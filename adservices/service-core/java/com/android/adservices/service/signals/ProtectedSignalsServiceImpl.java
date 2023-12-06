@@ -51,6 +51,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -96,11 +97,13 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         AdServicesExecutors.getBlockingExecutor(),
                                         TIMEOUT_MS,
                                         TIMEOUT_MS,
-                                        MAX_SIZE_BYTES)),
+                                        FlagsFactory.getFlags()
+                                                .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
-                                new UpdateEncoderEventHandler(context)),
+                                new UpdateEncoderEventHandler(context),
+                                new SignalEvictionController()),
                         new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME)),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(context),
@@ -184,7 +187,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredProtectedSignalsPermission(
                 mContext, updateSignalsInput.getCallerPackageName(), apiName);
 
         final int callerUid = getCallingUid(apiName);
@@ -211,22 +214,27 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         boolean shouldLog = false;
         try {
             try {
-                // Filter and validate request -- the custom audience filter does what we need so
-                // I don't see much value in creating a new one
-                AdTechIdentifier buyer =
-                        mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
-                                input.getUpdateUri(),
-                                input.getCallerPackageName(),
-                                mFlags.getDisableFledgeEnrollmentCheck(),
-                                // We will always enforce the foreground check, I don't see a reason
-                                // to make a flags for this like other APIs do
-                                true,
-                                true,
-                                callerUid,
-                                apiName,
-                                PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
-                                devContext);
-                shouldLog = true;
+                AdTechIdentifier buyer;
+                try {
+                    /* Filter and validate request -- the custom audience filter does what we need
+                     * so I don't see much value in creating a new one.
+                     */
+                    buyer =
+                            mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
+                                    input.getUpdateUri(),
+                                    input.getCallerPackageName(),
+                                    mFlags.getDisableFledgeEnrollmentCheck(),
+                                    mFlags.getEnforceForegroundStatusForSignals(),
+                                    // Consent is enforced in a separate call below.
+                                    false,
+                                    callerUid,
+                                    apiName,
+                                    PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
+                                    devContext);
+                    shouldLog = true;
+                } catch (Throwable t) {
+                    throw new FilterException(t);
+                }
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
@@ -234,7 +242,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                     sLogger.v("Orchestrating signal update");
                     mUpdateSignalsOrchestrator
                             .orchestrateUpdate(
-                                    input.getUpdateUri(), buyer, input.getCallerPackageName())
+                                    input.getUpdateUri(),
+                                    buyer,
+                                    input.getCallerPackageName(),
+                                    devContext)
                             .get();
                     PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;

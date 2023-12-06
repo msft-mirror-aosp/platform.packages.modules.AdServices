@@ -27,6 +27,7 @@ import com.android.cobalt.CobaltPeriodicJob;
 import com.android.cobalt.CobaltPipelineType;
 import com.android.cobalt.crypto.HpkeEncrypter;
 import com.android.cobalt.data.DataService;
+import com.android.cobalt.domain.Project;
 import com.android.cobalt.impl.CobaltLoggerImpl;
 import com.android.cobalt.impl.CobaltPeriodicJobImpl;
 import com.android.cobalt.observations.PrivacyGenerator;
@@ -34,25 +35,25 @@ import com.android.cobalt.system.SystemClockImpl;
 import com.android.cobalt.system.SystemData;
 import com.android.internal.annotations.GuardedBy;
 
-import com.google.cobalt.CobaltRegistry;
-
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 /** Factory for Cobalt's logger and periodic job implementations. */
 public final class CobaltFactory {
     private static final Object SINGLETON_LOCK = new Object();
 
     /*
-     * Use the prod pipeline because AdServices' reports are for either the DEBUG or GA release
+     * Uses the prod pipeline because AdServices' reports are for either the DEBUG or GA release
      * stage and DEBUG is sufficient for local testing.
      */
     private static final CobaltPipelineType PIPELINE_TYPE = CobaltPipelineType.PROD;
 
     // Objects which are non-trivial to construct or need to be shared between the logger and
     // periodic job are static.
-    private static CobaltRegistry sSingletonCobaltRegistry;
+    private static Project sSingletonCobaltRegistryProject;
     private static DataService sSingletonDataService;
     private static SecureRandom sSingletonSecureRandom;
 
@@ -112,6 +113,7 @@ public final class CobaltFactory {
                                         flags.getAdservicesReleaseStageForCobalt()),
                                 getDataService(context),
                                 getExecutor(),
+                                getScheduledExecutor(),
                                 new SystemClockImpl(),
                                 new SystemData(),
                                 new PrivacyGenerator(getSecureRandom()),
@@ -121,6 +123,7 @@ public final class CobaltFactory {
                                         new HpkeEncryptImpl(), PIPELINE_TYPE),
                                 CobaltApiKeys.copyFromHexApiKey(
                                         flags.getCobaltAdservicesApiKeyHex()),
+                                Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
                                 flags.getTopicsCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;
@@ -134,12 +137,17 @@ public final class CobaltFactory {
     }
 
     @NonNull
-    private static CobaltRegistry getRegistry(Context context)
-            throws CobaltInitializationException {
-        if (sSingletonCobaltRegistry == null) {
-            sSingletonCobaltRegistry = CobaltRegistryLoader.getRegistry(context);
+    private static ScheduledExecutorService getScheduledExecutor() {
+        // Cobalt requires a timeout to disconnect from the system server.
+        return AdServicesExecutors.getScheduler();
+    }
+
+    @NonNull
+    private static Project getRegistry(Context context) throws CobaltInitializationException {
+        if (sSingletonCobaltRegistryProject == null) {
+            sSingletonCobaltRegistryProject = CobaltRegistryLoader.getRegistry(context);
         }
-        return sSingletonCobaltRegistry;
+        return sSingletonCobaltRegistryProject;
     }
 
     @NonNull

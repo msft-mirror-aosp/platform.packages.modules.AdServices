@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 /**
  * Class used to generate AggregateReport using AggregatableAttributionSource and
@@ -120,8 +121,35 @@ public class AggregatePayloadGenerator {
             contributions.add(contribution);
         }
         if (contributions.size() > 0) {
+            if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
+                AggregateHistogramContribution paddingContribution =
+                        new AggregateHistogramContribution.Builder()
+                                .setPaddingContribution()
+                                .build();
+
+                padContributions(contributions, paddingContribution);
+            }
             return Optional.of(contributions);
         }
         return Optional.empty();
+    }
+
+    /**
+     * Given a list of {@link AggregateHistogramContribution} actual contributions and a single
+     * {@link AggregateHistogramContribution} padding contribution, append the maximum number of
+     * padding contributions to the actual attributions, in place. The maximum number of
+     * contributions is defined in the flags. If the number of actual contributions is already at
+     * the maximum limit, then do nothing.
+     *
+     * @param contributions actual contributions
+     * @param padding the contribution that will act as the pad value.
+     */
+    public void padContributions(
+            List<AggregateHistogramContribution> contributions,
+            AggregateHistogramContribution padding) {
+        IntStream.range(
+                        contributions.size(),
+                        mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+                .forEach(i -> contributions.add(padding));
     }
 }

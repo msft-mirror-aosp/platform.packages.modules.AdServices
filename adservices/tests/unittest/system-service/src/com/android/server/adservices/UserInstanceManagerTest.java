@@ -16,6 +16,7 @@
 
 package com.android.server.adservices;
 
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL_VERSION;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -41,7 +42,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Set;
 
@@ -246,19 +246,14 @@ public class UserInstanceManagerTest {
                 };
         UserInstanceManager mgr = new UserInstanceManager(topicsDao, TEST_BASE_PATH);
 
-        String dump;
         String[] args = new String[0];
-        try (StringWriter sw = new StringWriter()) {
-            PrintWriter pw = new PrintWriter(sw);
-
-            mgr.dump(pw, args);
-
-            pw.flush();
-            dump = sw.toString();
-        }
+        String dump = dump(pw -> mgr.dump(pw, args));
 
         // Content doesn't matter much, we just wanna make sure it doesn't crash (for example,
         // by using the wrong %s / %d tokens) and that its components are dumped
         assertWithMessage("content of dump()").that(dump).contains(TOPICS_DAO_DUMP);
+
+        // TODO(b/280677793): dump content of other managers (it might be simpler to do so on each
+        // method above, using expectThat() (instead of assertThat())
     }
 }

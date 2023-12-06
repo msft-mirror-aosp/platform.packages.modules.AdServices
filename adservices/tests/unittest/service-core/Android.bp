@@ -18,13 +18,13 @@ package {
 java_defaults {
     name: "AdServices-ServiceCoreUnitTest-Defaults",
     defaults: ["adservices-extended-mockito-defaults"],
-    sdk_version: "module_current",
     // Currently this test module is failing, which results in low test coverage
     // The reason is the target test coverage system runs on is different as what this test
     // configures. Add below line to address the issue.
     // See b/233124651 for details.
     compile_multilib: "both",
     min_sdk_version: "Tiramisu",
+    sdk_version: "module_current",
     plugins: [
         "auto_value_plugin",
         "auto_annotation_plugin"
@@ -33,9 +33,11 @@ java_defaults {
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-assets",
         "adservices-service-core-schema",
+        "adservices-shared-testing",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -62,6 +64,7 @@ java_defaults {
     instrumentation_for: "AdServicesApk",
     jni_libs: [
         "libhpke_jni",
+        "libacttest_jni",
         "libtflite_support_classifiers_native",
     ],
     aaptflags: [
@@ -91,6 +94,7 @@ android_test {
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
 }
 
+
 android_test {
     name: "AdServicesJsEngineUnitTests",
     srcs: [
@@ -106,7 +110,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "adservices-assets",
         "adservices-test-fixtures",
     ],
@@ -143,7 +147,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "adservices-assets",
         "adservices-test-fixtures",
         "mobile_data_downloader_lib",
@@ -177,7 +181,9 @@ java_defaults {
     static_libs: [
         "adservices-assets",
         "adservices-service-core-schema",
+        "adservices-shared-testing",
         "adservices-test-fixtures",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "androidx.room_room-runtime",
@@ -188,7 +194,7 @@ java_defaults {
         "opencensus-java-api",
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -206,6 +212,7 @@ java_defaults {
     instrumentation_for: "ExtServices-sminus",
     jni_libs: [
         "libhpke_jni",
+        "libacttest_jni",
         "libtflite_support_classifiers_native",
     ],
     aaptflags: [
@@ -254,7 +261,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -293,7 +300,7 @@ android_test {
         "compatibility-device-util-axt",
         "mobile_data_downloader_lib",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -311,12 +318,29 @@ android_test {
     instrumentation_for: "ExtServices-sminus",
 }
 
-java_library {
-    name: "adservices-measurement-web-util-lib",
-    sdk_version: "module_current",
-    srcs: [
-      "src/com/android/adservices/service/measurement/WebUtil.java"
+cc_library_shared {
+    name: "libacttest_jni",
+    min_sdk_version: "30",
+    sdk_version: "current",
+    stl: "libc++_static",
+    cflags: [
+        "-Werror",
+        "-Wno-unused-parameter",
+        "-Wno-unused-but-set-variable",
     ],
-    visibility: ["//packages/modules/AdServices/adservices/tests/unittest/fixtures"]
-
+    srcs: [
+        "src/jni/cpp/act_util_jni.cpp",
+    ],
+    include_dirs: [
+        "packages/modules/AdServices/adservices/service-core/jni/include",
+        "packages/modules/AdServices/adservices/tests/unittest/service-core/src/jni/cpp"
+    ],
+    header_libs: ["jni_headers"],
+    shared_libs: ["liblog",],
+    static_libs: ["libact", "libcrypto_static"],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+    ],
 }

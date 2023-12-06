@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService-ren gaitze-egoeraren APIa erabiltzeko baimena ematen die aplikazioei."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Atzitu AdServicesManager-en APIak"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager-en APIak erabiltzeko baimena ematen die aplikazioei."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdService’s update AdId APIa erabiltzeko baimena."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Aplikazio bati AdService’s update AdId APIa erabiltzeko baimena ematen dio."</string>
     <string name="app_label" msgid="5844694701336604490">"Iragarkien pribatutasuna"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Probatu Android-eko iragarkien pribatutasunaren beta-bertsioa"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Aplikazioek iragarkiak erakusteko aukera pribatuagoak arakatzen ari da Android"</string>
@@ -72,7 +74,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Aplikazioek zure interesak estima ditzakete, eta Android-en aldi baterako gorde. Adibidez, baliteke korrika egiteko oinetakoak eroste aldera erabiltzen duzun aplikazio batek \"maratoiak\" interes gisa estimatzea.\n\nGeroago, interes horretan oinarrituta, baliteke beste aplikazio batek maratoiekin erlazionatutako iragarki bat erakustea.\n\nInteresak gorde dituzten aplikazioen zerrenda kudeatzeko, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Iragarkien pribatutasuna babesteko eginbide berriak"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Iragarkien gaiekin eta kontrolatzeko aukera berriekin, ikusten dituzun iragarkien gaineko kontrol handiagoa izango duzu"</string>
-    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Orain, iragarkien pribatutasunarekin erlazionatutako eginbide berriak daude"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Orain, iragarkietarako pribatutasun-eginbide berriak daude"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Berriki erabili dituzun aplikazioetan oinarrituta hartzen ditu kontuan Android-ek interesatzen zaizkizun gaiak. Halaber, erabiltzen dituzun aplikazioek gustuko dituzun gaiak zehatz ditzakete. Geroago, erabiltzen dituzun aplikazioek informazio hori eska dezakete, iragarki pertsonalizatuak erakusteko. Iragarkiak erakusteko zein gai eta aplikazio erabiltzen diren aukera dezakezu."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Iragarkien errendimendua neurtzeko, datu mota jakin batzuk soilik partekatzen dituzte aplikazioek elkarrekin."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android-eko iragarkiei buruzko informazio gehiago"</string>
@@ -87,7 +89,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Probatu iragarkien pribatutasuna babesteko eginbide berriak"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Iragarkien gaiekin, ikusten dituzun iragarkien gaineko kontrol handiagoa izango duzu"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Ikusi xehetasunak"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Probatu iragarkien pribatutasunarekin erlazionatutako eginbide berriak"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Probatu iragarkietarako pribatutasun-eginbide berriak"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Ikusten dituzun iragarkien gaineko kontrol handiagoa emango dizuten pribatutasun-eginbide berriak kaleratuko ditu Android-ek."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Iragarkien gaiei esker, aplikazioek iragarki egokiak erakusten dizkizute, eta zure identitatea eta aplikazioen erabilerari buruzko informazioa babesten. Berriki erabili dituzun aplikazioetan oinarrituta har ditzake kontuan Android-ek interesatzen zaizkizun gaiak. Geroago, erabiltzen dituzun aplikazioek zuretzako gai egokiak zein diren galde diezaiokete Android-i, ikusten dituzun iragarkiak pertsonalizatzeko."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Gailuaren ezarpenetan, iragarkien gaiak ikus ditzakezu, eta aplikazioekin partekatzea nahi ez duzunak blokeatu. Era berean, Android-ek iragarkien gaiak erregulartasunez automatikoki ezabatzen ditu."</string>
@@ -102,7 +104,7 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Nola kudea ditzakezu datuak?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Gaiak erregulartasunez ezabatzen ditu Android-ek automatikoki. Aplikazioak erabiltzen jarraitu ahala, baliteke gai bat berriro agertzea zerrendan. Era berean, Android-ek aplikazioekin partekatzerik nahi ez duzun gaiak blokea ditzakezu, eta iragarkien gaiak desaktibatu. Horretarako, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Aldaketak egiteko, joan pribatutasun-ezarpenetara."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Orain, iragarkien pribatutasunarekin erlazionatutako beste eginbide batzuk daude"</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Orain, iragarkietarako beste pribatutasun-eginbide batzuk daude"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Aplikazioek, iragarki pertsonalizatuak erakusten dizkizutenean, zuri buruz ikas dezaketena mugatzeko modu berriak ere eskaintzen ditu Android-ek."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"• Aplikazioek iradokitako iragarkiei esker, zure identitatea eta aplikazioen erabilerari buruzko informazioa babesten da, eta aplikazioek iragarki egokiak erakusten dizkizute. Zure jardueretan oinarrituta, baliteke erabiltzen dituzun aplikazioek erlazionatutako iragarkiak erakustea beste aplikazio batzuetan. Pribatutasun-ezarpenetan, aplikazioen zerrenda bat ikus dezakezu, eta haiei iradokizunak egiteko aukera blokeatu."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"• Iragarkien neurketa ezarpenarekin, datu mota jakin batzuk soilik partekatzen dituzte aplikazioek elkarrekin iragarkien errendimendua neurtzeko; adibidez, zer ordutan erakutsi dizuten iragarki bat."</string>
@@ -116,9 +118,9 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Aplikazioek iradokitako datuak erregulartasunez automatikoki ezabatzen ditu Android-ek. Baliteke beste behin erabiltzen duzun aplikazio bat berriro ere zerrendan agertzea."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Hauek ere egin ditzakezu pribatutasun-ezarpenetan: aplikazioei iragarkiak iradokitzeko aukera blokeatu, iragarkien iradokizunekin erlazionatutako datu guztiak berrezarri edo aplikazioek iradokitako iragarkiak desaktibatu."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Iragarkien errendimendua neurtzen laguntzen dien informazioa eska diezaiokete erabiltzen dituzun aplikazioek Android-i. Android-ek zure pribatutasuna babesten du, aplikazioek haien artean parteka dezaketen informazioa mugatuta."</string>
-    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Orain, iragarkien pribatutasunarekin erlazionatutako eginbide berriak daude"</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Orain, iragarkietarako pribatutasun-eginbide berriak daude"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Izan ikusten dituzun iragarkien gaineko kontrol handiagoa zure identitatea babesten duzun bitartean"</string>
-    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Orain, iragarkien pribatutasunarekin erlazionatutako eginbide berriak daude"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Orain, iragarkietarako pribatutasun-eginbide berriak daude"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Aplikazioek, iragarki pertsonalizatuak erakusten dizkizutenean, zuri buruz ikas dezaketena mugatzeko modu berriak kaleratuko ditu Android-ek."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Aplikazioek iradokitako iragarkiei esker, pribatutasun-eginbide berriek zure identitatea eta aplikazioen erabilerari buruzko informazioa babesten dituzte, eta aplikazioei iragarki egokiak erakusteko aukera ematen. Zure jardueretan oinarrituta, baliteke erabiltzen dituzun aplikazioek erlazionatutako iragarkiak iradokitzea beste aplikazio batzuetan. Pribatutasun-ezarpenetan, aplikazioen zerrenda bat ikus dezakezu, eta haiei iradokizunak egiteko aukera blokeatu."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Iragarkien neurketarekin, datu mota mugatuak partekatzen dira aplikazioen artean bertako iragarkien errendimendua ulertzeko; esate baterako, iragarkiak eguneko zer ordutan agertu zaizkizun."</string>
@@ -128,9 +130,9 @@
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Iragarkien gaiei esker, aplikazioek iragarki egokiak erakusten dizkizute, eta zure identitatea eta aplikazioen erabilerari buruzko informazioa babesten. Berriki erabili dituzun aplikazioetan oinarrituta har ditzake kontuan Android-ek interesatzen zaizkizun gaiak. Geroago, erabiltzen dituzun aplikazioek gai egokiak zein diren galde diezaiokete Android-i, iragarki egokiagoak erakusteko."</string>
     <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Pribatutasun-ezarpenetan ikus ditzakezu iragarkien gaiak, eta aplikazioekin partekatzea nahi ez duzun gaiak blokeatu. Horrez gain, Android-ek erregulartasunez automatikoki ezabatzen ditu iragarkien gaiak."</string>
     <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Aktibatu"</string>
-    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Orain, iragarkien pribatutasunarekin erlazionatutako eginbide berriak daude"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Orain, iragarkietarako pribatutasun-eginbide berriak daude"</string>
     <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Orain, ikusten dituzun iragarkien gaineko kontrol handiagoa duzu zure identitatea babesten duzun bitartean"</string>
-    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Orain, iragarkien pribatutasunarekin erlazionatutako eginbide berriak daude"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Orain, iragarkietarako pribatutasun-eginbide berriak daude"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Orain, ikusten dituzun iragarkien gaineko kontrol handiagoa ematen dizuten pribatutasun-eginbide berriak eskaintzen ditu Android-ek."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Hurrengoa"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox-a"</string>
@@ -439,7 +441,7 @@
     <string name="topic10204" msgid="6591131759521321677">"Bizi-aseguruak"</string>
     <string name="topic10205" msgid="3294946723815021478">"Bidaia-aseguruak"</string>
     <string name="topic10206" msgid="6166888350685752683">"Inbertsioak"</string>
-    <string name="topic10207" msgid="2296385804039743999">"Salgaien eta gerokoen merkataritza"</string>
+    <string name="topic10207" msgid="2296385804039743999">"Salgaien eta finantza-gerokoen merkataritza"</string>
     <string name="topic10208" msgid="2717498987483479091">"Monetak eta trukea"</string>
     <string name="topic10209" msgid="5204948738662951962">"Estaldura-funtsak"</string>
     <string name="topic10210" msgid="4607225697024266227">"Funts mutualistak"</string>
@@ -468,7 +470,7 @@
     <string name="topic10233" msgid="8318075279868138231">"Borroka-jokoak"</string>
     <string name="topic10234" msgid="3899847414436099153">"Bideojokoei buruzko erreferentziak eta iritziak"</string>
     <string name="topic10235" msgid="5851356242523630529">"Bideojokoetarako tranpak eta iradokizunak"</string>
-    <string name="topic10236" msgid="1986665634014804954">"Jokalari anitzeko joko masiboak"</string>
+    <string name="topic10236" msgid="1986665634014804954">"Jokalari bat baino gehiagoko joko masiboak"</string>
     <string name="topic10237" msgid="5569920221620447713">"Musika- eta dantza-jokoak"</string>
     <string name="topic10238" msgid="7431087331656772530">"Mundu irekiko jokoak"</string>
     <string name="topic10239" msgid="8667462879554115515">"Tiroketa-jokoak"</string>
@@ -575,9 +577,9 @@
     <string name="topic10340" msgid="6538182603360796294">"Haurrentzako segurtasuna Interneten"</string>
     <string name="topic10341" msgid="3586543243312398568">"Erromantikoak"</string>
     <string name="topic10342" msgid="3695176378281477573">"Zientzia-fikzioa eta fantasia"</string>
-    <string name="topic10343" msgid="2318169062960263837">"Maskotak eta animaliak"</string>
-    <string name="topic10344" msgid="2005534117977874327">"Maskotentzako janaria eta maskotak zaintzeko hornigaiak"</string>
-    <string name="topic10345" msgid="2397329020706244200">"Maskotak"</string>
+    <string name="topic10343" msgid="2318169062960263837">"Konpainia-animaliak eta animaliak"</string>
+    <string name="topic10344" msgid="2005534117977874327">"Konpainia-animalientzako janaria eta haiek zaintzeko hornigaiak"</string>
+    <string name="topic10345" msgid="2397329020706244200">"Konpainia-animaliak"</string>
     <string name="topic10346" msgid="1323702748723563694">"Txoriak"</string>
     <string name="topic10347" msgid="3301879823396773413">"Katuak"</string>
     <string name="topic10348" msgid="8066686305498410222">"Txakurrak"</string>

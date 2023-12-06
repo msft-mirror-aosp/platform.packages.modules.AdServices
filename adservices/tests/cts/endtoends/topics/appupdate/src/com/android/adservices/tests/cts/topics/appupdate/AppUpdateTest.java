@@ -31,14 +31,13 @@ import android.content.IntentFilter;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -73,14 +72,13 @@ import java.util.stream.Collectors;
  *   <li>2. Install test app at epoch T+1 and it'll be assigned with returned topics at T.
  *   <li>3. Forces Maintenance job to run to reconcile app installation mismatching, in case
  *       broadcast is missed due to system delay.
- *   <li>4. Test app itself calls Topics API and it'll return the topics at T. Then test app calls
- *       Topics API through sdk, the sdk will be assigned with returned topic for epoch T at the
- *       serving flow. Both calls will send broadcast to this CTS test suite app and this test suite
- *       app will verify the results are expected
+ *   <li>4. Then test app calls Topics API through sdk, the sdk will be assigned with returned topic
+ *       for epoch T at the serving flow. Both calls will send broadcast to this CTS test suite app
+ *       and this test suite app will verify the results are expected
  *   <li>5. Uninstall test app and wait for 3 epochs.
  *   <li>6. Install test app again and it won't be assigned with topics as no usage in the past 3
- *       epoch. Call topics API again via app only and sdk. Both calls should have empty response as
- *       all derived data been wiped off.
+ *       epoch. Call topics API again via sdk. It should have empty response as all derived data
+ *       been wiped off.
  *   <li>7. Finally verify the number of broadcast received is as expected. Then uninstall test app
  *       and unregister the listener.
  * </ul>
@@ -119,8 +117,6 @@ public class AppUpdateTest {
     // the test sample app will send back to the main test app. So the order is important.
     private static final String[] EXPECTED_TOPIC_RESPONSE_BROADCASTS = {
         NON_EMPTY_TOPIC_RESPONSE_BROADCAST,
-        NON_EMPTY_TOPIC_RESPONSE_BROADCAST,
-        EMPTY_TOPIC_RESPONSE_BROADCAST,
         EMPTY_TOPIC_RESPONSE_BROADCAST,
     };
 
@@ -135,9 +131,6 @@ public class AppUpdateTest {
     // allow them to have enough time to be executed. This helps to reduce the test flaky.
     private static final long EXECUTION_WAITING_TIME = 2000;
 
-    // Default Epoch Period.
-    private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
-
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
     private static final int DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
@@ -145,17 +138,16 @@ public class AppUpdateTest {
     private int mExpectedTopicResponseBroadCastIndex = 0;
     private BroadcastReceiver mTopicsResponseReceiver;
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @Before
     public void setup() throws InterruptedException {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-
         // Kill AdServices process so that background jobs don't get skipped due to starting
         // with same params.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
@@ -163,20 +155,14 @@ public class AppUpdateTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        flags.setTopicsDisableDirectAppCall(true);
+        flags.setTopicsEnforceForeground(false);
 
         registerTopicResponseReceiver();
-    }
-
-    @After
-    public void tearDown() {
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
@@ -255,15 +241,12 @@ public class AppUpdateTest {
         topicResponseIntentFilter.addAction(EMPTY_TOPIC_RESPONSE_BROADCAST);
 
         // Assert the result at each time the CTS test suite receives the broadcast. Specifically,
-        // First time: test app1 should get non-empty returned topics as it was assigned with topics
-        //             when it gets installed. This is to test the app installation behaviors.
-        // Second time: test app1 should get non-empty returned topics as it calls Topics API via
+        // First time: test app1 should get non-empty returned topics as it calls Topics API via
         //              sdk. This is to test sdk topics assignment for newly installed apps.
-        // Third time: test app1 should get empty returned topics as it wasn't assigned with topics
+        // Second time: test app1 should get empty returned topics as it wasn't assigned with topics
         //             when it gets installed due to zero usage in last 3 epochs, as well as it was
         //             uninstalled. This is to test the uninstallation behaviors.
-        // Fourth time: test app1 should also get empty returned topics when it calls Topics API
-        //              via sdk.
+
         mTopicsResponseReceiver =
                 new BroadcastReceiver() {
                     @Override
@@ -316,19 +299,6 @@ public class AppUpdateTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    // Override the Epoch Period to shorten the Epoch Length in the test.
-    private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Percentage For Random Topic in the test.
-    private void overridePercentageForRandomTopic(long overridePercentage) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
-                        + overridePercentage);
     }
 
     // Forces JobScheduler to run the Maintenance job.

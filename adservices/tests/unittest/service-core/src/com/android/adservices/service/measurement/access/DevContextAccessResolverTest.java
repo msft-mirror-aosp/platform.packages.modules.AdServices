@@ -30,8 +30,8 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.service.measurement.WebUtil;
 
 import org.junit.Before;
 import org.junit.Test;

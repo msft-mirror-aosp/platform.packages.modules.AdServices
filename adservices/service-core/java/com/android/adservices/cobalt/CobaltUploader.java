@@ -20,7 +20,7 @@ import static android.adservices.cobalt.EncryptedCobaltEnvelopeParams.ENVIRONMEN
 
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.adservices.cobalt.EncryptedCobaltEnvelopeParams;
 import android.adservices.cobalt.IAdServicesCobaltUploadService;
@@ -76,8 +76,16 @@ final class CobaltUploader implements Uploader {
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
+    }
+
+    @Override
+    public void uploadDone() {
+        if (Log.isLoggable(TAG, Log.INFO)) {
+            Log.i(TAG, "Unbinding from upload service");
+        }
+        mServiceBinder.unbindFromService();
     }
 
     @VisibleForTesting

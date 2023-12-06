@@ -92,11 +92,29 @@ filegroup {
     ],
 }
 
+// TODO(b/306522832): move to Shared/ and change packages (to something like
+// c.a.ads.flags), although we'd need to be consider whether to make sure it's
+// used only by adservices itself, not ODP (or SdkSandbox)
+filegroup {
+    name: "adservices-service-common-flags-sources",
+    srcs: [
+        "java/com/android/adservices/service/CommonFlags.java",
+        "java/com/android/adservices/service/CommonFlagsConstants.java",
+        "java/com/android/adservices/service/CommonPhFlags.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices/adservices/service",
+    ],
+}
+
 filegroup {
     name: "adservices-service-core-phflags-sources",
     srcs: [
         ":adservices-service-core-flags-constants-sources",
+        ":adservices-service-common-flags-sources",
         "java/com/android/adservices/service/Flags.java",
+        "java/com/android/adservices/service/FlagsFactory.java",
         "java/com/android/adservices/service/PhFlags.java",
     ],
     path: "java",
@@ -151,6 +169,9 @@ android_library {
         "adservices-cobalt",
         "adservices-proto-lite",
         "adservices-grpclib-lite",
+        "adservices-shared-common",
+        "adservices-shared-error-logging",
+        "adservices-shared-storage",
         "modules-utils-build",
     ],
     jarjar_rules: "jarjar-rules.txt",
@@ -170,16 +191,23 @@ cc_library_shared {
         "-Wno-unused-parameter",
         "-Wno-unused-but-set-variable",
     ],
-    srcs: ["jni/cpp/hpke_jni.cpp", "jni/cpp/ohttp_jni.cpp"],
+    srcs: [
+        "jni/cpp/hpke_jni.cpp",
+        "jni/cpp/ohttp_jni.cpp",
+        "jni/cpp/act_jni.cpp",
+    ],
     include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
-    header_libs: [ "jni_headers"  ],
-    shared_libs: ["libcrypto", "liblog"],
+    header_libs: ["jni_headers"],
+    shared_libs: ["liblog",],
+    static_libs: ["libact", "libcrypto_static"],
+    version_script: "jni/version-script.lds",
     apex_available: ["com.android.adservices", "com.android.extservices"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
     ],
 }
+
 
 // Schemas needs to be bundled via this android_library since service-core unit tests for schema
 // migration will need this.

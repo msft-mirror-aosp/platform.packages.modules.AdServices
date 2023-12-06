@@ -29,10 +29,11 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.collect.ImmutableList;
 
@@ -45,8 +46,6 @@ import java.util.stream.Collectors;
 /** Does event report window related calculations, e.g. count, reporting time. */
 public class EventReportWindowCalcDelegate {
     private static final String EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER = ",";
-
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
 
     private final Flags mFlags;
 
@@ -62,7 +61,7 @@ public class EventReportWindowCalcDelegate {
      */
     public int getMaxReportCount(@NonNull Source source, boolean isInstallCase) {
         // TODO(b/290101531): Cleanup flags
-        if (mFlags.getMeasurementFlexLiteAPIEnabled() && source.getMaxEventLevelReports() != null) {
+        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.getMaxEventLevelReports() != null) {
             return source.getMaxEventLevelReports();
         }
         if (source.getSourceType() == Source.SourceType.EVENT
@@ -138,7 +137,7 @@ public class EventReportWindowCalcDelegate {
 
     private Pair<Long, Long> getFinalReportingWindow(
             Source source, List<Pair<Long, Long>> earlyWindows) {
-        if (mFlags.getMeasurementFlexLiteAPIEnabled() && source.hasManualEventReportWindows()) {
+        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.hasManualEventReportWindows()) {
             List<Pair<Long, Long>> windowList = source.parsedProcessedEventReportWindows();
             return windowList.get(windowList.size() - 1);
         }
@@ -167,11 +166,11 @@ public class EventReportWindowCalcDelegate {
      *
      * @param windowIndex window index corresponding to which the reporting time should be returned
      * @param triggerDataIndex trigger data state index
-     * @param reportSpec flex event report spec
+     * @param triggerSpecs flex event trigger specs
      */
     public long getReportingTimeForNoisingFlexEventApi(
-            int windowIndex, int triggerDataIndex, ReportSpec reportSpec) {
-        for (TriggerSpec triggerSpec : reportSpec.getTriggerSpecs()) {
+            int windowIndex, int triggerDataIndex, TriggerSpecs triggerSpecs) {
+        for (TriggerSpec triggerSpec : triggerSpecs.getTriggerSpecs()) {
             triggerDataIndex -= triggerSpec.getTriggerData().size();
             if (triggerDataIndex < 0) {
                 return triggerSpec.getEventReportWindowsEnd().get(windowIndex)
@@ -179,6 +178,39 @@ public class EventReportWindowCalcDelegate {
             }
         }
         return 0;
+    }
+
+    /**
+     * Calculates the reporting time based on the {@link Trigger} time for flexible event report API
+     *
+     * @param triggerSpecs the report specification to be processed
+     * @param sourceRegistrationTime source registration time
+     * @param triggerTime trigger time
+     * @param triggerData the trigger data
+     * @return the reporting time
+     */
+    public long getFlexEventReportingTime(
+            TriggerSpecs triggerSpecs,
+            long sourceRegistrationTime,
+            long triggerTime,
+            UnsignedLong triggerData) {
+        if (triggerTime < sourceRegistrationTime) {
+            return -1L;
+        }
+        if (triggerTime
+                < triggerSpecs.findReportingStartTimeForTriggerData(triggerData)
+                        + sourceRegistrationTime) {
+            return -1L;
+        }
+
+        List<Long> reportingWindows = triggerSpecs.findReportingEndTimesForTriggerData(triggerData);
+        for (Long window : reportingWindows) {
+            if (triggerTime <= window + sourceRegistrationTime) {
+                return sourceRegistrationTime + window
+                        + mFlags.getMeasurementMinEventReportDelayMillis();
+            }
+        }
+        return -1L;
     }
 
     private boolean isAppInstalled(Source source, int destinationType) {
@@ -194,7 +226,7 @@ public class EventReportWindowCalcDelegate {
      */
     private List<Pair<Long, Long>> getEarlyReportingWindows(Source source, boolean installState) {
         // TODO(b/290221611) Remove early reporting windows from code, only use them for flags.
-        if (mFlags.getMeasurementFlexLiteAPIEnabled() && source.hasManualEventReportWindows()) {
+        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.hasManualEventReportWindows()) {
             List<Pair<Long, Long>> windows = source.parsedProcessedEventReportWindows();
             // Select early windows only i.e. skip the last element
             return windows.subList(0, windows.size() - 1);
@@ -277,7 +309,8 @@ public class EventReportWindowCalcDelegate {
         String earlyReportingWindowsString = pickEarlyReportingWindowsConfig(mFlags, sourceType);
 
         if (earlyReportingWindowsString == null) {
-            sLogger.d("Invalid configurable early reporting windows; null");
+            LoggerFactory.getMeasurementLogger()
+                    .d("Invalid configurable early reporting windows; null");
             return defaultEarlyWindows;
         }
 
@@ -298,9 +331,10 @@ public class EventReportWindowCalcDelegate {
         String[] split =
                 earlyReportingWindowsString.split(EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER);
         if (split.length > MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS) {
-            sLogger.d(
-                    "Invalid configurable early reporting window; more than allowed size: "
-                            + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Invalid configurable early reporting window; more than allowed size: "
+                                    + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
             return defaultEarlyWindows;
         }
 
@@ -308,7 +342,8 @@ public class EventReportWindowCalcDelegate {
             try {
                 earlyWindows.add(TimeUnit.SECONDS.toMillis(Long.parseLong(window)));
             } catch (NumberFormatException e) {
-                sLogger.d(e, "Configurable early reporting window parsing failed.");
+                LoggerFactory.getMeasurementLogger()
+                        .d(e, "Configurable early reporting window parsing failed.");
                 return defaultEarlyWindows;
             }
         }

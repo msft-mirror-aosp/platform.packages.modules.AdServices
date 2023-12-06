@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Lejon një aplikacion të ketë qasje tek API-ja e gjendjes së aktivizimit të AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Qasja te API-të e AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Lejon një aplikacion të qaset te API-të e AdServicesManager."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"Qasja tek AdService’s update AdId API."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Lejon një aplikacion të ketë qasje tek AdService’s update AdId API."</string>
     <string name="app_label" msgid="5844694701336604490">"Privatësia e reklamave"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Bashkohu në versionin beta të privatësisë së reklamave të Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android po eksploron mënyra më private për aplikacionet për të të shfaqur reklama"</string>
@@ -284,8 +286,8 @@
     <string name="topic10049" msgid="8061992014977840818">"Kolona zanore"</string>
     <string name="topic10050" msgid="3540229495848506229">"Muzikë botërore"</string>
     <string name="topic10051" msgid="6132468331924347995">"Muzikë reggae dhe e Karaibeve"</string>
-    <string name="topic10052" msgid="8213269199807045473">"Galeritë e imazheve në linjë"</string>
-    <string name="topic10053" msgid="1378192203082454197">"Videot në linjë"</string>
+    <string name="topic10052" msgid="8213269199807045473">"Galeritë e imazheve online"</string>
+    <string name="topic10053" msgid="1378192203082454197">"Videot online"</string>
     <string name="topic10054" msgid="3727401645405134505">"Transmetim i videove të drejtpërdrejta"</string>
     <string name="topic10055" msgid="4943174831732192854">"Transmetim i filmave dhe televizionit"</string>
     <string name="topic10056" msgid="3066058636154255073">"Opera"</string>
@@ -520,7 +522,7 @@
     <string name="topic10285" msgid="7056449544316408821">"Motorë kërkimi"</string>
     <string name="topic10286" msgid="3458688996478472971">"Telefona inteligjentë"</string>
     <string name="topic10287" msgid="6766203044518402938">"Telekonferencat"</string>
-    <string name="topic10288" msgid="3883137694557636622">"Aplikacione uebi dhe vegla në linjë"</string>
+    <string name="topic10288" msgid="3883137694557636622">"Aplikacione uebi dhe vegla online"</string>
     <string name="topic10289" msgid="3392995633794787676">"Shërbime uebi"</string>
     <string name="topic10290" msgid="3118880486702986341">"Hapësira ruajtëse në renë kompjuterike"</string>
     <string name="topic10291" msgid="6025855926350955094">"Dizajn dhe zhvillim uebi"</string>
@@ -552,7 +554,7 @@
     <string name="topic10317" msgid="2412259096368647866">"Lajme sportive"</string>
     <string name="topic10318" msgid="1508449672941031904">"Moti"</string>
     <string name="topic10319" msgid="3973645291178509390">"Lajme nga bota"</string>
-    <string name="topic10320" msgid="5279440074507438174">"Komuniteti në linjë"</string>
+    <string name="topic10320" msgid="5279440074507438174">"Komuniteti online"</string>
     <string name="topic10321" msgid="7018890132742820265">"Figura dhe skedarë GIF të animuar"</string>
     <string name="topic10322" msgid="1585737438943011532">"Takime dashurie dhe personale"</string>
     <string name="topic10323" msgid="962863497957179646">"Përmbledhje e furnizimit dhe faqeshënuesit socialë"</string>

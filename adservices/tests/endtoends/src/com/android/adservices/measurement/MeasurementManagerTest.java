@@ -40,6 +40,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -368,6 +369,7 @@ public class MeasurementManagerTest {
         Assume.assumeTrue(SdkLevel.isAtLeastS());
 
         final MeasurementManager mm = getMeasurementManager();
+        overrideConsentNotifiedDebugMode();
         overrideConsentManagerDebugMode();
         CompletableFuture<Integer> future = new CompletableFuture<>();
         OutcomeReceiver<Integer, Exception> callback =
@@ -391,6 +393,7 @@ public class MeasurementManagerTest {
     @Test
     public void testGetMeasurementApiStatus_customReceiver() throws Exception {
         final MeasurementManager mm = getMeasurementManager();
+        overrideConsentNotifiedDebugMode();
         overrideConsentManagerDebugMode();
         CompletableFuture<Integer> future = new CompletableFuture<>();
         AdServicesOutcomeReceiver<Integer, Exception> callback =
@@ -792,6 +795,11 @@ public class MeasurementManagerTest {
     }
 
     // Override the Consent Manager behaviour - Consent Given
+    private void overrideConsentNotifiedDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_notified_debug_mode true");
+    }
+
+    // Override the Consent Manager behaviour - Consent Given
     private void overrideConsentManagerDebugMode() {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
@@ -804,10 +812,9 @@ public class MeasurementManagerTest {
         if (SdkLevel.isAtLeastS()) {
             return;
         }
-
-        flags.setConsentSourceOfTruth(1)
-                .setBlockedTopicsSourceOfTruth(1)
-                .setEnableAppsearchConsentData(false)
+        flags.setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, FlagsConstants.PPAPI_ONLY)
+                .setFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 1)
+                .setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, false)
                 .setMeasurementRollbackDeletionAppSearchKillSwitch(true);
     }
 }

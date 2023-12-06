@@ -37,8 +37,8 @@ interface ISdkSandboxManager {
     const String LOAD_SDK = "LOAD_SDK";
     const String REQUEST_SURFACE_PACKAGE = "REQUEST_SURFACE_PACKAGE";
 
-    void addSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
-    void removeSdkSandboxProcessDeathCallback(in String callingPackageName, long timeAppCalledSystemServer, in ISdkSandboxProcessDeathCallback callback);
+    void addSdkSandboxProcessDeathCallback(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in ISdkSandboxProcessDeathCallback callback);
+    void removeSdkSandboxProcessDeathCallback(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in ISdkSandboxProcessDeathCallback callback);
     void registerAppOwnedSdkSandboxInterface(in String callingPackageName, in AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface, in SandboxLatencyInfo sandboxLatencyInfo);
     void unregisterAppOwnedSdkSandboxInterface(in String callingPackageName, in String name, in SandboxLatencyInfo sandboxLatencyInfo);
     oneway void loadSdk(in String callingPackageName, in IBinder appProcessToken, in String sdkName, in SandboxLatencyInfo sandboxLatencyInfo, in Bundle params, in ILoadSdkCallback callback);
@@ -50,6 +50,7 @@ interface ISdkSandboxManager {
     oneway void syncDataFromClient(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     void stopSdkSandbox(in String callingPackageName);
     void logLatencies(in SandboxLatencyInfo sandboxLatencyInfo);
+    void logSandboxActivityEvent(int method, int callResult, int latencyMillis);
 
     // TODO(b/282239822): Remove this workaround on Android VIC
     IBinder getAdServicesManager();

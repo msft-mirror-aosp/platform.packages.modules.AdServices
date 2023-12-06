@@ -33,7 +33,9 @@ public class KeyValueData {
     public enum DataType {
         REGISTRATION_REDIRECT_COUNT,
         EVENT_REPORT_RETRY_COUNT,
+        DEBUG_EVENT_REPORT_RETRY_COUNT,
         AGGREGATE_REPORT_RETRY_COUNT,
+        DEBUG_AGGREGATE_REPORT_RETRY_COUNT,
         DEBUG_REPORT_RETRY_COUNT
     }
 
@@ -135,7 +137,9 @@ public class KeyValueData {
 
     private void validateOfTypeReport() {
         if (mDataType != DataType.AGGREGATE_REPORT_RETRY_COUNT
+                && mDataType != DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT
                 && mDataType != DataType.EVENT_REPORT_RETRY_COUNT
+                && mDataType != DataType.DEBUG_EVENT_REPORT_RETRY_COUNT
                 && mDataType != DataType.DEBUG_REPORT_RETRY_COUNT) {
             throw new IllegalStateException("Illegal method call");
         }

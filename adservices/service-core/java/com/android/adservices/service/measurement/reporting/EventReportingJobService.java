@@ -109,7 +109,8 @@ public final class EventReportingJobService extends JobService {
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.EVENT,
-                                ReportingStatus.UploadMethod.REGULAR)
+                                ReportingStatus.UploadMethod.REGULAR,
+                                getApplicationContext())
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
                                 System.currentTimeMillis());

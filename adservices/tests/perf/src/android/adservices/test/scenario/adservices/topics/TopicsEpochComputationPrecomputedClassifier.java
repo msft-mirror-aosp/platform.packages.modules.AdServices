@@ -16,6 +16,8 @@
 
 package android.adservices.test.scenario.adservices.topics;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
@@ -26,14 +28,14 @@ import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -94,21 +96,23 @@ public class TopicsEpochComputationPrecomputedClassifier {
 
     private static final String EPOCH_STOP_TIMESTAMP_KEY = "end";
 
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forTopicsPerfTests(
+                            TEST_EPOCH_JOB_PERIOD_MS, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
+                    // Turn off MDD to avoid model mismatching
+                    .setMddBackgroundTaskKillSwitch(true)
+                    .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true);
+
     @Before
     public void setup() throws Exception {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
-
-        overridingBeforeTest();
-    }
-
-    @After
-    public void teardown() {
-        overridingAfterTest();
     }
 
     @Test
+    @FlakyTest(bugId = 290122696)
     public void testEpochComputation() throws Exception {
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.
@@ -164,76 +168,6 @@ public class TopicsEpochComputationPrecomputedClassifier {
 
         GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
         assertThat(sdk2Result2.getTopics()).isEmpty();
-    }
-
-    private void overridingBeforeTest() {
-        disableGlobalKillSwitch();
-        disableTopicsKillSwitch();
-        overridingAdservicesLoggingLevel("VERBOSE");
-
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-
-        // Turn off MDD to avoid model mismatching
-        disableMddBackgroundTasks(true);
-
-        // Use bundled files for classifier
-        overrideClassifierForceUseBundledFiles(true);
-
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-    }
-
-    private void overridingAfterTest() {
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        disableMddBackgroundTasks(false);
-        overrideClassifierForceUseBundledFiles(false);
-        overridingAdservicesLoggingLevel("INFO");
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-    }
-
-    // Switch on/off for MDD service. Default value is false, which means MDD is enabled.
-    private void disableMddBackgroundTasks(boolean isSwitchedOff) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.mdd_background_task_kill_switch " + isSwitchedOff);
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics' enrollment check.
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
-    }
-
-    // Override the Epoch Period to shorten the Epoch Length in the test.
-    private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Percentage For Random Topic in the test.
-    private void overridePercentageForRandomTopic(long overridePercentage) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
-                        + overridePercentage);
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */
@@ -328,26 +262,5 @@ public class TopicsEpochComputationPrecomputedClassifier {
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd hh:mm:ss.SSS");
         Date parsedDate = dateFormat.parse(words[0] + " " + words[1]);
         return parsedDate.getTime();
-    }
-
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-        ShellUtils.runShellCommand("setprop log.tag.adservices.topics %s", loggingLevel);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    private void disableGlobalKillSwitch() {
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-    }
-
-    // Override topics_kill_switch to ignore the effect of actual PH values.
-    private void disableTopicsKillSwitch() {
-        ShellUtils.runShellCommand("device_config put adservices topics_kill_switch false");
-    }
-
-    // Override to force use bundled files.
-    private void overrideClassifierForceUseBundledFiles(boolean enable) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices classifier_force_use_bundled_files " + enable);
     }
 }

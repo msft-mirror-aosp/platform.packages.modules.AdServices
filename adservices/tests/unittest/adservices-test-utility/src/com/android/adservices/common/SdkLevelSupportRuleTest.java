@@ -15,48 +15,25 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
-
-import android.util.Log;
 
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Rule;
+public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRuleTest {
 
-public final class SdkLevelSupportRuleTest
-        extends AbstractSdkLevelSupportedRuleTestCase<SdkLevelSupportRule> {
-
-    private static final String TAG = SdkLevelSupportRuleTest.class.getSimpleName();
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder().spyStatic(SdkLevel.class).build();
-
-    @Override
-    protected SdkLevelSupportRule newRuleForAtLeast(AndroidSdkLevel level) {
-        return new SdkLevelSupportRule(level);
+    public SdkLevelSupportRuleTest() {
+        super(AndroidLogger.getInstance());
     }
 
     @Override
-    protected void setDeviceSdkLevel(AndroidSdkLevel level) {
-        Log.v(TAG, "setDeviceSdkLevel(" + level + ")");
-        switch (level) {
-            case S:
-                // TODO(b/295321663): this is hacky, need to refactor the rule to use SDK ints
-                // directly
-                mockIsAtLeastS(true);
-                mockIsAtLeastT(false);
-                return;
-            case T:
-                mockIsAtLeastS(true);
-                mockIsAtLeastT(true);
-                return;
-            default:
-                throw new UnsupportedOperationException(
-                        "mocking level " + level + " not implemented yet");
-        }
+    protected SdkLevelSupportRule newRuleForDeviceLevelAndRuleAtLeastLevel(AndroidSdkLevel level) {
+        return newRule(level, level);
+    }
+
+    @Override
+    protected SdkLevelSupportRule newRule(AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
+        SdkLevelSupportRule rule = new SdkLevelSupportRule(ruleLevel);
+        mLog.v("newRule(%s, %s): returning %s", ruleLevel, deviceLevel, rule);
+        rule.setDeviceLevelSupplier(() -> deviceLevel);
+        return rule;
     }
 }

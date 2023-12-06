@@ -16,10 +16,16 @@
 
 package com.android.server.adservices;
 
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.adservices.topics.TopicParcel;
+import android.os.Build;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.server.adservices.data.topics.TopicsDao;
 import com.android.server.adservices.data.topics.TopicsDbHelper;
 import com.android.server.adservices.data.topics.TopicsDbTestUtil;
@@ -27,6 +33,7 @@ import com.android.server.adservices.data.topics.TopicsTables;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -39,6 +46,10 @@ public class BlockedTopicsManagerTest {
     private static final int USER_ID = 0;
 
     private BlockedTopicsManager mBlockedTopicsManager;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule extendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder().spyStatic(Build.class).build();
 
     @Before
     public void setup() {
@@ -118,5 +129,47 @@ public class BlockedTopicsManagerTest {
         // Verify the topic is  removed
         mBlockedTopicsManager.clearAllBlockedTopics();
         assertThat(mBlockedTopicsManager.retrieveAllBlockedTopics()).isEmpty();
+    }
+
+    @Test
+    public void testDump_noBlockedTopics() throws Exception {
+        String prefix = "_";
+
+        String dump = dump(pw -> mBlockedTopicsManager.dump(pw, prefix));
+
+        assertDumpHasPrefix(dump, prefix);
+        assertWithMessage("content of dump()").that(dump).contains("0 blocked topics\n");
+    }
+
+    @Test
+    public void testDump_blockedTopics() throws Exception {
+        String prefix = "_";
+        int topicId = 1;
+        TopicParcel topicParcel =
+                new TopicParcel.Builder()
+                        .setTopicId(topicId)
+                        .setTaxonomyVersion(TAXONOMY_VERSION)
+                        .setModelVersion(MODEL_VERSION)
+                        .build();
+
+        mBlockedTopicsManager.recordBlockedTopic(List.of(topicParcel));
+
+        String dump = dump(pw -> mBlockedTopicsManager.dump(pw, prefix));
+
+        assertWithMessage("content of dump()")
+                .that(dump)
+                .startsWith(prefix + "BlockedTopicsManager:");
+        assertDumpHasPrefix(dump, prefix);
+        assertWithMessage("content of dump()").that(dump).contains("1 blocked topics\n");
+        assertWithMessage("content of dump() (blockedtopic)")
+                .that(dump)
+                .doesNotContainMatch(
+                        ".*id.*"
+                                + topicId
+                                + ".*model.*"
+                                + MODEL_VERSION
+                                + ".*taxonomy.*"
+                                + TAXONOMY_VERSION
+                                + ".*");
     }
 }

@@ -51,7 +51,8 @@ public class ReportingStatus {
         VERBOSE_DEBUG_TRIGGER_EVENT_STORAGE_LIMIT(25),
         VERBOSE_DEBUG_TRIGGER_UNKNOWN_ERROR(26),
         VERBOSE_DEBUG_TRIGGER_AGGREGATE_STORAGE_LIMIT(27),
-        VERBOSE_DEBUG_TRIGGER_AGGREGATE_EXCESSIVE_REPORTS(28);
+        VERBOSE_DEBUG_TRIGGER_AGGREGATE_EXCESSIVE_REPORTS(28),
+        VERBOSE_DEBUG_UNKNOWN(29);
         private final int mValue;
 
         ReportType(int value) {
@@ -88,7 +89,8 @@ public class ReportingStatus {
         JOB_RETRY_LIMIT_REACHED(5),
         SERIALIZATION_ERROR(6),
         ENCRYPTION_ERROR(7),
-        UNSUCCESSFUL_HTTP_RESPONSE_CODE(8);
+        UNSUCCESSFUL_HTTP_RESPONSE_CODE(8),
+        REPORT_NOT_FOUND(9);
         private final int mValue;
 
         FailureStatus(int value) {
@@ -134,6 +136,7 @@ public class ReportingStatus {
         mFailureStatus = FailureStatus.UNKNOWN;
         mUploadMethod = UploadMethod.UNKNOWN;
         mReportingDelay = 0L;
+        mSourceRegistrant = "";
     }
 
     /** Get the type of report that is being uploaded. */

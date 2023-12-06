@@ -33,16 +33,14 @@ import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
+import com.android.cobalt.domain.Project;
 import com.android.cobalt.system.SystemData;
 import com.android.cobalt.system.testing.FakeSystemClock;
 
 import com.google.cobalt.AggregateValue;
-import com.google.cobalt.CobaltRegistry;
-import com.google.cobalt.CustomerConfig;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.Metadata;
 import com.google.cobalt.MetricDefinition.MetricType;
-import com.google.cobalt.ProjectConfig;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.ReportType;
@@ -58,6 +56,7 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -119,18 +118,11 @@ public class CobaltLoggerImplTest {
                     .setMetricType(MetricType.INTEGER)
                     .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DEBUG))
                     .build();
-    private static final CobaltRegistry COBALT_REGISTRY =
-            CobaltRegistry.newBuilder()
-                    .addCustomers(
-                            CustomerConfig.newBuilder()
-                                    .setCustomerId((int) ONE_REPORT.customerId())
-                                    .addProjects(
-                                            ProjectConfig.newBuilder()
-                                                    .setProjectId((int) ONE_REPORT.projectId())
-                                                    .addMetrics(ONE_REPORT_METRIC)
-                                                    .addMetrics(MULTIPLE_REPORT_METRIC)
-                                                    .addMetrics(WRONG_TYPE_METRIC)))
-                    .build();
+    private static final Project COBALT_REGISTRY =
+            Project.create(
+                    (int) ONE_REPORT.customerId(),
+                    (int) ONE_REPORT.projectId(),
+                    List.of(ONE_REPORT_METRIC, MULTIPLE_REPORT_METRIC, WRONG_TYPE_METRIC));
 
     private CobaltDatabase mCobaltDatabase;
     private TestOnlyDao mTestOnlyDao;
@@ -445,19 +437,14 @@ public class CobaltLoggerImplTest {
                         .setMetaData(
                                 Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.FISHFOOD))
                         .build();
-        CobaltRegistry registry =
-                CobaltRegistry.newBuilder()
-                        .addCustomers(
-                                CustomerConfig.newBuilder()
-                                        .setCustomerId((int) ONE_REPORT.customerId())
-                                        .addProjects(
-                                                ProjectConfig.newBuilder()
-                                                        .setProjectId((int) ONE_REPORT.projectId())
-                                                        .addMetrics(metric)))
-                        .build();
+        Project project =
+                Project.create(
+                        (int) ONE_REPORT.customerId(),
+                        (int) ONE_REPORT.projectId(),
+                        List.of(metric));
         CobaltLogger logger =
                 new CobaltLoggerImpl(
-                        registry,
+                        project,
                         ReleaseStage.DOGFOOD,
                         mDataService,
                         mSystemData,
@@ -491,19 +478,14 @@ public class CobaltLoggerImplTest {
                                         .setMaxReleaseStage(ReleaseStage.FISHFOOD))
                         .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
                         .build();
-        CobaltRegistry registry =
-                CobaltRegistry.newBuilder()
-                        .addCustomers(
-                                CustomerConfig.newBuilder()
-                                        .setCustomerId((int) ONE_REPORT.customerId())
-                                        .addProjects(
-                                                ProjectConfig.newBuilder()
-                                                        .setProjectId((int) ONE_REPORT.projectId())
-                                                        .addMetrics(metric)))
-                        .build();
+        Project project =
+                Project.create(
+                        (int) ONE_REPORT.customerId(),
+                        (int) ONE_REPORT.projectId(),
+                        List.of(metric));
         CobaltLogger logger =
                 new CobaltLoggerImpl(
-                        registry,
+                        project,
                         ReleaseStage.DOGFOOD,
                         mDataService,
                         mSystemData,
@@ -520,5 +502,20 @@ public class CobaltLoggerImplTest {
 
         // Check that no report data was added to the DB.
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+    }
+
+    @Test
+    public void noOpLogString_doesNothing() throws Exception {
+        // Log some data with the expectation nothing will be logged.
+        mLogger.noOpLogString(
+                        ONE_REPORT.metricId(),
+                        /* value= */ "Test",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+
+        // Check that no data was added to the DB.
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+        assertThat(mTestOnlyDao.getInitialEnabledTime().isPresent()).isFalse();
+        assertThat(mTestOnlyDao.getStartDisabledTime().isPresent()).isFalse();
     }
 }

@@ -19,8 +19,8 @@ package com.android.adservices.service.measurement.aggregation;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
@@ -53,7 +53,8 @@ public final class AggregateReportFixture {
                 .setDedupKey(ValidAggregateReportParams.DEDUP_KEY)
                 .setRegistrationOrigin(ValidAggregateReportParams.REGISTRATION_ORIGIN)
                 .setAggregationCoordinatorOrigin(
-                        ValidAggregateReportParams.AGGREGATION_COORDINATOR_ORIGIN);
+                        ValidAggregateReportParams.AGGREGATION_COORDINATOR_ORIGIN)
+                .setIsFakeReport(false);
     }
 
     public static AggregateReport getValidAggregateReport() {

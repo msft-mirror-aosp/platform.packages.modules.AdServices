@@ -139,6 +139,7 @@ public final class MeasurementTables {
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String MAX_EVENT_LEVEL_REPORTS = "max_event_level_reports";
         String SHARED_DEBUG_KEY = "shared_debug_key";
+        String TRIGGER_DATA_MATCHING = "trigger_data_matching";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -196,6 +197,7 @@ public final class MeasurementTables {
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+        String TRIGGER_DEBUG_KEYS = "trigger_debug_keys";
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
         String REGISTRATION_ORIGIN = "registration_origin";
@@ -217,6 +219,7 @@ public final class MeasurementTables {
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
         String REGISTRATION_ORIGIN = "registration_origin";
+        String SCOPE = "scope";
     }
 
     /** Contract for Unencrypted aggregate payload. */
@@ -239,6 +242,7 @@ public final class MeasurementTables {
         String DEDUP_KEY = "dedup_key";
         String REGISTRATION_ORIGIN = "registration_origin";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
+        String IS_FAKE_REPORT = "is_fake_report";
     }
 
     /** Contract for aggregate encryption key. */
@@ -260,6 +264,8 @@ public final class MeasurementTables {
         String ENROLLMENT_ID = "enrollment_id";
         String REGISTRATION_ORIGIN = "registration_origin";
         String REFERENCE_ID = "reference_id";
+        String INSERTION_TIME = "insertion_time";
+        String REGISTRANT = "registrant";
     }
 
     /** Contract for xna ignored sources. */
@@ -510,6 +516,8 @@ public final class MeasurementTables {
                     + SourceContract.SHARED_DEBUG_KEY
                     + " INTEGER, "
                     + SourceContract.SHARED_FILTER_DATA_KEYS
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_DATA_MATCHING
                     + " TEXT "
                     + ")";
 
@@ -727,6 +735,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + EventReportContract.TRIGGER_SUMMARY_BUCKET
                     + " TEXT, "
+                    + EventReportContract.TRIGGER_DEBUG_KEYS
+                    + " TEXT, "
                     + "FOREIGN KEY ("
                     + EventReportContract.SOURCE_ID
                     + ") REFERENCES "
@@ -809,6 +819,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AttributionContract.REGISTRATION_ORIGIN
                     + " TEXT, "
+                    + AttributionContract.SCOPE
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AttributionContract.SOURCE_ID
                     + ") REFERENCES "
@@ -911,6 +923,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
                     + " TEXT, "
+                    + AggregateReport.IS_FAKE_REPORT
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "
@@ -986,6 +1000,10 @@ public final class MeasurementTables {
                     + DebugReportContract.REGISTRATION_ORIGIN
                     + " TEXT, "
                     + DebugReportContract.REFERENCE_ID
+                    + " TEXT, "
+                    + DebugReportContract.INSERTION_TIME
+                    + " INTEGER, "
+                    + DebugReportContract.REGISTRANT
                     + " TEXT "
                     + ")";
 
@@ -1099,17 +1117,15 @@ public final class MeasurementTables {
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + AttributionContract.TABLE
-                + "_ss_so_ds_do_ei_tt"
+                + "_s_ss_ds_ei_tt"
                 + " ON "
                 + AttributionContract.TABLE
                 + "("
+                + AttributionContract.SCOPE
+                + ", "
                 + AttributionContract.SOURCE_SITE
                 + ", "
-                + AttributionContract.SOURCE_ORIGIN
-                + ", "
                 + AttributionContract.DESTINATION_SITE
-                + ", "
-                + AttributionContract.DESTINATION_ORIGIN
                 + ", "
                 + AttributionContract.ENROLLMENT_ID
                 + ", "

@@ -18,9 +18,9 @@ package com.android.adservices.service.measurement.registration;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
@@ -53,12 +53,15 @@ import android.view.MotionEvent.PointerProperties;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.TriggerSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -100,7 +103,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 /** Unit tests for {@link AsyncSourceFetcher} */
 @RunWith(Parameterized.class)
-public final class AsyncSourceFetcherTest {
+public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
+
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String DEFAULT_REGISTRATION =
@@ -179,18 +183,20 @@ public final class AsyncSourceFetcherTest {
         mAraParsingAlignmentV1Enabled = araParsingAlignmentV1Enabled;
     }
 
-    @Rule
-    public ExternalResource externalResource = new ExternalResource() {
-        protected void before() throws Throwable {
-            setup();
-        }
+    @Rule(order = 11)
+    public ExternalResource externalResource =
+            new ExternalResource() {
+                protected void before() throws Throwable {
+                    setup();
+                }
 
-        protected void after() {
-            try {
-                cleanup();
-            } catch (InterruptedException ignored) { }
-        }
-    };
+                protected void after() {
+                    try {
+                        cleanup();
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            };
 
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -232,6 +238,18 @@ public final class AsyncSourceFetcherTest {
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTION_FILTERS);
         when(mFlags.getMeasurementMaxValuesPerAttributionFilter())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER);
+        when(mFlags.getMeasurementMaxDistinctWebDestinationsInSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION);
+        when(mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+                .thenReturn(Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        when(mFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds())
+                .thenReturn(MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        when(mFlags.getMeasurementMaxPostInstallExclusivityWindow())
+                .thenReturn(Flags.MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
+        when(mFlags.getMeasurementMaxInstallAttributionWindow())
+                .thenReturn(Flags.MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW);
+        when(mFlags.getMeasurementMinInstallAttributionWindow())
+                .thenReturn(Flags.MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW);
     }
 
     public void cleanup() throws InterruptedException {
@@ -504,9 +522,11 @@ public final class AsyncSourceFetcherTest {
     public void fetchSource_tooManyWebDestinationInList_fails() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        int maxDistinctDestinations =
+                MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
         StringBuilder destinationsBuilder = new StringBuilder("[");
         destinationsBuilder.append(
-                IntStream.range(0, MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION + 1)
+                IntStream.range(0, maxDistinctDestinations + 1)
                         .mapToObj(i -> "\"" + WebUtil.validUri(
                                 "https://web-destination" + i + ".test").toString() + "\"")
                         .collect(Collectors.joining(",")));
@@ -846,7 +866,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -958,7 +978,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -1777,7 +1797,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -1820,7 +1840,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -1862,7 +1882,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -1905,7 +1925,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -1947,7 +1967,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -1989,7 +2009,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2030,7 +2050,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2072,7 +2092,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2114,7 +2134,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2156,7 +2176,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2198,7 +2218,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2239,7 +2259,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2280,7 +2300,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2321,7 +2341,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2362,7 +2382,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -2402,7 +2422,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -3368,7 +3388,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -3516,8 +3536,10 @@ public final class AsyncSourceFetcherTest {
     @Test
     public void fetchWebSource_tooManyWebDestinationInList_fails() throws Exception {
         StringBuilder destinationsBuilder = new StringBuilder("[");
+        int maxDistinctDestinations =
+                MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
         destinationsBuilder.append(
-                IntStream.range(0, MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION + 1)
+                IntStream.range(0, maxDistinctDestinations + 1)
                         .mapToObj(i -> "\"" + WebUtil.validUri(
                                 "https://web-destination" + i + ".test").toString() + "\"")
                         .collect(Collectors.joining(",")));
@@ -3633,7 +3655,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -4071,8 +4093,9 @@ public final class AsyncSourceFetcherTest {
         assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
         assertEquals(EVENT_ID_1, result.getEventId());
         assertEquals(
-                result.getEventTime() + TimeUnit.SECONDS.toMillis(
-                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -4121,8 +4144,9 @@ public final class AsyncSourceFetcherTest {
         assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
         assertEquals(EVENT_ID_1, result.getEventId());
         assertEquals(
-                result.getEventTime() + TimeUnit.SECONDS.toMillis(
-                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         assertNull(result.getFilterDataString());
@@ -4385,7 +4409,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -4442,7 +4466,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -4745,8 +4769,9 @@ public final class AsyncSourceFetcherTest {
         assertNull(result.getFilterDataString());
         assertEquals(EVENT_ID_1, result.getEventId());
         assertEquals(
-                result.getEventTime() + TimeUnit.SECONDS.toMillis(
-                        MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
         assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         assertNull(result.getAggregateSource());
@@ -5127,7 +5152,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -5184,7 +5209,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -5240,7 +5265,7 @@ public final class AsyncSourceFetcherTest {
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         assertEquals(expiry, result.getExpiryTime());
         assertNull(result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
@@ -5519,11 +5544,294 @@ public final class AsyncSourceFetcherTest {
     }
 
     @Test
+    public void fetchSource_triggerDataMatching_success() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        doReturn(true).when(mFlags).getMeasurementEnableTriggerDataMatching();
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "\"destination\": \"android-app://com.myapps\","
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\","
+                                                + "\"install_attribution_window\": \"272800\","
+                                                + "\"trigger_data_matching\": \"exact\","
+                                                + "\"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(Source.TriggerDataMatching.EXACT, result.getTriggerDataMatching());
+    }
+
+    @Test
+    public void fetchSource_triggerDataMatchingInvalid_noSourceGenerated() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        doReturn(true).when(mFlags).getMeasurementEnableTriggerDataMatching();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "\"destination\": \"android-app://com.myapps\","
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\","
+                                                + "\"install_attribution_window\": \"272800\","
+                                                + "\"trigger_data_matching\": \"INVALID\","
+                                                + "\"post_install_exclusivity_window\": \"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isEmpty());
+    }
+
+    @Test
     public void fetchSource_flexibleEventReportApi_valid() throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(20))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
+        assertNotNull(result.getTriggerSpecs());
+        assertEquals(3, result.getTriggerSpecs().getMaxReports());
+        assertEquals(
+                1L,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getTriggerData()
+                        .get(0)
+                        .getValue()
+                        .longValue());
+        assertEquals(
+                3, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
+        assertEquals(
+                3,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getEventReportWindowsEnd()
+                        .size());
+    }
+
+    @Test
+    public void fetchSource_flexibleEventReportApi_setsDefaults() throws Exception {
+        String triggerSpecsString =
+                "[{"
+                        + "\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                                + "\"start_time\": 0,"
+                                + "\"end_times\": ["
+                                        + TimeUnit.DAYS.toSeconds(2) + ","
+                                        + TimeUnit.DAYS.toSeconds(7) + ","
+                                        + TimeUnit.DAYS.toSeconds(20) + "]}"
+                        + "}],";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
+        TriggerSpecs triggerSpecs = result.getTriggerSpecs();
+        assertEquals(3, triggerSpecs.getMaxReports());
+        UnsignedLong triggerData = new UnsignedLong(2L);
+        // Default operator
+        assertEquals(
+                TriggerSpec.SummaryOperatorType.COUNT,
+                triggerSpecs.getSummaryOperatorType(triggerData));
+        // Default summary buckets
+        List<Long> expectedSummaryBuckets = List.of(1L, 2L, 3L);
+        List<Long> actualSummaryBuckets = triggerSpecs.getSummaryBucketsForTriggerData(triggerData);
+        assertEquals(expectedSummaryBuckets, actualSummaryBuckets);
+        assertEquals(triggerSpecs.getMaxReports(), actualSummaryBuckets.size());
+        assertEquals(
+                1L,
+                triggerSpecs
+                        .getTriggerSpecs()[0]
+                        .getTriggerData()
+                        .get(0)
+                        .getValue()
+                        .longValue());
+        assertEquals(3, triggerSpecs.getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, triggerSpecs.getTriggerSpecs().length);
+        assertEquals(
+                3,
+                triggerSpecs
+                        .getTriggerSpecs()[0]
+                        .getEventReportWindowsEnd()
+                        .size());
+    }
+
+    @Test
+    public void fetchSource_flexibleEventReportApi_windowsOutOfBounds_clampsFirstAndLast()
+            throws Exception {
+        long expiry = 2592000L;
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.MINUTES.toSeconds(38),
+                                TimeUnit.DAYS.toSeconds(7),
+                                expiry + TimeUnit.DAYS.toSeconds(10))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\":\"" + String.valueOf(expiry) + "\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
+        assertNotNull(result.getTriggerSpecs());
+        assertEquals(
+                List.of(
+                        Long.valueOf(TimeUnit.SECONDS.toMillis(TimeUnit.HOURS.toSeconds(1))),
+                        Long.valueOf(TimeUnit.SECONDS.toMillis(TimeUnit.DAYS.toSeconds(7))),
+                        Long.valueOf(TimeUnit.SECONDS.toMillis(expiry))),
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getEventReportWindowsEnd());
+    }
+
+    @Test
+    public void fetchSource_flexEventReportApiMoreSummaryBucketsThanReports_noSourceGenerated()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -5544,20 +5852,19 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -5565,93 +5872,9 @@ public final class AsyncSourceFetcherTest {
                 mFetcher.fetchSource(
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
         // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertTrue(fetch.isPresent());
-        Source result = fetch.get();
-        assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(3, result.getFlexEventReportSpec().getMaxReports());
         assertEquals(
-                1L,
-                result.getFlexEventReportSpec()
-                        .getTriggerSpecs()[0]
-                        .getTriggerData()
-                        .get(0)
-                        .getValue()
-                        .longValue());
-        assertEquals(
-                3, result.getFlexEventReportSpec().getTriggerSpecs()[0].getTriggerData().size());
-        assertEquals(1, result.getFlexEventReportSpec().getTriggerSpecs().length);
-        assertEquals(
-                3,
-                result.getFlexEventReportSpec()
-                        .getTriggerSpecs()[0]
-                        .getEventReportWindowsEnd()
-                        .size());
-    }
-
-    @Test
-    public void fetchSource_flexibleEventReportApi_windowsOutOfBounds_clampsFirstAndLast()
-            throws Exception {
-        long expiry = 2592000L;
-        String triggerSpecsString =
-                "[{\"trigger_data\": [1, 2, 3],"
-                        + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
-                        + String.format(
-                                "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.MINUTES.toSeconds(38),
-                                TimeUnit.DAYS.toSeconds(7),
-                                expiry + TimeUnit.DAYS.toSeconds(10))
-                        + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
-        RegistrationRequest request =
-                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
-        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
-        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
-        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\n"
-                                                + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\":\"" + String.valueOf(expiry) + "\","
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
-                                                + "  \"trigger_specs\": "
-                                                + triggerSpecsString
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"3\",\n"
-                                                + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
-        // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertTrue(fetch.isPresent());
-        Source result = fetch.get();
-        assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(
-                List.of(
-                        Long.valueOf(TimeUnit.SECONDS.toMillis(TimeUnit.HOURS.toSeconds(1))),
-                        Long.valueOf(TimeUnit.SECONDS.toMillis(TimeUnit.DAYS.toSeconds(7))),
-                        Long.valueOf(TimeUnit.SECONDS.toMillis(expiry))),
-                result.getFlexEventReportSpec()
-                        .getTriggerSpecs()[0]
-                        .getEventReportWindowsEnd());
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertTrue(fetch.isEmpty());
     }
 
     @Test
@@ -5660,12 +5883,12 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s]}, ",
                                 TimeUnit.MINUTES.toSeconds(38))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -5679,20 +5902,19 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
                                                 + "  \"expiry\":\"2592000\","
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -5703,12 +5925,12 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
         assertEquals(
                 List.of(
                         Long.valueOf(TimeUnit.SECONDS.toMillis(TimeUnit.HOURS.toSeconds(1)))),
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd());
     }
@@ -5718,14 +5940,14 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
@@ -5740,9 +5962,9 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
+                                                + ".myapps\","
                                                 + "\"web_destination\": ["
                                                 + "\""
                                                 + WEB_DESTINATION
@@ -5750,17 +5972,16 @@ public final class AsyncSourceFetcherTest {
                                                 + "\""
                                                 + WEB_DESTINATION_2
                                                 + "\"],"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -5773,34 +5994,99 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(3, result.getFlexEventReportSpec().getMaxReports());
+        assertEquals(3, result.getTriggerSpecs().getMaxReports());
         assertEquals(
                 1L,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getTriggerData()
                         .get(0)
                         .getValue()
                         .longValue());
         assertEquals(
-                3, result.getFlexEventReportSpec().getTriggerSpecs()[0].getTriggerData().size());
-        assertEquals(1, result.getFlexEventReportSpec().getTriggerSpecs().length);
+                3, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
         assertEquals(
                 3,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd()
                         .size());
     }
 
     @Test
-    public void fetchSource_flexibleEventReportApiNonNumber_noSourceGenerated() throws Exception {
+    public void fetchSource_flexibleEventReportApiArithmeticException_noSourceGenerated()
+            throws Exception {
         String triggerSpecsString =
-                "[{\"trigger_data\": [1, 2, \"a\"],"
+                "[{\"trigger_data\": ["
+                        + IntStream.range(1, 33)
+                                .boxed()
+                                .map(String::valueOf)
+                                .collect(Collectors.joining(","))
+                        + "],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                                + "\"start_time\": 0,"
+                                + "\"end_times\": ["
+                                        + IntStream.range(1, 6)
+                                                .mapToLong(TimeUnit.DAYS::toSeconds)
+                                                .boxed()
+                                                .map(String::valueOf)
+                                                .collect(Collectors.joining(","))
+                                + "]"
+                        + "},"
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": ["
+                                + IntStream.range(1, 21)
+                                        .boxed()
+                                        .map(String::valueOf)
+                                        .collect(Collectors.joining(","))
+                        + "]}]";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString + ","
+                                                + "  \"max_event_level_reports\": 20,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertTrue(fetch.isEmpty());
+    }
+
+    @Test
+    public void fetchSource_flexibleEventReportApiTriggerDataTooHigh_noSourceGenerated()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 4294967296],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -5813,25 +6099,382 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"432000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isEmpty());
+    }
+
+    @Test
+    public void fetchSource_flexibleEventReportApiSummaryOperatorInvalid_noSourceGenerated()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"invalid\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isEmpty());
+    }
+
+    @Test
+    public void fetchSource_flexibleEventReportApiModulusTriggerDataMatchingNonContiguous_fail()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [0, 1, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(20))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        doReturn(true).when(mFlags).getMeasurementEnableTriggerDataMatching();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void fetchSource_flexibleEventReportApiExactTriggerDataMatchingNonContiguous_pass()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [0, 1, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(20))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        doReturn(true).when(mFlags).getMeasurementEnableTriggerDataMatching();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"trigger_data_matching\": \"exact\","
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
+        assertNotNull(result.getTriggerSpecs());
+        assertEquals(3, result.getTriggerSpecs().getMaxReports());
+        assertEquals(
+                0L,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getTriggerData()
+                        .get(0)
+                        .getValue()
+                        .longValue());
+        assertEquals(
+                3, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
+        assertEquals(
+                3,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getEventReportWindowsEnd()
+                        .size());
+    }
+
+    @Test
+    public void fetchSource_flexEventReportApiModulusTriggerDataMatchingDoesNotStartAtZero_fail()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(20))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        doReturn(true).when(mFlags).getMeasurementEnableTriggerDataMatching();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void fetchSource_flexEventReportApiExactTriggerDataMatchingDoesNotStartAtZero_pass()
+            throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(20))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}], \n";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        doReturn(true).when(mFlags).getMeasurementEnableTriggerDataMatching();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"trigger_data_matching\": \"exact\","
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
+        assertNotNull(result.getTriggerSpecs());
+        assertEquals(3, result.getTriggerSpecs().getMaxReports());
+        assertEquals(
+                1L,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getTriggerData()
+                        .get(0)
+                        .getValue()
+                        .longValue());
+        assertEquals(
+                3, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
+        assertEquals(
+                3,
+                result.getTriggerSpecs()
+                        .getTriggerSpecs()[0]
+                        .getEventReportWindowsEnd()
+                        .size());
+    }
+
+    @Test
+    public void fetchSource_flexibleEventReportApiNonNumber_noSourceGenerated() throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, \"a\"],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0,"
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + "  \"max_event_level_reports\": 3,"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -5848,7 +6491,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, \"a\"],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -5863,25 +6506,27 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"432000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -5900,7 +6545,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -5913,25 +6558,27 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"432000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
@@ -5949,7 +6596,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -5963,25 +6610,27 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"432000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
@@ -6001,7 +6650,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -6011,7 +6660,7 @@ public final class AsyncSourceFetcherTest {
                         + "\"summary_buckets\": [1,2,3,4]}, "
                         + "{\"trigger_data\": [3,4,5],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -6025,25 +6674,27 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"432000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
@@ -6061,7 +6712,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -6071,7 +6722,7 @@ public final class AsyncSourceFetcherTest {
                         + "\"summary_buckets\": [1,2,3,4]}, "
                         + "{\"trigger_data\": [3,4,5],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -6087,25 +6738,27 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"432000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
 
@@ -6127,7 +6780,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -6150,9 +6803,9 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
+                                                + ".myapps\","
                                                 + "\"web_destination\": ["
                                                 + "\""
                                                 + WEB_DESTINATION
@@ -6160,17 +6813,16 @@ public final class AsyncSourceFetcherTest {
                                                 + "\""
                                                 + WEB_DESTINATION_2
                                                 + "\"],"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\",\n"
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6181,23 +6833,23 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(4, result.getFlexEventReportSpec().getMaxReports());
+        assertEquals(4, result.getTriggerSpecs().getMaxReports());
         assertEquals(
                 1L,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getTriggerData()
                         .get(0)
                         .getValue()
                         .longValue());
         assertEquals(
-                8, result.getFlexEventReportSpec().getTriggerSpecs()[0].getTriggerData().size());
-        assertEquals(1, result.getFlexEventReportSpec().getTriggerSpecs().length);
+                8, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
         assertEquals(
                 4,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd()
                         .size());
@@ -6211,7 +6863,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -6234,9 +6886,9 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
+                                                + ".myapps\","
                                                 + "\"web_destination\": ["
                                                 + "\""
                                                 + WEB_DESTINATION
@@ -6244,16 +6896,15 @@ public final class AsyncSourceFetcherTest {
                                                 + "\""
                                                 + WEB_DESTINATION_2
                                                 + "\"],"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\",\n"
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
+                                                + "\"987654\""
                                                 + "}\n")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -6267,23 +6918,23 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNotNull(result.getTriggerSpecs());
-        assertNotNull(result.getFlexEventReportSpec());
-        assertEquals(4, result.getFlexEventReportSpec().getMaxReports());
+        assertEquals(4, result.getTriggerSpecs().getMaxReports());
         assertEquals(
                 1L,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getTriggerData()
                         .get(0)
                         .getValue()
                         .longValue());
         assertEquals(
-                8, result.getFlexEventReportSpec().getTriggerSpecs()[0].getTriggerData().size());
-        assertEquals(1, result.getFlexEventReportSpec().getTriggerSpecs().length);
+                8, result.getTriggerSpecs().getTriggerSpecs()[0].getTriggerData().size());
+        assertEquals(1, result.getTriggerSpecs().getTriggerSpecs().length);
         assertEquals(
                 4,
-                result.getFlexEventReportSpec()
+                result.getTriggerSpecs()
                         .getTriggerSpecs()[0]
                         .getEventReportWindowsEnd()
                         .size());
@@ -6294,7 +6945,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -6307,25 +6958,27 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(false).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"432000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6336,8 +6989,8 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNull(result.getTriggerSpecs());
-        assertNull(result.getFlexEventReportSpec());
     }
 
     @Test
@@ -6345,7 +6998,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2),
@@ -6359,25 +7012,27 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(false).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"432000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"432000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
-                                                + "  \"max_bucket_increments\": "
-                                                + "\"3\",\n"
+                                                + "  \"max_event_level_reports\": 3,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -6391,8 +7046,8 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
+        assertNull(result.getTriggerSpecsString());
         assertNull(result.getTriggerSpecs());
-        assertNull(result.getFlexEventReportSpec());
     }
 
     @Test
@@ -6400,7 +7055,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -6410,7 +7065,7 @@ public final class AsyncSourceFetcherTest {
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -6425,14 +7080,17 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
+                                                + ".myapps\","
                                                 + "\"web_destination\": ["
                                                 + "\""
                                                 + WEB_DESTINATION
@@ -6440,18 +7098,17 @@ public final class AsyncSourceFetcherTest {
                                                 + "\""
                                                 + WEB_DESTINATION_2
                                                 + "\"],"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\",\n"
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6471,7 +7128,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -6481,7 +7138,7 @@ public final class AsyncSourceFetcherTest {
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4, 5, 6, 7, 8, 9],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -6496,14 +7153,17 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(8).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
+                                                + ".myapps\","
                                                 + "\"web_destination\": ["
                                                 + "\""
                                                 + WEB_DESTINATION
@@ -6511,18 +7171,17 @@ public final class AsyncSourceFetcherTest {
                                                 + "\""
                                                 + WEB_DESTINATION_2
                                                 + "\"],"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\",\n"
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6541,7 +7200,7 @@ public final class AsyncSourceFetcherTest {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -6551,7 +7210,7 @@ public final class AsyncSourceFetcherTest {
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0,"
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
                                 TimeUnit.DAYS.toSeconds(2),
@@ -6566,15 +7225,17 @@ public final class AsyncSourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(32).when(mFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        doReturn(5).when(mFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
+                                                + ".myapps\","
                                                 + "\"web_destination\": ["
                                                 + "\""
                                                 + WEB_DESTINATION
@@ -6582,18 +7243,17 @@ public final class AsyncSourceFetcherTest {
                                                 + "\""
                                                 + WEB_DESTINATION_2
                                                 + "\"],"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"21\","
+                                                + "  \"max_event_level_reports\": 21,"
                                                 + "  \"post_install_exclusivity_window\": "
-                                                + "\"987654\"\n"
-                                                + "}\n")));
+                                                + "\"987654\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6621,15 +7281,14 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"21\""
-                                                + "}\n")));
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": 21"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6656,15 +7315,49 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"-3\""
-                                                + "}\n")));
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": -3"
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void fetchSource_flexLiteApi_eventLevelReportsNotNumeric_rejectsSource()
+            throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(20).when(mFlags).getMeasurementFlexApiMaxEventReports();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": \"3\""
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6697,17 +7390,16 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\","
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "\"event_report_windows\":"
                                                 + eventReportWindows
-                                                + "}\n")));
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6739,17 +7431,16 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
                                                 + "  \"expiry\":\"" + String.valueOf(expiry) + "\","
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "\"event_report_windows\":"
                                                 + eventReportWindows
-                                                + "}\n")));
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6792,17 +7483,16 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
                                                 + "  \"expiry\":\"2592000\","
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "\"event_report_windows\":"
                                                 + eventReportWindows
-                                                + "}\n")));
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6840,18 +7530,17 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\","
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "\"event_report_window\": \"2592000\","
                                                 + "\"event_report_windows\":"
                                                 + eventReportWindows
-                                                + "}\n")));
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6879,17 +7568,16 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\","
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "\"event_report_windows\":"
                                                 + eventReportWindows
-                                                + "}\n")));
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6917,17 +7605,16 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"864000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\","
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"864000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "\"event_report_windows\":"
                                                 + eventReportWindows
-                                                + "}\n")));
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6955,17 +7642,16 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"864000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"4\","
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"864000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"max_event_level_reports\": 4,"
                                                 + "\"event_report_windows\":"
                                                 + eventReportWindows
-                                                + "}\n")));
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -6995,18 +7681,17 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"5\""
-                                                + "}\n")));
+                                                + "  \"max_event_level_reports\": 5"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -7035,18 +7720,17 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"5\""
-                                                + "}\n")));
+                                                + "  \"max_event_level_reports\": 5"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -7075,18 +7759,17 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"5\""
-                                                + "}\n")));
+                                                + "  \"max_event_level_reports\": 5"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -7115,18 +7798,17 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"5\""
-                                                + "}\n")));
+                                                + "  \"max_event_level_reports\": 5"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -7162,18 +7844,17 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"5\""
-                                                + "}\n")));
+                                                + "  \"max_event_level_reports\": 5"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -7212,18 +7893,17 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"5\""
-                                                + "}\n")));
+                                                + "  \"max_event_level_reports\": 5"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -7258,18 +7938,62 @@ public final class AsyncSourceFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Source",
                                 List.of(
-                                        "{\n"
+                                        "{"
                                                 + "  \"destination\": \"android-app://com"
-                                                + ".myapps\",\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"2592000\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
                                                 + "  \"trigger_specs\": "
                                                 + triggerSpecsString
                                                 + ","
-                                                + "  \"max_event_level_reports\": "
-                                                + "\"5\""
-                                                + "}\n")));
+                                                + "  \"max_event_level_reports\": 5"
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void fetchSource_startTimeNotNumeric_singleTriggerData_rejectsSource() throws Exception {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1], "
+                        + "\"event_report_windows\": {"
+                        + "\"start_time\": \"1\","
+                        + "\"end_times\": ["
+                        + TimeUnit.DAYS.toSeconds(10)
+                        + "]}"
+                        + "}]";
+
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementFlexibleEventReportingApiEnabled();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\","
+                                                + "  \"priority\": \"123\","
+                                                + "  \"expiry\": \"2592000\","
+                                                + "  \"source_event_id\": \"987654321\","
+                                                + "  \"trigger_specs\": "
+                                                + triggerSpecsString
+                                                + ","
+                                                + "  \"max_event_level_reports\": 5"
+                                                + "}")));
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -7412,6 +8136,38 @@ public final class AsyncSourceFetcherTest {
         assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_dropSourceIfInstalled_success() throws Exception {
+        when(mFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getOutputStream()).thenReturn(outputStream);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"drop_source_if_installed\":true}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        verify(mFetcher, times(1)).openUrl(any());
+        assertTrue(fetch.get().shouldDropSourceIfInstalled());
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {

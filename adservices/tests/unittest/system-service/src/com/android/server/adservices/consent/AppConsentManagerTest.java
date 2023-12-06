@@ -16,7 +16,12 @@
 
 package com.android.server.adservices.consent;
 
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.server.adservices.consent.AppConsentManager.DUMP_PREFIX;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
+
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,7 +36,7 @@ import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 
 import org.junit.After;
 import org.junit.Before;
@@ -435,5 +440,19 @@ public class AppConsentManagerTest {
                                 null, AppConsentManagerFixture.APP10_UID));
 
         verify(mDatastoreSpy).initialize();
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        String prefix = "_";
+
+        String dump = dump(pw -> mAppConsentManager.dump(pw, prefix));
+
+        assertWithMessage("content of dump()").that(dump).startsWith(prefix + "AppConsentManager:");
+        assertDumpHasPrefix(dump, prefix);
+
+        String datastoreDump =
+                dump(pw -> mDatastoreSpy.dump(pw, prefix + DUMP_PREFIX + DUMP_PREFIX));
+        assertWithMessage("content of dump() (datastore)").that(dump).contains(datastoreDump);
     }
 }

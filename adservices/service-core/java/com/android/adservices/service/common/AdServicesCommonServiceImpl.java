@@ -20,7 +20,10 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
+import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
+import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -39,16 +42,20 @@ import static com.android.adservices.service.ui.constants.DebugMessages.IS_AD_SE
 import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_SERVICES_ENABLED_API_CALLED_MESSAGE;
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
+import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.EnableAdServicesResponse;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IEnableAdServicesCallback;
+import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
+import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -58,6 +65,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adid.AdIdCacheManager;
+import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
@@ -81,13 +90,19 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     private final UxEngine mUxEngine;
     private final UxStatesManager mUxStatesManager;
     private final Flags mFlags;
+    private final AdIdWorker mAdIdWorker;
 
     public AdServicesCommonServiceImpl(
-            Context context, Flags flags, UxEngine uxEngine, UxStatesManager uxStatesManager) {
+            Context context,
+            Flags flags,
+            UxEngine uxEngine,
+            UxStatesManager uxStatesManager,
+            AdIdWorker adIdWorker) {
         mContext = context;
         mFlags = flags;
         mUxEngine = uxEngine;
         mUxStatesManager = uxStatesManager;
+        mAdIdWorker = adIdWorker;
     }
 
     @Override
@@ -304,6 +319,43 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         .build());
                     } catch (Exception e) {
                         LogUtil.e("enableAdServices() failed to complete: " + e.getMessage());
+                    }
+                });
+    }
+
+    /**
+     * Updates {@link AdId} cache in {@link AdIdCacheManager} when the device changes {@link AdId}.
+     * This API is used by AdIdProvider to update the {@link AdId} Cache.
+     */
+    @Override
+    @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
+    public void updateAdIdCache(
+            @NonNull UpdateAdIdRequest updateAdIdRequest, @NonNull IUpdateAdIdCallback callback) {
+        boolean authorizedCaller = PermissionHelper.hasUpdateAdIdCachePermission(mContext);
+        int callerUid = Binder.getCallingUid();
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!mFlags.getAdIdCacheEnabled()) {
+                            LogUtil.w("notifyAdIdChange() is disabled.");
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            return;
+                        }
+
+                        if (!authorizedCaller) {
+                            LogUtil.w(
+                                    "Caller %d is not authorized to update AdId Cache!", callerUid);
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            return;
+                        }
+
+                        mAdIdWorker.updateAdId(updateAdIdRequest);
+
+                        // The message in on debugging purpose.
+                        callback.onResult("Success");
+                    } catch (Exception e) {
+                        LogUtil.e(e, "updateAdIdCache() failed to complete.");
                     }
                 });
     }

@@ -35,7 +35,6 @@ import java.util.Objects;
 /** POJO for FilterMap. */
 public class FilterMap {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     private Map<String, List<String>> mAttributionFilterMap;
     private Map<String, FilterValue> mAttributionFilterMapWithLongValue;
 
@@ -127,7 +126,7 @@ public class FilterMap {
 
             return result;
         } catch (JSONException e) {
-            sLogger.d(e, "Failed to serialize filtermap.");
+            LoggerFactory.getMeasurementLogger().d(e, "Failed to serialize filtermap.");
             return null;
         }
     }
@@ -153,7 +152,7 @@ public class FilterMap {
             }
             return result;
         } catch (JSONException e) {
-            sLogger.d(e, "Failed to serialize filtermap.");
+            LoggerFactory.getMeasurementLogger().d(e, "Failed to serialize filtermap.");
             return null;
         }
     }

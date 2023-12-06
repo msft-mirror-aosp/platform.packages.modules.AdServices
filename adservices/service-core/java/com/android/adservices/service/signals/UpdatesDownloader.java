@@ -23,6 +23,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
@@ -38,6 +39,7 @@ public class UpdatesDownloader {
 
     public static final String PACKAGE_NAME_HEADER = "X-PROTECTED-SIGNALS-PACKAGE";
     public static final String CONVERSION_ERROR_MSG = "Error converting response body to JSON";
+
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Executor mLightweightExecutor;
     @NonNull private final AdServicesHttpsClient mHttpClient;
@@ -55,10 +57,12 @@ public class UpdatesDownloader {
      *
      * @param validatedUri Validated Uri to fetch JSON from.
      * @param packageName The package name of the calling app.
+     * @param devContext Development context for testing the network call
      * @return A future containing the fetched JSON.
      */
     @NonNull
-    public FluentFuture<JSONObject> getUpdateJson(Uri validatedUri, String packageName) {
+    public FluentFuture<JSONObject> getUpdateJson(
+            Uri validatedUri, String packageName, DevContext devContext) {
         sLogger.v("Fetching signals from " + validatedUri);
 
         ImmutableMap<String, String> requestProperties =
@@ -67,6 +71,7 @@ public class UpdatesDownloader {
                 AdServicesHttpClientRequest.builder()
                         .setRequestProperties(requestProperties)
                         .setUri(validatedUri)
+                        .setDevContext(devContext)
                         .build();
         FluentFuture<AdServicesHttpClientResponse> response =
                 FluentFuture.from(mHttpClient.fetchPayload(request));

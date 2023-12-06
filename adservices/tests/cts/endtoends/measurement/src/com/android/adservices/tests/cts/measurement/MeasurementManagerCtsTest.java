@@ -48,6 +48,7 @@ import androidx.test.runner.AndroidJUnit4;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.WebUtil;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -81,14 +82,15 @@ public class MeasurementManagerCtsTest {
     /* Note: The source and trigger registration used here must match one of those in
        {@link PreEnrolledAdTechForTest}.
     */
-    private static final Uri SOURCE_REGISTRATION_URI = Uri.parse("https://test.com/source");
-    private static final Uri TRIGGER_REGISTRATION_URI = Uri.parse("https://test.com/trigger");
+    private static final Uri SOURCE_REGISTRATION_URI = WebUtil.validUri("https://test.test/source");
+    private static final Uri TRIGGER_REGISTRATION_URI =
+            WebUtil.validUri("https://test.test/trigger");
     private static final Uri LOCALHOST = Uri.parse("https://localhost");
-    private static final Uri DESTINATION = Uri.parse("http://trigger-origin.com");
+    private static final Uri DESTINATION = WebUtil.validUri("http://trigger-origin.test");
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os.destination");
-    private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
-    private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
-    private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("http://web-destination.test");
+    private static final Uri ORIGIN_URI = WebUtil.validUri("https://sample.example1.test");
+    private static final Uri DOMAIN_URI = WebUtil.validUri("https://example2.test");
     private static final InputEvent INPUT_EVENT =
             new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);
     private static final float DEFAULT_REQUEST_PER_SECOND = 25f;
@@ -1020,7 +1022,12 @@ public class MeasurementManagerCtsTest {
     }
 
     private void enableGlobalKillSwitch(boolean enabled) {
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+        if (SdkLevel.isAtLeastT()) {
+            ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+        } else {
+            ShellUtils.runShellCommand(
+                    "device_config put adservices enable_back_compat " + !enabled);
+        }
     }
 
     private void enableMeasurementKillSwitch(boolean enabled) {

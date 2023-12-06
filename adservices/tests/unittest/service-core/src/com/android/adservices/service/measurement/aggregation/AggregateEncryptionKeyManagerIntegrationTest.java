@@ -18,16 +18,17 @@ package com.android.adservices.service.measurement.aggregation;
 
 import static org.mockito.Mockito.when;
 
-
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -42,6 +43,7 @@ import java.io.InputStream;
 import java.time.Clock;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -57,11 +59,15 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
     private static final String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_PATH = "test/path";
 
     @Mock Clock mClock;
-    @Spy AggregateEncryptionKeyFetcher mFetcher;
+
+    @Spy
+    AggregateEncryptionKeyFetcher mFetcher =
+            new AggregateEncryptionKeyFetcher(ApplicationProvider.getApplicationContext());
+
     @Mock HttpsURLConnection mUrlConnection;
     @Mock AdServicesErrorLogger mErrorLogger;
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open("aggregate_encryption_key_test.json");
         return AbstractDbIntegrationTest.getTestCasesFrom(
@@ -70,9 +76,12 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public AggregateEncryptionKeyManagerIntegrationTest(DbState input, DbState output, String name)
-            throws IOException {
-        super(input, output);
+    public AggregateEncryptionKeyManagerIntegrationTest(
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            String name) throws IOException {
+        super(input, output, flagsMap);
         MockitoAnnotations.initMocks(this);
         when(mClock.millis()).thenReturn(AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         AggregateEncryptionKeyTestUtil.prepareMockAggregateEncryptionKeyFetcher(
@@ -97,10 +106,12 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
         List<AggregateEncryptionKey> providedKeys =
                 aggregateEncryptionKeyManager.getAggregateEncryptionKeys(
                         Uri.parse(AGGREGATION_COORDINATOR_ORIGIN_1), NUM_KEYS_REQUESTED);
-        Assert.assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
-                + "unexpected results:" + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
+        Assert.assertTrue(
+                "aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
+                        + "unexpected results:"
+                        + AggregateEncryptionKeyTestUtil.prettify(providedKeys),
                 AggregateEncryptionKeyTestUtil.isSuperset(
-                        mOutput.getAggregateEncryptionKeyList(), providedKeys)
+                                mOutput.getAggregateEncryptionKeyList(), providedKeys)
                         && providedKeys.size() == NUM_KEYS_REQUESTED);
     }
 }

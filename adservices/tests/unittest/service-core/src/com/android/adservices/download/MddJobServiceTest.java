@@ -17,28 +17,33 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
+import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
+import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
+import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
+import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.android.libraries.mobiledatadownload.TaskScheduler.WIFI_CHARGING_PERIODIC_TASK;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -46,19 +51,23 @@ import static org.mockito.Mockito.when;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.PersistableBundle;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 
@@ -66,20 +75,21 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
-public class MddJobServiceTest {
-    private static final int BACKGROUND_TASK_TIMEOUT_MS = 5_000;
-    private static final int JOB_SCHEDULED_WAIT_TIME_MS = 1_000;
+@SpyStatic(MddJobService.class)
+@SpyStatic(MobileDataDownloadFactory.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(MddFlags.class)
+@SpyStatic(AdservicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
+    private static final int JOB_SCHEDULED_WAIT_TIME_MS = 1_000;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
     private static final int MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID =
@@ -90,53 +100,35 @@ public class MddJobServiceTest {
             MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId();
     private static final int MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID =
             MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
+    private static final long TASK_PERIOD = 21_600L;
+    public static final int INTERVAL_MS = 10_000;
+    public static final int FLEX_MS = 1_000;
 
     @Spy private MddJobService mSpyMddJobService;
-    private MockitoSession mStaticMockSession;
 
-    @Mock JobParameters mMockJobParameters;
+    @Mock private JobParameters mMockJobParameters;
 
-    @Mock MobileDataDownload mMockMdd;
-    @Mock MobileDataDownloadFactory mMockMddFactory;
-    @Mock Flags mMockFlags;
-    @Mock MddFlags mMockMddFlags;
-    @Mock StatsdAdServicesLogger mMockStatsdLogger;
+    @Mock private MobileDataDownload mMockMdd;
+    @Mock private Flags mMockFlags;
+    @Mock private MddFlags mMockMddFlags;
+    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
+
+    private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdservicesJobServiceLogger mLogger;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
-        // Start a mockitoSession to mock static method.
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(MddJobService.class)
-                        .spyStatic(MobileDataDownloadFactory.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MddFlags.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-
         // Mock JobScheduler invocation in EpochJobService
         assertThat(JOB_SCHEDULER).isNotNull();
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
 
-        ExtendedMockito.doReturn(JOB_SCHEDULER)
-                .when(mSpyMddJobService)
-                .getSystemService(JobScheduler.class);
+        extendedMockito.mockGetFlags(mMockFlags);
 
-        // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        mLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
-        Mockito.doNothing()
-                .when(mLogger)
-                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        ExtendedMockito.doReturn(mLogger)
-                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+        doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
+
+        mLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
 
         // MDD Task Tag.
         PersistableBundle bundle = new PersistableBundle();
@@ -147,343 +139,342 @@ public class MddJobServiceTest {
     @After
     public void teardown() {
         JOB_SCHEDULER.cancelAll();
-        mStaticMockSession.finishMocking();
     }
 
     @Test
-    public void testOnStartJob_killswitchIsOff_withoutLogging() throws InterruptedException {
+    public void testOnStartJob_killswitchIsOff_withoutLogging() throws Exception {
         // Logging killswitch is on.
-        doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
 
         testOnStartJob_killswitchIsOff();
 
         // Verify logging methods are not invoked.
-        verify(mLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mLogger);
     }
 
     @Test
-    public void testOnStartJob_killswitchIsOff_withLogging() throws InterruptedException {
+    public void testOnStartJob_killswitchIsOff_withLogging() throws Exception {
         // Logging killswitch is off.
-        doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mLogger);
 
         testOnStartJob_killswitchIsOff();
 
         // Verify logging methods are invoked.
-        verify(mLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyJobFinishedLogged(mLogger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
-    public void testOnStartJob_killswitchIsOn_withoutLogging() {
+    public void testOnStartJob_killswitchIsOn_withoutLogging() throws Exception {
         // Logging killswitch is on.
-        Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
 
         testOnStartJob_killswitchIsOn();
 
         // Verify logging methods are not invoked.
-        verify(mLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mLogger);
     }
 
     @Test
-    public void testOnStartJob_killSwitchOn_withLogging() {
+    public void testOnStartJob_killSwitchOn_withLogging() throws Exception {
         // Logging killswitch is off.
-        Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mLogger);
 
         testOnStartJob_killswitchIsOn();
 
         // Verify logging methods are invoked.
-        verify(mLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON),
-                        anyInt());
+        verifyBackgroundJobsSkipLogged(mLogger, callback);
     }
 
     @Test
-    public void testSchedule_killswitchOff() throws InterruptedException {
+    public void testSchedule_killswitchOff() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mockGetMddFlags();
         // Killswitch is off.
-        doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
 
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testSchedule_killswitchOn() throws InterruptedException {
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+    public void testSchedule_killswitchOn() throws Exception {
         // Killswitch is off.
-        doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+        mockMddBackgroundTaskKillSwitch(/* toBeReturned */ true);
 
-        mSpyMddJobService.scheduleIfNeeded(CONTEXT, false);
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
 
         verifyZeroInteractions(staticMockMarker(MobileDataDownloadFactory.class));
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ false,
+                /* checkPendingJob */ false);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testOnStopJob_withoutLogging() {
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+    public void testOnStopJob_withoutLogging() throws Exception {
         // Logging killswitch is on.
-        doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
 
         testOnStopJob();
 
         // Verify logging methods are not invoked.
-        verify(mLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mLogger);
     }
 
     @Test
-    public void testOnStopJob_withLogging() {
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+    public void testOnStopJob_withLogging() throws Exception {
         // Logging killswitch is off.
-        doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mLogger);
 
         testOnStopJob();
 
         // Verify logging methods are invoked.
-        verify(mLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyOnStopJobLogged(mLogger, callback);
     }
 
     @Test
-    public void testScheduleIfNeeded_Success() throws InterruptedException {
+    public void testScheduleIfNeeded_Success() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mockGetMddFlags();
 
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, false)).isTrue();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID)).isNotNull();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID))
-                .isNotNull();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeeded_ScheduledWithSameParameters() throws InterruptedException {
+    public void testScheduleIfNeeded_ScheduledWithSameParameters() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L)
-                .when(mMockMddFlags)
-                .maintenanceGcmTaskPeriod();
+        mockGetMddFlags();
+        when(mMockMddFlags.maintenanceGcmTaskPeriod()).thenReturn(TASK_PERIOD);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
 
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ false,
+                /* checkPendingJob */ false);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeeded_ScheduledWithDifferentParameters()
-            throws InterruptedException {
+    public void testScheduleIfNeeded_ScheduledWithDifferentParameters() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L)
-                .when(mMockMddFlags)
-                .maintenanceGcmTaskPeriod();
+        mockGetMddFlags();
+        when(mMockMddFlags.maintenanceGcmTaskPeriod()).thenReturn(TASK_PERIOD);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
 
-        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L + 1L)
-                .when(mMockMddFlags)
-                .maintenanceGcmTaskPeriod();
-        // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        when(mMockMddFlags.maintenanceGcmTaskPeriod()).thenReturn(TASK_PERIOD + 1L);
+        // The second invocation of scheduleIfNeeded() with different parameters should schedule a
+        // new job.
+        callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeeded_forceRun() throws InterruptedException {
+    public void testScheduleIfNeeded_forceRun() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mockGetMddFlags();
 
-        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L)
-                .when(mMockMddFlags)
-                .maintenanceGcmTaskPeriod();
+        when(mMockMddFlags.maintenanceGcmTaskPeriod()).thenReturn(TASK_PERIOD);
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID)).isNotNull();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID))
-                .isNotNull();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
 
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+        callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ false,
+                /* checkPendingJob */ false);
 
         // The third invocation of scheduleIfNeeded() is forced and re-schedules the job.
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ true)).isTrue();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        callBack = scheduleJobInBackground(/* forceSchedule */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+        assertJobScheduled(
+                callBack,
+                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask()
-            throws InterruptedException {
+    public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(/* MaintenanceGcmTaskPeriod default value */ 86400L)
-                .when(mMockMddFlags)
-                .maintenanceGcmTaskPeriod();
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID)).isNotNull();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        mockGetMddFlags();
+        when(mMockMddFlags.maintenanceGcmTaskPeriod()).thenReturn(TASK_PERIOD);
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask()
-            throws InterruptedException {
+    public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(/* MaintenanceGcmTaskPeriod default value */ 21600L)
-                .when(mMockMddFlags)
-                .chargingGcmTaskPeriod();
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        mockGetMddFlags();
+        when(mMockMddFlags.chargingGcmTaskPeriod()).thenReturn(TASK_PERIOD);
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
     public void testScheduleIfNeededMddSingleTask_mddCellularChargingPeriodicTask()
-            throws InterruptedException {
+            throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(/* MaintenanceGcmTaskPeriod default value */ 21600L)
-                .when(mMockMddFlags)
-                .cellularChargingGcmTaskPeriod();
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID))
-                .isNotNull();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        mockGetMddFlags();
+        when(mMockMddFlags.cellularChargingGcmTaskPeriod()).thenReturn(TASK_PERIOD);
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testScheduleIfNeededMddSingleTask_mddWifiChargingPeriodicTask()
-            throws InterruptedException {
+    public void testScheduleIfNeededMddSingleTask_mddWifiChargingPeriodicTask() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
-        ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(/* MaintenanceGcmTaskPeriod default value */ 21600L)
-                .when(mMockMddFlags)
-                .wifiChargingGcmTaskPeriod();
-        assertThat(MddJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
-        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
-        // We schedule the job in this test and cancel it in the teardown. There could be a race
-        // condition between when the job starts and when we try to cancel it. If the job already
-        // started and we exited this test method, the flag would not be mocked anymore and hence
-        // the READ_DEVICE_CONFIG exception.
-        // We wait here so that the scheduled job can finish.
-        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+        mockGetMddFlags();
+        when(mMockMddFlags.wifiChargingGcmTaskPeriod()).thenReturn(TASK_PERIOD);
+        JobServiceCallback callBack = scheduleJobInBackground(/* forceSchedule */ false);
+        assertJobScheduled(
+                callBack,
+                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                /* shouldSchedule */ true,
+                /* checkPendingJob */ true);
+
+        waitForJobFinished(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
     public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
-        // Logging killswitch is on.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
 
         testOnStartJob_shouldDisableJobTrue();
 
         // Verify logging method is not invoked.
-        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mLogger);
     }
 
     @Test
     public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
-        // Logging killswitch is off.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
 
         testOnStartJob_shouldDisableJobTrue();
 
         // Verify no logging has happened even though logging is enabled because this field is not
         // logged
-        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mLogger);
     }
 
-    private void testOnStartJob_killswitchIsOn() {
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+    private void testOnStartJob_killswitchIsOn() throws InterruptedException {
         // Killswitch is on.
-        doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
-
+        mockMddBackgroundTaskKillSwitch(/* toBeReturned */ true);
         doNothing().when(mSpyMddJobService).jobFinished(mMockJobParameters, false);
 
         // Schedule the job to assert after starting that the scheduled job has been cancelled
@@ -492,51 +483,52 @@ public class MddJobServiceTest {
                                 MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
                                 new ComponentName(CONTEXT, MddJobService.class))
                         .setRequiresCharging(true)
-                        .setPeriodic(/* periodMs */ 10000, /* flexMs */ 1000)
+                        .setPeriodic(INTERVAL_MS, FLEX_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
-        assertNotNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
+
+        JobServiceCallback callback = createJobFinishedCallback(mSpyMddJobService);
 
         // Now verify that when the Job starts, it will unschedule itself.
-        assertFalse(mSpyMddJobService.onStartJob(mMockJobParameters));
+        assertThat(mSpyMddJobService.onStartJob(mMockJobParameters)).isFalse();
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNull();
 
-        assertNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+        callback.assertJobFinished();
 
         verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
     }
 
     private void testOnStartJob_killswitchIsOff() throws InterruptedException {
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is off.
-        doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+        mockMddBackgroundTaskKillSwitch(/* toBeReturned */ false);
 
-        // Add a countDownLatch to ensure background thread gets executed
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-
-        ExtendedMockito.doReturn(mMockMdd)
+        doReturn(mMockMdd)
                 .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+
+        JobServiceCallback callback = createJobFinishedCallback(mSpyMddJobService);
 
         mSpyMddJobService.onStartJob(mMockJobParameters);
 
-        // The countDownLatch doesn't get decreased and waits until timeout.
-        assertThat(countDownLatch.await(BACKGROUND_TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isFalse();
+        callback.assertJobFinished();
 
         // Check that Mdd.handleTask is executed.
-        ExtendedMockito.verify(
-                () -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+        verify(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
         verify(mMockMdd).handleTask(WIFI_CHARGING_PERIODIC_TASK);
     }
 
-    private void testOnStopJob() {
+    private void testOnStopJob() throws InterruptedException {
+        JobServiceCallback callback = createOnStopJobCallback(mSpyMddJobService);
+
         // Verify nothing throws
         mSpyMddJobService.onStopJob(mMockJobParameters);
+
+        callback.assertJobFinished();
     }
 
     private void testOnStartJob_shouldDisableJobTrue() {
-        ExtendedMockito.doReturn(true)
+        doReturn(true)
                 .when(
                         () ->
                                 ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
@@ -550,7 +542,7 @@ public class MddJobServiceTest {
                                 MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
                                 new ComponentName(CONTEXT, MddJobService.class))
                         .setRequiresCharging(true)
-                        .setPeriodic(/* periodMs */ 10000, /* flexMs */ 1000)
+                        .setPeriodic(INTERVAL_MS, FLEX_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
@@ -562,5 +554,79 @@ public class MddJobServiceTest {
 
         verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
+    }
+
+    // TODO(b/296945680): remove Thread.sleep().
+    /**
+     * Waits for current running job to finish before mocked {@code Flags} finished mocking.
+     *
+     * <p>Tests needs to call this at the end of the test if scheduled background job to prevent
+     * {@code android.permission.READ_DEVICE_CONFIG} permission error when scheduled job start
+     * running after mocked {@code flags} finished mocking.
+     */
+    public void waitForJobFinished(int timeOutMs) throws InterruptedException {
+        Thread.sleep(timeOutMs);
+    }
+
+    private void mockGetMddFlags() {
+        doReturn(mMockMddFlags).when(MddFlags::getInstance);
+    }
+
+    private void mockMddBackgroundTaskKillSwitch(boolean toBeReturned) {
+        doReturn(toBeReturned).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+    }
+
+    private JobServiceCallback createJobFinishedCallback(JobService jobService) {
+        JobServiceCallback callback = new JobServiceCallback();
+
+        doAnswer(
+                        unusedInvocation -> {
+                            callback.onJobFinished();
+                            return null;
+                        })
+                .when(jobService)
+                .jobFinished(any(), anyBoolean());
+
+        return callback;
+    }
+
+    private JobServiceCallback createOnStopJobCallback(JobService jobService) {
+        JobServiceCallback callback = new JobServiceCallback();
+
+        doAnswer(
+                        invocation -> {
+                            invocation.callRealMethod();
+                            callback.onJobStopped();
+                            return null;
+                        })
+                .when(jobService)
+                .onStopJob(any());
+
+        return callback;
+    }
+
+    private JobServiceCallback scheduleJobInBackground(boolean forceSchedule) {
+        JobServiceCallback callback = new JobServiceCallback();
+
+        mExecutorService.execute(
+                () ->
+                        callback.insertJobScheduledResult(
+                                MddJobService.scheduleIfNeeded(CONTEXT, forceSchedule)));
+
+        return callback;
+    }
+
+    private void assertJobScheduled(
+            JobServiceCallback callback, int jobId, boolean shouldSchedule, boolean checkPendingJob)
+            throws InterruptedException {
+        assertWithMessage(
+                        "Check callback received result. jobId: %s, shouldSchedule: %s",
+                        jobId, shouldSchedule)
+                .that(callback.assertResultReceived())
+                .isEqualTo(shouldSchedule);
+
+        if (checkPendingJob) {
+            assertThat(JOB_SCHEDULER.getPendingJob(jobId)).isNotNull();
+        }
     }
 }

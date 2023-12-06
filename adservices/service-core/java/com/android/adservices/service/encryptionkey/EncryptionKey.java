@@ -34,10 +34,11 @@ public class EncryptionKey {
     private int mKeyCommitmentId;
     private String mBody;
     private long mExpiration;
+    private long mLastFetchTime;
 
-    private EncryptionKey() {
+    public EncryptionKey() {
         mId = null;
-        mKeyType = KeyType.ENCRYPTION_KEY;
+        mKeyType = KeyType.ENCRYPTION;
         mEnrollmentId = null;
         mReportingOrigin = null;
         mEncryptionKeyUrl = null;
@@ -45,6 +46,7 @@ public class EncryptionKey {
         mKeyCommitmentId = 0;
         mBody = null;
         mExpiration = 0L;
+        mLastFetchTime = 0L;
     }
 
     @Override
@@ -61,7 +63,8 @@ public class EncryptionKey {
                 && Objects.equals(mProtocolType, encryptionKey.mProtocolType)
                 && (mKeyCommitmentId == encryptionKey.mKeyCommitmentId)
                 && Objects.equals(mBody, encryptionKey.mBody)
-                && (mExpiration == encryptionKey.mExpiration);
+                && (mExpiration == encryptionKey.mExpiration)
+                && (mLastFetchTime == encryptionKey.mLastFetchTime);
     }
 
     @Override
@@ -75,10 +78,11 @@ public class EncryptionKey {
                 mProtocolType,
                 mKeyCommitmentId,
                 mBody,
-                mExpiration);
+                mExpiration,
+                mLastFetchTime);
     }
 
-    /** Returns id for this key commitment. */
+    /** Returns id for this encryption key, this is the UUID for each key in db table. */
     public String getId() {
         return mId;
     }
@@ -111,7 +115,7 @@ public class EncryptionKey {
         return mProtocolType;
     }
 
-    /** Returns id for this key commitment. */
+    /** Returns id for this key commitment, this id is unique per adtech. */
     public int getKeyCommitmentId() {
         return mKeyCommitmentId;
     }
@@ -121,9 +125,14 @@ public class EncryptionKey {
         return mBody;
     }
 
-    /** Returns expiration time of this public key. */
+    /** Returns expiration time of this public key in milliseconds. */
     public long getExpiration() {
         return mExpiration;
+    }
+
+    /** Returns the last fetch time for this encryption key. */
+    public long getLastFetchTime() {
+        return mLastFetchTime;
     }
 
     /** Builder for {@link EncryptionKey}. */
@@ -188,6 +197,12 @@ public class EncryptionKey {
             return this;
         }
 
+        /** See {@link EncryptionKey#getLastFetchTime()}. */
+        public Builder setLastFetchTime(long lastFetchTime) {
+            mBuilding.mLastFetchTime = lastFetchTime;
+            return this;
+        }
+
         /** Build the {@link EncryptionKey}. */
         public EncryptionKey build() {
             return mBuilding;
@@ -196,24 +211,28 @@ public class EncryptionKey {
 
     // The key type for this key, a key can be either an encryption key or a signing key.
     public enum KeyType {
-        ENCRYPTION_KEY(0),
-        SIGNING_KEY(1);
-        private final int mValue;
+        ENCRYPTION("encryption"),
+        SIGNING("signing");
 
-        KeyType(int value) {
+        private final String mValue;
+
+        KeyType(String value) {
             mValue = value;
         }
 
-        public int getValue() {
+        public String getValue() {
             return mValue;
         }
     }
 
     /**
-     * ProtocolType enumerates the encryption algorithm used with this key. Set as HPKE for now, can
-     * support more algorithm if we need in the future.
+     * ProtocolType enumerates the algorithm used with the key. Set as HPKE by default, more
+     * algorithms can be supported in the future.
      */
     public enum ProtocolType {
+        // Algorithm used by signing key.
+        ECDSA("ecdsa"),
+        // Algorithm used by Topics encryption key.
         HPKE("hpke");
         private final String mValue;
 

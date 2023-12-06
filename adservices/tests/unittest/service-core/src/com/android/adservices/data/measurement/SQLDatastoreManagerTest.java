@@ -35,9 +35,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -71,8 +71,9 @@ public class SQLDatastoreManagerTest {
                 ExtendedMockito.spy(
                         new SQLDatastoreManager(
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
-        ExtendedMockito.doReturn(mLogger).when(mSQLDatastoreManager).getLogger();
+        ExtendedMockito.doReturn(mLogger).when(LoggerFactory::getMeasurementLogger);
     }
+
     @Test
     public void runInTransactionWithResult_throwsException_logsDbVersion()
             throws DatastoreException {

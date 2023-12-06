@@ -24,6 +24,7 @@ import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
 import android.cts.statsdatom.lib.DeviceUtils;
 import android.cts.statsdatom.lib.ReportUtils;
+import android.platform.test.annotations.FlakyTest;
 
 import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
@@ -103,6 +104,7 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 305089304)
     public void testGetTopicsLog() throws Exception {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);

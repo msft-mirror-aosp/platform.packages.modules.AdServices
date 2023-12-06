@@ -50,6 +50,7 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -122,6 +123,7 @@ public class AdSelectionScriptEngine {
     public static final String DEBUG_REPORTING_SELLER_REJECT_REASON_FIELD_NAME = "rejectReason";
     public static final String AD_COST_FIELD_NAME = "adCost";
     public static final int NUM_BITS_STOCHASTIC_ROUNDING = 8;
+
     /**
      * Template for the iterative invocation function. The two tokens to expand are the list of
      * parameters and the invocation of the actual per-ad function.
@@ -243,7 +245,7 @@ public class AdSelectionScriptEngine {
      * Minified JS that un-marshals signals to map their keys and values to byte[]. Should be
      * invoked by the driver script before passing the signals to encodeSignals() function.
      *
-     *
+     * <pre>
      * function decodeHex(hexString) {
      *     hexString = hexString.replace(/\\s/g, '');
      *     if (hexString.length % 2 !== 0) {
@@ -258,36 +260,48 @@ public class AdSelectionScriptEngine {
      *     return byteArray;
      * }
      *
-     * function unmarshal(signalObjects) {
-     *     const signals = signalObjects;
-     *     const mappedObjects = [];
-     *
-     *     signals.forEach(signalGroup => {
-     *         for (const key in signalGroup) {
-     *             const signal_key = decodeHex(key);
-     *             const decodedValues = signalGroup[key].map(entry => ({
+     * function unmarshal(signalObjects){
+     *    const result=new Map();
+     *    signalObjects.forEach(
+     *      (signalGroup=> {
+     *        for(const key in signalGroup){
+     *          const signal_key = decodeHex(key)
+     *          const decodedValues= signalGroup[key].map((entry=>({
      *                 signal_value: decodeHex(entry.val),
      *                 creation_time: entry.time,
-     *                 package_name: entry.app.trim(), // Remove leading/trailing whitespaces
-     *             }));
+     *                 package_name: entry.app.trim()
+     *               })));
      *
-     *             const mappedObject = {
-     *                 [signal_key]: decodedValues,
-     *             };
-     *             mappedObjects.push(mappedObject);
+     *           result.set(signal_key, decodedValues)
      *         }
-     *     });
-     *
-     *     return mappedObjects;
+     *        })
+     *     )
+     *   return result;
      * }
+     * </pre>
      */
     private static final String UNMARSHAL_SIGNALS_JS =
-            "function decodeHex(e){if((e=e.replace(/\\\\s/g,\"\")).length%2!=0)throw new Error"
-                    + "(\"hex must have even chars.\");const n=new Uint8Array(e.length/2);for(let"
-                    + " t=0;t<e.length;t+=2){const r=parseInt(e.substr(t,2),16);n[t/2]=r}return "
-                    + "n}function unmarshal(e){const n=[];return e.forEach((e=>{for(const t in e)"
-                    + "{const r={[decodeHex(t)]:e[t].map((e=>({signal_value:decodeHex(e.val),"
-                    + "creation_time:e.time,package_name:e.app.trim()})))};n.push(r)}})),n}";
+            "function decodeHex(e){if((e=e.replace(/\\\\s/g,\"\")).length%2!=0)throw Error(\"hex "
+                    + "must have even chars.\");let t=new Uint8Array(e.length/2);for(let n=0;n<e"
+                    + ".length;n+=2){let a=parseInt(e.substr(n,2),16);t[n/2]=a}return t}function "
+                    + "unmarshal(e){let t=new Map;return e.forEach(e=>{for(let n in e){let a=e[n]."
+                    + "map(e=>({signal_value:decodeHex(e.val),creation_time:e.time,package_name:e."
+                    + "app.trim()}));t.set(decodeHex(n),a)}}),t}";
+
+    /**
+     * Function used to marshal the Uint8Array returned by encodeSignals into an hex string.
+     *
+     * <pre>
+     * function encodeHex(signals) {
+     *    return signals.reduce(
+     *      (output, byte) => output + byte.toString(16).padStart(2, '0'), ''
+     *    );
+     * };
+     * </pre>
+     */
+    private static final String MARSHALL_ENCODED_SIGNALS_JS =
+            "function encodeHex(e){return e.reduce((e,n)=>e+n.toString(16).padStart(2,"
+                    + " '0'),\"\");}";
 
     /**
      * This JS wraps around encodeSignals() logic. Un-marshals the signals and then invokes the
@@ -297,16 +311,20 @@ public class AdSelectionScriptEngine {
             "function "
                     + ENCODE_SIGNALS_DRIVER_FUNCTION_NAME
                     + "(signals, maxSize) {\n"
-                    + "console.log(signals, maxSize);\n"
                     + "  const unmarshalledSignals = unmarshal(signals);\n"
                     + "\n"
                     + "  "
-                    + "  return "
+                    + "  let encodeResult = "
                     + ENCODE_SIGNALS_FUNCTION_NAME
                     + "(unmarshalledSignals, maxSize);\n"
+                    + "   return { 'status': encodeResult.status, "
+                    + "'results': encodeHex(encodeResult.results) };\n"
                     + "}\n"
                     + "\n"
-                    + UNMARSHAL_SIGNALS_JS;
+                    + UNMARSHAL_SIGNALS_JS
+                    + "\n"
+                    + MARSHALL_ENCODED_SIGNALS_JS
+                    + "\n";
 
     private static final String TAG = AdSelectionScriptEngine.class.getName();
     private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
@@ -526,21 +544,23 @@ public class AdSelectionScriptEngine {
     /**
      * Injects buyer provided encodeSignals() logic into a driver JS. The driver script first
      * un-marshals the signals, which would be marshaled by {@link ProtectedSignalsArgumentUtil},
-     * and then invokes the buyer provided encoding logic.
+     * and then invokes the buyer provided encoding logic. The script marshals the Uint8Array
+     * returned by encodeSignals as HEX string and converts it into the byte[] returned by this
+     * method.
      *
      * @param encodingLogic The buyer provided encoding logic
      * @param rawSignals The signals fetched from buyer delegation
      * @param maxSize maxSize of payload generated by the buyer
      * @throws IllegalStateException if the JSON created from raw Signals is invalid
      */
-    public ListenableFuture<String> encodeSignals(
+    public ListenableFuture<byte[]> encodeSignals(
             @NonNull String encodingLogic,
             @NonNull Map<String, List<ProtectedSignal>> rawSignals,
             @NonNull int maxSize)
             throws IllegalStateException {
 
         if (rawSignals.isEmpty()) {
-            return Futures.immediateFuture("");
+            return Futures.immediateFuture(new byte[0]);
         }
 
         String combinedDriverAndEncodingLogic = ENCODE_SIGNALS_DRIVER_JS + encodingLogic;
@@ -568,7 +588,7 @@ public class AdSelectionScriptEngine {
                                 args,
                                 ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
                                 isolateSettings))
-                .transform(result -> handleEncodingOutput(result), mExecutor);
+                .transform(this::handleEncodingOutput, mExecutor);
     }
 
     /**
@@ -746,9 +766,9 @@ public class AdSelectionScriptEngine {
     }
 
     @VisibleForTesting
-    String handleEncodingOutput(String encodingScriptResult) throws IllegalStateException {
+    byte[] handleEncodingOutput(String encodingScriptResult) throws IllegalStateException {
 
-        if (encodingScriptResult.isEmpty()) {
+        if (encodingScriptResult == null || encodingScriptResult.isEmpty()) {
             throw new IllegalStateException(
                     "The encoding script either doesn't contain the required function or the"
                             + " function returned null");
@@ -764,11 +784,36 @@ public class AdSelectionScriptEngine {
                 sLogger.v(errorMsg);
                 throw new IllegalStateException(errorMsg);
             }
-            return result;
+
+            try {
+                return decodeHexString(result);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Malformed encoded payload.", e);
+            }
         } catch (JSONException e) {
             sLogger.e("Could not extract the Encoded Payload result");
             throw new IllegalStateException("Exception processing result from encoding");
         }
+    }
+
+    private byte[] decodeHexString(String hexString) {
+        Preconditions.checkArgument(
+                hexString.length() % 2 == 0, "Expected an hex string but the arg length is odd");
+
+        byte[] result = new byte[hexString.length() / 2];
+        for (int i = 0; i < hexString.length() / 2; i++) {
+            result[i] = byteValue(hexString.charAt(2 * i), hexString.charAt(2 * i + 1));
+        }
+        return result;
+    }
+
+    private byte byteValue(char highNibble, char lowNibble) {
+        int high = Character.digit(highNibble, 16);
+        Preconditions.checkArgument(high >= 0, "Invalid value for HEX string char");
+        int low = Character.digit(lowNibble, 16);
+        Preconditions.checkArgument(low >= 0, "Invalid value for HEX string char");
+
+        return (byte) (high << 4 | low);
     }
 
     /**

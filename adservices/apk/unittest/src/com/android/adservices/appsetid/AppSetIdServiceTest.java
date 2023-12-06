@@ -84,8 +84,7 @@ public class AppSetIdServiceTest {
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            ExtendedMockito.doReturn(mMockAppSetIdWorker)
-                    .when(() -> AppSetIdWorker.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(mMockAppSetIdWorker).when(() -> AppSetIdWorker.getInstance());
             AppSetIdService spyAppSetIdService = spy(new AppSetIdService());
             doReturn(mMockPackageManager).when(spyAppSetIdService).getPackageManager();
             ExtendedMockito.doReturn(mMockAppImportanceFilter)

@@ -15,9 +15,18 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+import static com.android.adservices.tests.ui.libs.AdservicesWorkflows.startNotificationActivity;
+import static com.android.adservices.tests.ui.libs.UiUtils.LAUNCH_TIMEOUT;
+import static com.android.adservices.tests.ui.libs.UiUtils.clickMoreToBottom;
+import static com.android.adservices.ui.util.ApkTestUtil.getElement;
+
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Intent;
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -28,16 +37,13 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -47,38 +53,40 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
 public class NotificationActivityU18UxSelectorUiAutomatorTest {
-    private static final String NOTIFICATION_PACKAGE = "android.adservices.ui.NOTIFICATIONS";
-    private static final int LAUNCH_TIMEOUT = 5000;
-    private static final int SCROLL_WAIT_TIME = 2000;
     private static final UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
     private String mTestName;
 
-    @Rule
+    @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
+                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_U18_UX_ENABLED, true)
+                    .setFlag(KEY_DEBUG_UX, "U18_UX");
+
     @BeforeClass
-    public static void classSetup() {
+    public static void classSetup() throws InterruptedException {
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
+        // sleep for 1 min for bootCompleteReceiver to get invoked on S-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            TimeUnit.SECONDS.sleep(60);
+        }
     }
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_ad_services_system_api true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices debug_ux U18_UX");
-
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -90,28 +98,26 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled false");
     }
 
     @Test
     public void acceptFlowTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        startActivity();
+        startNotificationActivity(ApplicationProvider.getApplicationContext(), sDevice, false);
 
-        UiObject u18NotificationTitle = getElement(R.string.notificationUI_u18_notification_title);
+        UiObject u18NotificationTitle =
+                getElement(sDevice, R.string.notificationUI_u18_notification_title);
         assertThat(u18NotificationTitle.exists()).isTrue();
 
-        clickMoreToBottom();
+        UiObject moreButton = getElement(sDevice, R.string.notificationUI_more_button_text);
+        clickMoreToBottom(moreButton);
 
         UiObject
                 leftControlButton =
-                        getElement(R.string.notificationUI_u18_left_control_button_text),
+                        getElement(sDevice, R.string.notificationUI_u18_left_control_button_text),
                 rightControlButton =
-                        getElement(R.string.notificationUI_u18_right_control_button_text);
+                        getElement(sDevice, R.string.notificationUI_u18_right_control_button_text);
         assertThat(leftControlButton.exists()).isTrue();
         rightControlButton.click();
         assertThat(u18NotificationTitle.exists()).isFalse();
@@ -122,23 +128,25 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
     public void clickSettingsTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        startActivity();
+        startNotificationActivity(ApplicationProvider.getApplicationContext(), sDevice, false);
 
-        clickMoreToBottom();
+        UiObject moreButton = getElement(sDevice, R.string.notificationUI_more_button_text);
+        clickMoreToBottom(moreButton);
 
         UiObject
                 leftControlButton =
-                        getElement(R.string.notificationUI_u18_left_control_button_text),
+                        getElement(sDevice, R.string.notificationUI_u18_left_control_button_text),
                 rightControlButton =
-                        getElement(R.string.notificationUI_u18_right_control_button_text);
+                        getElement(sDevice, R.string.notificationUI_u18_right_control_button_text);
         assertThat(rightControlButton.exists()).isTrue();
 
         leftControlButton.click();
 
         // make sure it goes to u18 page rather than GA page
-        UiObject topicTitle = getElement(R.string.settingsUI_topics_ga_title);
+        UiObject topicTitle = getElement(sDevice, R.string.settingsUI_topics_ga_title);
         assertThat((topicTitle.exists())).isFalse();
-        UiObject measurementTitle = getElement(R.string.settingsUI_u18_measurement_view_title);
+        UiObject measurementTitle =
+                getElement(sDevice, R.string.settingsUI_u18_measurement_view_title);
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
             ApkTestUtil.click(sDevice, R.string.settingsUI_u18_measurement_view_title);
         } else {
@@ -147,39 +155,4 @@ public class NotificationActivityU18UxSelectorUiAutomatorTest {
         assertThat(measurementTitle.exists()).isTrue();
     }
 
-    private void startActivity() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices debug_ux U18_UX");
-
-        String notificationPackage = NOTIFICATION_PACKAGE;
-        Intent intent = new Intent(notificationPackage);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        ApplicationProvider.getApplicationContext().startActivity(intent);
-        sDevice.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
-    }
-
-    private void clickMoreToBottom() throws UiObjectNotFoundException, InterruptedException {
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        if (!moreButton.exists()) {
-            LogUtil.e("More Button not Found");
-            return;
-        }
-
-        int clickCount = 10;
-        while (moreButton.exists() && clickCount-- > 0) {
-            moreButton.click();
-            Thread.sleep(SCROLL_WAIT_TIME);
-        }
-        assertThat(moreButton.exists()).isFalse();
-    }
-
-    private String getString(int resourceId) {
-        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
-    }
-
-    private UiObject getElement(int resId) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)));
-    }
 }

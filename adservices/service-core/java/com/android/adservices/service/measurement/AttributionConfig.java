@@ -27,8 +27,6 @@ import static com.android.adservices.service.measurement.AttributionConfig.Attri
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NOT_FILTERS;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_PRIORITY_RANGE;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.START;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -49,7 +47,6 @@ import java.util.Objects;
 /** POJO for AttributionConfig. */
 public class AttributionConfig {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getMeasurementLogger();
     @NonNull private final String mSourceAdtech;
     @Nullable private final Pair<Long, Long> mSourcePriorityRange;
     @Nullable private final List<FilterMap> mSourceFilters;
@@ -228,7 +225,7 @@ public class AttributionConfig {
 
             return attributionConfig;
         } catch (JSONException e) {
-            sLogger.d(e, "Serializing attribution config failed");
+            LoggerFactory.getMeasurementLogger().d(e, "Serializing attribution config failed");
             return null;
         }
     }
@@ -288,8 +285,8 @@ public class AttributionConfig {
                 mSourceExpiryOverride =
                         MathUtils.extractValidNumberInRange(
                                 override,
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                flags.getMeasurementMinReportingRegisterSourceExpirationInSeconds(),
+                                flags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
             }
             if (!attributionConfigsJson.isNull(PRIORITY)) {
                 mPriority = attributionConfigsJson.getLong(PRIORITY);
@@ -299,8 +296,9 @@ public class AttributionConfig {
                 mExpiry =
                         MathUtils.extractValidNumberInRange(
                                 expiry,
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                flags.getMeasurementMinReportingRegisterSourceExpirationInSeconds(),
+                                flags
+                                        .getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
             }
             if (!attributionConfigsJson.isNull(FILTER_DATA)) {
                 JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, FILTER_DATA);

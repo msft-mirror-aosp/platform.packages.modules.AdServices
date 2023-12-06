@@ -17,10 +17,14 @@ package com.android.adservices.common;
 
 import com.android.adservices.common.Logger.RealLogger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // TODO(b/294423183): add unit tests
 /**
@@ -56,7 +60,7 @@ public final class SystemPropertiesHelper {
             mLog.d("reset(): not needed");
             return;
         }
-        mLog.v("reset(): restoring %s flags", size);
+        mLog.v("reset(): restoring %d system properties", size);
         try {
             for (Entry<String, String> flag : mPropsToBeReset.entrySet()) {
                 setOnly(flag.getKey(), flag.getValue());
@@ -66,9 +70,22 @@ public final class SystemPropertiesHelper {
         }
     }
 
-    public void dumpSystemProperties(StringBuilder dump, String prefix) {
-        String properties = mInterface.dumpSystemProperties();
-        addProperties(dump, properties, prefix);
+    /** Gets all properties that matches the given {@code matcher}. */
+    public List<NameValuePair> getAll(NameValuePair.Matcher matcher) {
+        return mInterface.getAll(matcher);
+    }
+
+    @Override
+    public String toString() {
+        return "SystemPropertiesHelper [mInterface="
+                + mInterface
+                + ",mPropsToBeReset="
+                + mPropsToBeReset
+                + ", mLog="
+                + mLog
+                + ", regex="
+                + Interface.PROP_LINE_REGEX
+                + "]";
     }
 
     private String get(String name) {
@@ -89,32 +106,42 @@ public final class SystemPropertiesHelper {
         mInterface.set(name, value);
     }
 
-    private static void addProperties(StringBuilder builder, String properties, String prefix) {
-        String realPrefix = "[" + prefix;
-        String[] lines = properties.split("\n");
-        boolean foundAtLeastOne = false;
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i];
-            if (line.startsWith(realPrefix)) {
-                foundAtLeastOne = true;
-                builder.append(line).append('\n');
-            }
-        }
-        if (!foundAtLeastOne) {
-            builder.append("(no properties with prefix ").append(prefix).append(')');
-        }
-    }
-
     /** Low-level interface for {@link android.os.SystemProperties}. */
-    interface Interface {
+    protected abstract static class Interface extends AbstractDeviceGateway {
+
+        private static final String PROP_LINE_REGEX = "^\\[(?<name>.*)\\].*\\[(?<value>.*)\\]$";
+        private static final Pattern PROP_LINE_PATTERN = Pattern.compile(PROP_LINE_REGEX);
+
+        Interface() {}
 
         /** Gets the value of a property. */
-        String get(String name);
+        abstract String get(String name);
+
+        /**
+         * Gets the name (including the prefix) and value of all properties that have the given
+         * {@code prefixes}.
+         */
+        List<NameValuePair> getAll(NameValuePair.Matcher propertyMatcher) {
+            List<NameValuePair> allProperties = new ArrayList<>();
+            String properties = runShellCommand("getprop");
+            // NOTE: prefix most likely have . (like debug.adservices), but that's fine
+            String[] lines = properties.split("\n");
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i];
+                Matcher lineMatcher = PROP_LINE_PATTERN.matcher(line);
+                if (lineMatcher.matches()) {
+                    String name = lineMatcher.group("name");
+                    String value = lineMatcher.group("value");
+                    NameValuePair property = new NameValuePair(name, value);
+                    if (propertyMatcher.matches(property)) {
+                        allProperties.add(property);
+                    }
+                }
+            }
+            return allProperties;
+        }
 
         /** Sets the value of a property. */
-        void set(String name, String value);
-
-        /** Lists all properties (names and values). */
-        String dumpSystemProperties();
+        abstract void set(String name, String value);
     }
 }

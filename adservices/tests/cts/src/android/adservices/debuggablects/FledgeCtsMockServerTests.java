@@ -39,6 +39,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.adservices.utils.MockWebServerRule;
 import android.net.Uri;
 import android.util.Log;
@@ -46,11 +47,13 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
-import com.android.adservices.service.js.JSScriptEngine;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -61,7 +64,6 @@ import com.google.mockwebserver.MockWebServer;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,7 +102,11 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "ca2";
 
-    @Rule
+    // Ignore tests when device is not at least S
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     ApplicationProvider.getApplicationContext(),
@@ -129,8 +135,6 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
     private MockWebServer mMockWebServer;
 
-    private String mPreviousAppAllowList;
-
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
 
@@ -141,22 +145,30 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
     private String mServerBaseAddress;
     private AdTechIdentifier mAdTechIdentifier;
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 1)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
+
+    @Rule(order = 2)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName());
+
     @Before
     public void setup() throws InterruptedException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-        } else {
-            mPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            String.format(
-                                    "%s,%s",
-                                    sContext.getPackageName(), "ad-selection-from-outcomes"));
-            CompatAdServicesTestUtils.setFlags();
+            flags.setFlag(
+                    FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH,
+                    FlagsConstants.PPAPI_AND_SYSTEM_SERVER);
         }
 
         mAdSelectionClient =
@@ -201,8 +213,7 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()
-                || !JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+        if (!CtsWebViewSupportUtil.isJSSandboxAvailable(sContext)) {
             return;
         }
 
@@ -211,11 +222,6 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     private String getCacheBusterPrefix() {
@@ -241,8 +247,6 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
 
     @Test
     public void testFledgeAuctionSelectionFlow_happy_Path() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
@@ -315,8 +319,6 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
 
     @Test
     public void testFledgeAuctionSelectionFlowSuccessWithDataVersionHeader() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         PhFlagsFixture.overrideFledgeDataVersionHeaderEnabled(true);
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
@@ -401,8 +403,6 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
     @Test
     public void testFledgeAuctionSelectionFlowSuccessWithDataVersionHeaderSkipsSellerExceeds8Bits()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         PhFlagsFixture.overrideFledgeDataVersionHeaderEnabled(true);
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
@@ -491,8 +491,6 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
     @Test
     public void testFledgeAuctionSelectionFlowSuccessWithDataVersionHeaderSkipsBuyerExceeds8Bits()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         PhFlagsFixture.overrideFledgeDataVersionHeaderEnabled(true);
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);

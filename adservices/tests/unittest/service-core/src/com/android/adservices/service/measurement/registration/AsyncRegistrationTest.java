@@ -24,9 +24,9 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.WebUtil;
 
 import org.junit.Test;
 

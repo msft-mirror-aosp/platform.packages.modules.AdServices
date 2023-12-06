@@ -29,9 +29,13 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.common.ExceptionFailureSyncCallback;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,14 +48,13 @@ import java.util.concurrent.TimeUnit;
 public final class AdIdManagerTest {
 
     private static final String TAG = AdIdManagerTest.class.getSimpleName();
-    private static final long CALLBACK_TIMEOUT_MS = 500;
 
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
     // Ignore tests when device is not at least  (requires android.os.OutcomeReceiver)
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     // Ignore tests when device is not supported
     @Rule(order = 1)
@@ -75,11 +78,24 @@ public final class AdIdManagerTest {
     }
 
     @Test
-    public void testAdIdManager() throws Exception {
+    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
+    public void testAdIdManager_SPlus() throws Exception {
         OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
-
         mAdIdManager.getAdId(sCallbackExecutor, callback);
-        AdId resultAdId = callback.assertSuccess(CALLBACK_TIMEOUT_MS);
+        validateAdIdManagerTestResults(callback);
+    }
+
+    @Test
+    public void testAdIdManager_R() throws Exception {
+        AdServicesOutcomeReceiverForTests<AdId> callback =
+                new AdServicesOutcomeReceiverForTests<>();
+        mAdIdManager.getAdId(sCallbackExecutor, callback);
+        validateAdIdManagerTestResults(callback);
+    }
+
+    private void validateAdIdManagerTestResults(ExceptionFailureSyncCallback<AdId> callback)
+            throws Exception {
+        AdId resultAdId = callback.assertSuccess();
         Log.v(TAG, "AdId: " + toString(resultAdId));
 
         assertWithMessage("getAdId()").that(resultAdId.getAdId()).isNotNull();
@@ -129,9 +145,21 @@ public final class AdIdManagerTest {
     }
 
     private boolean getAdIdAndVerifyRateLimitReached() throws InterruptedException {
-        OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
-        mAdIdManager.getAdId(sCallbackExecutor, callback);
-        callback.assertCalled(CALLBACK_TIMEOUT_MS);
+        if (SdkLevel.isAtLeastS()) {
+            OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
+            mAdIdManager.getAdId(sCallbackExecutor, callback);
+            return verifyAdIdRateLimitReached(callback);
+        } else {
+            AdServicesOutcomeReceiverForTests<AdId> callback =
+                    new AdServicesOutcomeReceiverForTests<>();
+            mAdIdManager.getAdId(sCallbackExecutor, callback);
+            return verifyAdIdRateLimitReached(callback);
+        }
+    }
+
+    private boolean verifyAdIdRateLimitReached(ExceptionFailureSyncCallback<AdId> callback)
+            throws InterruptedException {
+        callback.assertCalled();
         AdId result = callback.getResult();
         Exception error = callback.getError();
         Log.v(
@@ -146,26 +174,31 @@ public final class AdIdManagerTest {
 
     @Test
     @RequiresLowRamDevice
-    public void testAdIdManager_whenDeviceNotSupported() {
+    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
+    public void testAdIdManager_whenDeviceNotSupported_SPlus() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         assertWithMessage("adIdManager").that(adIdManager).isNotNull();
         OutcomeReceiverForTests<AdId> receiver = new OutcomeReceiverForTests<>();
 
-        // TODO(b/295235571): remove whole if block below once fixed
-        if (true) {
-            // NOTE: cannot use assertThrows() as it would cause a NoSuchClassException on R (as
-            // JUnit somehow scans the whole class)
-            try {
-                adIdManager.getAdId(sCallbackExecutor, receiver);
-                fail("getAdId() should have thrown IllegalStateException");
-            } catch (IllegalStateException e) {
-                // expected
-            }
-            return;
-        }
-
         adIdManager.getAdId(sCallbackExecutor, receiver);
         receiver.assertFailure(IllegalStateException.class);
+    }
+
+    @Test
+    @RequiresLowRamDevice
+    public void testAdIdManager_whenDeviceNotSupported_R() {
+        AdIdManager adIdManager = AdIdManager.get(sContext);
+        assertWithMessage("adIdManager").that(adIdManager).isNotNull();
+        AdServicesOutcomeReceiverForTests<AdId> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        // NOTE: cannot use assertThrows() as it would cause a NoSuchClassException on R (as
+        // JUnit somehow scans the whole class)
+        try {
+            adIdManager.getAdId(sCallbackExecutor, receiver);
+            fail("getAdId() should have thrown IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
     }
 
     private static String toString(AdId adId) {

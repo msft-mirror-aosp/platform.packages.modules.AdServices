@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -100,6 +101,16 @@ public final class PermissionHelper {
     }
 
     /**
+     * @return {@code true} if the caller has the permission to invoke Protected Signals APIs.
+     */
+    public static boolean hasProtectedSignalsPermission(
+            @NonNull Context context, @NonNull String appPackageName) {
+        // TODO(b/236268316): Add check for SDK permission.
+        return hasPermission(
+                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
+    }
+
+    /**
      * @return {@code true} if the caller has the permission to invoke AdService's state
      *     modification API.
      */
@@ -122,6 +133,20 @@ public final class PermissionHelper {
                 || PackageManager.PERMISSION_GRANTED
                         == context.checkCallingOrSelfPermission(
                                 AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT);
+    }
+
+    /**
+     * Returns if the caller has the permission to invoke the API of updating {@link AdId} cache.
+     *
+     * @return {@code true} if the caller has the permission.
+     */
+    public static boolean hasUpdateAdIdCachePermission(@NonNull Context context) {
+        return PackageManager.PERMISSION_GRANTED
+                        == context.checkCallingOrSelfPermission(
+                                AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID)
+                || PackageManager.PERMISSION_GRANTED
+                        == context.checkCallingOrSelfPermission(
+                                AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT);
     }
 
     private static boolean hasPermission(

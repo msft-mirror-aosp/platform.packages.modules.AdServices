@@ -82,7 +82,9 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -222,12 +224,21 @@ public class AuctionServerE2ETest {
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS)
                     .build();
+
+    private static final long AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS = 20;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private AdServicesHttpsClient mAdServicesHttpsClientSpy;
     private AdServicesLogger mAdServicesLoggerMock;
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule deviceSupportRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilterMock;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
@@ -315,8 +326,7 @@ public class AuctionServerE2ETest {
                 spy(adSelectionDebugReportingDatabase.getAdSelectionDebugReportDao());
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));
         mAdIdFetcher =
-                new AdIdFetcher(
-                        mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor, mFlags);
+                new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
 
         mAdSelectionService = createAdSelectionService();
 
@@ -348,7 +358,8 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testAuctionServer_killSwitchDisabled_throwsException() {
-        mFlags = new AuctionServerE2ETestFlags(true, false);
+        mFlags =
+                new AuctionServerE2ETestFlags(true, false, AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS);
         mAdSelectionService = createAdSelectionService(); // create the service again with new flags
 
         GetAdSelectionDataInput getAdSelectionDataInput =
@@ -519,7 +530,8 @@ public class AuctionServerE2ETest {
                         .setAds(filterableAds)
                         .build();
         Assert.assertNotNull(winningCustomAudience.getAds());
-        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(winningCustomAudience, Uri.EMPTY);
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                winningCustomAudience, Uri.EMPTY, /*debuggable=*/ false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -596,14 +608,16 @@ public class AuctionServerE2ETest {
     @Test
     public void testGetAdSelectionData_withEncrypt_validRequest_DebugReportingFlagEnabled()
             throws Exception {
-        Flags flags = new AuctionServerE2ETestFlags(false, true);
+        Flags flags =
+                new AuctionServerE2ETestFlags(false, true, AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS);
 
         testGetAdSelectionData_withEncryptHelper(flags);
     }
 
     @Test
     public void testGetAdSelectionData_withEncrypt_validRequest_LatDisabled() throws Exception {
-        Flags flags = new AuctionServerE2ETestFlags(false, true);
+        Flags flags =
+                new AuctionServerE2ETestFlags(false, true, AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS);
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
 
         testGetAdSelectionData_withEncryptHelper(flags);
@@ -612,9 +626,10 @@ public class AuctionServerE2ETest {
     @Test
     public void testGetAdSelectionData_withEncrypt_validRequest_GetAdIdTimeoutException()
             throws Exception {
-        Flags flags = new AuctionServerE2ETestFlags(false, true);
+        Flags flags =
+                new AuctionServerE2ETestFlags(false, true, AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS);
         mMockAdIdWorker.setResult(MockAdIdWorker.MOCK_AD_ID, false);
-        mMockAdIdWorker.setDelay(100L);
+        mMockAdIdWorker.setDelay(AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS * 2);
 
         testGetAdSelectionData_withEncryptHelper(flags);
     }
@@ -640,7 +655,8 @@ public class AuctionServerE2ETest {
                                 DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
                                         WINNER_BUYER))
                         .build(),
-                Uri.EMPTY);
+                Uri.EMPTY,
+                /*debuggable=*/ false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -682,7 +698,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testAuctionServerResult_usedInWaterfallMediation_success() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         Dispatcher dispatcher =
@@ -695,7 +711,7 @@ public class AuctionServerE2ETest {
                         return new MockResponse().setResponseCode(404);
                     }
                 };
-        mMockWebServerRule.startMockWebServer(dispatcher);
+        mockWebServerRule.startMockWebServer(dispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
         when(mObliviousHttpEncryptorMock.encryptBytes(any(byte[].class), anyLong(), anyLong()))
@@ -714,7 +730,8 @@ public class AuctionServerE2ETest {
                                 DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
                                         WINNER_BUYER))
                         .build(),
-                Uri.EMPTY);
+                Uri.EMPTY,
+                /*debuggable=*/ false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -758,7 +775,7 @@ public class AuctionServerE2ETest {
                                         .anAdSelectionFromOutcomesConfig(
                                                 Collections.singletonList(adSelectionId),
                                                 bidFloorSignalsBelowBid,
-                                                mMockWebServerRule.uriForPath(selectionLogicPath)))
+                                                mockWebServerRule.uriForPath(selectionLogicPath)))
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         AdSelectionFromOutcomesTestCallback waterfallReturnsAdSelectionIdCallback =
@@ -780,7 +797,7 @@ public class AuctionServerE2ETest {
                                         .anAdSelectionFromOutcomesConfig(
                                                 Collections.singletonList(adSelectionId),
                                                 bidFloorSignalsAboveBid,
-                                                mMockWebServerRule.uriForPath(selectionLogicPath)))
+                                                mockWebServerRule.uriForPath(selectionLogicPath)))
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
         AdSelectionFromOutcomesTestCallback waterfallReturnsNullCallback =
@@ -837,7 +854,8 @@ public class AuctionServerE2ETest {
                                 seedBytes,
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -895,7 +913,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testReportImpression_serverAuction_impressionAndInteractionReporting()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(4);
@@ -927,7 +945,8 @@ public class AuctionServerE2ETest {
                                 DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
                                         WINNER_BUYER))
                         .build(),
-                Uri.EMPTY);
+                Uri.EMPTY,
+                /*debuggable=*/ false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1039,7 +1058,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testReportImpression_serverAuction_sellerReportingFailure_noExceptionThrown()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(2);
@@ -1077,7 +1096,8 @@ public class AuctionServerE2ETest {
                                 DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
                                         WINNER_BUYER))
                         .build(),
-                Uri.EMPTY);
+                Uri.EMPTY,
+                /*debuggable=*/ false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1145,7 +1165,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testReportImpression_serverAuction_buyerReportingFailure_noExceptionThrown()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(2);
@@ -1183,7 +1203,8 @@ public class AuctionServerE2ETest {
                                 DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
                                         WINNER_BUYER))
                         .build(),
-                Uri.EMPTY);
+                Uri.EMPTY,
+                /*debuggable=*/ false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1274,7 +1295,8 @@ public class AuctionServerE2ETest {
                                 DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
                                         WINNER_BUYER))
                         .build(),
-                Uri.EMPTY);
+                Uri.EMPTY,
+                /*debuggable=*/ false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1347,7 +1369,8 @@ public class AuctionServerE2ETest {
                                 DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
                                         WINNER_BUYER))
                         .build(),
-                Uri.EMPTY);
+                Uri.EMPTY,
+                /*debuggable=*/ false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1466,7 +1489,8 @@ public class AuctionServerE2ETest {
                                 seedBytes,
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
-                        mAdIdFetcher);
+                        mAdIdFetcher,
+                        false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1528,7 +1552,8 @@ public class AuctionServerE2ETest {
                 mConsentManagerMock,
                 mObliviousHttpEncryptorMock,
                 mAdSelectionDebugReportDaoSpy,
-                mAdIdFetcher);
+                mAdIdFetcher,
+                false);
     }
 
     private Map<AdTechIdentifier, BuyerInput> getBuyerInputMapFromDecryptedBytes(
@@ -1575,7 +1600,8 @@ public class AuctionServerE2ETest {
                     DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
                             .build();
             customAudiences.put(name, thisCustomAudience);
-            mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY);
+            mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                    thisCustomAudience, Uri.EMPTY, /*debuggable=*/ false);
         }
         return customAudiences;
     }
@@ -1854,14 +1880,19 @@ public class AuctionServerE2ETest {
 
         private final boolean mDebugReportingEnabled;
 
+        private final long mAdIdFetcherTimeoutMs;
+
         AuctionServerE2ETestFlags() {
-            this(false, false);
+            this(false, false, 20);
         }
 
         AuctionServerE2ETestFlags(
-                boolean fledgeAuctionServerKillSwitch, boolean debugReportingEnabled) {
+                boolean fledgeAuctionServerKillSwitch,
+                boolean debugReportingEnabled,
+                long adIdFetcherTimeoutMs) {
             mFledgeAuctionServerKillSwitch = fledgeAuctionServerKillSwitch;
             mDebugReportingEnabled = debugReportingEnabled;
+            mAdIdFetcherTimeoutMs = adIdFetcherTimeoutMs;
         }
 
         @Override
@@ -1902,6 +1933,11 @@ public class AuctionServerE2ETest {
         @Override
         public boolean getFledgeAuctionServerEnableDebugReporting() {
             return mDebugReportingEnabled;
+        }
+
+        @Override
+        public long getFledgeAuctionServerAdIdFetcherTimeoutMs() {
+            return mAdIdFetcherTimeoutMs;
         }
     }
 }

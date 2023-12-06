@@ -19,12 +19,16 @@ package android.adservices.debuggablects;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 
+import android.adservices.adid.AdId;
+import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
+import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
@@ -32,13 +36,17 @@ import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.compatibility.common.util.ShellUtils;
+
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -183,7 +191,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
         String customAudienceName = "hats";
 
         try {
-            CustomAudience customAudience = makeCustomAudience(customAudienceName);
+            CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
             ShellUtils.runShellCommand(
                     "device_config put adservices fledge_fetch_custom_audience_enabled true");
             mCustomAudienceClient
@@ -220,18 +228,9 @@ public class AdSelectionTest extends FledgeScenarioTest {
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
         setupDefaultMockWebServer(dispatcher);
-        CustomAudience template = makeCustomAudience(SHOES_CA);
         CustomAudience customAudience =
-                new CustomAudience.Builder()
-                        .setName(template.getName())
-                        .setBuyer(template.getBuyer())
-                        .setBiddingLogicUri(template.getBiddingLogicUri())
-                        .setActivationTime(template.getActivationTime())
+                makeCustomAudience(SHOES_CA)
                         .setExpirationTime(Instant.now().plus(1, ChronoUnit.SECONDS))
-                        .setDailyUpdateUri(template.getDailyUpdateUri())
-                        .setUserBiddingSignals(template.getUserBiddingSignals())
-                        .setTrustedBiddingData(template.getTrustedBiddingData())
-                        .setAds(template.getAds())
                         .build();
         AdSelectionConfig config = makeAdSelectionConfig();
 
@@ -285,6 +284,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @FlakyTest(bugId = 300421625)
     @Test
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
+        assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-164.json", getCacheBusterPrefix());
@@ -335,8 +335,10 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * Test that buyer and seller receive win and loss debug reports with reject reason (Remarketing
      * CUJ 170).
      */
+    @FlakyTest(bugId = 301334790)
     @Test
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
+        assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-170.json", getCacheBusterPrefix());
@@ -357,5 +359,34 @@ public class AdSelectionTest extends FledgeScenarioTest {
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    private boolean isAdIdSupported() {
+        AdIdCompatibleManager adIdCompatibleManager;
+        AdServicesOutcomeReceiverForTests<AdId> callback =
+                new AdServicesOutcomeReceiverForTests<>();
+        try {
+            adIdCompatibleManager = new AdIdCompatibleManager(sContext);
+            adIdCompatibleManager.getAdId(MoreExecutors.directExecutor(), callback);
+        } catch (IllegalStateException e) {
+            Log.d(TAG, "isAdIdAvailable(): IllegalStateException detected in AdId manager.");
+            return false;
+        }
+
+        boolean isAdIdAvailable;
+        try {
+            AdId result = callback.assertSuccess();
+            isAdIdAvailable =
+                    !Objects.isNull(result)
+                            && !result.isLimitAdTrackingEnabled()
+                            && !result.getAdId().equals(AdId.ZERO_OUT);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Log.d(TAG, "isAdIdSupported(): failed to get AdId due to InterruptedException.");
+            isAdIdAvailable = false;
+        }
+
+        Log.d(TAG, String.format("isAdIdSupported(): %b", isAdIdAvailable));
+        return isAdIdAvailable;
     }
 }

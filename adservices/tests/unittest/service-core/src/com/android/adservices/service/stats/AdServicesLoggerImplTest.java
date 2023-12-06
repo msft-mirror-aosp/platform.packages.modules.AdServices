@@ -18,6 +18,11 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus.IO_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -88,6 +93,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 
@@ -643,5 +649,77 @@ public class AdServicesLoggerImplTest {
                         eq(10),
                         eq("SomeSdkName"),
                         eq(errorCauseEnumValue));
+    }
+
+    @Test
+    public void testLogMsmtClickVerificationStats() {
+        int sourceType = Source.SourceType.NAVIGATION.getIntValue();
+        boolean inputEventPresent = true;
+        boolean systemClickVerificationSuccessful = true;
+        boolean systemClickVerificationEnabled = true;
+        long inputEventDelayMs = 200L;
+        long validDelayWindowMs = 1000L;
+        String sourceRegistrant = "test_source_registrant";
+
+        MeasurementClickVerificationStats stats =
+                MeasurementClickVerificationStats.builder()
+                        .setSourceType(sourceType)
+                        .setInputEventPresent(inputEventPresent)
+                        .setSystemClickVerificationSuccessful(systemClickVerificationSuccessful)
+                        .setSystemClickVerificationEnabled(systemClickVerificationEnabled)
+                        .setInputEventDelayMillis(inputEventDelayMs)
+                        .setValidDelayWindowMillis(validDelayWindowMs)
+                        .setSourceRegistrant(sourceRegistrant)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementClickVerificationStats(stats);
+        ArgumentCaptor<MeasurementClickVerificationStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementClickVerificationStats.class);
+        verify(mStatsdLoggerMock).logMeasurementClickVerificationStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
+    }
+
+    @Test
+    public void testLogEncryptionKeyFetchedStats() {
+        final String enrollmentId = "enrollmentId";
+        final String companyId = "companyId";
+        final String encryptionKeyUrl = "https://www.adtech1.com/.well-known/encryption-keys";
+
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(IO_EXCEPTION)
+                        .setIsFirstTimeFetch(false)
+                        .setAdtechEnrollmentId(enrollmentId)
+                        .setCompanyId(companyId)
+                        .setEncryptionKeyUrl(encryptionKeyUrl)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEncryptionKeyFetchedStats(stats);
+
+        ArgumentCaptor<AdServicesEncryptionKeyFetchedStats> argumentCaptor =
+                ArgumentCaptor.forClass(AdServicesEncryptionKeyFetchedStats.class);
+        verify(mStatsdLoggerMock).logEncryptionKeyFetchedStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
+    }
+
+    @Test
+    public void testLogEncryptionKeyDbTransactionEndedStats() {
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(WRITE_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(INSERT_EXCEPTION)
+                        .setMethodName(INSERT_KEY)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logEncryptionKeyDbTransactionEndedStats(stats);
+
+        ArgumentCaptor<AdServicesEncryptionKeyDbTransactionEndedStats> argumentCaptor =
+                ArgumentCaptor.forClass(AdServicesEncryptionKeyDbTransactionEndedStats.class);
+        verify(mStatsdLoggerMock).logEncryptionKeyDbTransactionEndedStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
     }
 }

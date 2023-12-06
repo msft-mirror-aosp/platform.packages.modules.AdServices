@@ -18,7 +18,6 @@ package com.android.adservices.tests.appsetid;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.appsetid.AppSetId;
@@ -36,20 +35,16 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,8 +63,6 @@ public class AppSetIdManagerTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final float DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5f;
 
-    private static String sPreviousAppAllowList;
-
     // Ignore tests when device is not at least S
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -79,42 +72,17 @@ public class AppSetIdManagerTest {
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
-    @BeforeClass
-    public static void setupClass() {
-        if (!SdkLevel.isAtLeastT()) {
-            sPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
-        }
-    }
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setPpapiAppAllowList(sContext.getPackageName())
+                    .setAppsetIdKillSwitch(false);
 
     @Before
     public void setup() throws Exception {
-        overrideAppSetIdKillSwitch(true);
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
-    }
-
-    @After
-    public void tearDown() {
-        overrideAppSetIdKillSwitch(false);
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(sPreviousAppAllowList);
-        }
-    }
-
-    // Override appsetid related kill switch to ignore the effect of actual PH values.
-    // If shouldOverride = true, override appsetid related kill switch to OFF to allow adservices
-    // If shouldOverride = false, override appsetid related kill switch to meaningless value so that
-    // PhFlags will use the default value.
-    private void overrideAppSetIdKillSwitch(boolean shouldOverride) {
-        String overrideString = shouldOverride ? "false" : "null";
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.appsetid_kill_switch " + overrideString);
     }
 
     @Test
@@ -174,19 +142,13 @@ public class AppSetIdManagerTest {
 
     @Test
     @RequiresLowRamDevice
-    public void testAppSetIdManager_whenDeviceNotSupported() {
+    public void testAppSetIdManager_whenDeviceNotSupported() throws Exception {
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         assertWithMessage("appSetIdManager").that(appSetIdManager).isNotNull();
         OutcomeReceiverForTests<AppSetId> receiver = new OutcomeReceiverForTests<>();
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, receiver));
-
-        // TODO(b/295235571): remove assertThrows above and instead check the callback:
-        if (false) {
-            receiver.assertFailure(IllegalStateException.class);
-        }
+        appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, receiver);
+        receiver.assertFailure(IllegalStateException.class);
     }
 
     private boolean getAppSetIdAndVerifyRateLimitReached(AppSetIdManager manager)

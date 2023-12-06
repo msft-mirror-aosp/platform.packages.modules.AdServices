@@ -17,9 +17,9 @@
 package com.android.adservices.service.adid;
 
 import android.adservices.adid.IGetAdIdCallback;
+import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
-import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -55,11 +55,11 @@ public class AdIdWorker {
      * existing instance will be returned.
      */
     @NonNull
-    public static AdIdWorker getInstance(Context context) {
+    public static AdIdWorker getInstance() {
         if (sAdIdWorker == null) {
             synchronized (AdIdWorker.class) {
                 if (sAdIdWorker == null) {
-                    sAdIdWorker = new AdIdWorker(AdIdCacheManager.getInstance(context));
+                    sAdIdWorker = new AdIdWorker(AdIdCacheManager.getInstance());
                 }
             }
         }
@@ -77,5 +77,17 @@ public class AdIdWorker {
         LogUtil.v("AdIdWorker.getAdId for %s, %d", packageName, appUid);
 
         mAdIdCacheManager.getAdId(packageName, appUid, callback);
+    }
+
+    /**
+     * Updates the AdId Cache.
+     *
+     * @param updateAdIdRequest the request contains new AdId to update the cache.
+     */
+    public void updateAdId(UpdateAdIdRequest updateAdIdRequest) {
+        Objects.requireNonNull(updateAdIdRequest);
+
+        LogUtil.v("AdIdWorker.updateAdId with request: %s", updateAdIdRequest);
+        mAdIdCacheManager.updateAdId(updateAdIdRequest);
     }
 }
