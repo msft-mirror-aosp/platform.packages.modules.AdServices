@@ -541,10 +541,10 @@ public final class SdkSandboxManager {
     public void unloadSdk(@NonNull String sdkName) {
         Objects.requireNonNull(sdkName, "sdkName should not be null");
         try {
-            mService.unloadSdk(
-                    mContext.getPackageName(),
-                    sdkName,
-                    /*timeAppCalledSystemServer=*/ mTimeProvider.elapsedRealtime());
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_UNLOAD_SDK);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
+            mService.unloadSdk(mContext.getPackageName(), sdkName, sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -679,7 +679,7 @@ public final class SdkSandboxManager {
             throw new UnsupportedOperationException();
         }
 
-        long timeEventStarted = SystemClock.elapsedRealtime();
+        long timeEventStarted = mTimeProvider.elapsedRealtime();
 
         Intent intent = new Intent();
         intent.setAction(ACTION_START_SANDBOXED_ACTIVITY);
@@ -702,7 +702,7 @@ public final class SdkSandboxManager {
             mService.logSandboxActivityEvent(
                     StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
                     StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
-                    (int) (SystemClock.elapsedRealtime() - timeEventStarted));
+                    (int) (mTimeProvider.elapsedRealtime() - timeEventStarted));
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
