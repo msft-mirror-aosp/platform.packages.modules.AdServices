@@ -255,6 +255,15 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
         when(mFlags.getMeasurementDestinationRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW);
+        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
+        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+        when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+        when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+                .thenReturn(Flags
+                        .MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
         when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
         mContext = spy(sDefaultContext);
         when(mContext.getPackageManager()).thenReturn(mPackageManager);
@@ -2721,10 +2730,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void isSourceAllowedToInsert_flexEventApiValidNav_pass()
             throws DatastoreException, JSONException {
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4],"
@@ -2791,10 +2796,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
@@ -2859,10 +2860,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementFlexLiteApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -2914,10 +2911,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementFlexLiteApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -2968,10 +2961,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
@@ -2991,8 +2980,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
-                        .setWebDestinations(
-                                List.of(WebUtil.validUri("https://web-destination1.test")))
                         .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                         .setRegistrant(Uri.parse("android-app://com.example"))
                         .setEventTime(new Random().nextLong())
@@ -3033,14 +3020,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void isSourceAllowedToInsert_flexEventApiValidV1ParamsNavNearBoundary_pass()
+    public void isSourceAllowedToInsert_flexEventApiValidV1NavNearBoundaryDualDestination_fail()
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
@@ -3097,6 +3080,68 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         mMeasurementDao,
                         mDebugReportApi);
         // Assert
+        assertFalse(status);
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_flexEventApiValidV1NavNearBoundary_pass()
+            throws DatastoreException, JSONException {
+        // setup
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 3;
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        // Navigation and Event source has different maximum information gain
+                        // threshold
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setTriggerSpecs(new TriggerSpecs(
+                                triggerSpecsArray, maxEventLevelReports, null))
+                        .build();
+
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        testSource,
+                        testSource.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+        // Assert
         assertTrue(status);
     }
 
@@ -3105,10 +3150,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
                         + "\"event_report_windows\": { "

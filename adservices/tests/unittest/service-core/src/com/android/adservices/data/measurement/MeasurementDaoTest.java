@@ -247,8 +247,8 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
         assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
         assertEquals(
-                validSource.getCoarseEventReportDestinations(),
-                source.getCoarseEventReportDestinations());
+                validSource.hasCoarseEventReportDestinations(),
+                source.hasCoarseEventReportDestinations());
         assertEquals(validSource.getTriggerDataMatching(), source.getTriggerDataMatching());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
         assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());

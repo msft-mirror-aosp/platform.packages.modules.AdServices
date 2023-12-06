@@ -757,7 +757,11 @@ public class AsyncSourceFetcher {
                         json.getBoolean(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED));
             }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
-            return Optional.of(builder.build());
+            Source source = builder.build();
+            // Build privacy parameters, catching an arithmetic exception in case an inordinate
+            // number of report states is presented.
+            source.hasValidInformationGain(mFlags);
+            return Optional.of(source);
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: invalid JSON");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
