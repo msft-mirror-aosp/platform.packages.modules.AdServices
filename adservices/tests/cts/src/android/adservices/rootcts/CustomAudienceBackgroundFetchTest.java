@@ -26,6 +26,8 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 
+import com.android.compatibility.common.util.ShellUtils;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -123,5 +125,47 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
+     * Test to ensure that trusted signals are not updated if the daily update job exceeds the
+     * default timeout.
+     */
+    @Test
+    public void testAdSelection_withLongRunningJob_backgroundJobFails() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+        int startBackgroundFetchTimeoutMs = getBackgroundFetchJobTimeout();
+        int overrideBackgroundFetchTimeoutMs = 50;
+
+        try {
+            overrideBackgroundFetchJobTimeout(overrideBackgroundFetchTimeoutMs);
+            joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                    .isTrue();
+            Thread.sleep(overrideBackgroundFetchTimeoutMs + 100);
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+        } finally {
+            overrideBackgroundFetchJobTimeout(startBackgroundFetchTimeoutMs);
+            leaveCustomAudience(CA_NAME);
+        }
+    }
+
+    private static void overrideBackgroundFetchJobTimeout(int timeout) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices fledge_background_fetch_job_max_runtime_ms"
+                                + " %s",
+                        timeout));
+    }
+
+    private static int getBackgroundFetchJobTimeout() {
+        return Integer.parseInt(
+                ShellUtils.runShellCommand(
+                        "device_config get adservices fledge_background_fetch_job_max_runtime_ms"));
     }
 }
