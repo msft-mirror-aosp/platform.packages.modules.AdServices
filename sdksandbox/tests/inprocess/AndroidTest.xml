@@ -25,8 +25,7 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false" />
         <option name="package" value="com.android.sdksandbox.inprocess" />
-        <option name="instrumentation-arg"
-                key="thisisignored" value="thisisignored --instrument-sdk-sandbox" />
+        <option name="instrument-sdk-sandbox" value="true" />
     </test>
 
     <object type="module_controller"
