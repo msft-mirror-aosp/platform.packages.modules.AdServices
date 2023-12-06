@@ -41,16 +41,24 @@ public final class ApplicationContextSingletonRule implements TestRule {
     public static final String TAG = ApplicationContextSingletonRule.class.getSimpleName();
 
     private final Context mContext;
+    private final boolean mRestoreAfter;
 
-    /** Default constructor, sets the singleton as the target context of the instrumented app. */
-    public ApplicationContextSingletonRule() {
-        this(ApplicationProvider.getApplicationContext());
+    /**
+     * Default constructor, sets the singleton as the target context of the instrumented app and
+     * whether the previous context should be restored after the test.
+     */
+    public ApplicationContextSingletonRule(boolean restoreAfter) {
+        this(ApplicationProvider.getApplicationContext(), restoreAfter);
     }
 
-    /** Sets the singleton using the given {@code context}. */
-    public ApplicationContextSingletonRule(Context context) {
+    /**
+     * Sets the singleton using the given {@code context} and whether the previous context should be
+     * restored after the test.
+     */
+    public ApplicationContextSingletonRule(Context context, boolean restoreAfter) {
         mContext = Objects.requireNonNull(context, "context cannot be null");
-        Log.v(TAG, "Constructing with " + context);
+        mRestoreAfter = restoreAfter;
+        Log.v(TAG, "Constructing with " + context + " and restoreAfter=" + restoreAfter);
     }
 
     /** Convenience method to get the current {@link ApplicationContextSingleton}. */
@@ -72,18 +80,38 @@ public final class ApplicationContextSingletonRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 Context previousContext = ApplicationContextSingleton.getForTests();
+                String testName =
+                        description.getTestClass().getSimpleName()
+                                + "#"
+                                + description.getMethodName();
                 Log.d(
                         TAG,
                         "Changing ApplicationContextSingleton from "
                                 + previousContext
                                 + " to "
-                                + mContext);
+                                + mContext
+                                + " on "
+                                + testName);
                 ApplicationContextSingleton.setForTests(mContext);
                 try {
                     base.evaluate();
                 } finally {
-                    Log.d(TAG, "Restoring ApplicationContextSingleton to " + previousContext);
-                    ApplicationContextSingleton.setForTests(previousContext);
+                    if (mRestoreAfter) {
+                        Log.d(
+                                TAG,
+                                "Restoring ApplicationContextSingleton to "
+                                        + previousContext
+                                        + " on "
+                                        + testName);
+                        ApplicationContextSingleton.setForTests(previousContext);
+                    } else {
+                        Log.d(
+                                TAG,
+                                "NOT restoring ApplicationContextSingleton to previous context ("
+                                        + previousContext
+                                        + ") on "
+                                        + testName);
+                    }
                 }
             }
         };

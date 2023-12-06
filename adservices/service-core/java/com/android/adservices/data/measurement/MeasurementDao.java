@@ -401,11 +401,11 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertSource(@NonNull Source source) throws DatastoreException {
+    public String insertSource(@NonNull Source source) throws DatastoreException {
         if (mDbFileMaxSizeLimitReachedSupplier.get()) {
             LoggerFactory.getMeasurementLogger()
                     .d("DB size has reached the limit, source will not be inserted");
-            return;
+            return null;
         }
 
         String sourceId = UUID.randomUUID().toString();
@@ -480,6 +480,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.SourceContract.SHARED_DEBUG_KEY,
                 getNullableUnsignedLong(source.getSharedDebugKey()));
+        values.put(
+                MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
+                source.getTriggerDataMatching().name());
 
         long rowId =
                 mSQLTransaction
@@ -546,6 +549,7 @@ class MeasurementDao implements IMeasurementDao {
                 }
             }
         }
+        return sourceId;
     }
 
     @Override
@@ -886,6 +890,29 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public int deleteDebugReports(
+            @NonNull Uri registrant, @NonNull Instant start, @NonNull Instant end)
+            throws DatastoreException {
+        Objects.requireNonNull(registrant);
+        Objects.requireNonNull(start);
+        Objects.requireNonNull(end);
+        validateRange(start, end);
+        Instant cappedStart = capDeletionRange(start);
+        Instant cappedEnd = capDeletionRange(end);
+        Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
+        Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
+
+        final SQLiteDatabase db = mSQLTransaction.getDatabase();
+        return db.delete(
+                MeasurementTables.DebugReportContract.TABLE,
+                mergeConditions(
+                        " AND ",
+                        registrantMatcher.apply(MeasurementTables.DebugReportContract.REGISTRANT),
+                        timeMatcher.apply(MeasurementTables.DebugReportContract.INSERTION_TIME)),
+                /* whereArgs*/ null);
+    }
+
+    @Override
     public List<String> getPendingEventReportIdsInWindow(long windowStartTime, long windowEndTime)
             throws DatastoreException {
         List<String> eventReports = new ArrayList<>();
@@ -1210,6 +1237,40 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public List<Uri> getUninstalledAppNamesHavingMeasurementData(List<Uri> installedApps)
+            throws DatastoreException {
+        final List<Uri> uninstallAppNames = new ArrayList<>();
+
+        final String installedAppsFormatted = getUriValueList(installedApps);
+        final String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT %2$s FROM %1$s WHERE %2$s NOT IN %7$s "
+                                + "UNION "
+                                + "SELECT %4$s FROM %3$s WHERE %4$s NOT IN %7$s "
+                                + "UNION "
+                                + "SELECT %6$s FROM %5$s WHERE %6$s NOT IN %7$s",
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.SourceContract.REGISTRANT,
+                        MeasurementTables.TriggerContract.TABLE,
+                        MeasurementTables.TriggerContract.REGISTRANT,
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.REGISTRANT,
+                        installedAppsFormatted);
+        try (Cursor cursor =
+                mSQLTransaction.getDatabase().rawQuery(query, /* selectionArgs= */ null)) {
+            while (cursor.moveToNext()) {
+                uninstallAppNames.add(
+                        Uri.parse(
+                                cursor.getString(
+                                        cursor.getColumnIndexOrThrow(
+                                                MeasurementTables.SourceContract.REGISTRANT))));
+            }
+        }
+        return uninstallAppNames;
+    }
+
+    @Override
     public Integer countDistinctReportingOriginsPerPublisherXDestInAttribution(
             Uri sourceSite,
             Uri destinationSite,
@@ -1466,208 +1527,6 @@ class MeasurementDao implements IMeasurementDao {
                             String.valueOf(windowStartTime),
                             String.valueOf(windowEndTime)
                         });
-    }
-
-    @Override
-    public boolean deleteAppRecords(Uri uri) throws DatastoreException {
-        int numDeletions = 0;
-        String uriStr = uri.toString();
-        SQLiteDatabase db = mSQLTransaction.getDatabase();
-        // For all Source records matching the given Uri
-        // as REGISTRANT, obtains EventReport records who's SOURCE_ID
-        // matches a Source records' EVENT_ID.
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.EventReportContract.TABLE,
-                        String.format(
-                                Locale.ENGLISH,
-                                "%1$s IN ("
-                                        + "SELECT e.%1$s FROM %2$s e"
-                                        + " INNER JOIN %3$s s"
-                                        + " ON e.%4$s = s.%5$s"
-                                        + " WHERE s.%6$s = ?"
-                                        + ")",
-                                MeasurementTables.EventReportContract.ID,
-                                MeasurementTables.EventReportContract.TABLE,
-                                MeasurementTables.SourceContract.TABLE,
-                                MeasurementTables.EventReportContract.SOURCE_ID,
-                                MeasurementTables.SourceContract.ID,
-                                MeasurementTables.SourceContract.REGISTRANT),
-                        new String[] {uriStr});
-
-        // EventReport table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.EventReportContract.TABLE,
-                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION + " = ?",
-                        new String[] {uriStr});
-        // AggregateReport table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.AggregateReport.TABLE,
-                        MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
-                                + " = ? "
-                                + " OR "
-                                + MeasurementTables.AggregateReport.PUBLISHER
-                                + " = ? ",
-                        new String[] {uriStr, uriStr});
-        // Source table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.SourceContract.TABLE,
-                        "( "
-                                + MeasurementTables.SourceContract.REGISTRANT
-                                + " = ? ) OR "
-                                + "("
-                                + MeasurementTables.SourceContract.STATUS
-                                + " = ? AND "
-                                + MeasurementTables.SourceContract.ID
-                                + " IN ("
-                                + selectSourceIdsByDestination(uriStr, EventSurfaceType.APP)
-                                + ") )",
-                        new String[] {uriStr, String.valueOf(Source.Status.IGNORED)});
-        // Trigger table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.TriggerContract.TABLE,
-                        MeasurementTables.TriggerContract.REGISTRANT + " = ?",
-                        new String[] {uriStr});
-        // Attribution table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.AttributionContract.TABLE,
-                        MeasurementTables.AttributionContract.SOURCE_SITE
-                                + " = ? OR "
-                                + MeasurementTables.AttributionContract.DESTINATION_SITE
-                                + " = ?",
-                        new String[] {uriStr, uriStr});
-
-        // Async Registration table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.AsyncRegistrationContract.TABLE,
-                        MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
-                        new String[] {uriStr});
-
-        // Debug Report table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.DebugReportContract.TABLE,
-                        MeasurementTables.DebugReportContract.REGISTRANT + " = ? ",
-                        new String[] {uriStr});
-
-        return numDeletions != 0;
-    }
-
-    @Override
-    public boolean deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException {
-        int numDeletions = 0;
-        SQLiteDatabase db = mSQLTransaction.getDatabase();
-        String valueList = getUriValueList(uriList);
-
-        // For all Source records not in the given list
-        // as REGISTRANT, obtains EventReport records whose SOURCE_ID
-        // matches Source records' SOURCE_ID.
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.EventReportContract.TABLE,
-                        String.format(
-                                Locale.ENGLISH,
-                                "%1$s IN ("
-                                        + "SELECT e.%1$s FROM %2$s e"
-                                        + " INNER JOIN %3$s s"
-                                        + " ON e.%4$s = s.%5$s"
-                                        + " WHERE s.%6$s NOT IN "
-                                        + valueList
-                                        + ")",
-                                MeasurementTables.EventReportContract.ID,
-                                MeasurementTables.EventReportContract.TABLE,
-                                MeasurementTables.SourceContract.TABLE,
-                                MeasurementTables.EventReportContract.SOURCE_ID,
-                                MeasurementTables.SourceContract.ID,
-                                MeasurementTables.SourceContract.REGISTRANT),
-                        /* whereArgs */ null);
-
-        // Event Report table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.EventReportContract.TABLE,
-                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION
-                                + " NOT IN "
-                                + valueList,
-                        /* whereArgs */ null);
-
-        // AggregateReport table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.AggregateReport.TABLE,
-                        MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
-                                + " NOT IN "
-                                + valueList.toString()
-                                + " OR "
-                                + MeasurementTables.AggregateReport.PUBLISHER
-                                + " NOT IN "
-                                + valueList.toString(),
-                        /* whereArgs */ null);
-
-        // Source table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.SourceContract.TABLE,
-                        "(("
-                                + MeasurementTables.SourceContract.REGISTRANT
-                                + " NOT IN "
-                                + valueList
-                                + ") OR ("
-                                + MeasurementTables.SourceContract.STATUS
-                                + " = ? AND "
-                                // Delete source records that are associated with any
-                                // non-installed destination apps.
-                                + MeasurementTables.SourceContract.ID
-                                + " IN ("
-                                + selectSourceIdsWithNonInstalledAppDestinations(valueList)
-                                + ")))",
-                        new String[] {String.valueOf(Source.Status.IGNORED)});
-
-        // Trigger table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.TriggerContract.TABLE,
-                        MeasurementTables.TriggerContract.REGISTRANT + " NOT IN " + valueList,
-                        /* whereArgs */ null);
-
-        // Attribution table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.AttributionContract.TABLE,
-                        MeasurementTables.AttributionContract.SOURCE_SITE
-                                + " NOT IN "
-                                + valueList.toString()
-                                + " OR "
-                                + MeasurementTables.AttributionContract.DESTINATION_SITE
-                                + " NOT IN "
-                                + valueList.toString(),
-                        /* whereArgs */ null);
-
-        // Async Registration table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.AsyncRegistrationContract.TABLE,
-                        MeasurementTables.AsyncRegistrationContract.REGISTRANT
-                                + " NOT IN "
-                                + valueList.toString(),
-                        /* whereArgs */ null);
-
-        // Debug Report table
-        numDeletions +=
-                db.delete(
-                        MeasurementTables.DebugReportContract.TABLE,
-                        MeasurementTables.DebugReportContract.REGISTRANT
-                                + " NOT IN "
-                                + valueList.toString(),
-                        /* whereArgs */ null);
-
-        return numDeletions != 0;
     }
 
     @Override
@@ -2776,10 +2635,6 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
-    private static String getNullableUriString(@Nullable List<Uri> uriList) {
-        return Optional.ofNullable(uriList).map(uris -> uris.get(0).toString()).orElse(null);
-    }
-
     private static String getNullableUriString(@Nullable Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
@@ -3158,31 +3013,6 @@ class MeasurementDao implements IMeasurementDao {
                         + MeasurementTables.SourceDestination.DESTINATION_TYPE
                         + " = "
                         + destinationType);
-    }
-
-    /**
-     * Given a parenthesised list of destinations, select source IDs where any of their app
-     * destinations are not installed.
-     */
-    private static String selectSourceIdsWithNonInstalledAppDestinations(String installedApps) {
-        return String.format(
-                Locale.ENGLISH,
-                "SELECT DISTINCT "
-                        + MeasurementTables.SourceDestination.SOURCE_ID
-                        + " "
-                        + "FROM "
-                        + MeasurementTables.SourceDestination.TABLE
-                        + " "
-                        + "WHERE "
-                        + MeasurementTables.SourceDestination.DESTINATION
-                        + " "
-                        + "NOT IN "
-                        + installedApps
-                        + " "
-                        + "AND "
-                        + MeasurementTables.SourceDestination.DESTINATION_TYPE
-                        + " = "
-                        + EventSurfaceType.APP);
     }
 
     /**

@@ -48,7 +48,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -79,7 +79,7 @@ import com.android.adservices.service.measurement.reporting.EventReportWindowCal
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.truth.Truth;
 
@@ -90,9 +90,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
@@ -110,14 +107,15 @@ import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
-/** Unit tests for {@link AsyncRegistrationQueueRunnerTest} */
-public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCase {
+@SpyStatic(FlagsFactory.class)
+public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
     private static final boolean DEFAULT_AD_ID_PERMISSION = false;
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
     private static final Uri DEFAULT_VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
+    private static final String DEFAULT_SOURCE_ID = UUID.randomUUID().toString();
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri APP_TOP_ORIGIN =
             Uri.parse("android-app://" + sDefaultContext.getPackageName());
@@ -166,6 +164,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     private AsyncSourceFetcher mAsyncSourceFetcher;
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
     private Source mMockedSource;
+    private Context mContext;
+
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Trigger mMockedTrigger;
     @Mock private ITransaction mTransaction;
@@ -173,15 +173,12 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     @Mock private ContentResolver mContentResolver;
     @Mock private ContentProviderClient mMockContentProviderClient;
     @Mock private DebugReportApi mDebugReportApi;
-    @Mock HttpsURLConnection mUrlConnection;
-    @Mock Flags mFlags;
-    @Mock AdServicesLogger mLogger;
-    @Mock AdServicesErrorLogger mErrorLogger;
-    @Mock SourceNoiseHandler mSourceNoiseHandler;
-    @Mock PackageManager mPackageManager;
-    private Context mContext;
-
-    private MockitoSession mStaticMockSession;
+    @Mock private HttpsURLConnection mUrlConnection;
+    @Mock private Flags mFlags;
+    @Mock private AdServicesLogger mLogger;
+    @Mock private AdServicesErrorLogger mErrorLogger;
+    @Mock private SourceNoiseHandler mSourceNoiseHandler;
+    @Mock private PackageManager mPackageManager;
 
     private static EnrollmentData getEnrollment(String enrollmentId) {
         return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
@@ -213,18 +210,11 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     public void cleanup() {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
-        mStaticMockSession.finishMocking();
     }
 
     @Before
-    public void before() throws RemoteException {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+    public void before() throws Exception {
+        extendedMockito.mockGetFlags(mFlags);
 
         mAsyncSourceFetcher = spy(new AsyncSourceFetcher(sDefaultContext));
         mAsyncTriggerFetcher = spy(new AsyncTriggerFetcher(sDefaultContext));
@@ -265,6 +255,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
                         .MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
         when(mFlags.getMeasurementDestinationRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW);
+        when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
         mContext = spy(sDefaultContext);
         when(mContext.getPackageManager()).thenReturn(mPackageManager);
     }
@@ -1974,6 +1965,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
 
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getAppDestinations().get(0).toString())
                         .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2024,6 +2016,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
 
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getWebDestinations().get(0).toString())
                         .setDestinationSite(source.getWebDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2081,6 +2074,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
                 .insertAttribution(attributionRateLimitArgCaptor.capture());
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getAppDestinations().get(0).toString())
                         .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2094,6 +2088,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
 
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getWebDestinations().get(0).toString())
                         .setDestinationSite(source.getWebDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2224,6 +2219,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
 
         assertEquals(
                 new Attribution.Builder()
+                        .setSourceId(DEFAULT_SOURCE_ID)
                         .setDestinationOrigin(source.getAppDestinations().get(0).toString())
                         .setDestinationSite(source.getAppDestinations().get(0).toString())
                         .setEnrollmentId(source.getEnrollmentId())
@@ -2862,7 +2858,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     public void isSourceAllowedToInsert_flexLiteApiExceedMaxInfoGain_fail()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementFlexLiteAPIEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexLiteApiEnabled()).thenReturn(true);
         when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
         when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
@@ -2917,7 +2913,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     public void isSourceAllowedToInsert_flexLiteApiExceedMaxInfoGain_pass()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementFlexLiteAPIEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementFlexLiteApiEnabled()).thenReturn(true);
         when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
         when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())

@@ -18,13 +18,19 @@ package com.android.adservices.common;
 
 import com.android.adservices.common.Logger.RealLogger;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 // TODO(b/295269584): move to module-utils?
 // TODO(b/295269584): add examples
@@ -44,8 +50,7 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     private static final String TAG = "SdkLevelSupportRule";
 
-    private static final String REASON_LEVEL_SET_ON_RULE_CONSTRUCTOR =
-            "(level set on rule constructor)";
+    @VisibleForTesting static final String DEFAULT_REASON = "N/A";
 
     private final AndroidSdkRange mDefaultRequiredRange;
     protected final Logger mLog;
@@ -92,73 +97,172 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         };
     }
 
-    // TODO(b/295269584): expose as @VisibleForTest and add unit tests for it - that would be a more
-    // pragmatic approach then adding more combinations to the existing tests
-    private RequiredRange getRequiredRange(Description description) {
-        // Start with the levels set in the constructor
-        int minLevel = mDefaultRequiredRange.mMinLevel;
-        int maxLevel = mDefaultRequiredRange.mMaxLevel;
-        String reason = REASON_LEVEL_SET_ON_RULE_CONSTRUCTOR;
+    @VisibleForTesting
+    RequiredRange getRequiredRange(Description description) {
+        // List of ranges defined in the test itself and its superclasses
+        Set<AndroidSdkRange> ranges = new HashSet<>();
+        // TODO(b/295269584): merge all reasons (instead of using just the latest);
+        String reason = null;
 
-        // Then check for the "atLeastX" method annotations
-        RequiresSdkLevelAtLeastR atLeastR =
-                description.getAnnotation(RequiresSdkLevelAtLeastR.class);
-        if (atLeastR != null && minLevel <= AndroidSdkLevel.R.mLevel) {
-            minLevel = AndroidSdkLevel.R.mLevel;
-            reason = atLeastR.reason();
-        }
-        RequiresSdkLevelAtLeastS atLeastS =
-                description.getAnnotation(RequiresSdkLevelAtLeastS.class);
-        if (atLeastS != null && minLevel <= AndroidSdkLevel.S.mLevel) {
-            minLevel = AndroidSdkLevel.S.mLevel;
-            reason = atLeastS.reason();
-        }
-        RequiresSdkLevelAtLeastS2 atLeastS2 =
-                description.getAnnotation(RequiresSdkLevelAtLeastS2.class);
-        if (atLeastS2 != null && minLevel <= AndroidSdkLevel.S2.mLevel) {
-            minLevel = AndroidSdkLevel.S2.mLevel;
-            reason = atLeastS2.reason();
-        }
-        RequiresSdkLevelAtLeastT atLeastT =
-                description.getAnnotation(RequiresSdkLevelAtLeastT.class);
-        if (atLeastT != null && minLevel <= AndroidSdkLevel.T.mLevel) {
-            minLevel = AndroidSdkLevel.T.mLevel;
-            reason = atLeastT.reason();
-        }
-        RequiresSdkLevelAtLeastU atLeastU =
-                description.getAnnotation(RequiresSdkLevelAtLeastU.class);
-        if (atLeastU != null && minLevel <= AndroidSdkLevel.U.mLevel) {
-            minLevel = AndroidSdkLevel.U.mLevel;
-            reason = atLeastU.reason();
+        // Start with the test class
+        RequiredRange testRange =
+                getRequiredRange(
+                        description.getAnnotations(),
+                        /* allowEmpty= */ false,
+                        /* addDefaultRange= */ true,
+                        /* setDefaultReason= */ false);
+        reason = testRange.reason;
+        ranges.add(testRange.range);
+
+        // Then the superclasses
+        Class<?> clazz = description.getTestClass();
+        do {
+            RequiredRange testClassRange = getRequiredRangeFromClass(clazz);
+            if (testClassRange != null) {
+                ranges.add(testClassRange.range);
+                if (reason == null) {
+                    reason = testClassRange.reason;
+                }
+            }
+            clazz = clazz.getSuperclass();
+        } while (clazz != null);
+
+        if (reason == null) {
+            reason = DEFAULT_REASON;
         }
 
-        // Then check for the "atMostX" method annotations
-        RequiresSdkLevelLessThanT requiresLessThanT =
-                description.getAnnotation(RequiresSdkLevelLessThanT.class);
-        if (requiresLessThanT != null && maxLevel > AndroidSdkLevel.S2.mLevel) {
-            maxLevel = AndroidSdkLevel.S2.mLevel;
-            reason = requiresLessThanT.reason();
+        AndroidSdkRange mergedRange = AndroidSdkRange.merge(ranges);
+        return new RequiredRange(mergedRange, reason);
+    }
+
+    @VisibleForTesting
+    RequiredRange getRequiredRange(Collection<Annotation> annotations) {
+        return getRequiredRange(
+                annotations,
+                /* allowEmpty= */ false,
+                /* addDefaultRange= */ true,
+                /* setDefaultReason= */ true);
+    }
+
+    @Nullable
+    private RequiredRange getRequiredRangeFromClass(Class<?> testClass) {
+        Annotation[] annotations = testClass.getAnnotations();
+        if (annotations == null) {
+            return null;
         }
+
+        return getRequiredRange(
+                Arrays.asList(annotations),
+                /* allowEmpty= */ true,
+                /* addDefaultRange= */ false,
+                /* setDefaultReason= */ false);
+    }
+
+    @Nullable
+    private RequiredRange getRequiredRange(
+            Collection<Annotation> annotations,
+            boolean allowEmpty,
+            boolean addDefaultRange,
+            boolean setDefaultReason) {
+        Set<AndroidSdkRange> ranges = new HashSet<>();
+        if (addDefaultRange) {
+            ranges.add(mDefaultRequiredRange);
+        }
+        String reason = null;
+
+        for (Annotation annotation : annotations) {
+            if (annotation instanceof RequiresSdkLevelAtLeastR) {
+                ranges.add(AndroidSdkRange.forAtLeast(AndroidSdkLevel.R.getLevel()));
+                reason = getReason(reason, ((RequiresSdkLevelAtLeastR) annotation).reason());
+            }
+            if (annotation instanceof RequiresSdkLevelAtLeastS) {
+                ranges.add(AndroidSdkRange.forAtLeast(AndroidSdkLevel.S.getLevel()));
+                reason = getReason(reason, ((RequiresSdkLevelAtLeastS) annotation).reason());
+            }
+            if (annotation instanceof RequiresSdkLevelAtLeastS2) {
+                ranges.add(AndroidSdkRange.forAtLeast(AndroidSdkLevel.S2.getLevel()));
+                reason = getReason(reason, ((RequiresSdkLevelAtLeastS2) annotation).reason());
+            }
+            if (annotation instanceof RequiresSdkLevelAtLeastT) {
+                ranges.add(AndroidSdkRange.forAtLeast(AndroidSdkLevel.T.getLevel()));
+                reason = getReason(reason, ((RequiresSdkLevelAtLeastT) annotation).reason());
+                reason = ((RequiresSdkLevelAtLeastT) annotation).reason();
+            }
+            if (annotation instanceof RequiresSdkLevelAtLeastU) {
+                ranges.add(AndroidSdkRange.forAtLeast(AndroidSdkLevel.U.getLevel()));
+                reason = getReason(reason, ((RequiresSdkLevelAtLeastU) annotation).reason());
+            }
+            if (annotation instanceof RequiresSdkLevelLessThanT) {
+                ranges.add(AndroidSdkRange.forAtMost(AndroidSdkLevel.S2.getLevel()));
+                reason = getReason(reason, ((RequiresSdkLevelLessThanT) annotation).reason());
+            }
+        }
+
+        if (ranges.isEmpty() && allowEmpty) {
+            return null;
+        }
+
+        if (reason == null && setDefaultReason) {
+            reason = DEFAULT_REASON;
+        }
+
         try {
-            return new RequiredRange(AndroidSdkRange.forRange(minLevel, maxLevel), reason);
+            AndroidSdkRange mergedRange = AndroidSdkRange.merge(ranges);
+            return new RequiredRange(mergedRange, reason);
         } catch (Exception e) {
             throw new IllegalArgumentException(
                     "Invalid range when combining constructor range ("
-                            + mDefaultRequiredRange
+                            + ranges
                             + ") and annotations ("
-                            + description.getAnnotations()
+                            + annotations
                             + ")",
                     e);
         }
     }
 
-    private static final class RequiredRange {
-        public final AndroidSdkRange range;
-        public final String reason;
+    private String getReason(String currentReason, String newReason) {
+        if (newReason == null) {
+            return currentReason;
+        }
+        if (currentReason == null || currentReason.equals(newReason)) {
+            return newReason;
+        }
+        throw new IllegalStateException(
+                "Found annotation with reason ("
+                        + newReason
+                        + ") different from previous annotation reason ("
+                        + currentReason
+                        + ")");
+    }
 
-        RequiredRange(AndroidSdkRange range, String reason) {
+    @VisibleForTesting
+    static final class RequiredRange {
+        public final AndroidSdkRange range;
+        @Nullable public final String reason;
+
+        RequiredRange(AndroidSdkRange range, @Nullable String reason) {
             this.range = Objects.requireNonNull(range);
-            this.reason = (reason == null || reason.isBlank()) ? "N/A" : reason;
+            this.reason = reason;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(range);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            RequiredRange other = (RequiredRange) obj;
+            return Objects.equals(range, other.range);
         }
 
         @Override
@@ -192,6 +296,11 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
     /** Gets whether the device supports at least Android {@code U}. */
     public final boolean isAtLeastU() {
         return getDeviceApiLevel().isAtLeast(AndroidSdkLevel.U);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[mDefaultRequiredRange=" + mDefaultRequiredRange + "]";
     }
 
     // NOTE: calling it AndroidSdkLevel to avoid conflict with SdkLevel
@@ -280,16 +389,19 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
         }
 
         protected static AndroidSdkRange merge(AndroidSdkRange... ranges) {
+            return merge(Arrays.asList(ranges));
+        }
+
+        protected static AndroidSdkRange merge(Collection<AndroidSdkRange> ranges) {
             Objects.requireNonNull(ranges, "ranges cannot be null");
-            if (ranges.length == 0) {
+            if (ranges.isEmpty()) {
                 throw new IllegalArgumentException("ranges cannot be empty");
             }
             int minRange = NO_MIN;
             int maxRange = NO_MAX;
             for (AndroidSdkRange range : ranges) {
                 if (range == null) {
-                    throw new IllegalArgumentException(
-                            "ranges cannot have null range: " + Arrays.toString(ranges));
+                    throw new IllegalArgumentException("ranges cannot have null range: " + ranges);
                 }
                 minRange = Math.max(minRange, range.mMinLevel);
                 maxRange = Math.min(maxRange, range.mMaxLevel);

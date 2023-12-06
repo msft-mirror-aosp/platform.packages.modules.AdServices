@@ -38,30 +38,31 @@ public class SettingsPages {
             UiDevice device,
             UiConstants.UX ux,
             boolean isOptin,
-            boolean flipConsent)
+            boolean flipConsent,
+            boolean assertOptIn)
             throws UiObjectNotFoundException, InterruptedException {
         switch (ux) {
             case GA_UX:
                 enterTopicsConsentPage(context, device);
-                flipConsent(device, isOptin, flipConsent);
+                flipConsent(device, isOptin, flipConsent, assertOptIn);
                 device.pressBack();
                 enterFledgeConsentPage(context, device);
-                flipConsent(device, isOptin, flipConsent);
+                flipConsent(device, isOptin, flipConsent, assertOptIn);
                 device.pressBack();
                 enterMsmtConsentPage(context, device);
-                flipConsent(device, isOptin, flipConsent);
+                flipConsent(device, isOptin, flipConsent, assertOptIn);
                 device.pressBack();
                 break;
             case BETA_UX:
-                flipConsent(device, isOptin, flipConsent);
+                flipConsent(device, isOptin, flipConsent, assertOptIn);
                 break;
             case U18_UX:
                 enterU18ConsentPage(context, device);
-                flipConsent(device, isOptin, flipConsent);
+                flipConsent(device, isOptin, flipConsent, assertOptIn);
                 break;
             case RVC_UX:
                 enterU18ConsentPage(context, device);
-                flipConsent(device, isOptin, flipConsent);
+                flipConsent(device, isOptin, flipConsent, assertOptIn);
         }
     }
 
@@ -86,7 +87,8 @@ public class SettingsPages {
     }
 
     /** Flips the consent toggle. */
-    public static void flipConsent(UiDevice device, boolean isOptin, boolean flipConsent)
+    public static void flipConsent(
+            UiDevice device, boolean isOptin, boolean flipConsent, boolean assertOptIn)
             throws UiObjectNotFoundException, InterruptedException {
         UiObject consentSwitch =
                 device.findObject(new UiSelector().className("android.widget.Switch"));
@@ -106,6 +108,8 @@ public class SettingsPages {
                 consentSwitch.clickTopLeft();
             }
             Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+            assertThat(consentSwitch.isChecked()).isTrue();
+        } else if (assertOptIn) {
             assertThat(consentSwitch.isChecked()).isTrue();
         } else {
             if (consentStatus) {

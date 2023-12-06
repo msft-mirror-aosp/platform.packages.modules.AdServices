@@ -32,9 +32,9 @@
         <option name="max-sdk-level" value="32"/>
     </object>
 
-    <!-- Prevent tests from running on Android R- -->
+    <!-- Prevent tests from running on Android Q- -->
     <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
+            class="com.android.tradefed.testtype.suite.module.Sdk30ModuleController"/>
 
     <!-- For this test suite to get picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
@@ -86,6 +86,12 @@
                 value="device_config put adservices enable_enrollment_test_seed true" />
         <option name="teardown-command"
                 value="device_config put adservices enable_enrollment_test_seed false" />
+
+        <!-- Enabled API access without ad_services_config -->
+        <option name="run-command"
+                value="device_config put adservices app_config_returns_enabled_by_detault true" />
+        <option name="teardown-command"
+                value="device_config put adservices app_config_returns_enabled_by_detault false" />
 
         <!-- Disable Register Ad Beacon Feature -->
         <option name="run-command"

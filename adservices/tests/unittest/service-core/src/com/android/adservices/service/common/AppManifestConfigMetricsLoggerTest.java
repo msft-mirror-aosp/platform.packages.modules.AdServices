@@ -18,9 +18,7 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithoutThrowable;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.dump;
-import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.logUsage;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.PREFS_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION;
@@ -89,7 +87,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     @Before
     public void setExpectations() {
         appContext.set(mMockContext);
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(mPrefs);
         mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
         mErrorLogUtilWithoutThrowableCallback = mockErrorLogUtilWithoutThrowable();
@@ -100,7 +98,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        logUsage(
+                        logUsageAndDontWait(
                                 /* packageName= */ null,
                                 APP_EXISTS,
                                 APP_HAS_CONFIG,
@@ -123,7 +121,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
         // 2nd time should not call edit
         mPrefs.onEditThrows(); // will throw if edit() is called
-        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndDontWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).hasSize(1);
@@ -161,8 +159,6 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         // tests per method (not class)
         FakeSharedPreferences prefs = new FakeSharedPreferences();
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(prefs);
-        SyncOnSharedPreferenceChangeListener listener = new SyncOnSharedPreferenceChangeListener();
-        prefs.registerOnSharedPreferenceChangeListener(listener);
 
         // 1st call
         Log.d(
@@ -174,9 +170,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                         + ", enabledByDefault="
                         + ENABLED_BY_DEFAULT
                         + ")");
-        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
-        listener.assertReceived();
-        prefs.unregisterOnSharedPreferenceChangeListener(listener);
+        logUsageAndWait(prefs, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         int valueBefore = prefs.getInt(PKG_NAME, -1);
         expect.withMessage(
@@ -196,11 +190,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                         + ", enabledByDefault="
                         + enabledByDefault
                         + ")");
-        SyncOnSharedPreferenceChangeListener listener2 = new SyncOnSharedPreferenceChangeListener();
-        prefs.registerOnSharedPreferenceChangeListener(listener2);
-        logUsage(PKG_NAME, appExists, appHasConfig, enabledByDefault);
-        listener2.assertReceived();
-        prefs.unregisterOnSharedPreferenceChangeListener(listener2);
+        logUsageAndWait(prefs, PKG_NAME, appExists, appHasConfig, enabledByDefault);
 
         Map<String, ?> allProps = prefs.getAll();
         expect.withMessage("allProps").that(allProps).hasSize(1);
@@ -227,7 +217,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenThrow(exception);
 
-        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndDontWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         mErrorLogUtilWithThrowableCallback.assertReceived(
                 expect,
@@ -240,7 +230,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     public void testLogUsage_commitFailed() throws Exception {
         mPrefs.onCommitReturns(/* result= */ false);
 
-        logUsage(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndDontWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).isEmpty();
@@ -263,7 +253,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                             return mPrefs;
                         });
 
-        logUsageAndWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(mPrefs, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
 
         assertWithMessage("execution thread")
                 .that(executionThread.get())
@@ -293,9 +283,13 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Test
     public void testDump_multipleEntries() throws Exception {
-        logUsageAndWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(mPrefs, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
         logUsageAndWait(
-                PKG_NAME2, APP_DOES_NOT_EXIST, APP_DOES_NOT_HAVE_CONFIG, NOT_ENABLED_BY_DEFAULT);
+                mPrefs,
+                PKG_NAME2,
+                APP_DOES_NOT_EXIST,
+                APP_DOES_NOT_HAVE_CONFIG,
+                NOT_ENABLED_BY_DEFAULT);
 
         String dump = DumpHelper.dump(pw -> AppManifestConfigMetricsLogger.dump(mMockContext, pw));
 
@@ -328,28 +322,64 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
     private void logUsageAndWait(boolean appExists, boolean appHasConfig, boolean enabledByDefault)
             throws InterruptedException {
-        logUsageAndWait(PKG_NAME, appExists, appHasConfig, enabledByDefault);
+        logUsageAndWait(mPrefs, PKG_NAME, appExists, appHasConfig, enabledByDefault);
     }
 
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
     private void logUsageAndWait(
-            String appName, boolean appExists, boolean appHasConfig, boolean enabledByDefault)
+            SharedPreferences prefs,
+            String appName,
+            boolean appExists,
+            boolean appHasConfig,
+            boolean enabledByDefault)
             throws InterruptedException {
         SyncOnSharedPreferenceChangeListener listener = new SyncOnSharedPreferenceChangeListener();
-        mPrefs.registerOnSharedPreferenceChangeListener(listener);
+        prefs.registerOnSharedPreferenceChangeListener(listener);
+        try {
+            Log.v(
+                    mTag,
+                    "logUsageAndWait(appName="
+                            + appName
+                            + ", prefs="
+                            + prefs
+                            + ", appExists="
+                            + appExists
+                            + ", appHasConfig="
+                            + appHasConfig
+                            + ", enabledByDefault="
+                            + enabledByDefault
+                            + ", listener="
+                            + listener
+                            + ")");
+            AppManifestConfigMetricsLogger.logUsage(
+                    appName, appExists, appHasConfig, enabledByDefault);
+            String result = listener.assertResultReceived();
+            Log.v(mTag, "result: " + result);
+        } finally {
+            mPrefs.unregisterOnSharedPreferenceChangeListener(listener);
+        }
+    }
+
+    // Should only be used in cases where the call is expect to not change the shared preferences
+    // (in which case a listener would not be called)
+    private void logUsageAndDontWait(
+            String appName, boolean appExists, boolean appHasConfig, boolean enabledByDefault) {
         Log.v(
                 mTag,
-                "logUsageAndWait(appExists="
+                "logUsageAndDontWait(appName= "
+                        + appName
+                        + ", mPrefs="
+                        + mPrefs
+                        + ", appExists="
                         + appExists
                         + ", appHasConfig="
                         + appHasConfig
                         + ", enabledByDefault="
                         + enabledByDefault
                         + ")");
-        logUsage(appName, appExists, appHasConfig, enabledByDefault);
-        listener.assertResultReceived();
-        // don't need to unregister, listener is just used once
+        AppManifestConfigMetricsLogger.logUsage(appName, appExists, appHasConfig, enabledByDefault);
     }
+
 
     // TODO(b/309857141): move to its own class / common package (it will be done in a later CL so
     // this class can be easily cherry picked into older releases).
