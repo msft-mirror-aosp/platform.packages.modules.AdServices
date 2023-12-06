@@ -133,36 +133,41 @@ public class TriggerSpec {
         VALUE_SUM
     }
 
+    private static List<Long> getLongListFromJSON(JSONObject json, String key)
+            throws JSONException {
+        return getLongListFromJSON(json.getJSONArray(key));
+    }
+
     /**
      * Parses long JSONArray into List<Long>
      *
-     * @param json parent jsonObject
-     * @param key key for the JSON Array
+     * @param jsonArray the JSON Array
      * @return the parsed List<Long>
      */
-    public static List<Long> getLongListFromJSON(JSONObject json, String key)
-            throws JSONException {
+    public static List<Long> getLongListFromJSON(JSONArray jsonArray) throws JSONException {
         List<Long> result = new ArrayList<>();
-        JSONArray valueArray = json.getJSONArray(key);
-        for (int i = 0; i < valueArray.length(); i++) {
-            result.add(valueArray.getLong(i));
+        for (int i = 0; i < jsonArray.length(); i++) {
+            result.add(jsonArray.getLong(i));
         }
         return result;
+    }
+
+    private static List<UnsignedLong> getTriggerDataArrayFromJSON(JSONObject json, String key)
+            throws JSONException {
+        return getTriggerDataArrayFromJSON(json.getJSONArray(key));
     }
 
     /**
      * Parses long JSONArray into List<UnsignedLong>
      *
-     * @param json parent jsonObject
-     * @param key key for the JSON Array
+     * @param jsonArray the JSON Array
      * @return a list of UnsignedLong
      */
-    public static List<UnsignedLong> getTriggerDataArrayFromJSON(JSONObject json, String key)
+    public static List<UnsignedLong> getTriggerDataArrayFromJSON(JSONArray jsonArray)
             throws JSONException {
         List<UnsignedLong> result = new ArrayList<>();
-        JSONArray valueArray = json.getJSONArray(key);
-        for (int i = 0; i < valueArray.length(); i++) {
-            result.add(new UnsignedLong(valueArray.getString(i)));
+        for (int i = 0; i < jsonArray.length(); i++) {
+            result.add(new UnsignedLong(jsonArray.getString(i)));
         }
         return result;
     }
