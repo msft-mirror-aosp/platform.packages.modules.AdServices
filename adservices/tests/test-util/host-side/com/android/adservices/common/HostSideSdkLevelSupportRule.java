@@ -15,14 +15,13 @@
  */
 package com.android.adservices.common;
 
-import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractSdkLevelSupportedRule}. */
 public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
     private HostSideSdkLevelSupportRule(AndroidSdkLevel level) {
-        super(ConsoleLogger.getInstance(), level);
+        super(ConsoleLogger.getInstance(), AndroidSdkRange.forAtLeast(level.getLevel()));
     }
 
     public void setDevice(ITestDevice device) {
@@ -61,27 +60,7 @@ public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupported
     }
 
     @Override
-    public boolean isAtLeastR() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.R);
-    }
-
-    @Override
-    public boolean isAtLeastS() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.S);
-    }
-
-    @Override
-    public boolean isAtLeastT() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.T);
-    }
-
-    @Override
-    public boolean isAtLeastU() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.U);
-    }
-
-    private boolean isDeviceApiLevelAtLeast(AndroidSdkLevel level)
-            throws DeviceNotAvailableException {
-        return TestDeviceHelper.getTestDevice().getApiLevel() >= level.getLevel();
+    public AndroidSdkLevel getDeviceApiLevel() {
+        return AndroidSdkLevel.forLevel(TestDeviceHelper.getApiLevel());
     }
 }

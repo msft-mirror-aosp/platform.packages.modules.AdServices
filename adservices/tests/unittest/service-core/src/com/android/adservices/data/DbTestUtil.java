@@ -65,7 +65,7 @@ public final class DbTestUtil {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
                 sSingleton =
-                        new DbHelper(sContext, DATABASE_NAME_FOR_TEST, DbHelper.DATABASE_VERSION);
+                        new DbHelper(sContext, DATABASE_NAME_FOR_TEST, DbHelper.DATABASE_VERSION_7);
             }
             return sSingleton;
         }

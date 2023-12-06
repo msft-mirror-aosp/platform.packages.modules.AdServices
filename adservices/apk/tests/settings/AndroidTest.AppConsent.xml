@@ -19,7 +19,7 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user" />
 
     <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
-        <option name="directory-keys" value="/sdcard/Pictures" />
+        <option name="directory-keys" value="/sdcard/Documents/adservices-tests" />
         <option name="clean-up" value="false" />
         <option name="collect-on-run-ended-only" value="true" />
     </metrics_collector>

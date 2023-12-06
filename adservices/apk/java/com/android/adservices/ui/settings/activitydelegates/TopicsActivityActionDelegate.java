@@ -221,7 +221,7 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case BLOCK_TOPIC:
-                                UiStatsLogger.logBlockTopicSelected(mActivity);
+                                UiStatsLogger.logBlockTopicSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockTopicDialog(
@@ -235,7 +235,7 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case RESET_TOPICS:
-                                UiStatsLogger.logResetTopicSelected(mActivity);
+                                UiStatsLogger.logResetTopicSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetTopicDialog(

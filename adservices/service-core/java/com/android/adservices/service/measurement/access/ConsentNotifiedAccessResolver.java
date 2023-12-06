@@ -22,13 +22,10 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
 
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.CachedFlags;
 
 /**
  * API access gate on whether consent notification was displayed. {@link #isAllowed(Context)} will
@@ -39,12 +36,23 @@ import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentCh
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotifiedAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Consent notification has not been displayed.";
-    private final UxStatesManager mUxStatesManager;
-    private final Flags mFlags;
+    private final ConsentManager mConsentManager;
+    private final CachedFlags mFlags;
+    @NonNull private final UserConsentAccessResolver mUserConsentAccessResolver;
 
-    public ConsentNotifiedAccessResolver(@NonNull UxStatesManager uxStatesManager, Flags flags) {
-        mUxStatesManager = uxStatesManager;
+    public ConsentNotifiedAccessResolver(
+            @NonNull ConsentManager consentManager, @NonNull CachedFlags flags) {
+        this(consentManager, flags, new UserConsentAccessResolver(consentManager));
+    }
+
+    @VisibleForTesting
+    public ConsentNotifiedAccessResolver(
+            @NonNull ConsentManager consentManager,
+            @NonNull CachedFlags flags,
+            @NonNull UserConsentAccessResolver userConsentAccessResolver) {
+        mConsentManager = consentManager;
         mFlags = flags;
+        mUserConsentAccessResolver = userConsentAccessResolver;
     }
 
     @Override
@@ -52,11 +60,15 @@ public class ConsentNotifiedAccessResolver implements IAccessResolver {
         if (mFlags.getConsentNotifiedDebugMode()) {
             return true;
         }
-        PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
-                mUxStatesManager.getEnrollmentChannel();
-        return enrollmentChannel == GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
-                || enrollmentChannel == BetaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL
-                || enrollmentChannel == U18UxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL;
+
+        // If the user has already consented, don't check whether the notification was shown
+        if (mUserConsentAccessResolver.isAllowed(context)) {
+            return true;
+        }
+
+        return mConsentManager.wasNotificationDisplayed()
+                || mConsentManager.wasGaUxNotificationDisplayed()
+                || mConsentManager.wasU18NotificationDisplayed();
     }
 
     @Override

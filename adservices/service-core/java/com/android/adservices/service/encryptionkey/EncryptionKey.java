@@ -226,14 +226,13 @@ public class EncryptionKey {
     }
 
     /**
-     * ProtocolType enumerates the encryption algorithm used with this key. Set as HPKE for now, can
-     * support more algorithm if we need in the future.
+     * ProtocolType enumerates the algorithm used with the key. Set as HPKE by default, more
+     * algorithms can be supported in the future.
      */
     public enum ProtocolType {
-        // TODO(b/300707076): check which algo PA will use for signing key, update fetching default
-        //  value.
-        WebPKI("webpki"),
+        // Algorithm used by signing key.
         ECDSA("ecdsa"),
+        // Algorithm used by Topics encryption key.
         HPKE("hpke");
         private final String mValue;
 

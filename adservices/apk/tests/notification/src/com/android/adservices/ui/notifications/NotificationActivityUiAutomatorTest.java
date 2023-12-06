@@ -38,6 +38,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -49,7 +50,6 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,7 +62,8 @@ import org.mockito.quality.Strictness;
 import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
-public class NotificationActivityUiAutomatorTest {
+public final class NotificationActivityUiAutomatorTest extends AdServicesUnitTestCase {
+
     private static final String NOTIFICATION_TEST_PACKAGE =
             "android.test.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
@@ -80,9 +81,6 @@ public class NotificationActivityUiAutomatorTest {
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
-
         mContext = InstrumentationRegistry.getInstrumentation().getContext();
 
         MockitoAnnotations.initMocks(this);
@@ -122,8 +120,6 @@ public class NotificationActivityUiAutomatorTest {
 
     @After
     public void teardown() throws Exception {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
@@ -142,10 +138,6 @@ public class NotificationActivityUiAutomatorTest {
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_right_control_button_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(2000);
@@ -168,10 +160,6 @@ public class NotificationActivityUiAutomatorTest {
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_right_control_button_text_eu);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
-
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(2000);

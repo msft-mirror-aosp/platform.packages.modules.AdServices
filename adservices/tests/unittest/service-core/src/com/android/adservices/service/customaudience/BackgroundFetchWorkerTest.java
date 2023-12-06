@@ -305,7 +305,6 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchNothingToUpdate()
             throws ExecutionException, InterruptedException {
         assertTrue(
@@ -314,9 +313,14 @@ public class BackgroundFetchWorkerTest {
                                 CommonFixture.FIXED_NOW, 1)
                         .isEmpty());
 
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -345,9 +349,14 @@ public class BackgroundFetchWorkerTest {
                                 CommonFixture.FIXED_NOW, 1)
                         .isEmpty());
 
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -377,9 +386,13 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -391,7 +404,6 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchExecutionLoggerSpy).close(fetchDataList.size(), STATUS_SUCCESS);
     }
 
-    @FlakyTest(bugId = 300999392)
     @Test
     public void testRunBackgroundFetchUpdateCustomAudiences()
             throws ExecutionException, InterruptedException {
@@ -415,8 +427,12 @@ public class BackgroundFetchWorkerTest {
                 .updateCustomAudience(any(), any());
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -459,14 +475,7 @@ public class BackgroundFetchWorkerTest {
 
         // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
         CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            latchForExecutionLoggerClose.countDown();
-                            return null;
-                        })
-                .when(mAdServicesLoggerImplMock)
-                .logBackgroundFetchProcessReportedStats(any());
-
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
 
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
@@ -722,6 +731,16 @@ public class BackgroundFetchWorkerTest {
 
         // Background fetch should complete without error
         mBackgroundFetchWorker.runBackgroundFetch().get();
+    }
+
+    private void setLatchToCountdownOnLogClose(CountDownLatch latch) {
+        doAnswer(
+                        unusedInvocation -> {
+                            latch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerImplMock)
+                .logBackgroundFetchProcessReportedStats(any());
     }
 
     private static class BackgroundFetchWorkerTestFlags implements Flags {

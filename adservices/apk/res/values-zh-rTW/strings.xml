@@ -140,7 +140,7 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android 推測的興趣喜好"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"會推測興趣喜好的應用程式"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"廣告評估功能"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"廣告評估"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"應用程式可以使用 Privacy Sandbox 評估廣告成效。為達成此目的，廣告主可以將你與其廣告和應用程式之間的互動資料，暫時儲存在 Android 系統中。可以儲存的資料量有限，且會定期遭到刪除。\n\n你隨時都可以關閉 Privacy Sandbox，藉此刪除這項資料。"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android 會定期根據你所用的應用程式，推測你最感興趣的類別。應用程式可以要求 Android 運用這些興趣喜好向你顯示更貼近需求的廣告。\n\n如果你封鎖某項興趣喜好，那麼除非你解除封鎖，否則該項興趣喜好不會再加入這份清單。請注意，你可能還是會看到某些相關的廣告。"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"封鎖"</string>
@@ -205,7 +205,7 @@
     <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"系統會刪除所有待處理的廣告評估報告，不會再產生或提供新報告。"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"廣告隱私權"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"廣告主題"</string>
-    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"應用程式建議的廣告"</string>
+    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"應用程式建議廣告"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android 會根據你最近使用的應用程式以及使用頻率，記錄你感興趣的主題。"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"你使用的應用程式也能根據你的使用方式，判斷你喜愛的主題。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"你使用的應用程式可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。Android 允許應用程式收集少數幾種資料。"</string>

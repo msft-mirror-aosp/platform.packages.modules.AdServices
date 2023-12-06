@@ -17,11 +17,14 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsLogging;
+import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
+import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
+import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
@@ -42,10 +45,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -60,13 +59,13 @@ import android.os.PersistableBundle;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.JobServiceCallback;
-import com.android.adservices.common.ProcessLifeguardRule;
+import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 
@@ -83,7 +82,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
-public class MddJobServiceTest {
+public final class MddJobServiceTest extends AdServicesUnitTestCase {
+
     private static final int JOB_SCHEDULED_WAIT_TIME_MS = 1_000;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
@@ -111,7 +111,7 @@ public class MddJobServiceTest {
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdservicesJobServiceLogger mLogger;
 
-    @Rule(order = 0)
+    @Rule
     public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(MddJobService.class)
@@ -121,9 +121,6 @@ public class MddJobServiceTest {
                     .spyStatic(AdservicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .build();
-
-    @Rule(order = 1)
-    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
 
     @Before
     public void setup() {
@@ -137,11 +134,7 @@ public class MddJobServiceTest {
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
-        // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        mLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
-        doNothing().when(mLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        doReturn(mLogger).when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+        mLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
 
         // MDD Task Tag.
         PersistableBundle bundle = new PersistableBundle();
@@ -162,18 +155,20 @@ public class MddJobServiceTest {
         testOnStartJob_killswitchIsOff();
 
         // Verify logging methods are not invoked.
-        verifyBackgroundJobsLogging(mLogger, never());
+        verifyLoggingNotHappened(mLogger);
     }
 
     @Test
     public void testOnStartJob_killswitchIsOff_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mLogger);
 
         testOnStartJob_killswitchIsOff();
 
         // Verify logging methods are invoked.
-        verifyJobFinishedLogged(mLogger);
+        verifyJobFinishedLogged(mLogger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -184,18 +179,19 @@ public class MddJobServiceTest {
         testOnStartJob_killswitchIsOn();
 
         // Verify logging methods are not invoked.
-        verifyBackgroundJobsLogging(mLogger, never());
+        verifyLoggingNotHappened(mLogger);
     }
 
     @Test
     public void testOnStartJob_killSwitchOn_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mLogger);
 
         testOnStartJob_killswitchIsOn();
 
         // Verify logging methods are invoked.
-        verifyBackgroundJobsSkipLogged(mLogger);
+        verifyBackgroundJobsSkipLogged(mLogger, callback);
     }
 
     @Test
@@ -240,18 +236,19 @@ public class MddJobServiceTest {
         testOnStopJob();
 
         // Verify logging methods are not invoked.
-        verifyBackgroundJobsLogging(mLogger, never());
+        verifyLoggingNotHappened(mLogger);
     }
 
     @Test
     public void testOnStopJob_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mLogger);
 
         testOnStopJob();
 
         // Verify logging methods are invoked.
-        verifyOnStopJobLogged(mLogger);
+        verifyOnStopJobLogged(mLogger, callback);
     }
 
     @Test
@@ -467,7 +464,7 @@ public class MddJobServiceTest {
         testOnStartJob_shouldDisableJobTrue();
 
         // Verify logging method is not invoked.
-        verifyBackgroundJobsLogging(mLogger, never());
+        verifyLoggingNotHappened(mLogger);
     }
 
     @Test
@@ -478,7 +475,7 @@ public class MddJobServiceTest {
 
         // Verify no logging has happened even though logging is enabled because this field is not
         // logged
-        verifyBackgroundJobsLogging(mLogger, never());
+        verifyLoggingNotHappened(mLogger);
     }
 
     private void testOnStartJob_killswitchIsOn() throws InterruptedException {

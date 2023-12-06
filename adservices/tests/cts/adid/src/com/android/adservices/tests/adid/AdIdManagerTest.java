@@ -21,7 +21,6 @@ import static org.junit.Assert.fail;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
-import android.adservices.common.AdServicesOutcomeReceiver;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.util.Log;
@@ -30,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.ExceptionFailureSyncCallback;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
@@ -180,19 +180,6 @@ public final class AdIdManagerTest {
         assertWithMessage("adIdManager").that(adIdManager).isNotNull();
         OutcomeReceiverForTests<AdId> receiver = new OutcomeReceiverForTests<>();
 
-        // TODO(b/295235571): remove whole if block below once fixed
-        if (true) {
-            // NOTE: cannot use assertThrows() as it would cause a NoSuchClassException on R (as
-            // JUnit somehow scans the whole class)
-            try {
-                adIdManager.getAdId(sCallbackExecutor, receiver);
-                fail("getAdId() should have thrown IllegalStateException");
-            } catch (IllegalStateException e) {
-                // expected
-            }
-            return;
-        }
-
         adIdManager.getAdId(sCallbackExecutor, receiver);
         receiver.assertFailure(IllegalStateException.class);
     }
@@ -216,13 +203,5 @@ public final class AdIdManagerTest {
 
     private static String toString(AdId adId) {
         return adId == null ? null : adId.getAdId();
-    }
-
-    private static final class AdServicesOutcomeReceiverForTests<T>
-            extends ExceptionFailureSyncCallback<T>
-            implements AdServicesOutcomeReceiver<T, Exception> {
-        AdServicesOutcomeReceiverForTests() {
-            super();
-        }
     }
 }

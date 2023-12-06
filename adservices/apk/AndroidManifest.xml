@@ -428,5 +428,11 @@
             android:authorities="com.android.adservices.provider.asyncregistration"
             android:exported="false"
         />
+        <provider
+            android:name=
+                "com.android.adservices.service.common.AdServicesInternalProvider"
+            android:authorities="com.android.adservices.provider.internal"
+            android:exported="false"
+        />
     </application>
 </manifest>
