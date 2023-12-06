@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.appsearch;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -42,11 +44,10 @@ import androidx.appsearch.app.AppSearchSession;
 import androidx.appsearch.app.SetSchemaRequest;
 import androidx.appsearch.app.SetSchemaResponse;
 import androidx.appsearch.platformstorage.PlatformStorage;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -65,18 +66,17 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-@SmallTest
+@RequiresSdkLevelAtLeastS
 public final class AppSearchConsentWorkerTest extends AdServicesUnitTestCase {
 
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
@@ -88,24 +88,20 @@ public final class AppSearchConsentWorkerTest extends AdServicesUnitTestCase {
     private static final Topic TOPIC1 = Topic.create(0, 1, 11);
     private static final Topic TOPIC2 = Topic.create(12, 2, 22);
     private static final Topic TOPIC3 = Topic.create(123, 3, 33);
-    private List<Topic> mTopics = new ArrayList<>();
+    private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
     private MockitoSession mMockitoSession;
-    @Mock
-    Flags mMockFlags;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.forAtLeastS();
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
-        mTopics.addAll(List.of(TOPIC1, TOPIC2, TOPIC3));
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(FlagsFactory.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
-        ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+        mockGetFlags(mMockFlags);
         when(mMockFlags.getAdservicesApkShaCertificate())
                 .thenReturn(Flags.ADSERVICES_APK_SHA_CERTIFICATE);
         when(mMockFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
