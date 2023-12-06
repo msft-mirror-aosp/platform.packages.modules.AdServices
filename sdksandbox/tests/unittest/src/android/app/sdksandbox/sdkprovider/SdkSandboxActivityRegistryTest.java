@@ -17,6 +17,7 @@
 package android.app.sdksandbox.sdkprovider;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
@@ -166,7 +167,7 @@ public class SdkSandboxActivityRegistryTest {
 
         ActivityContextInfo contextInfo = mRegistry.getContextInfo(intent);
 
-        assertThat(ActivityContextInfo.CONTEXT_FLAGS)
+        assertThat(contextInfo.getContextFlags())
                 .isEqualTo(Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
         contextInfo.getSdkApplicationInfo();
         Mockito.verify(mSdkContext, Mockito.times(1)).getApplicationInfo();
