@@ -111,7 +111,6 @@ import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
-
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -2035,8 +2034,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    // TODO(b/299109198): remove once the {@link SdkSandboxActivityAuthority#isSdkSandboxActivity}
-    // API is stable.
+    // TODO(b/300059435): remove once the {@link
+    // SdkSandboxActivityAuthority#isSdkSandboxActivityIntent} API is stable.
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     boolean isSdkSandboxActivity(Intent intent) {
         if (intent == null) {
@@ -2099,7 +2098,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             boolean isSdkSandboxActivity =
                     (sandboxActivitySdkBasedContext())
-                            ? SdkSandboxActivityAuthority.isSdkSandboxActivity(mContext, intent)
+                            ? SdkSandboxActivityAuthority.isSdkSandboxActivityIntent(
+                                    mContext, intent)
                             : isSdkSandboxActivity(intent);
             if (isSdkSandboxActivity) {
                 final String sdkSandboxPackageName =
