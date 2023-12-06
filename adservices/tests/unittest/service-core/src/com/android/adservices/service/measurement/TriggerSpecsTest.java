@@ -290,7 +290,7 @@ public class TriggerSpecsTest {
         assertEquals(
                 new Pair<>(4L, 5L), TriggerSpecs.getSummaryBucketFromIndex(1, summaryBucket));
         assertEquals(
-                new Pair<>(10L, 2147483646L),
+                new Pair<>(10L, TriggerSpecs.MAX_BUCKET_THRESHOLD),
                 TriggerSpecs.getSummaryBucketFromIndex(4, summaryBucket));
     }
 
