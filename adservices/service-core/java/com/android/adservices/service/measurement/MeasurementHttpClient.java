@@ -18,8 +18,10 @@ package com.android.adservices.service.measurement;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 
@@ -34,8 +36,10 @@ import java.net.URLConnection;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -61,8 +65,7 @@ public class MeasurementHttpClient {
 
     public MeasurementHttpClient(Context context) {
         if (mApexVersion == null) {
-            mApexVersion =
-                    getAdservicesApexVersion(context.getPackageManager(), context.getPackageName());
+            setAdservicesApexVersion(context.getPackageManager());
         }
     }
 
@@ -128,14 +131,27 @@ public class MeasurementHttpClient {
                 mApexVersion, headerVersion -> computeHeaderVersion());
     }
 
-    private Long getAdservicesApexVersion(PackageManager packageManager, String packageName) {
-        try {
-            return packageManager
-                    .getPackageInfo(packageName, PackageManager.MATCH_APEX)
-                    .getLongVersionCode();
-        } catch (PackageManager.NameNotFoundException e) {
-            return 0L;
+    private void setAdservicesApexVersion(PackageManager packageManager) {
+        List<PackageInfo> installedPackages =
+                packageManager.getInstalledPackages(PackageManager.MATCH_APEX);
+
+        Optional<Long> apexVersion = Optional.empty();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            apexVersion =
+                    installedPackages.stream()
+                            .filter(s -> s.isApex && s.packageName.contains("android.adservices"))
+                            .findFirst()
+                            .map(PackageInfo::getLongVersionCode);
         }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            apexVersion =
+                    installedPackages.stream()
+                            .filter(s -> s.isApex && s.packageName.contains("android.extservices"))
+                            .findFirst()
+                            .map(PackageInfo::getLongVersionCode);
+        }
+        apexVersion.ifPresent(aLong -> mApexVersion = aLong);
     }
 
     private String computeHeaderVersion() {
@@ -145,10 +161,12 @@ public class MeasurementHttpClient {
             String[] range = mapping.split(",");
             int startRange = Integer.parseInt(range[0]);
             int endRange = Integer.parseInt(range[1]);
-            if (mApexVersion >= startRange && mApexVersion < endRange) {
+            if (mApexVersion != null && (mApexVersion >= startRange && mApexVersion < endRange)) {
                 return range[2];
             }
         }
+        LoggerFactory.getMeasurementLogger()
+                .d("Header version not found. " + "Apex version -  " + mApexVersion);
         return APEX_VERSION_WHEN_NOT_FOUND;
     }
 }

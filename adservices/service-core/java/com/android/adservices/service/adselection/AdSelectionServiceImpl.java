@@ -297,10 +297,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
-                        AdIdWorker.getInstance(context),
+                        AdIdWorker.getInstance(),
                         AdServicesExecutors.getLightWeightExecutor(),
-                        AdServicesExecutors.getScheduler(),
-                        FlagsFactory.getFlags()),
+                        AdServicesExecutors.getScheduler()),
                 BinderFlagReader.readFlag(
                         () ->
                                 FlagsFactory.getFlags()
@@ -340,23 +339,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         final DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
                 () -> {
-                    GetAdSelectionDataRunner runner =
-                            new GetAdSelectionDataRunner(
-                                    mObliviousHttpEncryptor,
-                                    mAdSelectionEntryDao,
-                                    mCustomAudienceDao,
-                                    mEncodedPayloadDao,
-                                    mAdSelectionServiceFilter,
-                                    mAdFilteringFeatureFactory.getAdFilterer(),
-                                    mBackgroundExecutor,
-                                    mLightweightExecutor,
-                                    AdServicesExecutors.getBlockingExecutor(),
-                                    mScheduledExecutor,
-                                    mFlags,
-                                    callingUid,
-                                    devContext,
-                                    mAdIdFetcher);
-                    runner.run(inputParams, callback);
+                    runGetAdSelectionData(inputParams, callback, callingUid, devContext);
                     Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, traceCookie);
                 });
     }
@@ -506,6 +489,76 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 callingUid,
                                 devContext,
                                 auctionServerEnabledForUpdateHistogram));
+    }
+
+    private void runGetAdSelectionData(
+            GetAdSelectionDataInput inputParams,
+            GetAdSelectionDataCallback callback,
+            int callingUid,
+            DevContext devContext) {
+        ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
+                AuctionServerDebugReporting.createInstance(
+                        mFlags,
+                        mAdIdFetcher,
+                        inputParams.getCallerPackageName(),
+                        callingUid,
+                        mLightweightExecutor);
+
+        FluentFuture.from(auctionServerDebugReportingFuture)
+                .addCallback(
+                        new FutureCallback<>() {
+                            @Override
+                            public void onSuccess(
+                                    AuctionServerDebugReporting auctionServerDebugReporting) {
+                                sLogger.v(
+                                        "Auction Server Debug reporting enabled: %b",
+                                        auctionServerDebugReporting.isEnabled());
+                                GetAdSelectionDataRunner runner =
+                                        new GetAdSelectionDataRunner(
+                                                mObliviousHttpEncryptor,
+                                                mAdSelectionEntryDao,
+                                                mCustomAudienceDao,
+                                                mEncodedPayloadDao,
+                                                mAdSelectionServiceFilter,
+                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mBackgroundExecutor,
+                                                mLightweightExecutor,
+                                                AdServicesExecutors.getBlockingExecutor(),
+                                                mScheduledExecutor,
+                                                mFlags,
+                                                callingUid,
+                                                devContext,
+                                                auctionServerDebugReporting);
+                                runner.run(inputParams, callback);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                sLogger.e(
+                                        t,
+                                        "Failed to create Auction Server Debug Reporting instance,"
+                                                + " debug reporting is disabled");
+                                GetAdSelectionDataRunner runner =
+                                        new GetAdSelectionDataRunner(
+                                                mObliviousHttpEncryptor,
+                                                mAdSelectionEntryDao,
+                                                mCustomAudienceDao,
+                                                mEncodedPayloadDao,
+                                                mAdSelectionServiceFilter,
+                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mBackgroundExecutor,
+                                                mLightweightExecutor,
+                                                AdServicesExecutors.getBlockingExecutor(),
+                                                mScheduledExecutor,
+                                                mFlags,
+                                                callingUid,
+                                                devContext,
+                                                AuctionServerDebugReporting
+                                                        .createForDebugReportingDisabled());
+                                runner.run(inputParams, callback);
+                            }
+                        },
+                        mLightweightExecutor);
     }
 
     private void runAdSelection(
@@ -724,7 +777,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mFlags,
                                     mAdSelectionServiceFilter,
                                     mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
-                                    callingUid);
+                                    callingUid,
+                                    mShouldUseUnifiedTables);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }
@@ -789,7 +843,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mAdSelectionServiceFilter,
                             mFledgeAuthorizationFilter,
                             mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                            callingUid);
+                            callingUid,
+                            mShouldUseUnifiedTables);
             reporter.reportImpression(requestParams, callback);
         }
     }
@@ -842,7 +897,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 devContext,
                                 measurementService,
                                 mConsentManager,
-                                mContext)
+                                mContext,
+                                mShouldUseUnifiedTables)
                         .getEventReporter();
 
         eventReporter.reportInteraction(inputParams, callback);
@@ -926,7 +982,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 adCounterHistogramLowerMaxTotalEventCount,
                                 adCounterHistogramAbsoluteMaxPerBuyerEventCount,
                                 adCounterHistogramLowerMaxPerBuyerEventCount,
-                                auctionServerEnabledForUpdateHistogram),
+                                auctionServerEnabledForUpdateHistogram,
+                                mShouldUseUnifiedTables),
                         mBackgroundExecutor,
                         // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
                         //  after aligning on Clock usage

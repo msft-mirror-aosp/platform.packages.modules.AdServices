@@ -31,6 +31,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -125,6 +126,7 @@ public class NotificationActivityRvcUxSelectorUiAutomatorTest {
         assertThat(u18NotificationTitle.exists()).isFalse();
     }
 
+    @FlakyTest(bugId = 309468369)
     @Test
     public void clickSettingsTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();

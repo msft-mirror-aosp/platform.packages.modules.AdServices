@@ -18,22 +18,23 @@ package com.android.adservices.service.appsetid;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static org.junit.Assert.fail;
+
 import android.adservices.appsetid.GetAppSetIdResult;
 import android.adservices.appsetid.IGetAppSetIdCallback;
 import android.adservices.appsetid.IGetAppSetIdProviderCallback;
 import android.annotation.NonNull;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.concurrent.CompletableFuture;
 
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdWorker}. */
-public class AppSetIdWorkerTest {
+public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
 
     private boolean mTestSuccess;
 
@@ -45,9 +46,7 @@ public class AppSetIdWorkerTest {
 
         CompletableFuture<GetAppSetIdResult> future = new CompletableFuture<>();
 
-        AppSetIdWorker spyWorker =
-                Mockito.spy(
-                        AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        AppSetIdWorker spyWorker = Mockito.spy(AppSetIdWorker.getInstance());
         Mockito.doReturn(mInterface).when(spyWorker).getService();
 
         spyWorker.getAppSetId(
@@ -62,13 +61,15 @@ public class AppSetIdWorkerTest {
                     @Override
                     public void onError(int resultCode) {
                         // should never be called.
-                        Assert.fail();
+                        fail();
                     }
                 });
 
         GetAppSetIdResult result = future.get();
-        Assert.assertEquals(DEFAULT_APP_SET_ID, result.getAppSetId());
-        Assert.assertEquals(1, result.getAppSetIdScope());
+        expect.withMessage("getAppSetId()")
+                .that(result.getAppSetId())
+                .isEqualTo(DEFAULT_APP_SET_ID);
+        expect.withMessage("getAppSetIdScope()").that(result.getAppSetIdScope()).isEqualTo(1);
     }
 
     @Test
@@ -77,9 +78,7 @@ public class AppSetIdWorkerTest {
 
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
-        AppSetIdWorker spyWorker =
-                Mockito.spy(
-                        AppSetIdWorker.getInstance(ApplicationProvider.getApplicationContext()));
+        AppSetIdWorker spyWorker = Mockito.spy(AppSetIdWorker.getInstance());
         Mockito.doReturn(mInterface).when(spyWorker).getService();
 
         spyWorker.getAppSetId(
@@ -89,7 +88,7 @@ public class AppSetIdWorkerTest {
                     @Override
                     public void onResult(GetAppSetIdResult resultParcel) {
                         // should never be called.
-                        Assert.fail();
+                        fail();
                     }
 
                     @Override
@@ -99,7 +98,7 @@ public class AppSetIdWorkerTest {
                 });
 
         int result = future.get();
-        Assert.assertEquals(/* INTERNAL_STATE_ERROR */ 1, result);
+        expect.withMessage("result").that(result).isEqualTo(1); // INTERNAL_STATE_ERROR
     }
 
     private final android.adservices.appsetid.IAppSetIdProviderService mInterface =

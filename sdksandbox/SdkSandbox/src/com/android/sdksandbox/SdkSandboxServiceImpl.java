@@ -40,6 +40,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
@@ -90,8 +91,8 @@ public class SdkSandboxServiceImpl extends Service {
             return mContext;
         }
 
-        long getCurrentTime() {
-            return System.currentTimeMillis();
+        long elapsedRealtime() {
+            return SystemClock.elapsedRealtime();
         }
 
         @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -204,11 +205,11 @@ public class SdkSandboxServiceImpl extends Service {
             String sdkName, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
 
-        sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.elapsedRealtime());
         unloadSdkInternal(sdkName);
-        sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.elapsedRealtime());
 
-        sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.elapsedRealtime());
         try {
             callback.onUnloadSdk(sandboxLatencyInfo);
         } catch (RemoteException ignore) {
@@ -440,7 +441,7 @@ public class SdkSandboxServiceImpl extends Service {
             int errorCode,
             String message,
             SandboxLatencyInfo sandboxLatencyInfo) {
-        sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
+        sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.elapsedRealtime());
         sandboxLatencyInfo.setSandboxStatus(SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SANDBOX);
         try {
             callback.onLoadSdkError(new LoadSdkException(errorCode, message), sandboxLatencyInfo);
@@ -487,7 +488,7 @@ public class SdkSandboxServiceImpl extends Service {
                 @NonNull ILoadSdkInSandboxCallback callback,
                 @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
             sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
-                    mInjector.getCurrentTime());
+                    mInjector.elapsedRealtime());
 
             Objects.requireNonNull(callingPackageName, "callingPackageName should not be null");
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
@@ -519,7 +520,7 @@ public class SdkSandboxServiceImpl extends Service {
                 @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
             Objects.requireNonNull(sandboxLatencyInfo, "sandboxLatencyInfo should not be null");
             sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
-                    mInjector.getCurrentTime());
+                    mInjector.elapsedRealtime());
             Objects.requireNonNull(sdkName, "sdkName should not be null");
             Objects.requireNonNull(callback, "callback should not be null");
             SdkSandboxServiceImpl.this.unloadSdk(sdkName, callback, sandboxLatencyInfo);

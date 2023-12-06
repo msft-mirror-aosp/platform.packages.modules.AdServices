@@ -60,6 +60,7 @@ public final class EventReporterFactory {
     @NonNull private final MeasurementImpl mMeasurementService;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final Context mContext;
+    private final boolean mShouldUseUnifiedTables;
 
     public EventReporterFactory(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -74,7 +75,8 @@ public final class EventReporterFactory {
             @NonNull DevContext devContext,
             @NonNull MeasurementImpl measurementService,
             @NonNull ConsentManager consentManager,
-            @NonNull Context context) {
+            @NonNull Context context,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -110,6 +112,7 @@ public final class EventReporterFactory {
         mFledgeMeasurementReportAndRegisterEventApiFallbackEnabled =
                 BinderFlagReader.readFlag(
                         flags::getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled);
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     /**
@@ -128,7 +131,8 @@ public final class EventReporterFactory {
                     mAdSelectionServiceFilter,
                     mCallerUid,
                     mFledgeAuthorizationFilter,
-                    mDevContext);
+                    mDevContext,
+                    mShouldUseUnifiedTables);
         }
 
         // If reportEvent is enabled but reportAndRegisterEvent is disabled: return an instance
@@ -145,7 +149,8 @@ public final class EventReporterFactory {
                     mAdSelectionServiceFilter,
                     mCallerUid,
                     mFledgeAuthorizationFilter,
-                    mDevContext);
+                    mDevContext,
+                    mShouldUseUnifiedTables);
         }
 
         // If reportEvent and reportAndRegisterEvent are enabled but reportAndRegisterEventFallback
@@ -165,7 +170,8 @@ public final class EventReporterFactory {
                     mDevContext,
                     mMeasurementService,
                     mConsentManager,
-                    mContext);
+                    mContext,
+                    mShouldUseUnifiedTables);
         }
 
         // If reportEvent, reportAndRegisterEvent and reportAndRegisterEventFallback are enabled:
@@ -185,6 +191,7 @@ public final class EventReporterFactory {
                 mDevContext,
                 mMeasurementService,
                 mConsentManager,
-                mContext);
+                mContext,
+                mShouldUseUnifiedTables);
     }
 }

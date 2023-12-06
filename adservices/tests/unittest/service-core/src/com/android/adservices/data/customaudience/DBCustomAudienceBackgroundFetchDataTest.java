@@ -121,7 +121,8 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                                 CommonFixture.VALID_BUYER_1),
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         NUM_VALIDATION_FAILURES_POSITIVE,
-                        NUM_TIMEOUT_FAILURES_POSITIVE);
+                        NUM_TIMEOUT_FAILURES_POSITIVE,
+                        /*debuggable=*/ false);
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
         assertEquals(CommonFixture.VALID_BUYER_1, fetchData.getBuyer());
@@ -132,6 +133,33 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, fetchData.getEligibleUpdateTime());
         assertEquals(NUM_VALIDATION_FAILURES_POSITIVE, fetchData.getNumValidationFailures());
         assertEquals(NUM_TIMEOUT_FAILURES_POSITIVE, fetchData.getNumTimeoutFailures());
+        assertEquals(false, fetchData.getIsDebuggable());
+    }
+
+    @Test
+    public void testCreateDebuggableFetchDataSuccess() {
+        DBCustomAudienceBackgroundFetchData fetchData =
+                DBCustomAudienceBackgroundFetchData.create(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER_1,
+                        CustomAudienceFixture.VALID_NAME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1),
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        NUM_VALIDATION_FAILURES_POSITIVE,
+                        NUM_TIMEOUT_FAILURES_POSITIVE,
+                        /*debuggable=*/ true);
+
+        assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
+        assertEquals(CommonFixture.VALID_BUYER_1, fetchData.getBuyer());
+        assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
+        assertEquals(
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
+                fetchData.getDailyUpdateUri());
+        assertEquals(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI, fetchData.getEligibleUpdateTime());
+        assertEquals(NUM_VALIDATION_FAILURES_POSITIVE, fetchData.getNumValidationFailures());
+        assertEquals(NUM_TIMEOUT_FAILURES_POSITIVE, fetchData.getNumTimeoutFailures());
+        assertEquals(true, fetchData.getIsDebuggable());
     }
 
     @Test
@@ -194,6 +222,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(expectedEligibleUpdateTime, updatedFetchData.getEligibleUpdateTime());
         assertEquals(0, updatedFetchData.getNumValidationFailures());
         assertEquals(0, updatedFetchData.getNumTimeoutFailures());
+        assertEquals(false, updatedFetchData.getIsDebuggable());
     }
 
     @Test
@@ -224,6 +253,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(
                 NUM_VALIDATION_FAILURES_POSITIVE + 1, updatedFetchData.getNumValidationFailures());
         assertEquals(NUM_TIMEOUT_FAILURES_POSITIVE, updatedFetchData.getNumTimeoutFailures());
+        assertEquals(false, updatedFetchData.getIsDebuggable());
     }
 
     @Test
@@ -255,6 +285,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(
                 NUM_VALIDATION_FAILURES_POSITIVE + 1, updatedFetchData.getNumValidationFailures());
         assertEquals(NUM_TIMEOUT_FAILURES_POSITIVE, updatedFetchData.getNumTimeoutFailures());
+        assertEquals(false, updatedFetchData.getIsDebuggable());
     }
 
     @Test
@@ -285,6 +316,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(expectedEligibleUpdateTime, updatedFetchData.getEligibleUpdateTime());
         assertEquals(NUM_VALIDATION_FAILURES_POSITIVE, updatedFetchData.getNumValidationFailures());
         assertEquals(NUM_TIMEOUT_FAILURES_POSITIVE + 1, updatedFetchData.getNumTimeoutFailures());
+        assertEquals(false, updatedFetchData.getIsDebuggable());
     }
 
     @Test
@@ -315,6 +347,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         assertEquals(expectedEligibleUpdateTime, updatedFetchData.getEligibleUpdateTime());
         assertEquals(NUM_VALIDATION_FAILURES_POSITIVE, updatedFetchData.getNumValidationFailures());
         assertEquals(NUM_TIMEOUT_FAILURES_POSITIVE + 1, updatedFetchData.getNumTimeoutFailures());
+        assertEquals(false, updatedFetchData.getIsDebuggable());
     }
 
     @Test
@@ -343,6 +376,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                 "Background fetch data was updated from a benign failure",
                 updatedFetchData,
                 originalFetchData);
+        assertEquals(false, updatedFetchData.getIsDebuggable());
     }
 
     @Test
@@ -370,5 +404,6 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                 "Background fetch data was updated from a benign failure",
                 updatedFetchData,
                 originalFetchData);
+        assertEquals(false, updatedFetchData.getIsDebuggable());
     }
 }

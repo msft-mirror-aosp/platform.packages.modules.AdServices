@@ -28,6 +28,7 @@ import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -111,6 +112,7 @@ public class TopicsEpochComputationPrecomputedClassifier {
     }
 
     @Test
+    @FlakyTest(bugId = 290122696)
     public void testEpochComputation() throws Exception {
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.

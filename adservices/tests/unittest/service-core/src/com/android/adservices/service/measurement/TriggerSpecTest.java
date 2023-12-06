@@ -175,7 +175,7 @@ public class TriggerSpecTest {
         assertEquals(
                 testObject.getSummaryWindowOperator().name().toLowerCase(), summaryWindowOperator);
         List<Long> expectedSummaryBuckets = Arrays.asList(1L, 2L, 3L, 4L);
-        assertEquals(expectedSummaryBuckets, testObject.getSummaryBucket());
+        assertEquals(expectedSummaryBuckets, testObject.getSummaryBuckets());
     }
 
     private List<UnsignedLong> toUnsignedLong(List<Integer> list) {
