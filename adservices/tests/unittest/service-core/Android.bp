@@ -60,7 +60,6 @@ java_defaults {
         "general-tests",
         "mts-adservices",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
     jni_libs: [
         "libhpke_jni",
@@ -126,7 +125,6 @@ android_test {
         "mts-adservices",
     ],
     test_config: "AndroidTest.JsScriptEngine.xml",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }
 
@@ -163,7 +161,6 @@ android_test {
         "mts-adservices",
     ],
     test_config: "AndroidTestMDD.xml",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }
 
@@ -208,7 +205,6 @@ java_defaults {
         "general-tests",
         "mts-extservices",
     ],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
     jni_libs: [
         "libhpke_jni",
@@ -275,7 +271,6 @@ android_test {
         "mts-extservices",
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
 
@@ -314,7 +309,6 @@ android_test {
         "mts-extservices",
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
 
