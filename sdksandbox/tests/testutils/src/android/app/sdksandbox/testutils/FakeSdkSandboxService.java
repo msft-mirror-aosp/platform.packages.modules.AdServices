@@ -36,7 +36,7 @@ import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
-import com.android.sdksandbox.IUnloadSdkCallback;
+import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -54,7 +54,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     private ILoadSdkInSandboxCallback mLoadSdkInSandboxCallback;
     private IRequestSurfacePackageFromSdkCallback mRequestSurfacePackageFromSdkCallback = null;
-    private IUnloadSdkCallback mUnloadSdkCallback = null;
+    private IUnloadSdkInSandboxCallback mUnloadSdkInSandboxCallback = null;
     private IComputeSdkStorageCallback mComputeSdkStorageCallback = null;
     private ApplicationInfo mCustomizedInfo;
 
@@ -116,8 +116,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     @Override
     public void unloadSdk(
-            String sdkName, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
-        mUnloadSdkCallback = callback;
+            String sdkName,
+            IUnloadSdkInSandboxCallback callback,
+            SandboxLatencyInfo sandboxLatencyInfo) {
+        mUnloadSdkInSandboxCallback = callback;
     }
 
     @Override
@@ -163,7 +165,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     public boolean isSdkUnloaded() {
-        return mUnloadSdkCallback != null;
+        return mUnloadSdkInSandboxCallback != null;
     }
 
     public void sendStorageInfoToSystemServer() throws Exception {
@@ -195,10 +197,9 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         }
     }
 
-    public void sendUnloadSdkSuccess() throws Exception {
-        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+    public void sendUnloadSdkSuccess(SandboxLatencyInfo sandboxLatencyInfo) throws Exception {
         setSandboxLatencyTimestamps(sandboxLatencyInfo);
-        mUnloadSdkCallback.onUnloadSdk(sandboxLatencyInfo);
+        mUnloadSdkInSandboxCallback.onUnloadSdk(sandboxLatencyInfo);
     }
 
     // TODO(b/242684679): Use iRequestSurfacePackageFromSdkCallback instead of fake callback
