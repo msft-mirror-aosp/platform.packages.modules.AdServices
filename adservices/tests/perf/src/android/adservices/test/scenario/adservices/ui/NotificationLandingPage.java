@@ -17,6 +17,7 @@
 package android.adservices.test.scenario.adservices.ui;
 
 import android.content.Context;
+import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
@@ -70,8 +71,12 @@ public class NotificationLandingPage {
     @Test
     public void testNotificationLandingPage() throws Exception {
         final long start = System.currentTimeMillis();
+
+        Trace.beginSection("NotificationTriggerEvent");
         AdservicesWorkflows.testNotificationActivityFlow(
                 sContext, sDevice, true, UiConstants.UX.GA_UX, false, false, true);
+        Trace.endSection();
+
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "(" + UI_NOTIFICATION_LATENCY_METRIC + ": " + duration + ")");
     }
