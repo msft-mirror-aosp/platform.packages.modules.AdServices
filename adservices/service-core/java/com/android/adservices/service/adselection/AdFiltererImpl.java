@@ -240,24 +240,28 @@ public final class AdFiltererImpl implements AdFilterer {
             String customAudienceOwner,
             String customAudienceName,
             Instant currentTime) {
-        for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
-            Instant intervalStartTime =
-                    currentTime.minusMillis(frequencyCap.getInterval().toMillis());
-            int numEventsSinceStartTime =
-                    mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(
-                            frequencyCap.getAdCounterKey(),
-                            buyer,
-                            customAudienceOwner,
-                            customAudienceName,
-                            FrequencyCapFilters.AD_EVENT_TYPE_WIN,
-                            intervalStartTime);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_WIN);
+        try {
+            for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
+                Instant intervalStartTime =
+                        currentTime.minusMillis(frequencyCap.getInterval().toMillis());
+                int numEventsSinceStartTime =
+                        mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(
+                                frequencyCap.getAdCounterKey(),
+                                buyer,
+                                customAudienceOwner,
+                                customAudienceName,
+                                FrequencyCapFilters.AD_EVENT_TYPE_WIN,
+                                intervalStartTime);
 
-            if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
-                return false;
+                if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
+                    return false;
+                }
             }
+            return true;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_WIN, traceCookie);
         }
-
-        return true;
     }
 
     private boolean doesAdPassFrequencyCapFiltersForNonWinType(
