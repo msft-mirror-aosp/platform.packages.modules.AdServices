@@ -22,26 +22,22 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -52,56 +48,40 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(BackgroundJobsManager.class)
+@SpyStatic(ConsentManager.class)
+@RequiresSdkLevelAtLeastT(reason = "Back Compat only support GA UX")
 @RunWith(AndroidJUnit4.class)
-public final class DialogFragmentTest extends AdServicesUnitTestCase {
+public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
 
-    private String mTestName;
-    private MockitoSession mStaticMockSession;
-    private ConsentManager mConsentManager;
-    @Mock Flags mMockFlags;
+    @Mock private ConsentManager mConsentManager;
+    @Mock private Flags mMockFlags;
 
     @Before
-    public void setup() throws UiObjectNotFoundException, IOException {
-        // Skip the test on S- since Back Compat only support GA UX
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
-
-        // Static mocking
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .spyStatic(ConsentManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+    public void setup() throws Exception {
+        extendedMockito.mockGetFlags(mMockFlags);
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         // UiDialogFragmentEnable flag should be on for this test
         doReturn(true).when(mMockFlags).getUiDialogFragmentEnabled();
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
-        // prepare objects used by static mocking
-        mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(10001, 1, 1));
         tempList.add(Topic.create(10002, 1, 1));
@@ -130,14 +110,10 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
         doNothing().when(mConsentManager).resetTopics();
         doNothing().when(mConsentManager).revokeConsentForTopic(any(Topic.class));
         doNothing().when(mConsentManager).restoreConsentForTopic(any(Topic.class));
-        try {
-            doNothing().when(mConsentManager).resetAppsAndBlockedApps();
-            doNothing().when(mConsentManager).resetApps();
-            doNothing().when(mConsentManager).revokeConsentForApp(any(App.class));
-            doNothing().when(mConsentManager).restoreConsentForApp(any(App.class));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        doNothing().when(mConsentManager).resetAppsAndBlockedApps();
+        doNothing().when(mConsentManager).resetApps();
+        doNothing().when(mConsentManager).revokeConsentForApp(any(App.class));
+        doNothing().when(mConsentManager).restoreConsentForApp(any(App.class));
         doNothing().when(mConsentManager).resetMeasurement();
 
         ExtendedMockito.doNothing()
@@ -175,7 +151,7 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
 
         // launch app
-        Context context = ApplicationProvider.getApplicationContext();
+        Context context = appContext.get();
         Intent intent = new Intent(PRIVACY_SANDBOX_TEST_PACKAGE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
@@ -187,18 +163,11 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
 
     @After
     public void teardown() {
-        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
-
-        AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + getTestName() + "_");
     }
 
     @Test
-    public void optOutDialogTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+    public void optOutDialogTest() throws Exception {
         UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         assertThat(consentSwitch.exists()).isTrue();
 
@@ -232,8 +201,7 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void blockTopicDialogTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+    public void blockTopicDialogTest() throws Exception {
         // open topics view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
         UiObject blockTopicText =
@@ -271,8 +239,7 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void unblockTopicDialogTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+    public void unblockTopicDialogTest() throws Exception {
         // open topics view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
 
@@ -301,8 +268,7 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void resetTopicDialogTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+    public void resetTopicDialogTest() throws Exception {
         // open topics view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
 
@@ -336,9 +302,7 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
 
     @Test
     @FlakyTest(bugId = 301779505)
-    public void blockAppDialogTest() throws UiObjectNotFoundException, IOException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
+    public void blockAppDialogTest() throws Exception {
         // perform a gentle swipe so scroll won't miss the text close to the
         // bottom of the current screen.
         UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
@@ -381,9 +345,7 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void unblockAppDialogTest() throws UiObjectNotFoundException, IOException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
+    public void unblockAppDialogTest() throws Exception {
         UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
         if(!appsTitle.exists()){
             ApkTestUtil.gentleSwipe(sDevice);
@@ -420,9 +382,7 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void resetAppDialogTest() throws UiObjectNotFoundException, IOException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
+    public void resetAppDialogTest() throws Exception {
         UiObject appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_title);
         if(!appsTitle.exists()){
             ApkTestUtil.gentleSwipe(sDevice);
