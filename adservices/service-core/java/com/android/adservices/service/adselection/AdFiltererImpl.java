@@ -69,7 +69,7 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
-        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CA);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FILTER_CA);
         try {
             List<DBCustomAudience> toReturn = new ArrayList<>();
             Instant currentTime = mClock.instant();
@@ -96,7 +96,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     toReturn.size(), cas.size(), remainingAds, totalAds);
             return toReturn;
         } finally {
-            Tracing.endAsyncSection(Tracing.FILTER_CA, traceCookie);
+            Tracing.endAsyncSection(Tracing.FILTERER_FILTER_CA, traceCookie);
         }
     }
 
@@ -109,7 +109,7 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public SignedContextualAds filterContextualAds(SignedContextualAds contextualAds) {
-        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CONTEXTUAL);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FILTER_CONTEXTUAL);
         try {
             List<AdWithBid> adsList = new ArrayList<>();
             Instant currentTime = mClock.instant();
@@ -129,7 +129,7 @@ public final class AdFiltererImpl implements AdFilterer {
 
             return contextualAds.cloneToBuilder().setAdsWithBid(adsList).build();
         } finally {
-            Tracing.endAsyncSection(Tracing.FILTER_CONTEXTUAL, traceCookie);
+            Tracing.endAsyncSection(Tracing.FILTERER_FILTER_CONTEXTUAL, traceCookie);
         }
     }
 

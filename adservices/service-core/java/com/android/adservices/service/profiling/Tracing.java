@@ -24,8 +24,8 @@ import java.util.concurrent.ThreadLocalRandom;
 /** Utility class providing methods for using {@link android.os.Trace}. */
 public final class Tracing {
 
-    public static final String FILTER_CA = "FilterCustomAudiences";
-    public static final String FILTER_CONTEXTUAL = "FilterContextualAds";
+    public static final String FILTERER_FILTER_CA = "AdFilterer#FilterCustomAudiences";
+    public static final String FILTERER_FILTER_CONTEXTUAL = "AdFilterer#FilterContextualAds";
     public static final String RUN_AD_SELECTION = "RunOnDeviceAdSelection";
     public static final String PERSIST_AD_SELECTION = "PersistOnDeviceAdSelection";
     public static final String GET_BUYERS_CUSTOM_AUDIENCE = "GetBuyersCustomAudience";
