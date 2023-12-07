@@ -60,7 +60,6 @@ android_test {
         "general-tests",
         "mts-adservices",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     data: [":com.example.adservices.samples.ui.consenttestapp"],
     instrumentation_for: "AdServicesApk",
 }
@@ -159,7 +158,6 @@ android_test {
         "mts-adservices",
     ],
     test_config: "AndroidTest.AppConsent.xml",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     data: [":com.example.adservices.samples.ui.consenttestapp"],
     instrumentation_for: "AdServicesApk",
 }

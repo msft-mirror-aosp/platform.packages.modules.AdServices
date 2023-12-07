@@ -256,7 +256,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         // Default to use PPAPI consent to test migration-irrelevant logics.
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
 
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
         doReturn(true).when(mMockFlags).getAdservicesConsentMigrationLoggingEnabled();
         doReturn(true).when(mMockFlags).getEnrollmentEnableLimitedLogging();

@@ -233,6 +233,30 @@ public class MainActivity extends AppCompatActivity {
         refreshLoadSdksButtonText();
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        /*
+            Resume video when app is active.
+            TODO (b/314953975) Should be handled on SDK side:
+                1) (after adding Client App state API): Resume when app is foreground
+                2) (after migration to ui-lib Visibility): Resume when PlayerView is visible
+        */
+        withSdkApiIfLoaded(ISdkApi::notifyMainActivityStarted);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        /*
+            Pause video when app is not active.
+            TODO (b/314953975) Should be handled on SDK side:
+                1) (after adding Client App state API): Pause when app is background
+                2) (after migration to ui-lib Visibility): Pause when PlayerView is not visible
+        */
+        withSdkApiIfLoaded(ISdkApi::notifyMainActivityStopped);
+    }
+
     private void registerResetPreferencesButton() {
         mResetPreferencesButton.setOnClickListener(
                 v ->
@@ -323,6 +347,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                         mInScrollBannerView.setVisibility(View.INVISIBLE);
                         mBottomBannerView.setVisibility(View.INVISIBLE);
+                        // TODO (b/314953975) Should be handled in Session.close()
+                        withSdkApiIfLoaded(ISdkApi::notifyMainActivityStopped);
                         logAndDisplayMessage(INFO, "All SurfaceControlViewHost Released.");
                     }
                 });
@@ -1025,5 +1051,26 @@ public class MainActivity extends AppCompatActivity {
                         .build());
         StrictMode.setVmPolicy(
                 new StrictMode.VmPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build());
+    }
+
+    private interface ConsumerWithException<T> {
+        void accept(T t) throws Exception;
+    }
+
+    private void withSdkApiIfLoaded(ConsumerWithException<ISdkApi> sdkApiConsumer) {
+        if (!mSdksLoaded) {
+            return;
+        }
+        final IBinder binder = mSandboxedSdk.getInterface();
+        final ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+        if (sdkApi == null) {
+            logAndDisplayMessage(ERROR, "Failed to get SdkApi: Invalid SDK object");
+            return;
+        }
+        try {
+            sdkApiConsumer.accept(sdkApi);
+        } catch (Exception error) {
+            logAndDisplayMessage(ERROR, "Exception while calling SdkApi: %s", error);
+        }
     }
 }

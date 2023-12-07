@@ -26,13 +26,9 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.RemoteException;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -43,11 +39,9 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.EditText;
-import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import java.util.List;
 import java.util.Random;
@@ -69,16 +63,18 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String ON_CLICK_OPEN_CHROME = "on-click-open-chrome";
     private static final String ON_CLICK_OPEN_PACKAGE = "on-click-open-package";
     private static final String PACKAGE_TO_OPEN_KEY = "package-to-open";
+    private final PlayerViewProvider mPlayerViewProvider = new PlayerViewProvider();
     private String mSdkSdkCommEnabled = null;
     private String mOnClickOpenPackage = null;
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new SdkApi(getContext()));
+        return new SandboxedSdk(new SdkApi(getContext(), mPlayerViewProvider));
     }
 
     @Override
     public void beforeUnloadSdk() {
+        mPlayerViewProvider.onHostActivityStopped();
         Log.i(TAG, "SDK unloaded");
     }
 
@@ -90,7 +86,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
         String type = params.getString(VIEW_TYPE_KEY, "");
         if (VIDEO_VIEW_VALUE.equals(type)) {
             String videoUrl = params.getString(VIDEO_URL_KEY, "");
-            return new TestVideoView(windowContext, videoUrl);
+            return mPlayerViewProvider.createPlayerView(windowContext, videoUrl);
         } else if (VIEW_TYPE_INFLATED_VIEW.equals(type)) {
             final LayoutInflater inflater =
                     (LayoutInflater)
@@ -302,52 +298,6 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mSdkContext.startActivity(intent);
             }
-        }
-    }
-
-    private static class TestVideoView extends VideoView {
-
-        private MediaPlayer mPlayer;
-
-        TestVideoView(Context windowContext, String url) {
-            super(windowContext);
-            new Handler(Looper.getMainLooper())
-                    .post(
-                            () -> {
-                                setVideoURI(Uri.parse(url));
-                                requestFocus();
-
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                                    // Add playback controls to the video.
-                                    MediaController mediaController =
-                                            new MediaController(getContext());
-                                    mediaController.setAnchorView(this);
-                                    setMediaController(mediaController);
-                                }
-
-                                setOnPreparedListener(this::onPrepared);
-                            });
-        }
-
-        private void onPrepared(MediaPlayer mp) {
-            mPlayer = mp;
-            mPlayer.setVolume(1.0f, 1.0f);
-            start();
-        }
-
-        @Override
-        public void pause() {
-            super.pause();
-            Log.i(TAG, "Video was paused.");
-
-            // For testing, mute the video when it is paused for the first time.
-            mPlayer.setVolume(0.0f, 0.0f);
-        }
-
-        @Override
-        public void start() {
-            super.start();
-            Log.i(TAG, "Video was started.");
         }
     }
 
