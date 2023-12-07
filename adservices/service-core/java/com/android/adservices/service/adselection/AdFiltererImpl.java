@@ -240,11 +240,15 @@ public final class AdFiltererImpl implements AdFilterer {
             String customAudienceOwner,
             String customAudienceName,
             Instant currentTime) {
-        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_WIN);
+        final int adPassesFiltersTraceCookie =
+                Tracing.beginAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_WIN);
         try {
             for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
                 Instant intervalStartTime =
                         currentTime.minusMillis(frequencyCap.getInterval().toMillis());
+
+                final int numEventsForCATraceCookie =
+                        Tracing.beginAsyncSection(Tracing.FREQUENCY_CAP_GET_NUM_EVENTS_CA);
                 int numEventsSinceStartTime =
                         mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(
                                 frequencyCap.getAdCounterKey(),
@@ -253,6 +257,8 @@ public final class AdFiltererImpl implements AdFilterer {
                                 customAudienceName,
                                 FrequencyCapFilters.AD_EVENT_TYPE_WIN,
                                 intervalStartTime);
+                Tracing.endAsyncSection(
+                        Tracing.FREQUENCY_CAP_GET_NUM_EVENTS_CA, numEventsForCATraceCookie);
 
                 if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
                     return false;
@@ -260,7 +266,7 @@ public final class AdFiltererImpl implements AdFilterer {
             }
             return true;
         } finally {
-            Tracing.endAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_WIN, traceCookie);
+            Tracing.endAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_WIN, adPassesFiltersTraceCookie);
         }
     }
 
@@ -276,7 +282,9 @@ public final class AdFiltererImpl implements AdFilterer {
                         currentTime.minusMillis(frequencyCap.getInterval().toMillis());
                 int numEventsSinceStartTime =
                         mFrequencyCapDao.getNumEventsForBuyerAfterTime(
-                                frequencyCap.getAdCounterKey(), buyer, adEventType,
+                                frequencyCap.getAdCounterKey(),
+                                buyer,
+                                adEventType,
                                 intervalStartTime);
 
                 if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
