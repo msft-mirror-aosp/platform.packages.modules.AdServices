@@ -19,14 +19,13 @@ package com.android.server.sdksandbox;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX;
 
 import android.annotation.IntDef;
 import android.annotation.Nullable;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
+import android.app.sdksandbox.IUnloadSdkCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LogUtil;
 import android.app.sdksandbox.SandboxLatencyInfo;
@@ -52,7 +51,7 @@ import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
-import com.android.sdksandbox.IUnloadSdkCallback;
+import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 
 import java.lang.annotation.Retention;
@@ -333,18 +332,20 @@ class LoadSdkSession {
         }
     }
 
-    void unload(long timeSystemServerReceivedCallFromApp) {
-        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+    void unload(SandboxLatencyInfo sandboxLatencyInfo, IUnloadSdkCallback callback) {
+        // TODO(b/312444990): log latency in cases the method call fails.
         sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
-        IUnloadSdkCallback unloadCallback =
-                new IUnloadSdkCallback.Stub() {
+        IUnloadSdkInSandboxCallback unloadInSandboxCallback =
+                new IUnloadSdkInSandboxCallback.Stub() {
                     @Override
                     public void onUnloadSdk(SandboxLatencyInfo sandboxLatencyInfo) {
-                        logLatencyMetricsForCallback(
-                                /*timeSystemServerReceivedCallFromSandbox=*/ mInjector
-                                        .elapsedRealtime(),
-                                SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
-                                sandboxLatencyInfo);
+                        sandboxLatencyInfo.setTimeSystemServerReceivedCallFromSandbox(
+                                mInjector.elapsedRealtime());
+                        try {
+                            callback.onUnloadSdk(sandboxLatencyInfo);
+                        } catch (RemoteException e) {
+                            Log.e(TAG, "Could not send onUnloadSdk");
+                        }
                     }
                 };
 
@@ -381,18 +382,8 @@ class LoadSdkSession {
             return;
         }
 
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
-                (int)
-                        (sandboxLatencyInfo.getTimeSystemServerCallFinished()
-                                - timeSystemServerReceivedCallFromApp),
-                /*success=*/ true,
-                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                mCallingInfo.getUid());
-
         try {
-            service.unloadSdk(mSdkName, unloadCallback, sandboxLatencyInfo);
+            service.unloadSdk(mSdkName, unloadInSandboxCallback, sandboxLatencyInfo);
         } catch (DeadObjectException e) {
             Log.i(
                     TAG,

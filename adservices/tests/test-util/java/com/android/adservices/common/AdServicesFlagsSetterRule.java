@@ -17,6 +17,7 @@ package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
@@ -85,6 +86,7 @@ public final class AdServicesFlagsSetterRule
                 .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
                 .setTopicsOnDeviceClassifierKillSwitch(false)
+                .setFlag(KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT, true)
                 .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
                 .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
                 .setDisableTopicsEnrollmentCheckForTests(true)
@@ -96,6 +98,7 @@ public final class AdServicesFlagsSetterRule
     public static AdServicesFlagsSetterRule forAdidE2ETests(String packageName) {
         return forGlobalKillSwitchDisabledTests()
                 .setAdIdKillSwitchForTests(false)
+                .setFlag(KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT, true)
                 .setFlag(KEY_ADID_REQUEST_PERMITS_PER_SECOND, 25.0)
                 .setPpapiAppAllowList(packageName)
                 .setCompatModeFlags();

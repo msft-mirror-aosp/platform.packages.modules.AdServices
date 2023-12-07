@@ -89,6 +89,7 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -104,7 +105,6 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
 
     @Test
     public void euAcceptFlowTest() throws UiObjectNotFoundException, InterruptedException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         startActivity(true);
