@@ -69,7 +69,7 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
-        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FILTER_CA);
+        final int filterCATraceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FILTER_CA);
         try {
             List<DBCustomAudience> toReturn = new ArrayList<>();
             Instant currentTime = mClock.instant();
@@ -77,6 +77,8 @@ public final class AdFiltererImpl implements AdFilterer {
             int totalAds = 0;
             int remainingAds = 0;
             for (DBCustomAudience ca : cas) {
+                final int forEachCATraceCookie =
+                        Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_CA);
                 List<DBAdData> filteredAds = new ArrayList<>();
                 totalAds += ca.getAds().size();
                 for (DBAdData ad : ca.getAds()) {
@@ -89,6 +91,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     toReturn.add(new DBCustomAudience.Builder(ca).setAds(filteredAds).build());
                     remainingAds += filteredAds.size();
                 }
+                Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_CA, forEachCATraceCookie);
             }
             sLogger.v(
                     "Filtering finished. %d CAs of the original %d remain. "
@@ -96,7 +99,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     toReturn.size(), cas.size(), remainingAds, totalAds);
             return toReturn;
         } finally {
-            Tracing.endAsyncSection(Tracing.FILTERER_FILTER_CA, traceCookie);
+            Tracing.endAsyncSection(Tracing.FILTERER_FILTER_CA, filterCATraceCookie);
         }
     }
 
