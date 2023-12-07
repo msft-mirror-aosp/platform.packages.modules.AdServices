@@ -23,10 +23,12 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adid.AdId;
 import android.os.Parcel;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
 /** Unit tests for {@link UpdateAdIdRequest} */
-public final class UpdateAdIdRequestTest {
+public final class UpdateAdIdRequestTest extends AdServicesUnitTestCase {
 
     @Test
     public void testWriteToParcel() {
@@ -58,8 +60,8 @@ public final class UpdateAdIdRequestTest {
                         .setLimitAdTrackingEnabled(isLatEnabled)
                         .build();
 
-        assertThat(request.getAdId()).isEqualTo(adIdString);
-        assertThat(request.isLimitAdTrackingEnabled()).isEqualTo(isLatEnabled);
+        expect.that(request.getAdId()).isEqualTo(adIdString);
+        expect.that(request.isLimitAdTrackingEnabled()).isEqualTo(isLatEnabled);
     }
 
     @Test
