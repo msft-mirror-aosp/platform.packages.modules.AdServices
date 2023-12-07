@@ -3308,7 +3308,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return DeviceConfig.getFloat(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
-                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
     }
 
     @Override
@@ -3317,7 +3317,24 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
-                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+    }
+
+    @Override
+    public float getMeasurementFlexApiMaxInformationGainDualDestinationEvent() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+    }
+
+    @Override
+    public float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
     }
 
     @Override
@@ -4071,6 +4088,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION
                         + " = "
                         + getMeasurementFlexApiMaxInformationGainNavigation());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT
+                        + " = "
+                        + getMeasurementFlexApiMaxInformationGainDualDestinationEvent());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
+                        + " = "
+                        + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS

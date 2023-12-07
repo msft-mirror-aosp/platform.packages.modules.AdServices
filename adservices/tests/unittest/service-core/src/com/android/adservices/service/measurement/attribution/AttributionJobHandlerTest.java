@@ -103,8 +103,6 @@ public class AttributionJobHandlerTest {
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
-    private static final Long PENULTIMATE_INT_AS_LONG =
-            Integer.valueOf(Integer.MAX_VALUE - 1).longValue();
     private static final long SOURCE_TIME = 1690000000000L;
     private static final long TRIGGER_TIME = 1690000001000L;
     private static final long EXPIRY_TIME = 1692592000000L;
@@ -4866,7 +4864,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
-        Pair<Long, Long> secondBucket = Pair.create(100L, PENULTIMATE_INT_AS_LONG);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
 
         final EventReport currentEventReport1 =
                 new EventReport.Builder()
@@ -5096,7 +5094,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
-        Pair<Long, Long> secondBucket = Pair.create(100L, PENULTIMATE_INT_AS_LONG);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
 
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         when(mMeasurementDao.getPendingTriggerIds())
@@ -5226,7 +5224,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
-        Pair<Long, Long> secondBucket = Pair.create(100L, PENULTIMATE_INT_AS_LONG);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
 
         final EventReport.Builder eventReportBuilder =
                 new EventReport.Builder()
@@ -5404,7 +5402,7 @@ public class AttributionJobHandlerTest {
                         .build();
 
         Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
-        Pair<Long, Long> secondBucket = Pair.create(100L, PENULTIMATE_INT_AS_LONG);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
 
         final EventReport currentEventReport1 =
                 new EventReport.Builder()
@@ -5451,8 +5449,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerDedupKey(new UnsignedLong(1233L))
                         .build();
 
-        TriggerSpecs templateTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumArrayValidBaseline(), 2, null);
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum(2);
 
         JSONArray existingAttributes = new JSONArray();
         JSONObject triggerRecord1 = generateTriggerJSONFromEventReport(currentEventReport1);
@@ -5624,8 +5621,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerDedupKey(new UnsignedLong(123L))
                         .build();
 
-        TriggerSpecs templateTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumArrayValidBaseline(), 2, null);
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum(2);
         JSONArray existingAttributes = new JSONArray();
         JSONObject triggerRecord1 = generateTriggerJSONFromEventReport(currentEventReport1);
         JSONObject triggerRecord2 = generateTriggerJSONFromEventReport(currentEventReport2);
@@ -5739,8 +5735,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
 
-        TriggerSpecs templateTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumArrayValidBaseline(), 2, null);
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum(2);
         JSONArray existingAttributes = new JSONArray();
 
         Source source =
@@ -5844,8 +5839,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
 
-        TriggerSpecs templateTriggerSpecs = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueSumArrayValidBaseline(), 2, null);
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum(2);
         JSONArray existingAttributes = new JSONArray();
 
         Source source =
@@ -6005,6 +5999,55 @@ public class AttributionJobHandlerTest {
         verify(mLogger).logMeasurementAttributionStats(statusArg.capture());
         MeasurementAttributionStats measurementAttributionStats = statusArg.getValue();
         assertTrue(measurementAttributionStats.isSourceDerived());
+    }
+
+    @Test
+    public void performAttributions_invalidTriggerId_triggerNotFoundLogged()
+            throws DatastoreException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setNotFilters(
+                                "[{\n"
+                                        + "  \"key_1\": [\"value_11_x\", \"value_12\"]}, {\n"
+                                        + "  \"key_2\": [\"value_21\", \"value_22_x\"]\n"
+                                        + "}]\n")
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenThrow(DatastoreException.class);
+
+        // Execution
+        boolean result = mHandler.performPendingAttributions();
+
+        // Assertion
+        assertEquals(false, result);
+        ArgumentCaptor<MeasurementAttributionStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementAttributionStats.class);
+        verify(mLogger).logMeasurementAttributionStats(statusArg.capture());
+        MeasurementAttributionStats measurementAttributionStats = statusArg.getValue();
+        assertEquals(
+                measurementAttributionStats.getSourceType(),
+                AttributionStatus.SourceType.UNKNOWN.getValue());
+        assertEquals(
+                measurementAttributionStats.getSurfaceType(),
+                AttributionStatus.AttributionSurface.UNKNOWN.getValue());
+        assertEquals(
+                measurementAttributionStats.getResult(),
+                AttributionStatus.AttributionResult.UNKNOWN.getValue());
+        assertEquals(
+                measurementAttributionStats.getFailureType(),
+                AttributionStatus.FailureType.TRIGGER_NOT_FOUND.getValue());
     }
 
     @Test

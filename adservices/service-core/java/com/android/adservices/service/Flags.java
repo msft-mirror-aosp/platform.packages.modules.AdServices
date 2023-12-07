@@ -690,18 +690,32 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 6.5F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT = 6.5F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
     default float getMeasurementFlexApiMaxInformationGainEvent() {
-        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.46173F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
-        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT = 6.5F;
+
+    /** Returns max information gain for Flexible Event, dual destination Event sources */
+    default float getMeasurementFlexApiMaxInformationGainDualDestinationEvent() {
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.46173F;
+
+    /** Returns max information gain for Flexible Event, dual destination Navigation sources */
+    default float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
