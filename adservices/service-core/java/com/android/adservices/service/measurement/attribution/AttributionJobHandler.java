@@ -176,7 +176,14 @@ class AttributionJobHandler {
     private boolean performAttribution(String triggerId, AttributionStatus attributionStatus) {
         return mDatastoreManager.runInTransaction(
                 measurementDao -> {
-                    Trigger trigger = measurementDao.getTrigger(triggerId);
+                    Trigger trigger;
+                    try {
+                        trigger = measurementDao.getTrigger(triggerId);
+                    } catch (DatastoreException e) {
+                        attributionStatus.setFailureType(
+                                AttributionStatus.FailureType.TRIGGER_NOT_FOUND);
+                        throw e;
+                    }
                     attributionStatus.setAttributionDelay(
                             System.currentTimeMillis() - trigger.getTriggerTime());
 
@@ -207,6 +214,23 @@ class AttributionJobHandler {
                     }
 
                     Source source = sourceOpt.get().first;
+
+                    // If the source is a flex source, build trigger specs to populate privacy
+                    // parameters that may be used in debug and regular reporting.
+                    if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()
+                            && source.getTriggerSpecsString() != null
+                            && !source.getTriggerSpecsString().isEmpty()) {
+                        try {
+                            source.buildTriggerSpecs();
+                        } catch (JSONException e) {
+                            LoggerFactory.getMeasurementLogger().e(
+                                    e, "AttributionJobHandler::performAttribution cannot build "
+                                            + "trigger specs");
+                            ignoreTrigger(trigger, measurementDao);
+                            return;
+                        }
+                    }
+
                     List<Source> remainingMatchingSources = sourceOpt.get().second;
 
                     attributionStatus.setSourceType(source.getSourceType());
@@ -265,11 +289,14 @@ class AttributionJobHandler {
                         attributeTrigger(trigger, measurementDao);
                         if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
                             if (isEventTriggeringStatusAttributed) {
-                                insertAttribution(Attribution.Scope.EVENT, source, trigger,
-                                        measurementDao);
+                                insertAttribution(
+                                        Attribution.Scope.EVENT, source, trigger, measurementDao);
                             }
                             if (isAggregateTriggeringStatusAttributed) {
-                                insertAttribution(Attribution.Scope.AGGREGATE, source, trigger,
+                                insertAttribution(
+                                        Attribution.Scope.AGGREGATE,
+                                        source,
+                                        trigger,
                                         measurementDao);
                             }
                         } else {
@@ -765,9 +792,7 @@ class AttributionJobHandler {
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
 
-        if (!mFlags.getMeasurementFlexibleEventReportingApiEnabled()
-                || source.getTriggerSpecsString() == null
-                || source.getTriggerSpecsString().isEmpty()) {
+        if (source.getTriggerSpecs() == null) {
             EventReport newEventReport =
                     new EventReport.Builder()
                             .populateFromSourceAndTrigger(
@@ -794,21 +819,11 @@ class AttributionJobHandler {
                 incrementEventDebugReportCountBy(attributionStatus, 1);
             }
         // The source is using flexible event API
-        } else if (source.getTriggerSpecsString() != null
-                && !source.getTriggerSpecsString().isEmpty()) {
-            try {
-                source.buildTriggerSpecs();
-                if (!generateFlexEventReports(
-                        source, trigger, eventTrigger, debugKeyPair, measurementDao)) {
-                    return TriggeringStatus.DROPPED;
-                }
-            } catch (JSONException e) {
-                LoggerFactory.getMeasurementLogger().e(
-                        e, "AttributionJobHandler::maybeGenerateEventReport cannot build trigger"
-                                + "specs");
-                return TriggeringStatus.DROPPED;
-            }
+        } else if (!generateFlexEventReports(
+                source, trigger, eventTrigger, debugKeyPair, measurementDao)) {
+            return TriggeringStatus.DROPPED;
         }
+
         return TriggeringStatus.ATTRIBUTED;
     }
 
@@ -1015,7 +1030,7 @@ class AttributionJobHandler {
     private List<Uri> getEventReportDestinations(@NonNull Source source, int destinationType) {
         ImmutableList.Builder<Uri> destinations = new ImmutableList.Builder<>();
         if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
-                && source.getCoarseEventReportDestinations()) {
+                && source.hasCoarseEventReportDestinations()) {
             Optional.ofNullable(source.getAppDestinations()).ifPresent(destinations::addAll);
             Optional.ofNullable(source.getWebDestinations()).ifPresent(destinations::addAll);
         } else {
@@ -1146,8 +1161,7 @@ class AttributionJobHandler {
                                 triggerSummaryBucket,
                                 debugKeys.first,
                                 debugKeys.second,
-                                mEventReportWindowCalcDelegate,
-                                mSourceNoiseHandler,
+                                source.getFlipProbability(mFlags),
                                 getEventReportDestinations(
                                         source, trigger.getDestinationType()))
                         .build();

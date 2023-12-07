@@ -169,7 +169,10 @@ public final class ImpressionNoiseUtil {
     public static List<int[]> selectFlexEventReportRandomStateAndGenerateReportConfigs(
             TriggerSpecs triggerSpecs, int destinationMultiplier, ThreadLocalRandom rand) {
 
+        // Assumes trigger specs already built privacy parameters.
         int[][] params = triggerSpecs.getPrivacyParamsForComputation();
+        // Doubling the window cap for each trigger data type correlates with counting report states
+        // that treat having a web destination as different from an app destination.
         int[] updatedPerTypeNumWindowList = new int[params[1].length];
         for (int i = 0; i < params[1].length; i++) {
             updatedPerTypeNumWindowList[i] = params[1][i] * destinationMultiplier;
