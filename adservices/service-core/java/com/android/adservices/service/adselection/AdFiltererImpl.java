@@ -269,18 +269,23 @@ public final class AdFiltererImpl implements AdFilterer {
             int adEventType,
             AdTechIdentifier buyer,
             Instant currentTime) {
-        for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
-            Instant intervalStartTime =
-                    currentTime.minusMillis(frequencyCap.getInterval().toMillis());
-            int numEventsSinceStartTime =
-                    mFrequencyCapDao.getNumEventsForBuyerAfterTime(
-                            frequencyCap.getAdCounterKey(), buyer, adEventType, intervalStartTime);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_NON_WIN);
+        try {
+            for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
+                Instant intervalStartTime =
+                        currentTime.minusMillis(frequencyCap.getInterval().toMillis());
+                int numEventsSinceStartTime =
+                        mFrequencyCapDao.getNumEventsForBuyerAfterTime(
+                                frequencyCap.getAdCounterKey(), buyer, adEventType,
+                                intervalStartTime);
 
-            if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
-                return false;
+                if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
+                    return false;
+                }
             }
+            return true;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_NON_WIN, traceCookie);
         }
-
-        return true;
     }
 }
