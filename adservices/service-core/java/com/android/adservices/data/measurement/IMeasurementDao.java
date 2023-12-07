@@ -367,17 +367,17 @@ public interface IMeasurementDao {
      */
     void markAggregateDebugReportDelivered(String aggregateReportId) throws DatastoreException;
 
-    /** Saves the {@link EventReport} to datastore. */
+    /** Saves the {@link EventReport} to the datastore. */
     void insertEventReport(EventReport eventReport) throws DatastoreException;
 
-    /** Deletes the {@link EventReport} from datastore. */
+    /** Deletes the {@link EventReport} from the datastore. */
     void deleteEventReport(EventReport eventReport) throws DatastoreException;
 
-    /** Deletes the {@link DebugReport} from datastore. */
+    /** Deletes the {@link DebugReport} from the datastore. */
     void deleteDebugReport(String debugReportId) throws DatastoreException;
 
     /**
-     * Deletes the {@link DebugReport} from datastore based on parameters.
+     * Deletes the {@link DebugReport} from the datastore based on parameters.
      *
      * @param registrant
      * @param start
@@ -441,7 +441,7 @@ public interface IMeasurementDao {
      */
     void undoInstallAttribution(Uri uri) throws DatastoreException;
 
-    /** Save aggregate encryption key to datastore. */
+    /** Save aggregate encryption key to the datastore. */
     void insertAggregateEncryptionKey(AggregateEncryptionKey aggregateEncryptionKey)
             throws DatastoreException;
 
@@ -455,10 +455,10 @@ public interface IMeasurementDao {
     /** Remove aggregate encryption keys from the datastore older than {@code expiry}. */
     void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException;
 
-    /** Save unencrypted aggregate payload to datastore. */
+    /** Save unencrypted aggregate payload to the datastore. */
     void insertAggregateReport(AggregateReport payload) throws DatastoreException;
 
-    /** Save debug report payload to datastore. */
+    /** Save debug report payload to the datastore. */
     void insertDebugReport(DebugReport payload) throws DatastoreException;
 
     /**
@@ -593,6 +593,10 @@ public interface IMeasurementDao {
      * @throws DatastoreException throw DatastoreException
      */
     Set<String> fetchFlexSourceIdsFor(@NonNull Collection<String> triggerIds)
+            throws DatastoreException;
+
+    /** Deletes the {@link EventReport}s and associated {@link Attribution}s from the datastore. */
+    void deleteFlexEventReportsAndAttributions(List<EventReport> eventReports)
             throws DatastoreException;
 
     /**
