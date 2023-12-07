@@ -1596,6 +1596,61 @@ class MeasurementDao implements IMeasurementDao {
         return sourceIds;
     }
 
+    @Override
+    public void deleteFlexEventReportsAndAttributions(List<EventReport> eventReports)
+            throws DatastoreException {
+        if (eventReports.isEmpty()) {
+            return;
+        }
+
+        String sourceId = eventReports.get(0).getSourceId();
+
+        Map<String, List<String>> triggerIdToEventReportIdsMap =
+                eventReports
+                        .stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        EventReport::getTriggerId,
+                                        Collectors.mapping(
+                                                EventReport::getId, Collectors.toList())));
+
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+
+        for (Map.Entry<String, List<String>> entry : triggerIdToEventReportIdsMap.entrySet()) {
+            String triggerId = entry.getKey();
+            List<String> eventReportIds = entry.getValue();
+
+            String eventReportsWhereStatement = MeasurementTables.EventReportContract.ID
+                    + " IN ('" + String.join("','", eventReportIds) + "')";
+
+            db.delete(
+                    MeasurementTables.EventReportContract.TABLE,
+                    eventReportsWhereStatement,
+                    new String[0]);
+
+            // There can be multiple attributions per source ID / trigger ID matching pair, so we
+            // limit the number of attributions deleted to the number of event reports provided that
+            // were associated with the trigger ID.
+            String attributionWhereStatement = MeasurementTables.AttributionContract.ID
+                    + " IN ("
+                        + "SELECT " + MeasurementTables.AttributionContract.ID
+                        + " FROM " + MeasurementTables.AttributionContract.TABLE
+                        + " WHERE " + MeasurementTables.AttributionContract.SCOPE + " = ?"
+                        + " AND " + MeasurementTables.AttributionContract.SOURCE_ID + " = ?"
+                        + " AND " + MeasurementTables.AttributionContract.TRIGGER_ID + " = ?"
+                        + " LIMIT " + String.valueOf(eventReportIds.size())
+                        + ")";
+
+            db.delete(
+                    MeasurementTables.AttributionContract.TABLE,
+                    attributionWhereStatement,
+                    new String[] {
+                            String.valueOf(Attribution.Scope.EVENT),
+                            sourceId,
+                            triggerId });
+        }
+    }
+
     private String getUriValueList(List<Uri> uriList) {
         // Construct query, as list of all packages present on the device
         StringBuilder valueList = new StringBuilder("(");
