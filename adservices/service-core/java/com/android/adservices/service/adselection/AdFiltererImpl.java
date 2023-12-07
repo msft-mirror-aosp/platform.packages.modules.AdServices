@@ -145,9 +145,13 @@ public final class AdFiltererImpl implements AdFilterer {
         if (ad.getAdFilters() == null) {
             return true;
         }
-        return doesAdPassAppInstallFilters(ad, buyer)
-                && doesAdPassFrequencyCapFilters(
-                        ad, buyer, customAudienceOwner, customAudienceName, currentTime);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_AD);
+        boolean passes =
+                doesAdPassAppInstallFilters(ad, buyer)
+                        && doesAdPassFrequencyCapFilters(
+                                ad, buyer, customAudienceOwner, customAudienceName, currentTime);
+        Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_AD, traceCookie);
+        return passes;
     }
 
     private boolean doesAdPassAppInstallFilters(DBAdData ad, AdTechIdentifier buyer) {
