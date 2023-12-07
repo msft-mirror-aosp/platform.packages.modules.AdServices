@@ -68,7 +68,10 @@ android_test {
         "framework-adservices-lib",
         "auto_value_annotations",
     ],
-    srcs: ["src/android/adservices/rootcts/*.java"],
+    srcs: [
+        "src/android/adservices/rootcts/*.java",
+        "src/android/adservices/utils/*.java",
+    ],
     // Tag this module as a cts test artifact
     exclude_srcs: [
       "src/android/adservices/debuggablects/*.java",
@@ -234,7 +237,7 @@ android_test {
         "auto_value_annotations",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     test_config: "AndroidTestDebuggable.ExtServices.xml",
     manifest: "AndroidManifestDebuggableExtServices.xml",

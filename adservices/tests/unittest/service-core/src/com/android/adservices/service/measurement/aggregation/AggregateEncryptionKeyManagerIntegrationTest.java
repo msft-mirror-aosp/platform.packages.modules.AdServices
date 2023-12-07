@@ -43,6 +43,7 @@ import java.io.InputStream;
 import java.time.Clock;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -66,7 +67,7 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
     @Mock HttpsURLConnection mUrlConnection;
     @Mock AdServicesErrorLogger mErrorLogger;
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open("aggregate_encryption_key_test.json");
         return AbstractDbIntegrationTest.getTestCasesFrom(
@@ -75,9 +76,12 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public AggregateEncryptionKeyManagerIntegrationTest(DbState input, DbState output, String name)
-            throws IOException {
-        super(input, output);
+    public AggregateEncryptionKeyManagerIntegrationTest(
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            String name) throws IOException {
+        super(input, output, flagsMap);
         MockitoAnnotations.initMocks(this);
         when(mClock.millis()).thenReturn(AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         AggregateEncryptionKeyTestUtil.prepareMockAggregateEncryptionKeyFetcher(

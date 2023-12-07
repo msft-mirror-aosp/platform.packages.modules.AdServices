@@ -20,6 +20,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -162,41 +163,71 @@ public final class SourceFixture {
         }
     }
 
-    public static ReportSpec getValidReportSpecCountBased() throws JSONException {
+    /** Provides a count-based valid TriggerSpecs. */
+    public static TriggerSpecs getValidTriggerSpecsCountBased() throws JSONException {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0, "
                         + String.format(
                                 "\"end_times\": [%s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
-        return new ReportSpec(triggerSpecsString, "3", getValidSource());
+        Source source =
+                getMinimalValidSourceBuilder()
+                        .setAttributedTriggers(new ArrayList<>())
+                        .build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(
+                triggerSpecArrayFrom(triggerSpecsString), 3, source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        return triggerSpecs;
     }
 
-    public static ReportSpec getValidReportSpecCountBasedWithFewerState() throws JSONException {
+    /** Provides a count-based valid TriggerSpecs with smaller state space. */
+    public static TriggerSpecs getValidTriggerSpecsCountBasedWithFewerState() throws JSONException {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1],"
                         + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
+                        + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
-        return new ReportSpec(triggerSpecsString, "1", getValidSource());
+        Source source = getMinimalValidSourceBuilder().build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(
+                triggerSpecArrayFrom(triggerSpecsString), 1, source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        return triggerSpecs;
     }
 
-    public static ReportSpec getValidReportSpecValueSum() throws JSONException {
-        return new ReportSpec(getTriggerSpecValueSumEncodedJSONValidBaseline(), "3",
-                getValidSource());
+    /** Provides a value-sum-based valid TriggerSpecs. */
+    public static TriggerSpecs getValidTriggerSpecsValueSum() throws JSONException {
+        return getValidTriggerSpecsValueSum(3);
+    }
+
+    /** Provides a value-sum-based valid TriggerSpecs. */
+    public static TriggerSpecs getValidTriggerSpecsValueSum(int maxReports) throws JSONException {
+        Source source =
+                getMinimalValidSourceBuilder()
+                        .setAttributedTriggers(new ArrayList<>())
+                        .build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(
+                getTriggerSpecValueSumArrayValidBaseline(),
+                maxReports,
+                source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        return triggerSpecs;
     }
 
     public static Source getValidSourceWithFlexEventReport() {
         try {
             return getValidSourceBuilder()
                     .setAttributedTriggers(new ArrayList<>())
-                    .setFlexEventReportSpec(getValidReportSpecCountBased())
-                    .setMaxEventLevelReports(getValidReportSpecCountBased().getMaxReports())
+                    .setTriggerSpecs(getValidTriggerSpecsCountBased())
+                    .setMaxEventLevelReports(getValidTriggerSpecsCountBased().getMaxReports())
                     .build();
         } catch (JSONException e) {
             return null;
@@ -205,11 +236,11 @@ public final class SourceFixture {
 
     public static Source getValidSourceWithFlexEventReportWithFewerState() {
         try {
-            return getValidSourceBuilder()
+            return getMinimalValidSourceBuilder()
                     .setAttributedTriggers(new ArrayList<>())
-                    .setFlexEventReportSpec(getValidReportSpecCountBasedWithFewerState())
+                    .setTriggerSpecs(getValidTriggerSpecsCountBasedWithFewerState())
                     .setMaxEventLevelReports(
-                            getValidReportSpecCountBasedWithFewerState().getMaxReports())
+                            getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
                     .build();
         } catch (JSONException e) {
             return null;
@@ -220,7 +251,7 @@ public final class SourceFixture {
         try {
             return getValidSourceBuilder()
                     .setAttributedTriggers(new ArrayList<>())
-                    .setFlexEventReportSpec(getValidReportSpecValueSum());
+                    .setTriggerSpecs(getValidTriggerSpecsValueSum());
         } catch (JSONException e) {
             return null;
         }
@@ -228,29 +259,29 @@ public final class SourceFixture {
 
     public static Source.Builder getValidSourceBuilderWithFlexEventReportValueSum()
             throws JSONException {
-        ReportSpec reportSpec = getValidReportSpecValueSum();
+        TriggerSpecs triggerSpecs = getValidTriggerSpecsValueSum();
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
-                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
-                .setMaxEventLevelReports(reportSpec.getMaxReports())
+                .setTriggerSpecsString(triggerSpecs.encodeToJson())
+                .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                 .setEventAttributionStatus(null)
-                .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
+                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString());
     }
 
     public static Source.Builder getValidSourceBuilderWithFlexEventReport() throws JSONException {
-        ReportSpec reportSpec = getValidReportSpecCountBased();
+        TriggerSpecs triggerSpecs = getValidTriggerSpecsCountBased();
         return getMinimalValidSourceBuilder()
                 .setId(UUID.randomUUID().toString())
-                .setTriggerSpecs(reportSpec.encodeTriggerSpecsToJson())
-                .setMaxEventLevelReports(reportSpec.getMaxReports())
+                .setTriggerSpecsString(triggerSpecs.encodeToJson())
+                .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                 .setEventAttributionStatus(null)
-                .setPrivacyParameters(reportSpec.encodePrivacyParametersToJSONString());
+                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString());
     }
 
     public static String getTriggerSpecCountEncodedJSONValidBaseline() {
         return "[{\"trigger_data\": [1, 2, 3],"
                 + "\"event_report_windows\": { "
-                + "\"start_time\": \"0\", "
+                + "\"start_time\": 0, "
                 + String.format(
                         "\"end_times\": [%s, %s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2),
@@ -260,10 +291,14 @@ public final class SourceFixture {
                 + "\"summary_buckets\": [1, 2, 3, 4]}]";
     }
 
+    public static TriggerSpec[] getTriggerSpecArrayCountValidBaseline() {
+        return triggerSpecArrayFrom(getTriggerSpecCountEncodedJSONValidBaseline());
+    }
+
     public static String getTriggerSpecValueSumEncodedJSONValidBaseline() {
         return "[{\"trigger_data\": [1, 2],"
                 + "\"event_report_windows\": { "
-                + "\"start_time\": \"0\", "
+                + "\"start_time\": 0, "
                 + String.format(
                         "\"end_times\": [%s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
@@ -271,23 +306,41 @@ public final class SourceFixture {
                 + "\"summary_buckets\": [10, 100]}]";
     }
 
-    public static String getTriggerSpecValueCountJSONTwoTriggerSpecs() {
-        return "[{\"trigger_data\": [1, 2, 3],"
-                + "\"event_report_windows\": { "
-                + "\"start_time\": \"0\", "
-                + String.format(
-                        "\"end_times\": [%s, %s, %s]}, ",
-                        TimeUnit.DAYS.toMillis(2),
-                        TimeUnit.DAYS.toMillis(7),
-                        TimeUnit.DAYS.toMillis(30))
-                + "\"summary_window_operator\": \"count\", "
-                + "\"summary_buckets\": [1, 2, 3, 4]}, "
-                + "{\"trigger_data\": [4, 5, 6, 7],"
-                + "\"event_report_windows\": { "
-                + "\"start_time\": \"0\", "
-                + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
-                + "\"summary_window_operator\": \"count\", "
-                + "\"summary_buckets\": [1,5,7]} "
-                + "]";
+    public static TriggerSpec[] getTriggerSpecValueSumArrayValidBaseline() {
+        return triggerSpecArrayFrom(getTriggerSpecValueSumEncodedJSONValidBaseline());
+    }
+
+    public static TriggerSpec[] getTriggerSpecValueCountJSONTwoTriggerSpecs() {
+        return triggerSpecArrayFrom(
+                "[{\"trigger_data\": [1, 2, 3],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0, "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s]}, ",
+                                TimeUnit.DAYS.toMillis(2),
+                                TimeUnit.DAYS.toMillis(7),
+                                TimeUnit.DAYS.toMillis(30))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4]}, "
+                        + "{\"trigger_data\": [4, 5, 6, 7],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0, "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1,5,7]} "
+                        + "]");
+    }
+
+    private static TriggerSpec[] triggerSpecArrayFrom(String json) {
+        try {
+            JSONArray jsonArray = new JSONArray(json);
+            TriggerSpec[] triggerSpecArray = new TriggerSpec[jsonArray.length()];
+            for (int i = 0; i < jsonArray.length(); i++) {
+                triggerSpecArray[i] = new TriggerSpec.Builder(jsonArray.getJSONObject(i)).build();
+            }
+            return triggerSpecArray;
+        } catch (JSONException ignored) {
+            return null;
+        }
     }
 }

@@ -100,6 +100,22 @@ public interface Flags extends CommonFlags {
         return TOPICS_DISABLE_DIRECT_APP_CALLS;
     }
 
+    /** Flag to enable encrypted Topics feature for Topics API. */
+    boolean TOPICS_ENCRYPTION_ENABLED = false;
+
+    /** Returns the feature flag to enable encryption for Topics API. */
+    default boolean getTopicsEncryptionEnabled() {
+        return TOPICS_ENCRYPTION_ENABLED;
+    }
+
+    /** Flag to disable plaintext Topics for Topics API response. */
+    boolean TOPICS_DISABLE_PLAINTEXT_RESPONSE = false;
+
+    /** Returns the feature flag to disable plaintext fields Topics API response. */
+    default boolean getTopicsDisablePlaintextResponse() {
+        return TOPICS_DISABLE_PLAINTEXT_RESPONSE;
+    }
+
     /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
@@ -574,6 +590,26 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
+    int MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum event attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxEventAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum aggregate attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxAggregateAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
     int MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION = 10;
 
     /**
@@ -642,9 +678,7 @@ public interface Flags extends CommonFlags {
 
     long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
 
-    /**
-     * Returns the duration that controls the rate-limiting window for destinations.
-     */
+    /** Returns the duration that controls the rate-limiting window for destinations. */
     default long getMeasurementDestinationRateLimitWindow() {
         return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
     }
@@ -652,22 +686,36 @@ public interface Flags extends CommonFlags {
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
 
     /** Returns true if flex lite api is enabled else false. */
-    default boolean getMeasurementFlexLiteAPIEnabled() {
+    default boolean getMeasurementFlexLiteApiEnabled() {
         return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 6.5F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT = 6.5F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
     default float getMeasurementFlexApiMaxInformationGainEvent() {
-        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.46173F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
-        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT = 6.5F;
+
+    /** Returns max information gain for Flexible Event, dual destination Event sources */
+    default float getMeasurementFlexApiMaxInformationGainDualDestinationEvent() {
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.46173F;
+
+    /** Returns max information gain for Flexible Event, dual destination Navigation sources */
+    default float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
@@ -997,29 +1045,25 @@ public interface Flags extends CommonFlags {
     int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
     int PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP = 3;
     long PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS = 24L * 60L * 60L; // 1 day
+    int PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES = 10 * 1024;
+    int PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES = 15 * 1024;
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
         return PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
     }
 
-    /**
-     * @return period of running periodic encoding in milliseconds
-     */
+    /** Returns period of running periodic encoding in milliseconds */
     default long getProtectedSignalPeriodicEncodingJobPeriodMs() {
         return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
     }
 
-    /**
-     * @return the flexible period of running periodic encoding in milliseconds
-     */
+    /** Returns the flexible period of running periodic encoding in milliseconds */
     default long getProtectedSignalsPeriodicEncodingJobFlexMs() {
         return PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
     }
 
-    /**
-     * @return the max size in bytes for encoded payload
-     */
+    /** Returns the max size in bytes for encoded payload */
     default int getProtectedSignalsEncodedPayloadMaxSizeBytes() {
         return PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
     }
@@ -1037,6 +1081,19 @@ public interface Flags extends CommonFlags {
     /** Returns the maximum time window beyond which encoder logic should be refreshed */
     default long getProtectedSignalsEncoderRefreshWindowSeconds() {
         return PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
+    }
+
+    /** Returns the maximum size of signals in storage per buyer. */
+    default int getProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+    }
+
+    /**
+     * Returns the maximum size of signals in the storage per buyer with a graceful oversubscription
+     * policy.
+     */
+    default int getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -1230,34 +1287,28 @@ public interface Flags extends CommonFlags {
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
-    /**
-     * @return whether to call trusted servers for off device ad selection.
-     */
+    /** Returns whether to call trusted servers for off device ad selection. */
     default boolean getAdSelectionOffDeviceEnabled() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
     boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
 
-    /** @return whether to call trusted servers for off device ad selection. */
+    /** Returns whether to call trusted servers for off device ad selection. */
     default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
         return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
     boolean FLEDGE_AUCTION_SERVER_ENABLED = false;
 
-    /**
-     * @return whether to enable server auction support in post-auction APIs.
-     */
+    /** Returns whether to enable server auction support in post-auction APIs. */
     default boolean getFledgeAuctionServerEnabled() {
         return FLEDGE_AUCTION_SERVER_ENABLED;
     }
 
     boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION = true;
 
-    /**
-     * @return whether to enable server auction support in report impression.
-     */
+    /** Returns whether to enable server auction support in report impression. */
     default boolean getFledgeAuctionServerEnabledForReportImpression() {
         return getFledgeAuctionServerEnabled()
                 && FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION;
@@ -1265,18 +1316,14 @@ public interface Flags extends CommonFlags {
 
     boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT = true;
 
-    /**
-     * @return whether to enable server auction support in report event API.
-     */
+    /** Returns whether to enable server auction support in report event API. */
     default boolean getFledgeAuctionServerEnabledForReportEvent() {
         return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
     }
 
     boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM = true;
 
-    /**
-     * @return whether to enable server auction support in update histogram API.
-     */
+    /** Returns whether to enable server auction support in update histogram API. */
     default boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
         return getFledgeAuctionServerEnabled()
                 && FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM;
@@ -1284,9 +1331,7 @@ public interface Flags extends CommonFlags {
 
     boolean FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION = true;
 
-    /**
-     * @return whether to enable server auction support in select ads mediation API.
-     */
+    /** Returns whether to enable server auction support in select ads mediation API. */
     default boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
         return getFledgeAuctionServerEnabled()
                 && FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
@@ -1294,9 +1339,7 @@ public interface Flags extends CommonFlags {
 
     boolean FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA = true;
 
-    /**
-     * @return whether to enable ad filtering in get ad selection data API.
-     */
+    /** Returns whether to enable ad filtering in get ad selection data API. */
     default boolean getFledgeAuctionServerEnableAdFilterInGetAdSelectionData() {
         return FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA;
     }
@@ -1313,9 +1356,9 @@ public interface Flags extends CommonFlags {
     boolean FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED = false;
 
     /**
-     * @return true if forcing {@link
-     *     android.adservices.adselection.AdSelectionManager#persistAdSelectionResult} to continue
-     *     when owner is null, otherwise false.
+     * Returns true if forcing {@link
+     * android.adservices.adselection.AdSelectionManager#persistAdSelectionResult} to continue when
+     * owner is null, otherwise false.
      */
     default boolean getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled() {
         return FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
@@ -1323,36 +1366,28 @@ public interface Flags extends CommonFlags {
 
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED = false;
 
-    /**
-     * @return whether to call remote URLs for debug reporting.
-     */
+    /** Returns whether to call remote URLs for debug reporting. */
     default boolean getFledgeEventLevelDebugReportingEnabled() {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
     }
 
     boolean FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY = false;
 
-    /**
-     * @return whether to call remote URLs for debug reporting.
-     */
+    /** Returns whether to call remote URLs for debug reporting. */
     default boolean getFledgeEventLevelDebugReportSendImmediately() {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
     }
 
     int FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS = 60 * 15;
 
-    /**
-     * @return minimum number of seconds between debug report batch.
-     */
+    /** Returns minimum number of seconds between debug report batch. */
     default int getFledgeEventLevelDebugReportingBatchDelaySeconds() {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS;
     }
 
     int FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH = 1000;
 
-    /**
-     * @return maximum number of items in a debug report batch.
-     */
+    /** Returns maximum number of items in a debug report batch. */
     default int getFledgeEventLevelDebugReportingMaxItemsPerBatch() {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
     }
@@ -1360,8 +1395,8 @@ public interface Flags extends CommonFlags {
     int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
 
     /**
-     * @return the maximum time in milliseconds allowed for a network call to open its initial
-     *     connection during the FLEDGE debug report sender job.
+     * Returns the maximum time in milliseconds allowed for a network call to open its initial
+     * connection during the FLEDGE debug report sender job.
      */
     default int getFledgeDebugReportSenderJobNetworkConnectionTimeoutMs() {
         return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_CONNECT_TIMEOUT_MS;
@@ -1370,8 +1405,8 @@ public interface Flags extends CommonFlags {
     int FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
 
     /**
-     * @return the maximum time in milliseconds allowed for a network call to read a response from a
-     *     target server during the FLEDGE debug report sender job.
+     * Returns the maximum time in milliseconds allowed for a network call to read a response from a
+     * target server during the FLEDGE debug report sender job.
      */
     default int getFledgeDebugReportSenderJobNetworkReadTimeoutMs() {
         return FLEDGE_DEBUG_REPORT_SENDER_JOB_NETWORK_READ_TIMEOUT_MS;
@@ -1380,8 +1415,8 @@ public interface Flags extends CommonFlags {
     long FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
 
     /**
-     * @return the maximum amount of time (in milliseconds) each FLEDGE debug report sender job is
-     *     allowed to run.
+     * Returns the maximum amount of time (in milliseconds) each FLEDGE debug report sender job is
+     * allowed to run.
      */
     default long getFledgeDebugReportSenderJobMaxRuntimeMs() {
         return FLEDGE_DEBUG_REPORT_SENDER_JOB_MAX_RUNTIME_MS;
@@ -1390,8 +1425,8 @@ public interface Flags extends CommonFlags {
     long FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS = TimeUnit.MINUTES.toMillis(10);
 
     /**
-     * @return the best effort max time (in milliseconds) between each FLEDGE debug report sender
-     *     job run.
+     * Returns the best effort max time (in milliseconds) between each FLEDGE debug report sender
+     * job run.
      */
     default long getFledgeDebugReportSenderJobPeriodMs() {
         return FLEDGE_DEBUG_REPORT_SENDER_JOB_PERIOD_MS;
@@ -1400,8 +1435,8 @@ public interface Flags extends CommonFlags {
     long FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS = TimeUnit.MINUTES.toMillis(2);
 
     /**
-     * @return the amount of flex (in milliseconds) around the end of each period to run each FLEDGE
-     *     debug report sender job.
+     * Returns the amount of flex (in milliseconds) around the end of each period to run each FLEDGE
+     * debug report sender job.
      */
     default long getFledgeDebugReportSenderJobFlexMs() {
         return FLEDGE_DEBUG_REPORT_SENDER_JOB_FLEX_MS;
@@ -1425,9 +1460,7 @@ public interface Flags extends CommonFlags {
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
             "https://publickeyservice-test1.bas-kms.xyz/v1alpha/publicKeys";
 
-    /**
-     * @return Uri to fetch auction encryption key for fledge ad selection.
-     */
+    /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
     }
@@ -1435,18 +1468,14 @@ public interface Flags extends CommonFlags {
     String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
             "https://chromekanonymity-pa.googleapis.com/v1/proxy/keys";
 
-    /**
-     * @return Uri to fetch join encryption key for fledge ad selection.
-     */
+    /** Returns Uri to fetch join encryption key for fledge ad selection. */
     default String getFledgeAuctionServerJoinKeyFetchUri() {
         return FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
     }
 
     int FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING = 5;
 
-    /**
-     * @return Shard count for using auction key for fledge ad selection.
-     */
+    /** Returns Shard count for using auction key for fledge ad selection. */
     default int getFledgeAuctionServerAuctionKeySharding() {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
     }
@@ -1592,7 +1621,7 @@ public interface Flags extends CommonFlags {
      *
      * <p>The intended goal is to override this value for tests.
      *
-     * @return Timeout in mills.
+     * <p>Returns Timeout in mills.
      */
     default long getFledgeAuctionServerAdIdFetcherTimeoutMs() {
         return DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
@@ -1686,6 +1715,12 @@ public interface Flags extends CommonFlags {
         return CONSENT_MANAGER_LAZY_ENABLE_MODE;
     }
 
+    boolean CONSENT_ALREADY_INTERACTED_FIX_ENABLE = true;
+
+    default boolean getConsentAlreadyInteractedEnableMode() {
+        return CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+    }
+
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
             /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
 
@@ -1732,6 +1767,20 @@ public interface Flags extends CommonFlags {
 
     default boolean getConsentManagerDebugMode() {
         return CONSENT_MANAGER_DEBUG_MODE;
+    }
+
+    boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
+
+    /** When enabled, the device is treated as OTA device. */
+    default boolean getConsentManagerOTADebugMode() {
+        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+    }
+
+    boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
+
+    /** When enabled, perform age check in rvc post ota notification channel. */
+    default boolean getRvcPostOtaNotifAgeCheck() {
+        return DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
     }
 
     /** Available sources of truth to get consent for PPAPI. */
@@ -2324,7 +2373,7 @@ public interface Flags extends CommonFlags {
      */
     boolean TOPICS_KILL_SWITCH = false; // By default, the Topics API is enabled.
 
-    /** @return value of Topics API kill switch */
+    /** Returns value of Topics API kill switch */
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
@@ -2336,7 +2385,7 @@ public interface Flags extends CommonFlags {
      */
     boolean TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH = false;
 
-    /** @return value of Topics on-device classifier kill switch. */
+    /** Returns value of Topics on-device classifier kill switch. */
     default boolean getTopicsOnDeviceClassifierKillSwitch() {
         return TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
     }
@@ -2349,7 +2398,7 @@ public interface Flags extends CommonFlags {
      */
     boolean MDD_BACKGROUND_TASK_KILL_SWITCH = false;
 
-    /** @return value of Mdd Background Task kill switch */
+    /** Returns value of Mdd Background Task kill switch */
     default boolean getMddBackgroundTaskKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || MDD_BACKGROUND_TASK_KILL_SWITCH;
@@ -2361,7 +2410,7 @@ public interface Flags extends CommonFlags {
      */
     boolean MDD_LOGGER_KILL_SWITCH = false;
 
-    /** @return value of MDD Logger Kill Switch */
+    /** Returns value of MDD Logger Kill Switch */
     default boolean getMddLoggerKillSwitch() {
         return getGlobalKillSwitch() || MDD_LOGGER_KILL_SWITCH;
     }
@@ -2374,9 +2423,7 @@ public interface Flags extends CommonFlags {
      */
     boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
 
-    /**
-     * @return value of Fledge Ad Selection Service API kill switch .
-     */
+    /** Returns value of Fledge Ad Selection Service API kill switch . */
     default boolean getFledgeSelectAdsKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_SELECT_ADS_KILL_SWITCH;
@@ -2388,9 +2435,7 @@ public interface Flags extends CommonFlags {
      */
     boolean FLEDGE_AUCTION_SERVER_KILL_SWITCH = true;
 
-    /**
-     * @return value of Fledge Auction server API kill switch.
-     */
+    /** Returns value of Fledge Auction server API kill switch. */
     default boolean getFledgeAuctionServerKillSwitch() {
         return getGlobalKillSwitch()
                 || getFledgeSelectAdsKillSwitch()
@@ -2403,9 +2448,7 @@ public interface Flags extends CommonFlags {
      */
     boolean FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH = false;
 
-    /**
-     * @return value of On Device Auction API kill switch.
-     */
+    /** Returns value of On Device Auction API kill switch. */
     default boolean getFledgeOnDeviceAuctionKillSwitch() {
         return getGlobalKillSwitch()
                 || getFledgeSelectAdsKillSwitch()
@@ -2419,7 +2462,7 @@ public interface Flags extends CommonFlags {
      */
     boolean FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH = false;
 
-    /** @return value of Fledge Join Custom Audience API kill switch */
+    /** Returns value of Fledge Join Custom Audience API kill switch */
     default boolean getFledgeCustomAudienceServiceKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
@@ -2431,9 +2474,7 @@ public interface Flags extends CommonFlags {
      */
     boolean PROTECTED_SIGNALS_SERVICE_KILL_SWITCH = false;
 
-    /**
-     * @return value of the protected signals API kill switch.
-     */
+    /** Returns value of the protected signals API kill switch. */
     default boolean getProtectedSignalsServiceKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
@@ -2450,9 +2491,7 @@ public interface Flags extends CommonFlags {
      */
     boolean ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH = true;
 
-    /**
-     * @return value of encryption key new enrollment fetch job kill switch
-     */
+    /** Returns value of encryption key new enrollment fetch job kill switch */
     default boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
         // We check the Global kill switch first. As a result, it overrides all other kill switches.
         return getGlobalKillSwitch() || ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
@@ -2467,9 +2506,7 @@ public interface Flags extends CommonFlags {
      */
     boolean ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH = true;
 
-    /**
-     * @return value of encryption key new enrollment fetch job kill switch
-     */
+    /** Returns value of encryption key new enrollment fetch job kill switch */
     default boolean getEncryptionKeyPeriodicFetchKillSwitch() {
         // We check the Global kill switch first. As a result, it overrides all other kill switches.
         return getGlobalKillSwitch() || ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
@@ -2496,7 +2533,7 @@ public interface Flags extends CommonFlags {
      */
     boolean ENABLE_BACK_COMPAT = false;
 
-    /** @return value of enable Back Compat */
+    /** Returns value of enable Back Compat */
     default boolean getEnableBackCompat() {
         return ENABLE_BACK_COMPAT;
     }
@@ -2508,7 +2545,7 @@ public interface Flags extends CommonFlags {
      */
     boolean ENABLE_APPSEARCH_CONSENT_DATA = SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT();
 
-    /** @return value of enable appsearch consent data flag */
+    /** Returns value of enable appsearch consent data flag */
     default boolean getEnableAppsearchConsentData() {
         return ENABLE_APPSEARCH_CONSENT_DATA;
     }
@@ -2522,11 +2559,23 @@ public interface Flags extends CommonFlags {
      */
     boolean ENABLE_ADEXT_SERVICE_CONSENT_DATA = SDK_INT == Build.VERSION_CODES.R;
 
-    /**
-     * @return value of enable AdExt service consent data flag.
-     */
+    /** Returns value of enable AdExt service consent data flag. */
     default boolean getEnableAdExtServiceConsentData() {
         return ENABLE_ADEXT_SERVICE_CONSENT_DATA;
+    }
+
+    /**
+     * Enables data migration from AdServicesExtDataStorageService to AppSearch upon OTA to Android
+     * S. As a result this flag is only true on Android S.
+     */
+    boolean ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION =
+            SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT();
+
+    /**
+     * @return value of enable AdExt service to AppSearch migration flag.
+     */
+    default boolean getEnableAdExtServiceToAppSearchMigration() {
+        return ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
     }
 
     /*
@@ -2806,24 +2855,24 @@ public interface Flags extends CommonFlags {
     boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = false;
     boolean ENABLE_ENROLLMENT_TEST_SEED = false;
 
-    /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
+    /** Returns {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
         return DISABLE_TOPICS_ENROLLMENT_CHECK;
     }
 
-    /** @return {@code true} if the FLEDGE APIs should disable the ad tech enrollment check */
+    /** Returns {@code true} if the FLEDGE APIs should disable the ad tech enrollment check */
     default boolean getDisableFledgeEnrollmentCheck() {
         return DISABLE_FLEDGE_ENROLLMENT_CHECK;
     }
 
-    /** @return {@code true} if the Measurement APIs should disable the ad tech enrollment check */
+    /** Returns {@code true} if the Measurement APIs should disable the ad tech enrollment check */
     default boolean isDisableMeasurementEnrollmentCheck() {
         return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
     }
 
     /**
-     * @return {@code true} if the Enrollment seed is disabled. (Enrollment seed is only needed for
-     *     testing)
+     * Returns {@code true} if the Enrollment seed is disabled. (Enrollment seed is only needed for
+     * testing)
      */
     default boolean isEnableEnrollmentTestSeed() {
         return ENABLE_ENROLLMENT_TEST_SEED;
@@ -2840,40 +2889,40 @@ public interface Flags extends CommonFlags {
     boolean ENFORCE_FOREGROUND_STATUS_SIGNALS = true;
 
     /**
-     * @return true if FLEDGE runAdSelection API should require that the calling API is running in
-     *     foreground.
+     * Returns true if FLEDGE runAdSelection API should require that the calling API is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
     }
 
     /**
-     * @return true if FLEDGE reportImpression API should require that the calling API is running in
-     *     foreground.
+     * Returns true if FLEDGE reportImpression API should require that the calling API is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeReportImpression() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
     }
 
     /**
-     * @return true if FLEDGE reportInteraction API should require that the calling API is running
-     *     in foreground.
+     * Returns true if FLEDGE reportInteraction API should require that the calling API is running
+     * in foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeReportInteraction() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
     }
 
     /**
-     * @return true if FLEDGE override API methods (for Custom Audience and Ad Selection) should
-     *     require that the calling API is running in foreground.
+     * Returns true if FLEDGE override API methods (for Custom Audience and Ad Selection) should
+     * require that the calling API is running in foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeOverrides() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
     }
 
     /**
-     * @return true if FLEDGE Custom Audience API methods should require that the calling API is
-     *     running in foreground.
+     * Returns true if FLEDGE Custom Audience API methods should require that the calling API is
+     * running in foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeCustomAudience() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
@@ -2889,80 +2938,80 @@ public interface Flags extends CommonFlags {
     boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = false;
 
     /**
-     * @return true if Measurement Delete Registrations API should require that the calling API is
-     *     running in foreground.
+     * Returns true if Measurement Delete Registrations API should require that the calling API is
+     * running in foreground.
      */
     default boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
     }
 
     /**
-     * @return true if Measurement Register Source API should require that the calling API is
-     *     running in foreground.
+     * Returns true if Measurement Register Source API should require that the calling API is
+     * running in foreground.
      */
     default boolean getEnforceForegroundStatusForMeasurementRegisterSource() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
     }
 
     /**
-     * @return true if Measurement Register Trigger API should require that the calling API is
-     *     running in foreground.
+     * Returns true if Measurement Register Trigger API should require that the calling API is
+     * running in foreground.
      */
     default boolean getEnforceForegroundStatusForMeasurementRegisterTrigger() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER;
     }
 
     /**
-     * @return true if Measurement Register Web Source API should require that the calling API is
-     *     running in foreground.
+     * Returns true if Measurement Register Web Source API should require that the calling API is
+     * running in foreground.
      */
     default boolean getEnforceForegroundStatusForMeasurementRegisterWebSource() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE;
     }
 
     /**
-     * @return true if Measurement Register Web Trigger API should require that the calling API is
-     *     running in foreground.
+     * Returns true if Measurement Register Web Trigger API should require that the calling API is
+     * running in foreground.
      */
     default boolean getEnforceForegroundStatusForMeasurementRegisterWebTrigger() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER;
     }
 
     /**
-     * @return true if Measurement Get Status API should require that the calling API is running in
-     *     foreground.
+     * Returns true if Measurement Get Status API should require that the calling API is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
     }
 
     /**
-     * @return true if Measurement Get Status API should require that the calling API is running in
-     *     foreground.
+     * Returns true if Measurement Get Status API should require that the calling API is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForMeasurementRegisterSources() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
 
-    /** @return true if the Enrollment match is based on url origin matching */
+    /** Returns true if the Enrollment match is based on url origin matching */
     default boolean getEnforceEnrollmentOriginMatch() {
         return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
     }
 
-    /** @return true if Topics API should require that the calling API is running in foreground. */
+    /** Returns true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
         return ENFORCE_FOREGROUND_STATUS_TOPICS;
     }
 
     /**
-     * @return true if Protected Signals API should require that the calling API is running in
-     *     foreground.
+     * Returns true if Protected Signals API should require that the calling API is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForSignals() {
         return ENFORCE_FOREGROUND_STATUS_SIGNALS;
     }
 
-    /** @return true if AdId API should require that the calling API is running in foreground. */
+    /** Returns true if AdId API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForAdId() {
         return ENFORCE_FOREGROUND_STATUS_ADID;
     }
@@ -2970,13 +3019,13 @@ public interface Flags extends CommonFlags {
     int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;
 
     /**
-     * @return true if AppSetId API should require that the calling API is running in foreground.
+     * Returns true if AppSetId API should require that the calling API is running in foreground.
      */
     default boolean getEnforceForegroundStatusForAppSetId() {
         return ENFORCE_FOREGROUND_STATUS_APPSETID;
     }
 
-    /** @return the importance level to use to check if an application is in foreground. */
+    /** Returns the importance level to use to check if an application is in foreground. */
     default int getForegroundStatuslLevelForValidation() {
         return FOREGROUND_STATUS_LEVEL;
     }
@@ -2990,21 +3039,21 @@ public interface Flags extends CommonFlags {
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
 
     /**
-     * @return true if we enforce to check that JavaScriptIsolate supports limiting the max heap
-     *     size
+     * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap
+     * size
      */
     default boolean getEnforceIsolateMaxHeapSize() {
         return ENFORCE_ISOLATE_MAX_HEAP_SIZE;
     }
 
-    /** @return size in bytes we bound the heap memory for JavaScript isolate */
+    /** Returns size in bytes we bound the heap memory for JavaScript isolate */
     default long getIsolateMaxHeapSizeBytes() {
         return ISOLATE_MAX_HEAP_SIZE_BYTES;
     }
 
     /**
-     * @return max allowed size in bytes for response based registrations payload of an individual
-     *     source/trigger registration.
+     * Returns max allowed size in bytes for response based registrations payload of an individual
+     * source/trigger registration.
      */
     default long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
@@ -3370,12 +3419,20 @@ public interface Flags extends CommonFlags {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 
-    /** Default value for flexible event reporting API */
+    /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
-    /** Returns whether to enable flexible event reporting API */
+    /** Returns whether to enable Measurement flexible event reporting API */
     default boolean getMeasurementFlexibleEventReportingApiEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default value for Measurement trigger data matching */
+    boolean MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING = true;
+
+    /** Returns whether to enable Measurement trigger data matching */
+    default boolean getMeasurementEnableTriggerDataMatching() {
+        return MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
     }
 
     /** Default maximum sources per publisher */
@@ -3560,6 +3617,14 @@ public interface Flags extends CommonFlags {
     /** Returns whether Measurement source deactivation after filtering feature is enabled. */
     default boolean getMeasurementEnableSourceDeactivationAfterFiltering() {
         return MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
+    }
+
+    /** Default Measurement scoped attribution rate limit feature flag. */
+    boolean MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT = true;
+
+    /** Returns whether Measurement scoped attribution rate limit feature is enabled. */
+    default boolean getMeasurementEnableScopedAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT;
     }
 
     /** Default Measurement app package name logging flag. */
@@ -3898,7 +3963,7 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default RVC UX feature flag.. */
-    boolean DEFAULT_RVC_UX_ENABLED = false;
+    boolean DEFAULT_RVC_UX_ENABLED = SDK_INT == Build.VERSION_CODES.R;
 
     /** RVC UX feature flag.. */
     default boolean getEnableRvcUx() {
@@ -4104,6 +4169,14 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_ENABLE_PREINSTALL_CHECK;
     }
 
+    /** Default value of flag for session stable kill switches. */
+    boolean MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES = true;
+
+    /** Returns true when session stable kill switches are enabled. */
+    default boolean getMeasurementEnableSessionStableKillSwitches() {
+        return MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
@@ -4170,7 +4243,7 @@ public interface Flags extends CommonFlags {
      */
     boolean ENABLE_LOGGED_TOPIC = false;
 
-    /** @return if to enable logged_topic column in ReturnedTopic table. */
+    /** Returns if to enable logged_topic column in ReturnedTopic table. */
     default boolean getEnableLoggedTopic() {
         return ENABLE_LOGGED_TOPIC;
     }
@@ -4178,7 +4251,7 @@ public interface Flags extends CommonFlags {
     /** Whether to enable database schema version 8 */
     boolean ENABLE_DATABASE_SCHEMA_VERSION_8 = false;
 
-    /** @return if to enable database schema version 8. */
+    /** Returns if to enable database schema version 8. */
     default boolean getEnableDatabaseSchemaVersion8() {
         return ENABLE_DATABASE_SCHEMA_VERSION_8;
     }
@@ -4186,9 +4259,7 @@ public interface Flags extends CommonFlags {
     /** Whether to enable database schema version 9. */
     boolean ENABLE_DATABASE_SCHEMA_VERSION_9 = false;
 
-    /**
-     * @return if to enable database schema version 9.
-     */
+    /** Returns if to enable database schema version 9. */
     default boolean getEnableDatabaseSchemaVersion9() {
         return ENABLE_DATABASE_SCHEMA_VERSION_9;
     }
@@ -4321,7 +4392,7 @@ public interface Flags extends CommonFlags {
      *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
      * </ul>
      *
-     * @return if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
+     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
      */
     default boolean getAdIdCacheEnabled() {
         return DEFAULT_ADID_CACHE_ENABLED;
@@ -4335,7 +4406,7 @@ public interface Flags extends CommonFlags {
      *
      * <p>The intended goal is to override this value for tests.
      *
-     * @return Timeout in mills.
+     * <p>Returns Timeout in mills.
      */
     default long getAdIdFetcherTimeoutMs() {
         return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
@@ -4388,5 +4459,36 @@ public interface Flags extends CommonFlags {
      */
     default boolean getAdservicesEnablementCheckEnabled() {
         return DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
+    }
+
+    /**
+     * Enable AdServicesExtDataStorageServiceProxy read for consent data feature flag. Its meant to
+     * enable the proxy service for testing when the actual service is unavailable The default value
+     * is false.
+     */
+    boolean DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY = false;
+
+    /**
+     * @return value of enable AdExt service proxy.
+     */
+    default boolean getEnableAdExtServiceDebugProxy() {
+        return DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
+    }
+
+    /**
+     * Default value to determine how many logging events {@link
+     * com.android.adservices.spe.AdservicesJobServiceLogger} should upload to the server.
+     *
+     * <p>The value should be an integer in the range of [0, 100], where 100 is to log all events
+     * and 0 is to log no events.
+     */
+    int DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE = 5;
+
+    /**
+     * Returns the sampling logging rate for {@link
+     * com.android.adservices.spe.AdservicesJobServiceLogger} for logging events.
+     */
+    default int getBackgroundJobSamplingLoggingRate() {
+        return DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
     }
 }

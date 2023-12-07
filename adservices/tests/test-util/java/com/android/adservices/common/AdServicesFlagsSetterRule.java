@@ -17,6 +17,7 @@ package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
@@ -28,6 +29,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 
 import android.os.Build;
@@ -84,6 +86,7 @@ public final class AdServicesFlagsSetterRule
                 .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
                 .setTopicsOnDeviceClassifierKillSwitch(false)
+                .setFlag(KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT, true)
                 .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
                 .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
                 .setDisableTopicsEnrollmentCheckForTests(true)
@@ -95,6 +98,7 @@ public final class AdServicesFlagsSetterRule
     public static AdServicesFlagsSetterRule forAdidE2ETests(String packageName) {
         return forGlobalKillSwitchDisabledTests()
                 .setAdIdKillSwitchForTests(false)
+                .setFlag(KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT, true)
                 .setFlag(KEY_ADID_REQUEST_PERMITS_PER_SECOND, 25.0)
                 .setPpapiAppAllowList(packageName)
                 .setCompatModeFlags();
@@ -117,6 +121,7 @@ public final class AdServicesFlagsSetterRule
                 .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
                 .setSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES, false)
                 .setAdIdKillSwitchForTests(false);
     }
 

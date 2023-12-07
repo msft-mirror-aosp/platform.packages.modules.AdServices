@@ -1,5 +1,9 @@
 {
   "description": "One web source with trigger app destination with debug keys. AdId permission enabled and ar debug present. No debug keys expected in output",
+  "phflags_override": {
+    "measurement_flex_api_max_information_gain_dual_destination_event": "9",
+    "measurement_flex_api_max_information_gain_dual_destination_navigation": "14"
+  },
   "input": {
     "web_sources": [{
       "registration_request": {

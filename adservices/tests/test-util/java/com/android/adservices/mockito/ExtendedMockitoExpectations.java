@@ -23,8 +23,11 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.spy;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -33,8 +36,10 @@ import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.server.LocalManagerRegistry;
 
 import com.google.common.truth.Expect;
 
@@ -53,21 +58,6 @@ import java.util.Objects;
 public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
-
-    /**
-     * Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning the given {@code
-     * manager}.
-     */
-    public static <T> void mockGetLocalManager(Class<T> managerClass, T manager) {
-        Log.v(TAG, "mockGetLocalManager(" + managerClass + ", " + manager + ")");
-        doReturn(manager).when(() -> LocalManagerRegistry.getManager(managerClass));
-    }
-
-    /** Mocks a call to {@link LocalManagerRegistry#getManager(Class)}, returning {@code null}. */
-    public static void mockGetLocalManagerNotFound(Class<?> managerClass) {
-        Log.v(TAG, "mockGetLocalManagerNotFound(" + managerClass + ")");
-        doReturn(null).when(() -> LocalManagerRegistry.getManager(managerClass));
-    }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
     public static void mockIsAtLeastR(boolean isIt) {
@@ -147,18 +137,25 @@ public final class ExtendedMockitoExpectations {
         return callback;
     }
 
+    // TODO(b/314969513): remove once there is no more usage
     /**
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
      * FlagsFactory#getFlagsForTest()}
+     *
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting(Flags)} instead
      */
     public static void mockGetFlagsForTest() {
         mockGetFlags(FlagsFactory.getFlagsForTest());
     }
 
+    // TODO(b/314969513): remove once there is no more usage
     /**
      * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
      * object.
+     *
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlags(Flags)} instead
      */
+    @Deprecated
     public static void mockGetFlags(Flags mockedFlags) {
         doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
@@ -179,6 +176,17 @@ public final class ExtendedMockitoExpectations {
                             return null;
                         })
                 .when(() -> invocation.run());
+    }
+
+    /** Mock {@link AdservicesJobServiceLogger} to not actually log the stats to server. */
+    public static AdservicesJobServiceLogger mockAdservicesJobServiceLogger(
+            Context context, StatsdAdServicesLogger statsDLogger) {
+        AdservicesJobServiceLogger logger =
+                spy(new AdservicesJobServiceLogger(context, Clock.SYSTEM_CLOCK, statsDLogger));
+        doNothing().when(logger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        doReturn(logger).when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+
+        return logger;
     }
 
     /**

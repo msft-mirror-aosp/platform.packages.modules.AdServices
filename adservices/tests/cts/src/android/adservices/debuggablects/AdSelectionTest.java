@@ -19,12 +19,16 @@ package android.adservices.debuggablects;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 
+import android.adservices.adid.AdId;
+import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
+import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
@@ -32,14 +36,17 @@ import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.RequiresAdIdAvailable;
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.compatibility.common.util.ShellUtils;
+
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -113,7 +120,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * reporting URI (Remarketing CUJ 160).
      */
     @Test
-    @FlakyTest(bugId = 300195428)
     public void testAdSelection_withAdCostInUrl_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
@@ -275,10 +281,10 @@ public class AdSelectionTest extends FledgeScenarioTest {
     }
 
     /** Test that buyer and seller receive win and loss debug reports (Remarketing CUJ 164). */
-    @RequiresAdIdAvailable
     @FlakyTest(bugId = 300421625)
     @Test
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
+        assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-164.json", getCacheBusterPrefix());
@@ -329,10 +335,10 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * Test that buyer and seller receive win and loss debug reports with reject reason (Remarketing
      * CUJ 170).
      */
-    @RequiresAdIdAvailable
     @FlakyTest(bugId = 301334790)
     @Test
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
+        assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-170.json", getCacheBusterPrefix());
@@ -353,5 +359,34 @@ public class AdSelectionTest extends FledgeScenarioTest {
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    private boolean isAdIdSupported() {
+        AdIdCompatibleManager adIdCompatibleManager;
+        AdServicesOutcomeReceiverForTests<AdId> callback =
+                new AdServicesOutcomeReceiverForTests<>();
+        try {
+            adIdCompatibleManager = new AdIdCompatibleManager(sContext);
+            adIdCompatibleManager.getAdId(MoreExecutors.directExecutor(), callback);
+        } catch (IllegalStateException e) {
+            Log.d(TAG, "isAdIdAvailable(): IllegalStateException detected in AdId manager.");
+            return false;
+        }
+
+        boolean isAdIdAvailable;
+        try {
+            AdId result = callback.assertSuccess();
+            isAdIdAvailable =
+                    !Objects.isNull(result)
+                            && !result.isLimitAdTrackingEnabled()
+                            && !result.getAdId().equals(AdId.ZERO_OUT);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Log.d(TAG, "isAdIdSupported(): failed to get AdId due to InterruptedException.");
+            isAdIdAvailable = false;
+        }
+
+        Log.d(TAG, String.format("isAdIdSupported(): %b", isAdIdAvailable));
+        return isAdIdAvailable;
     }
 }

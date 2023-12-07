@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.noising;
 
-import com.android.adservices.service.measurement.ReportSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -161,15 +161,18 @@ public final class ImpressionNoiseUtil {
     /**
      * Randomly generate report configs based on noise params
      *
-     * @param reportSpec Report spec to use for state generation
+     * @param triggerSpecs trigger specs to use for state generation
      * @param destinationMultiplier destination multiplier
      * @param rand random number generator
      * @return list of reporting configs
      */
     public static List<int[]> selectFlexEventReportRandomStateAndGenerateReportConfigs(
-            ReportSpec reportSpec, int destinationMultiplier, ThreadLocalRandom rand) {
+            TriggerSpecs triggerSpecs, int destinationMultiplier, ThreadLocalRandom rand) {
 
-        int[][] params = reportSpec.getPrivacyParamsForComputation();
+        // Assumes trigger specs already built privacy parameters.
+        int[][] params = triggerSpecs.getPrivacyParamsForComputation();
+        // Doubling the window cap for each trigger data type correlates with counting report states
+        // that treat having a web destination as different from an app destination.
         int[] updatedPerTypeNumWindowList = new int[params[1].length];
         for (int i = 0; i < params[1].length; i++) {
             updatedPerTypeNumWindowList[i] = params[1][i] * destinationMultiplier;

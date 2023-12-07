@@ -57,7 +57,7 @@ public class AdServicesCommonService extends Service {
                             FlagsFactory.getFlags(),
                             UxEngine.getInstance(this),
                             UxStatesManager.getInstance(this),
-                            AdIdWorker.getInstance(this));
+                            AdIdWorker.getInstance());
         }
         LogUtil.d("created adservices common service");
         try {
@@ -104,7 +104,7 @@ public class AdServicesCommonService extends Service {
             LogUtil.w(
                     "Using dump to call AdServicesShellCommandHandler - should NOT happen on"
                             + " production");
-            new AdServicesShellCommandHandler(fd).run(realArgs);
+            new AdServicesShellCommandHandler(/* context= */ this, pw).run(realArgs);
             return;
         }
         super.dump(fd, pw, args);

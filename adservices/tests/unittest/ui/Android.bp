@@ -49,6 +49,8 @@ android_test {
         "truth",
         "adservices-assets",
         "adservices-service-core-schema",
+        "adservices-shared-testing",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -71,7 +73,6 @@ android_test {
         "general-tests",
         "mts-adservices"
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
     jni_libs: [
         "libhpke_jni",
@@ -113,7 +114,9 @@ android_test {
     static_libs: [
         "adservices-assets",
         "adservices-service-core-schema",
+        "adservices-shared-testing",
         "adservices-test-fixtures",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "androidx.room_room-runtime",
@@ -139,7 +142,6 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
     jni_libs: [
         "libhpke_jni",

@@ -136,7 +136,8 @@ public abstract class E2EMockTest extends E2ETest {
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
     protected DebugReportApi mDebugReportApi;
 
-    @Rule public final E2EMockStatic.E2EMockStaticRule mE2EMockStaticRule;
+    @Rule(order = 11)
+    public final E2EMockStatic.E2EMockStaticRule e2EMockStaticRule;
 
     private static Map<String, String> sPhFlags =
             Map.ofEntries(
@@ -166,7 +167,7 @@ public abstract class E2EMockTest extends E2ETest {
         mErrorLogger = mock(AdServicesErrorLogger.class);
         mDatastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
-        mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
+        e2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(mDatastoreManager, mFlags));
 
         mEnrollmentDao =
@@ -450,11 +451,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processAction(UninstallApp uninstallApp) {
         Assert.assertTrue(
                 "measurementDao.undoInstallAttribution failed",
-                mDatastoreManager.runInTransaction(
-                        measurementDao -> {
-                            measurementDao.deleteAppRecords(uninstallApp.mUri);
-                            measurementDao.undoInstallAttribution(uninstallApp.mUri);
-                        }));
+                mMeasurementImpl.deletePackageRecords(uninstallApp.mUri));
     }
 
     @Override

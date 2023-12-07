@@ -16,11 +16,8 @@
 
 package com.android.adservices.service.measurement.rollback;
 
-import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
-
 import static com.android.adservices.service.measurement.rollback.MeasurementRollbackCompatManager.APEX_VERSION_WHEN_NOT_FOUND;
 
-import android.adservices.extdata.AdServicesExtDataParams;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.util.Pair;
@@ -48,36 +45,20 @@ public final class AdServicesExtStorageMeasurementRollbackWorker
 
     @Override
     public void recordAdServicesDeletionOccurred(int deletionApiType, long currentApexVersion) {
-        AdServicesExtDataParams params =
-                new AdServicesExtDataParams.Builder()
-                        .setMsmtRollbackApexVersion(currentApexVersion)
-                        .build();
-        boolean success =
-                mStorageManager.setAdServicesExtData(
-                        params, new int[] {FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION});
+        boolean success = mStorageManager.setMeasurementRollbackApexVersion(currentApexVersion);
         log(success, "Recording measurement rollback deletion in AdServicesExtData successful: ");
     }
 
     @Override
     public void clearAdServicesDeletionOccurred(@NonNull Void storageIdentifier) {
-        AdServicesExtDataParams params =
-                new AdServicesExtDataParams.Builder()
-                        .setMsmtRollbackApexVersion(APEX_VERSION_WHEN_NOT_FOUND)
-                        .build();
         boolean success =
-                mStorageManager.setAdServicesExtData(
-                        params, new int[] {FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION});
+                mStorageManager.setMeasurementRollbackApexVersion(APEX_VERSION_WHEN_NOT_FOUND);
         log(success, "Clear measurement rollback deletion in AdServicesExtData successful: ");
     }
 
     @Override
     public Pair<Long, Void> getAdServicesDeletionRollbackMetadata(int deletionApiType) {
-        AdServicesExtDataParams params = mStorageManager.getAdServicesExtData();
-        if (params == null) {
-            return null;
-        }
-
-        long apex = params.getMeasurementRollbackApexVersion();
+        long apex = mStorageManager.getMeasurementRollbackApexVersion();
         return apex == APEX_VERSION_WHEN_NOT_FOUND ? null : Pair.create(apex, null);
     }
 

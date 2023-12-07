@@ -365,6 +365,8 @@ public class GetAdSelectionDataRunner {
                     mCompressedBuyerInput,
             String packageName,
             long adSelectionId) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.CREATE_GET_AD_SELECTION_DATA_PAYLOAD);
+
         ProtectedAudienceInput protectedAudienceInput =
                 composeProtectedAudienceInputBytes(
                         mCompressedBuyerInput,
@@ -372,7 +374,11 @@ public class GetAdSelectionDataRunner {
                         adSelectionId,
                         mAuctionServerDebugReporting.isEnabled());
         sLogger.v("ProtectedAudienceInput composed");
-        return applyPayloadFormatter(protectedAudienceInput);
+        AuctionServerPayloadFormattedData formattedData =
+                applyPayloadFormatter(protectedAudienceInput);
+
+        Tracing.endAsyncSection(Tracing.CREATE_GET_AD_SELECTION_DATA_PAYLOAD, traceCookie);
+        return formattedData;
     }
 
     private ListenableFuture<byte[]> persistAdSelectionIdRequest(

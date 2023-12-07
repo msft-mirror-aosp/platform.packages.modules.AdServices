@@ -37,10 +37,12 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.tests.sdkprovider.crashtest.ICrashTestSdkApi;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -74,6 +76,17 @@ public class SdkSandboxMetricsTestApp {
         mDropboxManager = mContext.getSystemService(DropBoxManager.class);
         mPackageManager = mContext.getPackageManager();
         assertThat(mSdkSandboxManager).isNotNull();
+
+        // Unload the SDK before running tests to ensure that the SDK is not loaded before running a
+        // test
+        mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
+    }
+
+    @After
+    public void tearDown() {
+        if (mSdkSandboxManager != null) {
+            mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
+        }
     }
 
     @Test
@@ -89,11 +102,13 @@ public class SdkSandboxMetricsTestApp {
 
         final ICrashTestSdkApi sdk =
                 ICrashTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
-        final ApplicationExitInfo info = sdk.getLastApplicationExitInfo();
-        assertThat(info).isNotNull();
-        assertThat(info.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
-        assertThat(info.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
-        assertThat(info.getTimestamp()).isGreaterThan(timeStampBeforeCrash);
+        final List<ApplicationExitInfo> exitInfos = sdk.getSdkSandboxExitReasons();
+        ApplicationExitInfo mostRecentExitInfo = exitInfos.get(0);
+        assertThat(mostRecentExitInfo).isNotNull();
+        assertThat(mostRecentExitInfo.getRealUid())
+                .isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
+        assertThat(mostRecentExitInfo.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
+        assertThat(mostRecentExitInfo.getTimestamp()).isGreaterThan(timeStampBeforeCrash);
     }
 
     @Test
@@ -113,6 +128,26 @@ public class SdkSandboxMetricsTestApp {
         assertThat(info.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
         assertThat(info.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
         assertThat(info.getTimestamp()).isGreaterThan(timeStampBeforeCrash);
+    }
+
+    // Should only be tested after another app has started and crashed their own sandbox.
+    @Test
+    public void testSdkCannotAccessExitReasonsFromOtherSdkSandboxUids() throws Exception {
+        mRule.getScenario();
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+
+        final ICrashTestSdkApi sdk =
+                ICrashTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+        final List<ApplicationExitInfo> exitInfos = sdk.getSdkSandboxExitReasons();
+
+        // Test that all exit infos (if any) are only for its own process
+        for (int i = 0; i < exitInfos.size(); i++) {
+            final ApplicationExitInfo exitInfo = exitInfos.get(i);
+            assertThat(exitInfo.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
+        }
     }
 
     @Test

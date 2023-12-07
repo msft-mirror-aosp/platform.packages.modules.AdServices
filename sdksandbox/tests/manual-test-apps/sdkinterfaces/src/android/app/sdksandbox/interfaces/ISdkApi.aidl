@@ -26,4 +26,8 @@ interface ISdkApi {
     void startActivity(IActivityStarter callback, in Bundle params);
     String getSandboxDump();
     boolean isCustomizedSdkContextEnabled();
+
+    //For pausing playback when app is not active
+    oneway void notifyMainActivityStarted();
+    oneway void notifyMainActivityStopped();
 }

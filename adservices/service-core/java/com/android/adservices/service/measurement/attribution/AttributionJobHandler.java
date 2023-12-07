@@ -41,10 +41,10 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.EventTrigger;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.PrivacyParams;
-import com.android.adservices.service.measurement.ReportSpec;
-import com.android.adservices.service.measurement.ReportSpecUtil;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
@@ -74,9 +74,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -174,7 +176,14 @@ class AttributionJobHandler {
     private boolean performAttribution(String triggerId, AttributionStatus attributionStatus) {
         return mDatastoreManager.runInTransaction(
                 measurementDao -> {
-                    Trigger trigger = measurementDao.getTrigger(triggerId);
+                    Trigger trigger;
+                    try {
+                        trigger = measurementDao.getTrigger(triggerId);
+                    } catch (DatastoreException e) {
+                        attributionStatus.setFailureType(
+                                AttributionStatus.FailureType.TRIGGER_NOT_FOUND);
+                        throw e;
+                    }
                     attributionStatus.setAttributionDelay(
                             System.currentTimeMillis() - trigger.getTriggerTime());
 
@@ -205,6 +214,23 @@ class AttributionJobHandler {
                     }
 
                     Source source = sourceOpt.get().first;
+
+                    // If the source is a flex source, build trigger specs to populate privacy
+                    // parameters that may be used in debug and regular reporting.
+                    if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()
+                            && source.getTriggerSpecsString() != null
+                            && !source.getTriggerSpecsString().isEmpty()) {
+                        try {
+                            source.buildTriggerSpecs();
+                        } catch (JSONException e) {
+                            LoggerFactory.getMeasurementLogger().e(
+                                    e, "AttributionJobHandler::performAttribution cannot build "
+                                            + "trigger specs");
+                            ignoreTrigger(trigger, measurementDao);
+                            return;
+                        }
+                    }
+
                     List<Source> remainingMatchingSources = sourceOpt.get().second;
 
                     attributionStatus.setSourceType(source.getSourceType());
@@ -231,7 +257,29 @@ class AttributionJobHandler {
                                 trigger.getEnrollmentId());
                     }
 
-                    if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
+                    // For flex event attribution, we delete attribution records of pending reports
+                    // and process a new attribution state. The count of attributions affects the
+                    // alloted report quota, as well as limits calculated in different code paths
+                    // form here so we retrieve it once and pass as needed.
+                    long eventAttributionCount =
+                            mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                                    ? measurementDao.getAttributionsPerRateLimitWindow(
+                                            Attribution.Scope.EVENT, source, trigger)
+                                    : measurementDao.getAttributionsPerRateLimitWindow(
+                                            source, trigger);
+
+                    long aggregateAttributionCount =
+                            mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                                    ? measurementDao.getAttributionsPerRateLimitWindow(
+                                            Attribution.Scope.AGGREGATE, source, trigger)
+                                    // If scoped attribution is not enabled, eventAttributionCount
+                                    // and aggregateAttributionCount are the same, total count.
+                                    : eventAttributionCount;
+
+                    // Attribution count passed here can be either `eventAttributionCount` or
+                    // `aggregateAttributionCount` since this method won't use scoped attribution.
+                    if (shouldAttributionBeBlockedByRateLimits(
+                            eventAttributionCount, source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
@@ -242,11 +290,19 @@ class AttributionJobHandler {
 
                     TriggeringStatus aggregateTriggeringStatus =
                             maybeGenerateAggregateReport(
-                                    source, trigger, measurementDao, attributionStatus);
+                                    source,
+                                    trigger,
+                                    aggregateAttributionCount,
+                                    measurementDao,
+                                    attributionStatus);
 
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(
-                                    source, trigger, measurementDao, attributionStatus);
+                                    source,
+                                    trigger,
+                                    eventAttributionCount,
+                                    measurementDao,
+                                    attributionStatus);
 
                     boolean isEventTriggeringStatusAttributed =
                             eventTriggeringStatus == TriggeringStatus.ATTRIBUTED;
@@ -260,13 +316,39 @@ class AttributionJobHandler {
                                     remainingMatchingSources,
                                     trigger.getEnrollmentId());
                         }
-                        attributeTriggerAndInsertAttribution(trigger, source, measurementDao);
+                        attributeTrigger(trigger, measurementDao);
+                        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
+                            // Non-flex source, insert a single attribution record. (For flex
+                            // sources, we insert a variable number of attribution rate-limit
+                            // records during processing.)
+                            if (source.getTriggerSpecs() == null
+                                    && isEventTriggeringStatusAttributed) {
+                                insertAttribution(Attribution.Scope.EVENT, source, trigger,
+                                        measurementDao);
+                            }
+                            if (isAggregateTriggeringStatusAttributed) {
+                                insertAttribution(
+                                        Attribution.Scope.AGGREGATE,
+                                        source,
+                                        trigger,
+                                        measurementDao);
+                            }
+                        // Non-scoped attribution rate-limiting: insert attribution if aggregate
+                        // report was created or if an event report was created and the source is
+                        // non-flex.
+                        } else if (isAggregateTriggeringStatusAttributed
+                                || (isEventTriggeringStatusAttributed
+                                      && source.getTriggerSpecs() == null)) {
+                            insertAttribution(source, trigger, measurementDao);
+                        }
                         attributionStatus.setAttributionResult(
                                 isAggregateTriggeringStatusAttributed,
                                 isEventTriggeringStatusAttributed);
                     } else {
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
+                        // TODO (b/309323690) Consider logging implications for scoped attribution
+                        // rate limit.
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_REPORTS_GENERATED);
                         ignoreTrigger(trigger, measurementDao);
@@ -275,10 +357,11 @@ class AttributionJobHandler {
     }
 
     private boolean shouldAttributionBeBlockedByRateLimits(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (!hasAttributionQuota(source, trigger, measurementDao)
-                || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
+        if ((!mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                && !hasAttributionQuota(attributionCount, source, trigger, measurementDao))
+                        || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
@@ -291,9 +374,22 @@ class AttributionJobHandler {
     private TriggeringStatus maybeGenerateAggregateReport(
             Source source,
             Trigger trigger,
+            long attributionCount,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
+        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                && !hasAttributionQuota(
+                      attributionCount,
+                      Attribution.Scope.AGGREGATE,
+                      source,
+                      trigger,
+                      measurementDao)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("Attribution blocked by aggregate rate limits. Source ID: %s ; "
+                            + "Trigger ID: %s ", source.getId(), trigger.getId());
+            return TriggeringStatus.DROPPED;
+        }
 
         if (trigger.getTriggerTime() >= source.getAggregatableReportWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
@@ -637,13 +733,29 @@ class AttributionJobHandler {
     private TriggeringStatus maybeGenerateEventReport(
             Source source,
             Trigger trigger,
+            long attributionCount,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
-
         if (source.getParentId() != null) {
             LoggerFactory.getMeasurementLogger()
                     .d("Event report generation skipped because it's a derived source.");
+            return TriggeringStatus.DROPPED;
+        }
+
+        // Non-flex source can determine attribution limit here. For flex sources, attribution count
+        // can limit report quota rather than prevent reporting altogether.
+        if (source.getTriggerSpecs() == null
+                && mFlags.getMeasurementEnableScopedAttributionRateLimit()
+                && !hasAttributionQuota(
+                        attributionCount,
+                        Attribution.Scope.EVENT,
+                        source,
+                        trigger,
+                        measurementDao)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("Attribution blocked by event rate limits. Source ID: %s ; "
+                            + "Trigger ID: %s ", source.getId(), trigger.getId());
             return TriggeringStatus.DROPPED;
         }
 
@@ -688,10 +800,15 @@ class AttributionJobHandler {
             }
         }
 
+        if (getMatchingEffectiveTriggerData(eventTrigger, source).isEmpty()) {
+            // TODO (b/)314189512: send "trigger-event-no-matching-trigger-data" debug report.
+            return TriggeringStatus.DROPPED;
+        }
+
         if (mEventReportWindowCalcDelegate.getReportingTime(
-                                source, trigger.getTriggerTime(), trigger.getDestinationType())
-                        == -1
-                && (source.getTriggerSpecs() == null || source.getTriggerSpecs().isEmpty())) {
+                source, trigger.getTriggerTime(), trigger.getDestinationType()) == -1
+                && (source.getTriggerSpecsString() == null
+                      || source.getTriggerSpecsString().isEmpty())) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
             return TriggeringStatus.DROPPED;
@@ -727,21 +844,19 @@ class AttributionJobHandler {
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
 
-        EventReport newEventReport =
-                new EventReport.Builder()
-                        .populateFromSourceAndTrigger(
-                                source,
-                                trigger,
-                                eventTrigger,
-                                debugKeyPair,
-                                mEventReportWindowCalcDelegate,
-                                mSourceNoiseHandler,
-                                getEventReportDestinations(source, trigger.getDestinationType()),
-                                mFlags.getMeasurementFlexibleEventReportingApiEnabled())
-                        .build();
-        if (!mFlags.getMeasurementFlexibleEventReportingApiEnabled()
-                || source.getTriggerSpecs() == null
-                || source.getTriggerSpecs().isEmpty()) {
+        if (source.getTriggerSpecs() == null) {
+            EventReport newEventReport =
+                    new EventReport.Builder()
+                            .populateFromSourceAndTrigger(
+                                    source,
+                                    trigger,
+                                    eventTrigger,
+                                    debugKeyPair,
+                                    mEventReportWindowCalcDelegate,
+                                    mSourceNoiseHandler,
+                                    getEventReportDestinations(
+                                            source, trigger.getDestinationType()))
+                            .build();
             if (!provisionEventReportQuota(source, trigger, newEventReport, measurementDao)) {
                 return TriggeringStatus.DROPPED;
             }
@@ -755,96 +870,232 @@ class AttributionJobHandler {
             if (newEventReport.getDebugReportStatus() == EventReport.DebugReportStatus.PENDING) {
                 incrementEventDebugReportCountBy(attributionStatus, 1);
             }
-        } else {
-
-            if (!provisionEventReportFlexEventApiQuota(
-                    source, newEventReport, measurementDao, eventTrigger)) {
-                return TriggeringStatus.DROPPED;
-            }
+        // The source is using flexible event API
+        } else if (!generateFlexEventReports(
+                source, trigger, eventTrigger, attributionCount, debugKeyPair, measurementDao)) {
+            return TriggeringStatus.DROPPED;
         }
+
         return TriggeringStatus.ATTRIBUTED;
     }
 
-    private boolean provisionEventReportFlexEventApiQuota(
+    private long restoreTriggerContributionsAndProvisionFlexEventReportQuota(
             Source source,
-            EventReport newEventReport,
-            IMeasurementDao measurementDao,
-            EventTrigger eventTrigger)
-            throws DatastoreException {
-        ReportSpec reportSpec = source.getFlexEventReportSpec();
-        if (!reportSpec.containsTriggerData(newEventReport.getTriggerData())) {
+            Trigger trigger,
+            long attributionCount,
+            Map<UnsignedLong, Integer> triggerDataToBucketIndexMap,
+            IMeasurementDao measurementDao) throws DatastoreException {
+
+        List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
+
+        List<EventReport> reportsToDelete = new ArrayList<>();
+
+        source.getTriggerSpecs().prepareFlexAttribution(
+                sourceEventReports,
+                trigger.getTriggerTime(),
+                reportsToDelete,
+                triggerDataToBucketIndexMap);
+
+        int numEarlierScheduledReports = sourceEventReports.size() - reportsToDelete.size();
+        int maxEventReports = source.getTriggerSpecs().getMaxReports();
+
+        // Completed reports already covered the allotted quota.
+        if (numEarlierScheduledReports == maxEventReports) {
+            return 0;
+        }
+
+        // Delete pending reports and associated attribution rate-limit records. We will recreate an
+        // updated sequence below.
+        measurementDao.deleteFlexEventReportsAndAttributions(reportsToDelete);
+
+        // Each report deleted has an associated attribution rate-limit record deleted
+        long remainingAttributions =
+                (long) mFlags.getMeasurementMaxEventAttributionPerRateLimitWindow()
+                        - attributionCount + reportsToDelete.size();
+
+        // Return the smaller of remaining attributions per rate limit or remaining report quota.
+        return Math.min(
+                remainingAttributions,
+                (long) (maxEventReports - numEarlierScheduledReports));
+    }
+
+    private boolean generateFlexEventReports(
+            Source source,
+            Trigger trigger,
+            EventTrigger eventTrigger,
+            long attributionCount,
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        if (source.getTriggerDataCardinality() == 0) {
             return false;
         }
 
-        // for flexible event API.
-        int bucketIncrements = ReportSpecUtil.countBucketIncrements(reportSpec, newEventReport);
-        if (bucketIncrements == 0) {
-            // the new proposed report doesn't cause bucket increments so no new report
-            // generated
-            reportSpec.insertAttributedTrigger(newEventReport);
+        TriggerSpecs triggerSpecs = source.getTriggerSpecs();
+
+        Optional<UnsignedLong> maybeEffectiveTriggerData =
+                getMatchingEffectiveTriggerData(eventTrigger, source);
+
+        if (maybeEffectiveTriggerData.isEmpty()) {
+            return false;
+        }
+
+        UnsignedLong effectiveTriggerData = maybeEffectiveTriggerData.get();
+
+        // Store the current bucket index for each trigger data
+        Map<UnsignedLong, Integer> triggerDataToBucketIndexMap = new HashMap<>();
+
+        long remainingReportQuota =
+                restoreTriggerContributionsAndProvisionFlexEventReportQuota(
+                        source,
+                        trigger,
+                        attributionCount,
+                        triggerDataToBucketIndexMap,
+                        measurementDao);
+
+        if (remainingReportQuota == 0L) {
+            return false;
+        }
+
+        List<AttributedTrigger> attributedTriggers = source.getAttributedTriggers();
+
+        long triggerValue =
+                triggerSpecs.getSummaryOperatorType(effectiveTriggerData)
+                        == TriggerSpec.SummaryOperatorType.COUNT
+                                ? 1L
+                                : eventTrigger.getTriggerValue();
+
+        attributedTriggers.add(new AttributedTrigger(
+                trigger.getId(),
+                eventTrigger.getTriggerPriority(),
+                // effectiveTriggerData is used in reporting and matching trigger spec; the original
+                // trigger datastore record contains the provided trigger data.
+                effectiveTriggerData,
+                triggerValue,
+                trigger.getTriggerTime(),
+                eventTrigger.getDedupKey(),
+                debugKeyPair.second,
+                debugKeyPair.first != null));
+
+        attributedTriggers.sort(
+                Comparator.comparingLong(AttributedTrigger::getPriority).reversed()
+                        .thenComparing(AttributedTrigger::getTriggerTime));
+
+        // Store for each trigger data any amount already covered for the current bucket.
+        Map<UnsignedLong, Long> triggerDataToBucketAmountMap = new HashMap<>();
+        Map<UnsignedLong, List<AttributedTrigger>> triggerDataToContributingTriggersMap =
+                new HashMap<>();
+
+        for (AttributedTrigger attributedTrigger : attributedTriggers) {
             // Flex API already inserts the attributed trigger and does not need an explicit action
             // for that.
-            if (eventTrigger.getDedupKey() != null
+            if (attributedTrigger.getDedupKey() != null
                     && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
-                source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
+                source.getEventReportDedupKeys().add(attributedTrigger.getDedupKey());
                 measurementDao.updateSourceEventReportDedupKeys(source);
             }
-        } else {
-            List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
-            if (sourceEventReports.size() + bucketIncrements <= reportSpec.getMaxReports()) {
-                // there are enough quota to generate all report for this trigger. No competing
-                // condition
-                reportSpec.insertAttributedTrigger(newEventReport);
 
-                finalizeMultipleEventReportCreationWithTriggerSummaryBucket(
-                        source,
-                        eventTrigger,
-                        newEventReport,
-                        measurementDao,
-                        bucketIncrements,
-                        getReportCountForTriggerData(
-                                newEventReport.getTriggerData(), sourceEventReports));
-            } else {
-                // competing condition: more event report candidate than allowed quota
-                Pair<List<EventReport>, Integer> tmp =
-                        ReportSpecUtil.processIncomingReport(
-                                reportSpec, bucketIncrements, newEventReport, sourceEventReports);
-                List<EventReport> toBeDeletedReports = tmp.first;
-                int numOfNewReportGenerated = tmp.second;
-                for (EventReport report : toBeDeletedReports) {
-                    measurementDao.deleteEventReport(report);
-                    if (report.getTriggerDedupKey() != null
-                            && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
-                        source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
-                    }
-                }
-                // create a filtered list to remove new event report and deleted event report
-                List<EventReport> nonDeletedReports =
-                        sourceEventReports.stream()
-                                .filter(obj -> !toBeDeletedReports.contains(obj))
-                                .collect(Collectors.toList());
-                finalizeMultipleEventReportCreationWithTriggerSummaryBucket(
-                        source,
-                        eventTrigger,
-                        newEventReport,
-                        measurementDao,
-                        numOfNewReportGenerated,
-                        getReportCountForTriggerData(
-                                newEventReport.getTriggerData(), nonDeletedReports));
-                resetSummaryBucketForEventReportsRelatedToDeletion(
-                        source, nonDeletedReports, toBeDeletedReports, measurementDao);
+            remainingReportQuota -= updateFlexAttributionStateAndGetNumReports(
+                    source,
+                    trigger,
+                    attributedTrigger,
+                    remainingReportQuota,
+                    triggerDataToBucketIndexMap,
+                    triggerDataToBucketAmountMap,
+                    triggerDataToContributingTriggersMap,
+                    measurementDao);
+
+            if (remainingReportQuota == 0) {
+                break;
             }
         }
+
         measurementDao.updateSourceAttributedTriggers(
                 source.getId(),
                 source.attributedTriggersToJsonFlexApi());
+
+        // TODO (b/307786346): represent actual report count.
         return true;
+    }
+
+    private long updateFlexAttributionStateAndGetNumReports(
+            Source source,
+            Trigger trigger,
+            AttributedTrigger attributedTrigger,
+            long remainingReportQuota,
+            Map<UnsignedLong, Integer> triggerDataToBucketIndexMap,
+            Map<UnsignedLong, Long> triggerDataToBucketAmountMap,
+            Map<UnsignedLong, List<AttributedTrigger>> triggerDataToContributingTriggersMap,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        TriggerSpecs triggerSpecs = source.getTriggerSpecs();
+        UnsignedLong triggerData = attributedTrigger.getTriggerData();
+
+        triggerDataToBucketIndexMap.putIfAbsent(triggerData, 0);
+
+        int bucketIndex = triggerDataToBucketIndexMap.get(triggerData);
+        List<Long> buckets = triggerSpecs.getSummaryBucketsForTriggerData(triggerData);
+
+        // Once we've generated a report for the last bucket, subsequent triggers cannot
+        // generate more reports.
+        if (bucketIndex == buckets.size()) {
+            return 0;
+        }
+
+        triggerDataToBucketAmountMap.putIfAbsent(triggerData, 0L);
+        triggerDataToContributingTriggersMap.putIfAbsent(triggerData, new ArrayList<>());
+
+        List<AttributedTrigger> contributingTriggers =
+                triggerDataToContributingTriggersMap.get(triggerData);
+        if (attributedTrigger.remainingValue() > 0L) {
+            contributingTriggers.add(attributedTrigger);
+        }
+
+        long prevBucket = bucketIndex == 0 ? 0L : buckets.get(bucketIndex - 1);
+        long numReportsCreated = 0L;
+
+        for (int i = bucketIndex; i < buckets.size(); i++) {
+            long bucket = buckets.get(i);
+            long bucketSize = bucket - prevBucket;
+            long bucketAmount = triggerDataToBucketAmountMap.get(triggerData);
+
+            if (attributedTrigger.remainingValue() >= bucketSize - bucketAmount) {
+                finalizeEventReportAndAttributionCreationForFlex(
+                        source,
+                        trigger,
+                        attributedTrigger,
+                        contributingTriggers,
+                        TriggerSpecs.getSummaryBucketFromIndex(i, buckets),
+                        measurementDao);
+                numReportsCreated += 1L;
+
+                if (remainingReportQuota - numReportsCreated == 0L) {
+                    return numReportsCreated;
+                }
+
+                attributedTrigger.addContribution(bucketSize - bucketAmount);
+                triggerDataToBucketIndexMap.put(triggerData, i + 1);
+                triggerDataToBucketAmountMap.put(triggerData, 0L);
+                contributingTriggers.clear();
+                if (attributedTrigger.remainingValue() > 0L) {
+                    contributingTriggers.add(attributedTrigger);
+                }
+            } else {
+                triggerDataToBucketIndexMap.put(triggerData, i);
+                long diff = attributedTrigger.remainingValue();
+                triggerDataToBucketAmountMap.merge(
+                        triggerData, diff, (oldValue, value) -> oldValue + diff);
+                attributedTrigger.addContribution(diff);
+                break;
+            }
+            prevBucket = bucket;
+        }
+
+        return numReportsCreated;
     }
 
     private List<Uri> getEventReportDestinations(@NonNull Source source, int destinationType) {
         ImmutableList.Builder<Uri> destinations = new ImmutableList.Builder<>();
         if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
-                && source.getCoarseEventReportDestinations()) {
+                && source.hasCoarseEventReportDestinations()) {
             Optional.ofNullable(source.getAppDestinations()).ifPresent(destinations::addAll);
             Optional.ofNullable(source.getWebDestinations()).ifPresent(destinations::addAll);
         } else {
@@ -942,29 +1193,48 @@ class AttributionJobHandler {
         measurementDao.insertEventReport(eventReport);
     }
 
-    private void finalizeMultipleEventReportCreationWithTriggerSummaryBucket(
+    private void finalizeEventReportAndAttributionCreationForFlex(
             Source source,
-            EventTrigger eventTrigger,
-            EventReport eventReport,
-            IMeasurementDao measurementDao,
-            int numNewReport,
-            int numCurrentReportWithSameTriggerData)
+            Trigger trigger,
+            AttributedTrigger attributedTrigger,
+            List<AttributedTrigger> contributingTriggers,
+            Pair<Long, Long> triggerSummaryBucket,
+            IMeasurementDao measurementDao)
             throws DatastoreException {
-        // Flex API already inserts the attributed trigger and does not need an explicit action for
-        // that.
-        if (eventTrigger.getDedupKey() != null
-                && !mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
-                source.getEventReportDedupKeys().add(eventTrigger.getDedupKey());
-        }
-        measurementDao.updateSourceEventReportDedupKeys(source);
-        List<Long> summaryBuckets =
-                ReportSpecUtil.getSummaryBucketsForTriggerData(
-                        source.getFlexEventReportSpec(), eventTrigger.getTriggerData());
-        for (int i = 0; i < numNewReport; i++) {
-            eventReport.updateSummaryBucket(
-                    ReportSpecUtil.getSummaryBucketFromIndex(
-                            numCurrentReportWithSameTriggerData++, summaryBuckets));
-            measurementDao.insertEventReport(eventReport);
+        long reportTime = mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                source.getTriggerSpecs(),
+                source.getEventTime(),
+                // We can make an assertion that any report generated for any trigger data can only
+                // be associated with the next report window after trigger time that's configured
+                // for that trigger data: (1) if report time were to be before trigger time, that
+                // would mean attributed triggers all with an earlier time filled a bucket during
+                // the current iteration, which is disputed by counting all of those buckets before,
+                // and (2) if report time is to be after trigger time, it necessarily will be the
+                // next report window configured for the current trigger data, regardless of how
+                // much earlier were the actual attributed triggers counted towards the bucket.
+                trigger.getTriggerTime(),
+                attributedTrigger.getTriggerData());
+        Pair<UnsignedLong, List<UnsignedLong>> debugKeys =
+                getDebugKeysForFlex(contributingTriggers, source);
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .getForFlex(
+                                source,
+                                trigger,
+                                attributedTrigger,
+                                reportTime,
+                                triggerSummaryBucket,
+                                debugKeys.first,
+                                debugKeys.second,
+                                source.getFlipProbability(mFlags),
+                                getEventReportDestinations(
+                                        source, trigger.getDestinationType()))
+                        .build();
+        measurementDao.insertEventReport(eventReport);
+        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
+            insertAttribution(Attribution.Scope.EVENT, source, trigger, measurementDao);
+        } else {
+            insertAttribution(source, trigger, measurementDao);
         }
     }
 
@@ -995,19 +1265,29 @@ class AttributionJobHandler {
                 Collections.singletonList(trigger.getId()), Trigger.Status.IGNORED);
     }
 
-    private static void attributeTriggerAndInsertAttribution(Trigger trigger, Source source,
-            IMeasurementDao measurementDao)
+    private static void attributeTrigger(Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         measurementDao.updateTriggerStatus(
                 Collections.singletonList(trigger.getId()), Trigger.Status.ATTRIBUTED);
-        measurementDao.insertAttribution(createAttribution(source, trigger));
+    }
+
+    private static void insertAttribution(Source source, Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        measurementDao.insertAttribution(createAttributionBuilder(source, trigger).build());
+    }
+
+    private static void insertAttribution(@Attribution.Scope int scope, Source source,
+            Trigger trigger, IMeasurementDao measurementDao) throws DatastoreException {
+        measurementDao.insertAttribution(
+                createAttributionBuilder(source, trigger)
+                        .setScope(scope)
+                        .build());
     }
 
     private boolean hasAttributionQuota(
-            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
         if (attributionCount >= mFlags.getMeasurementMaxAttributionPerRateLimitWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
@@ -1017,6 +1297,29 @@ class AttributionJobHandler {
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
         return attributionCount < mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
+    }
+
+    private boolean hasAttributionQuota(
+            long attributionCount,
+            @Attribution.Scope int scope,
+            Source source,
+            Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        int limit = scope == Attribution.Scope.EVENT
+                ? mFlags.getMeasurementMaxEventAttributionPerRateLimitWindow()
+                : mFlags.getMeasurementMaxAggregateAttributionPerRateLimitWindow();
+        boolean isWithinLimit = attributionCount < limit;
+        if (!isWithinLimit) {
+            // TODO (b/309324404) Consider debug report implications for scoped attribution rate
+            // limit.
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(attributionCount),
+                    measurementDao,
+                    Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
+        }
+        return isWithinLimit;
     }
 
     private boolean isWithinReportLimit(
@@ -1227,6 +1530,36 @@ class AttributionJobHandler {
         }
     }
 
+    private Optional<UnsignedLong> getMatchingEffectiveTriggerData(
+            EventTrigger eventTrigger, Source source) {
+        UnsignedLong triggerData = eventTrigger.getTriggerData();
+
+        // Flex source
+        if (source.getTriggerSpecs() != null) {
+            if (mFlags.getMeasurementEnableTriggerDataMatching()
+                    && source.getTriggerDataMatching() == Source.TriggerDataMatching.MODULUS) {
+                // Modify trigger data value mod total trigger spec cardinality.
+                triggerData = triggerData.mod(source.getTriggerDataCardinality());
+            }
+            if (!source.getTriggerSpecs().containsTriggerData(triggerData)) {
+                return Optional.empty();
+            }
+            return Optional.of(triggerData);
+        // V1 source
+        } else if (!mFlags.getMeasurementEnableTriggerDataMatching()) {
+            return Optional.of(triggerData);
+        }
+
+        if (source.getTriggerDataMatching() == Source.TriggerDataMatching.EXACT) {
+            UnsignedLong triggerDataCardinalityBound = new UnsignedLong(
+                    ((long) source.getTriggerDataCardinality()) - 1L);
+            if (eventTrigger.getTriggerData().compareTo(triggerDataCardinalityBound) > 0) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(triggerData);
+    }
+
     private static Optional<Pair<Uri, Uri>> getPublisherAndDestinationTopPrivateDomains(
             Source source, Trigger trigger) {
         Uri attributionDestination = trigger.getAttributionDestination();
@@ -1249,7 +1582,8 @@ class AttributionJobHandler {
         }
     }
 
-    public static Attribution createAttribution(@NonNull Source source, @NonNull Trigger trigger) {
+    public static Attribution.Builder createAttributionBuilder(@NonNull Source source,
+            @NonNull Trigger trigger) {
         Optional<Uri> publisherTopPrivateDomain =
                 getTopPrivateDomain(source.getPublisher(), source.getPublisherType());
         Uri destination = trigger.getAttributionDestination();
@@ -1277,8 +1611,7 @@ class AttributionJobHandler {
                 .setRegistrant(trigger.getRegistrant().toString())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
-                .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                .build();
+                .setRegistrationOrigin(trigger.getRegistrationOrigin());
     }
 
     private static Optional<Uri> getTopPrivateDomain(
@@ -1286,6 +1619,36 @@ class AttributionJobHandler {
         return eventSurfaceType == EventSurfaceType.APP
                 ? Optional.of(BaseUriExtractor.getBaseUri(uri))
                 : WebAddresses.topPrivateDomainAndScheme(uri);
+    }
+
+    private static Pair<UnsignedLong, List<UnsignedLong>> getDebugKeysForFlex(
+            List<AttributedTrigger> contributingTriggers, Source source) {
+        List<UnsignedLong> triggerDebugKeys = new ArrayList<>();
+        // To provide a source debug key in the event report, the source debug key must have been
+        // populated for each evaluation for source and trigger for all triggers contributing to the
+        // bucket.
+        boolean allBucketContributorsHadNonNullSourceDebugKeys = true;
+        for (AttributedTrigger trigger : contributingTriggers) {
+            // Only add a debug key to the result if the invariant is maintained. Otherwise, the
+            // invariant has been broken, but conclude the iteration to process source debug-key.
+            if (trigger.getDebugKey() != null) {
+                triggerDebugKeys.add(trigger.getDebugKey());
+            }
+            // Update the value of the boolean for source debug key as a series of AND
+            // operations that must all be true.
+            allBucketContributorsHadNonNullSourceDebugKeys &= trigger.hasSourceDebugKey();
+        }
+        // We are allowed to access the actual source debug key value if the invariant has been
+        // maintained.
+        UnsignedLong sourceDebugKey = allBucketContributorsHadNonNullSourceDebugKeys
+                ? source.getDebugKey()
+                : null;
+        // All triggers must have debug keys for the report to include any.
+        if (contributingTriggers.size() == triggerDebugKeys.size()) {
+            return Pair.create(sourceDebugKey, triggerDebugKeys);
+        } else {
+            return Pair.create(sourceDebugKey, Collections.emptyList());
+        }
     }
 
     private static boolean hasDeduplicationKey(@NonNull Source source,
@@ -1361,54 +1724,6 @@ class AttributionJobHandler {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Configurable aggregate report delay parsing failed.");
             return reportDelayFromDefaults;
-        }
-    }
-
-    private int getReportCountForTriggerData(
-            UnsignedLong triggerData, List<EventReport> currentReports) {
-        int count = 0;
-        for (EventReport report : currentReports) {
-            if (report.getTriggerData().equals(triggerData)) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    private void resetSummaryBucketForEventReportsRelatedToDeletion(
-            Source source,
-            List<EventReport> currentEventReports,
-            List<EventReport> deletedReports,
-            IMeasurementDao measurementDao)
-            throws DatastoreException {
-        Set<UnsignedLong> processedTriggerData = new HashSet<>();
-        List<EventReport> orderedEventReports =
-                currentEventReports.stream()
-                        .sorted(Comparator.comparingLong(EventReport::getTriggerTime).reversed())
-                        .collect(Collectors.toList());
-
-        for (EventReport deletedReport : deletedReports) {
-            UnsignedLong triggerData = deletedReport.getTriggerData();
-            if (processedTriggerData.contains(triggerData)) {
-                continue;
-            }
-            processedTriggerData.add(triggerData);
-            int count = 0;
-            List<Long> summaryBuckets =
-                    ReportSpecUtil.getSummaryBucketsForTriggerData(
-                            source.getFlexEventReportSpec(), triggerData);
-            for (EventReport currentReport : orderedEventReports) {
-                Pair<Long, Long> newSummaryBucket =
-                        ReportSpecUtil.getSummaryBucketFromIndex(count, summaryBuckets);
-                count++;
-                if (!newSummaryBucket.equals(currentReport.getTriggerSummaryBucket())) {
-                    // only the new bucket different with original one, we need to update DB
-                    currentReport.updateSummaryBucket(newSummaryBucket);
-                    measurementDao.updateEventReportSummaryBucket(
-                            currentReport.getId(),
-                            currentReport.getStringEncodedTriggerSummaryBucket());
-                }
-            }
         }
     }
 

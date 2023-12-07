@@ -37,6 +37,7 @@ java_defaults {
         "adservices-assets",
         "adservices-service-core-schema",
         "adservices-shared-testing",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -59,7 +60,6 @@ java_defaults {
         "general-tests",
         "mts-adservices"
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
     jni_libs: [
         "libhpke_jni",
@@ -125,7 +125,6 @@ android_test {
         "mts-adservices"
     ],
     test_config: "AndroidTest.JsScriptEngine.xml",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }
 
@@ -162,7 +161,6 @@ android_test {
         "mts-adservices"
     ],
     test_config: "AndroidTestMDD.xml",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }
 
@@ -182,6 +180,7 @@ java_defaults {
         "adservices-service-core-schema",
         "adservices-shared-testing",
         "adservices-test-fixtures",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "androidx.room_room-runtime",
@@ -206,7 +205,6 @@ java_defaults {
         "general-tests",
         "mts-extservices"
     ],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
     jni_libs: [
         "libhpke_jni",
@@ -273,7 +271,6 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
 
@@ -312,7 +309,6 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
 }
 
@@ -334,8 +330,8 @@ cc_library_shared {
         "packages/modules/AdServices/adservices/tests/unittest/service-core/src/jni/cpp"
     ],
     header_libs: ["jni_headers"],
-    shared_libs: ["libcrypto", "liblog",],
-    static_libs: ["libact"],
+    shared_libs: ["liblog",],
+    static_libs: ["libact", "libcrypto_static"],
     apex_available: ["com.android.adservices", "com.android.extservices"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

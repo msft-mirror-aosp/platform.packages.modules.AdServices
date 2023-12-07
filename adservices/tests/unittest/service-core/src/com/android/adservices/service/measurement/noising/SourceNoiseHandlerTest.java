@@ -208,7 +208,7 @@ public class SourceNoiseHandlerTest {
 
     @Test
     public void impressionNoiseParamGeneration_flexLiteAPI() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long eventTime = System.currentTimeMillis();
         Source eventSource2Windows =
                 SourceFixture.getMinimalValidSourceBuilder()

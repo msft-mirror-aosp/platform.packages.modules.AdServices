@@ -142,6 +142,9 @@ public class ContentValueFixtures {
 
         // Added in V22
         public static final String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
+
+        // Added in V30
+        public static final String TRIGGER_DATA_MATCHING = Source.TriggerDataMatching.EXACT.name();
     }
 
     public static class SourceDestinationValues {
@@ -233,6 +236,9 @@ public class ContentValueFixtures {
 
         // Added in V25
         public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+
+        // Added in V29
+        public static final int SCOPE = 0;
     }
 
     public static class EventReportValues {
@@ -263,6 +269,9 @@ public class ContentValueFixtures {
 
         // Added in V23
         public static final String TRIGGER_SUMMARY_BUCKET = "1,3";
+
+        // Added in V28
+        public static final String TRIGGER_DEBUG_KEYS = "9223372036854775809,15";
     }
 
     public static class AggregateReportValues {
@@ -730,6 +739,20 @@ public class ContentValueFixtures {
         return values;
     }
 
+    /** Returns content values for source version 29 */
+    public static ContentValues generateSourceContentValuesV29() {
+        return generateSourceContentValuesV22();
+    }
+
+    /** Returns content values for source version 30 */
+    public static ContentValues generateSourceContentValuesV30() {
+        ContentValues values = generateSourceContentValuesV29();
+        values.put(
+                MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
+                SourceValues.TRIGGER_DATA_MATCHING);
+        return values;
+    }
+
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
 
@@ -938,18 +961,6 @@ public class ContentValueFixtures {
         return generateTriggerContentValuesV20();
     }
 
-    public static ContentValues generateTriggerContentValuesV22() {
-        ContentValues values = generateTriggerContentValuesV21();
-        values.put(
-                MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
-                SourceValues.SHARED_FILTER_DATA_KEYS);
-        return values;
-    }
-
-    public static ContentValues generateTriggerContentValuesV23() {
-        return generateTriggerContentValuesV22();
-    }
-
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -1050,6 +1061,25 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AttributionContract.REGISTRATION_ORIGIN,
                 AttributionValues.REGISTRATION_ORIGIN.toString());
+        return values;
+    }
+
+    /** Return content values for an attribution record version 26 */
+    public static ContentValues generateAttributionContentValuesV26() {
+        return generateAttributionContentValuesV25();
+    }
+
+    /** Return content values for an attribution record version 28 */
+    public static ContentValues generateAttributionContentValuesV28() {
+        return generateAttributionContentValuesV26();
+    }
+
+    /** Return content values for an attribution record version 29 */
+    public static ContentValues generateAttributionContentValuesV29() {
+        ContentValues values = generateAttributionContentValuesV28();
+        values.put(
+                MeasurementTables.AttributionContract.SCOPE,
+                AttributionValues.SCOPE);
         return values;
     }
 
@@ -1199,6 +1229,25 @@ public class ContentValueFixtures {
         eventReport.put(
                 MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
                 EventReportValues.TRIGGER_SUMMARY_BUCKET);
+        return eventReport;
+    }
+
+    /** Returns content values for event report version 26 */
+    public static ContentValues generateEventReportContentValuesV26() {
+        return generateEventReportContentValuesV23();
+    }
+
+    /** Returns content values for event report version 27 */
+    public static ContentValues generateEventReportContentValuesV27() {
+        return generateEventReportContentValuesV26();
+    }
+
+    /** Returns content values for event report version 28 */
+    public static ContentValues generateEventReportContentValuesV28() {
+        ContentValues eventReport = generateEventReportContentValuesV27();
+        eventReport.put(
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEYS,
+                EventReportValues.TRIGGER_DEBUG_KEYS);
         return eventReport;
     }
 

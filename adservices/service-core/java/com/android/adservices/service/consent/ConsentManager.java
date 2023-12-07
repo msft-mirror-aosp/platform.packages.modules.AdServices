@@ -230,7 +230,7 @@ public class ConsentManager {
                     boolean enableAppsearchConsentData =
                             FlagsFactory.getFlags().getEnableAppsearchConsentData();
                     if (enableAppsearchConsentData) {
-                        appSearchConsentManager = AppSearchConsentManager.getInstance(context);
+                        appSearchConsentManager = AppSearchConsentManager.getInstance();
                         handleConsentMigrationFromAppSearchIfNeeded(
                                 context,
                                 datastore,
@@ -238,6 +238,23 @@ public class ConsentManager {
                                 appSearchConsentManager,
                                 adServicesManager,
                                 statsdAdServicesLogger);
+                    }
+
+                    AdServicesExtDataStorageServiceManager adServicesExtDataManager = null;
+                    // Flag enable_adext_service_consent_data is true on R and S+ only when
+                    // we want to use AdServicesExtDataStorageService to write to or read from.
+                    boolean enableAdExtServiceConsentData =
+                            FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
+                    if (enableAdExtServiceConsentData) {
+                        adServicesExtDataManager =
+                                AdServicesExtDataStorageServiceManager.getInstance(context);
+                        if (FlagsFactory.getFlags().getEnableAdExtServiceToAppSearchMigration()) {
+                            ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
+                                    context,
+                                    datastore,
+                                    appSearchConsentManager,
+                                    adServicesExtDataManager);
+                        }
                     }
 
                     // Attempt to migrate consent data from PPAPI to System server if needed.
@@ -248,15 +265,6 @@ public class ConsentManager {
                             statsdAdServicesLogger,
                             consentSourceOfTruth);
 
-                    AdServicesExtDataStorageServiceManager adServicesExtDataManager = null;
-                    // Flag enable_adext_service_consent_data is true on R and S only when
-                    // we want to use AdServicesExtDataStorageService to write to or read from.
-                    boolean enableAdExtServiceConsentData =
-                            FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
-                    if (enableAdExtServiceConsentData) {
-                        adServicesExtDataManager =
-                                AdServicesExtDataStorageServiceManager.getInstance(context);
-                    }
                     sConsentManager =
                             new ConsentManager(
                                     TopicsWorker.getInstance(context),
@@ -299,7 +307,7 @@ public class ConsentManager {
             LogUtil.d("CONSENT_KEY already enable. Skipping enable process.");
             return;
         }
-        UiStatsLogger.logOptInSelected(context);
+        UiStatsLogger.logOptInSelected();
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(context);
 
@@ -326,7 +334,7 @@ public class ConsentManager {
     public void disable(@NonNull Context context) {
         Objects.requireNonNull(context);
 
-        UiStatsLogger.logOptOutSelected(context);
+        UiStatsLogger.logOptOutSelected();
         // Disable all the APIs
         try {
             // reset all data
@@ -367,7 +375,7 @@ public class ConsentManager {
             return;
         }
 
-        UiStatsLogger.logOptInSelected(context, apiType);
+        UiStatsLogger.logOptInSelected(apiType);
 
         BackgroundJobsManager.scheduleJobsPerApi(context, apiType);
 
@@ -395,7 +403,7 @@ public class ConsentManager {
     public void disable(@NonNull Context context, AdServicesApiType apiType) {
         Objects.requireNonNull(context);
 
-        UiStatsLogger.logOptOutSelected(context, apiType);
+        UiStatsLogger.logOptOutSelected(apiType);
 
         try {
             resetByApi(apiType);
@@ -462,10 +470,6 @@ public class ConsentManager {
      *     revoked.
      */
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            throw new IllegalStateException("GA UX feature is disabled.");
-        }
-
         if (mFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
@@ -496,18 +500,22 @@ public class ConsentManager {
     }
 
     /**
-     * Retrieves the measurement API consent from R.
+     * Returns whether the user is adult user who OTA from R.
      *
-     * @return {@link AdServicesApiConsent} providing information whether the consent was given or
-     *     revoked.
+     * @return true if user is adult user who OTA from R, otherwise false.
      */
-    public AdServicesApiConsent getConsentFromR() {
-        if (mFlags.getConsentManagerDebugMode()) {
-            return AdServicesApiConsent.GIVEN;
+    public boolean isOtaAdultUserFromRvc() {
+        if (mFlags.getConsentManagerOTADebugMode()) {
+            return true;
         }
 
-        return AdServicesApiConsent.getConsent(
-                mAdExtDataManager != null && mAdExtDataManager.getMsmtConsent());
+        // TODO(313672368) clean up getRvcPostOtaNotifAgeCheck flag after u18 is qualified on R/S
+        return mAdExtDataManager != null
+                && mAdExtDataManager.getNotificationDisplayed()
+                && (mFlags.getRvcPostOtaNotifAgeCheck()
+                        ? !mAdExtDataManager.getIsU18Account()
+                                && mAdExtDataManager.getIsAdultAccount()
+                        : true);
     }
 
     /**
@@ -761,13 +769,7 @@ public class ConsentManager {
      */
     public boolean isFledgeConsentRevokedForApp(@NonNull String packageName)
             throws IllegalArgumentException {
-        // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        AdServicesApiConsent consent;
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            consent = getConsent();
-        } else {
-            consent = getConsent(AdServicesApiType.FLEDGE);
-        }
+        AdServicesApiConsent consent = getConsent(AdServicesApiType.FLEDGE);
 
         if (!consent.isGiven()) {
             return true;
@@ -824,13 +826,7 @@ public class ConsentManager {
      */
     public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName)
             throws IllegalArgumentException {
-        // TODO(b/238464639): Implement API-specific consent for FLEDGE
-        AdServicesApiConsent consent;
-        if (!mFlags.getGaUxFeatureEnabled()) {
-            consent = getConsent();
-        } else {
-            consent = getConsent(AdServicesApiType.FLEDGE);
-        }
+        AdServicesApiConsent consent = getConsent(AdServicesApiType.FLEDGE);
 
         if (!consent.isGiven()) {
             return true;
@@ -963,8 +959,7 @@ public class ConsentManager {
                     // Beta UX.
                     throw new IllegalStateException(
                             getAdExtExceptionMessage(
-                                    /* illegalAction= */ "store if beta notification was"
-                                            + " displayed"));
+                                    /* illegalAction= */ "store if beta notif was displayed"));
                 },
                 /* errorLogger= */ null);
     }
@@ -2046,7 +2041,7 @@ public class ConsentManager {
                 () -> mAdServicesManager.wasU18NotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasU18NotificationDisplayed(),
                 () -> // On Android R only U18 notification is allowed to be displayed.
-                mAdExtDataManager.getNotifDisplayed(),
+                mAdExtDataManager.getNotificationDisplayed(),
                 /* errorLogger= */ null);
     }
 
@@ -2062,7 +2057,7 @@ public class ConsentManager {
                         mAppSearchConsentManager.setU18NotificationDisplayed(
                                 wasU18NotificationDisplayed),
                 () -> // On Android R only U18 notification is allowed to be displayed.
-                mAdExtDataManager.setNotifDisplayed(wasU18NotificationDisplayed),
+                mAdExtDataManager.setNotificationDisplayed(wasU18NotificationDisplayed),
                 /* errorLogger= */ null);
     }
 

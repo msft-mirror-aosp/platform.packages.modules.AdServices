@@ -297,7 +297,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
-                        AdIdWorker.getInstance(context),
+                        AdIdWorker.getInstance(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler()),
                 BinderFlagReader.readFlag(
@@ -777,7 +777,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mFlags,
                                     mAdSelectionServiceFilter,
                                     mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
-                                    callingUid);
+                                    callingUid,
+                                    mShouldUseUnifiedTables);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }
@@ -842,7 +843,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mAdSelectionServiceFilter,
                             mFledgeAuthorizationFilter,
                             mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                            callingUid);
+                            callingUid,
+                            mShouldUseUnifiedTables);
             reporter.reportImpression(requestParams, callback);
         }
     }
@@ -895,7 +897,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 devContext,
                                 measurementService,
                                 mConsentManager,
-                                mContext)
+                                mContext,
+                                mShouldUseUnifiedTables)
                         .getEventReporter();
 
         eventReporter.reportInteraction(inputParams, callback);
@@ -979,7 +982,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 adCounterHistogramLowerMaxTotalEventCount,
                                 adCounterHistogramAbsoluteMaxPerBuyerEventCount,
                                 adCounterHistogramLowerMaxPerBuyerEventCount,
-                                auctionServerEnabledForUpdateHistogram),
+                                auctionServerEnabledForUpdateHistogram,
+                                mShouldUseUnifiedTables),
                         mBackgroundExecutor,
                         // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
                         //  after aligning on Clock usage

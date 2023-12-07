@@ -17,212 +17,228 @@
 package com.android.adservices.service.extdata;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_FALSE;
+import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_TRUE;
+import static android.adservices.extdata.AdServicesExtDataParams.STATE_NO_MANUAL_INTERACTIONS_RECORDED;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_MEASUREMENT_CONSENTED;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_NOTIFICATION_DISPLAYED;
 
-import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
 import android.adservices.extdata.GetAdServicesExtDataResult;
 import android.adservices.extdata.IAdServicesExtDataStorageService;
 import android.adservices.extdata.IGetAdServicesExtDataCallback;
+import android.content.Context;
 import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import java.util.concurrent.CompletableFuture;
+import com.google.common.truth.Expect;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.mockito.Mock;
 
 public class AdServicesExtDataStorageServiceWorkerTest {
-    private static final String TEST_EXCEPTION_MSG = "Test exception thrown!";
-    private static final String NO_SERVICE_EXCEPTION_MESSAGE =
-            "Unable to find AdServicesExtDataStorageService!";
+    private static final long NO_APEX_VALUE = -1L;
+    private static final String TEST_EXCEPTION_MESSAGE = "Test Exception!";
     private static final AdServicesExtDataParams TEST_PARAMS =
             new AdServicesExtDataParams.Builder()
-                    .setNotificationDisplayed(1)
-                    .setMsmtConsent(0)
-                    .setIsU18Account(1)
-                    .setIsAdultAccount(0)
-                    .setManualInteractionWithConsentStatus(-1)
-                    .setMsmtRollbackApexVersion(-1)
+                    .setNotificationDisplayed(BOOLEAN_TRUE)
+                    .setMsmtConsent(BOOLEAN_FALSE)
+                    .setIsU18Account(BOOLEAN_TRUE)
+                    .setIsAdultAccount(BOOLEAN_FALSE)
+                    .setManualInteractionWithConsentStatus(STATE_NO_MANUAL_INTERACTIONS_RECORDED)
+                    .setMsmtRollbackApexVersion(NO_APEX_VALUE)
                     .build();
     private static final int[] TEST_FIELD_LIST = {
         FIELD_IS_MEASUREMENT_CONSENTED, FIELD_IS_NOTIFICATION_DISPLAYED
     };
 
-    private boolean mIsSuccess;
+    @Rule public final Expect expect = Expect.create();
+
     private AdServicesExtDataStorageServiceWorker mSpyWorker;
+
+    @Mock private Flags mFlags;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule mockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .mockStatic(FlagsFactory.class)
+                    .spyStatic(AdServicesExtDataStorageServiceDebugProxy.class)
+                    .build();
+
+    @Mock private AdServicesExtDataStorageServiceDebugProxy mDebugProxy;
 
     @Before
     public void setup() {
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(mDebugProxy)
+                .when(
+                        () ->
+                                AdServicesExtDataStorageServiceDebugProxy.getInstance(
+                                        any(Context.class)));
         mSpyWorker =
-                Mockito.spy(
+                spy(
                         AdServicesExtDataStorageServiceWorker.getInstance(
                                 ApplicationProvider.getApplicationContext()));
     }
 
     @Test
     public void testGetAdServicesExtData_serviceNotFound_resultsInOnErrorSet() throws Exception {
-        Mockito.doReturn(null).when(mSpyWorker).getService();
+        doReturn(null).when(mSpyWorker).getService();
+        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        mSpyWorker.getAdServicesExtData(receiver);
 
-        CompletableFuture<String> future = new CompletableFuture<>();
-        mSpyWorker.getAdServicesExtData(constructFailureCallback(future));
-
-        Assert.assertEquals(NO_SERVICE_EXCEPTION_MESSAGE, future.get());
-        Mockito.verify(mSpyWorker, times(0)).unbindFromService();
+        Exception exception = receiver.assertErrorReceived();
+        expect.that(exception).isInstanceOf(IllegalStateException.class);
+        verify(mSpyWorker, never()).unbindFromService();
     }
 
     @Test
     public void testGetAdServicesExtData_onResultSet() throws Exception {
-        Mockito.doReturn(mService).when(mSpyWorker).getService();
+        doReturn(getMockService(/* isSuccess */ true)).when(mSpyWorker).getService();
+        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        mSpyWorker.getAdServicesExtData(receiver);
 
-        mIsSuccess = true;
-        CompletableFuture<AdServicesExtDataParams> future = new CompletableFuture<>();
-        mSpyWorker.getAdServicesExtData(
-                new AdServicesOutcomeReceiver<>() {
-                    @Override
-                    public void onResult(AdServicesExtDataParams result) {
-                        future.complete(result);
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                    }
-                });
-
-        Assert.assertEquals(TEST_PARAMS, future.get());
-        Mockito.verify(mSpyWorker, times(1)).unbindFromService();
+        AdServicesExtDataParams result = receiver.assertSuccess();
+        expect.that(result).isEqualTo(TEST_PARAMS);
+        verify(mSpyWorker).unbindFromService();
     }
 
     @Test
     public void testGetAdServicesExtData_onErrorSet() throws Exception {
-        Mockito.doReturn(mService).when(mSpyWorker).getService();
+        doReturn(getMockService(/* isSuccess */ false)).when(mSpyWorker).getService();
+        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        mSpyWorker.getAdServicesExtData(receiver);
 
-        mIsSuccess = false;
-        CompletableFuture<String> future = new CompletableFuture<>();
-        mSpyWorker.getAdServicesExtData(constructFailureCallback(future));
-
-        Assert.assertEquals(TEST_EXCEPTION_MSG, future.get());
-        Mockito.verify(mSpyWorker, times(1)).unbindFromService();
+        Exception exception = receiver.assertErrorReceived();
+        expect.that(exception).hasMessageThat().isEqualTo(TEST_EXCEPTION_MESSAGE);
+        verify(mSpyWorker).unbindFromService();
     }
 
     @Test
     public void testSetAdServicesExtData_serviceNotFound_resultsInOnErrorSet() throws Exception {
-        Mockito.doReturn(null).when(mSpyWorker).getService();
+        doReturn(null).when(mSpyWorker).getService();
+        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        mSpyWorker.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
 
-        CompletableFuture<String> future = new CompletableFuture<>();
-        mSpyWorker.setAdServicesExtData(
-                TEST_PARAMS, TEST_FIELD_LIST, constructFailureCallback(future));
-
-        Assert.assertEquals(NO_SERVICE_EXCEPTION_MESSAGE, future.get());
-        Mockito.verify(mSpyWorker, times(0)).unbindFromService();
+        Exception exception = receiver.assertErrorReceived();
+        expect.that(exception).isInstanceOf(IllegalStateException.class);
+        verify(mSpyWorker, never()).unbindFromService();
     }
 
     @Test
     public void testSetAdServicesExtData_onResultSet() throws Exception {
-        Mockito.doReturn(mService).when(mSpyWorker).getService();
+        doReturn(getMockService(/* isSuccess */ true)).when(mSpyWorker).getService();
+        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        mSpyWorker.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
 
-        mIsSuccess = true;
-        CompletableFuture<AdServicesExtDataParams> future = new CompletableFuture<>();
-        mSpyWorker.setAdServicesExtData(
-                TEST_PARAMS, TEST_FIELD_LIST, constructSuccessCallback(future));
-
-        Assert.assertEquals(TEST_PARAMS, future.get());
-        Mockito.verify(mSpyWorker, times(1)).unbindFromService();
+        AdServicesExtDataParams result = receiver.assertSuccess();
+        expect.that(result).isEqualTo(TEST_PARAMS);
+        verify(mSpyWorker).unbindFromService();
     }
 
     @Test
     public void testSetAdServicesExtData_onErrorSet() throws Exception {
-        Mockito.doReturn(mService).when(mSpyWorker).getService();
+        doReturn(getMockService(/* isSuccess */ false)).when(mSpyWorker).getService();
+        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        mSpyWorker.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
 
-        mIsSuccess = false;
-        CompletableFuture<String> future = new CompletableFuture<>();
-        mSpyWorker.setAdServicesExtData(
-                TEST_PARAMS, TEST_FIELD_LIST, constructFailureCallback(future));
-
-        Assert.assertEquals(TEST_EXCEPTION_MSG, future.get());
-        Mockito.verify(mSpyWorker, times(1)).unbindFromService();
+        Exception exception = receiver.assertErrorReceived();
+        expect.that(exception).hasMessageThat().isEqualTo(TEST_EXCEPTION_MESSAGE);
+        verify(mSpyWorker).unbindFromService();
     }
 
-    private AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> constructSuccessCallback(
-            CompletableFuture<AdServicesExtDataParams> future) {
-        return new AdServicesOutcomeReceiver<>() {
+    @Test
+    public void testSetAdServicesExtData_serviceNotFound_useProxy() throws Exception {
+        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(true);
+        doReturn(null).when(mSpyWorker).getService();
+        doNothing().when(mDebugProxy).setAdServicesExtData(any(), any(), any());
+        mSpyWorker.setProxy(mDebugProxy);
+        AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        mSpyWorker.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
+        verify(mDebugProxy).setAdServicesExtData(any(), any(), any());
+        verify(mSpyWorker, never()).unbindFromService();
+    }
+
+    @Test
+    public void testGetAdServicesExtData_serviceNotFound_useProxy() throws Exception {
+        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(true);
+        doReturn(null).when(mSpyWorker).getService();
+        doNothing().when(mDebugProxy).getAdServicesExtData(any());
+        mSpyWorker.setProxy(mDebugProxy);
+        AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+        doNothing().when(mDebugProxy).getAdServicesExtData(any());
+        mSpyWorker.getAdServicesExtData(receiver);
+        verify(mDebugProxy).getAdServicesExtData(any());
+        verify(mSpyWorker, never()).unbindFromService();
+    }
+
+    private IAdServicesExtDataStorageService getMockService(boolean isSuccess) {
+        return new IAdServicesExtDataStorageService.Stub() {
             @Override
-            public void onResult(AdServicesExtDataParams result) {
-                future.complete(result);
+            public void getAdServicesExtData(IGetAdServicesExtDataCallback callback)
+                    throws RemoteException {
+                if (isSuccess) {
+                    GetAdServicesExtDataResult result =
+                            new GetAdServicesExtDataResult.Builder()
+                                    .setStatusCode(STATUS_SUCCESS)
+                                    .setErrorMessage("")
+                                    .setAdServicesExtDataParams(TEST_PARAMS)
+                                    .build();
+                    callback.onResult(result);
+                } else {
+                    callback.onError(TEST_EXCEPTION_MESSAGE);
+                }
             }
 
             @Override
-            public void onError(Exception error) {
-                Assert.fail();
+            public void putAdServicesExtData(
+                    AdServicesExtDataParams params,
+                    int[] fields,
+                    IGetAdServicesExtDataCallback callback)
+                    throws RemoteException {
+                if (isSuccess) {
+                    GetAdServicesExtDataResult result =
+                            new GetAdServicesExtDataResult.Builder()
+                                    .setStatusCode(STATUS_SUCCESS)
+                                    .setErrorMessage("")
+                                    .setAdServicesExtDataParams(params)
+                                    .build();
+                    callback.onResult(result);
+                } else {
+                    callback.onError(TEST_EXCEPTION_MESSAGE);
+                }
             }
         };
     }
-
-    private AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> constructFailureCallback(
-            CompletableFuture<String> future) {
-        return new AdServicesOutcomeReceiver<>() {
-            @Override
-            public void onResult(AdServicesExtDataParams result) {
-                Assert.fail();
-            }
-
-            @Override
-            public void onError(Exception e) {
-                future.complete(e.getMessage());
-            }
-        };
-    }
-
-    private final IAdServicesExtDataStorageService mService =
-            new IAdServicesExtDataStorageService.Stub() {
-                @Override
-                public void getAdServicesExtData(IGetAdServicesExtDataCallback callback)
-                        throws RemoteException {
-                    try {
-                        if (mIsSuccess) {
-                            GetAdServicesExtDataResult result =
-                                    new GetAdServicesExtDataResult.Builder()
-                                            .setStatusCode(STATUS_SUCCESS)
-                                            .setErrorMessage("")
-                                            .setAdServicesExtDataParams(TEST_PARAMS)
-                                            .build();
-                            callback.onResult(result);
-                        } else {
-                            throw new Exception(TEST_EXCEPTION_MSG);
-                        }
-                    } catch (Throwable e) {
-                        callback.onError(e.getMessage());
-                    }
-                }
-
-                @Override
-                public void putAdServicesExtData(
-                        AdServicesExtDataParams params,
-                        int[] fields,
-                        IGetAdServicesExtDataCallback callback)
-                        throws RemoteException {
-                    try {
-                        if (mIsSuccess) {
-                            GetAdServicesExtDataResult result =
-                                    new GetAdServicesExtDataResult.Builder()
-                                            .setStatusCode(STATUS_SUCCESS)
-                                            .setErrorMessage("")
-                                            .setAdServicesExtDataParams(params)
-                                            .build();
-                            callback.onResult(result);
-                        } else {
-                            throw new Exception(TEST_EXCEPTION_MSG);
-                        }
-                    } catch (Throwable e) {
-                        callback.onError(e.getMessage());
-                    }
-                }
-            };
 }

@@ -120,7 +120,7 @@ public class UxEngineTest {
                         BackgroundJobsManager.scheduleAllBackgroundJobs(any()));
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(any()));
-        ExtendedMockito.doNothing().when(() -> UiStatsLogger.logEntryPointClicked(any()));
+        ExtendedMockito.doNothing().when(() -> UiStatsLogger.logEntryPointClicked());
 
         doReturn(true).when(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
         doReturn(true).when(mUxStatesManager).getFlag(KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED);
@@ -729,7 +729,6 @@ public class UxEngineTest {
         doReturn(isU18Account).when(mConsentManager).isU18Account();
         doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
         doReturn(true).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsentFromR();
         // U18 notice was already displayed.
         doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
 

@@ -27,7 +27,9 @@ import android.adservices.extdata.IGetAdServicesExtDataCallback;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.service.FlagsFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -37,11 +39,13 @@ import java.util.Objects;
  * Worker class that binds and interacts with {@link AdServicesExtDataStorageService}. All API calls
  * in this class are performed asynchronously.
  */
-public class AdServicesExtDataStorageServiceWorker {
+public final class AdServicesExtDataStorageServiceWorker {
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile AdServicesExtDataStorageServiceWorker sExtDataWorker;
 
     private final ServiceBinder<IAdServicesExtDataStorageService> mServiceBinder;
+
+    private AdServicesExtDataStorageServiceDebugProxy mDebugProxy;
 
     private AdServicesExtDataStorageServiceWorker(Context context) {
         mServiceBinder =
@@ -49,6 +53,7 @@ public class AdServicesExtDataStorageServiceWorker {
                         context,
                         AdServicesExtDataStorageService.SERVICE_INTERFACE,
                         IAdServicesExtDataStorageService.Stub::asInterface);
+        mDebugProxy = AdServicesExtDataStorageServiceDebugProxy.getInstance(context);
     }
 
     /** Gets a singleton instance of {@link AdServicesExtDataStorageServiceWorker}. */
@@ -77,9 +82,17 @@ public class AdServicesExtDataStorageServiceWorker {
 
         IAdServicesExtDataStorageService service = getService();
         if (service == null) {
+            if (FlagsFactory.getFlags().getEnableAdExtServiceDebugProxy()) {
+                LogUtil.d(
+                        "AdExt Service is null and enable debug proxy flag is true, "
+                                + "getting data via proxy");
+                Objects.requireNonNull(mDebugProxy);
+                mDebugProxy.getAdServicesExtData(callback);
+                return;
+            }
             setCallbackOnError(
                     callback,
-                    new RuntimeException("Unable to find AdServicesExtDataStorageService!"),
+                    new IllegalStateException("Unable to find AdServicesExtDataStorageService!"),
                     /* shouldUnbind= */ false);
             return;
         }
@@ -109,9 +122,17 @@ public class AdServicesExtDataStorageServiceWorker {
 
         IAdServicesExtDataStorageService service = getService();
         if (service == null) {
+            if (FlagsFactory.getFlags().getEnableAdExtServiceDebugProxy()) {
+                LogUtil.d(
+                        "AdExt Service is null and enable debug proxy flag is true putting data "
+                                + "via debug proxy");
+                Objects.requireNonNull(mDebugProxy);
+                mDebugProxy.setAdServicesExtData(params, fieldsToUpdate, callback);
+                return;
+            }
             setCallbackOnError(
                     callback,
-                    new RuntimeException("Unable to find AdServicesExtDataStorageService!"),
+                    new IllegalStateException("Unable to find AdServicesExtDataStorageService!"),
                     /* shouldUnbind= */ false);
             return;
         }
@@ -158,5 +179,10 @@ public class AdServicesExtDataStorageServiceWorker {
     @VisibleForTesting
     void unbindFromService() {
         mServiceBinder.unbindFromService();
+    }
+
+    @VisibleForTesting
+    public void setProxy(AdServicesExtDataStorageServiceDebugProxy proxy) {
+        mDebugProxy = proxy;
     }
 }
