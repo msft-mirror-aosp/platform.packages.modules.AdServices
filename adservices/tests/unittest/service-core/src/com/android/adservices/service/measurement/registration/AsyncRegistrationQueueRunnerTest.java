@@ -48,7 +48,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -79,7 +79,7 @@ import com.android.adservices.service.measurement.reporting.EventReportWindowCal
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.truth.Truth;
 
@@ -90,9 +90,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
@@ -110,8 +107,8 @@ import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
-/** Unit tests for {@link AsyncRegistrationQueueRunnerTest} */
-public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCase {
+@SpyStatic(FlagsFactory.class)
+public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
     private static final boolean DEFAULT_AD_ID_PERMISSION = false;
@@ -167,6 +164,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     private AsyncSourceFetcher mAsyncSourceFetcher;
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
     private Source mMockedSource;
+    private Context mContext;
+
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Trigger mMockedTrigger;
     @Mock private ITransaction mTransaction;
@@ -174,15 +173,12 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     @Mock private ContentResolver mContentResolver;
     @Mock private ContentProviderClient mMockContentProviderClient;
     @Mock private DebugReportApi mDebugReportApi;
-    @Mock HttpsURLConnection mUrlConnection;
-    @Mock Flags mFlags;
-    @Mock AdServicesLogger mLogger;
-    @Mock AdServicesErrorLogger mErrorLogger;
-    @Mock SourceNoiseHandler mSourceNoiseHandler;
-    @Mock PackageManager mPackageManager;
-    private Context mContext;
-
-    private MockitoSession mStaticMockSession;
+    @Mock private HttpsURLConnection mUrlConnection;
+    @Mock private Flags mFlags;
+    @Mock private AdServicesLogger mLogger;
+    @Mock private AdServicesErrorLogger mErrorLogger;
+    @Mock private SourceNoiseHandler mSourceNoiseHandler;
+    @Mock private PackageManager mPackageManager;
 
     private static EnrollmentData getEnrollment(String enrollmentId) {
         return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
@@ -214,18 +210,11 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesUnitTestCa
     public void cleanup() {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
-        mStaticMockSession.finishMocking();
     }
 
     @Before
     public void before() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mFlags);
 
         mAsyncSourceFetcher = spy(new AsyncSourceFetcher(sDefaultContext));
         mAsyncTriggerFetcher = spy(new AsyncTriggerFetcher(sDefaultContext));

@@ -23,7 +23,7 @@ import android.os.IBinder;
 
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
-import com.android.sdksandbox.IUnloadSdkCallback;
+import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
 import android.app.sdksandbox.SandboxLatencyInfo;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 
@@ -38,6 +38,6 @@ oneway interface ISdkSandboxService {
                   in ApplicationInfo customizedInfo,
                   in Bundle params, in ILoadSdkInSandboxCallback callback,
                   in SandboxLatencyInfo sandboxLatencyInfo);
-    void unloadSdk(in String sdkName, in IUnloadSdkCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
+    void unloadSdk(in String sdkName, in IUnloadSdkInSandboxCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
     void syncDataFromClient(in SharedPreferencesUpdate update);
 }

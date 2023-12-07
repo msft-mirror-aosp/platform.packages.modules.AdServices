@@ -55,6 +55,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
@@ -89,6 +90,8 @@ public final class SettingsActivityUiAutomatorTest extends AdServicesExtendedMoc
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+        extendedMockito.mockGetFlags(mMockFlags);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(false).when(mMockFlags).getUiDialogFragmentEnabled();

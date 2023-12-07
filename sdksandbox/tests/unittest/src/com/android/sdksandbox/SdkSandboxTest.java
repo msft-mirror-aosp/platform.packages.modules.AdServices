@@ -555,10 +555,11 @@ public class SdkSandboxTest {
                 SANDBOX_LATENCY_INFO);
         loadSdkCallback.assertLoadSdkIsSuccessful();
 
-        final UnloadSdkCallbackImpl unloadSdkCallback = new UnloadSdkCallbackImpl();
-        mService.unloadSdk(SDK_NAME, unloadSdkCallback, SANDBOX_LATENCY_INFO);
+        UnloadSdkInSandboxCallbackImpl unloadSdkInSandboxCallback =
+                new UnloadSdkInSandboxCallbackImpl();
+        mService.unloadSdk(SDK_NAME, unloadSdkInSandboxCallback, SANDBOX_LATENCY_INFO);
 
-        final SandboxLatencyInfo sandboxLatencyInfo = unloadSdkCallback.getSandboxLatencyInfo();
+        SandboxLatencyInfo sandboxLatencyInfo = unloadSdkInSandboxCallback.getSandboxLatencyInfo();
 
         assertThat(sandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
@@ -758,7 +759,7 @@ public class SdkSandboxTest {
         }
     }
 
-    private static class UnloadSdkCallbackImpl extends IUnloadSdkCallback.Stub {
+    private static class UnloadSdkInSandboxCallbackImpl extends IUnloadSdkInSandboxCallback.Stub {
         private SandboxLatencyInfo mSandboxLatencyInfo;
 
         @Override

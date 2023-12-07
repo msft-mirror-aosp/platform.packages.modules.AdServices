@@ -18,7 +18,6 @@ package com.android.adservices.download;
 
 import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -59,21 +58,21 @@ import android.os.PersistableBundle;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -82,7 +81,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
-public final class MddJobServiceTest extends AdServicesUnitTestCase {
+@SpyStatic(MddJobService.class)
+@SpyStatic(MobileDataDownloadFactory.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(MddFlags.class)
+@SpyStatic(AdservicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int JOB_SCHEDULED_WAIT_TIME_MS = 1_000;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -101,26 +106,15 @@ public final class MddJobServiceTest extends AdServicesUnitTestCase {
 
     @Spy private MddJobService mSpyMddJobService;
 
-    @Mock JobParameters mMockJobParameters;
+    @Mock private JobParameters mMockJobParameters;
 
-    @Mock MobileDataDownload mMockMdd;
-    @Mock Flags mMockFlags;
-    @Mock MddFlags mMockMddFlags;
-    @Mock StatsdAdServicesLogger mMockStatsdLogger;
+    @Mock private MobileDataDownload mMockMdd;
+    @Mock private Flags mMockFlags;
+    @Mock private MddFlags mMockMddFlags;
+    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
 
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdservicesJobServiceLogger mLogger;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(MddJobService.class)
-                    .spyStatic(MobileDataDownloadFactory.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(MddFlags.class)
-                    .spyStatic(AdservicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .build();
 
     @Before
     public void setup() {
@@ -130,7 +124,7 @@ public final class MddJobServiceTest extends AdServicesUnitTestCase {
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
 
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
