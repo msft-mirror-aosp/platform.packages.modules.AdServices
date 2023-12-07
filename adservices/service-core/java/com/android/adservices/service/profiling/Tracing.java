@@ -32,6 +32,8 @@ public final class Tracing {
             "AdFilterer#doesAdPassFrequencyCapFiltersForWinType";
     public static final String FREQUENCY_CAP_GET_NUM_EVENTS_CA =
             "FrequencyCapDao#getNumEventsForCustomAudienceAfterTime";
+    public static final String FREQUENCY_CAP_GET_NUM_EVENTS_BUYER =
+            "FrequencyCapDao#getNumEventsForBuyerAfterTime";
     public static final String FILTERER_FREQUENCY_CAP_NON_WIN =
             "AdFilterer#doesAdPassFrequencyCapFiltersForNonWinType";
     public static final String FILTERER_FILTER_CONTEXTUAL = "AdFilterer#FilterContextualAds";
