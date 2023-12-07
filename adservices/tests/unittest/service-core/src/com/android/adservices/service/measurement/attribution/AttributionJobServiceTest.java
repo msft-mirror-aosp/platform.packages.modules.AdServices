@@ -24,8 +24,10 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinish
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -38,6 +40,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,6 +56,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -65,10 +69,10 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
@@ -94,6 +98,18 @@ public class AttributionJobServiceTest {
 
     private AdservicesJobServiceLogger mSpyLogger;
     private Flags mMockFlags;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule extendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AttributionJobService.class)
+                    .spyStatic(DatastoreManagerFactory.class)
+                    .spyStatic(DebugReportingJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .mockStatic(ServiceCompatUtils.class)
+                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setUp() {
@@ -192,8 +208,8 @@ public class AttributionJobServiceTest {
                     verify(mMockDatastoreManager, times(2)).runInTransactionWithResult(any());
                     verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
                     ExtendedMockito.verify(
-                            () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
-                            times(2));
+                            () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
+                            never());
                     verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
                 });
     }
@@ -224,6 +240,155 @@ public class AttributionJobServiceTest {
                     // field is not logged
                     verifyLoggingNotHappened(mSpyLogger);
                 });
+    }
+
+    @Test
+    public void testRescheduling_failureWhileProcessingRecords_dontRescheduleManually()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            AttributionJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean()));
+
+                    // Failure while processing records
+                    ExtendedMockito.doReturn(AttributionJobHandler.ProcessingResult.FAILURE)
+                            .when(mSpyService)
+                            .acquireLockAndProcessPendingAttributions();
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate, reschedule job with jobFinished
+                    assertTrue(result);
+                    // recordJobFinished
+                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                            .recordJobFinished(
+                                    eq(MEASUREMENT_ATTRIBUTION_JOB_ID),
+                                    /* isSuccessful= */ eq(false),
+                                    /* shouldRetry= */ eq(true));
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
+                            .jobFinished(any(), eq(/* wantsReschedule= */ true));
+                    ExtendedMockito.verify(
+                            () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
+                            never());
+                    verify(mSpyService, never()).scheduleImmediately(any());
+                });
+    }
+
+    @Test
+    public void testRescheduling_successNoMoreRecordsToProcess_rescheduleManually()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            AttributionJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean()));
+
+                    // Successful processing
+                    ExtendedMockito.doReturn(
+                                    AttributionJobHandler.ProcessingResult
+                                            .SUCCESS_ALL_RECORDS_PROCESSED)
+                            .when(mSpyService)
+                            .acquireLockAndProcessPendingAttributions();
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate, do not reschedule with jobFinished, but reschedule manually
+                    assertTrue(result);
+                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                            .recordJobFinished(
+                                    eq(MEASUREMENT_ATTRIBUTION_JOB_ID),
+                                    /* isSuccessful= */ eq(true),
+                                    /* shouldRetry= */ eq(false));
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
+                    ExtendedMockito.verify(
+                            () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).times(1));
+                    verify(mSpyService, never()).scheduleImmediately(any());
+                });
+    }
+
+    @Test
+    public void testRescheduling_hasMoreRecordsToProcess_rescheduleImmediately() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            AttributionJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean()));
+
+                    // Pending records
+                    ExtendedMockito.doReturn(
+                                    AttributionJobHandler.ProcessingResult
+                                            .SUCCESS_WITH_PENDING_RECORDS)
+                            .when(mSpyService)
+                            .acquireLockAndProcessPendingAttributions();
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate, do not reschedule with jobFinished, but reschedule immediately
+                    assertTrue(result);
+                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                            .recordJobFinished(
+                                    eq(MEASUREMENT_ATTRIBUTION_JOB_ID),
+                                    /* isSuccessful= */ eq(true),
+                                    /* shouldRetry= */ eq(true));
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
+                    ExtendedMockito.verify(
+                            () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
+                            never());
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
+                            .scheduleImmediately(any());
+                });
+    }
+
+    @Test
+    public void testScheduleImmediately_killSwitchOff_rescheduleImmediately() {
+        // Setup
+        disableKillSwitch();
+        JobScheduler jobScheduler = mock(JobScheduler.class);
+        Context context = mock(Context.class);
+        doReturn(jobScheduler).when(context).getSystemService(eq(JobScheduler.class));
+
+        // Execute
+        mSpyService.scheduleImmediately(context);
+
+        // Validate jobInfo params to run immediately
+        ArgumentCaptor<JobInfo> captorJobInfo = ArgumentCaptor.forClass(JobInfo.class);
+        verify(jobScheduler, times(1)).schedule(captorJobInfo.capture());
+        JobInfo jobInfo = captorJobInfo.getValue();
+        assertNotNull(jobInfo);
+        assertNull(jobInfo.getTriggerContentUris());
+        assertEquals(-1, jobInfo.getTriggerContentUpdateDelay());
+    }
+
+    @Test
+    public void testScheduleImmediately_killSwitchOn_dontReschedule() {
+        // Setup
+        enableKillSwitch();
+        JobScheduler jobScheduler = mock(JobScheduler.class);
+        Context context = mock(Context.class);
+        doReturn(jobScheduler).when(context).getSystemService(eq(JobScheduler.class));
+
+        // Execute
+        mSpyService.scheduleImmediately(context);
+
+        // Validate, job did not schedule
+        verify(jobScheduler, never()).schedule(any());
     }
 
     @Test
@@ -423,7 +588,7 @@ public class AttributionJobServiceTest {
 
                     doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
                             .when(mSpyService)
-                            .processPendingAttributions();
+                            .acquireLockAndProcessPendingAttributions();
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
                     Thread.sleep(WAIT_IN_MILLIS);
 
@@ -483,7 +648,7 @@ public class AttributionJobServiceTest {
         verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
         verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
         ExtendedMockito.verify(
-                () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)), times(1));
+                () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()), never());
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
     }
 
@@ -510,43 +675,27 @@ public class AttributionJobServiceTest {
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AttributionJobService.class)
-                        .spyStatic(DatastoreManagerFactory.class)
-                        .spyStatic(DebugReportingJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
-            // Setup mock everything in job
-            mMockDatastoreManager = mock(DatastoreManager.class);
-            doReturn(Optional.empty())
-                    .when(mMockDatastoreManager)
-                    .runInTransactionWithResult(any());
-            doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-            doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
-            ExtendedMockito.doReturn(mMockDatastoreManager)
-                    .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
-            ExtendedMockito.doNothing()
-                    .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        // Setup mock everything in job
+        mMockDatastoreManager = mock(DatastoreManager.class);
+        doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
+        doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
+        doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
+        doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+        ExtendedMockito.doReturn(mMockDatastoreManager)
+                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
+        ExtendedMockito.doNothing()
+                .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-            // Mock AdservicesJobServiceLogger to not actually log the stats to server
-            Mockito.doNothing()
-                    .when(mSpyLogger)
-                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-            ExtendedMockito.doReturn(mSpyLogger)
-                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+        // Mock AdservicesJobServiceLogger to not actually log the stats to server
+        Mockito.doNothing()
+                .when(mSpyLogger)
+                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        ExtendedMockito.doReturn(mSpyLogger)
+                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
 
-            // Execute
-            execute.run();
-        } finally {
-            session.finishMocking();
-        }
+        // Execute
+        execute.run();
     }
 
     private void enableKillSwitch() {

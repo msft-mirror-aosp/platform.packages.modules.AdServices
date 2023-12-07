@@ -425,7 +425,9 @@ public class AttributionJobHandlerTest {
                         source.getWebDestinations()));
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
 
-        assertTrue(mHandler.performPendingAttributions());
+        assertEquals(
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
+                mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao).updateTriggerStatus(
                 eq(Collections.singletonList(trigger1.getId())), eq(Trigger.Status.ATTRIBUTED));
@@ -1593,7 +1595,9 @@ public class AttributionJobHandlerTest {
                         source2.getAppDestinations(),
                         source2.getWebDestinations()));
 
-        assertTrue(mHandler.performPendingAttributions());
+        assertEquals(
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
+                mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao, times(2)).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
         // Verify source dedup key updates.
@@ -1906,7 +1910,9 @@ public class AttributionJobHandlerTest {
                 .thenReturn(
                         Pair.create(source1.getAppDestinations(), source1.getWebDestinations()));
 
-        assertTrue(mHandler.performPendingAttributions());
+        assertEquals(
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
+                mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
         // Verify new event report insertion.
@@ -1960,7 +1966,9 @@ public class AttributionJobHandlerTest {
                         Pair.create(source1.getAppDestinations(), source1.getWebDestinations()));
         when(mFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
 
-        assertTrue(mHandler.performPendingAttributions());
+        assertEquals(
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
+                mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
         // Verify new event report insertion.
@@ -2493,6 +2501,18 @@ public class AttributionJobHandlerTest {
         mHandler.performPendingAttributions();
         verify(mMeasurementDao, never()).updateSourceAggregateContributions(any());
         verify(mMeasurementDao, never()).insertAggregateReport(any());
+    }
+
+    @Test
+    public void performAttributions_noRecords_returnSuccess() throws DatastoreException {
+        // Setup
+        when(mMeasurementDao.getPendingTriggerIds()).thenReturn(Collections.emptyList());
+
+        // Execution
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
+
+        // Assertions
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
     }
 
     @Test
@@ -4444,10 +4464,10 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertTrue(result);
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
@@ -4536,10 +4556,10 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertTrue(result);
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
@@ -4632,10 +4652,10 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertTrue(result);
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -5997,10 +6017,10 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertTrue(result);
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
@@ -6040,10 +6060,10 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getTrigger(trigger.getId())).thenThrow(DatastoreException.class);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertEquals(false, result);
+        assertEquals(AttributionJobHandler.ProcessingResult.FAILURE, result);
         ArgumentCaptor<MeasurementAttributionStats> statusArg =
                 ArgumentCaptor.forClass(MeasurementAttributionStats.class);
         verify(mLogger).logMeasurementAttributionStats(statusArg.capture());
