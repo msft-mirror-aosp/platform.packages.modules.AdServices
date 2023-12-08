@@ -60,6 +60,17 @@ public class FakeDatabase extends RoomDatabase {
 }
 """
                 ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
+}
+"""
+                ),
                 *stubs
             )
             .issues(RoomDatabaseMigrationDetector.ISSUE)
@@ -83,6 +94,17 @@ public class FakeDatabase extends RoomDatabase {
     public static final String DATABASE_NAME = "fake.db";
 
     // Singleton and dao declaration.
+}
+"""
+                ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
 }
 """
                 ),
@@ -114,6 +136,17 @@ public class FakeDatabase extends RoomDatabase {
     public static final String DATABASE_NAME = "fake.db";
 
     // Singleton and dao declaration.
+}
+"""
+                ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
 }
 """
                 ),
@@ -150,6 +183,17 @@ public class FakeDatabase extends RoomDatabase {
 }
 """
                 ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
+}
+"""
+                ),
                 *stubs
             )
             .issues(RoomDatabaseMigrationDetector.ISSUE)
@@ -183,6 +227,17 @@ public class FakeDatabase extends RoomDatabase {
 }
 """
                 ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
+}
+"""
+                ),
                 *stubs
             )
             .issues(RoomDatabaseMigrationDetector.ISSUE)
@@ -212,6 +267,17 @@ public class FakeDatabase extends RoomDatabase {
     public static final String DATABASE_NAME = "fake.db";
 
     // Singleton and dao declaration.
+}
+"""
+                ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
 }
 """
                 ),
@@ -252,6 +318,17 @@ public class FakeDatabase extends RoomDatabase {
 }
 """
                 ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
+}
+"""
+                ),
                 *stubs
             )
             .issues(RoomDatabaseMigrationDetector.ISSUE)
@@ -286,6 +363,17 @@ public class FakeDatabase extends RoomDatabase {
     public static final String DATABASE_NAME = "fake.db";
 
     // Singleton and dao declaration.
+}
+"""
+                ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
 }
 """
                 ),
@@ -324,11 +412,109 @@ public class FakeDatabase extends RoomDatabase {
 }
 """
                 ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+    FakeDatabase mFakeDatabase;
+}
+"""
+                ),
                 *stubs
             )
             .issues(RoomDatabaseMigrationDetector.ISSUE)
             .run()
             .expectClean()
+    }
+
+    @Test
+    fun testMigrationPath_databaseNotRegistered() {
+        lint()
+            .files(
+                java(
+                    """
+package com.android.adservices.service.common.fake.packagename;
+
+import androidx.room.AutoMigration;
+import androidx.room.Database;
+import androidx.room.RoomDatabase;
+
+@Database(
+    entities = {},
+    autoMigrations = {
+        @AutoMigration(from = 1, to = 2),
+    },
+    version = FakeDatabase.DATABASE_VERSION)
+public class FakeDatabase extends RoomDatabase {
+    public static final int DATABASE_VERSION = 2;
+    public static final String DATABASE_NAME = "fake.db";
+
+    // Singleton and dao declaration.
+}
+"""
+                ),
+                java(
+                    """
+package com.android.adservices.data;
+
+import com.android.adservices.service.common.fake.packagename.FakeDatabase;
+
+class RoomDatabaseRegistration {
+}
+"""
+                ),
+                *stubs
+            )
+            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .run()
+            .expectContains(
+                RoomDatabaseMigrationDetector.DATABASE_NOT_REGISTERED_ERROR.format(
+                    "com.android.adservices.service.common.fake.packagename.FakeDatabase"
+                )
+            )
+            .expectContains(createErrorCountString(1, 0))
+    }
+
+    @Test
+    fun testMigrationPath_databaseRegisterClassMissing() {
+        lint()
+            .files(
+                java(
+                    """
+package com.android.adservices.service.common.fake.packagename;
+
+import androidx.room.AutoMigration;
+import androidx.room.Database;
+import androidx.room.RoomDatabase;
+
+@Database(
+    entities = {},
+    autoMigrations = {
+        @AutoMigration(from = 1, to = 2),
+    },
+    version = FakeDatabase.DATABASE_VERSION)
+public class FakeDatabase extends RoomDatabase {
+    public static final int DATABASE_VERSION = 2;
+    public static final String DATABASE_NAME = "fake.db";
+
+    // Singleton and dao declaration.
+}
+"""
+                ),
+                *stubs
+            )
+            .issues(RoomDatabaseMigrationDetector.ISSUE)
+            .run()
+            .expectContains(RoomDatabaseMigrationDetector.DATABASE_REGISTRATION_CLASS_MISSING_ERROR)
+            .expectContains(createErrorCountString(1, 0))
+    }
+
+    @Test
+    fun testMigrationPath_noDatabaseClass_happyCase() {
+        lint().files(*stubs).issues(RoomDatabaseMigrationDetector.ISSUE).run().expectClean()
     }
 
     private val database: TestFile =
