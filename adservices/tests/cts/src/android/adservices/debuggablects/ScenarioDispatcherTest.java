@@ -21,6 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 
+import androidx.test.filters.FlakyTest;
+
 import com.google.mockwebserver.MockWebServer;
 
 import org.junit.Rule;
@@ -77,6 +79,7 @@ public class ScenarioDispatcherTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315327589)
     public void testScenarioDispatcher_withVerifyNotCalled_success() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/scenario-test-003.json", "");
