@@ -45,10 +45,8 @@ public class MeasurementDbMigratorV28 extends AbstractMeasurementDbMigrator {
                         values,
                         null,
                         new String[0]);
-        if (rows != 1) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("Failed to update trigger debug keys for all event report records.");
-        }
+        LoggerFactory.getMeasurementLogger()
+                .d("Updated trigger debug keys for " + rows + " event report records.");
     }
 
     public MeasurementDbMigratorV28() {

@@ -81,7 +81,7 @@ public final class GetTopicsResponse {
          * Creates a {@link Builder} for {@link GetTopicsResponse} objects.
          *
          * @param topics The list of the returned Topics.
-         * @deprecated Use {@link Builder#Builder(List, List)} instead.
+         * @deprecated This function is deprecated.
          */
         @Deprecated
         public Builder(@NonNull List<Topic> topics) {
