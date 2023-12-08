@@ -80,6 +80,7 @@ import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
@@ -697,6 +698,7 @@ public class AuctionServerE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 303119299)
     public void testAuctionServerResult_usedInWaterfallMediation_success() throws Exception {
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(mFlags).when(FlagsFactory::getFlags);
