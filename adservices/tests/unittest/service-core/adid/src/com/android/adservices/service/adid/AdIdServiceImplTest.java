@@ -21,10 +21,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -32,7 +32,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -51,10 +50,10 @@ import android.os.Binder;
 import android.os.Process;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -64,34 +63,24 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.adid.AdIdServiceImpl}. */
-public final class AdIdServiceImplTest {
-    @Rule
-    public final AdServicesExtendedMockitoRule mExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .mockStatic(Binder.class)
-                    .spyStatic(FlagsFactory.class)
-                    .setStrictness(Strictness.WARN)
-                    .build();
-
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+@MockStatic(Binder.class)
+@SpyStatic(FlagsFactory.class)
+public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
@@ -99,10 +88,11 @@ public final class AdIdServiceImplTest {
     private static final int LOGGER_EVENT_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String ADID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
+    // See android.os.Process, that FIRST_SDK_SANDBOX_UID = 20000 and LAST_SDK_SANDBOX_UID = 29999.
     private static final int SANDBOX_UID = 25000;
 
-    private final Context mSpyContext = spy(sContext);
     private final AdServicesLogger mSpyAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
+    private Context mSpyContext;
     private CallerMetadata mCallerMetadata;
     private AdIdWorker mAdIdWorker;
     private GetAdIdParam mRequest;
@@ -117,9 +107,10 @@ public final class AdIdServiceImplTest {
 
     @Before
     public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        Context context = appContext.get();
+        mSpyContext = spy(context);
 
-        AdIdCacheManager adIdCacheManager = spy(new AdIdCacheManager(sContext));
+        AdIdCacheManager adIdCacheManager = spy(new AdIdCacheManager(context));
         mAdIdWorker = new AdIdWorker(adIdCacheManager);
         Mockito.doReturn(null).when(adIdCacheManager).getService();
 
@@ -145,11 +136,12 @@ public final class AdIdServiceImplTest {
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
 
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
     }
 
     @Test
     public void checkAllowList_emptyAllowList() throws InterruptedException {
+        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
         // Empty allow list.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
         invokeGetAdIdAndVerifyError(
@@ -174,10 +166,8 @@ public final class AdIdServiceImplTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = "Sdk Sandbox only exists in T+")
     public void testEnforceForeground_sandboxCaller() throws Exception {
-        // Sandbox is only applicable for T+
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getAdId()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -186,7 +176,7 @@ public final class AdIdServiceImplTest {
                         SANDBOX_UID, AD_SERVICES_API_CALLED__API_NAME__GET_ADID, SOME_SDK_NAME);
 
         // Mock UID with SDK UID
-        when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
+        doReturn(SANDBOX_UID).when(Binder::getCallingUidOrThrow);
 
         // Mock Flags with true to enable enforcing foreground check.
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForAdId();
@@ -216,7 +206,7 @@ public final class AdIdServiceImplTest {
                         uid, AD_SERVICES_API_CALLED__API_NAME__GET_ADID, SOME_SDK_NAME);
 
         // Mock UID with Non-SDK UI
-        when(Binder.getCallingUidOrThrow()).thenReturn(uid);
+        doReturn(uid).when(Binder::getCallingUidOrThrow);
 
         // Mock Flags with false to disable enforcing foreground check.
         doReturn(false).when(mMockFlags).getEnforceForegroundStatusForAdId();
@@ -235,17 +225,17 @@ public final class AdIdServiceImplTest {
 
     @Test
     public void checkAppNoPermission() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
+
         setupPermissions(TEST_APP_PACKAGE_NAME);
         invokeGetAdIdAndVerifyError(
                 mSpyContext, STATUS_PERMISSION_NOT_REQUESTED, /* checkLoggingStatus */ true);
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = "Sdk Sandbox only exists in T+")
     public void checkSdkNoPermission() throws Exception {
-        // Sdk Sandbox only exists in T+
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
+        doReturn(SANDBOX_UID).when(Binder::getCallingUidOrThrow);
 
         setupPermissions(TEST_APP_PACKAGE_NAME, ACCESS_ADSERVICES_AD_ID);
         doReturn(PackageManager.PERMISSION_DENIED)
@@ -257,7 +247,7 @@ public final class AdIdServiceImplTest {
 
     @Test
     public void getAdId() throws Exception {
-        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
         runGetAdId(createTestAdIdServiceImplInstance());
     }
 
