@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Deblochează"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interese blocate"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Resetează toate interesele"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Momentan, nu există categorii de interese de afișat."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Momentan, nu există subiecte de afișat.\nAflă mai multe despre "<a href="https://support.google.com/android?p=ad_privacy">"subiectele anunțurilor"</a>"."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentan, nu există categorii de interese de afișat"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Momentan, nu există subiecte de afișat"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Versiunea beta pentru confidențialitatea anunțurilor Android oferă noi funcții pe care aplicațiile le pot folosi pentru a-ți afișa anunțuri care ți-ar putea plăcea. Aceste tehnologii nu utilizează identificatorii dispozitivului.\n\nAndroid poate să estimeze tipurile de anunțuri care te-ar putea interesa și salvează temporar categoriile de interese pe dispozitivul tău. Astfel, aplicațiile îți pot afișa anunțuri relevante, fără să-ți urmărească activitatea în site-uri și aplicații de la alți dezvoltatori."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nu ai blocat nicio categorie de interese"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Vezi aplicațiile blocate"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Resetează categoriile de interese estimate de aplicații"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Momentan, nicio aplicație nu sugerează categorii de interese"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Momentan, nu există aplicații de afișat. \nAflă mai multe despre "<a href="https://support.google.com/android?p=ad_privacy">"anunțurile sugerate de aplicații"</a>"."</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Momentan, nu există aplicații de afișat"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Versiunea beta pentru confidențialitatea anunțurilor Android oferă noi funcții pe care aplicațiile le pot folosi pentru a-ți afișa anunțuri care ți-ar putea plăcea. Aceste tehnologii nu utilizează identificatorii dispozitivului.\n\nAplicațiile pot să estimeze tipurile de anunțuri care te-ar putea interesa și salvează temporar categoriile de interese pe dispozitivul tău. Astfel, aplicațiile îți pot afișa anunțuri relevante, fără să-ți urmărească activitatea în site-uri și aplicații de la alți dezvoltatori."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nu ai blocat nicio aplicație"</string>
@@ -187,25 +187,14 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Resetezi anunțurile sugerate de aplicații?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Datele despre sugestiile de anunțuri de la aplicații din lista ta vor fi șterse și aplicațiile vor sugera anunțuri noi pe viitor. Este posibil să vezi în continuare unele anunțuri asociate."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Datele despre aplicații au fost resetate"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Subiectele anunțurilor sunt activate"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android va începe să noteze subiectele de interes, dar poate dura un timp să apară primele subiecte."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Dezactivezi subiectele anunțurilor?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Lista de subiecte se va șterge. Android nu va mai nota subiectele de interes, dar e posibil să vezi în continuare anunțurile relevante."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Funcția anunțuri sugerate de aplicații este activată"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Aplicațiile pot începe să sugereze anunțuri. Vei vedea o listă de aplicații după ce încep să sugereze anunțuri."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Dezactivezi anunțurile sugerate de aplicații?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Toate datele privind sugestiile de aplicații se vor șterge. Aplicațiile nu vor mai putea sugera anunțuri, dar e posibil să vezi în continuare anunțurile relevante."</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Cuantificarea anunțurilor este activată"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android poate trimite aplicațiilor informații foarte limitate pentru a le ajuta să-și măsoare performanța anunțurilor."</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Dezactivezi cuantificarea anunțurilor?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Toate rapoartele în așteptare pentru cuantificarea anunțurilor se vor șterge și nu se vor genera sau trimite rapoarte noi."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Resetezi toate subiectele?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Resetezi anunțurile sugerate de aplicații?"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Confidențialitatea anunțurilor"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Subiectele anunțurilor"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Anunțuri sugerate de aplicații"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android reține subiectele de interes în funcție de aplicațiile pe care le-ai folosit recent și de frecvența cu care le folosești."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplicațiile pe care le folosești pot stabili lucrurile care te interesează și în funcție de modul în care le folosești."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplicațiile pe care le folosești pot solicita informații de la Android pentru a măsura performanța anunțurilor lor. Android permite aplicațiilor să colecteze tipuri de date limitate."</string>
-    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Află mai multe despre "<a href="https://support.google.com/android?p=ad_privacy">"confidențialitatea anunțurilor pe Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Activate / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> subiecte"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Activat / # subiect}few{Activate / # subiecte}other{Activate / # de subiecte}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Activate / <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicații"</string>
@@ -222,11 +211,6 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicații pe care le-ai blocat"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Resetează datele sugerate de aplicații"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Se întâmplă frecvent ca aplicațiile pe care le folosești să rețină lucrurile care te interesează pentru a-ți personaliza experiența. Aplicațiile pot și să stocheze informații pe Android despre subiectele tale.\n\nDe exemplu, dacă folosești o aplicație despre antrenamente pentru maraton, aplicația poate deduce că te interesează pantofii de alergare. Ulterior, dacă folosești altă aplicație, acea aplicație îți poate afișa un anunț pentru pantofi de alergare sugerat de prima aplicație.\n\nAndroid șterge automat datele sugerate de aplicații cu regularitate. Este posibil ca aplicațiile pe care le folosești din nou să reapară în listă. Poți să nu permiți unei aplicații să îți sugereze anunțuri.\n\nÎn aplicațiile pe care le folosești, un anunț pe care îl vezi poate fi personalizat în funcție de această setare, de setarea pentru subiectele anunțurilor, de setările tale pentru ID-ul publicitar și de capacitatea aplicației pe care o folosești de a personaliza anunțurile."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Este disponibilă o nouă funcție pentru confidențialitatea anunțurilor"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Între aplicații sunt trimise informații foarte limitate pentru a ajuta la măsurarea performanței anunțurilor"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Lansăm o nouă funcție pentru confidențialitatea anunțurilor, numită cuantificarea anunțurilor. Android trimite doar informații foarte limitate între aplicații, de exemplu, când ți s-a afișat un anunț, pentru a ajuta la măsurarea performanței anunțurilor."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Poți face modificări în setările pentru confidențialitatea anunțurilor."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplicațiile pe care le folosești pot solicita informații de la Android pentru a măsura performanța anunțurilor lor. Android permite aplicațiilor să colecteze doar tipuri de date limitate."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrație colorată cu simboluri care reprezintă subiecte de interes, cum ar fi muzică, știri și sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrație colorată cu un lacăt într-un cerc"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrație alb-negru mică cu nouă puncte care formează un pătrat"</string>

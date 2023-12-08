@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"අවහිර නොකරන්න"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ඔබ අවහිර කර ඇති ලැදිකම්"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ලැදිකම් සියල්ල යළි සකසන්න."</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"මේ මොහොතේ පෙන්වීමට ලැදිකම් කිසිවක් නැත."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"මේ මොහොතේ පෙන්වීමට මාතෘකා නැත.\n"<a href="https://support.google.com/android?p=ad_privacy">"දැන්වීම් මාතෘකා"</a>" පිළිබඳව තව දැන ගන්න"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"දැනට පෙන්වීමට ලැදිකම් කිසිවක් නැත"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"දැන් පෙන්වීමට මාතෘකා නැත"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"පෞද්ගලිකත්ව වැලිපෙට්ටිය"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android හි දැන්වීම් පෞද්ගලිකත්ව බීටා යෙදුම් ඔබට ඔබ කැමති වීමට ඉඩ ඇති දැන්වීම් පෙන්වීමට භාවිත කළ හැකි නව විශේෂාංග සපයයි. මෙම තාක්ෂණයන් මගින් උපාංග හැඳුනුම්කාරක භාවිතා නොකරයි.\n\nAndroid හට ඔබ උනන්දුවක් දැක්වීමට ඉඩ ඇති ආකාරයේ වෙළෙඳ දැන්වීම් අනුමාන කර ඒවා තාවකාලිකව ඔබේ උපාංගය මත සුරැකිය හැක. මින් වෙනත් සංවර්ධකයන්ගේ වෙබ් අඩවි හරහා ඔබේ ක්‍රියාකාරකම් නිරීක්ෂණය නොකර ඔබට අදාළ වෙළෙඳ දැන්වීම් පෙන්වීමට යෙදුම්වලට ඉඩ ලබා දේ."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ඔබට අවහිර කළ ලැදිකම් කිසිවක් නැත"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"අවහිර කළ යෙදුම් බලන්න"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"යෙදුම් මගින් අනුමාන කරන ලද ලැදිකම් යළි සකසන්න"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"මේ මොහොතේ කිසිදු යෙදුමක් ඔබ වෙනුවෙන් ලැදිකම් ජනනය නොකරයි"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"මේ මොහොතේ පෙන්වීමට යෙදුම් නැත. \n"<a href="https://support.google.com/android?p=ad_privacy">"යෙදුම්-යෝජිත දැන්වීම්"</a>" පිළිබඳව තව දැන ගන්න"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"දැන් පෙන්වීමට යෙදුම් නැත"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"පෞද්ගලිකත්ව වැලිපෙට්ටිය"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android හි දැන්වීම් පෞද්ගලිකත්ව බීටා යෙදුම් ඔබට ඔබ කැමති වීමට ඉඩ ඇති දැන්වීම් පෙන්වීමට භාවිත කළ හැකි නව විශේෂාංග සපයයි. මෙම තාක්ෂණයන් මගින් උපාංග හැඳුනුම්කාරක භාවිතා නොකරයි.\n\nයෙදුම්වලට ඔබ උනන්දුවක් දැක්විය හැකි වෙළෙඳ දැන්වීම් වර්ග අනුමාන කර, ඒවා තාවකාලිකව ඔබේ උපාංගයේ සුරැකිය හැක. මින් වෙනත් සංවර්ධකයන්ගේ වෙබ් අඩවි හරහා ඔබේ ක්‍රියාකාරකම් නිරීක්ෂණය නොකර ඔබට අදාළ වෙළෙඳ දැන්වීම් පෙන්වීමට යෙදුම්වලට ඉඩ ලබා දේ."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ඔබට අවහිර කළ යෙදුම් නැත"</string>
@@ -187,25 +187,14 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"යෙදුම් මගින් යෝජිත දැන්වීම් යළි සකසන්න ද?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"ඔබේ ලැයිස්තුවේ ඇති යෙදුම් වලින් දැන්වීම්-යෝජනා දත්ත මකා දමනු ඇති අතර යෙදුම් ඉදිරියට යාමට නව දැන්වීම් යෝජනා කරයි. ඔබ තවමත් යම් අදාළ දැන්වීම් දැකිය හැක."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"යෙදුම් දත්ත යළි සකසන ලදි"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"දැන්වීම් මාතෘකා ක්‍රියාත්මකයි"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android උනන්දුවක් දක්වන මාතෘකා සටහන් කිරීම ආරම්භ කරනු ඇති නමුත්, ඔබේ පළමු මාතෘකා දිස් වීමට යම් කාලයක් ගත විය හැක."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"දැන්වීම් මාතෘකා ක්‍රියාවිරහිත කරන්න ද?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"මෙම මාතෘකා ලැයිස්තුව මකා දැමෙනු ඇත. Android තවදුරටත් උනන්දුවක් දක්වන මාතෘකා සටහන් නොකරනු ඇති නමුත්, ඔබ තවමත් අදාළ දැන්වීම් දැකිය හැක."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"යෙදුම්-යෝජිත දැන්වීම් ක්‍රියාත්මකයි"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"යෙදුම් දැන්වීම් යෝජනා කිරීම ආරම්භ කළ හැක. ඔවුන් දැන්වීම් යෝජනා කිරීම ආරම්භ කළ පසු ඔබට යෙදුම් ලැයිස්තුවක් පෙනෙනු ඇත."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"යෙදුම්-යෝජිත දැන්වීම් ක්‍රියාවිරහිත කරන්න ද?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"සියලු දැන්වීම් යෝජනා දත්ත මකා දැමෙනු ඇත. යෙදුම්වලට තවදුරටත් දැන්වීම් යෝජනා කිරීමට නොහැකි වනු ඇති නමුත්, ඔබ තවමත් අදාළ දැන්වීම් දැකිය හැක."</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"දැන්වීම් මැනීම ක්‍රියාත්මකයි"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android හට යෙදුම්වලට ඔවුන්ගේ දැන්වීම්වල ක්‍රියාකාරීත්වය මැනීමට උදවු කිරීමට යෙදුම් සමග බෙදා ගත හැක්කේ ඉතා සීමිත තොරතුරු පමණි."</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"දැන්වීම් මැනීම ක්‍රියා විරහිත කරන්න ද?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"සියලු පොරොත්තු දැන්වීම් මිනුම් වාර්තා මකා දමනු ඇති අතර නව වාර්තා උත්පාදනය කිරීම හෝ බෙදා ගැනීම සිදු කරනු නොලැබේ."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"සියලු මාතෘකා යළි සකසන්න ද?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"යෙදුම් මගින් යෝජිත දැන්වීම් යළි සකසන්න ද?"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"දැන්වීම් පෞද්ගලිකත්වය"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"දැන්වීම් මාතෘකා"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"යෙදුම්-යෝජිත දැන්වීම්"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android ඔබ මෑතක දී භාවිතා කළ යෙදුම් සහ ඔබ ඒවා කොපමණ නිතර භාවිතා කරන ආකාරය මත පදනම්ව උනන්දුවක් දක්වන මාතෘකා සටහන් කරයි."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ඔබ භාවිතා කරන යෙදුම්වලට ඔබ ඒවා භාවිතා කරන ආකාරය මත පදනම්ව ඔබ කැමති දේ තීරණය කළ හැක."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ඔබ භාවිතා කරන යෙදුම්වලට ඒවායේ දැන්වීම්වල කාර්ය සාධනය මැනීමට උදවු කිරීමට Android වෙතින් තොරතුරු විමසා සිටිය හැක. සීමිත දත්ත වර්ග එකතු කිරීමට Android යෙදුම්වලට ඉඩ දෙයි."</string>
-    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android මත දැන්වීම් පෞද්ගලිකත්වය"</a>" පිළිබඳව තව දැන ගන්න"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ක්‍රියාත්මකයි / මාතෘකා <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ක්‍රියාත්මකයි /# මාතෘකාවක්}one{ක්‍රියාත්මකයි / මාතෘකා #ක්}other{ක්‍රියාත්මකයි / මාතෘකා #ක්}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ක්‍රියාත්මකයි / යෙදුම් <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
@@ -218,15 +207,10 @@
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"සියලු දැන්වීම් මාතෘකා යළි සකසන්න"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android ඔබ පසුගිය සති කිහිපය තුළ භාවිතා කළ යෙදුම් මත පදනම්ව උනන්දුවක් දක්වන මාතෘකා සටහන් කරයි.\n\nපසුව, ඔබ භාවිතා කරන යෙදුමකට ඔබ දකින දැන්වීම් පෞද්ගලීකරණය කිරීමට ඔබේ මාතෘකා සඳහා Android විමසා සිටිය හැක. ඔබේ අනන්‍යතාවය සහ ඔබේ යෙදුම් භාවිතය පිළිබඳ තොරතුරු ආරක්ෂා කරමින් Android මාතෘකා 3ක් දක්වා බෙදා ගනී.\n\nAndroid ස්වයංව මාතෘකා නිතිපතා මකා දමයි. ඔබ යෙදුම් දිගටම භාවිතා කරන විට, මාතෘකාවක් ලැයිස්තුවේ නැවත දිස් විය හැක. නැතහොත් ඔබට Android යෙදුම් සමග බෙදා ගැනීමට අවශ්‍ය නොවන මාතෘකා අවහිර කළ හැක.\n\nඔබේ යෙදුම්වල, ඔබ දකින දැන්වීමක් මෙම සැකසීම, යෙදුම්-යෝජිත දැන්වීම් සැකසීම, ඔබේ වෙළඳ ප්‍රචාරණ ID සැකසීම්, සහ ඔබ භාවිතා කරන යෙදුම දැන්වීම් පෞද්ගලීකරණය කරන ආකාරය මත පදනම්ව, පෞද්ගලීකරණය කළ හැක."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"යෙදුම්-යෝජිත දැන්වීම්වලට ඉඩ දෙන්න"</string>
-    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"ඔබ භාවිතා කරන යෙදුම්වලට ඔබ කැමති දේ තීරණය කළ හැකි අතර පසුව වෙනත් යෙදුම්වල දැන්වීම් යෝජනා කළ හැක.\n\nඔබට යෝජනා කිරීමෙන් යෙදුම් අවහිර කළ හැක. Android යෙදුම්-යෝජිත දත්ත නිතිපතා ස්වයංක්‍රීයව මකා දමයි."</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"ඔබ භාවිතා කරන යෙදුම්වලට ඔබ කැමති දේ තීරණය කළ හැකි අතර පසුව වෙනත් යෙදුම්වල දැන්වීම් යෝජනා කළ හැක.\n\nඔබට යෝජනා කිරීමෙන් යෙදුම් අවහිර කළ හැක. Android යෙදුම්-යෝජිත දත්ත නිතිපතා ස්වයංව ද මකා දමයි."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ඔබ අවහිර කළ යෙදුම්"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"යෙදුම්-යෝජිත දත්ත යළි සකසන්න"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ඔබ භාවිතා කරන යෙදුම් ඔබේ අත්දැකීම පෞද්ගලීකරණය කිරීමට ඔබ කැමති දේවල් මතක තබා ගැනීම සාමාන්‍ය දෙයකි. යෙදුම්වලට ඔබේ මාතෘකා පිළිබඳ තොරතුරු Android සමග ගබඩා කිරීම ද කළ හැක.\n\nඋදාහරණයක් ලෙස, ඔබ මැරතන් පුහුණුව පිළිබඳ යෙදුමක් භාවිතා කරන්නේ නම්, ඔබ ධාවන සපත්තුවලට කැමති බව යෙදුම තීරණය කරයි. පසුව, ඔබ වෙනත් යෙදුමක් භාවිතා කරන්නේ නම්, එම යෙදුමට පළමු යෙදුම මගින් යෝජනා කරන ලද ධාවන සපත්තු සඳහා දැන්වීමක් පෙන්විය හැක.\n\nAndroid ස්වයංව යෙදුම්-යෝජිත දත්ත නිතිපතා මකා දමයි. ඔබ නැවත භාවිතා කරන යෙදුමක් ලැයිස්තුවෙහි නැවත දිස් විය හැක. නැතහොත් ඔබට ඔබ වෙනුවෙන් දැන්වීම් යෝජනා කිරීමෙන් යෙදුමක් අවහිර කළ හැක.\n\nඔබේ යෙදුම් තුළ, ඔබ දකින දැන්වීමක් මෙම සැකසීම, දැන්වීම් මාතෘකා සැකසීම, ඔබේ වෙළඳ ප්‍රචාරණ ID සැකසීම්, සහ යෙදුම ඔබ පෞද්ගලීකරණය කළ දැන්වීම් භාවිතා කරන ආකාරය මත පදනම්ව පෞද්ගලීකරණ කළ හැක."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"නව දැන්වීම් රහස්‍යතා විශේෂාංගය තිබේ"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"දැන්වීම් කාර්ය සාධනය මැනීමට උදවු කිරීමට යෙදුම් අතර බෙදා ගනු ලබන්නේ ඉතා සීමිත තතු පමණි"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"අපි දැන්වීම් මැනීම නමින් නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංගයක් දියත් කරන්නෙමු. Android යෙදුම්වලට දැන්වීම්වල ක්‍රියාකාරිත්වය මැනීමට උදවු කරමින්, ඔබට දැන්වීමක් පෙන්වූ විට වැනි ඉතා සීමිත තොරතුරු පමණක් යෙදුම් අතර බෙදා ගනී."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"ඔබට දැන්වීම් පෞද්ගලිකත්ව සැකසීම් තුළ වෙනස්කම් සිදු කළ හැක."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"ඔබ භාවිතා කරන යෙදුම්වලට ඒවායේ දැන්වීම්වල කාර්ය සාධනය මැනීමට උදවු කිරීමට Android වෙතින් තොරතුරු විමසා සිටිය හැක. සීමිත දත්ත වර්ග එකතු කිරීමට පමණක් Android යෙදුම්වලට ඉඩ දෙයි."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"සංගීතය, පුවත්, සහ ක්‍රීඩා වැනි උනන්දුවක් දක්වන මාතෘකා නියෝජනය කරන සංකේතවල වර්ණවත් රූප සටහන"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"රවුමක ඇතුළත අගුලක වර්ණවත් රූප සටහන"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"සමචතුරස්‍රයක් සාදන තිත් නවයක කුඩා කළු සහ සුදු රූප සටහන"</string>

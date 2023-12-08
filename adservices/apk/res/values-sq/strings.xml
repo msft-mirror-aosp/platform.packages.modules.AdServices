@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Zhblloko"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interesat që ke bllokuar"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Rivendos të gjitha interesat"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Nuk ka interesa për të shfaqur për momentin."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Nuk ka asnjë temë për të shfaqur për momentin.\nMëso më shumë rreth "<a href="https://support.google.com/android?p=ad_privacy">"temave të reklamave"</a></string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Nuk ka interesa për të shfaqur për momentin"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Nuk ka asnjë temë për të shfaqur për momentin"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Versioni beta i privatësisë së reklamave të Android ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAndroid mund të përllogarisë llojet e reklamave që mund të të interesojnë dhe t\'i ruajë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Nuk ke asnjë interes të bllokuar"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Shiko aplikacionet e bllokuara"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Rivendos interesat e përllogaritur nga aplikacionet"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Asnjë aplikacion nuk po gjeneron interesa për ty për momentin"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Nuk ka aplikacione për të shfaqur për momentin. \nMëso më shumë rreth "<a href="https://support.google.com/android?p=ad_privacy">"reklamave të sugjeruara nga aplikacionet"</a></string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Nuk ka aplikacione për t\'u shfaqur për momentin"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Versioni beta i privatësisë së reklamave të Android ofron veçori të reja që aplikacionet mund t\'i përdorin për të të shfaqur reklama që mund të të pëlqejnë. Këto teknologji nuk përdorin identifikuesit e pajisjes.\n\nAplikacionet mund të përllogarisin llojet e reklamave që mund të të interesojnë dhe t\'i ruajnë këta interesa përkohësisht në pajisjen tënde. Kjo i lejon aplikacionet që të të shfaqin reklama të përshtatshme, pa e monitoruar aktivitetin tënd nëpër sajtet e uebit dhe aplikacionet nga zhvilluesit e tjerë."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Nuk ke asnjë aplikacion të bllokuar"</string>
@@ -187,25 +187,14 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Të rivendosen reklamat e sugjeruara nga aplikacionet?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Të dhënat për sugjerimin e reklamave nga aplikacionet në listën tënde do të fshihen dhe aplikacionet do të sugjerojnë reklama të reja në vazhdim. Mund të shikosh përsëri disa reklama në lidhje me të."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Të dhënat e aplikacionit u rivendosën"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Temat e reklamave janë aktive"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android do të fillojë të shënojë temat me interes, por mund të duhet pak kohë sa të shfaqen temat e tua të para."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Të çaktivizohen temat e reklamave?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Kjo listë me tema do të fshihet. Android nuk do të shënojë më tema me interes, por mund të shohësh ende reklama të përshtatshme."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Reklamat e sugjeruara nga aplikacionet janë aktive"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Aplikacionet mund të fillojnë të sugjerojnë reklama. Do të shohësh një listë aplikacionesh sapo ato të fillojnë të sugjerojnë reklama."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Të çaktivizohen reklamat e sugjeruara nga aplikacionet?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Të gjitha të dhënat e sugjerimeve të reklamave do të fshihen. Aplikacionet nuk do të mund të sugjerojnë më reklama, por mund të shohësh ende reklama të përshtatshme."</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Matja e reklamave është aktive"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android mund të ndajë vetëm informacione shumë të kufizuara me aplikacionet për t\'i ndihmuar të matin performancën e reklamave të tyre."</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Të çaktivizohet matja e reklamave?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Të gjitha raportet e matjes së reklamave në pritje do të fshihen dhe asnjë raport i ri nuk do të krijohet apo ndahet."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Të rivendosen të gjitha temat?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Të rivendosen reklamat e sugjeruara nga aplikacionet?"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privatësia e reklamave"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Temat e reklamave"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamat e sugjeruara nga aplikacionet"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android shënon temat e interesit bazuar në aplikacionet që ke përdorur së fundi dhe sa shpesh i përdor ato."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikacionet që ti përdor mund të përcaktojnë gjithashtu se çfarë të pëlqen bazuar në mënyrën se si i përdor."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikacionet që ti përdor mund t\'i kërkojnë informacione Android për t\'i ndihmuar të matin performancën e reklamave të tyre. Android i lejon aplikacionet të mbledhin lloje të kufizuara të dhënash."</string>
-    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Mëso më shumë rreth "<a href="https://support.google.com/android?p=ad_privacy">"privatësisë së reklamave në Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Aktivizuar/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> tema"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Aktive/# temë}other{Aktive/# tema}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Aktivizuar/<xliff:g id="APPS_COUNT">%1$d</xliff:g> aplikacione"</string>
@@ -222,11 +211,6 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikacionet që ke bllokuar"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Rivendos të dhënat e sugjeruara nga aplikacionet"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Zakonisht aplikacionet që ti përdor kujtojnë gjërat që të interesojnë për të personalizuar përvojën tënde. Gjithashtu, aplikacionet mund të ruajnë informacione me Android rreth temave të tua.\n\nPër shembull, nëse ti përdor një aplikacion për trajnim për maratonë, aplikacioni mund të vendosë që të interesojnë atlete vrapimi. Më vonë, nëse përdor një aplikacion tjetër, ai aplikacion mund të të shfaqë një reklamë për atlete vrapimi me sugjerim të aplikacionit të parë.\n\nAndroid fshin automatikisht të dhëna të sugjeruara nga aplikacionet rregullisht. Një aplikacion që ti e përdor sërish mund të rishfaqet në listë. Ose mund të bllokosh një aplikacion që mos të të sugjerojë reklama.\n\nNë aplikacionet e tua, një reklamë mund të jetë e personalizuar në varësi të këtij cilësimi, cilësimit të temave të reklamave, cilësimeve të tua për ID-në e reklamimit dhe nëse aplikacioni që ti po përdor i personalizon reklamat."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Ofrohet një veçori e re për privatësinë e reklamave"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Mes aplikacioneve ndahen vetëm informacione shumë të kufizuara për të ndihmuar në performancën e reklamave"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Ne po prezantojmë një veçori të re të privatësisë së reklamave të quajtur \"Matja e reklamave\". Android ndan vetëm informacione shumë të kufizuara mes aplikacioneve, si p.sh. kur të shfaqet një reklamë, për t\'i ndihmuar aplikacionet të matin performancën e reklamave."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Mund të bësh ndryshime te cilësimet e privatësisë së reklamave."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Aplikacionet që përdor ti mund t\'i kërkojnë informacione Android për t\'i ndihmuar të matin performancën e reklamave të tyre. Android i lejon aplikacionet të mbledhin vetëm lloje të kufizuara të dhënash."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrim me ngjyra i simboleve që përfaqësojnë tema interesi, si p.sh. muzika, lajmet dhe sportet"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrim me ngjyra i një kyçi brenda një rrethi"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrim i vogël bardh e zi i nëntë pikave që formojnë një katror"</string>
@@ -604,7 +588,7 @@
     <string name="topic10371" msgid="8229818210867472466">"Kimi"</string>
     <string name="topic10372" msgid="6400467418954574231">"Ekologjia dhe mjedisi"</string>
     <string name="topic10373" msgid="6990757247198163741">"Gjeologji"</string>
-    <string name="topic10374" msgid="8057983193031950119">"Të mësuarit automatik dhe inteligjenca artificiale"</string>
+    <string name="topic10374" msgid="8057983193031950119">"Nxënie automatike dhe inteligjencë artificiale"</string>
     <string name="topic10375" msgid="8511185098682306025">"Matematikë"</string>
     <string name="topic10376" msgid="6387800251638760737">"Fizikë"</string>
     <string name="topic10377" msgid="7834619927563362042">"Robotikë"</string>

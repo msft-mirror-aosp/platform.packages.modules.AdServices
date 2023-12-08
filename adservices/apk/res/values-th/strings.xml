@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"เลิกบล็อก"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ความสนใจที่คุณบล็อก"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"รีเซ็ตความสนใจทั้งหมด"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"ไม่มีความสนใจที่จะแสดงในขณะนี้"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"ไม่มีหัวข้อที่จะแสดงในขณะนี้\nดูข้อมูลเพิ่มเติมเกี่ยวกับ"<a href="https://support.google.com/android?p=ad_privacy">"หัวข้อโฆษณา"</a></string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ไม่มีความสนใจที่จะแสดงในขณะนี้"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"ไม่มีหัวข้อที่จะแสดงในขณะนี้"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"โปรแกรมความเป็นส่วนตัวเกี่ยวกับโฆษณาใน Android (เบต้า) มีฟีเจอร์ใหม่ๆ ที่แอปสามารถใช้เพื่อแสดงโฆษณาที่คุณอาจชอบ เทคโนโลยีเหล่านี้ไม่ใช้ตัวระบุอุปกรณ์\n\nAndroid สามารถคาดการณ์ประเภทของโฆษณาที่คุณอาจสนใจ และบันทึกความสนใจเหล่านี้ไว้บนอุปกรณ์ของคุณชั่วคราว วิธีนี้ช่วยให้แอปต่างๆ แสดงโฆษณาที่เกี่ยวข้องได้โดยที่ไม่ต้องติดตามกิจกรรมของคุณบนเว็บไซต์และแอปจากนักพัฒนารายอื่น"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ไม่มีความสนใจที่คุณบล็อกไว้"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ดูแอปที่บล็อก"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"รีเซ็ตความสนใจที่คาดการณ์โดยแอป"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ไม่มีแอปที่คาดการณ์ความสนใจของคุณในขณะนี้"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"ไม่มีแอปที่จะแสดงในขณะนี้ \nดูข้อมูลเพิ่มเติมเกี่ยวกับ"<a href="https://support.google.com/android?p=ad_privacy">"โฆษณาที่แอปแนะนำ"</a></string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"ไม่มีแอปที่จะแสดงในขณะนี้"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"ความเป็นส่วนตัวเกี่ยวกับโฆษณาใน Android (เบต้า) มีฟีเจอร์ใหม่ๆ ที่แอปสามารถใช้เพื่อแสดงโฆษณาที่คุณอาจชอบ เทคโนโลยีเหล่านี้ไม่ใช้ตัวระบุอุปกรณ์\n\nแอปสามารถคาดการณ์ประเภทของโฆษณาที่คุณอาจสนใจ และบันทึกความสนใจเหล่านี้ไว้บนอุปกรณ์ของคุณชั่วคราว วิธีนี้ช่วยให้แอปต่างๆ แสดงโฆษณาที่เกี่ยวข้องได้โดยที่ไม่ต้องติดตามกิจกรรมของคุณบนเว็บไซต์และแอปจากนักพัฒนารายอื่น"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"คุณไม่มีแอปที่ถูกบล็อก"</string>
@@ -187,25 +187,14 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"รีเซ็ตโฆษณาที่แอปแนะนำไหม"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"ระบบจะลบข้อมูลคำแนะนำโฆษณาออกจากแอปในรายการของคุณ และแอปจะแนะนำโฆษณาใหม่ในอนาคต คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"รีเซ็ตข้อมูลแอปแล้ว"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"หัวข้อโฆษณาเปิดอยู่"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android จะเริ่มบันทึกหัวข้อที่คุณสนใจ แต่อาจใช้เวลาสักครู่กว่าที่หัวข้อแรกจะปรากฏ"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"ปิดหัวข้อโฆษณาไหม"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"ระบบจะลบรายการหัวข้อนี้ Android จะไม่บันทึกหัวข้อที่สนใจอีก แต่คุณอาจยังคงเห็นโฆษณาที่เกี่ยวข้อง"</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"โฆษณาที่แอปแนะนำเปิดอยู่"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"แอปอาจเริ่มแนะนำโฆษณา คุณจะเห็นรายการแอปเมื่อแอปเริ่มแนะนำโฆษณา"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"ปิดโฆษณาที่แอปแนะนำไหม"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"ระบบจะลบข้อมูลคำแนะนำโฆษณาทั้งหมด แอปจะไม่สามารถแนะนำโฆษณาได้อีก แต่คุณอาจยังเห็นโฆษณาที่เกี่ยวข้องอยู่"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"การวัดผลโฆษณาเปิดอยู่"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android จะสามารถแชร์ข้อมูลกับแอปต่างๆ แบบจำกัดเพื่อช่วยแอปวัดประสิทธิภาพโฆษณา"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"ปิดการวัดผลโฆษณาไหม"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"ระบบจะลบรายงานการวัดผลโฆษณาทั้งหมดที่รอดำเนินการอยู่ และจะไม่สร้างหรือแชร์รายงานใหม่"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"รีเซ็ตหัวข้อทั้งหมดไหม"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"รีเซ็ตโฆษณาที่แอปแนะนำไหม"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ความเป็นส่วนตัวเกี่ยวกับโฆษณา"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"หัวข้อโฆษณา"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"โฆษณาที่แอปแนะนำ"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android บันทึกหัวข้อที่คุณสนใจตามแอปที่ใช้ล่าสุดและความถี่ที่คุณใช้"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"แอปที่คุณใช้ยังระบุสิ่งที่คุณชอบโดยอิงตามวิธีการใช้แอปได้อีกด้วย"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"แอปที่คุณใช้สามารถขอข้อมูลจาก Android เพื่อช่วยในการวัดประสิทธิภาพของโฆษณาได้ Android อนุญาตให้แอปรวบรวมข้อมูลเพียงบางประเภทเท่านั้น"</string>
-    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"ดูข้อมูลเพิ่มเติมเรื่อง"<a href="https://support.google.com/android?p=ad_privacy">"ความเป็นส่วนตัวเกี่ยวกับโฆษณาบน Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"เปิดอยู่ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> หัวข้อ"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{เปิดอยู่ / # หัวข้อ}other{เปิดอยู่ / # หัวข้อ}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"เปิดอยู่ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> แอป"</string>
@@ -222,11 +211,6 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"แอปที่คุณบล็อก"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"รีเซ็ตข้อมูลที่แอปแนะนำ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"โดยทั่วไป แอปที่คุณใช้จะจดจำสิ่งที่คุณสนใจเพื่อปรับเปลี่ยนประสบการณ์การใช้งานให้เหมาะกับคุณ แอปยังสามารถจัดเก็บข้อมูลเกี่ยวกับหัวข้อที่คุณสนใจไว้กับ Android ได้ด้วย\n\nตัวอย่างเช่น หากคุณใช้แอปเกี่ยวกับการฝึกวิ่งมาราธอน แอปอาจเข้าใจว่าคุณสนใจรองเท้าวิ่ง ภายหลัง เมื่อคุณใช้แอปอื่น แอปนี้ก็อาจแสดงโฆษณารองเท้าวิ่งที่แนะนำโดยแอปแรก\n\nAndroid จะลบข้อมูลที่แอปแนะนำโดยอัตโนมัติเป็นประจำ แอปที่คุณเข้าใช้อีกครั้งอาจกลับมาปรากฏในรายการอีก หรือคุณจะบล็อกแอปไม่ให้แนะนำโฆษณาก็ได้\n\nในแอปจะมีการปรับโฆษณาที่แสดงให้เหมาะกับคุณหรือไม่นั้นขึ้นอยู่กับการตั้งค่านี้ รวมถึงการตั้งค่าหัวข้อโฆษณา การตั้งค่ารหัสโฆษณา และแอปที่ใช้มีการปรับโฆษณาตามโปรไฟล์ของผู้ใช้ไหม"</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"ฟีเจอร์ใหม่ด้านความเป็นส่วนตัวเกี่ยวกับโฆษณาพร้อมใช้งานแล้ว"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"ระบบจะแชร์แค่ข้อมูลจำนวนน้อยมากระหว่างแอปต่างๆ เพื่อช่วยวัดประสิทธิภาพโฆษณา"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"เรากำลังเปิดตัวฟีเจอร์ใหม่ด้านความเป็นส่วนตัวเกี่ยวกับโฆษณาที่เรียกว่าการวัดผลโฆษณา Android จะแชร์แค่ข้อมูลจำนวนน้อยมากระหว่างเว็บไซต์ต่างๆ เช่น ข้อมูลเวลาที่แสดงโฆษณาแก่คุณ เพื่อช่วยให้แอปวัดประสิทธิภาพโฆษณาได้"</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"คุณทำการเปลี่ยนแปลงได้ในการตั้งค่าความเป็นส่วนตัวเกี่ยวกับโฆษณา"</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"แอปที่คุณใช้สามารถขอข้อมูลจาก Android เพื่อช่วยในการวัดประสิทธิภาพโฆษณาได้ Android อนุญาตให้แอปรวบรวมข้อมูลเพียงบางประเภทเท่านั้น"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"ภาพสัญลักษณ์สีสันสดใสแทนหัวข้อที่สนใจ เช่น เพลง ข่าว และกีฬา"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"ภาพสีสันสดใสของกุญแจที่อยู่ในวงกลม"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ภาพจุดขนาดเล็ก 9 จุดสีขาวและสีดำซึ่งประกอบขึ้นเป็นรูปสี่เหลี่ยมจัตุรัส"</string>
