@@ -19,6 +19,10 @@ package com.android.adservices.common;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.tradefed.device.BackgroundDeviceAction;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.result.ByteArrayInputStreamSource;
+import com.android.tradefed.result.InputStreamSource;
+import com.android.tradefed.result.LogDataType;
+import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +34,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /** Enables capturing device logs and exposing them to the host test. */
-// TODO(b/288892905) consolidate with existing logcat receiver
 public final class BackgroundLogReceiver extends MultiLineReceiver {
     private volatile boolean mCancelled;
     private final List<String> mLines = new ArrayList<>();
@@ -118,10 +121,26 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
         return earlyStop;
     }
 
-    /** Ends log collection. This method needs to be only used once per instance. */
-    private void stopBackgroundCollection() {
+    /** Stops log collection and adds all logs to input logger. */
+    public void stopAndAddTestLog(DeviceJUnit4ClassRunner.TestLogData logger) {
         if (mBackgroundDeviceAction != null) mBackgroundDeviceAction.cancel();
         if (isCancelled()) return;
+        mCancelled = true;
+
+        String joined = String.join("\n", mLines);
+        try (InputStreamSource data = new ByteArrayInputStreamSource(joined.getBytes())) {
+            logger.addTestLog(mName, LogDataType.TEXT, data);
+        }
+    }
+
+    /** Ends log collection. This method needs to be only used once per instance. */
+    private void stopBackgroundCollection() {
+        if (mBackgroundDeviceAction != null) {
+            mBackgroundDeviceAction.cancel();
+        }
+        if (isCancelled()) {
+            return;
+        }
         mCancelled = true;
     }
 
@@ -147,19 +166,23 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
 
     /** Builder class for the BackgroundLogReceiver. */
     public static final class Builder {
+        private String mName = "background-logcat-receiver";
         private ITestDevice mDevice;
         private String mLogCatCommand;
         private Predicate<String[]> mEarlyStopCondition;
 
+        public Builder setName(String name) {
+            mName = Objects.requireNonNull(name);
+            return this;
+        }
+
         public Builder setDevice(ITestDevice device) {
-            Objects.requireNonNull(device);
-            mDevice = device;
+            mDevice = Objects.requireNonNull(device);
             return this;
         }
 
         public Builder setLogCatCommand(String command) {
-            Objects.requireNonNull(command);
-            mLogCatCommand = command;
+            mLogCatCommand = Objects.requireNonNull(command);
             return this;
         }
 
@@ -179,8 +202,7 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
             Objects.requireNonNull(mDevice);
             Objects.requireNonNull(mLogCatCommand);
 
-            return new BackgroundLogReceiver(
-                    "background-logcat-receiver", mLogCatCommand, mDevice, mEarlyStopCondition);
+            return new BackgroundLogReceiver(mName, mLogCatCommand, mDevice, mEarlyStopCondition);
         }
     }
 }
