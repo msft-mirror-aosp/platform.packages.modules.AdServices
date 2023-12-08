@@ -44,7 +44,6 @@ import android.os.Binder;
 import android.os.Process;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
@@ -81,11 +80,10 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     private static final String APPSETID_API_ALLOW_LIST =
             "com.android.adservices.servicecoreappsetidtest";
     private static final int SANDBOX_UID = 25000;
-
-    private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
+    private Context mContext;
     private CallerMetadata mCallerMetadata;
     private AppSetIdWorker mAppSetIdWorker;
     private GetAppSetIdParam mRequest;
@@ -100,6 +98,8 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() throws Exception {
+        mContext = appContext.get();
+
         mAppSetIdWorker = Mockito.spy(AppSetIdWorker.getInstance());
         doReturn(null).when(mAppSetIdWorker).getService();
 

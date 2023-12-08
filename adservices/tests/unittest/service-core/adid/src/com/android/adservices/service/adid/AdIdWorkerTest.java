@@ -22,13 +22,14 @@ import android.adservices.adid.AdId;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.UpdateAdIdRequest;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 /** Unit test for {@link com.android.adservices.service.adid.AdIdWorker}. */
-public class AdIdWorkerTest {
+public final class AdIdWorkerTest extends AdServicesMockitoTestCase {
     private static final String PACKAGE_NAME = "package_name";
     private static final int DUMMY_CALLER_UID = 0;
     private static final IGetAdIdCallback CALLBACK = new IGetAdIdCallback.Default();
@@ -39,8 +40,6 @@ public class AdIdWorkerTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
         mAdIdWorker = new AdIdWorker(mMockAdIdCacheManager);
     }
 
