@@ -68,7 +68,7 @@
                     "trigger_data": "0",
                     "priority": "100",
                     "deduplication_key": "10",
-                    "value": "2"
+                    "value": 2
                   }
                 ],
                 "debug_key": "444",
@@ -97,7 +97,7 @@
                     "trigger_data": "0",
                     "priority": "101",
                     "deduplication_key": "11",
-                    "value": "9"
+                    "value": 9
                   }
                 ],
                 "debug_key": "555",
@@ -124,7 +124,7 @@
           "trigger_data": "0",
           "source_type": "navigation",
           "source_debug_key": "333",
-          "trigger_summary_bucket": [10, 2147483646],
+          "trigger_summary_bucket": [10, 4294967295],
           "randomized_trigger_rate": 0.000004157629766763622,
           "trigger_debug_keys": ["555", "444"]
         }
@@ -141,7 +141,7 @@
           "trigger_data": "0",
           "source_type": "navigation",
           "source_debug_key": "333",
-          "trigger_summary_bucket": [10, 2147483646],
+          "trigger_summary_bucket": [10, 4294967295],
           "randomized_trigger_rate": 0.000004157629766763622,
           "trigger_debug_keys": ["555", "444"]
         }

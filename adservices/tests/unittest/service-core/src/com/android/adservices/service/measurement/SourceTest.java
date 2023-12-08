@@ -454,12 +454,9 @@ public class SourceTest {
                         .setAttributedTriggers(new ArrayList<>())
                         .build());
 
-        TriggerSpecs triggerSpecsValueSumBased =
-                new TriggerSpecs(
-                        SourceFixture.getTriggerSpecValueSumArrayValidBaseline(),
-                        5,
-                        null);
+        TriggerSpecs triggerSpecsValueSumBased = SourceFixture.getValidTriggerSpecsValueSum(5);
         TriggerSpecs triggerSpecsCountBased = SourceFixture.getValidTriggerSpecsCountBased();
+
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecsString(triggerSpecsValueSumBased.encodeToJson())
@@ -1317,12 +1314,18 @@ public class SourceTest {
         Flags flags = mock(Flags.class);
         doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT)
+                .when(flags)
+                .getMeasurementFlexApiMaxInformationGainDualDestinationEvent();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION)
+                .when(flags)
+                .getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
@@ -1358,10 +1361,10 @@ public class SourceTest {
         Flags flags = mock(Flags.class);
         doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
         // setup
@@ -1403,10 +1406,10 @@ public class SourceTest {
         Flags flags = mock(Flags.class);
         doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
         // setup
@@ -1427,8 +1430,6 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
-                        .setWebDestinations(
-                                List.of(WebUtil.validUri("https://web-destination1.test")))
                         .setRegistrant(Uri.parse("android-app://com.example"))
                         .setEventTime(new Random().nextLong())
                         .setExpiryTime(8640000010L)

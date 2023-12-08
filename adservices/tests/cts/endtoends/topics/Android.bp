@@ -47,7 +47,6 @@ android_test {
     min_sdk_version: "Tiramisu",
     manifest: "CtsAdServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdServicesEndToEndTests.xml",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }
 
 android_test {
@@ -62,5 +61,4 @@ android_test {
     max_sdk_version: "32",
     manifest: "CtsAdExtServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdExtServicesEndToEndTests.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
 }
