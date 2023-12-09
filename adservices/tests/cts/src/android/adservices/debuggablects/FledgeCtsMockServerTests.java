@@ -50,6 +50,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
@@ -101,7 +102,11 @@ public class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "ca2";
 
-    @Rule
+    // Ignore tests when device is not at least S
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     ApplicationProvider.getApplicationContext(),

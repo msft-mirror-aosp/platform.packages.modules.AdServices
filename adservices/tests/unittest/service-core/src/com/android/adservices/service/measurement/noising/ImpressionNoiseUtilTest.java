@@ -23,6 +23,9 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.TriggerSpecsUtil;
@@ -446,6 +449,10 @@ public class ImpressionNoiseUtilTest {
      * @throws JSONException JSON syntax error
      */
     private static TriggerSpecs getValidTriggerSpecsForRandomOrderTest() throws JSONException {
-        return new TriggerSpecs(getValidTriggerSpecArray(), 3, null);
+        Source source = SourceFixture.getMinimalValidSourceBuilder().build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(getValidTriggerSpecArray(), 3, source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        return triggerSpecs;
     }
 }

@@ -114,6 +114,7 @@ filegroup {
         ":adservices-service-core-flags-constants-sources",
         ":adservices-service-common-flags-sources",
         "java/com/android/adservices/service/Flags.java",
+        "java/com/android/adservices/service/FlagsFactory.java",
         "java/com/android/adservices/service/PhFlags.java",
     ],
     path: "java",

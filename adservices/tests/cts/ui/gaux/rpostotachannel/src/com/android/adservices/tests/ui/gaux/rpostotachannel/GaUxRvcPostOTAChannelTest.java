@@ -158,7 +158,8 @@ public class GaUxRvcPostOTAChannelTest {
                 mDevice,
                 UiConstants.UX.GA_UX,
                 /* isOptIn= */ true,
-                /* isFlipConsent= */ true);
+                /* isFlipConsent= */ true,
+                /* assertOptIn= */ false);
     }
 
     /**
@@ -193,7 +194,8 @@ public class GaUxRvcPostOTAChannelTest {
                 mDevice,
                 UiConstants.UX.RVC_UX,
                 /* isOptIn= */ true,
-                /* isFlipConsent= */ true);
+                /* isFlipConsent= */ true,
+                /* assertOptIn= */ false);
         mDevice.pressHome();
 
         // Mock user is ota from Rvc by enabling consent manager ota debug mode
@@ -214,6 +216,7 @@ public class GaUxRvcPostOTAChannelTest {
                 mDevice,
                 UiConstants.UX.GA_UX,
                 /* isOptIn= */ true,
-                /* isFlipConsent= */ true);
+                /* isFlipConsent= */ true,
+                /* assertOptIn= */ false);
     }
 }

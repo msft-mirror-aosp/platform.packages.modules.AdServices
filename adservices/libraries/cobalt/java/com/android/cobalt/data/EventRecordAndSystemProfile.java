@@ -25,19 +25,14 @@ import com.google.cobalt.AggregateValue;
 import com.google.cobalt.SystemProfile;
 
 /**
- * Encapsulates values required for generating count observations.
+ * Encapsulates one locally aggregated event that is required for generating observations.
  *
- * <p>Values are tagged with @ColumnInfo so CountEvent can be automatically read from tables.
+ * <p>Values are tagged with @ColumnInfo so {@link EventRecordAndSystemProfile} can be automatically
+ * read from tables.
  */
 @AutoValue
 @CopyAnnotations
-public abstract class CountEvent {
-    /** The system profile hash. */
-    @CopyAnnotations
-    @ColumnInfo(name = "system_profile_hash")
-    @NonNull
-    public abstract long systemProfileHash();
-
+public abstract class EventRecordAndSystemProfile {
     /** The system profile. */
     @CopyAnnotations
     @ColumnInfo(name = "system_profile")
@@ -57,17 +52,14 @@ public abstract class CountEvent {
     public abstract AggregateValue aggregateValue();
 
     /**
-     * Creates a {@link CreateEvent}.
+     * Creates a {@link EventRecordAndSystemProfile}.
      *
      * <p>Used by Room to instantiate objects.
      */
     @NonNull
-    public static CountEvent create(
-            long systemProfileHash,
-            SystemProfile systemProfile,
-            EventVector eventVector,
-            AggregateValue aggregateValue) {
-        return new AutoValue_CountEvent(
-                systemProfileHash, systemProfile, eventVector, aggregateValue);
+    public static EventRecordAndSystemProfile create(
+            SystemProfile systemProfile, EventVector eventVector, AggregateValue aggregateValue) {
+        return new AutoValue_EventRecordAndSystemProfile(
+                systemProfile, eventVector, aggregateValue);
     }
 }

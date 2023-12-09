@@ -202,7 +202,9 @@ public class SdkSandboxServiceImpl extends Service {
 
     /** Unloads SDK. */
     public void unloadSdk(
-            String sdkName, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
+            String sdkName,
+            IUnloadSdkInSandboxCallback callback,
+            SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
 
         sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.elapsedRealtime());
@@ -516,7 +518,7 @@ public class SdkSandboxServiceImpl extends Service {
         @Override
         public void unloadSdk(
                 @NonNull String sdkName,
-                @NonNull IUnloadSdkCallback callback,
+                @NonNull IUnloadSdkInSandboxCallback callback,
                 @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
             Objects.requireNonNull(sandboxLatencyInfo, "sandboxLatencyInfo should not be null");
             sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(

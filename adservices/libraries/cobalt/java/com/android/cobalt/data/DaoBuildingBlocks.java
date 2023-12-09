@@ -381,8 +381,8 @@ abstract class DaoBuildingBlocks {
      * @param dayIndex the day to search under
      * @return a list of events to be used for observation generation
      */
-    List<CountEvent> queryCountEventsForDay(ReportKey reportKey, int dayIndex) {
-        return queryCountEventsForDay(
+    List<EventRecordAndSystemProfile> queryEventRecordsForDay(ReportKey reportKey, int dayIndex) {
+        return queryEventRecordsForDay(
                 reportKey.customerId(),
                 reportKey.projectId(),
                 reportKey.metricId(),
@@ -402,7 +402,6 @@ abstract class DaoBuildingBlocks {
      */
     @Query(
             "SELECT "
-                    + "aggregate.system_profile_hash, "
                     + "profile.system_profile, "
                     + "aggregate.event_vector, "
                     + "aggregate.aggregate_value "
@@ -417,7 +416,7 @@ abstract class DaoBuildingBlocks {
                     + "AND day_index= :dayIndex "
                     + "ORDER BY aggregate.system_profile_hash, "
                     + "aggregate.event_vector")
-    abstract List<CountEvent> queryCountEventsForDay(
+    abstract List<EventRecordAndSystemProfile> queryEventRecordsForDay(
             long customerId, long projectId, long metricId, long reportId, int dayIndex);
 
     /**

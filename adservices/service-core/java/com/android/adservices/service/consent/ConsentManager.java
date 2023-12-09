@@ -1792,7 +1792,7 @@ public class ConsentManager {
                             ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
             // If we did not migrate notification data, we should not attempt to migrate anything.
             if (!appSearchConsentManager.migrateConsentDataIfNeeded(
-                    context, sharedPreferences, datastore, adServicesManager, appConsentDao)) {
+                    sharedPreferences, datastore, adServicesManager, appConsentDao)) {
                 LogUtil.d("Skipping consent migration from AppSearch");
                 return;
             }
