@@ -256,7 +256,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         // Default to use PPAPI consent to test migration-irrelevant logics.
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
 
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
         doReturn(true).when(mMockFlags).getAdservicesConsentMigrationLoggingEnabled();
         doReturn(true).when(mMockFlags).getEnrollmentEnableLimitedLogging();
@@ -2547,7 +2547,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         verify(mContextSpy, never()).getSharedPreferences(anyString(), anyInt());
         verify(mAppSearchConsentManagerMock, never())
-                .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
+                .migrateConsentDataIfNeeded(any(), any(), any(), any());
         verify(mMockIAdServicesManager, never()).setConsent(any());
         verify(mMockIAdServicesManager, never()).recordNotificationDisplayed(true);
         verify(mMockIAdServicesManager, never()).recordGaUxNotificationDisplayed(true);
@@ -2756,8 +2756,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testHandleConsentMigrationFromAppSearchIfNeeded_notMigrated() throws Exception {
-        when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(
-                        any(), any(), any(), any(), any()))
+        when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(false);
         BooleanFileDatastore mockDatastore = mock(BooleanFileDatastore.class);
         AdServicesManager mockAdServicesManager = mock(AdServicesManager.class);
@@ -2775,8 +2774,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 mockAdServicesManager,
                 mStatsdAdServicesLoggerMock);
         verify(mockEditor, never()).putBoolean(any(), anyBoolean());
-        verify(mAppSearchConsentManagerMock)
-                .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
+        verify(mAppSearchConsentManagerMock).migrateConsentDataIfNeeded(any(), any(), any(), any());
         verify(mockAdServicesManager, never()).recordNotificationDisplayed(true);
         verify(mockAdServicesManager, never()).recordGaUxNotificationDisplayed(true);
         verify(mockAdServicesManager, never()).recordDefaultConsent(anyBoolean());
@@ -2790,8 +2788,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testHandleConsentMigrationFromAppSearchIfNeeded() throws Exception {
-        when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(
-                        any(), any(), any(), any(), any()))
+        when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(true);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(true);
         mConsentDatastore.put(CONSENT_KEY, true);
@@ -2815,8 +2812,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 mAppSearchConsentManagerMock,
                 mockAdServicesManager,
                 mStatsdAdServicesLoggerMock);
-        verify(mAppSearchConsentManagerMock)
-                .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
+        verify(mAppSearchConsentManagerMock).migrateConsentDataIfNeeded(any(), any(), any(), any());
 
         // Verify interactions data is migrated.
         assertThat(mConsentDatastore.get(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED))
@@ -2866,8 +2862,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testHandleConsentMigrationFromAppSearchIfNeededSharedPrefsEditorUnsuccessful()
             throws Exception {
-        when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(
-                        any(), any(), any(), any(), any()))
+        when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(true);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(true);
         mConsentDatastore.put(CONSENT_KEY, true);
@@ -2912,8 +2907,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testHandleConsentMigrationFromAppSearchIfNeededThrowsException() throws Exception {
-        when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(
-                        any(), any(), any(), any(), any()))
+        when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenThrow(IOException.class);
 
         AdServicesManager mockAdServicesManager = mock(AdServicesManager.class);

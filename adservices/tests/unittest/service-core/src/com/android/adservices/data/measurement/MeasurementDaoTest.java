@@ -247,8 +247,8 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
         assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
         assertEquals(
-                validSource.getCoarseEventReportDestinations(),
-                source.getCoarseEventReportDestinations());
+                validSource.hasCoarseEventReportDestinations(),
+                source.hasCoarseEventReportDestinations());
         assertEquals(validSource.getTriggerDataMatching(), source.getTriggerDataMatching());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
         assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());
@@ -2684,6 +2684,118 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void deleteFlexEventReportsAndAttributions_success() throws JSONException {
+        // Setup - Creates the following -
+        // source - S1, S2
+        // trigger - T1, T2, T3
+        // event reports - (E13, E23) (E11_1, E11_2, E11_3) (E21) (E22_1, E22_2)
+        // attributions
+        //    (ATT11_00 (aggregate scope), ATT11_01 (aggregate scope))
+        //    (ATT11_1, ATT11_2, ATT11_3) (ATT21) (ATT22_1, ATT22_2)
+        prepareDataForFlexEventReportAndAttributionDeletion();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        // Assert attributions present
+        assertNotNull(getAttribution("ATT11_1", db));
+        assertNotNull(getAttribution("ATT11_2", db));
+        assertNotNull(getAttribution("ATT11_3", db));
+        assertNotNull(getAttribution("ATT21", db));
+        assertNotNull(getAttribution("ATT22_1", db));
+        assertNotNull(getAttribution("ATT22_2", db));
+
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    // Assert sources and triggers present
+                    assertNotNull(measurementDao.getSource("S1"));
+                    assertNotNull(measurementDao.getSource("S2"));
+                    assertNotNull(measurementDao.getTrigger("T1"));
+                    assertNotNull(measurementDao.getTrigger("T2"));
+
+                    // Validate presence of unmatched event reports
+                    measurementDao.getEventReport("E13");
+                    measurementDao.getEventReport("E23");
+
+                    // Event report group 1
+                    // Validate event reports present
+                    EventReport e111 = measurementDao.getEventReport("E11_1");
+                    EventReport e112 = measurementDao.getEventReport("E11_2");
+
+                    // Deletion
+                    measurementDao.deleteFlexEventReportsAndAttributions(
+                            List.of(e111, e112));
+
+                    // Validate event report deletion
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E11_1");
+                            });
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E11_2");
+                            });
+                    assertNotNull(measurementDao.getEventReport("E11_3"));
+
+                    // Event report group 2
+                    // Validate event reports present
+                    EventReport e21 = measurementDao.getEventReport("E21");
+
+                    // Deletion
+                    measurementDao.deleteFlexEventReportsAndAttributions(
+                            List.of(e21));
+
+                    // Validate event report deletion
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E21");
+                            });
+
+                    // Event report group 3
+                    // Validate event reports present (retrieval doesn't throw)
+                    measurementDao.getEventReport("E22_1");
+                    EventReport e222 = measurementDao.getEventReport("E22_2");
+
+                    // Deletion
+                    measurementDao.deleteFlexEventReportsAndAttributions(
+                            List.of(e222));
+
+                    // Validate event report deletion
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E22_2");
+                            });
+                    assertNotNull(measurementDao.getEventReport("E22_1"));
+
+                    // Validate sources and triggers present
+                    assertNotNull(measurementDao.getSource("S1"));
+                    assertNotNull(measurementDao.getSource("S2"));
+                    assertNotNull(measurementDao.getTrigger("T1"));
+                    assertNotNull(measurementDao.getTrigger("T2"));
+
+                    // Validate presence of unmatched event reports
+                    measurementDao.getEventReport("E13");
+                    measurementDao.getEventReport("E23");
+                });
+
+        // Validate attribution deletion
+        assertNotNull(getAttribution("ATT11_00", db));
+        assertNotNull(getAttribution("ATT11_01", db));
+        assertNull(getAttribution("ATT11_1", db));
+        assertNull(getAttribution("ATT11_2", db));
+        assertNotNull(getAttribution("ATT11_3", db));
+        assertNull(getAttribution("ATT21", db));
+        // Attribution deletion order within the group associated with an event report is generally
+        // by insertion order, although it's not guaranteed. We deleted event report E22_2 but the
+        // first limited associated attribution returned is ATT22_1.
+        assertNull(getAttribution("ATT22_1", db));
+        assertNotNull(getAttribution("ATT22_2", db));
+    }
+
+    @Test
     public void deleteSources_providedIds_deletesMatchingSourcesAndRelatedData()
             throws JSONException {
         // Setup - Creates the following -
@@ -2857,6 +2969,105 @@ public class MeasurementDaoTest {
         assertEquals(2, DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE));
     }
 
+    // Setup - Creates the following -
+    // source - S1, S2
+    // trigger - T1, T2
+    // event reports - E11_1, E11_2, E11_3, E21, E22_1, E22_2
+    // attributions - ATT11_1, ATT11_2, ATT11_3, ATT21, ATT22_1, ATT22_2
+    private void prepareDataForFlexEventReportAndAttributionDeletion() throws JSONException {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Source s1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("S1")
+                        .build();
+        Source s2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setId("S2")
+                        .build();
+        Trigger t1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T1")
+                        .build();
+        Trigger t2 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T2")
+                        .build();
+        Trigger t3 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T2")
+                        .build();
+        EventReport e111 = createEventReportForSourceAndTrigger("E11_1", s1, t1);
+        EventReport e112 = createEventReportForSourceAndTrigger("E11_2", s1, t1);
+        EventReport e113 = createEventReportForSourceAndTrigger("E11_3", s1, t1);
+        EventReport e21 = createEventReportForSourceAndTrigger("E21", s2, t1);
+        EventReport e221 = createEventReportForSourceAndTrigger("E22_1", s2, t2);
+        EventReport e222 = createEventReportForSourceAndTrigger("E22_2", s2, t2);
+        EventReport e13 = createEventReportForSourceAndTrigger("E13", s1, t3);
+        EventReport e23 = createEventReportForSourceAndTrigger("E23", s2, t3);
+        Attribution att1100 =
+                createAttribution(
+                        "ATT11_00",
+                        Attribution.Scope.AGGREGATE,
+                        s1.getId(),
+                        t1.getId());
+        Attribution att1101 =
+                createAttribution(
+                        "ATT11_01",
+                        Attribution.Scope.AGGREGATE,
+                        s1.getId(),
+                        t1.getId());
+        Attribution att111 =
+                createAttribution(
+                        "ATT11_1", s1.getId(), t1.getId());
+        Attribution att112 =
+                createAttribution(
+                        "ATT11_2", s1.getId(), t1.getId());
+        Attribution att113 =
+                createAttribution(
+                        "ATT11_3", s1.getId(), t1.getId());
+        Attribution att21 =
+                createAttribution(
+                        "ATT21", s2.getId(), t1.getId());
+        Attribution att221 =
+                createAttribution(
+                        "ATT22_1", s2.getId(), t2.getId());
+        Attribution att222 =
+                createAttribution(
+                        "ATT22_2", s2.getId(), t2.getId());
+
+        insertSource(s1, s1.getId());
+        insertSource(s2, s2.getId());
+        AbstractDbIntegrationTest.insertToDb(t1, db);
+        AbstractDbIntegrationTest.insertToDb(t2, db);
+        AbstractDbIntegrationTest.insertToDb(e111, db);
+        AbstractDbIntegrationTest.insertToDb(e112, db);
+        AbstractDbIntegrationTest.insertToDb(e113, db);
+        AbstractDbIntegrationTest.insertToDb(e21, db);
+        AbstractDbIntegrationTest.insertToDb(e221, db);
+        AbstractDbIntegrationTest.insertToDb(e222, db);
+        AbstractDbIntegrationTest.insertToDb(e13, db);
+        AbstractDbIntegrationTest.insertToDb(e23, db);
+        AbstractDbIntegrationTest.insertToDb(att1100, db);
+        AbstractDbIntegrationTest.insertToDb(att1101, db);
+        AbstractDbIntegrationTest.insertToDb(att111, db);
+        AbstractDbIntegrationTest.insertToDb(att112, db);
+        AbstractDbIntegrationTest.insertToDb(att113, db);
+        AbstractDbIntegrationTest.insertToDb(att21, db);
+        AbstractDbIntegrationTest.insertToDb(att221, db);
+        AbstractDbIntegrationTest.insertToDb(att222, db);
+    }
+
+    // Setup - Creates the following -
+    // source - S1, S2, S3, S4
+    // trigger - T1, T2, T3, T4
+    // event reports - E11, E12, E21, E22, E23, E33, E44
+    // aggregate reports - AR11, AR12, AR21, AR34
+    // attributions - ATT11, ATT12, ATT21, ATT22, ATT33, ATT44
     private void prepareDataForSourceAndTriggerDeletion() throws JSONException {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Source s1 =
@@ -2911,21 +3122,21 @@ public class MeasurementDaoTest {
         AggregateReport ar21 = createAggregateReportForSourceAndTrigger("AR21", s2, t1);
         AggregateReport ar34 = createAggregateReportForSourceAndTrigger("AR34", s3, t4);
         Attribution att11 =
-                createAttributionWithSourceAndTriggerIds(
+                createAttribution(
                         "ATT11", s1.getId(), t1.getId()); // deleted
         Attribution att12 =
-                createAttributionWithSourceAndTriggerIds(
+                createAttribution(
                         "ATT12", s1.getId(), t2.getId()); // deleted
         Attribution att21 =
-                createAttributionWithSourceAndTriggerIds(
+                createAttribution(
                         "ATT21", s2.getId(), t1.getId()); // deleted
         Attribution att22 =
-                createAttributionWithSourceAndTriggerIds(
+                createAttribution(
                         "ATT22", s2.getId(), t2.getId()); // deleted
         Attribution att33 =
-                createAttributionWithSourceAndTriggerIds("ATT33", s3.getId(), t3.getId());
+                createAttribution("ATT33", s3.getId(), t3.getId());
         Attribution att44 =
-                createAttributionWithSourceAndTriggerIds("ATT44", s4.getId(), t4.getId());
+                createAttribution("ATT44", s4.getId(), t4.getId());
 
         insertSource(s1, s1.getId());
         insertSource(s2, s2.getId());
@@ -5822,10 +6033,21 @@ public class MeasurementDaoTest {
         assertNotEquals("Attribution insertion failed", -1, row);
     }
 
-    private static Attribution createAttributionWithSourceAndTriggerIds(
-            String attributionId, String sourceId, String triggerId) {
+    private static Attribution createAttribution(
+            String attributionId,
+            String sourceId,
+            String triggerId) {
+        return createAttribution(attributionId, Attribution.Scope.EVENT, sourceId, triggerId);
+    }
+
+    private static Attribution createAttribution(
+            String attributionId,
+            @Attribution.Scope int scope,
+            String sourceId,
+            String triggerId) {
         return new Attribution.Builder()
                 .setId(attributionId)
+                .setScope(scope)
                 .setTriggerTime(0L)
                 .setSourceSite("android-app://source.app")
                 .setSourceOrigin("android-app://source.app")
@@ -9300,6 +9522,25 @@ public class MeasurementDaoTest {
             builder.setRegistrationOrigin(Uri.parse(cursor.getString(index)));
         }
         return builder.build();
+    }
+
+    private Attribution getAttribution(String attributionId, SQLiteDatabase db) {
+        try (Cursor cursor =
+                        db.query(
+                                MeasurementTables.AttributionContract.TABLE,
+                                /* columns= */ null,
+                                MeasurementTables.AttributionContract.ID + " = ? ",
+                                new String[] {attributionId},
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            if (cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return constructAttributionFromCursor(cursor);
+        }
     }
 
     private static void insertAttributedTrigger(TriggerSpecs triggerSpecs,

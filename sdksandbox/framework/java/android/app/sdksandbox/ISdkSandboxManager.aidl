@@ -42,7 +42,7 @@ interface ISdkSandboxManager {
     void registerAppOwnedSdkSandboxInterface(in String callingPackageName, in AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface, in SandboxLatencyInfo sandboxLatencyInfo);
     void unregisterAppOwnedSdkSandboxInterface(in String callingPackageName, in String name, in SandboxLatencyInfo sandboxLatencyInfo);
     oneway void loadSdk(in String callingPackageName, in IBinder appProcessToken, in String sdkName, in SandboxLatencyInfo sandboxLatencyInfo, in Bundle params, in ILoadSdkCallback callback);
-    void unloadSdk(in String callingPackageName, in String sdkName, long timeAppCalledSystemServer);
+    void unloadSdk(in String callingPackageName, in String sdkName, in SandboxLatencyInfo sandboxLatencyInfo);
     // TODO(b/242031240): wrap the many input params in one parcelable object
     oneway void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, in SandboxLatencyInfo sandboxLatencyInfo, in Bundle params, IRequestSurfacePackageCallback callback);
     List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo);

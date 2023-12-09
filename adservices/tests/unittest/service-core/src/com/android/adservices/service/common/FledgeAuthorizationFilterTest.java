@@ -47,7 +47,7 @@ import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -57,15 +57,17 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
-public final class FledgeAuthorizationFilterTest extends AdServicesUnitTestCase {
+@MockStatic(PermissionHelper.class)
+@MockStatic(AppManifestConfigHelper.class)
+@MockStatic(PhFlags.class)
+public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int UID = 111;
@@ -92,25 +94,12 @@ public final class FledgeAuthorizationFilterTest extends AdServicesUnitTestCase 
 
     @Before
     public void setup() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PermissionHelper.class)
-                        .mockStatic(AppManifestConfigHelper.class)
-                        .mockStatic(PhFlags.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         mChecker =
                 new FledgeAuthorizationFilter(
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
                         mAdServicesLoggerMock,
                         mEnrollmentUtilMock);
-    }
-
-    @After
-    public void teardown() {
-        mMockitoSession.finishMocking();
     }
 
     @Test

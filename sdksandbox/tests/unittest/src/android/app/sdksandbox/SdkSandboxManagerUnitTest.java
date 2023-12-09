@@ -190,7 +190,7 @@ public class SdkSandboxManagerUnitTest {
                 .unloadSdk(
                         Mockito.eq(mContext.getPackageName()),
                         Mockito.eq(SDK_NAME),
-                        Mockito.anyLong());
+                        Mockito.any(SandboxLatencyInfo.class));
     }
 
     @Test

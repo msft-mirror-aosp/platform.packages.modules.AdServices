@@ -39,6 +39,11 @@ android_test_helper_app {
        "src/**/sdksandboxcode_1/*.java",
        "src/**/apiimplementation/*.java",
     ],
+    static_libs: [
+       "androidx.media3.media3-common",
+       "androidx.media3.media3-exoplayer",
+       "androidx.media3.media3-ui",
+    ],
     manifest: "AndroidManifest.xml",
     test_suites: ["general-tests"],
 }

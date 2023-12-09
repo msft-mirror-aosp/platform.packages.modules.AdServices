@@ -82,10 +82,8 @@ public class MeasurementDbMigratorV29 extends AbstractMeasurementDbMigrator {
                         values,
                         null,
                         new String[0]);
-        if (rows != 1) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("Failed to update attribution scope for all attribution records.");
-        }
+        LoggerFactory.getMeasurementLogger()
+                .d("Updated attribution scope for " + rows + " attribution records.");
     }
 
     private void createAggregateScopeAttributionForEachAttributionRecord(
