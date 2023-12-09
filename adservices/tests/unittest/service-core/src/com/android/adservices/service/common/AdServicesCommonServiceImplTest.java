@@ -131,8 +131,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mEditor).commit();
         doReturn(true).when(mSharedPreferences).contains(anyString());
 
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
         // Set device to EU
         doReturn(Flags.UI_EEA_COUNTRIES).when(mFlags).getUiEeaCountries();

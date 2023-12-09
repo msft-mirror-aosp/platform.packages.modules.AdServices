@@ -57,7 +57,7 @@ public class BlockedAppsViewModel extends AndroidViewModel {
     public BlockedAppsViewModel(@NonNull Application application) {
         super(application);
 
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
     }
 

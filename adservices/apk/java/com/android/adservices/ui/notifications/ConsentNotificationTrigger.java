@@ -63,7 +63,7 @@ public class ConsentNotificationTrigger {
                 UxStatesManager.getInstance(context).getFlag(KEY_GA_UX_FEATURE_ENABLED);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        ConsentManager consentManager = ConsentManager.getInstance(context);
+        ConsentManager consentManager = ConsentManager.getInstance();
         if (!notificationManager.areNotificationsEnabled()) {
             recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled();

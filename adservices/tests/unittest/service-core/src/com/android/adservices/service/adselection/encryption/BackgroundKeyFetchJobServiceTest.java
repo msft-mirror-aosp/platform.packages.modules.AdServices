@@ -135,7 +135,7 @@ public class BackgroundKeyFetchJobServiceTest {
     public void testOnStartJobConsentRevokedGaUxDisabled()
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -189,7 +189,7 @@ public class BackgroundKeyFetchJobServiceTest {
     public void testOnStartJobAdSelectionDataKillSwitchOff()
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(mFlagsWithAdSelectionDataKillSwitchOff).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -225,7 +225,7 @@ public class BackgroundKeyFetchJobServiceTest {
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
         doReturn(mBgFWorkerMock).when(() -> BackgroundKeyFetchWorker.getInstance(any()));
         doReturn(FluentFuture.from(immediateFuture(null)))
@@ -258,7 +258,7 @@ public class BackgroundKeyFetchJobServiceTest {
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -288,7 +288,7 @@ public class BackgroundKeyFetchJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
