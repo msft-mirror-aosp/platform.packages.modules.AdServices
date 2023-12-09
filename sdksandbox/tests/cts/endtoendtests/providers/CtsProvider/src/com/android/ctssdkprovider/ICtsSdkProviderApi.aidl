@@ -36,4 +36,6 @@ interface ICtsSdkProviderApi {
     void checkCanUseSharedPreferences();
     void checkReadFileDescriptor(in ParcelFileDescriptor fd, String expectedValue);
     ParcelFileDescriptor createFileDescriptor(String valueToWrite);
+    void waitForStateChangeDetection(int expectedForegroundValue, int expectedBackgroundValue);
+    void unregisterSdkSandboxClientImportanceListener();
 }

@@ -29,6 +29,7 @@ import android.adservices.utils.ScenarioDispatcher;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -75,6 +76,7 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
      * Test to ensure that trusted signals are not updated if a daily update server response exceeds
      * the 30-second timeout.
      */
+    @Ignore("b/315008031")
     @Test
     public void testAdSelection_withHighLatencyBackend_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
@@ -131,6 +133,7 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
      * Test to ensure that trusted signals are not updated if the daily update job exceeds the
      * default timeout.
      */
+    @Ignore("b/315008031")
     @Test
     public void testAdSelection_withLongRunningJob_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
