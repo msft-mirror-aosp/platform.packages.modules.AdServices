@@ -41,6 +41,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 
 import android.app.Notification;
@@ -60,7 +61,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -75,7 +76,7 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.ui.util.ApkTestUtil;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
@@ -83,15 +84,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
+@SpyStatic(ConsentManager.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(NotificationManagerCompat.class)
+@SpyStatic(AdServicesLoggerImpl.class)
+@SpyStatic(DeviceRegionProvider.class)
+@SpyStatic(UxStatesManager.class)
+@SpyStatic(UiStatsLogger.class)
 @RunWith(AndroidJUnit4.class)
-public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase {
+public final class ConsentNotificationTriggerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int LAUNCH_TIMEOUT = 5000;
@@ -99,39 +103,22 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
 
     private AdServicesManager mAdServicesManager;
     private NotificationManager mNotificationManager;
-    private MockitoSession mStaticMockSession = null;
-    private String mTestName;
+    private Context mContext;
 
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
     @Mock private UxStatesManager mMockUxStatesManager;
     @Mock private Flags mMockFlags;
-    @Spy private Context mContext;
 
     @Before
     public void setUp() {
-        mContext = appContext.get();
+        mContext = spy(appContext.get());
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         mNotificationManager = mContext.getSystemService(NotificationManager.class);
 
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(NotificationManagerCompat.class)
-                        .spyStatic(AdServicesLoggerImpl.class)
-                        .spyStatic(DeviceRegionProvider.class)
-                        .spyStatic(UxStatesManager.class)
-                        .spyStatic(UiStatsLogger.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
         doReturn(mAdServicesLogger).when(UiStatsLogger::getAdServicesLogger);
         doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance(any(Context.class)));
         doReturn(mAdServicesManager).when(mContext).getSystemService(AdServicesManager.class);
@@ -148,16 +135,13 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
 
     @After
     public void tearDown() throws IOException {
-        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + getTestName() + "_");
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
-        mStaticMockSession.finishMocking();
     }
 
     @Test
     public void testEuNotification() throws InterruptedException, UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
@@ -212,8 +196,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
     @Test
     public void testEuNotification_gaUxFlagEnabled()
             throws InterruptedException, UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
@@ -276,8 +258,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
 
     @Test
     public void testNonEuNotifications() throws InterruptedException, UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(false).when(mMockFlags).isEeaDevice();
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
@@ -332,8 +312,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
 
     @Test
     public void testNonEuNotifications_gaUxEnabled() throws InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(false).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
@@ -378,8 +356,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
     @Test
     public void testEuNotifications_gaUxEnabled_nonDismissable()
             throws InterruptedException, UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
@@ -455,8 +431,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
     @FlakyTest(bugId = 302607350)
     public void testEuNotifications_gaUxEnabled_nonDismissable_dismissedOnConfirmationPage()
             throws InterruptedException, UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
@@ -547,8 +521,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
 
     @Test
     public void testNotificationsDisabled() {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
 
@@ -578,8 +550,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
 
     private void testRvcUxNotification(boolean isEeaDevice)
             throws InterruptedException, UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(isEeaDevice).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_RVC_UX_ENABLED);
@@ -678,8 +648,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesUnitTestCase
 
     private void testRvcPostOtaNotification(boolean isEeaDevice)
             throws InterruptedException, UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         doReturn(isEeaDevice).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();

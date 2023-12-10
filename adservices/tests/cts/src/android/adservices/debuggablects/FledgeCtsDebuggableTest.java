@@ -75,6 +75,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
@@ -362,14 +363,18 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
     private static final AtomicInteger sFrequencyCapKeyToFilter = new AtomicInteger(0);
 
+    // Ignore tests when device is not at least S
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
     // certain minimum version.
-    @Rule(order = 1)
+    @Rule(order = 2)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 

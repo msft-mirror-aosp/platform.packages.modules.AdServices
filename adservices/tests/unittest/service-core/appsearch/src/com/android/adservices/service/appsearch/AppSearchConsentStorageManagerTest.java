@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.appsearch;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -36,14 +35,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -58,9 +54,9 @@ import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnr
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -69,8 +65,11 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.util.List;
 
-@SmallTest
-public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
+@SpyStatic(AppSearchConsentWorker.class)
+@SpyStatic(PackageManagerCompatUtils.class)
+@SpyStatic(SdkLevel.class)
+@SpyStatic(FlagsFactory.class)
+public class AppSearchConsentStorageManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
     @Mock private AdServicesStorageManager mAdServicesStorageManager;
@@ -79,7 +78,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     @Mock private AppConsentDao mAppConsentDao;
     @Mock private SharedPreferences.Editor mEditor;
 
-    @Mock Flags mMockFlags;
+    @Mock private Flags mMockFlags;
 
     private AppSearchConsentStorageManager mAppSearchConsentStorageManager;
     private static final AdServicesApiType API_TYPE = AdServicesApiType.TOPICS;
@@ -90,19 +89,10 @@ public class AppSearchConsentStorageManagerTest extends AdServicesUnitTestCase {
     private static final Topic TOPIC2 = Topic.create(12, 12, 12);
     private static final Topic TOPIC3 = Topic.create(123, 123, 123);
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AppSearchConsentWorker.class)
-                    .spyStatic(PackageManagerCompatUtils.class)
-                    .spyStatic(SdkLevel.class)
-                    .spyStatic(FlagsFactory.class)
-                    .build();
-
     @Before
     public void setup() {
         doReturn(mAppSearchConsentWorker).when(() -> AppSearchConsentWorker.getInstance());
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
         mAppSearchConsentStorageManager =
                 new AppSearchConsentStorageManager(mAppSearchConsentWorker);
         ApplicationInfo app1 = new ApplicationInfo();

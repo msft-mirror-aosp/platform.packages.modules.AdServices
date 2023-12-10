@@ -87,6 +87,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();

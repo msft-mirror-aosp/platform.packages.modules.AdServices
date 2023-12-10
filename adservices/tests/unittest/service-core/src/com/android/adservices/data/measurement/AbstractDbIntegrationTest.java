@@ -526,6 +526,7 @@ public abstract class AbstractDbIntegrationTest {
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AttributionContract.ID, attribution.getId());
+        values.put(MeasurementTables.AttributionContract.SCOPE, attribution.getScope());
         values.put(MeasurementTables.AttributionContract.SOURCE_SITE, attribution.getSourceSite());
         values.put(
                 MeasurementTables.AttributionContract.SOURCE_ORIGIN, attribution.getSourceOrigin());

@@ -1,7 +1,9 @@
 {
   "description": "Two app sources with dual destination when max_sources_per_origin is set to 1, debug_permission (ad_id permission) is enabled. Expected source-storage-limit debug report",
   "phflags_override": {
-    "measurement_max_sources_per_publisher": "1"
+    "measurement_max_sources_per_publisher": "1",
+    "measurement_flex_api_max_information_gain_dual_destination_event": "9",
+    "measurement_flex_api_max_information_gain_dual_destination_navigation": "14"
   },
   "input": {
     "sources": [

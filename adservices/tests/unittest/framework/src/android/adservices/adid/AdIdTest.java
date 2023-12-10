@@ -15,29 +15,31 @@
  */
 package android.adservices.adid;
 
-import static org.junit.Assert.assertEquals;
-
 import androidx.test.filters.SmallTest;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
 /** Unit tests for {@link android.adservices.adid.AdId} */
 @SmallTest
-public final class AdIdTest {
+public final class AdIdTest extends AdServicesUnitTestCase {
+    private static final String TEST_AD_ID = "TEST_AD_ID";
+    private static final boolean TEST_LIMIT_AD_TRACKING_ENABLED = true;
+
     @Test
-    public void testAdId() throws Exception {
-        AdId response = new AdId("TEST_ADID", true);
+    public void testAdId() {
+        AdId adId1 = new AdId(TEST_AD_ID, TEST_LIMIT_AD_TRACKING_ENABLED);
 
         // Validate the returned response is same to what we created
-        assertEquals("TEST_ADID", response.getAdId());
-        assertEquals(true, response.isLimitAdTrackingEnabled());
+        expect.that(adId1.getAdId()).isEqualTo(TEST_AD_ID);
+        expect.that(adId1.isLimitAdTrackingEnabled()).isEqualTo(TEST_LIMIT_AD_TRACKING_ENABLED);
 
-        AdId mirrorResponse = response;
-        assertEquals(true, response.equals(mirrorResponse));
-        assertEquals(true, response.equals(new AdId("TEST_ADID", true)));
-        assertEquals(false, response.equals(new AdId("TEST_ADID", false)));
-        assertEquals(false, response.equals("TEST_ADID"));
+        // Validate equals().
+        AdId adId2 = new AdId(TEST_AD_ID, TEST_LIMIT_AD_TRACKING_ENABLED);
+        expect.that(adId1).isEqualTo(adId2);
 
-        assertEquals(true, response.hashCode() == new AdId("TEST_ADID", true).hashCode());
+        // Validate hashcode().
+        expect.that(adId1.hashCode()).isEqualTo(adId2.hashCode());
     }
 }
