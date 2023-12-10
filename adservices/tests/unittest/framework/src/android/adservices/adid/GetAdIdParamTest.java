@@ -17,42 +17,52 @@ package android.adservices.adid;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
 /** Unit tests for {@link GetAdIdParam} */
 @SmallTest
-public final class GetAdIdParamTest {
+public final class GetAdIdParamTest extends AdServicesUnitTestCase {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_SDK_PACKAGE_NAME = "SomeSdkPackageName";
 
     @Test
     public void test_nonNull() {
-        GetAdIdParam request =
+        GetAdIdParam param =
                 new GetAdIdParam.Builder()
                         .setAppPackageName(SOME_PACKAGE_NAME)
                         .setSdkPackageName(SOME_SDK_PACKAGE_NAME)
                         .build();
 
-        assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
-        assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+        expect.that(param.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
+        expect.that(param.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
 
         // no file descriptor marshalling.
-        assertThat(request.describeContents()).isEqualTo(0);
+        expect.that(param.describeContents()).isEqualTo(0);
 
         Parcel parcel = Parcel.obtain();
-        request.writeToParcel(parcel, 0);
-        parcel.setDataPosition(0);
 
-        GetAdIdParam createdRequest = GetAdIdParam.CREATOR.createFromParcel(parcel);
-        assertEquals(false, createdRequest == request);
-        assertEquals(GetAdIdParam.CREATOR.newArray(1).length, 1);
+        try {
+            param.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+
+            GetAdIdParam createdParam = GetAdIdParam.CREATOR.createFromParcel(parcel);
+            expect.that(createdParam).isNotSameInstanceAs(param);
+
+            // equals() is not overridden.
+            expect.that(createdParam).isNotEqualTo(param);
+        } finally {
+            parcel.recycle();
+        }
+
+        assertThat(GetAdIdParam.CREATOR.newArray(1).length).isEqualTo(1);
     }
 
     @Test
@@ -62,7 +72,7 @@ public final class GetAdIdParamTest {
                 () -> {
                     GetAdIdParam unusedRequest =
                             new GetAdIdParam.Builder()
-                                    // Not setting AppPackagename making it null.
+                                    // Not setting AppPackageName making it null.
                                     .build();
                 });
 

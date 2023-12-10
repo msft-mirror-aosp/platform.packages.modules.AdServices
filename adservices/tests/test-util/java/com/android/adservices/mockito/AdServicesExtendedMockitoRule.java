@@ -18,6 +18,8 @@ package com.android.adservices.mockito;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import android.os.Binder;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -99,7 +101,7 @@ public class AdServicesExtendedMockitoRule
      *     equivalent annotations) on {@link FlagsFactory}.
      */
     public final void mockGetFlags(Flags mockedFlags) {
-        logD("mockGetFlags(%s)", mockedFlags);
+        logV("mockGetFlags(%s)", mockedFlags);
         assertSpiedOrMocked(FlagsFactory.class);
         doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
@@ -113,6 +115,37 @@ public class AdServicesExtendedMockitoRule
      */
     public final void mockGetFlagsForTesting(Flags mockedFlags) {
         mockGetFlags(FlagsFactory.getFlagsForTest());
+    }
+
+    /**
+     * Mocks a call to {@link Binder#getCallingUidOrThrow()}, returning {@code uid}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Binder}.
+     */
+    public final void mockGetCallingUidOrThrow(int uid) {
+        logV("mockGetCallingUidOrThrow(%d)", uid);
+        mockBinderGetCallingUidOrThrow(uid);
+    }
+
+    /**
+     * Same as {@link #mockGetCallingUidOrThrow(int)}, but using the {@code uid} of the calling
+     * process.
+     *
+     * <p>Typically used when code under test calls {@link Binder#getCallingUidOrThrow()} and the
+     * test doesn't care about the result, but it needs to be mocked otherwise the real call would
+     * fail (as the test is not running inside a binder transaction).
+     */
+    public final void mockGetCallingUidOrThrow() {
+        int uid = Process.myUid();
+        logV("mockGetCallingUidOrThrow(Process.myUid=%d)", uid);
+        mockBinderGetCallingUidOrThrow(uid);
+    }
+
+    // mock only, don't log
+    private void mockBinderGetCallingUidOrThrow(int uid) {
+        assertSpiedOrMocked(Binder.class);
+        doReturn(uid).when(Binder::getCallingUidOrThrow);
     }
 
     // Overridden to get test name
@@ -151,7 +184,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     // TODO(b/312802824): add unit tests (for rule itself)
-    private void assertSpiedOrMocked(Class<FlagsFactory> clazz) {
+    private void assertSpiedOrMocked(Class<?> clazz) {
         if (!mSpiedOrMockedStaticClasses.contains(clazz)) {
             throw new IllegalStateException(
                     "Test doesn't static spy or mock "
@@ -162,8 +195,8 @@ public class AdServicesExtendedMockitoRule
     }
 
     @FormatMethod
-    private void logD(@FormatString String fmt, Object... args) {
-        Log.d(TAG, "on " + getTestName() + ": " + String.format(fmt, args));
+    private void logV(@FormatString String fmt, Object... args) {
+        Log.v(TAG, "on " + getTestName() + ": " + String.format(fmt, args));
     }
 
     public static final class Builder

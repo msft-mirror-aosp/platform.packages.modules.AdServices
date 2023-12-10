@@ -108,16 +108,20 @@ public class DebugKeyAccessor {
         Boolean doesPlatformAndDebugAdIdMatch = null;
         switch (attributionType) {
             case AttributionType.SOURCE_APP_TRIGGER_APP:
-                if (source.hasAdIdPermission() && trigger.hasAdIdPermission()) {
+                if (source.hasAdIdPermission()) {
                     sourceDebugKey = source.getDebugKey();
+                }
+                if (trigger.hasAdIdPermission()) {
                     triggerDebugKey = trigger.getDebugKey();
                 }
                 break;
             case AttributionType.SOURCE_WEB_TRIGGER_WEB:
                 // TODO(b/280323940): Web<>Web Debug Keys AdID option
                 if (trigger.getRegistrant().equals(source.getRegistrant())) {
-                    if (source.hasArDebugPermission() && trigger.hasArDebugPermission()) {
+                    if (source.hasArDebugPermission()) {
                         sourceDebugKey = source.getDebugKey();
+                    }
+                    if (trigger.hasArDebugPermission()) {
                         triggerDebugKey = trigger.getDebugKey();
                     }
                 } else if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
