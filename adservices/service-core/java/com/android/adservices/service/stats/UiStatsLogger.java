@@ -561,7 +561,7 @@ public final class UiStatsLogger {
 
     private static int getDefaultConsent() {
         Context context = getApplicationContext();
-        if (UxStatesManager.getInstance(context).getUx() == RVC_UX) {
+        if (UxStatesManager.getInstance().getUx() == RVC_UX) {
             return getDefaultConsent(AdServicesApiType.MEASUREMENTS);
         }
         Boolean defaultConsent = ConsentManager.getInstance().getDefaultConsent();
@@ -653,7 +653,7 @@ public final class UiStatsLogger {
 
     private static int getUx() {
         Context context = getApplicationContext();
-        switch (UxStatesManager.getInstance(context).getUx()) {
+        switch (UxStatesManager.getInstance().getUx()) {
             case U18_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
             case RVC_UX:
@@ -670,7 +670,7 @@ public final class UiStatsLogger {
     private static int getEnrollmentChannel() {
         Context context = getApplicationContext();
         PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
-                UxStatesManager.getInstance(context).getEnrollmentChannel();
+                UxStatesManager.getInstance().getEnrollmentChannel();
         if (enrollmentChannel == GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
                 || enrollmentChannel
                         == BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL

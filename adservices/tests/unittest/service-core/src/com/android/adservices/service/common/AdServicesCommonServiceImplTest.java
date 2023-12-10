@@ -115,7 +115,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mFlags).getAdServicesEnabled();
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance(any()));
+        ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
         doNothing()
                 .when(
                         () ->

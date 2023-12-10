@@ -277,7 +277,7 @@ public class MobileDataDownloadFactory {
                 .setEnabledSupplier(
                         () -> {
                             // Topics is permanently disabled for U18 UX.
-                            if (UxStatesManager.getInstance(context).getUx()
+                            if (UxStatesManager.getInstance().getUx()
                                     == PrivacySandboxUxCollection.U18_UX) {
                                 return false;
                             }

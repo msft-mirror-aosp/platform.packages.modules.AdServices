@@ -124,8 +124,7 @@ public class ConsentNotificationJobServiceTest {
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
 
         mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
-        ExtendedMockito.doReturn(mUxStatesManager)
-                .when(() -> UxStatesManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
         mConsentNotificationJobService.setConsentManager(mConsentManager);

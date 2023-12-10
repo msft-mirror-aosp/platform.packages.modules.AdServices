@@ -34,6 +34,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import java.util.Map;
 
@@ -70,15 +71,16 @@ public class UxStatesManager {
 
     /** Returns an instance of the UxStatesManager. */
     @NonNull
-    public static UxStatesManager getInstance(Context context) {
-        LogUtil.d("UxStates getInstance() called.");
+    public static UxStatesManager getInstance() {
         if (sUxStatesManager == null) {
             synchronized (LOCK) {
                 if (sUxStatesManager == null) {
                     LogUtil.d("Creaeting new UxStatesManager.");
                     sUxStatesManager =
                             new UxStatesManager(
-                                    context, FlagsFactory.getFlags(), ConsentManager.getInstance());
+                                    ApplicationContextSingleton.get(),
+                                    FlagsFactory.getFlags(),
+                                    ConsentManager.getInstance());
                 }
             }
         }
