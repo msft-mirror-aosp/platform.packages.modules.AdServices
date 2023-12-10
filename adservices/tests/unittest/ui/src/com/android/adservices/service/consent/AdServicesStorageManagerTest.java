@@ -40,7 +40,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 
 import com.google.common.collect.ImmutableList;
@@ -50,7 +50,6 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.io.IOException;
@@ -60,7 +59,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class AdServicesStorageManagerTest extends AdServicesUnitTestCase {
+public final class AdServicesStorageManagerTest extends AdServicesMockitoTestCase {
     @Spy private Context mContextSpy;
     @Mock private IAdServicesManager mMockIAdServicesManager;
 
@@ -104,7 +103,6 @@ public class AdServicesStorageManagerTest extends AdServicesUnitTestCase {
 
     @Before
     public void setup() throws IOException {
-        MockitoAnnotations.initMocks(this);
         mContextSpy = Mockito.spy(appContext.get());
         mPackageManager = mContextSpy.getPackageManager();
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);

@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.measurement.util;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -26,26 +28,22 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.Optional;
 
 @SmallTest
-public final class EnrollmentTest extends AdServicesUnitTestCase {
+@SpyStatic(AppManifestConfigHelper.class)
+public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
@@ -62,33 +60,12 @@ public final class EnrollmentTest extends AdServicesUnitTestCase {
 
     @Mock private Flags mFlags;
 
-    private StaticMockitoSession mStaticMockitoSession;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AppManifestConfigHelper.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-    }
-
-    @After
-    public void cleanup() {
-        mStaticMockitoSession.finishMocking();
-    }
-
     @Test
     public void testMaybeGetEnrollmentId_success() {
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(ENROLLMENT);
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        mockIsAllowedAttributionAccess(/* allowed= */ true);
 
         assertEquals(
                 Optional.of(ENROLLMENT.getEnrollmentId()),
@@ -102,11 +79,7 @@ public final class EnrollmentTest extends AdServicesUnitTestCase {
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(null);
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        mockIsAllowedAttributionAccess(/* allowed= */ true);
 
         assertEquals(
                 Optional.empty(),
@@ -120,11 +93,8 @@ public final class EnrollmentTest extends AdServicesUnitTestCase {
                 .thenReturn(ENROLLMENT);
         // Simulating failure
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(true);
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        mockIsAllowedAttributionAccess(/* allowed= */ true);
+
         assertEquals(
                 Optional.empty(),
                 Enrollment.getValidEnrollmentId(
@@ -137,11 +107,7 @@ public final class EnrollmentTest extends AdServicesUnitTestCase {
                 .thenReturn(ENROLLMENT);
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
         // Simulating failure
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        mockIsAllowedAttributionAccess(/* allowed= */ false);
 
         assertEquals(
                 Optional.empty(),
@@ -227,5 +193,13 @@ public final class EnrollmentTest extends AdServicesUnitTestCase {
                 Enrollment.getValidEnrollmentId(
                         Uri.parse(localhostIpWithPathAndParams), PACKAGE_NAME, mEnrollmentDao,
                         sContext, mFlags));
+    }
+
+    private void mockIsAllowedAttributionAccess(boolean allowed) {
+        doReturn(allowed)
+                .when(
+                        () ->
+                                AppManifestConfigHelper.isAllowedAttributionAccess(
+                                        PACKAGE_NAME, ENROLLMENT_ID));
     }
 }

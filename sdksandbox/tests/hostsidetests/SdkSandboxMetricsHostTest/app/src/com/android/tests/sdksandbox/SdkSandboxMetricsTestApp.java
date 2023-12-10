@@ -37,6 +37,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.tests.sdkprovider.crashtest.ICrashTestSdkApi;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,6 +76,17 @@ public class SdkSandboxMetricsTestApp {
         mDropboxManager = mContext.getSystemService(DropBoxManager.class);
         mPackageManager = mContext.getPackageManager();
         assertThat(mSdkSandboxManager).isNotNull();
+
+        // Unload the SDK before running tests to ensure that the SDK is not loaded before running a
+        // test
+        mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
+    }
+
+    @After
+    public void tearDown() {
+        if (mSdkSandboxManager != null) {
+            mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
+        }
     }
 
     @Test
