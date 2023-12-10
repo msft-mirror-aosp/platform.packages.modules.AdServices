@@ -62,6 +62,8 @@ public class UxStatesManager {
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull ConsentManager consentManager) {
+        LogUtil.d("Instantiating lazy UxStatesManager instance.");
+
         mUxFlags = flags.getUxFlags();
         mConsentManager = consentManager;
         mIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
@@ -69,22 +71,18 @@ public class UxStatesManager {
                 context.getSharedPreferences("UX_SHARED_PREFERENCES", Context.MODE_PRIVATE);
     }
 
+    private static class UxStatesManagerLazyInstanceHolder {
+        static final UxStatesManager LAZY_INSTANCE =
+                new UxStatesManager(
+                        ApplicationContextSingleton.get(),
+                        FlagsFactory.getFlags(),
+                        ConsentManager.getInstance());
+    }
+
     /** Returns an instance of the UxStatesManager. */
     @NonNull
     public static UxStatesManager getInstance() {
-        if (sUxStatesManager == null) {
-            synchronized (LOCK) {
-                if (sUxStatesManager == null) {
-                    LogUtil.d("Creaeting new UxStatesManager.");
-                    sUxStatesManager =
-                            new UxStatesManager(
-                                    ApplicationContextSingleton.get(),
-                                    FlagsFactory.getFlags(),
-                                    ConsentManager.getInstance());
-                }
-            }
-        }
-        return sUxStatesManager;
+        return UxStatesManagerLazyInstanceHolder.LAZY_INSTANCE;
     }
 
     /** Saves the AdServices states into data stores. */
