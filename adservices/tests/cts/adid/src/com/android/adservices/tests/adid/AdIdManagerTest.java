@@ -21,56 +21,32 @@ import static org.junit.Assert.fail;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
-import android.content.Context;
 import android.os.LimitExceededException;
 import android.util.Log;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.ExceptionFailureSyncCallback;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public final class AdIdManagerTest {
-
-    private static final String TAG = AdIdManagerTest.class.getSimpleName();
+public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
 
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
-
-    // Ignore tests when device is not at least  (requires android.os.OutcomeReceiver)
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
-
-    // Ignore tests when device is not supported
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
 
     private AdIdManager mAdIdManager;
 
     @Before
     public void setup() throws Exception {
-        Log.v(TAG, "setup(): sleeping 1s");
+        Log.v(mTag, "setup(): sleeping 1s");
         TimeUnit.SECONDS.sleep(1);
 
         mAdIdManager = AdIdManager.get(sContext);
@@ -96,7 +72,7 @@ public final class AdIdManagerTest {
     private void validateAdIdManagerTestResults(ExceptionFailureSyncCallback<AdId> callback)
             throws Exception {
         AdId resultAdId = callback.assertSuccess();
-        Log.v(TAG, "AdId: " + toString(resultAdId));
+        Log.v(mTag, "AdId: " + toString(resultAdId));
 
         assertWithMessage("getAdId()").that(resultAdId.getAdId()).isNotNull();
         assertWithMessage("isLimitAdTrackingEnabled()")
@@ -111,7 +87,7 @@ public final class AdIdManagerTest {
         float requestPerSecond = flags.getAdIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
             Log.v(
-                    TAG,
+                    mTag,
                     "calling getAdIdAndVerifyRateLimitReached() "
                             + (i + 1)
                             + "/"
@@ -132,7 +108,7 @@ public final class AdIdManagerTest {
         boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         Log.d(
-                TAG,
+                mTag,
                 "testAdIdManager_verifyRateLimitReached(): reachedLimit="
                         + reachedLimit
                         + ", executedInLessThanOneSec="
@@ -163,7 +139,7 @@ public final class AdIdManagerTest {
         AdId result = callback.getResult();
         Exception error = callback.getError();
         Log.v(
-                TAG,
+                mTag,
                 "getAdIdAndVerifyRateLimitReached(): result="
                         + toString(result)
                         + ", error="

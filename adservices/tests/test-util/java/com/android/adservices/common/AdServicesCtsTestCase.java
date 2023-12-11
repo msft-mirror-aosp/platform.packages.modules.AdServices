@@ -15,12 +15,14 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
+import android.content.Context;
+
+import androidx.test.InstrumentationRegistry;
 
 import org.junit.Rule;
 
 /**
- * Base class for all unit tests.
+ * Base class for all CTS tests.
  *
  * <p>Contains only the bare minimum functionality required by them, like custom JUnit rules.
  *
@@ -28,10 +30,14 @@ import org.junit.Rule;
  * start defining rules with {@code order = 11} (although for now they can use {@code order = 0} for
  * {@code SdkLevelSupportRule}, as that rule cannot be defined here yet.
  */
-public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
+public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
+
+    // TODO(b/314188692): move to AdServicesTestCase (and refactor subclasses to use it)
+    protected static final Context sContext = InstrumentationRegistry.getTargetContext();
 
     @Rule(order = 5)
-    public final ApplicationContextSingletonRule appContext =
-            new ApplicationContextSingletonRule(/* restoreAfter= */ false);
+    public final AdServicesFlagsSetterRule flags = getAdServicesFlagsSetterRule();
 
+    /** Gets the {@link AdServicesFlagsSetterRule} for this test. */
+    protected abstract AdServicesFlagsSetterRule getAdServicesFlagsSetterRule();
 }
