@@ -32,6 +32,17 @@ import org.junit.Rule;
  */
 public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
 
+    // TODO(b/295321663): move these constants (and those from LogFactory) to AdServicesCommon
+    protected static final String LOGCAT_LEVEL_VERBOSE = "VERBOSE";
+    protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
+    protected static final String LOGCAT_TAG_ADSERVICES_SERVICE = LOGCAT_TAG_ADSERVICES + "-system";
+    protected static final String LOGCAT_TAG_TOPICS = LOGCAT_TAG_ADSERVICES + ".topics";
+    protected static final String LOGCAT_TAG_FLEDGE = LOGCAT_TAG_ADSERVICES + ".fledge";
+    protected static final String LOGCAT_TAG_MEASUREMENT = LOGCAT_TAG_ADSERVICES + ".measurement";
+    protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
+    protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
+    protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
+
     // TODO(b/314188692): move to AdServicesTestCase (and refactor subclasses to use it)
     protected static final Context sContext = InstrumentationRegistry.getTargetContext();
 
