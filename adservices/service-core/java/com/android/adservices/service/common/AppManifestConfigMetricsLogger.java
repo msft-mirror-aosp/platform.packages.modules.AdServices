@@ -141,7 +141,11 @@ public final class AppManifestConfigMetricsLogger {
 
         String prefix = "  ";
         @SuppressWarnings("NewAdServicesFile") // PREFS_NAME already called FileCompatUtils
-        String path = new File(context.getDataDir(), PREFS_NAME).getAbsolutePath();
+        // NOTE: shared_prefs is hard-coded on ContextImpl, but unfortunately Context doesn't offer
+        // any API we could use here to get that path (getSharedPreferencesPath() is @removed and
+        // the available APIs return a SharedPreferences, not a File).
+        String path =
+                new File(context.getDataDir() + "/shared_prefs", PREFS_NAME).getAbsolutePath();
         pw.printf("%sPreferences file: %s.xml\n", prefix, path);
 
         boolean flagEnabledByDefault =
