@@ -17,6 +17,8 @@
 package com.android.adservices.mockito;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
+import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
 
 import android.os.Binder;
 import android.os.Process;
@@ -24,8 +26,10 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.common.TestHelper;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
@@ -156,10 +160,7 @@ public class AdServicesExtendedMockitoRule
 
             @Override
             public void evaluate() throws Throwable {
-                mTestName =
-                        description.getTestClass().getSimpleName()
-                                + "#"
-                                + description.getMethodName();
+                mTestName = TestHelper.getTestName(description);
                 try {
                     realStatement.evaluate();
                 } finally {
@@ -181,6 +182,22 @@ public class AdServicesExtendedMockitoRule
         Set<Class<?>> mockedStaticClasses = super.getMockedStaticClasses(description);
         mSpiedOrMockedStaticClasses.addAll(mockedStaticClasses);
         return mockedStaticClasses;
+    }
+
+    @Override
+    protected boolean getClearInlineMethodsAtTheEnd(Description description) {
+        ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
+        if (annotation != null) {
+            boolean shouldClear = shouldClearInlineMocksAfterTest(description, annotation.value());
+            Log.d(
+                    TAG,
+                    "getClearInlineMethodsAtTheEnd(): returning value based on annotation ("
+                            + shouldClear
+                            + ") for "
+                            + TestHelper.getTestName(description));
+            return shouldClear;
+        }
+        return super.getClearInlineMethodsAtTheEnd(description);
     }
 
     // TODO(b/312802824): add unit tests (for rule itself)
