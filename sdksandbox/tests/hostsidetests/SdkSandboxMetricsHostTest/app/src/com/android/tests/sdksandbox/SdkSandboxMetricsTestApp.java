@@ -23,6 +23,7 @@ import android.app.ApplicationExitInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -65,13 +66,13 @@ public class SdkSandboxMetricsTestApp {
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private DropBoxManager mDropboxManager;
-    private Context mContext;
+    private final Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
+    private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
     private PackageManager mPackageManager;
     private String mCrashEntryText;
 
     @Before
     public void setup() {
-        mContext = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         mDropboxManager = mContext.getSystemService(DropBoxManager.class);
         mPackageManager = mContext.getPackageManager();
@@ -79,13 +80,13 @@ public class SdkSandboxMetricsTestApp {
 
         // Unload the SDK before running tests to ensure that the SDK is not loaded before running a
         // test
-        mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
+        mSdkLifecycleHelper.unloadSdk(SDK_PACKAGE);
     }
 
     @After
     public void tearDown() {
         if (mSdkSandboxManager != null) {
-            mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
+            mSdkLifecycleHelper.unloadSdk(SDK_PACKAGE);
         }
     }
 
