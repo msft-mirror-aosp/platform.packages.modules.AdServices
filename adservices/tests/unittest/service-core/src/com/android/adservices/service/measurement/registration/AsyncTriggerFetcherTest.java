@@ -46,7 +46,7 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -62,20 +62,17 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assume;
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.net.URL;
@@ -92,9 +89,11 @@ import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(Enrollment.class)
 /** Unit tests for {@link AsyncTriggerFetcher} */
 @RunWith(Parameterized.class)
-public final class AsyncTriggerFetcherTest extends AdServicesUnitTestCase {
+public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
@@ -164,15 +163,13 @@ public final class AsyncTriggerFetcherTest extends AdServicesUnitTestCase {
     private static final int mMaxAggregateDeduplicationKeysPerRegistration =
             Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 
-    AsyncTriggerFetcher mFetcher;
+    private AsyncTriggerFetcher mFetcher;
 
-    @Mock HttpsURLConnection mUrlConnection;
-    @Mock HttpsURLConnection mUrlConnection1;
-    @Mock EnrollmentDao mEnrollmentDao;
-    @Mock Flags mFlags;
-    @Mock AdServicesLogger mLogger;
-
-    private MockitoSession mStaticMockSession;
+    @Mock private HttpsURLConnection mUrlConnection;
+    @Mock private HttpsURLConnection mUrlConnection1;
+    @Mock private EnrollmentDao mEnrollmentDao;
+    @Mock private Flags mFlags;
+    @Mock private AdServicesLogger mLogger;
 
     // Parameterised setup to run all the tests once with ARA parsing V1 flag on, and once with the
     // flag off.
@@ -189,30 +186,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesUnitTestCase {
         mAraParsingAlignmentV1Enabled = araParsingAlignmentV1Enabled;
     }
 
-    @Rule(order = 11)
-    public ExternalResource externalResource =
-            new ExternalResource() {
-                protected void before() throws Throwable {
-                    setup();
-                }
-
-                protected void after() {
-                    try {
-                        cleanup();
-                    } catch (InterruptedException ignored) {
-                    }
-                }
-            };
-
+    @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(Enrollment.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
         mFetcher = spy(new AsyncTriggerFetcher(CONTEXT, mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
@@ -243,10 +219,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesUnitTestCase {
                 .thenReturn(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         when(mFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds())
                 .thenReturn(MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-    }
-
-    public void cleanup() throws InterruptedException {
-        mStaticMockSession.finishMocking();
     }
 
     @Test
