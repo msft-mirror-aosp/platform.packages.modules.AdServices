@@ -29,8 +29,10 @@ android_test {
         "adservices-shared-testing",
         "androidx.test.core",
         "androidx.test.runner",
+        "auto_value_annotations",
         "truth",
     ],
+    plugins: ["auto_annotation_plugin"],
     min_sdk_version: "30",
     test_suites: [
         "general-tests",

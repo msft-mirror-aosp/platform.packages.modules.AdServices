@@ -27,7 +27,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
@@ -67,10 +67,10 @@ import android.os.Process;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
+import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
@@ -105,13 +105,9 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -120,8 +116,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 // TODO(b/290839573) - Remove @RequiresSdkLevelAtLeastS if Topics is enabled on R in the future.
@@ -787,22 +781,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // Call init() to load the cache
         topicsServiceImpl.init();
 
-        // Topic impl service use a background executor to run the task,
-        // use a countdownLatch and set the countdown in the logging call operation
-        final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(
-                        new Answer<Object>() {
-                            @Override
-                            public Object answer(InvocationOnMock invocation) throws Throwable {
-                                // The method logAPiCallStats is called.
-                                invocation.callRealMethod();
-                                logOperationCalledLatch.countDown();
-                                return null;
-                            }
-                        })
-                .when(mAdServicesLogger)
-                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
-
         // Setting up the timestamp for latency calculation, we passing in a client side call
         // timestamp as a parameter to the call (100 in the below code), in topic service, it
         // calls for timestamp at the method start which will return 150, we get client side to
@@ -812,12 +790,14 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // which is 150 in these numbers
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
 
-        ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
-
         // Send client side timestamp, working with the mock information in
         // service side to calculate the latency
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
+
         GetTopicsResult getTopicsResult = callback.assertSuccess();
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
@@ -829,17 +809,13 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        assertThat(
-                        logOperationCalledLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
+        ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
+        assertApiCallStats(apiCallStats, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS);
 
-        verify(mAdServicesLogger).logApiCallStats(argument.capture());
-        assertThat(argument.getValue().getResultCode()).isEqualTo(STATUS_SUCCESS);
-        assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
-        assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
         // The latency calculate result (200 - 150) + (150 - 100) * 2 = 150
-        assertThat(argument.getValue().getLatencyMillisecond()).isEqualTo(150);
+        expect.withMessage("%s.getLatencyMillisecond()", apiCallStats)
+                .that(apiCallStats.getLatencyMillisecond())
+                .isEqualTo(150);
 
         // Invocations Summary
         // loadCache() : 1, getTopics(): 1 * 3
@@ -849,7 +825,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
     @Test
     public void testGetTopics_enforceCallingPackage_invalidPackage() throws Exception {
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        doNothingOnErrorLogUtilError();
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
@@ -900,49 +876,21 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
-        // Topic impl service use a background executor to run the task,
-        // use a countdownLatch and set the countdown in the logging call operation
-        final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(
-                        new Answer<Object>() {
-                            @Override
-                            public Object answer(InvocationOnMock invocation) throws Throwable {
-                                // The method logAPiCallStats is called.
-                                invocation.callRealMethod();
-                                logOperationCalledLatch.countDown();
-                                return null;
-                            }
-                        })
-                .when(mAdServicesLogger)
-                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
-
-        ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
-
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
-        topicsService.getTopics(mRequest, mCallerMetadata, callback);
-        // NOTE: not awaiting for the callback result but for logOperationCalledLatch instead
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
 
-        // getTopics method finished executing.
-        assertThat(
-                        logOperationCalledLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
+        topicsService.getTopics(mRequest, mCallerMetadata, callback);
+        // NOTE: not awaiting for the callback result but for apiCallStats instead
+
+        ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
+        assertApiCallStats(apiCallStats, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS);
 
         // Record the call from App and Sdk to usage history only when isRecordObservation is true.
-        verify(mSpyTopicsWorker, Mockito.times(1))
-                .recordUsage(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
-
-        verify(mAdServicesLogger).logApiCallStats(argument.capture());
-        assertThat(argument.getValue().getResultCode()).isEqualTo(STATUS_SUCCESS);
-        assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
-        assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
-        // Verify AdServicesLogger logs getTopics API.
-        assertThat(argument.getValue().getApiName())
-                .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS);
+        verify(mSpyTopicsWorker).recordUsage(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
     }
 
     @Test
-    @FlakyTest(bugId = 313942764)
     public void testGetTopics_notRecordObservation() throws Exception {
         mockAppContextForAppManifestConfigHelperCall();
 
@@ -954,24 +902,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         TopicsServiceImpl topicsService = createTestTopicsServiceImplInstance_spyTopicsWorker();
 
-        // Topic impl service use a background executor to run the task,
-        // use a countdownLatch and set the countdown in the logging call operation
-        final CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(
-                        new Answer<Object>() {
-                            @Override
-                            public Object answer(InvocationOnMock invocation) throws Throwable {
-                                // The method logAPiCallStats is called.
-                                invocation.callRealMethod();
-                                logOperationCalledLatch.countDown();
-                                return null;
-                            }
-                        })
-                .when(mAdServicesLogger)
-                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
-
-        ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
-
         mRequest =
                 new GetTopicsParam.Builder()
                         .setAppPackageName(TEST_APP_PACKAGE_NAME)
@@ -981,19 +911,32 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
+
         callback.assertResultReceived();
+        ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
+        assertApiCallStats(apiCallStats, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API);
 
         // Not record the call from App and Sdk to usage history when isRecordObservation is false.
         verify(mSpyTopicsWorker, never()).recordUsage(anyString(), anyString());
+    }
 
-        verify(mAdServicesLogger).logApiCallStats(argument.capture());
-        assertThat(argument.getValue().getResultCode()).isEqualTo(STATUS_SUCCESS);
-        assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
-        assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
-        // Verify AdServicesLogger logs Preview API.
-        assertThat(argument.getValue().getApiName())
-                .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API);
+    private void assertApiCallStats(ApiCallStats apiCallStats, int apiName) {
+        expect.withMessage("%s.getResultCode()", apiCallStats)
+                .that(apiCallStats.getResultCode())
+                .isEqualTo(STATUS_SUCCESS);
+        expect.withMessage("%s.getAppPackageName()", apiCallStats)
+                .that(apiCallStats.getAppPackageName())
+                .isEqualTo(TEST_APP_PACKAGE_NAME);
+        expect.withMessage("%s.getSdkPackageName()", apiCallStats)
+                .that(apiCallStats.getSdkPackageName())
+                .isEqualTo(SOME_SDK_NAME);
+        expect.withMessage("%s.getApiName()", apiCallStats)
+                .that(apiCallStats.getApiName())
+                .isEqualTo(apiName);
     }
 
     private void mockGetTopicsDisableDirectAppCalls(boolean value) {
@@ -1013,21 +956,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             boolean checkLoggingStatus)
             throws InterruptedException {
 
-        // Topic impl service use a background executor to run the task,
-        // use a countdownLatch and set the countdown in the logging call operation
-        CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(
-                        new Answer<Object>() {
-                            @Override
-                            public Object answer(InvocationOnMock invocation) throws Throwable {
-                                // The method logAPiCallStats is called.
-                                invocation.callRealMethod();
-                                logOperationCalledLatch.countDown();
-                                return null;
-                            }
-                        })
-                .when(mAdServicesLogger)
-                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
 
         mTopicsServiceImpl =
                 new TopicsServiceImpl(
@@ -1045,21 +975,23 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         callback.assertFailed(expectedResultCode);
 
         if (checkLoggingStatus) {
-            // getTopics method finished executing.
-            logOperationCalledLatch.await();
+            ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
 
-            ArgumentCaptor<ApiCallStats> argument = ArgumentCaptor.forClass(ApiCallStats.class);
-
-            verify(mAdServicesLogger).logApiCallStats(argument.capture());
-            assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_API_CALLED);
-            assertThat(argument.getValue().getApiClass())
+            expect.withMessage("%s.getResultCode()", apiCallStats)
+                    .that(apiCallStats.getResultCode())
+                    .isEqualTo(expectedResultCode);
+            expect.withMessage("%s.getApiClass()", apiCallStats)
+                    .that(apiCallStats.getApiName())
                     .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__TARGETING);
-            assertThat(argument.getValue().getApiName())
+            expect.withMessage("%s.getApiName()", apiCallStats)
+                    .that(apiCallStats.getApiName())
                     .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS);
-            assertThat(argument.getValue().getResultCode()).isEqualTo(expectedResultCode);
-            assertThat(argument.getValue().getAppPackageName())
+            expect.withMessage("%s.getAppPackageName()", apiCallStats)
+                    .that(apiCallStats.getAppPackageName())
                     .isEqualTo(request.getAppPackageName());
-            assertThat(argument.getValue().getSdkPackageName()).isEqualTo(request.getSdkName());
+            expect.withMessage("%s.getSdkPackageName()", apiCallStats)
+                    .that(apiCallStats.getSdkPackageName())
+                    .isEqualTo(request.getSdkName());
         }
     }
 

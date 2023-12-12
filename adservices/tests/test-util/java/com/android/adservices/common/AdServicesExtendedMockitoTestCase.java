@@ -15,39 +15,37 @@
  */
 package com.android.adservices.common;
 
-import android.util.Log;
+import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
+import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 
-import org.junit.AfterClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
-import org.mockito.Mockito;
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
  * AdServicesMockitoTestCase} instead).
  *
- * <p><b>NOTE:</b> subclasses MUST use
- * {@link com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or
- * (@link com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static
- * classes are mocked ad/or spied.
+ * <p><b>NOTE:</b> subclasses MUST use {@link
+ * com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or (@link
+ * com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static classes are
+ * mocked ad/or spied.
  */
+@ClearInlineMocksMode(CLEAR_AFTER_TEST_CLASS)
 public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTestCase {
 
-    private static final String TAG = AdServicesExtendedMockitoTestCase.class.getSimpleName();
+    // NOTE: must use CLEAR_AFTER_TEST_CLASS by default (defined as a class annotation, so it's used
+    // by both ExtendedMockitoInlineCleanerRule and AdServicesExtendedMockitoRule), as some tests
+    // performing complicated static class initialization on @Before methods, which often cause test
+    // failure when called after the mocks are cleared (for example, DialogFragmentTest would fail
+    // after the first method was executed)
+    @ClassRule
+    public static final ExtendedMockitoInlineCleanerRule sInlineCleaner =
+            new ExtendedMockitoInlineCleanerRule();
 
     @Rule(order = 10)
     public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    // TODO(b/315196012): use annotations instead
-                    .dontClearInlineMocks()
-                    .build();
-
-    /** Clears inline mocks to avoid memory leaks. */
-    @AfterClass
-    public static void clearInlineMethods() {
-        // TODO(b/315196012): need to figure out which class it is (might need a custom @ClassRule
-        Log.i(TAG, "Calling Mockito.framework().clearInlineMocks() @AfterClass of");
-        Mockito.framework().clearInlineMocks();
-    }
+            new AdServicesExtendedMockitoRule.Builder(this).build();
 }
