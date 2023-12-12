@@ -57,6 +57,7 @@ import android.content.Context;
 import android.os.PersistableBundle;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.JobServiceCallback;
@@ -142,6 +143,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testOnStartJob_killswitchIsOff_withoutLogging() throws Exception {
         // Logging killswitch is on.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
@@ -153,6 +155,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testOnStartJob_killswitchIsOff_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
@@ -166,6 +169,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testOnStartJob_killswitchIsOn_withoutLogging() throws Exception {
         // Logging killswitch is on.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
@@ -177,6 +181,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testOnStartJob_killSwitchOn_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
@@ -189,6 +194,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testSchedule_killswitchOff() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         mockGetMddFlags();
@@ -206,6 +212,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testSchedule_killswitchOn() throws Exception {
         // Killswitch is off.
         mockMddBackgroundTaskKillSwitch(/* toBeReturned */ true);
@@ -223,6 +230,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testOnStopJob_withoutLogging() throws Exception {
         // Logging killswitch is on.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
@@ -234,6 +242,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testOnStopJob_withLogging() throws Exception {
         // Logging killswitch is off.
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
@@ -246,6 +255,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testScheduleIfNeeded_Success() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         mockGetMddFlags();
@@ -276,6 +286,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testScheduleIfNeeded_ScheduledWithSameParameters() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         mockGetMddFlags();
@@ -301,6 +312,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testScheduleIfNeeded_ScheduledWithDifferentParameters() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         mockGetMddFlags();
@@ -328,6 +340,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testScheduleIfNeeded_forceRun() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         mockGetMddFlags();
@@ -391,6 +404,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         mockGetMddFlags();
@@ -406,6 +420,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         mockGetMddFlags();
@@ -421,6 +436,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testScheduleIfNeededMddSingleTask_mddCellularChargingPeriodicTask()
             throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
@@ -437,6 +453,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testScheduleIfNeededMddSingleTask_mddWifiChargingPeriodicTask() throws Exception {
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         mockGetMddFlags();
@@ -452,6 +469,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
 
@@ -462,6 +480,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 315980870)
     public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
 
