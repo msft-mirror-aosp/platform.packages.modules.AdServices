@@ -15,8 +15,7 @@
  */
 package com.android.adservices.common;
 
-
-import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
+import com.android.adservices.common.AndroidSdk.Level;
 
 public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRuleTest {
 
@@ -25,12 +24,12 @@ public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRule
     }
 
     @Override
-    protected SdkLevelSupportRule newRuleForDeviceLevelAndRuleAtLeastLevel(AndroidSdkLevel level) {
+    protected SdkLevelSupportRule newRuleForDeviceLevelAndRuleAtLeastLevel(Level level) {
         return newRule(level, level);
     }
 
     @Override
-    protected SdkLevelSupportRule newRule(AndroidSdkLevel ruleLevel, AndroidSdkLevel deviceLevel) {
+    protected SdkLevelSupportRule newRule(Level ruleLevel, Level deviceLevel) {
         SdkLevelSupportRule rule = new SdkLevelSupportRule(ruleLevel);
         mLog.v("newRule(%s, %s): returning %s", ruleLevel, deviceLevel, rule);
         rule.setDeviceLevelSupplier(() -> deviceLevel);
