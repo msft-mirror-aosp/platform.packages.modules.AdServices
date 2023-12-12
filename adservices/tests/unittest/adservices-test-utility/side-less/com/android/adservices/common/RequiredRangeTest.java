@@ -26,6 +26,7 @@ import org.junit.Test;
 public final class RequiredRangeTest {
 
     private static final String REASON = "To get to the other side.";
+    private static final String NULL_REASON = null;
 
     @Rule public final Expect expect = Expect.create();
 
@@ -46,12 +47,10 @@ public final class RequiredRangeTest {
         var range2 = AndroidSdkRange.forExactly(42);
 
         expectEquals(new RequiredRange(range1, REASON), new RequiredRange(range1, REASON));
-        expectEquals(
-                new RequiredRange(range1, REASON), new RequiredRange(range1, /* reason= */ null));
+        expectEquals(new RequiredRange(range1, REASON), new RequiredRange(range1, NULL_REASON));
 
         expectNotEquals(new RequiredRange(range1, REASON), new RequiredRange(range2, REASON));
-        expectNotEquals(
-                new RequiredRange(range1, REASON), new RequiredRange(range2, /* reason= */ null));
+        expectNotEquals(new RequiredRange(range1, REASON), new RequiredRange(range2, NULL_REASON));
     }
 
     private void expectEquals(RequiredRange requiredRange1, RequiredRange requiredRange2) {
