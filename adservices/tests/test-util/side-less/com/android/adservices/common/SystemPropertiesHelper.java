@@ -112,7 +112,11 @@ public final class SystemPropertiesHelper {
         private static final String PROP_LINE_REGEX = "^\\[(?<name>.*)\\].*\\[(?<value>.*)\\]$";
         private static final Pattern PROP_LINE_PATTERN = Pattern.compile(PROP_LINE_REGEX);
 
-        Interface() {}
+        protected final Logger mLog;
+
+        Interface(RealLogger logger) {
+            mLog = new Logger(Objects.requireNonNull(logger), DeviceConfigHelper.class);
+        }
 
         /** Gets the value of a property. */
         abstract String get(String name);
@@ -142,6 +146,22 @@ public final class SystemPropertiesHelper {
         }
 
         /** Sets the value of a property. */
-        abstract void set(String name, String value);
+        void set(String name, String value) {
+            mLog.v("set(%s, %s)", name, value);
+
+            if (value != null && !value.isEmpty()) {
+                runShellCommand("setprop %s %s", name, value);
+                return;
+            }
+            // TODO(b/293132368): UIAutomation doesn't support passing a "" or '' - it will quote
+            // them, which would cause the property value to be "" or '', not the empty String.
+            // Another approach would be calling SystemProperties.set(), but that method is hidden
+            // (b/294414609)
+            mLog.w(
+                    "NOT resetting property %s to empty String as it's not supported by"
+                            + " runShellCommand(), but setting it as null",
+                    name);
+            runShellCommand("setprop %s null", name);
+        }
     }
 }
