@@ -230,11 +230,11 @@ public class ReportAndRegisterEventE2ETest {
 
     @Spy
     private AsyncSourceFetcher mAsyncSourceFetcherSpy =
-            new AsyncSourceFetcher(CONTEXT, mEnrollmentDaoMock, mFlags, mAdServicesLoggerMock);
+            new AsyncSourceFetcher(CONTEXT, mEnrollmentDaoMock, mFlags);
 
     @Spy
     private AsyncTriggerFetcher mAsyncTriggerFetcherSpy =
-            new AsyncTriggerFetcher(CONTEXT, mEnrollmentDaoMock, mFlags, mAdServicesLoggerMock);
+            new AsyncTriggerFetcher(CONTEXT, mEnrollmentDaoMock, mFlags);
 
     @Mock private DebugReportApi mDebugReportApiMock;
     @Mock private SourceNoiseHandler mSourceNoiseHandlerMock;
