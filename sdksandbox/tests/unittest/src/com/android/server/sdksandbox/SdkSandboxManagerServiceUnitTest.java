@@ -2123,7 +2123,10 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testStopSdkSandbox() throws Exception {
         disableKillUid();
+
+        assertThat(mService.isSdkSandboxServiceRunning(TEST_PACKAGE)).isFalse();
         loadSdk(SDK_NAME);
+        assertThat(mService.isSdkSandboxServiceRunning(TEST_PACKAGE)).isTrue();
 
         Mockito.doNothing()
                 .when(mSpyContext)
@@ -2134,6 +2137,7 @@ public class SdkSandboxManagerServiceUnitTest {
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
         assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isEqualTo(null);
+        assertThat(mService.isSdkSandboxServiceRunning(TEST_PACKAGE)).isFalse();
     }
 
     @Test(expected = SecurityException.class)
