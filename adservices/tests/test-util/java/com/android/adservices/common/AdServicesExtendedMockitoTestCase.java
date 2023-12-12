@@ -23,15 +23,16 @@ import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInli
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.mockito.quality.Strictness;
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
  * AdServicesMockitoTestCase} instead).
  *
- * <p><b>NOTE:</b> subclasses MUST use {@link
- * com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or (@link
- * com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static classes are
- * mocked ad/or spied.
+ * <p><b>NOTE:</b> subclasses MUST use
+ * {@link com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or
+ * (@link com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static
+ * classes are mocked ad/or spied.
  */
 @ClearInlineMocksMode(CLEAR_AFTER_TEST_CLASS)
 public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTestCase {
@@ -47,5 +48,18 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
 
     @Rule(order = 10)
     public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this).build();
+            new AdServicesExtendedMockitoRule.Builder(this).setStrictness(getStrictness()).build();
+
+    /**
+     * Allows subclasses to override the default strictness of the {@link #extendedMockito} rule.
+     *
+     * <p><b>NOTE: </b>ideally the strictness shouldn't be matter and this method should only be
+     * temporarily overridden (for example, to return {@code STRICT_STUBS}) to debug / improve the
+     * test (for example, to remove unnecessary expectations after some refactoring).
+     *
+     * @return {@link Strictness#LENIENT} by default
+     */
+    protected Strictness getStrictness() {
+        return Strictness.LENIENT;
+    }
 }
