@@ -52,41 +52,29 @@ public final class AppManifestConfigMetricsLogger {
 
     /** Logs the app usage. */
     @VisibleForTesting // TODO(b/310270746): remove public when TopicsServiceImplTest is refactored
-    public static void logUsage(
-            String packageName,
-            boolean appExists,
-            boolean appHasConfig,
-            boolean enabledByDefault) {
-        Objects.requireNonNull(packageName, "packageName cannot be null");
-
-        AdServicesExecutors.getBackgroundExecutor()
-                .execute(
-                        () ->
-                                handleLogUsage(
-                                        packageName,
-                                        appExists,
-                                        appHasConfig,
-                                        enabledByDefault));
+    public static void logUsage(AppManifestConfigCall call) {
+        Objects.requireNonNull(call, "call cannot be null");
+        AdServicesExecutors.getBackgroundExecutor().execute(() -> handleLogUsage(call));
     }
 
-    private static void handleLogUsage(
-            String packageName,
-            boolean appExists,
-            boolean appHasConfig,
-            boolean enabledByDefault) {
+    private static void handleLogUsage(AppManifestConfigCall call) {
         Context context = ApplicationContextSingleton.get();
         try {
             int newValue =
-                    (appExists ? FLAG_APP_EXISTS : 0)
-                            | (appHasConfig ? FLAG_APP_HAS_CONFIG : 0)
-                            | (enabledByDefault ? FLAG_ENABLED_BY_DEFAULT : 0);
+                    (call.appExists ? FLAG_APP_EXISTS : 0)
+                            | (call.appHasConfig ? FLAG_APP_HAS_CONFIG : 0)
+                            | (call.enabledByDefault ? FLAG_ENABLED_BY_DEFAULT : 0);
             LogUtil.d(
                     "AppManifestConfigMetricsLogger.logUsage(): app=[name=%s, exists=%b,"
                             + " hasConfig=%b], enabledByDefault=%b, newValue=%d",
-                    packageName, appExists, appHasConfig, enabledByDefault, newValue);
+                    call.packageName,
+                    call.appExists,
+                    call.appHasConfig,
+                    call.enabledByDefault,
+                    newValue);
 
             SharedPreferences prefs = getPrefs(context);
-            String key = packageName;
+            String key = call.packageName;
 
             int currentValue = prefs.getInt(key, NOT_SET);
             if (currentValue == NOT_SET) {
@@ -109,10 +97,10 @@ public final class AppManifestConfigMetricsLogger {
                         "logUsage(ctx, file=%s, app=%s, appExist=%b, appHasConfig=%b,"
                                 + " enabledByDefault=%b, newValue=%d): failed to commit",
                         PREFS_NAME,
-                        packageName,
-                        appExists,
-                        appHasConfig,
-                        enabledByDefault,
+                        call.packageName,
+                        call.appExists,
+                        call.appHasConfig,
+                        call.enabledByDefault,
                         newValue);
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
@@ -124,10 +112,10 @@ public final class AppManifestConfigMetricsLogger {
                     "logUsage(ctx, file=%s, app=%s, appExist=%b, appHasConfig=%b,"
                             + " enabledByDefault=%b) failed",
                     PREFS_NAME,
-                    packageName,
-                    appExists,
-                    appHasConfig,
-                    enabledByDefault);
+                    call.packageName,
+                    call.appExists,
+                    call.appHasConfig,
+                    call.enabledByDefault);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
