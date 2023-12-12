@@ -18,9 +18,17 @@ package com.android.server.adservices;
 
 import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
+import android.adservices.shell.IShellCommand;
+import android.adservices.shell.IShellCommandCallback;
+import android.adservices.shell.ShellCommandParam;
+import android.adservices.shell.ShellCommandResult;
+import android.content.Context;
 import android.os.Binder;
 import android.os.Process;
+import android.os.RemoteException;
 
+import com.android.adservices.AdServicesCommon;
+import com.android.adservices.ServiceBinder;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 
@@ -28,7 +36,11 @@ import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Implementation of {@code cmd adservices_manager}.
@@ -44,17 +56,23 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     static final String WRONG_UID_TEMPLATE =
             AD_SERVICES_SYSTEM_SERVICE + " shell cmd is only callable by ADB (called by %d)";
 
+    private static final String CMD_IS_SYSTEM_SERVICE_ENABLED = "is-system-service-enabled";
+
     private final Injector mInjector;
     private final Flags mFlags;
+    private final Context mContext;
 
-    AdServicesShellCommand() {
-        this(new Injector(), PhFlags.getInstance());
+    private static final int DEFAULT_TIMEOUT_MILLIS = 5_000;
+
+    AdServicesShellCommand(Context context) {
+        this(new Injector(), PhFlags.getInstance(), context);
     }
 
     @VisibleForTesting
-    AdServicesShellCommand(Injector injector, Flags flags) {
+    AdServicesShellCommand(Injector injector, Flags flags, Context context) {
         mInjector = Objects.requireNonNull(injector);
         mFlags = Objects.requireNonNull(flags);
+        mContext = Objects.requireNonNull(context);
     }
 
     @Override
@@ -63,17 +81,74 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
         if (callingUid != Process.ROOT_UID && callingUid != Process.SHELL_UID) {
             throw new SecurityException(String.format(WRONG_UID_TEMPLATE, callingUid));
         }
-
         if (cmd == null || cmd.isEmpty() || cmd.equals("-h") || cmd.equals("help")) {
             onHelp();
             return 0;
         }
         switch (cmd) {
-            case "is-system-service-enabled":
+                // Below commands are handled by the System Server
+            case CMD_IS_SYSTEM_SERVICE_ENABLED:
                 return runIsSystemServiceEnabled();
+
+                // If there is no explicit case is there, we assume we want to run the shell command
+                // in the adservices process.
             default:
-                // Cannot use handleDefaultCommands() because it doesn't show help
-                return showError("Unsupported commmand: %s", cmd);
+                // TODO(b/308009734): Check for --user args in the follow-up cl and change
+                //  context and bind to the service accordingly.
+                return runAdServicesShellCommand(mContext, getAllArgs());
+        }
+    }
+
+    private int runAdServicesShellCommand(Context context, String[] args) {
+        IShellCommand service = mInjector.getShellCommandService(context);
+        if (service == null) {
+            getOutPrintWriter().println("Failed to connect to shell command service");
+            return -1;
+        }
+        ShellCommandParam param = new ShellCommandParam(args);
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicInteger resultCode = new AtomicInteger(-1);
+        try {
+            service.runShellCommand(
+                    param,
+                    new IShellCommandCallback.Stub() {
+                        @Override
+                        public void onResult(ShellCommandResult response) {
+                            if (response.isSuccess()) {
+                                getOutPrintWriter().println(response.getOut());
+                                resultCode.set(response.getResultCode());
+                            } else {
+                                showError("%s", response.getErr());
+                            }
+                            latch.countDown();
+                        }
+                    });
+        } catch (RemoteException e) {
+            getErrPrintWriter()
+                    .printf(
+                            "Remote exception occurred while executing %s\n",
+                            Arrays.toString(args));
+
+            latch.countDown();
+        }
+
+        // TODO(b/308009734): make the time out configurable with flags and command line argument.
+        await(latch, DEFAULT_TIMEOUT_MILLIS, getErrPrintWriter());
+
+        return resultCode.get();
+    }
+
+    private void await(CountDownLatch latch, int timeout, PrintWriter pw) {
+        try {
+            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                pw.printf(
+                        "Elapsed time: %d Millisecond. Timeout occurred , failed to "
+                                + "complete shell command\n",
+                        timeout);
+            }
+        } catch (InterruptedException e) {
+            pw.println("Thread interrupted, failed to complete shell command");
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -143,6 +218,15 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     static class Injector {
         int getCallingUid() {
             return Binder.getCallingUid();
+        }
+
+        IShellCommand getShellCommandService(Context context) {
+            ServiceBinder<IShellCommand> serviceBinder =
+                    ServiceBinder.getServiceBinder(
+                            context,
+                            AdServicesCommon.ACTION_SHELL_COMMAND_SERVICE,
+                            IShellCommand.Stub::asInterface);
+            return serviceBinder.getService();
         }
     }
 }
