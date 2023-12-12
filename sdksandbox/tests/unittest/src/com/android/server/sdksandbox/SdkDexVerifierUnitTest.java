@@ -140,9 +140,10 @@ public class SdkDexVerifierUnitTest {
         ApiAllowlistProvider failAllowlistProvider =
                 new ApiAllowlistProvider("allowlist_doesn't_exist");
         TestOutcomeReceiver callback = new TestOutcomeReceiver();
-        mVerifier.setApiAllowlistProvider(failAllowlistProvider);
+        SdkDexVerifier verifier =
+                new SdkDexVerifier(new SdkDexVerifier.Injector(failAllowlistProvider));
 
-        mVerifier.startDexVerification("apk_that_doesn't_get_verified", 33, callback);
+        verifier.startDexVerification("apk_that_doesn't_get_verified", 33, callback);
 
         assertThat(callback.getLastError()).isNotNull();
         assertThat(callback.getLastError().getMessage())
