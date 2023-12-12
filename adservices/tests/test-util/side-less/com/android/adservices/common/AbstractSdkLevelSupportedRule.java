@@ -26,17 +26,16 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-// TODO(b/295269584): move to module-utils?
 // TODO(b/295269584): add examples
-// TODO(b/295269584): add unit tests
-// TODO(b/295269584): rename to AbstractSdkLevelSupportRule
-
 /**
  * Rule used to skip a test when it's not supported by the device's SDK version.
  *
@@ -87,8 +86,8 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
                                     + requiredRange.range
                                     + " (and device level is "
                                     + deviceLevel
-                                    + "). Reason: "
-                                    + requiredRange.reason;
+                                    + "). Reasons: "
+                                    + requiredRange.reasons;
                     mLog.i("Skipping %s, as it %s", testName, message);
                     throw new AssumptionViolatedException("Test " + message);
                 }
@@ -101,8 +100,7 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
     RequiredRange getRequiredRange(Description description) {
         // List of ranges defined in the test itself and its superclasses
         Set<AndroidSdkRange> ranges = new HashSet<>();
-        // TODO(b/295269584): merge all reasons (instead of using just the latest);
-        String reason = null;
+        List<String> reasons;
 
         // Start with the test class
         RequiredRange testRange =
@@ -111,7 +109,7 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
                         /* allowEmpty= */ false,
                         /* addDefaultRange= */ true,
                         /* setDefaultReason= */ false);
-        reason = testRange.reason;
+        reasons = testRange.reasons;
         ranges.add(testRange.range);
 
         // Then the superclasses
@@ -120,19 +118,16 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
             RequiredRange testClassRange = getRequiredRangeFromClass(clazz);
             if (testClassRange != null) {
                 ranges.add(testClassRange.range);
-                if (reason == null) {
-                    reason = testClassRange.reason;
-                }
+                reasons.addAll(testClassRange.reasons);
             }
             clazz = clazz.getSuperclass();
         } while (clazz != null);
 
-        if (reason == null) {
-            reason = DEFAULT_REASON;
+        if (reasons.isEmpty()) {
+            reasons.add(DEFAULT_REASON);
         }
-
         AndroidSdkRange mergedRange = AndroidSdkRange.merge(ranges);
-        return new RequiredRange(mergedRange, reason);
+        return new RequiredRange(mergedRange, reasons);
     }
 
     @VisibleForTesting
@@ -238,11 +233,21 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
     @VisibleForTesting
     static final class RequiredRange {
         public final AndroidSdkRange range;
-        @Nullable public final String reason;
+        public final List<String> reasons;
 
-        RequiredRange(AndroidSdkRange range, @Nullable String reason) {
-            this.range = Objects.requireNonNull(range);
-            this.reason = reason;
+        RequiredRange(AndroidSdkRange range, @Nullable String... reasons) {
+            // getRequiredRange() might call it with a null reason, hence the check for 1st element
+            // being null
+            this(
+                    range,
+                    reasons == null || (reasons.length == 1 && reasons[0] == null)
+                            ? new ArrayList<>()
+                            : Arrays.stream(reasons).collect(Collectors.toList()));
+        }
+
+        RequiredRange(AndroidSdkRange range, List<String> reasons) {
+            this.range = range;
+            this.reasons = reasons;
         }
 
         @Override
@@ -267,7 +272,7 @@ abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
         @Override
         public String toString() {
-            return "[range=" + range + ", reason=" + reason + "]";
+            return "[range=" + range + ", reasons=" + reasons + "]";
         }
     }
     /** Gets the device API level. */
