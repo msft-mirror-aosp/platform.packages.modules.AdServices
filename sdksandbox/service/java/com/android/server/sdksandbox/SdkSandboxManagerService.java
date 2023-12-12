@@ -1842,7 +1842,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private void enforceAllowedToStartOrBindService(Intent intent) {
-        if (!mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
+        if (!Process.isSdkSandboxUid(Binder.getCallingUid())
+                || !mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
             return;
         }
         ComponentName component = intent.getComponent();
@@ -2317,7 +2318,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void enforceAllowedToStartActivity(@NonNull Intent intent) {
-            if (!mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
+            if (!Process.isSdkSandboxUid(Binder.getCallingUid())
+                    || !mSdkSandboxSettingsListener.areRestrictionsEnforced()) {
                 return;
             }
 
