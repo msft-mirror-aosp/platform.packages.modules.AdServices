@@ -13,15 +13,15 @@ package android.app.sdksandbox {
 
 package android.app.sdksandbox.sandboxactivity {
 
-  @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) public interface ActivityContextInfo {
+  @FlaggedApi("com.android.sdksandbox.flags.sandbox_activity_sdk_based_context") public interface ActivityContextInfo {
     method @NonNull public android.content.pm.ApplicationInfo getSdkApplicationInfo();
     field public static final int CONTEXT_FLAGS = 3; // 0x3
   }
 
-  @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) public abstract class SdkSandboxActivityAuthority {
-    method @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) @NonNull public android.app.sdksandbox.sandboxactivity.ActivityContextInfo getActivityContextInfo(@NonNull android.content.Intent);
-    method @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) @NonNull public static android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority getInstance();
-    method @FlaggedApi(com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT) public static boolean isSdkSandboxActivityIntent(@NonNull android.content.Context, @Nullable android.content.Intent);
+  @FlaggedApi("com.android.sdksandbox.flags.sandbox_activity_sdk_based_context") public abstract class SdkSandboxActivityAuthority {
+    method @FlaggedApi("com.android.sdksandbox.flags.sandbox_activity_sdk_based_context") @NonNull public android.app.sdksandbox.sandboxactivity.ActivityContextInfo getActivityContextInfo(@NonNull android.content.Intent);
+    method @FlaggedApi("com.android.sdksandbox.flags.sandbox_activity_sdk_based_context") @NonNull public static android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority getInstance();
+    method @FlaggedApi("com.android.sdksandbox.flags.sandbox_activity_sdk_based_context") public static boolean isSdkSandboxActivityIntent(@NonNull android.content.Context, @Nullable android.content.Intent);
   }
 
 }
