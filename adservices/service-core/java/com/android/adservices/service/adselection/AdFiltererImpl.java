@@ -179,54 +179,59 @@ public final class AdFiltererImpl implements AdFilterer {
         if (ad.getAdFilters().getFrequencyCapFilters() == null) {
             return true;
         }
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_AD);
+        try {
 
-        FrequencyCapFilters filters = ad.getAdFilters().getFrequencyCapFilters();
+            FrequencyCapFilters filters = ad.getAdFilters().getFrequencyCapFilters();
 
-        // TODO(b/265205439): Compare the performance of loading the histograms once for each custom
-        //  audience and buyer versus querying for every filter
+            // TODO(b/265205439): Compare the performance of loading the histograms once for each
+            //  custom audience and buyer versus querying for every filter
 
-        // Contextual ads cannot filter on win-typed events
-        boolean adIsFromCustomAudience =
-                (customAudienceOwner != null) && (customAudienceName != null);
-        if (adIsFromCustomAudience
-                && !filters.getKeyedFrequencyCapsForWinEvents().isEmpty()
-                && !doesAdPassFrequencyCapFiltersForWinType(
-                        filters.getKeyedFrequencyCapsForWinEvents(),
-                        buyer,
-                        customAudienceOwner,
-                        customAudienceName,
-                        currentTime)) {
-            return false;
+            // Contextual ads cannot filter on win-typed events
+            boolean adIsFromCustomAudience =
+                    (customAudienceOwner != null) && (customAudienceName != null);
+            if (adIsFromCustomAudience
+                    && !filters.getKeyedFrequencyCapsForWinEvents().isEmpty()
+                    && !doesAdPassFrequencyCapFiltersForWinType(
+                            filters.getKeyedFrequencyCapsForWinEvents(),
+                            buyer,
+                            customAudienceOwner,
+                            customAudienceName,
+                            currentTime)) {
+                return false;
+            }
+
+            if (!filters.getKeyedFrequencyCapsForImpressionEvents().isEmpty()
+                    && !doesAdPassFrequencyCapFiltersForNonWinType(
+                            filters.getKeyedFrequencyCapsForImpressionEvents(),
+                            FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                            buyer,
+                            currentTime)) {
+                return false;
+            }
+
+            if (!filters.getKeyedFrequencyCapsForViewEvents().isEmpty()
+                    && !doesAdPassFrequencyCapFiltersForNonWinType(
+                            filters.getKeyedFrequencyCapsForViewEvents(),
+                            FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                            buyer,
+                            currentTime)) {
+                return false;
+            }
+
+            if (!filters.getKeyedFrequencyCapsForClickEvents().isEmpty()
+                    && !doesAdPassFrequencyCapFiltersForNonWinType(
+                            filters.getKeyedFrequencyCapsForClickEvents(),
+                            FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                            buyer,
+                            currentTime)) {
+                return false;
+            }
+
+            return true;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_AD, traceCookie);
         }
-
-        if (!filters.getKeyedFrequencyCapsForImpressionEvents().isEmpty()
-                && !doesAdPassFrequencyCapFiltersForNonWinType(
-                        filters.getKeyedFrequencyCapsForImpressionEvents(),
-                        FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
-                        buyer,
-                        currentTime)) {
-            return false;
-        }
-
-        if (!filters.getKeyedFrequencyCapsForViewEvents().isEmpty()
-                && !doesAdPassFrequencyCapFiltersForNonWinType(
-                        filters.getKeyedFrequencyCapsForViewEvents(),
-                        FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
-                        buyer,
-                        currentTime)) {
-            return false;
-        }
-
-        if (!filters.getKeyedFrequencyCapsForClickEvents().isEmpty()
-                && !doesAdPassFrequencyCapFiltersForNonWinType(
-                        filters.getKeyedFrequencyCapsForClickEvents(),
-                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
-                        buyer,
-                        currentTime)) {
-            return false;
-        }
-
-        return true;
     }
 
     private boolean doesAdPassFrequencyCapFiltersForWinType(
