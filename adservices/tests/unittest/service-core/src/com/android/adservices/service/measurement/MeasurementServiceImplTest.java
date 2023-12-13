@@ -47,6 +47,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -1916,12 +1917,9 @@ public final class MeasurementServiceImplTest {
         return new StatusParam.Builder(APP_PACKAGE_NAME, SDK_PACKAGE_NAME).build();
     }
 
-    private void assertPackageNameLogged() throws InterruptedException {
-        // Sleep just a tiny fraction
-        // Logging happens in a separate thread and happens after the result code is returned
-        TimeUnit.MILLISECONDS.sleep(20);
+    private void assertPackageNameLogged() {
         ArgumentCaptor<ApiCallStats> captorStatus = ArgumentCaptor.forClass(ApiCallStats.class);
-        verify(mMockAdServicesLogger).logApiCallStats(captorStatus.capture());
+        verify(mMockAdServicesLogger, timeout(TIMEOUT)).logApiCallStats(captorStatus.capture());
         assertEquals(APP_PACKAGE_NAME, captorStatus.getValue().getAppPackageName());
         assertEquals(SDK_PACKAGE_NAME, captorStatus.getValue().getSdkPackageName());
     }
