@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Kumoa esto"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Estetyt kiinnostuksen kohteet"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Poista kaikki kiinnostuksen kohteet"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Näytettäviä kiinnostuksen kohteita ei juuri nyt ole."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Näytettäviä aiheita ei juuri nyt ole.\nLue lisää "<a href="https://support.google.com/android?p=ad_privacy">"mainosaiheista"</a></string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Näytettäviä kiinnostuksen kohteita ei juuri nyt ole"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Näytettäviä aiheita ei juuri nyt ole"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidin mainosyksityisyyden betaohjelma tarjoaa uusia ominaisuuksia, joiden avulla sovellukset voivat näyttää mainoksia, joista saatat pitää. Nämä teknologiat eivät käytä laitetunnisteita.\n\nAndroid voi arvioida, millaisista mainoksista voisit olla kiinnostunut, ja tallentaa kiinnostuksen kohteet väliaikaisesti laitteellesi. Näin sovellukset voivat näyttää osuvia mainoksia seuraamatta toimintaasi verkkosivustoilla ja muiden kehittäjien sovelluksissa."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Sinulla ei ole estettyjä kiinnostuksen kohteita"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Katso estetyt sovellukset"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Nollaa sovellusten arvioimat kiinnostuksen kohteet"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Tällä hetkellä ei ole sovelluksia, jotka arvioivat kiinnostuksen kohteitasi"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Näytettäviä sovelluksia ei juuri nyt ole. \nLue lisää "<a href="https://support.google.com/android?p=ad_privacy">"sovellusten ehdottamista mainoksista"</a></string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Näytettäviä sovelluksia ei juuri nyt ole"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidin mainosyksityisyyden betaohjelma tarjoaa uusia ominaisuuksia, joiden avulla sovellukset voivat näyttää mainoksia, joista saatat pitää. Nämä teknologiat eivät käytä laitetunnisteita.\n\nSovellukset voivat arvioida, millaisista mainoksista voisit olla kiinnostunut, ja tallentaa kiinnostuksen kohteet väliaikaisesti laitteellesi. Näin sovellukset voivat näyttää osuvia mainoksia seuraamatta toimintaasi verkkosivustoilla ja muiden kehittäjien sovelluksissa."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Sinulla ei ole estettyjä sovelluksia"</string>
@@ -187,25 +187,14 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Nollataanko sovellusten ehdottamat mainokset?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Listallasi olevista sovelluksista poistetaan mainosehdotusdata, ja sovellukset ehdottavat jatkossa uusia mainoksia. Saatat yhä nähdä joitakin siihen liittyviä mainoksia."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Sovellusdata on nollattu"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Mainosaiheet ovat päällä"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android alkaa havaita kiinnostuksen kohteita, mutta voi kulua jonkin aikaa ennen kuin ensimmäiset aiheet näkyvät."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Laitetaanko mainosaiheet pois päältä?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Tämä aihelista poistetaan. Android ei enää havaitse kiinnostuksen kohteita, mutta voit silti nähdä osuvia mainoksia."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Sovellusten ehdottamat mainokset ovat päällä"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Sovellukset voivat alkaa ehdottaa mainoksia. Näet listan sovelluksista, kun ne alkavat ehdottaa mainoksia."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Laitetaanko sovellusten ehdottamat mainokset pois päältä?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Kaikki mainosehdotusdata poistetaan. Sovellukset eivät enää ehdota mainoksia, mutta voit silti nähdä osuvia mainoksia."</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Mainosmittaus on päällä"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android voi jakaa sovelluksille vain hyvin rajoitettuja tietoja, jotka auttavat mainosten tehokkuuden mittaamisessa."</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Laitetaanko mainosmittaus pois päältä?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Kaikki odottavat mainosmittausraportit poistetaan, eikä uusia raportteja luoda tai jaeta."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Nollataanko kaikki aiheet?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Nollataanko sovellusten ehdottamat mainokset?"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Mainosyksityisyys"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Mainosten aiheet"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Sovellusten ehdottamat mainokset"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Androidin muistamat aiheet perustuvat äskettäin käyttämiisi sovelluksiin ja siihen, kuinka usein käytät niitä."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Käyttämäsi sovellukset voivat päätellä kiinnostuksen kohteitasi myös sen perusteella, miten käytät niitä."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Käyttämäsi sovellukset voivat pyytää Androidilta tietoja, jotka auttavat sovelluksia mittaamaan mainostuloksia. Android sallii sovellusten kerätä rajoitettuja datatyyppejä."</string>
-    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Lue lisää "<a href="https://support.google.com/android?p=ad_privacy">"mainosyksityisyydestä Android-laitteella"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Päällä / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> aihetta"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Päällä / # aihe}other{Päällä / # aihetta}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Päällä / <xliff:g id="APPS_COUNT">%1$d</xliff:g> sovellusta"</string>
@@ -222,11 +211,6 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Estämäsi sovellukset"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Nollaa sovellusten ehdottama data"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Käyttämäsi sovellukset muistavat usein sinua kiinnostavia aiheita ja käyttävät niitä personoidessaan kokemustasi. Sovellukset voivat myös tallentaa tietoja aiheista Androidiin.\n\nJos esimerkiksi käytät sovellusta maratonille treenaamiseen, sovellus voi päätellä, että olet kiinnostunut juoksukengistä. Jos käytät myöhemmin toista sovellusta, se voi näyttää sinulle ensimmäisen sovelluksen ehdottamia mainoksia juoksukengistä.\n\nAndroid poistaa sovellusten ehdotusdataa automaattisesti ja säännöllisesti. Jos käytät sovellusta uudelleen, se voi näkyä taas listalla. Voit milloin tahansa estää sovellusta ehdottamasta sinulle mainoksia.\n\nSovelluksessa näkemäsi mainokset voivat olla personoituja riippuen tästä asetuksesta, mainosten aiheasetuksesta, mainostunnusasetuksista ja siitä, personoiko käyttämäsi sovellus mainoksia."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Uusi mainosyksityisyysominaisuus saatavilla"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Sovellusten välillä jaetaan vain hyvin rajallisia tietoja, jotta sovellukset voivat mitata mainosten tuloksia"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Julkaisemme uuden yksityisyyteen liittyvän mainosominaisuuden, jota kutsutaan mainosmittaukseksi. Android jakaa sovellusten välillä vain hyvin rajallisia tietoja, esimerkiksi sen, milloin mainos on näytetty sinulle. Näiden tietojen avulla sovellukset voivat mitata mainosten tuloksia."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Voit tehdä muutoksia mainosyksityisyysasetuksista."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Käyttämäsi sovellukset voivat pyytää Androidilta tietoja, jotka auttavat sovelluksia mittaamaan mainostuloksia. Android sallii sovellusten kerätä vain tiettyjä datatyyppejä."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Värikäs kuvituskuva symboleista, jotka edustavat musiikkia, uutisia, urheilua ja muita kiinnostavia aiheita"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Värikäs kuvituskuva ympyrän sisällä olevasta lukosta"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Pieni mustavalkoinen kuvituskuva yhdeksän pisteen muodostamasta neliöstä"</string>

@@ -29,6 +29,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -131,6 +132,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
     }
 
+    @Ignore("b/275299487")
     @Test
     public void testSandboxIsCreatedPerUser() throws Exception {
         assumeTrue(getDevice().isMultiUserSupported());
