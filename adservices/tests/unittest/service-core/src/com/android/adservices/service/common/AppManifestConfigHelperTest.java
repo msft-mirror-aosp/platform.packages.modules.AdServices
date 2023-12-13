@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.appManifestConfigCall;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_DOES_NOT_EXIST;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_EXISTS;
@@ -97,11 +98,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         extendedMockito.mockGetFlags(mMockFlags);
         setEnabledByDefault(false);
         doNothingOnErrorLogUtilError();
-        doNothing()
-                .when(
-                        () ->
-                                AppManifestConfigMetricsLogger.logUsage(
-                                        any(), anyBoolean(), anyBoolean(), anyBoolean()));
+        doNothing().when(() -> AppManifestConfigMetricsLogger.logUsage(any()));
     }
 
     @Test
@@ -582,10 +579,8 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         verify(
                 () ->
                         AppManifestConfigMetricsLogger.logUsage(
-                                PACKAGE_NAME,
-                                appExists,
-                                appHasConfig,
-                                enabledByDefault),
+                                appManifestConfigCall(
+                                        PACKAGE_NAME, appExists, appHasConfig, enabledByDefault)),
                 mode);
     }
 
