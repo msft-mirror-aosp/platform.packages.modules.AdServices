@@ -47,7 +47,7 @@
     <string name="notificationUI_header_title_eu" msgid="4955298263079910371">"‏نسخه بتای حریم خصوصی آگهی‌های Android"</string>
     <string name="notificationUI_container1_title_eu" msgid="8315199862119660570">"تازه‌ها"</string>
     <string name="notificationUI_container1_body_text_eu" msgid="1700290522706948241">"ویژگی‌های جدید حریم خصوصی در «جعبه شنی حریم خصوصی» به برنامه‌ها اجازه می‌دهد آگهی‌های مرتبط به شما نشان دهند، اما آنچه را که این برنامه‌ها می‌توانند درباره فعالیت‌های شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر متوجه شوند محدود می‌کند."</string>
-    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"سازوکار عمل"</string>
+    <string name="notificationUI_container1_control_text_eu" msgid="3158258148321255153">"روش کار"</string>
     <string name="notificationUI_container2_title_eu" msgid="7198761373796187596">"نحوه مشارکت"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5763735880112009239">"روشن کردن نسخه بتا به برنامه‌ها اجازه می‌دهد این روش‌های خصوصی‌تر جدید را برای نمایش آگهی به شما آزمایش کنند. هرزمان خواستید می‌توانید نسخه بتا را در تنظیمات حریم خصوصی خاموش کنید."</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"نه متشکرم"</string>
