@@ -273,7 +273,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                 .that(dump)
                 .matches(
                         Pattern.compile(
-                                ".*file:.*/la/la/land/"
+                                ".*file:.*/la/la/land/shared_prefs/"
                                         + PREFS_NAME
                                         + "\\.xml.*\n"
                                         + ".*enabled by default: "
