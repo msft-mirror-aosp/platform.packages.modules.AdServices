@@ -50,6 +50,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -59,11 +60,11 @@ import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
@@ -83,6 +84,17 @@ public class DeleteUninstalledJobServiceTest {
 
     @Mock private Flags mMockFlags;
     private AdservicesJobServiceLogger mSpyLogger;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(MeasurementImpl.class)
+                    .spyStatic(DeleteUninstalledJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .mockStatic(ServiceCompatUtils.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Test
     public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
@@ -402,43 +414,26 @@ public class DeleteUninstalledJobServiceTest {
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .initMocks(this)
-                        .spyStatic(MeasurementImpl.class)
-                        .spyStatic(DeleteUninstalledJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
-            // Setup mock everything in job
-            ExtendedMockito.doReturn(mMockMeasurementImpl)
-                    .when(() -> MeasurementImpl.getInstance(any()));
-            doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-            doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            ExtendedMockito.doNothing()
-                    .when(() -> DeleteUninstalledJobService.schedule(any(), any()));
+        // Setup mock everything in job
+        ExtendedMockito.doReturn(mMockMeasurementImpl)
+                .when(() -> MeasurementImpl.getInstance(any()));
+        doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
+        doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
+        ExtendedMockito.doNothing().when(() -> DeleteUninstalledJobService.schedule(any(), any()));
 
-            StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
-            mSpyLogger =
-                    spy(
-                            new AdservicesJobServiceLogger(
-                                    CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
+        StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
+        mSpyLogger =
+                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
 
-            // Mock AdservicesJobServiceLogger to not actually log the stats to server
-            Mockito.doNothing()
-                    .when(mSpyLogger)
-                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-            ExtendedMockito.doReturn(mSpyLogger)
-                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+        // Mock AdservicesJobServiceLogger to not actually log the stats to server
+        Mockito.doNothing()
+                .when(mSpyLogger)
+                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        ExtendedMockito.doReturn(mSpyLogger)
+                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
 
-            // Execute
-            execute.run();
-        } finally {
-            session.finishMocking();
-        }
+        // Execute
+        execute.run();
     }
 
     private void enableKillSwitch() {
