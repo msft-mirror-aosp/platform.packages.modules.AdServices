@@ -100,7 +100,7 @@ public class AttributionJobServiceTest {
     private Flags mMockFlags;
 
     @Rule
-    public final AdServicesExtendedMockitoRule extendedMockitoRule =
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(AttributionJobService.class)
                     .spyStatic(DatastoreManagerFactory.class)

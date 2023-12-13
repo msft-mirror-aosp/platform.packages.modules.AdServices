@@ -78,6 +78,7 @@ import android.test.mock.MockContext;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
@@ -97,11 +98,11 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.time.Instant;
@@ -134,6 +135,15 @@ public final class MeasurementServiceImplTest {
     @Mock private Throttler mMockThrottler;
     @Mock private MockContext mMockContext;
     @Mock private DevContextFilter mDevContextFilter;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .mockStatic(Binder.class)
+                    .mockStatic(FlagsFactory.class)
+                    .mockStatic(PermissionHelper.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     private MeasurementServiceImpl mMeasurementServiceImpl;
     private Map<Integer, Boolean> mKillSwitchSnapshot;
@@ -1952,16 +1962,6 @@ public final class MeasurementServiceImplTest {
             final AccessDenier accessDenier,
             final TestUtils.RunnableWithThrow execute)
             throws Exception {
-
-        final MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(Binder.class)
-                        .mockStatic(FlagsFactory.class)
-                        .mockStatic(PermissionHelper.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
-        try {
             // Flags
             ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
@@ -1995,10 +1995,6 @@ public final class MeasurementServiceImplTest {
 
             mMeasurementServiceImpl = createServiceWithMocks();
             execute.run();
-
-        } finally {
-            mockitoSession.finishMocking();
-        }
     }
 
     /**

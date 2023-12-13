@@ -59,7 +59,6 @@ public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
     @Mock private EnrollmentDao mEnrollmentDao;
 
     @Mock private Flags mFlags;
-
     @Test
     public void testMaybeGetEnrollmentId_success() {
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))

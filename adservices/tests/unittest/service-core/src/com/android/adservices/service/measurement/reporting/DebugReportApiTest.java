@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -44,15 +45,14 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
@@ -68,20 +68,20 @@ public final class DebugReportApiTest {
     private static final String LIMIT = "100";
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private DebugReportApi mDebugReportApi;
-    private MockitoSession mStaticMockSession;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Flags mFlags;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(VerboseDebugReportingJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(VerboseDebugReportingJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
@@ -92,11 +92,6 @@ public final class DebugReportApiTest {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(true);
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(true);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
     }
 
     @Test
