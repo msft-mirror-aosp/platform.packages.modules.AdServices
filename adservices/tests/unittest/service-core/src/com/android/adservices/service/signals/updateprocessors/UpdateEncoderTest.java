@@ -82,32 +82,4 @@ public class UpdateEncoderTest {
                         .build();
         assertEquals(event, output.getUpdateEncoderEvent());
     }
-
-    @Test
-    public void testUpdateDeleteEventEmptyUri() throws JSONException {
-        JSONObject updateJson = new JSONObject();
-        updateJson.put(ACTION, "DELETE");
-        updateJson.put(ENDPOINT, "");
-
-        UpdateOutput output = mUpdateEncoder.processUpdates(updateJson, Collections.emptyMap());
-        UpdateEncoderEvent event =
-                UpdateEncoderEvent.builder()
-                        .setUpdateType(UpdateEncoderEvent.UpdateType.DELETE)
-                        .setEncoderEndpointUri(Uri.parse(""))
-                        .build();
-        assertEquals(event, output.getUpdateEncoderEvent());
-    }
-
-    @Test
-    public void testUpdateDeleteEventMissingUri() throws JSONException {
-        JSONObject updateJson = new JSONObject();
-        updateJson.put(ACTION, "DELETE");
-
-        UpdateOutput output = mUpdateEncoder.processUpdates(updateJson, Collections.emptyMap());
-        UpdateEncoderEvent event =
-                UpdateEncoderEvent.builder()
-                        .setUpdateType(UpdateEncoderEvent.UpdateType.DELETE)
-                        .build();
-        assertEquals(event, output.getUpdateEncoderEvent());
-    }
 }

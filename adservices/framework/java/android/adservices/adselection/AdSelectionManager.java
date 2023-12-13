@@ -23,6 +23,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
@@ -33,6 +34,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SuppressLint;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
@@ -47,6 +49,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -236,12 +239,21 @@ public class AdSelectionManager {
                         public void onSuccess(GetAdSelectionDataResponse resultParcel) {
                             executor.execute(
                                     () -> {
+                                        byte[] adSelectionData;
+                                        try {
+                                            adSelectionData = getAdSelectionData(resultParcel);
+                                        } catch (IOException e) {
+                                            receiver.onError(
+                                                    new IllegalStateException(
+                                                            "Unable to return the AdSelectionData",
+                                                            e));
+                                            return;
+                                        }
                                         receiver.onResult(
                                                 new GetAdSelectionDataOutcome.Builder()
                                                         .setAdSelectionId(
                                                                 resultParcel.getAdSelectionId())
-                                                        .setAdSelectionData(
-                                                                resultParcel.getAdSelectionData())
+                                                        .setAdSelectionData(adSelectionData)
                                                         .build());
                                     });
                         }
@@ -723,6 +735,7 @@ public class AdSelectionManager {
                             .setInteractionData(request.getData())
                             .setReportingDestinations(request.getReportingDestinations())
                             .setCallerPackageName(getCallerPackageName())
+                            .setCallerSdkName(getCallerSdkName())
                             .setInputEvent(request.getInputEvent());
 
             getAdId((adIdValue) -> inputBuilder.setAdId(adIdValue));
@@ -904,45 +917,66 @@ public class AdSelectionManager {
                 : sandboxedSdkContext.getClientPackageName();
     }
 
+    private byte[] getAdSelectionData(GetAdSelectionDataResponse response) throws IOException {
+        if (Objects.nonNull(response.getAssetFileDescriptor())) {
+            AssetFileDescriptor assetFileDescriptor = response.getAssetFileDescriptor();
+            return AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(assetFileDescriptor);
+        } else {
+            return response.getAdSelectionData();
+        }
+    }
+
+    private String getCallerSdkName() {
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        return sandboxedSdkContext == null ? "" : sandboxedSdkContext.getSdkPackageName();
+    }
+
     private interface AdSelectionAdIdCallback {
         void onResult(@Nullable String adIdValue);
     }
 
     @SuppressLint("MissingPermission")
     private void getAdId(AdSelectionAdIdCallback adSelectionAdIdCallback) {
-        CountDownLatch timer = new CountDownLatch(1);
-        AtomicReference<String> adIdValue = new AtomicReference<>();
-        mAdIdManager.getAdId(
-                mAdIdExecutor,
-                new android.adservices.common.AdServicesOutcomeReceiver<>() {
-                    @Override
-                    public void onResult(AdId adId) {
-                        String id = adId.getAdId();
-                        adIdValue.set(!AdId.ZERO_OUT.equals(id) ? id : null);
-                        sLogger.v("AdId permission enabled: %b.", !AdId.ZERO_OUT.equals(id));
-                        timer.countDown();
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        if (e instanceof IllegalStateException || e instanceof SecurityException) {
-                            sLogger.w(DEBUG_API_WARNING_MESSAGE);
-                        } else {
-                            sLogger.w(e, DEBUG_API_WARNING_MESSAGE);
-                        }
-                        timer.countDown();
-                    }
-                });
-
-        boolean timedOut = false;
         try {
-            timedOut = !timer.await(AD_ID_TIMEOUT_MS, MILLISECONDS);
-        } catch (InterruptedException e) {
-            sLogger.w(e, "Interrupted while getting the AdId.");
+            CountDownLatch timer = new CountDownLatch(1);
+            AtomicReference<String> adIdValue = new AtomicReference<>();
+            mAdIdManager.getAdId(
+                    mAdIdExecutor,
+                    new android.adservices.common.AdServicesOutcomeReceiver<>() {
+                        @Override
+                        public void onResult(AdId adId) {
+                            String id = adId.getAdId();
+                            adIdValue.set(!AdId.ZERO_OUT.equals(id) ? id : null);
+                            sLogger.v("AdId permission enabled: %b.", !AdId.ZERO_OUT.equals(id));
+                            timer.countDown();
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            if (e instanceof IllegalStateException
+                                    || e instanceof SecurityException) {
+                                sLogger.w(DEBUG_API_WARNING_MESSAGE);
+                            } else {
+                                sLogger.w(e, DEBUG_API_WARNING_MESSAGE);
+                            }
+                            timer.countDown();
+                        }
+                    });
+
+            boolean timedOut = false;
+            try {
+                timedOut = !timer.await(AD_ID_TIMEOUT_MS, MILLISECONDS);
+            } catch (InterruptedException e) {
+                sLogger.w(e, "Interrupted while getting the AdId.");
+            }
+            if (timedOut) {
+                sLogger.w("AdId call timed out.");
+            }
+            adSelectionAdIdCallback.onResult(adIdValue.get());
+        } catch (Exception e) {
+            sLogger.d(e, "Could not get AdId.");
+            adSelectionAdIdCallback.onResult(null);
         }
-        if (timedOut) {
-            sLogger.w("AdId call timed out.");
-        }
-        adSelectionAdIdCallback.onResult(adIdValue.get());
     }
 }

@@ -72,6 +72,12 @@
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.measurement VERBOSE"/>
 
+        <!-- Ensure the ad filtering feature is disabled -->
+        <option name="run-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"
                 value="setprop debug.adservices.sdk_request_permits_per_second 1000"/>

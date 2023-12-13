@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.shared.testing.common.FileHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import java.io.File;
@@ -198,7 +199,10 @@ public class ApkTestUtil {
                     new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                             .format(Date.from(Instant.now()));
 
-            File screenshotFile = new File("/sdcard/Pictures/" + methodName + timeStamp + ".png");
+            File screenshotFile =
+                    new File(
+                            FileHelper.getAdServicesTestsOutputDir(),
+                            methodName + timeStamp + ".png");
             device.takeScreenshot(screenshotFile);
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());

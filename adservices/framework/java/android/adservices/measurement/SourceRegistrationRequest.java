@@ -121,6 +121,8 @@ public final class SourceRegistrationRequest implements Parcelable {
          * Builder constructor for {@link SourceRegistrationRequest}.
          *
          * @param registrationUris source registration {@link Uri}s
+         * @throws IllegalArgumentException if the scheme for one or more of the
+         * {@code registrationUris} is not HTTPS
          */
         public Builder(@NonNull List<Uri> registrationUris) {
             Objects.requireNonNull(registrationUris);
@@ -131,6 +133,13 @@ public final class SourceRegistrationRequest implements Parcelable {
                                 "Requests should have at least 1 and at most %d URIs."
                                         + " Request has %d URIs.",
                                 REGISTRATION_URIS_MAX_COUNT, registrationUris.size()));
+            }
+            for (Uri registrationUri : registrationUris) {
+                if (registrationUri.getScheme() == null
+                        || !registrationUri.getScheme().equalsIgnoreCase("https")) {
+                    throw new IllegalArgumentException(
+                            "registrationUri must have an HTTPS scheme");
+                }
             }
             mRegistrationUris = registrationUris;
         }

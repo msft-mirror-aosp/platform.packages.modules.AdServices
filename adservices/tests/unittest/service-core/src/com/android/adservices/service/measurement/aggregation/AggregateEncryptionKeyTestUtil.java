@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.common.WebUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

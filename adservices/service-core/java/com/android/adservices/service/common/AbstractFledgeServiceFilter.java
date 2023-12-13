@@ -83,12 +83,8 @@ public abstract class AbstractFledgeServiceFilter {
      *     user consent
      */
     protected void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
+
         if (!userConsent.isGiven()) {
             throw new ConsentManager.RevokedConsentException();
         }

@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -46,7 +47,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class CustomizedSdkContextTest {
+public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
     private static final String SDK_NAME_2 = "com.android.emptysdkprovider";
 
@@ -66,26 +67,22 @@ public class CustomizedSdkContextTest {
                     "sdksandbox_customized_sdk_context_enabled",
                     "true");
 
+    private final Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
+    private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
+
     private SdkSandboxManager mSdkSandboxManager;
     private ICtsSdkProviderApi mSdk;
 
     @Before
     public void setup() {
-        final Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
+        mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         activityScenarioRule.getScenario();
     }
 
     @After
     public void tearDown() {
-        try {
-            mSdkSandboxManager.unloadSdk(SDK_NAME_1);
-        } catch (Exception ignored) {
-        }
-        try {
-            mSdkSandboxManager.unloadSdk(SDK_NAME_2);
-        } catch (Exception ignored) {
-        }
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME_1);
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME_2);
     }
 
     @Test

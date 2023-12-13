@@ -41,7 +41,7 @@ import org.junit.runners.JUnit4;
 
 /** End-to-end tests of {@link SdkSandboxController} APIs. */
 @RunWith(JUnit4.class)
-public class SdkSandboxControllerTest {
+public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();

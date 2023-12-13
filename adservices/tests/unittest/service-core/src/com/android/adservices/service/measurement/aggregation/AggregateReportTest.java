@@ -20,12 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
@@ -144,6 +145,7 @@ public final class AggregateReportTest {
         assertEquals(
                 AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
                 attributionReport.getRegistrationOrigin());
+        assertFalse(attributionReport.isFakeReport());
     }
 
     @Test
@@ -171,6 +173,7 @@ public final class AggregateReportTest {
         assertEquals(
                 AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
                 attributionReport.getRegistrationOrigin());
+        assertFalse(attributionReport.isFakeReport());
     }
 
     @Test
@@ -197,6 +200,7 @@ public final class AggregateReportTest {
         assertEquals(
                 AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
                 attributionReport.getRegistrationOrigin());
+        assertFalse(attributionReport.isFakeReport());
     }
 
     @Test
@@ -220,6 +224,7 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getSourceId());
         assertNull(attributionReport.getTriggerId());
         assertNull(attributionReport.getRegistrationOrigin());
+        assertFalse(attributionReport.isFakeReport());
     }
 
     @Test

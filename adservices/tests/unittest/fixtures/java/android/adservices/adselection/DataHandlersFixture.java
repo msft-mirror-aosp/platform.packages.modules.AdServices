@@ -22,8 +22,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBAdSelectionInitialization;
 import com.android.adservices.data.adselection.DBAdSelectionResult;
+import com.android.adservices.data.adselection.DBReportingComputationInfo;
 import com.android.adservices.data.adselection.DBReportingData;
 import com.android.adservices.data.adselection.DBWinningCustomAudience;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
@@ -51,6 +53,8 @@ public class DataHandlersFixture {
     public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("buyer1test.com");
     public static final String TEST_PACKAGE_NAME_1 = "android.adservices.tests1";
     public static final Instant CREATION_INSTANT_1 = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
+    public static final Instant CREATION_INSTANT_2 =
+            CLOCK.instant().plusSeconds(10).truncatedTo(ChronoUnit.MILLIS);
 
     public static final double WIN_BID_1 = 0.1;
     public static final Uri WIN_RENDER_URI_1 = AdDataFixture.getValidRenderUriByBuyer(BUYER_1, 1);
@@ -87,7 +91,7 @@ public class DataHandlersFixture {
 
     public static AdSelectionInitialization AD_SELECTION_INITIALIZATION_1 =
             getAdSelectionInitialization(SELLER_1, TEST_PACKAGE_NAME_1);
-    public static DBAdSelectionInitialization DB_AD_SELECTION_INTITIALIZATION_1 =
+    public static DBAdSelectionInitialization DB_AD_SELECTION_INITIALIZATION_1 =
             DBAdSelectionInitialization.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setSeller(AD_SELECTION_INITIALIZATION_1.getSeller())
@@ -95,8 +99,19 @@ public class DataHandlersFixture {
                     .setCreationInstant(CREATION_INSTANT_1)
                     .build();
 
+    public static DBAdSelectionInitialization DB_AD_SELECTION_INITIALIZATION_2 =
+            DBAdSelectionInitialization.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_2)
+                    .setSeller(AD_SELECTION_INITIALIZATION_1.getSeller())
+                    .setCallerPackageName(AD_SELECTION_INITIALIZATION_1.getCallerPackageName())
+                    .setCreationInstant(CREATION_INSTANT_2)
+                    .build();
+
     public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_1 =
-            getAdSelectionResultBidAndUri(WIN_BID_1, WIN_RENDER_URI_1);
+            getAdSelectionResultBidAndUri(AD_SELECTION_ID_1, WIN_BID_1, WIN_RENDER_URI_1);
+
+    public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_2 =
+            getAdSelectionResultBidAndUri(AD_SELECTION_ID_2, WIN_BID_1, WIN_RENDER_URI_1);
 
     public static WinningCustomAudience WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET =
             getWinningCustomAudience(TEST_WIN_CA_OWNER, "caAllFields", TEST_WIN_CA_COUNTER_KEYS);
@@ -108,9 +123,35 @@ public class DataHandlersFixture {
                     .setBuyerDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
                     .setSellerContextualSignals(SELLER_SIGNALS)
                     .setBuyerContextualSignals(BUYER_SIGNALS)
-                    .setWinningCaActivationTime(VALID_ACTIVATION_TIME)
-                    .setWinningCaExpirationTime(VALID_EXPIRATION_TIME)
-                    .setWinningCaUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                    .setWinningCustomAudienceSignals(
+                            CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setWinningBid(WIN_BID_1)
+                    .setWinningRenderUri(WIN_RENDER_URI_1)
+                    .build();
+
+    public static DBAdSelectionEntry DB_AD_SELECTION_ENTRY =
+            new DBAdSelectionEntry.Builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setSellerContextualSignals(SELLER_SIGNALS.toString())
+                    .setBiddingLogicUri(BUYER_1_BASE_URI)
+                    .setWinningAdBid(WIN_BID_1)
+                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setCreationTimestamp(CREATION_INSTANT_1)
+                    .setBuyerContextualSignals(BUYER_SIGNALS.toString())
+                    .setBuyerDecisionLogicJs(DUMMY_DECISION_LOGIC_JS)
+                    .setWinningAdRenderUri(WIN_RENDER_URI_1)
+                    .build();
+
+    public static DBReportingComputationInfo DB_REPORTING_COMPUTATION_INFO =
+            DBReportingComputationInfo.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setSellerContextualSignals(SELLER_SIGNALS.toString())
+                    .setBiddingLogicUri(BUYER_1_BASE_URI)
+                    .setWinningAdBid(WIN_BID_1)
+                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
+                    .setBuyerContextualSignals(BUYER_SIGNALS.toString())
+                    .setBuyerDecisionLogicJs(DUMMY_DECISION_LOGIC_JS)
+                    .setWinningAdRenderUri(WIN_RENDER_URI_1)
                     .build();
     public static ReportingData REPORTING_DATA_WITH_URIS =
             getReportingData(BUYER_REPORTING_URI_1, SELLER_REPORTING_URI_1);
@@ -181,12 +222,13 @@ public class DataHandlersFixture {
 
     public static AdSelectionInitialization getAdSelectionInitialization(
             AdTechIdentifier seller, String callerPackageName) {
-        return AdSelectionInitialization.create(seller, callerPackageName);
+        return AdSelectionInitialization.create(seller, callerPackageName, CREATION_INSTANT_1);
     }
 
     public static AdSelectionResultBidAndUri getAdSelectionResultBidAndUri(
-            double bid, Uri adRenderUri) {
+            long adSelectionId, double bid, Uri adRenderUri) {
         return AdSelectionResultBidAndUri.builder()
+                .setAdSelectionId(adSelectionId)
                 .setWinningAdBid(bid)
                 .setWinningAdRenderUri(adRenderUri)
                 .build();

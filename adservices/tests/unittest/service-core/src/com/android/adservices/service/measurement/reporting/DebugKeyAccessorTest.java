@@ -176,7 +176,8 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppWithSourceAdId_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_appToAppWithSourceAdId_sourceDebugKeyPresent()
+            throws DatastoreException {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -197,13 +198,14 @@ public class DebugKeyAccessorTest {
                         null);
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
-        assertNull(debugKeyPair.first);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertNull(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
-    public void getDebugKeys_appToAppWithTriggerAdId_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_appToAppWithTriggerAdId_triggerDebugKeyPresent()
+            throws DatastoreException {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -225,7 +227,7 @@ public class DebugKeyAccessorTest {
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
@@ -346,6 +348,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setDebugJoinKeyHashedValue(54L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(source.getRegistrant().toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -411,12 +414,13 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setDebugJoinKeyHashedValue(0L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(source.getRegistrant().toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
 
     @Test
-    public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_debugKeysAbsent()
+    public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_sourceDebugKeysPresent()
             throws DatastoreException {
         Trigger trigger =
                 createTrigger(
@@ -438,7 +442,7 @@ public class DebugKeyAccessorTest {
                         null);
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
-        assertNull(debugKeyPair.first);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertNull(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
@@ -502,6 +506,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setDebugJoinKeyHashedValue(54L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -566,6 +571,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setDebugJoinKeyHashedValue(0L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -629,6 +635,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setDebugJoinKeyHashedValue(54L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -722,6 +729,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setDebugJoinKeyHashedValue(0L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -1092,6 +1100,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setDebugJoinKeyHashedValue(54L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(source.getRegistrant().toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -1158,6 +1167,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setDebugJoinKeyHashedValue(0L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(source.getRegistrant().toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -1310,6 +1320,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setDebugJoinKeyHashedValue(54L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -1375,6 +1386,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setDebugJoinKeyHashedValue(0L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -1498,6 +1510,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setDebugJoinKeyHashedValue(54L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -1564,6 +1577,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setDebugJoinKeyHashedValue(0L)
                         .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
@@ -1633,6 +1647,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -1673,6 +1688,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -1713,6 +1729,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -1753,6 +1770,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(2L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -1795,6 +1813,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
@@ -1900,6 +1919,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -1969,6 +1989,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2009,6 +2030,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2049,6 +2071,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2089,6 +2112,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(2L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2131,6 +2155,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(2L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
@@ -2236,6 +2261,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2306,6 +2332,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2346,6 +2373,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2386,6 +2414,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2426,6 +2455,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(2L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2468,6 +2498,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(2L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
@@ -2573,6 +2604,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2643,6 +2675,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2683,6 +2716,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2723,6 +2757,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2763,6 +2798,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(2L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -2805,6 +2841,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(2L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
@@ -2910,6 +2947,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(false)
                         .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -3134,6 +3172,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }
@@ -3241,6 +3280,7 @@ public class DebugKeyAccessorTest {
                         .setMatched(true)
                         .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
     }

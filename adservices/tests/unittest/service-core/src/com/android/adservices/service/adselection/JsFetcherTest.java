@@ -340,6 +340,7 @@ public class JsFetcherTest {
                 AdServicesHttpClientRequest.builder()
                         .setUri(prebuiltUri)
                         .setUseCache(false)
+                        .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();
         FluentFuture<String> decisionLogicFuture =
                 mJsFetcher.getOutcomeSelectionLogic(

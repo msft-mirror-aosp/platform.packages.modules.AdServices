@@ -102,6 +102,10 @@ public interface AdServicesLogger {
     void logMeasurementDelayedSourceRegistrationStats(
             MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats);
 
+    /** Logs measurement click verification stats. */
+    void logMeasurementClickVerificationStats(
+            MeasurementClickVerificationStats measurementClickVerificationStats);
+
     /** Logs enrollment data stats. */
     void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId);
 
@@ -118,4 +122,11 @@ public interface AdServicesLogger {
             int mEnrollmentRecordCountInTable,
             String mQueryParameter,
             int mErrorCause);
+
+    /** Logs encryption key fetch stats. */
+    void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats);
+
+    /** Logs encryption key datastore transaction ended stats. */
+    void logEncryptionKeyDbTransactionEndedStats(
+            AdServicesEncryptionKeyDbTransactionEndedStats stats);
 }

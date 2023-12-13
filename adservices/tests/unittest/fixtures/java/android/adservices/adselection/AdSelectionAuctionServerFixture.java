@@ -38,7 +38,7 @@ public class AdSelectionAuctionServerFixture {
                                 ReportingUrls.newBuilder()
                                         .setReportingUrl("https://foobarbuyer.reporting")
                                         .build())
-                        .setComponentSellerReportingUrls(
+                        .setTopLevelSellerReportingUrls(
                                 ReportingUrls.newBuilder()
                                         .setReportingUrl("https://foobarseller.reporting")
                                         .build())

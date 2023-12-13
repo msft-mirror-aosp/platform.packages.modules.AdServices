@@ -20,7 +20,7 @@ import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
 
 import android.annotation.NonNull;
 
-import com.android.cobalt.data.CountEvent;
+import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.system.SystemData;
 
@@ -79,7 +79,8 @@ public final class CountObservationGenerator implements ObservationGenerator {
      */
     @Override
     public ImmutableList<UnencryptedObservationBatch> generateObservations(
-            int dayIndex, ImmutableListMultimap<SystemProfile, CountEvent> allEventData) {
+            int dayIndex,
+            ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> allEventData) {
         if (allEventData.isEmpty() && mReport.getPrivacyLevel() != PrivacyLevel.NO_ADDED_PRIVACY) {
             // Reports with privacy enabled need to send fabricated observations and a report
             // participation observation even if no real observations are present.
@@ -108,11 +109,14 @@ public final class CountObservationGenerator implements ObservationGenerator {
      * @return an UnencryptedObservation batch holding the generated observations
      */
     private UnencryptedObservationBatch generateObservations(
-            int dayIndex, SystemProfile systemProfile, ImmutableList<CountEvent> eventData) {
+            int dayIndex,
+            SystemProfile systemProfile,
+            ImmutableList<EventRecordAndSystemProfile> eventData) {
         if (mReport.getEventVectorBufferMax() != 0
                 && eventData.size() > mReport.getEventVectorBufferMax()) {
-            // Each CountEvent contains a unique event vector for the system profile and day so the
-            // number of events can be compared to the event vector buffer max of the report.
+            // Each EventRecordAndSystemProfile contains a unique event vector for the system
+            // profile and day so the number of events can be compared to the event vector buffer
+            // max of the report.
             eventData = eventData.subList(0, (int) mReport.getEventVectorBufferMax());
         }
 
@@ -148,7 +152,7 @@ public final class CountObservationGenerator implements ObservationGenerator {
      * @return ObservationToEncrypts containing non-private observations
      */
     private ImmutableList<ObservationToEncrypt> buildNonPrivateObservations(
-            ImmutableList<CountEvent> eventData) {
+            ImmutableList<EventRecordAndSystemProfile> eventData) {
         IntegerObservation.Builder integerBuilder = IntegerObservation.newBuilder();
         eventData.stream().map(this::buildIntegerValue).forEach(integerBuilder::addValues);
         Observation observation =
@@ -167,10 +171,10 @@ public final class CountObservationGenerator implements ObservationGenerator {
      * @param countEvent the event
      * @return an IntegerObservation.Value
      */
-    private IntegerObservation.Value buildIntegerValue(CountEvent countEvent) {
+    private IntegerObservation.Value buildIntegerValue(EventRecordAndSystemProfile event) {
         return IntegerObservation.Value.newBuilder()
-                .addAllEventCodes(countEvent.eventVector().eventCodes())
-                .setValue(countEvent.aggregateValue().getIntegerValue())
+                .addAllEventCodes(event.eventVector().eventCodes())
+                .setValue(event.aggregateValue().getIntegerValue())
                 .build();
     }
 
@@ -181,7 +185,7 @@ public final class CountObservationGenerator implements ObservationGenerator {
      * @return a list of observations to encrypt, including fabricated observations
      */
     private ImmutableList<ObservationToEncrypt> buildPrivateObservations(
-            ImmutableList<CountEvent> eventData) {
+            ImmutableList<EventRecordAndSystemProfile> eventData) {
         ImmutableList<Integer> eventIndices =
                 eventData.stream()
                         .map(countEvent -> asIndex(countEvent))
@@ -255,7 +259,7 @@ public final class CountObservationGenerator implements ObservationGenerator {
      * @param event the event to convert
      * @return the index of the event
      */
-    private int asIndex(CountEvent event) {
+    private int asIndex(EventRecordAndSystemProfile event) {
         int maxEventVectorIndex = maxEventVectorIndexForMetric();
         int eventVectorIndex =
                 PrivateIndexCalculations.eventVectorToIndex(event.eventVector(), mMetric);

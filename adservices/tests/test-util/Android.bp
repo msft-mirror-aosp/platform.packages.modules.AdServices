@@ -26,18 +26,19 @@ filegroup {
     ],
     path: "java",
     visibility: [
-        "//packages/modules/AdServices/adservices/tests:__subpackages__",
+        "//packages/modules/AdServices:__subpackages__",
     ],
 }
 
+// Java classes that are used by both device-side and host-side tests
 filegroup {
-    name: "adservices-mockito-sources",
+    name: "adservices-test-utility-sideless-sources",
     srcs: [
-        "java/com/android/adservices/mockito/*.java",
+        "side-less/**/*.java",
     ],
-    path: "java",
+    path: "side-less",
     visibility: [
-        "//packages/modules/AdServices/adservices/tests:__subpackages__",
+        ":__pkg__",
     ],
 }
 
@@ -46,6 +47,8 @@ android_library {
     sdk_version: "module_current",
     min_sdk_version: "30",
     srcs: [
+        ":adservices-extended-mockito-rule-sources",
+        ":adservices-test-utility-sideless-sources",
         ":adservices-test-utility-sources",
         ":adservices-service-core-phflags-sources",
     ],
@@ -54,10 +57,38 @@ android_library {
         "framework-adservices-lib",
         "framework-annotations-lib",
         "framework-configinfrastructure",
+        "junit",
     ],
     static_libs: [
+        "adservices-shared-testing",
         "androidx.test.runner",
         "compatibility-device-util-axt",
+        "modules-utils-preconditions",
+        // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
+        "modules-utils-testable-device-config",
+    ],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
+}
+
+android_library {
+    name: "adservices-test-mockito-expectations",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    srcs: [
+        "java/com/android/adservices/mockito/*MockitoExpectations.java",
+        ":adservices-service-core-phflags-sources",
+    ],
+    libs: [
+        "framework-adservices-lib",
+        "framework-annotations-lib",
+        "framework-configinfrastructure",
+    ],
+    static_libs: [
+        "adservices-service-core",
+        "adservices-shared-testing",
+        "adservices-test-utility",
+        "mockito-target-extended-minus-junit4",
+        "truth",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
 }
@@ -67,40 +98,37 @@ java_library_host {
     srcs: [
         "host-side/**/*.java",
         ":adservices-service-core-flags-constants-sources",
-        // TODO(b/284971005): move files below to pure-java and use filegroup
-        "java/com/android/adservices/common/AbstractAdServicesDeviceSupportedRule.java",
-        "java/com/android/adservices/common/AbstractAdServicesFlagsSetterRule.java",
-        "java/com/android/adservices/common/AbstractSdkLevelSupportedRule.java",
-        "java/com/android/adservices/common/DeviceConfigHelper.java",
-        "java/com/android/adservices/common/RequiresLowRamDevice.java",
-        "java/com/android/adservices/common/RequiresSdkLevelAtLeastR.java",
-        "java/com/android/adservices/common/RequiresSdkLevelAtLeastS.java",
-        "java/com/android/adservices/common/RequiresSdkLevelAtLeastSv2.java",
-        "java/com/android/adservices/common/RequiresSdkLevelAtLeastT.java",
-        "java/com/android/adservices/common/RequiresSdkLevelAtLeastU.java",
-        "java/com/android/adservices/common/RequiresSdkLevelAtLeastV.java",
-        "java/com/android/adservices/common/SystemPropertiesHelper.java",
-        // TODO(b/284971005): files below should be provided by module-utils
-        "java/com/android/adservices/common/Logger.java",
-        "java/com/android/adservices/common/Nullable.java",
+        ":adservices-test-utility-sideless-sources",
     ],
     libs: [
         "tradefed",
     ],
 }
 
+filegroup {
+    name: "adservices-extended-mockito-rule-sources",
+    srcs: [
+        "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
+        "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+    ],
+}
+
 java_defaults {
     name: "adservices-extended-mockito-defaults",
     srcs: [
-        ":adservices-mockito-sources",
+        ":adservices-extended-mockito-rule-sources",
     ],
     defaults: [
         "modules-utils-testable-device-config-defaults",
     ],
-    libs: [
-        "services.core.unboosted", // For LocalManagerRegistry on ExtendedMockitoExpectations
+    static_libs: [
+         "adservices-service-core",
     ],
     visibility: [
-        "//packages/modules/AdServices/adservices/tests:__subpackages__",
+        "//packages/modules/AdServices:__subpackages__",
     ],
 }

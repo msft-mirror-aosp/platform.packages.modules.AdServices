@@ -30,6 +30,7 @@ import com.android.adservices.service.profiling.Tracing;
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.io.IOException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -85,7 +86,7 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             ObliviousHttpClient client = ObliviousHttpClient.create(context.keyConfig());
 
             return client.decryptObliviousHttpResponse(encryptedBytes, context);
-        } catch (Exception e) {
+        } catch (InvalidKeySpecException | UnsupportedHpkeAlgorithmException | IOException e) {
             sLogger.e("Unexpected error during decryption");
             throw new RuntimeException(e);
         }

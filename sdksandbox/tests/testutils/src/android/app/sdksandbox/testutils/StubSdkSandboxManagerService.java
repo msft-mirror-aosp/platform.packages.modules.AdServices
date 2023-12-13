@@ -44,11 +44,11 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void registerAppOwnedSdkSandboxInterface(
             String callingPackageName,
             AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface,
-            long timeAppCalledSystemServer) {}
+            SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void unregisterAppOwnedSdkSandboxInterface(
-            String callingPackageName, String name, long timeAppCalledSystemServer) {}
+            String callingPackageName, String name, SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void loadSdk(
@@ -56,13 +56,12 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             IBinder clientApplicationThreadBinder,
             String sdkName,
             SandboxLatencyInfo sandboxLatencyInfo,
-            long timeAppCalledSystemServer,
             Bundle params,
             ILoadSdkCallback callback) {}
 
     @Override
     public void unloadSdk(
-            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {}
+            String callingPackageName, String sdkName, SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void requestSurfacePackage(
@@ -72,20 +71,25 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             int displayId,
             int width,
             int height,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
 
     @Override
     public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(
-            String callingPackageName, long timeAppCalledSystemServer) {
+            String callingPackageName, SandboxLatencyInfo sandboxLatencyInfo) {
         return Collections.emptyList();
     }
 
     @Override
     public List<SandboxedSdk> getSandboxedSdks(
-            String callingPackageName, long timeAppCalledSystemServer) {
+            String callingPackageName, SandboxLatencyInfo sandboxLatencyInfo) {
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isSdkSandboxServiceRunning(String callingPackageName) throws RemoteException {
+        return false;
     }
 
     @Override
@@ -94,27 +98,27 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void syncDataFromClient(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             SharedPreferencesUpdate update,
             ISharedPreferencesSyncCallback callback) {}
 
     @Override
     public void addSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
     public void removeSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
     public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
-    public void logLatencyFromSystemServerToApp(String method, int latency) {}
+    public void logSandboxActivityEvent(int method, int callResult, int latencyMillis) {}
 
     @Override
     public IBinder getAdServicesManager() {

@@ -18,10 +18,14 @@ package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -34,27 +38,33 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementReportsStats;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -93,13 +103,26 @@ public class AggregateReportingJobHandlerTest {
 
     @Mock EnrollmentDao mEnrollmentDao;
     @Mock Flags mMockFlags;
+    @Mock AdServicesLogger mLogger;
+    @Mock AdServicesErrorLogger mErrorLogger;
 
     AggregateReportingJobHandler mAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyDebugAggregateReportingJobHandler;
-    private StaticMockitoSession mMockitoSession;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(ErrorLogUtil.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     class FakeDatasoreManager extends DatastoreManager {
+
+        FakeDatasoreManager() {
+            super(mErrorLogger);
+        }
 
         @Override
         public ITransaction createNewTransaction() {
@@ -131,27 +154,35 @@ public class AggregateReportingJobHandlerTest {
                             return keys;
                         });
         mDatastoreManager = new FakeDatasoreManager();
-        mAggregateReportingJobHandler = new AggregateReportingJobHandler(
-                mEnrollmentDao, mDatastoreManager, mockKeyManager);
+        mAggregateReportingJobHandler =
+                new AggregateReportingJobHandler(
+                        mEnrollmentDao,
+                        mDatastoreManager,
+                        mockKeyManager,
+                        mMockFlags,
+                        mLogger,
+                        ReportingStatus.ReportType.AGGREGATE,
+                        ReportingStatus.UploadMethod.UNKNOWN,
+                        sContext);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
         mSpyDebugAggregateReportingJobHandler =
                 Mockito.spy(
                         new AggregateReportingJobHandler(
-                                        mEnrollmentDao, mDatastoreManager, mockKeyManager)
+                                        mEnrollmentDao,
+                                        mDatastoreManager,
+                                        mockKeyManager,
+                                        mMockFlags,
+                                        mLogger,
+                                        ReportingStatus.ReportType.AGGREGATE,
+                                        ReportingStatus.UploadMethod.UNKNOWN,
+                                        sContext)
                                 .setIsDebugInstance(true));
 
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
-    }
-
-    @After
-    public void after() {
-        mMockitoSession.finishMocking();
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
     }
 
     @Test
@@ -167,13 +198,7 @@ public class AggregateReportingJobHandlerTest {
                         .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                         .build();
-        JSONObject aggregateReportBody =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
         assertEquals(
                 aggregateReportBody.getString("aggregation_coordinator_origin"),
                 COORDINATOR_ORIGIN.toString());
@@ -182,10 +207,10 @@ public class AggregateReportingJobHandlerTest {
                 .thenReturn(aggregateReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
         doReturn(aggregateReportBody)
                 .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.eq(REPORTING_URI), Mockito.any());
+                .createReportJsonPayload(Mockito.any(), eq(REPORTING_URI), Mockito.any());
 
         doNothing()
                 .when(mMeasurementDao)
@@ -218,13 +243,7 @@ public class AggregateReportingJobHandlerTest {
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                         .build();
 
-        JSONObject aggregateReportBody =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
         // No Aggregation coordinator
         assertTrue(aggregateReportBody.isNull("aggregation_coordinator_origin"));
 
@@ -232,10 +251,10 @@ public class AggregateReportingJobHandlerTest {
                 .thenReturn(aggregateReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
         doReturn(aggregateReportBody)
                 .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.eq(REPORTING_URI), Mockito.any());
+                .createReportJsonPayload(Mockito.any(), eq(REPORTING_URI), Mockito.any());
 
         doNothing()
                 .when(mMeasurementDao)
@@ -267,22 +286,16 @@ public class AggregateReportingJobHandlerTest {
                         .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                         .build();
-        JSONObject aggregateReportBody =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
 
         when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
                 .thenReturn(aggregateReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugAggregateReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
         doReturn(aggregateReportBody)
                 .when(mSpyDebugAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.eq(REPORTING_URI), Mockito.any());
+                .createReportJsonPayload(Mockito.any(), eq(REPORTING_URI), Mockito.any());
 
         doNothing()
                 .when(mMeasurementDao)
@@ -311,22 +324,16 @@ public class AggregateReportingJobHandlerTest {
                         .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                         .build();
-        JSONObject aggregateReportBody =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
 
         when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
                 .thenReturn(aggregateReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
         doReturn(aggregateReportBody)
                 .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.eq(REPORTING_URI), Mockito.any());
+                .createReportJsonPayload(Mockito.any(), eq(REPORTING_URI), Mockito.any());
 
         doNothing()
                 .when(mMeasurementDao)
@@ -356,22 +363,16 @@ public class AggregateReportingJobHandlerTest {
                         .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                         .build();
-        JSONObject aggregateReportBody =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
 
         when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
                 .thenReturn(aggregateReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
         doReturn(aggregateReportBody)
                 .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.eq(REPORTING_URI), Mockito.any());
+                .createReportJsonPayload(Mockito.any(), eq(REPORTING_URI), Mockito.any());
 
         doNothing()
                 .when(mMeasurementDao)
@@ -402,22 +403,16 @@ public class AggregateReportingJobHandlerTest {
                         .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                         .build();
-        JSONObject aggregateReportBody =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
 
         when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
                 .thenReturn(aggregateReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
         doReturn(aggregateReportBody)
                 .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.eq(REPORTING_URI), Mockito.any());
+                .createReportJsonPayload(Mockito.any(), eq(REPORTING_URI), Mockito.any());
 
         doNothing()
                 .when(mMeasurementDao)
@@ -446,22 +441,16 @@ public class AggregateReportingJobHandlerTest {
                         .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                         .build();
-        JSONObject aggregateReportBody =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
 
         when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
                 .thenReturn(aggregateReport);
         doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
                 .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
         doReturn(aggregateReportBody)
                 .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(Mockito.any(), Mockito.eq(REPORTING_URI), Mockito.any());
+                .createReportJsonPayload(Mockito.any(), eq(REPORTING_URI), Mockito.any());
 
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_IO_ERROR,
@@ -504,22 +493,8 @@ public class AggregateReportingJobHandlerTest {
     @Test
     public void testPerformScheduledPendingReportsForMultipleReports()
             throws DatastoreException, IOException, JSONException {
-        AggregateReport aggregateReport1 =
-                new AggregateReport.Builder()
-                        .setId("aggregateReportId1")
-                        .setStatus(AggregateReport.Status.PENDING)
-                        .setScheduledReportTime(1000L)
-                        .setEnrollmentId(ENROLLMENT_ID)
-                        .setRegistrationOrigin(REPORTING_URI)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build();
-        JSONObject aggregateReportBody1 =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport1.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        AggregateReport aggregateReport1 = createASampleAggregateReport();
+        JSONObject aggregateReportBody1 = createASampleAggregateReportBody(aggregateReport1);
         AggregateReport aggregateReport2 =
                 new AggregateReport.Builder()
                         .setId("aggregateReportId2")
@@ -529,13 +504,92 @@ public class AggregateReportingJobHandlerTest {
                         .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                         .build();
-        JSONObject aggregateReportBody2 =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport2.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
+        JSONObject aggregateReportBody2 = createASampleAggregateReportBody(aggregateReport2);
+
+        when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
+                .thenReturn(
+                        Map.of(
+                                COORDINATOR_ORIGIN.toString(),
+                                List.of(aggregateReport1.getId(), aggregateReport2.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport1.getId()))
+                .thenReturn(aggregateReport1);
+        when(mMeasurementDao.getAggregateReport(aggregateReport2.getId()))
+                .thenReturn(aggregateReport2);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doReturn(aggregateReportBody1)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport1, REPORTING_URI, AggregateCryptoFixture.getKey());
+        doReturn(aggregateReportBody2)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport2, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+
+        verify(mMeasurementDao, times(2)).markAggregateReportStatus(any(), anyInt());
+        verify(mTransaction, times(5)).begin();
+        verify(mTransaction, times(5)).end();
+    }
+
+    @Test
+    public void testPerformScheduledPendingReportsInWindow_noKeys()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
+
+        when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
+                .thenReturn(
+                        Map.of(COORDINATOR_ORIGIN.toString(), List.of(aggregateReport.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
+        when(mockKeyManager.getAggregateEncryptionKeys(any(), anyInt()))
+                .thenReturn(Collections.emptyList());
+        mAggregateReportingJobHandler =
+                new AggregateReportingJobHandler(
+                        mEnrollmentDao,
+                        new FakeDatasoreManager(),
+                        mockKeyManager,
+                        mMockFlags,
+                        mLogger,
+                        sContext);
+        mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
+
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
+    }
+
+    @Test
+    public void testPerformScheduledPendingReports_ThreadInterrupted()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport1 = createASampleAggregateReport();
+        JSONObject aggregateReportBody1 = createASampleAggregateReportBody(aggregateReport1);
+        AggregateReport aggregateReport2 =
+                new AggregateReport.Builder()
+                        .setId("aggregateReportId2")
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setScheduledReportTime(1100L)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+                        .build();
+        JSONObject aggregateReportBody2 = createASampleAggregateReportBody(aggregateReport2);
 
         when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
                 .thenReturn(
@@ -558,59 +612,401 @@ public class AggregateReportingJobHandlerTest {
                 .createReportJsonPayload(
                         aggregateReport2, REPORTING_URI, AggregateCryptoFixture.getKey());
 
+        Thread.currentThread().interrupt();
         assertTrue(
                 mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
                         1000, 1100));
 
-        verify(mMeasurementDao, times(2)).markAggregateReportStatus(any(), anyInt());
-        verify(mTransaction, times(5)).begin();
-        verify(mTransaction, times(5)).end();
+        // 0 reports processed, since the thread exits early.
+        verify(mMeasurementDao, times(0)).markAggregateReportStatus(any(), anyInt());
+
+        // 1 transaction for initial retrieval of pending report ids.
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
     }
 
     @Test
-    public void testPerformScheduledPendingReportsInWindow_noKeys()
+    public void testPerformScheduledPendingReports_LogZeroRetryCount()
             throws DatastoreException, IOException, JSONException {
-        AggregateReport aggregateReport =
-                new AggregateReport.Builder()
-                        .setId("aggregateReportId1")
-                        .setStatus(AggregateReport.Status.PENDING)
-                        .setScheduledReportTime(1000L)
-                        .setEnrollmentId(ENROLLMENT_ID)
-                        .setRegistrationOrigin(REPORTING_URI)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build();
-        JSONObject aggregateReportBody =
-                new AggregateReportBody.Builder()
-                        .setReportId(aggregateReport.getId())
-                        .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .build()
-                        .toJson(AggregateCryptoFixture.getKey());
+        AggregateReport aggregateReport1 = createASampleAggregateReport();
+        JSONObject aggregateReportBody1 = createASampleAggregateReportBody(aggregateReport1);
 
         when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
                 .thenReturn(
-                        Map.of(COORDINATOR_ORIGIN.toString(), List.of(aggregateReport.getId())));
+                        Map.of(COORDINATOR_ORIGIN.toString(), List.of(aggregateReport1.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport1.getId()))
+                .thenReturn(aggregateReport1);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doReturn(aggregateReportBody1)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport1, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture());
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertEquals(
+                measurementReportsStats.getType(), ReportingStatus.ReportType.AGGREGATE.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.SUCCESS.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.UNKNOWN.getValue());
+        verify(mMeasurementDao, never()).incrementAndGetReportingRetryCount(any(), any());
+    }
+
+    @Test
+    public void testPerformScheduledPendingReports_LogReportNotFound() throws DatastoreException {
+        AggregateReport aggregateReport1 = createASampleAggregateReport();
+
+        when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
+                .thenReturn(
+                        Map.of(COORDINATOR_ORIGIN.toString(), List.of(aggregateReport1.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport1.getId())).thenReturn(null);
+
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture());
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertEquals(
+                measurementReportsStats.getType(), ReportingStatus.ReportType.AGGREGATE.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.FAILURE.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.REPORT_NOT_FOUND.getValue());
+        verify(mMeasurementDao)
+                .incrementAndGetReportingRetryCount(
+                        aggregateReport1.getId(),
+                        KeyValueData.DataType.AGGREGATE_REPORT_RETRY_COUNT);
+    }
+
+    @Test
+    public void performReport_throwsIOException_logsReportingStatus()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doThrow(new IOException())
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_IO_ERROR,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
+
+        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
+        verify(mSpyAggregateReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_throwsJsonDisabledToThrow_logsAndSwallowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+
+        doReturn(false)
+                .when(mMockFlags)
+                .getMeasurementEnableReportDeletionOnUnrecoverableException();
+        doReturn(false).when(mMockFlags).getMeasurementEnableReportingJobsThrowJsonException();
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(any(), any());
+        doThrow(new JSONException("cause message"))
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
+
+        verify(mMeasurementDao, never()).markAggregateReportStatus(anyString(), anyInt());
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_throwsJsonExceptionNoSampling_logsAndSwallowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableReportDeletionOnUnrecoverableException();
+        doReturn(true).when(mMockFlags).getMeasurementEnableReportingJobsThrowJsonException();
+        doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(any(), any());
+        doThrow(new JSONException("cause message"))
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
+
+        Assert.assertEquals(
+                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
+
+        verify(mMeasurementDao).markAggregateReportStatus(eq(aggregateReport.getId()), anyInt());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void performReport_throwsJsonEnabledToThrow_marksReportDeletedAndRethrowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableReportDeletionOnUnrecoverableException();
+        doReturn(true).when(mMockFlags).getMeasurementEnableReportingJobsThrowJsonException();
         when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
                 .thenReturn(aggregateReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_URI), Mockito.any());
-        doReturn(aggregateReportBody)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doThrow(new JSONException("cause message"))
                 .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(
-                        aggregateReport, REPORTING_URI, AggregateCryptoFixture.getKey());
+                .createReportJsonPayload(Mockito.any(), Mockito.any(), Mockito.any());
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
-        AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
-        when(mockKeyManager.getAggregateEncryptionKeys(any(), anyInt()))
-                .thenReturn(Collections.emptyList());
-        mAggregateReportingJobHandler = new AggregateReportingJobHandler(
-                mEnrollmentDao, new FakeDatasoreManager(), mockKeyManager);
-        mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
+        try {
+            mSpyAggregateReportingJobHandler.performReport(
+                    aggregateReport.getId(),
+                    AggregateCryptoFixture.getKey(),
+                    new ReportingStatus());
+            fail();
+        } catch (IllegalStateException e) {
+            assertEquals(JSONException.class, e.getCause().getClass());
+            assertEquals("cause message", e.getCause().getMessage());
+        }
 
-        assertTrue(
-                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
-                        1000, 1100));
+        verify(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.MARKED_TO_DELETE);
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
 
-        verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
+    @Test
+    public void performReport_throwsUnknownExceptionDisabledToThrow_logsAndSwallowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
+
+        doReturn(false)
+                .when(mMockFlags)
+                .getMeasurementEnableReportingJobsThrowUnaccountedException();
+        doReturn(aggregateReport).when(mMeasurementDao).getAggregateReport(aggregateReport.getId());
+        doThrow(new RuntimeException("unknown exception"))
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doReturn(aggregateReportBody)
+                .when(mSpyDebugAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), any(), any());
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
+        verify(mMeasurementDao, never()).markAggregateReportStatus(anyString(), anyInt());
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_throwsUnknownExceptionNoSampling_logsAndSwallowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
+
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableReportingJobsThrowUnaccountedException();
+        doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        doReturn(aggregateReport).when(mMeasurementDao).getAggregateReport(aggregateReport.getId());
+        doThrow(new RuntimeException("unknown exception"))
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doReturn(aggregateReportBody)
+                .when(mSpyDebugAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), any(), any());
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
+        verify(mMeasurementDao, never()).markAggregateReportStatus(anyString(), anyInt());
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_throwsUnknownExceptionEnabledToThrow_rethrowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableReportingJobsThrowUnaccountedException();
+        doReturn(aggregateReport).when(mMeasurementDao).getAggregateReport(aggregateReport.getId());
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doThrow(new RuntimeException("unknown exception"))
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), any(), any());
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+
+        try {
+            mSpyAggregateReportingJobHandler.performReport(
+                    aggregateReport.getId(),
+                    AggregateCryptoFixture.getKey(),
+                    new ReportingStatus());
+            fail();
+        } catch (RuntimeException e) {
+            assertEquals("unknown exception", e.getMessage());
+        }
+
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_throwsCryptoExceptionDisabledToThrow_logsAndSwallowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+
+        doReturn(false).when(mMockFlags).getMeasurementEnableReportingJobsThrowCryptoException();
+        doReturn(aggregateReport).when(mMeasurementDao).getAggregateReport(aggregateReport.getId());
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doThrow(new CryptoException("exception message"))
+                .when(mSpyDebugAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), any(), any());
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
+        verify(mMeasurementDao, never()).markAggregateReportStatus(anyString(), anyInt());
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_throwsCryptoExceptionNoSampling_logsAndSwallowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+
+        doReturn(true).when(mMockFlags).getMeasurementEnableReportingJobsThrowCryptoException();
+        doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        doReturn(aggregateReport).when(mMeasurementDao).getAggregateReport(aggregateReport.getId());
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doThrow(new CryptoException("exception message"))
+                .when(mSpyDebugAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), any(), any());
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
+                mSpyAggregateReportingJobHandler.performReport(
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
+        verify(mMeasurementDao, never()).markAggregateReportStatus(anyString(), anyInt());
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void performReport_throwsCryptoExceptionEnabledToThrow_rethrowsException()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport = createASampleAggregateReport();
+
+        doReturn(true).when(mMockFlags).getMeasurementEnableReportingJobsThrowCryptoException();
+        doReturn(aggregateReport).when(mMeasurementDao).getAggregateReport(aggregateReport.getId());
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doThrow(new CryptoException("exception message"))
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), any(), any());
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+
+        try {
+            mSpyAggregateReportingJobHandler.performReport(
+                    aggregateReport.getId(),
+                    AggregateCryptoFixture.getKey(),
+                    new ReportingStatus());
+            fail();
+        } catch (CryptoException e) {
+            assertEquals("exception message", e.getMessage());
+        }
+
+        verify(mTransaction, times(1)).begin();
+        verify(mTransaction, times(1)).end();
+    }
+
+    private static JSONObject createASampleAggregateReportBody(AggregateReport aggregateReport)
+            throws JSONException {
+        return new AggregateReportBody.Builder()
+                .setReportId(aggregateReport.getId())
+                .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
+                .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                .build()
+                .toJson(AggregateCryptoFixture.getKey());
+    }
+
+    private static AggregateReport createASampleAggregateReport() {
+        return new AggregateReport.Builder()
+                .setId("aggregateReportId1")
+                .setStatus(AggregateReport.Status.PENDING)
+                .setScheduledReportTime(1000L)
+                .setEnrollmentId(ENROLLMENT_ID)
+                .setRegistrationOrigin(REPORTING_URI)
+                .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                .build();
     }
 }

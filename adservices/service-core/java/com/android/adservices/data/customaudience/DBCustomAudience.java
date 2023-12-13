@@ -432,7 +432,6 @@ public class DBCustomAudience {
         private DBTrustedBiddingData mTrustedBiddingData;
         private Uri mBiddingLogicUri;
         private List<DBAdData> mAds;
-
         public Builder() {}
 
         public Builder(@NonNull DBCustomAudience customAudience) {

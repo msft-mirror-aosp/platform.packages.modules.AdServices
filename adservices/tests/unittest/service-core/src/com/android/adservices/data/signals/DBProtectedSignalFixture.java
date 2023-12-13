@@ -18,17 +18,27 @@ package com.android.adservices.data.signals;
 
 import android.adservices.common.CommonFixture;
 
+import java.time.Duration;
+
 public class DBProtectedSignalFixture {
 
     public static final byte[] KEY = {(byte) 1, (byte) 2, (byte) 3, (byte) 4};
     public static final byte[] VALUE = {(byte) 42};
-    public static final DBProtectedSignal SIGNAL =
-            DBProtectedSignal.builder()
-                    .setId(null)
-                    .setBuyer(CommonFixture.VALID_BUYER_1)
-                    .setKey(DBProtectedSignalFixture.KEY)
-                    .setValue(DBProtectedSignalFixture.VALUE)
-                    .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                    .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+
+    public static DBProtectedSignal.Builder getBuilder() {
+        return DBProtectedSignal.builder()
+                .setId(null)
+                .setBuyer(CommonFixture.VALID_BUYER_1)
+                .setKey(DBProtectedSignalFixture.KEY)
+                .setValue(DBProtectedSignalFixture.VALUE)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1);
+    }
+
+    public static final DBProtectedSignal SIGNAL = getBuilder().build();
+    public static final DBProtectedSignal LATER_TIME_SIGNAL =
+            getBuilder()
+                    .setCreationTime(
+                            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plus(Duration.ofDays(1)))
                     .build();
 }

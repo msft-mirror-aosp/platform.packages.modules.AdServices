@@ -102,18 +102,19 @@ public class DevContextFilter {
     @VisibleForTesting
     public DevContext createDevContext(int callingAppUid) {
         if (!isDeveloperMode()) {
+            LogUtil.v("Developer mode is disabled, creating dev context as disabled");
             return DevContext.createForDevOptionsDisabled();
         }
 
         try {
             String callingAppPackage =
                     mAppPackageNameRetriever.getAppPackageNameForUid(callingAppUid);
-            LogUtil.v("Creating Dev Context for calling app with package " + callingAppPackage);
             if (!isDebuggable(callingAppPackage)) {
-                LogUtil.v("Non debuggable, ignoring");
+                LogUtil.v("Not debuggable, creating dev context as disabled");
                 return DevContext.createForDevOptionsDisabled();
             }
 
+            LogUtil.v("Creating Dev Context for calling app with package " + callingAppPackage);
             return DevContext.builder()
                     .setDevOptionsEnabled(true)
                     .setCallingAppPackageName(callingAppPackage)

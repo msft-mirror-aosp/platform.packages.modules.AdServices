@@ -127,7 +127,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 frequencyCapAdDataValidator,
                 adCounterHistogramUpdater,
                 debugReporting,
-                callerUid);
+                callerUid,
+                false);
 
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
@@ -177,7 +178,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 frequencyCapAdDataValidator,
                 adCounterHistogramUpdater,
                 adSelectionExecutionLogger,
-                debugReporting);
+                debugReporting,
+                false);
 
         this.mJsFetcher = jsFetcher;
         DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());

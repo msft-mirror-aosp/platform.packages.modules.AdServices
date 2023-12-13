@@ -425,6 +425,15 @@ public class UpdateAdCounterHistogramWorkerTest {
             mShouldEnableAdFilteringFeature = shouldEnableAdFilteringFeature;
         }
 
+        public FlagsOverridingAdFiltering() {
+            this(FLEDGE_AD_SELECTION_FILTERING_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeOnDeviceAuctionKillSwitch() {
+            return false;
+        }
+
         @Override
         public boolean getEnforceIsolateMaxHeapSize() {
             return false;

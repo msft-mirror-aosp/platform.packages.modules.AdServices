@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package android.adservices.topics;
+
+import android.adservices.FlagsConstants;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -22,17 +25,31 @@ import java.util.Objects;
 
 /** Represent the result from the getTopics API. */
 public final class GetTopicsResponse {
+    private static final String KEY_TOPICS_ENCRYPTION_ENABLED =
+            FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
+
     /** List of Topic objects returned by getTopics API. */
     private final List<Topic> mTopics;
 
-    private GetTopicsResponse(@NonNull List<Topic> topics) {
+    /** List of EncryptedTopic objects returned by getTopics API. */
+    private final List<EncryptedTopic> mEncryptedTopics;
+
+    private GetTopicsResponse(List<Topic> topics, List<EncryptedTopic> encryptedTopics) {
         mTopics = topics;
+        mEncryptedTopics = encryptedTopics;
     }
 
     /** Returns a {@link List} of {@link Topic} objects returned by getTopics API. */
     @NonNull
     public List<Topic> getTopics() {
         return mTopics;
+    }
+
+    /** Returns a {@link List} of {@link EncryptedTopic} objects returned by getTopics API. */
+    @NonNull
+    @FlaggedApi(KEY_TOPICS_ENCRYPTION_ENABLED)
+    public List<EncryptedTopic> getEncryptedTopics() {
+        return mEncryptedTopics;
     }
 
     @Override
@@ -44,12 +61,12 @@ public final class GetTopicsResponse {
             return false;
         }
         GetTopicsResponse that = (GetTopicsResponse) o;
-        return mTopics.equals(that.mTopics);
+        return mTopics.equals(that.mTopics) && mEncryptedTopics.equals(that.mEncryptedTopics);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTopics);
+        return Objects.hash(mTopics, mEncryptedTopics);
     }
 
     /**
@@ -58,27 +75,42 @@ public final class GetTopicsResponse {
      */
     public static final class Builder {
         private List<Topic> mTopics = new ArrayList<>();
+        private List<EncryptedTopic> mEncryptedTopics = new ArrayList<>();
 
         /**
          * Creates a {@link Builder} for {@link GetTopicsResponse} objects.
          *
          * @param topics The list of the returned Topics.
+         * @deprecated Use {@link Builder#Builder(List, List)} instead.
          */
+        @Deprecated
         public Builder(@NonNull List<Topic> topics) {
             mTopics = Objects.requireNonNull(topics);
         }
 
         /**
+         * Creates a {@link Builder} for {@link GetTopicsResponse} objects.
+         *
+         * @param topics The list of the returned Topics.
+         * @param encryptedTopics The list of encrypted Topics.
+         */
+        @FlaggedApi(KEY_TOPICS_ENCRYPTION_ENABLED)
+        public Builder(@NonNull List<Topic> topics, @NonNull List<EncryptedTopic> encryptedTopics) {
+            mTopics = Objects.requireNonNull(topics);
+            mEncryptedTopics = Objects.requireNonNull(encryptedTopics);
+        }
+
+        /**
          * Builds a {@link GetTopicsResponse} instance.
          *
-         * <p>throws IllegalArgumentException if any of the params are null or there is any mismatch
-         * in the size of ModelVersions and TaxonomyVersions.
+         * @throws IllegalArgumentException if any of the params are null.
          */
-        public @NonNull GetTopicsResponse build() {
-            if (mTopics == null) {
+        @NonNull
+        public GetTopicsResponse build() {
+            if (mTopics == null || mEncryptedTopics == null) {
                 throw new IllegalArgumentException("Topics is null");
             }
-            return new GetTopicsResponse(mTopics);
+            return new GetTopicsResponse(mTopics, mEncryptedTopics);
         }
     }
 }

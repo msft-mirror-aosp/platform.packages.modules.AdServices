@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
@@ -28,7 +29,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -41,15 +41,19 @@ import android.adservices.common.AdServicesStates;
 import android.adservices.common.EnableAdServicesResponse;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IEnableAdServicesCallback;
+import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
+import android.adservices.common.UpdateAdIdRequest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.telephony.TelephonyManager;
 
+import androidx.test.filters.FlakyTest;
+
+import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -58,7 +62,6 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -70,9 +73,10 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class AdServicesCommonServiceImplTest {
+    private static final String UNUSED_AD_ID = "unused_ad_id";
+
     private AdServicesCommonServiceImpl mCommonService;
     private CountDownLatch mGetCommonCallbackLatch;
     @Mock private Flags mFlags;
@@ -84,6 +88,7 @@ public class AdServicesCommonServiceImplTest {
     @Mock private SharedPreferences.Editor mEditor;
     @Mock private ConsentManager mConsentManager;
     @Mock private TelephonyManager mTelephonyManager;
+    @Mock private AdIdWorker mMockAdIdWorker;
     @Captor ArgumentCaptor<String> mStringArgumentCaptor;
     @Captor ArgumentCaptor<Integer> mIntegerArgumentCaptor;
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
@@ -105,7 +110,8 @@ public class AdServicesCommonServiceImplTest {
                         .initMocks(this)
                         .startMocking();
         mCommonService =
-                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
+                new AdServicesCommonServiceImpl(
+                        mContext, mFlags, mUxEngine, mUxStatesManager, mMockAdIdWorker);
         doReturn(true).when(mFlags).getAdServicesEnabled();
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
@@ -137,7 +143,6 @@ public class AdServicesCommonServiceImplTest {
         doReturn(true).when(mUxStatesManager).isEnrolledUser(mContext);
     }
 
-
     @After
     public void teardown() {
         if (mStaticMockSession != null) {
@@ -147,115 +152,87 @@ public class AdServicesCommonServiceImplTest {
 
     // For the old entry point logic, we only check the UX flag and user enrollment is irrelevant.
     @Test
-    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV1() throws InterruptedException {
+    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV1() throws Exception {
         doReturn(false).when(mUxStatesManager).isEnrolledUser(mContext);
         doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
         mCommonService =
-                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
+                new AdServicesCommonServiceImpl(
+                        mContext, mFlags, mUxEngine, mUxStatesManager, mMockAdIdWorker);
+
         // Calling get adservice status, init set the flag to true, expect to return true
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
     }
 
     // For the new entry point logic, only enrolled user that has gone through UxEngine
     // can see the entry point.
     @Test
-    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2()
-            throws InterruptedException {
+    public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2() throws Exception {
         doReturn(false).when(mUxStatesManager).isEnrolledUser(mContext);
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
         doReturn(GA_UX).when(mConsentManager).getUx();
 
         mCommonService =
-                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
+                new AdServicesCommonServiceImpl(
+                        mContext, mFlags, mUxEngine, mUxStatesManager, mMockAdIdWorker);
+
         // Calling get adservice status, init set the flag to true, expect to return true
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                mGetCommonCallbackLatch.await(
-                        BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isFalse();
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isFalse();
     }
 
     @Test
-    public void getAdserviceStatusTest() throws InterruptedException {
+    public void getAdserviceStatusTest() throws Exception {
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
         mCommonService =
-                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
+                new AdServicesCommonServiceImpl(
+                        mContext, mFlags, mUxEngine, mUxStatesManager, mMockAdIdWorker);
         // Calling get adservice status, init set the flag to true, expect to return true
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
 
         // Set the flag to false
         doReturn(false).when(mFlags).getAdServicesEnabled();
 
         // Calling again, expect to false
-        capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult2 = capturedResponseParcel[0];
-        assertThat(getStatusResult2.getAdServicesEnabled()).isFalse();
+        getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isFalse();
     }
 
     @Test
-    public void getAdserviceStatusWithCheckActivityTest() throws InterruptedException {
+    public void getAdserviceStatusWithCheckActivityTest() throws Exception {
         doReturn(true).when(mFlags).isBackCompatActivityFeatureEnabled();
 
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
         mCommonService =
-                new AdServicesCommonServiceImpl(mContext, mFlags, mUxEngine, mUxStatesManager);
+                new AdServicesCommonServiceImpl(
+                        mContext, mFlags, mUxEngine, mUxStatesManager, mMockAdIdWorker);
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
+
         // Calling get adservice status, set the activity to enabled, expect to return true
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
 
         // Set the activity to disabled
         ExtendedMockito.doReturn(false)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
 
         // Calling again, expect to false
-        capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult2 = capturedResponseParcel[0];
-        assertThat(getStatusResult2.getAdServicesEnabled()).isFalse();
+        getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isFalse();
     }
 
     @Test
-    public void isAdservicesEnabledReconsentTest_happycase() throws InterruptedException {
+    public void isAdservicesEnabledReconsentTest_happycase() throws Exception {
         // Happy case
         // Calling get adservice status, init set the flag to true, expect to return true
         doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
@@ -264,18 +241,14 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void isAdservicesEnabledReconsentTest_gaUxFeatureDisabled() throws InterruptedException {
+    public void isAdservicesEnabledReconsentTest_gaUxFeatureDisabled() throws Exception {
         // GA UX feature disable, should not execute scheduler
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
@@ -284,19 +257,15 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void isAdservicesEnabledReconsentTest_deviceNotEu() throws InterruptedException {
+    public void isAdservicesEnabledReconsentTest_deviceNotEu() throws Exception {
         // GA UX feature enable, set device to not EU, not execute scheduler
         doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
@@ -305,21 +274,15 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void isAdservicesEnabledReconsentTest_gaUxNotificationDisplayed()
-            throws InterruptedException {
+    public void isAdservicesEnabledReconsentTest_gaUxNotificationDisplayed() throws Exception {
         // GA UX feature enabled, device set to EU, GA UX notification set to displayed
         doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
 
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
@@ -328,20 +291,15 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void isAdservicesEnabledReconsentTest_sharedPreferenceNotContain()
-            throws InterruptedException {
+    public void isAdservicesEnabledReconsentTest_sharedPreferenceNotContain() throws Exception {
         // GA UX notification set to not displayed, sharedpreference set to not contains
         doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(false).when(mSharedPreferences).contains(anyString());
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
@@ -350,18 +308,14 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void isAdservicesEnabledReconsentTest_userConsentRevoked() throws InterruptedException {
+    public void isAdservicesEnabledReconsentTest_userConsentRevoked() throws Exception {
         // Sharedpreference set to contains, user consent set to revoke
         doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(false)).when(mConsentManager).getConsent();
-        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
-        assertThat(
-                        mGetCommonCallbackLatch.await(
-                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-                .isTrue();
-        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
-        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+
+        IsAdServicesEnabledResult getAdservicesStatusResult = getStatusResult();
+        assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
         verify(
                 () ->
                         ConsentNotificationJobService.schedule(
@@ -369,33 +323,8 @@ public class AdServicesCommonServiceImplTest {
                 times(0));
     }
 
-    private IsAdServicesEnabledResult[] getStatusResult() {
-        final IsAdServicesEnabledResult[] capturedResponseParcel = new IsAdServicesEnabledResult[1];
-        mGetCommonCallbackLatch = new CountDownLatch(1);
-        mCommonService.isAdServicesEnabled(
-                new IAdServicesCommonCallback() {
-                    @Override
-                    public void onResult(IsAdServicesEnabledResult responseParcel)
-                            throws RemoteException {
-                        capturedResponseParcel[0] = responseParcel;
-                        mGetCommonCallbackLatch.countDown();
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode) {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
-        return capturedResponseParcel;
-    }
-
     @Test
-    public void setAdservicesEntryPointStatusTest() throws InterruptedException {
+    public void setAdservicesEntryPointStatusTest() throws Exception {
         // Not reconsent, as not ROW devices, Not first Consent, as notification displayed is true
         doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
@@ -436,7 +365,7 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void setAdservicesEnabledConsentTest_happycase() throws InterruptedException {
+    public void setAdservicesEnabledConsentTest_happycase() throws Exception {
         // Set device to ROW
         doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
@@ -473,7 +402,7 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void setAdservicesEnabledConsentTest_ReconsentEUDevice() throws InterruptedException {
+    public void setAdservicesEnabledConsentTest_ReconsentEUDevice() throws Exception {
         // enable GA UX feature, but EU device
         doReturn(true).when(mFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
@@ -602,23 +531,14 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void enableAdServicesTest_unauthorizedCaller() {
-        mGetCommonCallbackLatch = new CountDownLatch(1);
+    public void enableAdServicesTest_unauthorizedCaller() throws Exception {
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         ExtendedMockito.doReturn(false)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
 
-        mCommonService.enableAdServices(
-                new AdServicesStates.Builder().build(),
-                new IEnableAdServicesCallback.Stub() {
-                    @Override
-                    public void onResult(EnableAdServicesResponse response) {}
-
-                    @Override
-                    public void onFailure(int statusCode) {
-                        assertEquals(statusCode, STATUS_UNAUTHORIZED);
-                        mGetCommonCallbackLatch.countDown();
-                    }
-                });
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        callback.assertFailed(STATUS_UNAUTHORIZED);
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags, never()).getEnableAdServicesSystemApi();
@@ -626,26 +546,16 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void enableAdServicesTest_apiDisabled() {
-        mGetCommonCallbackLatch = new CountDownLatch(1);
+    @FlakyTest(bugId = 299686058)
+    public void enableAdServicesTest_apiDisabled() throws InterruptedException {
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
 
-        mCommonService.enableAdServices(
-                new AdServicesStates.Builder().build(),
-                new IEnableAdServicesCallback.Stub() {
-                    @Override
-                    public void onResult(EnableAdServicesResponse response) {
-                        assertThat(response.isApiEnabled()).isFalse();
-                        mGetCommonCallbackLatch.countDown();
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode) {
-                        Assert.fail();
-                    }
-                });
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        assertThat(callback.assertSuccess().isApiEnabled()).isFalse();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableAdServicesSystemApi();
@@ -653,30 +563,113 @@ public class AdServicesCommonServiceImplTest {
     }
 
     @Test
-    public void enableAdServicesTest_engineStarted() {
-        mGetCommonCallbackLatch = new CountDownLatch(1);
+    public void enableAdServicesTest_engineStarted() throws InterruptedException {
+        SyncIEnableAdServicesCallback callback =
+                new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
 
-        mCommonService.enableAdServices(
-                new AdServicesStates.Builder().build(),
-                new IEnableAdServicesCallback.Stub() {
-                    @Override
-                    public void onResult(EnableAdServicesResponse response) {
-                        assertThat(response.isApiEnabled()).isTrue();
-                        assertThat(response.isSuccess()).isTrue();
-                        mGetCommonCallbackLatch.countDown();
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode) {
-                        Assert.fail();
-                    }
-                });
+        mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
+        EnableAdServicesResponse response = callback.assertSuccess();
+        assertThat(response.isApiEnabled()).isTrue();
+        assertThat(response.isSuccess()).isTrue();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         verify(mFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine).start(any());
+    }
+
+    @Test
+    public void testUpdateAdIdChange() throws InterruptedException {
+        mGetCommonCallbackLatch = new CountDownLatch(1);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
+        doReturn(true).when(mFlags).getAdIdCacheEnabled();
+
+        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(UNUSED_AD_ID).build();
+        doNothing().when(mMockAdIdWorker).updateAdId(request);
+
+        SyncIUpdateAdIdCallback callback = callUpdateAdIdCache(request);
+        callback.assertResultReceived();
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
+        verify(mFlags).getAdIdCacheEnabled();
+        verify(mMockAdIdWorker).updateAdId(request);
+    }
+
+    @Test
+    public void testUpdateAdIdChange_unauthorizedCaller() throws InterruptedException {
+        mGetCommonCallbackLatch = new CountDownLatch(1);
+        ExtendedMockito.doReturn(false)
+                .when(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
+        doReturn(true).when(mFlags).getAdIdCacheEnabled();
+
+        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(UNUSED_AD_ID).build();
+        doNothing().when(mMockAdIdWorker).updateAdId(request);
+
+        SyncIUpdateAdIdCallback callback = callUpdateAdIdCache(request);
+        callback.assertFailed(STATUS_UNAUTHORIZED);
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
+        verify(mFlags).getAdIdCacheEnabled();
+        verify(mMockAdIdWorker, never()).updateAdId(request);
+    }
+
+    @Test
+    public void testUpdateAdIdChange_disabled() throws InterruptedException {
+        mGetCommonCallbackLatch = new CountDownLatch(1);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
+        doReturn(false).when(mFlags).getAdIdCacheEnabled();
+
+        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(UNUSED_AD_ID).build();
+        doNothing().when(mMockAdIdWorker).updateAdId(request);
+
+        SyncIUpdateAdIdCallback callback = callUpdateAdIdCache(request);
+        callback.assertFailed(STATUS_KILLSWITCH_ENABLED);
+
+        ExtendedMockito.verify(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
+        verify(mFlags).getAdIdCacheEnabled();
+        verify(mMockAdIdWorker, never()).updateAdId(request);
+    }
+
+    private IsAdServicesEnabledResult getStatusResult() throws Exception {
+        SyncIAdServicesCommonCallback callback =
+                new SyncIAdServicesCommonCallback(BINDER_CONNECTION_TIMEOUT_MS);
+
+        mCommonService.isAdServicesEnabled(callback);
+        return callback.assertResultReceived();
+    }
+
+    private SyncIUpdateAdIdCallback callUpdateAdIdCache(UpdateAdIdRequest request) {
+        SyncIUpdateAdIdCallback callback =
+                new SyncIUpdateAdIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        mCommonService.updateAdIdCache(request, callback);
+
+        return callback;
+    }
+
+    private static final class SyncIAdServicesCommonCallback
+            extends IntFailureSyncCallback<IsAdServicesEnabledResult>
+            implements IAdServicesCommonCallback {
+        private SyncIAdServicesCommonCallback(int timeoutMs) {
+            super(timeoutMs);
+        }
+    }
+
+    private static final class SyncIUpdateAdIdCallback extends IntFailureSyncCallback<String>
+            implements IUpdateAdIdCallback {
+        private SyncIUpdateAdIdCallback(int timeoutMs) {
+            super(timeoutMs);
+        }
+    }
+
+    private static final class SyncIEnableAdServicesCallback
+            extends IntFailureSyncCallback<EnableAdServicesResponse>
+            implements IEnableAdServicesCallback {
+        private SyncIEnableAdServicesCallback(int timeoutMs) {
+            super(timeoutMs);
+        }
     }
 }

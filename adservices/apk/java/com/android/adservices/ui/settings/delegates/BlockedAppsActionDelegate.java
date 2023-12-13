@@ -64,7 +64,7 @@ public class BlockedAppsActionDelegate {
                     }
                     try {
                         if (event == BlockedAppsViewModelUiEvent.RESTORE_APP) {
-                            UiStatsLogger.logUnblockAppSelected(mBlockedAppsActivity);
+                            UiStatsLogger.logUnblockAppSelected();
                             mBlockedAppsViewModel.restoreAppConsent(app);
                             if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {

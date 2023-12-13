@@ -38,6 +38,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
@@ -167,7 +168,7 @@ public class SdkSandboxController {
                     .loadSdk(
                             ((SandboxedSdkContext) mContext).getClientPackageName(),
                             sdkName,
-                            System.currentTimeMillis(),
+                            SystemClock.elapsedRealtime(),
                             params,
                             callbackProxy);
         } catch (RemoteException e) {
@@ -220,7 +221,8 @@ public class SdkSandboxController {
         }
         enforceSandboxedSdkContextInitialization();
 
-        return mSdkSandboxActivityRegistry.register(getSdkName(), sdkSandboxActivityHandler);
+        return mSdkSandboxActivityRegistry.register(
+                (SandboxedSdkContext) mContext, sdkSandboxActivityHandler);
     }
 
     /**
@@ -267,11 +269,6 @@ public class SdkSandboxController {
                     "Only available from the context obtained by calling android.app.sdksandbox"
                             + ".SandboxedSdkProvider#getContext()");
         }
-    }
-
-    @NonNull
-    private String getSdkName() {
-        return ((SandboxedSdkContext) mContext).getSdkName();
     }
 
     private static class LoadSdkReceiverProxy extends ILoadSdkCallback.Stub {

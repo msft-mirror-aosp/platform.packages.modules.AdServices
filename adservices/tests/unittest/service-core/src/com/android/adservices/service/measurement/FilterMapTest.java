@@ -16,14 +16,23 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.mockito.Mockito.when;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,7 +43,14 @@ import java.util.Set;
 
 /** Unit tests for {@link FilterMap} */
 @SmallTest
+@RunWith(MockitoJUnitRunner.class)
 public final class FilterMapTest {
+    @Mock private Flags mFlags;
+
+    @Before
+    public void setup() {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+    }
 
     @Test
     public void testCreation() throws Exception {
@@ -87,7 +103,7 @@ public final class FilterMapTest {
         FilterMap expected = createExample();
 
         // Execution
-        JSONObject jsonObject = expected.serializeAsJson();
+        JSONObject jsonObject = expected.serializeAsJson(mFlags);
         FilterMap actual = new FilterMap.Builder().buildFilterData(jsonObject).build();
 
         // Assertion
@@ -95,16 +111,76 @@ public final class FilterMapTest {
     }
 
     @Test
-    public void serializeAsJsonV2_success() throws JSONException {
+    public void serializeAsJson_lookbackWindowFilterEnabled_success() throws JSONException {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         // Setup
         FilterMap expected = createExampleV2();
 
         // Execution
-        JSONObject jsonObject = expected.serializeAsJsonV2();
+        JSONObject jsonObject = expected.serializeAsJson(mFlags);
         FilterMap actual = new FilterMap.Builder().buildFilterDataV2(jsonObject).build();
 
         // Assertion
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testAddLongValue() {
+        assertThat(new FilterMap.Builder().addLongValue("a", 1L).build().getLongValue("a"))
+                .isEqualTo(1L);
+    }
+
+    @Test
+    public void testAddStringListValue() {
+        List<String> stringList = Arrays.asList("123", "456");
+        assertThat(
+                        new FilterMap.Builder()
+                                .addStringListValue("a", stringList)
+                                .build()
+                                .getStringListValue("a"))
+                .isEqualTo(stringList);
+    }
+
+    @Test
+    public void testIsEmpty_lookbackWindowFilterEnabled_notEmpty() {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        List<String> stringList = Arrays.asList("123", "456");
+        assertThat(
+                        new FilterMap.Builder()
+                                .addStringListValue("a", stringList)
+                                .build()
+                                .isEmpty(mFlags))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsEmpty_lookbackWindowFilterEnabled_empty() {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        List<String> stringList = Arrays.asList("123", "456");
+        FilterMap filterMap = new FilterMap();
+        filterMap.getAttributionFilterMap().put("a", stringList);
+        assertThat(filterMap.isEmpty(mFlags)).isTrue();
+    }
+
+    @Test
+    public void testIsEmpty_lookbackWindowFilterDisabled_notEmpty() {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+        List<String> stringList = Arrays.asList("123", "456");
+        FilterMap filterMap = new FilterMap();
+        filterMap.getAttributionFilterMap().put("a", stringList);
+        assertThat(filterMap.isEmpty(mFlags)).isFalse();
+    }
+
+    @Test
+    public void testIsEmpty_lookbackWindowFilterDisabled_empty() {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+        List<String> stringList = Arrays.asList("123", "456");
+        assertThat(
+                        new FilterMap.Builder()
+                                .addStringListValue("a", stringList)
+                                .build()
+                                .isEmpty(mFlags))
+                .isTrue();
     }
 
     private FilterMap createExample() {

@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import android.net.Uri;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
@@ -33,13 +34,12 @@ import com.android.adservices.service.measurement.aggregation.AggregateCryptoFix
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.quality.Strictness;
 
@@ -71,8 +71,14 @@ public class AggregateReportBodyTest {
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
             + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
-    private StaticMockitoSession mMockitoSession;
     private Flags mMockFlags;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
@@ -86,6 +92,7 @@ public class AggregateReportBodyTest {
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode("enabled")
                 .build();
     }
 
@@ -101,6 +108,7 @@ public class AggregateReportBodyTest {
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .setSourceDebugKey(null)
                 .setTriggerDebugKey(null)
+                .setDebugMode(null)
                 .build();
     }
 
@@ -115,6 +123,7 @@ public class AggregateReportBodyTest {
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode(null)
                 .build();
     }
 
@@ -129,24 +138,15 @@ public class AggregateReportBodyTest {
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode(null)
                 .build();
     }
 
     @Before
     public void before() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         mMockFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
-    }
-
-    @After
-    public void after() {
-        mMockitoSession.finishMocking();
     }
 
     @Test
@@ -248,6 +248,9 @@ public class AggregateReportBodyTest {
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
         assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertEquals(
+                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
+                aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
     }
@@ -264,9 +267,7 @@ public class AggregateReportBodyTest {
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
         assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
-        assertEquals(
-                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
-                aggregateServicePayloads.opt("debug_cleartext_payload"));
+        assertNull(aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
     }
@@ -285,6 +286,25 @@ public class AggregateReportBodyTest {
         assertNull(aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithDebugMode() throws Exception {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+
+        assertEquals("enabled", sharedInfoJson.get("debug_mode"));
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithoutDebugMode() throws Exception {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyExampleWithSingleSourceDebugKey();
+
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+
+        assertNull(sharedInfoJson.opt("debug_mode"));
     }
 
     private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {

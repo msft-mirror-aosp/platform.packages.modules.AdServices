@@ -78,6 +78,11 @@
     <!-- Description of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesManager">Allows an application to access AdServicesManager’s APIs.</string>
 
+    <!-- Title of an application permission that allows calling updating AdId API via Common Service. [CHAR LIMIT=NONE] -->
+    <string name="permlab_updateAdservicesAdId">Access to AdService’s update AdId API.</string>
+    <!-- Description of an application permission that allows calling updating AdId API via Common Service.. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_updateAdservicesAdId">Allows an application to access AdService’s update AdId API.</string>
+
     <!-- Settings App UI strings -->
 
     <!--*****************************************************************************************-->

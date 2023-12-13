@@ -24,7 +24,7 @@ import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResul
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.exceptions.AdServicesException;
@@ -159,8 +159,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         mAdSelectionExecutionLogger.startRunAdScoring(adBiddingOutcomes);
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SCORING);
 
-        final List<ContextualAds> contextualAds =
-                new ArrayList<>(adSelectionConfig.getBuyerContextualAds().values());
+        final List<SignedContextualAds> contextualAds =
+                new ArrayList<>(adSelectionConfig.getBuyerSignedContextualAds().values());
 
         AdServicesHttpClientRequest scoringLogicUriHttpRequest =
                 AdServicesHttpClientRequest.builder()
@@ -262,7 +262,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private ListenableFuture<Pair<List<ScoreAdResult>, SellerContextualSignals>> getAdScores(
             @NonNull String scoringLogic,
             @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
-            @NonNull List<ContextualAds> contextualAds,
+            @NonNull List<SignedContextualAds> contextualAds,
             @NonNull final AdSelectionConfig adSelectionConfig) {
         mAdSelectionExecutionLogger.startGetAdScores();
         final AdSelectionSignals sellerSignals = adSelectionConfig.getSellerSignals();
@@ -276,7 +276,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         sLogger.v("Total Remarketing AdsWithBid count: %d", adsWithBid.size());
 
         List<AdWithBid> contextualBidAds = new ArrayList<>();
-        for (ContextualAds ctx : contextualAds) {
+        for (SignedContextualAds ctx : contextualAds) {
             contextualBidAds.addAll(ctx.getAdsWithBid());
         }
         sLogger.v("Total Contextual Ads count: %d", contextualBidAds.size());
@@ -459,7 +459,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
      */
     private List<AdScoringOutcome> mapAdsToScore(
             List<AdBiddingOutcome> adBiddingOutcomes,
-            List<ContextualAds> contextualAds,
+            List<SignedContextualAds> contextualAds,
             List<ScoreAdResult> adScores,
             AdSelectionConfig adSelectionConfig,
             SellerContextualSignals sellerContextualSignals) {
@@ -501,7 +501,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         }
 
         int i = contextualAdsIdx;
-        for (ContextualAds ctx : contextualAds) {
+        for (SignedContextualAds ctx : contextualAds) {
             for (AdWithBid adWithBid : ctx.getAdsWithBid()) {
                 if (i >= adScores.size()) {
                     throw new IllegalStateException(SCORES_COUNT_LESS_THAN_EXPECTED);

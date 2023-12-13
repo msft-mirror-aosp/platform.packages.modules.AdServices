@@ -58,6 +58,11 @@ public class U18UxDetentionChannelTest {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
+        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.enableNotificationPermission();
+        UiUtils.enableGa();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         mCommonManager = AdServicesCommonManager.get(sContext);

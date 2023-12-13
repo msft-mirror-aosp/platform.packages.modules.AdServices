@@ -265,24 +265,21 @@ public class Combinatorics {
      */
     public static long getNumStatesFlexApi(
             int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
-        boolean canComputeArithmetic = true;
+        if (perTypeNumWindowList.length == 0 || perTypeCapList.length == 0) {
+            return 1;
+        }
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
             if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
-                canComputeArithmetic = false;
-                break;
+                return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
             }
         }
         for (int n : perTypeCapList) {
             if (n < totalCap) {
-                canComputeArithmetic = false;
-                break;
+                return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
             }
         }
-        if (canComputeArithmetic) {
-            return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
-        }
 
-        return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
+        return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
     }
 
     /**
@@ -308,6 +305,9 @@ public class Combinatorics {
      * @return the information gain
      */
     public static double getInformationGain(long numOfStates, double flipProbability) {
+        if (numOfStates <= 1L) {
+            return 0d;
+        }
         double log2Q = DoubleMath.log2(numOfStates);
         double fakeProbability = flipProbability * (numOfStates - 1L) / numOfStates;
         return log2Q
@@ -316,7 +316,7 @@ public class Combinatorics {
     }
 
     /**
-     * Generate fake report set given a report specification and the rank order number
+     * Generate fake report set given a trigger specification and the rank order number
      *
      * @param totalCap total_cap
      * @param perTypeNumWindowList per type number of window list

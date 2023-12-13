@@ -60,6 +60,7 @@ public abstract class ReportingData {
             @NonNull Uri buyerWinReportingUri, @NonNull Uri sellerWinReportingUri) {
         Objects.requireNonNull(buyerWinReportingUri);
         Objects.requireNonNull(sellerWinReportingUri);
+
         return builder()
                 .setBuyerWinReportingUri(buyerWinReportingUri)
                 .setSellerWinReportingUri(sellerWinReportingUri)

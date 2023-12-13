@@ -55,13 +55,14 @@ public final class AndroidManifestConfigParser {
      * ID. The property is expected to be defined strictly inside <application>, which can only be
      * defined inside <manifest> at an overall element depth of 3 in the XML file. The parser is
      * intentionally meant to be lightweight and doesn't attempt to validate anything in the XML
-     * file apart from the AdServices config property itself. Throws an exception if AdServices
+     * file apart from the AdServices config property itself. Returns {@code null} if AdServices
      * config's resource ID cannot be detected in the XML.
      *
      * @param parser the XmlResourceParser representing the app's AndroidManifest compiled XML file.
      * @param resources the resources belonging to the app.
      */
-    public static int getAdServicesConfigResourceId(
+    @Nullable
+    public static Integer getAdServicesConfigResourceId(
             @NonNull XmlResourceParser parser, @NonNull Resources resources)
             throws XmlPullParserException, IOException {
         if (SdkLevel.isAtLeastS()) {
@@ -89,7 +90,7 @@ public final class AndroidManifestConfigParser {
             eventType = parser.next();
         }
 
-        throw new NoSuchElementException("Missing AdServices config property!");
+        return null;
     }
 
     private static boolean hasReachedEndOfApplication(@NonNull XmlResourceParser parser)

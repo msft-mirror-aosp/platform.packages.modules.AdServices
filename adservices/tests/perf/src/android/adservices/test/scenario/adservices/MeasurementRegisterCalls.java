@@ -35,9 +35,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mockwebserver.MockResponse;
@@ -46,6 +45,7 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -100,6 +100,10 @@ public class MeasurementRegisterCalls {
             "/.well-known/attribution-reporting/report-aggregate-attribution";
     public static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
             "/.well-known/attribution-reporting/report-event-attribution";
+
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
 
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
@@ -622,11 +626,6 @@ public class MeasurementRegisterCalls {
                 AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN,
                 /* makeDefault */ false);
 
-        // Set flags for back-compat AdServices functionality for Android S-.
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-
         sleep();
     }
 
@@ -722,10 +721,5 @@ public class MeasurementRegisterCalls {
                 "measurement_aggregation_coordinator_origin_list",
                 "null",
                 /* makeDefault */ false);
-
-        // Reset back-compat related flags.
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 }

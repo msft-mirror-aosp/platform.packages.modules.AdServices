@@ -36,6 +36,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.Validator;
+import com.android.adservices.service.devapi.DevContext;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -81,13 +82,17 @@ public class CustomAudienceImplTest {
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
-        mImpl.joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
+        mImpl.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE,
+                CustomAudienceFixture.VALID_OWNER,
+                DevContext.createForDevOptionsDisabled());
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         VALID_DB_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                CommonFixture.VALID_BUYER_1));
+                                CommonFixture.VALID_BUYER_1),
+                        /*debuggable=*/ false);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
@@ -130,7 +135,9 @@ public class CustomAudienceImplTest {
                         CommonFixture.FLAGS_FOR_TEST);
 
         implWithRealValidators.joinCustomAudience(
-                customAudienceWithValidSubdomains, CustomAudienceFixture.VALID_OWNER);
+                customAudienceWithValidSubdomains,
+                CustomAudienceFixture.VALID_OWNER,
+                DevContext.createForDevOptionsDisabled());
 
         DBCustomAudience expectedDbCustomAudience =
                 DBCustomAudience.fromServiceObject(
@@ -145,7 +152,8 @@ public class CustomAudienceImplTest {
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         eq(expectedDbCustomAudience),
-                        eq(customAudienceWithValidSubdomains.getDailyUpdateUri()));
+                        eq(customAudienceWithValidSubdomains.getDailyUpdateUri()),
+                        /*debuggable=*/ eq(false));
         verify(mCustomAudienceDaoMock)
                 .getCustomAudienceStats(eq(CustomAudienceFixture.VALID_OWNER));
 

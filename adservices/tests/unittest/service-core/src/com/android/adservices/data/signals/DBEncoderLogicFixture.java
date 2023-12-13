@@ -21,18 +21,18 @@ import android.adservices.common.CommonFixture;
 
 public class DBEncoderLogicFixture {
 
-    public static DBEncoderLogic anEncoderLogic() {
+    public static DBEncoderLogicMetadata anEncoderLogic() {
         return anEncoderLogicBuilder().build();
     }
 
-    public static DBEncoderLogic.Builder anEncoderLogicBuilder() {
+    public static DBEncoderLogicMetadata.Builder anEncoderLogicBuilder() {
         return anEncoderLogicBuilder(CommonFixture.VALID_BUYER_1);
     }
 
-    public static DBEncoderLogic.Builder anEncoderLogicBuilder(AdTechIdentifier buyer) {
-        return DBEncoderLogic.builder()
+    public static DBEncoderLogicMetadata.Builder anEncoderLogicBuilder(AdTechIdentifier buyer) {
+        return DBEncoderLogicMetadata.builder()
                 .setBuyer(buyer)
-                .setCreationTime(CommonFixture.FIXED_NOW)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                 .setVersion(1);
     }
 }

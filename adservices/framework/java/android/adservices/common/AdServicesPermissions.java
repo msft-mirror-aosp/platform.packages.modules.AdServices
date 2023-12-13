@@ -16,11 +16,15 @@
 
 package android.adservices.common;
 
+import android.adservices.FlagsConstants;
+import android.annotation.FlaggedApi;
 import android.annotation.SystemApi;
 
 /** Permissions used by the AdServices APIs. */
 public class AdServicesPermissions {
     private AdServicesPermissions() {}
+
+    private static final String KEY_AD_ID_CACHE_ENABLED = FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
 
     /** This permission needs to be declared by the caller of Topics APIs. */
     public static final String ACCESS_ADSERVICES_TOPICS =
@@ -122,4 +126,24 @@ public class AdServicesPermissions {
     @SystemApi
     public static final String ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD =
             "android.permission.ACCESS_PRIVILEGED_AD_SERVICES_COBALT_UPLOAD";
+
+    /**
+     * The permission that allows calling updating AdId Cache API via Common Service.
+     *
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
+    public static final String UPDATE_PRIVILEGED_AD_ID =
+            "android.permission.UPDATE_PRIVILEGED_AD_ID";
+
+    /**
+     * The permission that allows calling updating AdId Cache API via Common Service on S-.
+     *
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
+    public static final String UPDATE_PRIVILEGED_AD_ID_COMPAT =
+            "android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT";
 }

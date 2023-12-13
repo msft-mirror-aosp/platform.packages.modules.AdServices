@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"यसले कुनै एपलाई AdService को enablement state API प्रयोग गर्ने अनुमति दिन्छ।"</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager का API हरू प्रयोग गर्ने अनुमति"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"एपलाई AdServicesManager का API हरू प्रयोग गर्ने अनुमति दिन्छ।"</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdService को अपडेट गरिएको AdId API एक्सेस गर्ने अनुमति।"</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"एपलाई AdService को अपडेट गरिएको AdId API एक्सेस गर्ने अनुमति दिन्छ।"</string>
     <string name="app_label" msgid="5844694701336604490">"विज्ञापनको गोपनीयता"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android को विज्ञापनको गोपनीयतासम्बन्धी सुविधाको बिटा संस्करणमा सामेल हुनुहोस्"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android ले एपहरूले तपाईंलाई विज्ञापन देखाउन सक्ने अझ गोप्य तरिकाहरूका बारेमा अन्वेषण गर्दै छ"</string>

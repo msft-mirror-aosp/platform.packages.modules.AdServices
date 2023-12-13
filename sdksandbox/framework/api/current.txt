@@ -20,12 +20,12 @@ package android.app.sdksandbox {
     field @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.LoadSdkException> CREATOR;
   }
 
-  public final class RequestSurfacePackageException extends java.lang.Exception {
-    ctor public RequestSurfacePackageException(int, @Nullable String);
-    ctor public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable);
-    ctor public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable, @NonNull android.os.Bundle);
-    method @NonNull public android.os.Bundle getExtraErrorInformation();
-    method public int getRequestSurfacePackageErrorCode();
+  @Deprecated public final class RequestSurfacePackageException extends java.lang.Exception {
+    ctor @Deprecated public RequestSurfacePackageException(int, @Nullable String);
+    ctor @Deprecated public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable);
+    ctor @Deprecated public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable, @NonNull android.os.Bundle);
+    method @Deprecated @NonNull public android.os.Bundle getExtraErrorInformation();
+    method @Deprecated public int getRequestSurfacePackageErrorCode();
   }
 
   public final class SandboxedSdk implements android.os.Parcelable {
@@ -42,7 +42,7 @@ package android.app.sdksandbox {
     method public final void attachContext(@NonNull android.content.Context);
     method public void beforeUnloadSdk();
     method @Nullable public final android.content.Context getContext();
-    method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle, int, int);
+    method @Deprecated @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle, int, int);
     method @NonNull public abstract android.app.sdksandbox.SandboxedSdk onLoadSdk(@NonNull android.os.Bundle) throws android.app.sdksandbox.LoadSdkException;
   }
 
@@ -57,15 +57,15 @@ package android.app.sdksandbox {
     method public void registerAppOwnedSdkSandboxInterface(@NonNull android.app.sdksandbox.AppOwnedSdkSandboxInterface);
     method public void removeSdkSandboxProcessDeathCallback(@NonNull android.app.sdksandbox.SdkSandboxManager.SdkSandboxProcessDeathCallback);
     method public void removeSyncedSharedPreferencesKeys(@NonNull java.util.Set<java.lang.String>);
-    method public void requestSurfacePackage(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.os.Bundle,android.app.sdksandbox.RequestSurfacePackageException>);
+    method @Deprecated public void requestSurfacePackage(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.os.Bundle,android.app.sdksandbox.RequestSurfacePackageException>);
     method public void startSdkSandboxActivity(@NonNull android.app.Activity, @NonNull android.os.IBinder);
     method public void unloadSdk(@NonNull String);
     method public void unregisterAppOwnedSdkSandboxInterface(@NonNull String);
-    field public static final String EXTRA_DISPLAY_ID = "android.app.sdksandbox.extra.DISPLAY_ID";
-    field public static final String EXTRA_HEIGHT_IN_PIXELS = "android.app.sdksandbox.extra.HEIGHT_IN_PIXELS";
-    field public static final String EXTRA_HOST_TOKEN = "android.app.sdksandbox.extra.HOST_TOKEN";
-    field public static final String EXTRA_SURFACE_PACKAGE = "android.app.sdksandbox.extra.SURFACE_PACKAGE";
-    field public static final String EXTRA_WIDTH_IN_PIXELS = "android.app.sdksandbox.extra.WIDTH_IN_PIXELS";
+    field @Deprecated public static final String EXTRA_DISPLAY_ID = "android.app.sdksandbox.extra.DISPLAY_ID";
+    field @Deprecated public static final String EXTRA_HEIGHT_IN_PIXELS = "android.app.sdksandbox.extra.HEIGHT_IN_PIXELS";
+    field @Deprecated public static final String EXTRA_HOST_TOKEN = "android.app.sdksandbox.extra.HOST_TOKEN";
+    field @Deprecated public static final String EXTRA_SURFACE_PACKAGE = "android.app.sdksandbox.extra.SURFACE_PACKAGE";
+    field @Deprecated public static final String EXTRA_WIDTH_IN_PIXELS = "android.app.sdksandbox.extra.WIDTH_IN_PIXELS";
     field public static final int LOAD_SDK_ALREADY_LOADED = 101; // 0x65
     field public static final int LOAD_SDK_INTERNAL_ERROR = 500; // 0x1f4
     field public static final int LOAD_SDK_NOT_FOUND = 100; // 0x64

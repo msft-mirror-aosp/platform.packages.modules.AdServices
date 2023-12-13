@@ -16,19 +16,6 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-// genrule for converting a text proto registry to a binary proto.
-genrule_defaults {
-    name: "gen_cobalt_registry_binarypb",
-    tools: ["aprotoc"],
-    cmd: "$(location aprotoc) --encode=cobalt.CobaltRegistry " +
-         "--proto_path=packages/modules/AdServices/adservices/libraries/cobalt/proto " +
-         "packages/modules/AdServices/adservices/libraries/cobalt/proto/cobalt_registry.proto " +
-         "< $(in) > $(out)",
-    visibility: [
-        "//packages/modules/AdServices/service-core"
-    ],
-}
-
 filegroup {
     name: "adservices-cobalt-proto",
     srcs: [

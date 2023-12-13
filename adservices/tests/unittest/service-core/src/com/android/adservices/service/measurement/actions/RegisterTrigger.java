@@ -53,7 +53,7 @@ public final class RegisterTrigger implements Action {
                         TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY,
                         TestFormatJsonMapping.ATTRIBUTION_SOURCE_DEFAULT);
 
-        mDestination = regParamsJson.optString(TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY);
+        mDestination = regParamsJson.optString(TestFormatJsonMapping.CONTEXT_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
                 new RegistrationRequest.Builder(

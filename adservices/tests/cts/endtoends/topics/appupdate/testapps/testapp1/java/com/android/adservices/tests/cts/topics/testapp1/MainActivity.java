@@ -59,13 +59,9 @@ public class MainActivity extends Activity {
         mContext = getApplicationContext();
 
         try {
-            // Call Topics API from app only.
-            GetTopicsResponse getTopicsResponse = callTopicsApi(/* sdk */ "");
-            sendGetTopicsResponseBroadcast(getTopicsResponse);
-
             // Call Topics API via sdk.
-            GetTopicsResponse getTopicsResponse2 = callTopicsApi(SDK_NAME);
-            sendGetTopicsResponseBroadcast(getTopicsResponse2);
+            GetTopicsResponse getTopicsResponse = callTopicsApi(SDK_NAME);
+            sendGetTopicsResponseBroadcast(getTopicsResponse);
         } catch (Exception e) {
             Log.e(LOG_TAG, "getTopics() call failed, please check: " + e);
         }

@@ -42,6 +42,7 @@ public final class AdFilteringFeatureFactory {
     private final int mHistogramLowerMaxPerBuyerEventCount;
     private final AppInstallDao mAppInstallDao;
     private final FrequencyCapDao mFrequencyCapDao;
+    private final boolean mShouldUseUnifiedTables;
 
     public AdFilteringFeatureFactory(
             AppInstallDao appInstallDao, FrequencyCapDao frequencyCapDao, Flags flags) {
@@ -59,6 +60,8 @@ public final class AdFilteringFeatureFactory {
         mHistogramLowerMaxPerBuyerEventCount =
                 BinderFlagReader.readFlag(
                         flags::getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount);
+        mShouldUseUnifiedTables =
+                BinderFlagReader.readFlag(flags::getFledgeOnDeviceAuctionShouldUseUnifiedTables);
 
         mAppInstallDao = appInstallDao;
         mFrequencyCapDao = frequencyCapDao;
@@ -120,7 +123,8 @@ public final class AdFilteringFeatureFactory {
      *     enabled, or a {@link AdCounterHistogramUpdaterNoOpImpl} instance otherwise
      */
     public AdCounterHistogramUpdater getAdCounterHistogramUpdater(
-            @NonNull AdSelectionEntryDao adSelectionEntryDao) {
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            boolean auctionServerEnabledForUpdateHistogram) {
         Objects.requireNonNull(adSelectionEntryDao);
 
         if (mIsFledgeAdSelectionFilteringEnabled) {
@@ -130,7 +134,9 @@ public final class AdFilteringFeatureFactory {
                     mHistogramAbsoluteMaxTotalEventCount,
                     mHistogramLowerMaxTotalEventCount,
                     mHistogramAbsoluteMaxPerBuyerEventCount,
-                    mHistogramLowerMaxPerBuyerEventCount);
+                    mHistogramLowerMaxPerBuyerEventCount,
+                    auctionServerEnabledForUpdateHistogram,
+                    mShouldUseUnifiedTables);
         } else {
             return new AdCounterHistogramUpdaterNoOpImpl();
         }

@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Poskytuje aplikácii prístup k rozhraniu Enablement State API služby AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Prístup k rozhraniam API služby AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Umožnuje aplikácii prístup k rozhraniam API služby AdServicesManager."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"Prístup k aktualizácii rozhrania AdId API služby AdService."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Umožňuje aplikácii prístup k aktualizácii rozhrania AdId API služby AdService."</string>
     <string name="app_label" msgid="5844694701336604490">"Ochrana súkromia pri reklamách"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Pripojte sa k beta verzii ochrany súkromia pri reklamách v Androide"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android hľadá spôsoby, ako vám aplikácie môžu zobrazovať reklamy s vyššou ochranou súkromia"</string>

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
+
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
@@ -79,9 +81,9 @@ import javax.net.ssl.X509TrustManager;
  */
 public class AdServicesHttpsClient {
 
+    public static final long DEFAULT_MAX_BYTES = 1048576;
     private static final int DEFAULT_TIMEOUT_MS = 5000;
     // Setting default max content size to 1024 * 1024 which is ~ 1MB
-    private static final long DEFAULT_MAX_BYTES = 1048576;
     private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
     private static final String RETRY_AFTER_HEADER_FIELD = "Retry-After";
     private final int mConnectTimeoutMs;
@@ -171,10 +173,17 @@ public class AdServicesHttpsClient {
         urlConnection.setConnectTimeout(mConnectTimeoutMs);
         urlConnection.setReadTimeout(mReadTimeoutMs);
         // Setting true explicitly to follow redirects
-        if (WebAddresses.isLocalhost(Uri.parse(url.toString()))
-                && devContext.getDevOptionsEnabled()) {
-            LogUtil.v("Using unsafe HTTPS");
+        Uri uri = Uri.parse(url.toString());
+        if (WebAddresses.isLocalhost(uri) && devContext.getDevOptionsEnabled()) {
+            LogUtil.v("Using unsafe HTTPS for url ", url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
+        } else if (WebAddresses.isLocalhost(uri)) {
+            LogUtil.v(
+                    String.format(
+                            "Using normal HTTPS without unsafe SSL socket factory for a localhost"
+                                    + " address, DevOptionsEnabled: %s, CallingPackageName: %s",
+                            devContext.getDevOptionsEnabled(),
+                            devContext.getCallingAppPackageName()));
         }
         urlConnection.setInstanceFollowRedirects(true);
         return urlConnection;
@@ -520,6 +529,8 @@ public class AdServicesHttpsClient {
                     if (headerValue != null) {
                         // TODO(b/282017541): Add a maximum allowed retry-after duration.
                         retryAfterDuration = Duration.ofMillis(Long.parseLong(headerValue));
+                    } else {
+                        retryAfterDuration = DEFAULT_RETRY_AFTER_VALUE;
                     }
                 } else {
                     errorCode = AdServicesNetworkException.ERROR_CLIENT;

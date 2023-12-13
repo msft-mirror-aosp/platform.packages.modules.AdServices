@@ -120,7 +120,7 @@ public final class AdservicesTestHelper {
      */
     @Deprecated
     public static boolean isDeviceSupported() {
-        return AdServicesSupportHelper.isDeviceSupported();
+        return AdServicesSupportHelper.getInstance().isDeviceSupported();
     }
 
     /**

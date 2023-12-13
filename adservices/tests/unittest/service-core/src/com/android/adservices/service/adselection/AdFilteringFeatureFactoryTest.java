@@ -53,6 +53,9 @@ public class AdFilteringFeatureFactoryTest {
             Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
                     .build()
                     .adSelectionEntryDao();
+    private boolean mAuctionServerEnabledForUpdateHistogram =
+            new FlagsWithAdSelectionFilteringDisabled()
+                    .getFledgeAuctionServerEnabledForUpdateHistogram();
 
     @Test
     public void testGetAdFiltererFilteringEnabled() {
@@ -121,7 +124,9 @@ public class AdFilteringFeatureFactoryTest {
                         mAppInstallDao,
                         mFrequencyCapDao,
                         new FlagsWithAdSelectionFilteringEnabled());
-        assertThat(adFilteringFeatureFactory.getAdCounterHistogramUpdater(mAdSelectionEntryDao))
+        assertThat(
+                        adFilteringFeatureFactory.getAdCounterHistogramUpdater(
+                                mAdSelectionEntryDao, mAuctionServerEnabledForUpdateHistogram))
                 .isInstanceOf(AdCounterHistogramUpdaterImpl.class);
     }
 
@@ -130,7 +135,9 @@ public class AdFilteringFeatureFactoryTest {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
                         null, null, new FlagsWithAdSelectionFilteringDisabled());
-        assertThat(adFilteringFeatureFactory.getAdCounterHistogramUpdater(mAdSelectionEntryDao))
+        assertThat(
+                        adFilteringFeatureFactory.getAdCounterHistogramUpdater(
+                                mAdSelectionEntryDao, mAuctionServerEnabledForUpdateHistogram))
                 .isInstanceOf(AdCounterHistogramUpdaterNoOpImpl.class);
     }
 

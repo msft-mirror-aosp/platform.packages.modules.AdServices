@@ -25,12 +25,16 @@ import static org.mockito.Mockito.doReturn;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.TriggerSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.TriggerSpecsUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -1527,13 +1531,13 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTimeForNoisingFlexEventApi_validTime_equal() throws JSONException {
-        ReportSpec testObject1 = new ReportSpec(
-                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), "3", null);
+        TriggerSpecs testObject1 = new TriggerSpecs(
+                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), 3, null);
         // Assertion
-        assertEquals(new UnsignedLong(1L), testObject1.getTriggerDataValue(0));
-        assertEquals(new UnsignedLong(3L), testObject1.getTriggerDataValue(2));
-        assertEquals(new UnsignedLong(5L), testObject1.getTriggerDataValue(4));
-        assertEquals(new UnsignedLong(7L), testObject1.getTriggerDataValue(6));
+        assertEquals(new UnsignedLong(1L), testObject1.getTriggerDataFromIndex(0));
+        assertEquals(new UnsignedLong(3L), testObject1.getTriggerDataFromIndex(2));
+        assertEquals(new UnsignedLong(5L), testObject1.getTriggerDataFromIndex(4));
+        assertEquals(new UnsignedLong(7L), testObject1.getTriggerDataFromIndex(6));
         assertEquals(
                 TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoisingFlexEventApi(
@@ -1562,8 +1566,124 @@ public class EventReportWindowCalcDelegateTest {
     }
 
     @Test
+    public void getFlexEventReportingTime_triggerTimeEarlierThanSourceTime_signalsInvalid()
+            throws JSONException {
+        TriggerSpecs testTriggerSpecs =
+                new TriggerSpecs(
+                        SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, null);
+        assertEquals(
+                -1,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 10000, 9999, new UnsignedLong(1L)));
+    }
+
+    @Test
+    public void getFlexEventReportingTime_triggerTimeEarlierThanReportWindowStart_signalsInvalid()
+            throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+
+        // Assertion
+        assertEquals(
+                -1,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 10000, 10999, new UnsignedLong(1L)));
+    }
+
+    @Test
+    public void getFlexEventReportingTime_variousReportWindows_calculatesCorrectly()
+            throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+
+        // Assertion
+        assertEquals(
+                110000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 109999, new UnsignedLong(1L)));
+        assertEquals(
+                120000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 119999, new UnsignedLong(1L)));
+        assertEquals(
+                130000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 129999, new UnsignedLong(1L)));
+        assertEquals(
+                140000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 139999, new UnsignedLong(1L)));
+        assertEquals(
+                110000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 109999, new UnsignedLong(2L)));
+        assertEquals(
+                120000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 119999, new UnsignedLong(2L)));
+        assertEquals(
+                130000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 129999, new UnsignedLong(3L)));
+        assertEquals(
+                140000 + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 139999, new UnsignedLong(4L)));
+        assertEquals(
+                -1,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs, 100000, 149999, new UnsignedLong(1L)));
+    }
+
+    @Test
+    public void getFlexEventReportingTime_overridesMinEventReportDelay() throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+
+        long minReportDelay = 23000L;
+        doReturn(minReportDelay).when(mFlags).getMeasurementMinEventReportDelayMillis();
+
+        long expectedReportTimeWithoutDelay = 110000L;
+        long sourceRegistrationTime = 100000L;
+        long triggerTime = 109999L;
+
+        // Assertion
+        assertEquals(
+                expectedReportTimeWithoutDelay + minReportDelay,
+                mEventReportWindowCalcDelegate.getFlexEventReportingTime(
+                        testTriggerSpecs,
+                        sourceRegistrationTime,
+                        triggerTime,
+                        new UnsignedLong(1L)));
+    }
+
+    @Test
     public void getReportingTimeForNoising_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1640,7 +1760,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1742,7 +1862,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getMaxReportCount_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         long sourceTime = System.currentTimeMillis();
         Source source10Reports =
@@ -1787,7 +1907,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingWindowCountForNoising_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         long sourceTime = System.currentTimeMillis();
         Source defaultSourceEvent =

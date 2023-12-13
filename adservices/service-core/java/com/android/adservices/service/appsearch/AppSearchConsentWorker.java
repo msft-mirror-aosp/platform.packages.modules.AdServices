@@ -43,6 +43,7 @@ import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -153,9 +154,8 @@ class AppSearchConsentWorker {
     }
 
     /** Get an instance of AppSearchConsentWorker. */
-    static AppSearchConsentWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-        return new AppSearchConsentWorker(context);
+    static AppSearchConsentWorker getInstance() {
+        return new AppSearchConsentWorker(ApplicationContextSingleton.get());
     }
 
     /**
@@ -167,7 +167,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchConsentDao.readConsentData(
-                    mGlobalSearchSession, mExecutor, mUid, apiType);
+                    mGlobalSearchSession, mExecutor, mUid, apiType, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -213,7 +213,11 @@ class AppSearchConsentWorker {
         try {
             AppSearchAppConsentDao dao =
                     AppSearchAppConsentDao.readConsentData(
-                            mGlobalSearchSession, mExecutor, mUid, consentType);
+                            mGlobalSearchSession,
+                            mExecutor,
+                            mUid,
+                            consentType,
+                            mAdservicesPackageName);
             return (dao == null || dao.getApps() == null) ? List.of() : dao.getApps();
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
@@ -251,7 +255,11 @@ class AppSearchConsentWorker {
             // b/274507022 for details.
             AppSearchAppConsentDao dao =
                     AppSearchAppConsentDao.readConsentData(
-                            mGlobalSearchSession, mExecutor, mUid, consentType);
+                            mGlobalSearchSession,
+                            mExecutor,
+                            mUid,
+                            consentType,
+                            mAdservicesPackageName);
             // If there was no such row in the table, create one. Else, update existing one.
             if (dao == null) {
                 dao =
@@ -298,7 +306,11 @@ class AppSearchConsentWorker {
             // b/274507022 for details.
             AppSearchAppConsentDao dao =
                     AppSearchAppConsentDao.readConsentData(
-                            mGlobalSearchSession, mExecutor, mUid, consentType);
+                            mGlobalSearchSession,
+                            mExecutor,
+                            mUid,
+                            consentType,
+                            mAdservicesPackageName);
             // If there was no such row in the table, do nothing. Else, update existing one.
             if (dao == null || dao.getApps() == null || !dao.getApps().contains(app)) {
                 return;
@@ -323,7 +335,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchNotificationDao.wasNotificationDisplayed(
-                    mGlobalSearchSession, mExecutor, mUid);
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -334,7 +346,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchNotificationDao.wasGaUxNotificationDisplayed(
-                    mGlobalSearchSession, mExecutor, mUid);
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -395,7 +407,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchInteractionsDao.getPrivacySandboxFeatureType(
-                    mGlobalSearchSession, mExecutor, mUid);
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -434,7 +446,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchInteractionsDao.getManualInteractions(
-                    mGlobalSearchSession, mExecutor, mUid);
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -469,7 +481,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchTopicsConsentDao.getBlockedTopics(
-                    mGlobalSearchSession, mExecutor, mUid);
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -485,7 +497,7 @@ class AppSearchConsentWorker {
             // b/274507022 for details.
             AppSearchTopicsConsentDao dao =
                     AppSearchTopicsConsentDao.readConsentData(
-                            mGlobalSearchSession, mExecutor, mUid);
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             // If there was no such row in the table, create the row. Else, update existing one.
             if (dao == null) {
                 dao =
@@ -520,7 +532,7 @@ class AppSearchConsentWorker {
             // b/274507022 for details.
             AppSearchTopicsConsentDao dao =
                     AppSearchTopicsConsentDao.readConsentData(
-                            mGlobalSearchSession, mExecutor, mUid);
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             // If there was no such row in the table, do nothing. Else, update existing one.
             if (dao == null) {
                 return;
@@ -572,8 +584,7 @@ class AppSearchConsentWorker {
      * This method returns the package name of the AdServices APK from AdServices apex (T+). On an
      * S- device, it removes the "ext." substring from the package name.
      */
-    @VisibleForTesting
-    static String getAdServicesPackageName(Context context) {
+    public static String getAdServicesPackageName(Context context) {
         Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
         List<ResolveInfo> resolveInfos =
                 context.getPackageManager()
@@ -603,7 +614,8 @@ class AppSearchConsentWorker {
     boolean isAdIdEnabled() {
         READ_WRITE_LOCK.readLock().lock();
         try {
-            return AppSearchUxStatesDao.readIsAdIdEnabled(mGlobalSearchSession, mExecutor, mUid);
+            return AppSearchUxStatesDao.readIsAdIdEnabled(
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -614,7 +626,8 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchUxStatesDao dao =
-                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             if (dao == null) {
                 dao =
                         new AppSearchUxStatesDao(
@@ -638,7 +651,8 @@ class AppSearchConsentWorker {
     boolean isU18Account() {
         READ_WRITE_LOCK.readLock().lock();
         try {
-            return AppSearchUxStatesDao.readIsU18Account(mGlobalSearchSession, mExecutor, mUid);
+            return AppSearchUxStatesDao.readIsU18Account(
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -649,7 +663,8 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchUxStatesDao dao =
-                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             if (dao == null) {
                 dao =
                         new AppSearchUxStatesDao(
@@ -674,7 +689,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchUxStatesDao.readIsEntryPointEnabled(
-                    mGlobalSearchSession, mExecutor, mUid);
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -685,7 +700,8 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchUxStatesDao dao =
-                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             if (dao == null) {
                 dao =
                         new AppSearchUxStatesDao(
@@ -709,7 +725,8 @@ class AppSearchConsentWorker {
     boolean isAdultAccount() {
         READ_WRITE_LOCK.readLock().lock();
         try {
-            return AppSearchUxStatesDao.readIsAdultAccount(mGlobalSearchSession, mExecutor, mUid);
+            return AppSearchUxStatesDao.readIsAdultAccount(
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -720,7 +737,8 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchUxStatesDao dao =
-                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             if (dao == null) {
                 dao =
                         new AppSearchUxStatesDao(
@@ -745,7 +763,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchUxStatesDao.readIsU18NotificationDisplayed(
-                    mGlobalSearchSession, mExecutor, mUid);
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -756,7 +774,8 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchUxStatesDao dao =
-                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             if (dao == null) {
                 dao =
                         new AppSearchUxStatesDao(
@@ -780,7 +799,8 @@ class AppSearchConsentWorker {
     PrivacySandboxUxCollection getUx() {
         READ_WRITE_LOCK.readLock().lock();
         try {
-            return AppSearchUxStatesDao.readUx(mGlobalSearchSession, mExecutor, mUid);
+            return AppSearchUxStatesDao.readUx(
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -791,7 +811,8 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchUxStatesDao dao =
-                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             if (dao == null) {
                 dao =
                         new AppSearchUxStatesDao(
@@ -816,7 +837,7 @@ class AppSearchConsentWorker {
         READ_WRITE_LOCK.readLock().lock();
         try {
             return AppSearchUxStatesDao.readEnrollmentChannel(
-                    mGlobalSearchSession, mExecutor, mUid, ux);
+                    mGlobalSearchSession, mExecutor, mUid, ux, mAdservicesPackageName);
         } finally {
             READ_WRITE_LOCK.readLock().unlock();
         }
@@ -833,7 +854,8 @@ class AppSearchConsentWorker {
                 return;
             }
             AppSearchUxStatesDao dao =
-                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
             if (dao == null) {
                 dao =
                         new AppSearchUxStatesDao(

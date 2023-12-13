@@ -16,14 +16,18 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES;
+import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -31,8 +35,8 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.signals.FetchSignalUpdatesCallback;
-import android.adservices.signals.FetchSignalUpdatesInput;
+import android.adservices.signals.UpdateSignalsCallback;
+import android.adservices.signals.UpdateSignalsInput;
 import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
@@ -46,28 +50,25 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
-import java.net.URI;
 import java.util.concurrent.ExecutorService;
 
 public class ProtectedSignalsServiceImplTest {
-
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
 
     // TODO(b/296586554) Add API id
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
@@ -77,9 +78,10 @@ public class ProtectedSignalsServiceImplTest {
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
     private static final String EXCEPTION_MESSAGE = "message";
 
+    private MockitoSession mStaticMockSession = null;
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
-    @Mock private FetchOrchestrator mFetchOrchestratorMock;
+    @Mock private UpdateSignalsOrchestrator mUpdateSignalsOrchestratorMock;
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private DevContextFilter mDevContextFilterMock;
@@ -87,20 +89,28 @@ public class ProtectedSignalsServiceImplTest {
     @Mock private Flags mFlagsMock;
     @Mock private CallingAppUidSupplier mCallingAppUidSupplierMock;
     @Mock private CustomAudienceServiceFilter mCustomAudienceServiceFilterMock;
-    @Mock private FetchSignalUpdatesCallback mFetchSignalUpdatesCallbackMock;
+    @Mock private UpdateSignalsCallback mUpdateSignalsCallbackMock;
 
     @Captor ArgumentCaptor<FledgeErrorResponse> mErrorCaptor;
 
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     private DevContext mDevContext;
-    private FetchSignalUpdatesInput mInput;
+    private UpdateSignalsInput mInput;
 
     @Before
     public void setup() {
+
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(PeriodicEncodingJobService.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
                         CONTEXT,
-                        mFetchOrchestratorMock,
+                        mUpdateSignalsOrchestratorMock,
                         mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
                         mDevContextFilterMock,
@@ -109,43 +119,59 @@ public class ProtectedSignalsServiceImplTest {
                         mFlagsMock,
                         mCallingAppUidSupplierMock,
                         mCustomAudienceServiceFilterMock);
+
         mDevContext =
                 DevContext.builder()
                         .setDevOptionsEnabled(false)
                         .setCallingAppPackageName(PACKAGE)
                         .build();
-        mInput = new FetchSignalUpdatesInput.Builder(URI, PACKAGE).build();
+        mInput = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
 
         // Set up the mocks for a success flow -- indivual tests that want a failure can overwrite
         when(mCallingAppUidSupplierMock.getCallingAppUid()).thenReturn(UID);
         when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
+        when(mFlagsMock.getEnforceForegroundStatusForSignals()).thenReturn(true);
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
                         eq(false),
                         eq(true),
-                        eq(true),
+                        eq(false),
                         eq(UID),
                         eq(API_NAME),
-                        eq(PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
                         eq(mDevContext)))
                 .thenReturn(ADTECH);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
         SettableFuture<Object> emptyReturn = SettableFuture.create();
         emptyReturn.set(new Object());
-        when(mFetchOrchestratorMock.orchestrateFetch(eq(URI), eq(ADTECH), eq(PACKAGE)))
+        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext)))
                 .thenReturn(FluentFuture.from(emptyReturn));
+        doNothing()
+                .when(
+                        () ->
+                                PeriodicEncodingJobService.scheduleIfNeeded(
+                                        any(), any(), anyBoolean()));
+    }
+
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
     @Test
-    public void testFetchSignalUpdatesSuccess() throws Exception {
-        mProtectedSignalsService.fetchSignalUpdates(mInput, mFetchSignalUpdatesCallbackMock);
+    public void testUpdateSignalsSuccess() throws Exception {
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(eq(CONTEXT), eq(PACKAGE), eq(API_NAME));
+                .assertAppDeclaredProtectedSignalsPermission(
+                        eq(CONTEXT), eq(PACKAGE), eq(API_NAME));
         verify(mCallingAppUidSupplierMock).getCallingAppUid();
         verify(mDevContextFilterMock).createDevContext();
         verify(mFlagsMock).getDisableFledgeEnrollmentCheck();
@@ -155,106 +181,131 @@ public class ProtectedSignalsServiceImplTest {
                         eq(PACKAGE),
                         eq(false),
                         eq(true),
-                        eq(true),
+                        eq(false),
                         eq(UID),
                         eq(API_NAME),
-                        eq(PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
                         eq(mDevContext));
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE));
-        verify(mFetchOrchestratorMock).orchestrateFetch(eq(URI), eq(ADTECH), eq(PACKAGE));
-        verify(mFetchSignalUpdatesCallbackMock).onSuccess();
+        verify(mUpdateSignalsOrchestratorMock)
+                .orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext));
+        verify(mUpdateSignalsCallbackMock).onSuccess();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_SUCCESS), eq(0));
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(1));
     }
 
     @Test
-    public void testFetchSignalUpdatesNullInput() throws Exception {
+    public void testUpdateSignalsNullInput() throws Exception {
         assertThrows(
                 NullPointerException.class,
-                () ->
-                        mProtectedSignalsService.fetchSignalUpdates(
-                                null, mFetchSignalUpdatesCallbackMock));
+                () -> mProtectedSignalsService.updateSignals(null, mUpdateSignalsCallbackMock));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(API_NAME, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
-    public void testFetchSignalUpdatesNullCallback() throws Exception {
+    public void testUpdateSignalsNullCallback() throws Exception {
         assertThrows(
                 NullPointerException.class,
-                () -> mProtectedSignalsService.fetchSignalUpdates(mInput, null));
+                () -> mProtectedSignalsService.updateSignals(mInput, null));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(API_NAME, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
-    public void testFetchSignalUpdatesExceptionGettingUid() throws Exception {
+    public void testUpdateSignalsExceptionGettingUid() throws Exception {
         when(mCallingAppUidSupplierMock.getCallingAppUid()).thenThrow(new IllegalStateException());
         assertThrows(
                 IllegalStateException.class,
-                () ->
-                        mProtectedSignalsService.fetchSignalUpdates(
-                                mInput, mFetchSignalUpdatesCallbackMock));
+                () -> mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INTERNAL_ERROR), eq(0));
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
-    public void testFetchSignalUpdatesFilterException() throws Exception {
+    public void testUpdateSignalsFilterException() throws Exception {
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
                         eq(false),
                         eq(true),
-                        eq(true),
+                        eq(false),
                         eq(UID),
                         eq(API_NAME),
-                        eq(PROTECTED_SIGNAL_API_FETCH_SIGNAL_UPDATES),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
                         eq(mDevContext)))
-                .thenThrow(new FilterException(new LimitExceededException(EXCEPTION_MESSAGE)));
-        mProtectedSignalsService.fetchSignalUpdates(mInput, mFetchSignalUpdatesCallbackMock);
+                .thenThrow(new LimitExceededException(EXCEPTION_MESSAGE));
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
-        verify(mFetchSignalUpdatesCallbackMock).onFailure(mErrorCaptor.capture());
+        verify(mUpdateSignalsCallbackMock).onFailure(mErrorCaptor.capture());
         FledgeErrorResponse actual = mErrorCaptor.getValue();
         assertEquals(AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, actual.getStatusCode());
         assertEquals(EXCEPTION_MESSAGE, actual.getErrorMessage());
         verifyZeroInteractions(mAdServicesLoggerMock);
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
-    public void testFetchSignalUpdatesIllegalArgumentException() throws Exception {
-        when(mFetchOrchestratorMock.orchestrateFetch(eq(URI), eq(ADTECH), eq(PACKAGE)))
-                .thenThrow(new IllegalArgumentException(EXCEPTION_MESSAGE));
-        mProtectedSignalsService.fetchSignalUpdates(mInput, mFetchSignalUpdatesCallbackMock);
+    public void testUpdateSignalsIllegalArgumentException() throws Exception {
+        IllegalArgumentException exception = new IllegalArgumentException(EXCEPTION_MESSAGE);
+        SettableFuture<Object> future = SettableFuture.create();
+        future.setException(exception);
+        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext)))
+                .thenReturn(FluentFuture.from(future));
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
-        verify(mFetchSignalUpdatesCallbackMock).onFailure(mErrorCaptor.capture());
+        verify(mUpdateSignalsCallbackMock).onFailure(mErrorCaptor.capture());
         FledgeErrorResponse actual = mErrorCaptor.getValue();
         assertEquals(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, actual.getStatusCode());
         assertEquals(EXCEPTION_MESSAGE, actual.getErrorMessage());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT), eq(0));
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
-    public void testFetchSignalUpdatesNoConsent() throws Exception {
+    public void testUpdateSignalsNoConsent() throws Exception {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(true);
-        mProtectedSignalsService.fetchSignalUpdates(mInput, mFetchSignalUpdatesCallbackMock);
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED), eq(0));
-        verify(mFetchSignalUpdatesCallbackMock).onSuccess();
+        verify(mUpdateSignalsCallbackMock).onSuccess();
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(0));
     }
 
     @Test
-    public void testFetchSignalUpdatesCallbackException() throws Exception {
-        doThrow(new RuntimeException()).when(mFetchSignalUpdatesCallbackMock).onSuccess();
-        mProtectedSignalsService.fetchSignalUpdates(mInput, mFetchSignalUpdatesCallbackMock);
+    public void testUpdateSignalsCallbackException() throws Exception {
+        doThrow(new RuntimeException()).when(mUpdateSignalsCallbackMock).onSuccess();
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INTERNAL_ERROR), eq(0));
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(1));
     }
 }

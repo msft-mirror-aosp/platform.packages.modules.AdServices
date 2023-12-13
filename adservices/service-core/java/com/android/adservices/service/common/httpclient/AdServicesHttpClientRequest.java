@@ -74,8 +74,7 @@ public abstract class AdServicesHttpClientRequest {
         return new AutoValue_AdServicesHttpClientRequest.Builder()
                 .setRequestProperties(ImmutableMap.of())
                 .setResponseHeaderKeys(ImmutableSet.of())
-                .setUseCache(false)
-                .setDevContext(DevContext.createForDevOptionsDisabled());
+                .setUseCache(false);
     }
 
     /** Builder that cane be used to build an {@link AdServicesHttpClientRequest} */

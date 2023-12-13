@@ -35,7 +35,7 @@
         <item name="android:fontFamily">@*android:string/config_bodyFontFamilyMedium</item>
         <item name="android:layout_marginStart">24dp</item>
         <item name="android:layout_marginEnd">24dp</item>
-        <item name="android:backgroundTint">@color/adservices_state_on_color</item>
+        <item name="android:backgroundTint">@color/adservices_colorAccentPrimary</item>
         <item name="android:colorControlHighlight">@color/ripple_material_inverse</item>
         <item name="android:textColor">@color/adservices_primary_dark_device_default_settings
         </item>

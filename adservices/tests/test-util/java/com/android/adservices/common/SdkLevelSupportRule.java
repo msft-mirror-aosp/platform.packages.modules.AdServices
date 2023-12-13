@@ -16,7 +16,12 @@
 
 package com.android.adservices.common;
 
-import com.android.modules.utils.build.SdkLevel;
+import android.os.Build;
+
+import com.android.internal.annotations.VisibleForTesting;
+
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Device-side version of {@link AbstractSdkLevelSupportedRule}.
@@ -25,75 +30,67 @@ import com.android.modules.utils.build.SdkLevel;
  */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    private SdkLevelSupportRule(AndroidSdkLevel level) {
-        super(AndroidLogger.getInstance(), level);
+    @Nullable private Supplier<AndroidSdkLevel> mDeviceLevelSupplier;
+
+    SdkLevelSupportRule(AndroidSdkLevel level) {
+        super(AndroidLogger.getInstance(), AndroidSdkRange.forAtLeast(level.getLevel()));
+    }
+
+    @VisibleForTesting
+    void setDeviceLevelSupplier(Supplier<AndroidSdkLevel> levelSupplier) {
+        mDeviceLevelSupplier = Objects.requireNonNull(levelSupplier);
     }
 
     /**
-     * Gets a rule that ensures test is executed on every Android version, unless the test is
-     * explicitly annotated with a {@code RequiresSdkLevel...} annotation.
+     * Gets a rule that don't skip any test by default.
+     *
+     * <p>This rule is typically used when:
+     *
+     * <ul>
+     *   <li>Only a few tests require a specific SDK release - such tests will be annotated with a
+     *       {@code &#064;RequiresSdkLevel...} annotation.
+     *   <li>Some test methods (typically <code>&#064;Before</code>) need to check the SDK release
+     *       inside them - these tests call call rule methods such as {@code isAtLeastS()}.
+     * </ul>
      */
     public static SdkLevelSupportRule forAnyLevel() {
         return new SdkLevelSupportRule(AndroidSdkLevel.ANY);
     }
 
-    /** Gets a rule that ensures test is executed on Android R+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastR() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.R);
-    }
-
-    /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
+    /**
+     * Gets a rule that ensures tests are only executed on Android S+ and skipped otherwise, by
+     * default (if the test have other SDK restrictions, the test can be annotated with extra
+     * {@code &#064;RequiresSdkLevel...} annotations)
+     */
     public static SdkLevelSupportRule forAtLeastS() {
         return new SdkLevelSupportRule(AndroidSdkLevel.S);
     }
 
-    /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastSv2() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.S_V2);
-    }
-
-    /** Gets a rule that ensures test is executed on Android T+. Skips test otherwise. */
+    /**
+     * Gets a rule that ensures tests are only executed on Android T+ and skipped otherwise, by
+     * default (if the test have other SDK restrictions, the test can be annotated with extra
+     * {@code &#064;RequiresSdkLevel...} annotations)
+     */
     public static SdkLevelSupportRule forAtLeastT() {
         return new SdkLevelSupportRule(AndroidSdkLevel.T);
     }
 
-    /** Gets a rule that ensures test is executed on Android U+. Skips test otherwise. */
+    /**
+     * Gets a rule that ensures tests are only executed on Android U+ and skipped otherwise, by
+     * default (if the test have other SDK restrictions, the test can be annotated with extra
+     * {@code &#064;RequiresSdkLevel...} annotations)
+     */
     public static SdkLevelSupportRule forAtLeastU() {
         return new SdkLevelSupportRule(AndroidSdkLevel.U);
     }
 
-    /** Gets a rule that ensures test is executed on Android V+. Skips test otherwise. */
-    public static SdkLevelSupportRule forAtLeastV() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.V);
-    }
-
     @Override
-    public boolean isAtLeastR() {
-        return SdkLevel.isAtLeastR();
-    }
-
-    @Override
-    public boolean isAtLeastS() {
-        return SdkLevel.isAtLeastS();
-    }
-
-    @Override
-    public boolean isAtLeastSv2() {
-        return SdkLevel.isAtLeastSv2();
-    }
-
-    @Override
-    public boolean isAtLeastT() {
-        return SdkLevel.isAtLeastT();
-    }
-
-    @Override
-    public boolean isAtLeastU() {
-        return SdkLevel.isAtLeastU();
-    }
-
-    @Override
-    public boolean isAtLeastV() {
-        return SdkLevel.isAtLeastV();
+    public AndroidSdkLevel getDeviceApiLevel() {
+        if (mDeviceLevelSupplier != null) {
+            AndroidSdkLevel level = mDeviceLevelSupplier.get();
+            mLog.d("getDeviceApiLevel(): returning %s as set by supplier", level);
+            return level;
+        }
+        return AndroidSdkLevel.forLevel(Build.VERSION.SDK_INT);
     }
 }

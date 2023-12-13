@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.Nullable;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
@@ -28,32 +29,45 @@ import com.android.adservices.ohttp.EncapsulatedSharedSecret;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 
+import java.time.Instant;
+
 /** Dao to manage access to entities in Encryption Context table. */
 @Dao
 public abstract class EncryptionContextDao {
 
     /** Returns the EncryptionContext of given ad selection id if it exists. */
+    @Nullable
     @Query(
-            ""
-                    + "SELECT * FROM encryption_context "
+            "SELECT * FROM encryption_context "
                     + "WHERE context_id = :contextId AND encryption_key_type = :encryptionKeyType")
     public abstract DBEncryptionContext getEncryptionContext(
-            long contextId, @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType)
-            throws Exception;
+            long contextId, @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType);
 
     /** Inserts the given EncryptionContext in table. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insertEncryptionContext(DBEncryptionContext context);
 
+    /**
+     * Clean up expired encryption context entries if it is older than the given timestamp.
+     *
+     * @param expirationTime is the cutoff time to expire the Encryption Context.
+     */
+    @Query("DELETE FROM encryption_context WHERE creation_instant < :expirationTime")
+    public abstract void removeExpiredEncryptionContext(Instant expirationTime);
+
     /** Persists the encryption context in the {@link DBEncryptionContext} table. */
-    public void persistEncryptionContext(long contextId, EncryptionContext encryptionContext) {
+    public void persistEncryptionContext(
+            long contextId, EncryptionContext encryptionContext, Instant creationInstant) {
         DBValidator.validateEncryptionContext(encryptionContext);
 
         ObliviousHttpRequestContext requestContext = encryptionContext.getOhttpRequestContext();
         insertEncryptionContext(
                 DBEncryptionContext.builder()
                         .setContextId(contextId)
-                        .setEncryptionKeyType(encryptionContext.getAdSelectionEncryptionKeyType())
+                        .setEncryptionKeyType(
+                                EncryptionKeyConstants.from(
+                                        encryptionContext.getAdSelectionEncryptionKeyType()))
+                        .setCreationInstant(creationInstant)
                         .setSeed(requestContext.seed())
                         .setKeyConfig(requestContext.keyConfig().serializeKeyConfigToBytes())
                         .setSharedSecret(

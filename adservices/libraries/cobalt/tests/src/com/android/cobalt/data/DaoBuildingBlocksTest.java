@@ -195,8 +195,9 @@ public class DaoBuildingBlocksTest {
                 systemProfileHash);
     }
 
-    private List<CountEvent> queryCountEventsForDay(ReportKey reportKey, int dayIndex) {
-        return mDaoBuildingBlocks.queryCountEventsForDay(
+    private List<EventRecordAndSystemProfile> queryEventRecordsForDay(
+            ReportKey reportKey, int dayIndex) {
+        return mDaoBuildingBlocks.queryEventRecordsForDay(
                 reportKey.customerId(),
                 reportKey.projectId(),
                 reportKey.metricId(),
@@ -599,7 +600,7 @@ public class DaoBuildingBlocksTest {
     }
 
     @Test
-    public void testQueryCountEventsForDay() throws Exception {
+    public void testQueryEventRecordsForDay() throws Exception {
         insertSystemProfileAndReport(
                 sSystemProfileHash[0], sSystemProfile[0], sReportKey[0], sDayIndex[0]);
 
@@ -622,28 +623,20 @@ public class DaoBuildingBlocksTest {
                 sSystemProfileHash[0],
                 sAggregateValue[0]);
 
-        List<CountEvent> countEvents = queryCountEventsForDay(sReportKey[0], sDayIndex[0]);
-        assertThat(countEvents)
+        List<EventRecordAndSystemProfile> eventRecords =
+                queryEventRecordsForDay(sReportKey[0], sDayIndex[0]);
+        assertThat(eventRecords)
                 .containsExactly(
-                        CountEvent.create(
-                                sSystemProfileHash[0],
-                                sSystemProfile[0],
-                                sEventVector[0],
-                                sAggregateValue[0]),
-                        CountEvent.create(
-                                sSystemProfileHash[0],
-                                sSystemProfile[0],
-                                sEventVector[1],
-                                sAggregateValue[0]));
+                        EventRecordAndSystemProfile.create(
+                                sSystemProfile[0], sEventVector[0], sAggregateValue[0]),
+                        EventRecordAndSystemProfile.create(
+                                sSystemProfile[0], sEventVector[1], sAggregateValue[0]));
 
-        countEvents = queryCountEventsForDay(sReportKey[0], sDayIndex[1]);
-        assertThat(countEvents)
+        eventRecords = queryEventRecordsForDay(sReportKey[0], sDayIndex[1]);
+        assertThat(eventRecords)
                 .containsExactly(
-                        CountEvent.create(
-                                sSystemProfileHash[0],
-                                sSystemProfile[0],
-                                sEventVector[0],
-                                sAggregateValue[0]));
+                        EventRecordAndSystemProfile.create(
+                                sSystemProfile[0], sEventVector[0], sAggregateValue[0]));
     }
 
     @Test

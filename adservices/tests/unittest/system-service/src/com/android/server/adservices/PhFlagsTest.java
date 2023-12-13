@@ -19,11 +19,11 @@ package com.android.server.adservices;
 import static com.android.server.adservices.Flags.ADSERVICES_SYSTEM_SERVICE_ENABLED;
 import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.provider.DeviceConfig;
 
 import com.android.modules.utils.testing.TestableDeviceConfig;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.Rule;
 import org.junit.Test;

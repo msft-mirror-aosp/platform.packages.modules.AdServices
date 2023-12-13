@@ -92,14 +92,9 @@ public class BackgroundFetchJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
-        // Skip the execution and cancel the job if user consent is revoked. Use the aggregated
-        // consent with Beta UX and use the per-API consent with GA UX.
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()
-                        && !ConsentManager.getInstance(this)
-                                .getConsent(AdServicesApiType.FLEDGE)
-                                .isGiven()
-                || !FlagsFactory.getFlags().getGaUxFeatureEnabled()
-                        && !ConsentManager.getInstance(this).getConsent().isGiven()) {
+        // Skip the execution and cancel the job if user consent is revoked.
+        // Use the per-API consent with GA UX.
+        if (!ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven()) {
             LoggerFactory.getFledgeLogger()
                     .d("User Consent is revoked ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(

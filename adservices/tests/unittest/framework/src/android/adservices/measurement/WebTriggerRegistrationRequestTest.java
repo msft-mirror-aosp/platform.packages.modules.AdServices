@@ -18,6 +18,7 @@ package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
@@ -89,11 +90,19 @@ public class WebTriggerRegistrationRequestTest {
                         new WebTriggerRegistrationRequest.Builder(
                                         Collections.emptyList(), TOP_ORIGIN_URI)
                                 .build());
+    }
+
+    @Test
+    public void testMaxWebTriggerParam_failsWhenExceeds() {
+        assertNotNull(
+                new WebTriggerRegistrationRequest.Builder(
+                                generateWebTriggerParamsList(80), TOP_ORIGIN_URI)
+                        .build());
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new WebTriggerRegistrationRequest.Builder(
-                                        generateWebTriggerParamsList(21), TOP_ORIGIN_URI)
+                                        generateWebTriggerParamsList(81), TOP_ORIGIN_URI)
                                 .build());
     }
 

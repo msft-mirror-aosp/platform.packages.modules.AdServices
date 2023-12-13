@@ -62,8 +62,8 @@ import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.ContextualAds;
-import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -815,24 +815,24 @@ public class AdsScoreGeneratorImplTest {
 
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
-        Map<AdTechIdentifier, ContextualAds> contextualAdsMap = createContextualAds();
+        Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerContextualAds(contextualAdsMap)
+                        .setBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
                 mAdBiddingOutcomeList.stream()
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
-        List<ContextualAds> contextualAds =
-                mAdSelectionConfig.getBuyerContextualAds().values().stream()
+        List<SignedContextualAds> signedContextualAds =
+                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
-        for (ContextualAds ctx : contextualAds) {
+        for (SignedContextualAds ctx : signedContextualAds) {
             contextualBidAds.addAll(ctx.getAdsWithBid());
         }
 
@@ -936,24 +936,24 @@ public class AdsScoreGeneratorImplTest {
 
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
-        Map<AdTechIdentifier, ContextualAds> contextualAdsMap = createContextualAds();
+        Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerContextualAds(contextualAdsMap)
+                        .setBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
                 mAdBiddingOutcomeList.stream()
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
-        List<ContextualAds> contextualAds =
-                mAdSelectionConfig.getBuyerContextualAds().values().stream()
+        List<SignedContextualAds> signedContextualAds =
+                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
-        for (ContextualAds ctx : contextualAds) {
+        for (SignedContextualAds ctx : signedContextualAds) {
             contextualBidAds.addAll(ctx.getAdsWithBid());
         }
 
@@ -1084,24 +1084,24 @@ public class AdsScoreGeneratorImplTest {
 
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
-        Map<AdTechIdentifier, ContextualAds> contextualAdsMap = createContextualAds();
+        Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerContextualAds(contextualAdsMap)
+                        .setBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
                 mAdBiddingOutcomeList.stream()
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
-        List<ContextualAds> contextualAds =
-                mAdSelectionConfig.getBuyerContextualAds().values().stream()
+        List<SignedContextualAds> signedContextualAds =
+                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
-        for (ContextualAds ctx : contextualAds) {
+        for (SignedContextualAds ctx : signedContextualAds) {
             contextualBidAds.addAll(ctx.getAdsWithBid());
         }
 
@@ -1255,24 +1255,24 @@ public class AdsScoreGeneratorImplTest {
 
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
-        Map<AdTechIdentifier, ContextualAds> contextualAdsMap = createContextualAds();
+        Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerContextualAds(contextualAdsMap)
+                        .setBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
                 mAdBiddingOutcomeList.stream()
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
-        List<ContextualAds> contextualAds =
-                mAdSelectionConfig.getBuyerContextualAds().values().stream()
+        List<SignedContextualAds> signedContextualAds =
+                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
-        for (ContextualAds ctx : contextualAds) {
+        for (SignedContextualAds ctx : signedContextualAds) {
             contextualBidAds.addAll(ctx.getAdsWithBid());
         }
 
@@ -1899,18 +1899,19 @@ public class AdsScoreGeneratorImplTest {
         assertEquals(AdSelectionSignals.EMPTY, signals.getUserBiddingSignals());
     }
 
-    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+    private Map<AdTechIdentifier, SignedContextualAds> createContextualAds() {
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
 
         AdTechIdentifier buyer1 = BUYER_1;
-        ContextualAds contextualAds1 =
-                ContextualAdsFixture.generateContextualAds(
+        SignedContextualAds contextualAds1 =
+                SignedContextualAdsFixture.generateSignedContextualAds(
                                 buyer1, ImmutableList.of(100.0, 200.0, 300.0))
                         .build();
 
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
-        ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
+        SignedContextualAds contextualAds2 =
+                SignedContextualAdsFixture.generateSignedContextualAds(
+                                buyer2, ImmutableList.of(400.0, 500.0))
                         .build();
 
         buyerContextualAds.put(buyer1, contextualAds1);

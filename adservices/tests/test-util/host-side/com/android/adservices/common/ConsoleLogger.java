@@ -35,7 +35,7 @@ public final class ConsoleLogger implements RealLogger {
     @Override
     @FormatMethod
     public void log(LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
-        String message = "[" + tag + "]" + String.format(msgFmt, msgArgs);
+        String message = "[" + tag + "] " + String.format(msgFmt, msgArgs);
         switch (level) {
             case WTF:
                 CLog.wtf(message);
@@ -68,7 +68,7 @@ public final class ConsoleLogger implements RealLogger {
             Throwable t,
             @FormatString String msgFmt,
             Object... msgArgs) {
-        String message = "[" + tag + "]" + String.format(msgFmt, msgArgs);
+        String message = "[" + tag + "] " + String.format(msgFmt, msgArgs);
         switch (level) {
             case WTF:
                 CLog.wtf(message);

@@ -25,9 +25,10 @@ android_test {
         "adservices-assets",
         "adservices-service-core",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-test-utility",
         "adservices-ui-cts-root-test-lib",
+        "platform-test-rules",
     ],
     libs: [
         "android.test.base",

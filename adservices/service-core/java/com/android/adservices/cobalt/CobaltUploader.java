@@ -19,6 +19,8 @@ import static android.adservices.cobalt.EncryptedCobaltEnvelopeParams.ENVIRONMEN
 import static android.adservices.cobalt.EncryptedCobaltEnvelopeParams.ENVIRONMENT_PROD;
 
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.adservices.cobalt.EncryptedCobaltEnvelopeParams;
 import android.adservices.cobalt.IAdServicesCobaltUploadService;
@@ -28,6 +30,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.cobalt.CobaltPipelineType;
 import com.android.cobalt.upload.Uploader;
 import com.android.internal.annotations.VisibleForTesting;
@@ -70,7 +73,19 @@ final class CobaltUploader implements Uploader {
                             encryptedMessage.getCiphertext().toByteArray()));
         } catch (RemoteException e) {
             Log.w(TAG, "Remote exception while sending message, will be dropped", e);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
+    }
+
+    @Override
+    public void uploadDone() {
+        if (Log.isLoggable(TAG, Log.INFO)) {
+            Log.i(TAG, "Unbinding from upload service");
+        }
+        mServiceBinder.unbindFromService();
     }
 
     @VisibleForTesting

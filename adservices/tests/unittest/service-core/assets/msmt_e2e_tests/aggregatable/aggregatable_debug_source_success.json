@@ -260,7 +260,8 @@
               "key": "0x12",
               "value": 444
             }
-          ]
+          ],
+          "trigger_debug_key": "555"
         },
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239177000"
@@ -273,7 +274,8 @@
               "key": "0x13",
               "value": 555
             }
-          ]
+          ],
+          "trigger_debug_key": "666"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239178000"
@@ -293,21 +295,7 @@
           "trigger_debug_key": "333"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643238164043"
-      },
-      {
-        "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
-          "histograms": [
-            {
-              "key": "0x11",
-              "value": 222
-            }
-          ],
-          "source_debug_key": "111"
-        },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643236759896"
+        "report_time": "1643235574000"
       },
       {
         "payload": {
@@ -322,7 +310,7 @@
           "trigger_debug_key": "444"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643237474925"
+        "report_time": "1643235576000"
       }
     ],
     "verbose_debug_reports": [

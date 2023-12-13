@@ -21,6 +21,7 @@ import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
@@ -37,6 +38,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,23 +46,32 @@ import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class GaUxAlreadyEnrolledChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
 
+    private String mTestName;
+
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
+
     @Before
     public void setUp() throws Exception {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
+        UiUtils.resetAdServicesConsentData(sContext);
+
         UiUtils.enableNotificationPermission();
         UiUtils.enableGa();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -114,6 +125,8 @@ public class GaUxAlreadyEnrolledChannelTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -123,7 +136,11 @@ public class GaUxAlreadyEnrolledChannelTest {
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -151,7 +168,11 @@ public class GaUxAlreadyEnrolledChannelTest {
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsRowDevice();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -179,7 +200,11 @@ public class GaUxAlreadyEnrolledChannelTest {
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -205,7 +230,11 @@ public class GaUxAlreadyEnrolledChannelTest {
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.setAsEuDevice();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()

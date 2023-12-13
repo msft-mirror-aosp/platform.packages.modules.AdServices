@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -59,9 +60,11 @@ public class AdCounterHistogramUpdaterImplTest {
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
 
     private AdCounterHistogramUpdater mAdCounterHistogramUpdater;
+    private boolean mAuctionServerEnabledForUpdateHistogram;
 
     @Before
     public void setup() {
+        mAuctionServerEnabledForUpdateHistogram = false;
         mAdCounterHistogramUpdater =
                 new AdCounterHistogramUpdaterImpl(
                         mAdSelectionEntryDaoMock,
@@ -69,7 +72,9 @@ public class AdCounterHistogramUpdaterImplTest {
                         ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                         LOWER_MAX_TOTAL_EVENT_COUNT,
                         ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                        LOWER_MAX_PER_BUYER_EVENT_COUNT);
+                        LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                        mAuctionServerEnabledForUpdateHistogram,
+                        false);
     }
 
     @Test
@@ -83,7 +88,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
     }
 
     @Test
@@ -97,7 +104,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
     }
 
     @Test
@@ -111,7 +120,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 0,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -121,7 +132,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 -1,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
     }
 
     @Test
@@ -135,7 +148,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 0,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -145,7 +160,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 -1,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
     }
 
     @Test
@@ -159,7 +176,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 0,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -169,7 +188,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 -1,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
     }
 
     @Test
@@ -183,7 +204,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                0));
+                                0,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -193,7 +216,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                -1));
+                                -1,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
     }
 
     @Test
@@ -207,7 +232,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
-                                LOWER_MAX_PER_BUYER_EVENT_COUNT));
+                                LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
     }
 
     @Test
@@ -221,7 +248,9 @@ public class AdCounterHistogramUpdaterImplTest {
                                 ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_TOTAL_EVENT_COUNT,
                                 LOWER_MAX_PER_BUYER_EVENT_COUNT,
-                                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT));
+                                ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                                mAuctionServerEnabledForUpdateHistogram,
+                                false));
     }
 
     @Test
@@ -340,7 +369,9 @@ public class AdCounterHistogramUpdaterImplTest {
 
     @Test
     public void testUpdateNonWinHistogram_missingAdSelectionStops() {
-        doReturn(null).when(mAdSelectionEntryDaoMock).getAdSelectionHistogramInfo(anyLong(), any());
+        doReturn(null)
+                .when(mAdSelectionEntryDaoMock)
+                .getAdSelectionHistogramInfoInOnDeviceTable(anyLong(), any());
 
         mAdCounterHistogramUpdater.updateNonWinHistogram(
                 AD_SELECTION_ID,
@@ -355,7 +386,7 @@ public class AdCounterHistogramUpdaterImplTest {
     public void testUpdateNonWinHistogram_nullAdCounterKeysStops() {
         doReturn(DBAdSelectionHistogramInfo.create(CommonFixture.VALID_BUYER_1, null))
                 .when(mAdSelectionEntryDaoMock)
-                .getAdSelectionHistogramInfo(anyLong(), any());
+                .getAdSelectionHistogramInfoInOnDeviceTable(anyLong(), any());
 
         mAdCounterHistogramUpdater.updateNonWinHistogram(
                 AD_SELECTION_ID,
@@ -372,7 +403,7 @@ public class AdCounterHistogramUpdaterImplTest {
                         DBAdSelectionHistogramInfo.create(
                                 CommonFixture.VALID_BUYER_1, SERIALIZED_AD_COUNTER_KEYS))
                 .when(mAdSelectionEntryDaoMock)
-                .getAdSelectionHistogramInfo(anyLong(), any());
+                .getAdSelectionHistogramInfoInOnDeviceTable(anyLong(), any());
 
         mAdCounterHistogramUpdater.updateNonWinHistogram(
                 AD_SELECTION_ID,
@@ -396,5 +427,146 @@ public class AdCounterHistogramUpdaterImplTest {
                             anyInt(),
                             anyInt());
         }
+    }
+
+    @Test
+    public void testUpdateNonWinHistogram_withAdCounterKeysPersists_auctionServerOff() {
+        boolean auctionServerEnabledForUpdateHistogram = false;
+        AdCounterHistogramUpdater adCounterHistogramUpdater =
+                new AdCounterHistogramUpdaterImpl(
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                        LOWER_MAX_TOTAL_EVENT_COUNT,
+                        ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                        LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                        auctionServerEnabledForUpdateHistogram,
+                        false);
+        doReturn(
+                        DBAdSelectionHistogramInfo.create(
+                                CommonFixture.VALID_BUYER_1, SERIALIZED_AD_COUNTER_KEYS))
+                .when(mAdSelectionEntryDaoMock)
+                .getAdSelectionHistogramInfoInOnDeviceTable(anyLong(), any());
+
+        adCounterHistogramUpdater.updateNonWinHistogram(
+                AD_SELECTION_ID,
+                CommonFixture.TEST_PACKAGE_NAME,
+                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                CommonFixture.FIXED_NOW);
+
+        HistogramEvent.Builder expectedEventBuilder =
+                HistogramEvent.builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setTimestamp(CommonFixture.FIXED_NOW)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME);
+
+        for (Integer key : AdDataFixture.getAdCounterKeys()) {
+            verify(mFrequencyCapDaoMock)
+                    .insertHistogramEvent(
+                            eq(expectedEventBuilder.setAdCounterKey(key).build()),
+                            anyInt(),
+                            anyInt(),
+                            anyInt(),
+                            anyInt());
+        }
+        verify(mAdSelectionEntryDaoMock, times(0)).getAdSelectionHistogramInfo(anyLong(), any());
+        verify(mAdSelectionEntryDaoMock, times(0))
+                .getAdSelectionHistogramInfoFromUnifiedTable(anyLong(), any());
+    }
+
+    @Test
+    public void testUpdateNonWinHistogram_withAdCounterKeysPersists_auctionServerOn() {
+        boolean auctionServerEnabledForUpdateHistogram = true;
+        AdCounterHistogramUpdater adCounterHistogramUpdater =
+                new AdCounterHistogramUpdaterImpl(
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                        LOWER_MAX_TOTAL_EVENT_COUNT,
+                        ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                        LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                        auctionServerEnabledForUpdateHistogram,
+                        false);
+
+        doReturn(
+                        DBAdSelectionHistogramInfo.create(
+                                CommonFixture.VALID_BUYER_1, SERIALIZED_AD_COUNTER_KEYS))
+                .when(mAdSelectionEntryDaoMock)
+                .getAdSelectionHistogramInfo(anyLong(), any());
+
+        adCounterHistogramUpdater.updateNonWinHistogram(
+                AD_SELECTION_ID,
+                CommonFixture.TEST_PACKAGE_NAME,
+                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                CommonFixture.FIXED_NOW);
+
+        HistogramEvent.Builder expectedEventBuilder =
+                HistogramEvent.builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setTimestamp(CommonFixture.FIXED_NOW)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME);
+
+        for (Integer key : AdDataFixture.getAdCounterKeys()) {
+            verify(mFrequencyCapDaoMock)
+                    .insertHistogramEvent(
+                            eq(expectedEventBuilder.setAdCounterKey(key).build()),
+                            anyInt(),
+                            anyInt(),
+                            anyInt(),
+                            anyInt());
+        }
+        verify(mAdSelectionEntryDaoMock, times(0))
+                .getAdSelectionHistogramInfoInOnDeviceTable(anyLong(), any());
+        verify(mAdSelectionEntryDaoMock, times(0))
+                .getAdSelectionHistogramInfoFromUnifiedTable(anyLong(), any());
+    }
+
+    @Test
+    public void testUpdateNonWinHistogram_withAdCounterKeysPersists_unifiedFlagOn() {
+        boolean unifiedTablesEnabled = true;
+        AdCounterHistogramUpdater adCounterHistogramUpdater =
+                new AdCounterHistogramUpdaterImpl(
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+                        LOWER_MAX_TOTAL_EVENT_COUNT,
+                        ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+                        LOWER_MAX_PER_BUYER_EVENT_COUNT,
+                        false,
+                        unifiedTablesEnabled);
+
+        doReturn(
+                        DBAdSelectionHistogramInfo.create(
+                                CommonFixture.VALID_BUYER_1, SERIALIZED_AD_COUNTER_KEYS))
+                .when(mAdSelectionEntryDaoMock)
+                .getAdSelectionHistogramInfoFromUnifiedTable(anyLong(), any());
+
+        adCounterHistogramUpdater.updateNonWinHistogram(
+                AD_SELECTION_ID,
+                CommonFixture.TEST_PACKAGE_NAME,
+                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                CommonFixture.FIXED_NOW);
+
+        HistogramEvent.Builder expectedEventBuilder =
+                HistogramEvent.builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setTimestamp(CommonFixture.FIXED_NOW)
+                        .setSourceApp(CommonFixture.TEST_PACKAGE_NAME);
+
+        for (Integer key : AdDataFixture.getAdCounterKeys()) {
+            verify(mFrequencyCapDaoMock)
+                    .insertHistogramEvent(
+                            eq(expectedEventBuilder.setAdCounterKey(key).build()),
+                            anyInt(),
+                            anyInt(),
+                            anyInt(),
+                            anyInt());
+        }
+        verify(mAdSelectionEntryDaoMock, times(0))
+                .getAdSelectionHistogramInfoInOnDeviceTable(anyLong(), any());
+        verify(mAdSelectionEntryDaoMock, times(0)).getAdSelectionHistogramInfo(anyLong(), any());
     }
 }

@@ -115,7 +115,9 @@ public class CustomAudienceManager {
     @NonNull
     ICustomAudienceService getService() {
         ICustomAudienceService service = mServiceBinder.getService();
-        Objects.requireNonNull(service);
+        if (service == null) {
+            throw new IllegalStateException("custom audience service is not available.");
+        }
         return service;
     }
 

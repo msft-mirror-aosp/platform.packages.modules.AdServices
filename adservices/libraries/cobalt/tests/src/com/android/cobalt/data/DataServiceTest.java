@@ -22,12 +22,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 
 import com.google.cobalt.AggregateValue;
@@ -39,13 +37,9 @@ import com.google.common.collect.ImmutableListMultimap;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -55,9 +49,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @RunWith(AndroidJUnit4.class)
-public final class DataServiceTest {
+public final class DataServiceTest extends AdServicesMockitoTestCase {
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final Instant TIME = Instant.parse("2023-06-13T16:09:30.00Z");
     private static final int DAY_INDEX_1 = 19202;
@@ -81,14 +74,14 @@ public final class DataServiceTest {
     private static final int EVENT_COUNT_3 = 25;
     private static final int EVENT_COUNT_4 = 7;
 
-    private static final CountEvent EVENT_RECORD_3 =
-            createCountEvent(SYSTEM_PROFILE_1, EVENT_VECTOR_3, EVENT_COUNT_3);
-    private static final CountEvent EVENT_RECORD_3_2 =
-            createCountEvent(SYSTEM_PROFILE_2, EVENT_VECTOR_3, EVENT_COUNT_3);
-    private static final CountEvent EVENT_RECORD_4 =
-            createCountEvent(SYSTEM_PROFILE_1, EVENT_VECTOR_4, EVENT_COUNT_4);
-    private static final CountEvent EVENT_RECORD_4_2 =
-            createCountEvent(SYSTEM_PROFILE_2, EVENT_VECTOR_4, EVENT_COUNT_4);
+    private static final EventRecordAndSystemProfile EVENT_RECORD_3 =
+            createEventRecord(SYSTEM_PROFILE_1, EVENT_VECTOR_3, EVENT_COUNT_3);
+    private static final EventRecordAndSystemProfile EVENT_RECORD_3_2 =
+            createEventRecord(SYSTEM_PROFILE_2, EVENT_VECTOR_3, EVENT_COUNT_3);
+    private static final EventRecordAndSystemProfile EVENT_RECORD_4 =
+            createEventRecord(SYSTEM_PROFILE_1, EVENT_VECTOR_4, EVENT_COUNT_4);
+    private static final EventRecordAndSystemProfile EVENT_RECORD_4_2 =
+            createEventRecord(SYSTEM_PROFILE_2, EVENT_VECTOR_4, EVENT_COUNT_4);
     private static final UnencryptedObservationBatch OBSERVATION_1 =
             UnencryptedObservationBatch.newBuilder()
                     .setMetadata(
@@ -101,11 +94,8 @@ public final class DataServiceTest {
                     .build();
     private static final ImmutableList<UnencryptedObservationBatch> EMPTY_OBSERVATIONS =
             ImmutableList.of();
-    private static final ImmutableListMultimap<SystemProfile, CountEvent> EMPTY_EVENT_DATA =
-            ImmutableListMultimap.of();
-
-    @Rule(order = 0)
-    public final MockitoRule mockito = MockitoJUnit.rule();
+    private static final ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile>
+            EMPTY_EVENT_DATA = ImmutableListMultimap.of();
 
     private CobaltDatabase mCobaltDatabase;
     private DaoBuildingBlocks mDaoBuildingBlocks;
@@ -115,8 +105,8 @@ public final class DataServiceTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mCobaltDatabase = Room.inMemoryDatabaseBuilder(CONTEXT, CobaltDatabase.class).build();
+        mCobaltDatabase =
+                Room.inMemoryDatabaseBuilder(appContext.get(), CobaltDatabase.class).build();
         mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
         mTestOnlyDao = mCobaltDatabase.testOnlyDao();
         mDataService = new DataService(EXECUTOR, mCobaltDatabase);
@@ -139,10 +129,9 @@ public final class DataServiceTest {
         return TIME.minus(Duration.ofDays(days));
     }
 
-    private static CountEvent createCountEvent(
+    private static EventRecordAndSystemProfile createEventRecord(
             SystemProfile systemProfile, EventVector eventVector, int aggregateValue) {
-        return CountEvent.create(
-                SystemProfileEntity.getSystemProfileHash(systemProfile),
+        return EventRecordAndSystemProfile.create(
                 systemProfile,
                 eventVector,
                 AggregateValue.newBuilder().setIntegerValue(aggregateValue).build());
@@ -487,10 +476,10 @@ public final class DataServiceTest {
                         EVENT_COUNT_3)
                 .get();
 
-        // Expect one CountEvent to be passed to the Obseration Generator.
-        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+        // Expect one EventRecordAndSystemProfile to be passed to the Obseration Generator.
+        ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> expectedEventRecord =
                 ImmutableListMultimap.of(SYSTEM_PROFILE_1, EVENT_RECORD_3);
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1));
 
         // Generate and store the one observation for the current day.
@@ -499,7 +488,7 @@ public final class DataServiceTest {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
         verifyNoMoreInteractions(mGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
@@ -534,11 +523,12 @@ public final class DataServiceTest {
                         EVENT_COUNT_4)
                 .get();
 
-        // Expect one CountEvent with two event vectors to be passed to the observation generator.
-        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+        // Expect one EventRecordAndSystemProfile with two event vectors to be passed to the
+        // observation generator.
+        ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> expectedEventRecord =
                 ImmutableListMultimap.of(
                         SYSTEM_PROFILE_1, EVENT_RECORD_3, SYSTEM_PROFILE_1, EVENT_RECORD_4);
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1));
 
         // Generate and store the one observation for the current day.
@@ -547,7 +537,7 @@ public final class DataServiceTest {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
         verifyNoMoreInteractions(mGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
@@ -581,12 +571,12 @@ public final class DataServiceTest {
                         /* eventVectorBufferMax= */ 0,
                         EVENT_COUNT_4)
                 .get();
-        // Expect two CountEvents to be passed to the Obseration Generator.
-        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+        // Expect two EventRecordAndSystemProfiles to be passed to the Obseration Generator.
+        ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> expectedEventRecord =
                 ImmutableListMultimap.of(
                         SYSTEM_PROFILE_1, EVENT_RECORD_3,
                         SYSTEM_PROFILE_2, EVENT_RECORD_4_2);
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1, OBSERVATION_2));
 
         // Generate and store the one observation for the current day.
@@ -595,7 +585,7 @@ public final class DataServiceTest {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
         verifyNoMoreInteractions(mGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
@@ -651,8 +641,8 @@ public final class DataServiceTest {
                         EVENT_COUNT_3)
                 .get();
 
-        // Expect two CountEvents to be passed to the Obseration Generator.
-        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+        // Expect two EventRecordAndSystemProfiles to be passed to the Obseration Generator.
+        ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> expectedEventRecord =
                 ImmutableListMultimap.of(
                         SYSTEM_PROFILE_1,
                         EVENT_RECORD_3,
@@ -662,7 +652,7 @@ public final class DataServiceTest {
                         EVENT_RECORD_3_2,
                         SYSTEM_PROFILE_2,
                         EVENT_RECORD_4_2);
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1, OBSERVATION_2));
 
         // Generate and store the one observation for the current day.
@@ -671,7 +661,7 @@ public final class DataServiceTest {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
         verifyNoMoreInteractions(mGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
@@ -703,7 +693,8 @@ public final class DataServiceTest {
         // Initialize a report as up to date for sending observations a week ago.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 8));
 
-        // Expect empty CountEvent to be passed to the Obseration Generator for the days since the
+        // Expect empty EventRecordAndSystemProfile to be passed to the Obseration Generator
+        // for the days since the
         // logger was re-enabled.
         when(mGenerator.generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA))
                 .thenReturn(EMPTY_OBSERVATIONS);
@@ -750,17 +741,18 @@ public final class DataServiceTest {
                         EVENT_COUNT_3)
                 .get();
 
-        // Expect one CountEvent to be passed to the Obseration Generator for each of the two days.
-        ImmutableListMultimap<SystemProfile, CountEvent> expectedCountEvent =
+        // Expect one EventRecordAndSystemProfile to be passed to the Obseration Generator for
+        // each of the two days.
+        ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> expectedEventRecord =
                 ImmutableListMultimap.of(SYSTEM_PROFILE_1, EVENT_RECORD_3);
         when(mGenerator.generateObservations(DAY_INDEX_1 - 3, EMPTY_EVENT_DATA))
                 .thenReturn(EMPTY_OBSERVATIONS);
-        when(mGenerator.generateObservations(DAY_INDEX_1 - 2, expectedCountEvent))
+        when(mGenerator.generateObservations(DAY_INDEX_1 - 2, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1));
         when(mGenerator.generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA))
                 .thenReturn(EMPTY_OBSERVATIONS);
         // After 7 days of generating observations, there should be no event data.
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedCountEvent))
+        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_2));
 
         // Generate and store the observations for the three days of backfill.
@@ -770,9 +762,9 @@ public final class DataServiceTest {
 
         // Check that the Obseration Generator was called correctly.
         verify(mGenerator).generateObservations(DAY_INDEX_1 - 3, EMPTY_EVENT_DATA);
-        verify(mGenerator).generateObservations(DAY_INDEX_1 - 2, expectedCountEvent);
+        verify(mGenerator).generateObservations(DAY_INDEX_1 - 2, expectedEventRecord);
         verify(mGenerator).generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA);
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedCountEvent);
+        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
         verifyNoMoreInteractions(mGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())

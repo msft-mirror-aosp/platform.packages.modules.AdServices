@@ -20,7 +20,6 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.room.Database;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
@@ -54,7 +53,7 @@ public abstract class AdSelectionDebugReportingDatabase extends RoomDatabase {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
-                        Room.databaseBuilder(
+                        FileCompatUtils.roomDatabaseBuilderHelper(
                                         context,
                                         AdSelectionDebugReportingDatabase.class,
                                         DATABASE_NAME)

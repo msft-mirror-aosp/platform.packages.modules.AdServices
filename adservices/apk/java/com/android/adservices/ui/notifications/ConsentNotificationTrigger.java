@@ -59,7 +59,7 @@ public class ConsentNotificationTrigger {
      * @param context Context which is used to display {@link NotificationCompat}
      */
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
-        UiStatsLogger.logRequestedNotification(context);
+        UiStatsLogger.logRequestedNotification();
 
         boolean gaUxFeatureEnabled =
                 UxStatesManager.getInstance(context).getFlag(KEY_GA_UX_FEATURE_ENABLED);
@@ -68,7 +68,7 @@ public class ConsentNotificationTrigger {
         ConsentManager consentManager = ConsentManager.getInstance(context);
         if (!notificationManager.areNotificationsEnabled()) {
             recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
-            UiStatsLogger.logNotificationDisabled(context);
+            UiStatsLogger.logNotificationDisabled();
             return;
         }
 
@@ -83,7 +83,7 @@ public class ConsentNotificationTrigger {
         Notification notification = getNotification(context, isEuDevice, gaUxFeatureEnabled);
         notificationManager.notify(NOTIFICATION_ID, notification);
 
-        UiStatsLogger.logNotificationDisplayed(context);
+        UiStatsLogger.logNotificationDisplayed();
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
     }
 
@@ -101,7 +101,9 @@ public class ConsentNotificationTrigger {
                 case GA_UX:
                     consentManager.recordGaUxNotificationDisplayed(true);
                     break;
+                // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
+                case RVC_UX:
                     consentManager.setU18NotificationDisplayed(true);
                     break;
                 case BETA_UX:
@@ -132,7 +134,9 @@ public class ConsentNotificationTrigger {
                         notification = getGaConsentNotification(context, isEuDevice);
                     }
                     break;
+                // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
+                case RVC_UX:
                     notification = getU18ConsentNotification(context);
                     break;
                 case BETA_UX:
@@ -172,6 +176,15 @@ public class ConsentNotificationTrigger {
                 case U18_UX:
                     consentManager.recordMeasurementDefaultConsent(true);
                     consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+                    break;
+                case RVC_UX:
+                    if (isEuDevice) {
+                        consentManager.recordMeasurementDefaultConsent(false);
+                        consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
+                    } else {
+                        consentManager.recordMeasurementDefaultConsent(true);
+                        consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
+                    }
                     break;
                 case BETA_UX:
                     if (!isEuDevice) {

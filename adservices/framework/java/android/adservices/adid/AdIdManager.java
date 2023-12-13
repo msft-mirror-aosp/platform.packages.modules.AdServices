@@ -17,14 +17,16 @@ package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 
+import android.adservices.FlagsConstants;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 
 import androidx.annotation.RequiresApi;
@@ -37,8 +39,13 @@ import java.util.concurrent.Executor;
  * provides developers with a simple, standard system to continue to monetize their apps via
  * personalized ads (formerly known as interest-based ads).
  */
-@RequiresApi(Build.VERSION_CODES.S)
 public class AdIdManager {
+    // The update-api tooling pulls a reference to FlagsConstants if the key is directly used in the
+    // annotation. However, it correctly pulls in the key value from class-local constants. So
+    // reading the value of the key into a local constant which is then used within the annotation.
+    private static final String FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED =
+            FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
+
     /**
      * Service used for registering AdIdManager in the system service registry.
      *
@@ -96,16 +103,29 @@ public class AdIdManager {
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
-     * @throws SecurityException if caller is not authorized to call this API.
-     * @throws IllegalStateException if this API is not available.
-     * @throws LimitExceededException if rate limit was reached.
      */
+    @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
     @NonNull
     public void getAdId(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<AdId, Exception> callback) {
         mImpl.getAdId(executor, OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
+    }
+
+    /**
+     * Return the AdId. For use on Android R or lower.
+     *
+     * @param executor The executor to run callback.
+     * @param callback The callback that's called after adid are available or an error occurs.
+     */
+    @FlaggedApi(FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
+    @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
+    @NonNull
+    public void getAdId(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull AdServicesOutcomeReceiver<AdId, Exception> callback) {
+        mImpl.getAdId(executor, callback);
     }
 
     /**

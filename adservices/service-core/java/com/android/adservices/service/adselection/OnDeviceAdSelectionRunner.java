@@ -93,7 +93,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
-            final int callerUid) {
+            final int callerUid,
+            boolean shouldUseUnifiedTables) {
         super(
                 context,
                 customAudienceDao,
@@ -109,7 +110,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 frequencyCapAdDataValidator,
                 adCounterHistogramUpdater,
                 debugReporting,
-                callerUid);
+                callerUid,
+                shouldUseUnifiedTables);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
@@ -187,7 +189,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
-            @NonNull final DebugReporting debugReporting) {
+            @NonNull final DebugReporting debugReporting,
+            boolean shouldUseUnifiedTables) {
         super(
                 context,
                 customAudienceDao,
@@ -205,7 +208,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 frequencyCapAdDataValidator,
                 adCounterHistogramUpdater,
                 adSelectionExecutionLogger,
-                debugReporting);
+                debugReporting,
+                shouldUseUnifiedTables);
 
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -343,7 +347,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
         sLogger.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
 
-        if (validBiddingOutcomes.isEmpty() && adSelectionConfig.getBuyerContextualAds().isEmpty()) {
+        if (validBiddingOutcomes.isEmpty()
+                && adSelectionConfig.getBuyerSignedContextualAds().isEmpty()) {
             sLogger.w("Received empty list of successful bidding outcomes and contextual ads");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING);
         }

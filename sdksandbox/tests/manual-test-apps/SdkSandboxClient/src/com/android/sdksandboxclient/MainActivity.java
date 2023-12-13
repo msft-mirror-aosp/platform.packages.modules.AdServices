@@ -140,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mDumpSandboxButton;
     private Button mNewFullScreenAd;
     private Button mNewAppWebviewButton;
+    private Button mNewAppVideoButton;
     private Button mReleaseAllSurfaceControlViewHostButton;
 
     private SurfaceView mInScrollBannerView;
@@ -207,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
         mDumpSandboxButton = findViewById(R.id.dump_sandbox_button);
         mNewAppWebviewButton = findViewById(R.id.new_app_webview_button);
+        mNewAppVideoButton = findViewById(R.id.new_app_video_button);
 
         configureFeatureFlagSection();
 
@@ -226,8 +228,33 @@ public class MainActivity extends AppCompatActivity {
         registerSdkToSdkButton();
         registerDumpSandboxButton();
         registerNewAppWebviewButton();
+        registerNewAppVideoButton();
 
         refreshLoadSdksButtonText();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        /*
+            Resume video when app is active.
+            TODO (b/314953975) Should be handled on SDK side:
+                1) (after adding Client App state API): Resume when app is foreground
+                2) (after migration to ui-lib Visibility): Resume when PlayerView is visible
+        */
+        withSdkApiIfLoaded(ISdkApi::notifyMainActivityStarted);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        /*
+            Pause video when app is not active.
+            TODO (b/314953975) Should be handled on SDK side:
+                1) (after adding Client App state API): Pause when app is background
+                2) (after migration to ui-lib Visibility): Pause when PlayerView is not visible
+        */
+        withSdkApiIfLoaded(ISdkApi::notifyMainActivityStopped);
     }
 
     private void registerResetPreferencesButton() {
@@ -320,6 +347,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                         mInScrollBannerView.setVisibility(View.INVISIBLE);
                         mBottomBannerView.setVisibility(View.INVISIBLE);
+                        // TODO (b/314953975) Should be handled in Session.close()
+                        withSdkApiIfLoaded(ISdkApi::notifyMainActivityStopped);
                         logAndDisplayMessage(INFO, "All SurfaceControlViewHost Released.");
                     }
                 });
@@ -359,32 +388,24 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     Bundle params = new Bundle();
-                    OutcomeReceiver<SandboxedSdk, LoadSdkException> mediateeReceiver =
-                            new OutcomeReceiver<>() {
-                                @Override
-                                public void onResult(SandboxedSdk sandboxedSdk) {
-                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
-                                    mSdksLoaded = true;
-                                    refreshLoadSdksButtonText();
-                                    configureFeatureFlagSection();
-                                }
-
-                                @Override
-                                public void onError(LoadSdkException error) {
-                                    logAndDisplayMessage(
-                                            ERROR, "Failed to load all SDKs: %s", error);
-                                }
-                            };
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
                             new OutcomeReceiver<>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     mSandboxedSdk = sandboxedSdk;
-                                    mSdkSandboxManager.loadSdk(
-                                            MEDIATEE_SDK_NAME,
-                                            params,
-                                            Runnable::run,
-                                            mediateeReceiver);
+                                    IBinder binder = mSandboxedSdk.getInterface();
+                                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                                    try {
+                                        sdkApi.loadSdkBySdk(MEDIATEE_SDK_NAME);
+                                    } catch (Exception error) {
+                                        logAndDisplayMessage(
+                                                ERROR, "Failed to load all SDKs: %s", error);
+                                        return;
+                                    }
+                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
+                                    mSdksLoaded = true;
+                                    refreshLoadSdksButtonText();
+                                    configureFeatureFlagSection();
                                 }
 
                                 @Override
@@ -887,6 +908,19 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    private void registerNewAppVideoButton() {
+        mNewAppVideoButton.setOnClickListener(
+                v -> {
+                    final BannerOptions options =
+                            BannerOptions.fromSharedPreferences(mSharedPreferences);
+
+                    Intent intent = new Intent(this, AppVideoView.class);
+                    intent.putExtra(AppVideoView.VIDEO_URL_KEY, options.getVideoUrl());
+
+                    startActivity(intent);
+                });
+    }
+
     private Bundle getRequestSurfacePackageParams(String commType, SurfaceView surfaceView) {
         Bundle params = new Bundle();
         params.putInt(EXTRA_WIDTH_IN_PIXELS, surfaceView.getWidth());
@@ -1017,5 +1051,26 @@ public class MainActivity extends AppCompatActivity {
                         .build());
         StrictMode.setVmPolicy(
                 new StrictMode.VmPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build());
+    }
+
+    private interface ConsumerWithException<T> {
+        void accept(T t) throws Exception;
+    }
+
+    private void withSdkApiIfLoaded(ConsumerWithException<ISdkApi> sdkApiConsumer) {
+        if (!mSdksLoaded) {
+            return;
+        }
+        final IBinder binder = mSandboxedSdk.getInterface();
+        final ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+        if (sdkApi == null) {
+            logAndDisplayMessage(ERROR, "Failed to get SdkApi: Invalid SDK object");
+            return;
+        }
+        try {
+            sdkApiConsumer.accept(sdkApi);
+        } catch (Exception error) {
+            logAndDisplayMessage(ERROR, "Exception while calling SdkApi: %s", error);
+        }
     }
 }

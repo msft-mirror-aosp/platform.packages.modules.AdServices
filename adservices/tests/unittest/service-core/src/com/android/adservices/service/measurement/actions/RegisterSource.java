@@ -54,7 +54,7 @@ public final class RegisterSource implements Action {
                         TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY,
                         TestFormatJsonMapping.ATTRIBUTION_SOURCE_DEFAULT);
 
-        mPublisher = regParamsJson.optString(TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY);
+        mPublisher = regParamsJson.optString(TestFormatJsonMapping.CONTEXT_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
                 new RegistrationRequest.Builder(

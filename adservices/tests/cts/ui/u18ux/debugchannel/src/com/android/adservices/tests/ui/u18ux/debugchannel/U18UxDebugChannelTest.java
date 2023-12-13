@@ -22,8 +22,10 @@ import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -31,36 +33,47 @@ import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** CTS test for U18 users */
+@RunWith(AndroidJUnit4.class)
+@ScreenRecordRule.ScreenRecord
 public class U18UxDebugChannelTest {
 
-    private AdServicesCommonManager mCommonManager;
+    private static AdServicesCommonManager sCommonManager;
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-
     private UiDevice mDevice;
+    private String mTestName;
     private OutcomeReceiver<Boolean, Exception> mCallback;
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
+
+    @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
+        UiUtils.resetAdServicesConsentData(sContext);
+
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         UiUtils.enableNotificationPermission();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
 
-        mCommonManager = AdServicesCommonManager.get(sContext);
+        sCommonManager = AdServicesCommonManager.get(sContext);
 
         UiUtils.enableConsentDebugMode();
         mCallback =
@@ -75,6 +88,7 @@ public class U18UxDebugChannelTest {
                         Assert.fail();
                     }
                 };
+
         mDevice.pressHome();
     }
 
@@ -82,27 +96,32 @@ public class U18UxDebugChannelTest {
     public void tearDown() throws Exception {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
+        UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         mDevice.pressHome();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @Test
     public void testEntrypointDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.enableU18();
         UiUtils.enableGa();
-        boolean entryPointEnabled = false;
-        boolean isU18Account = true, isAdult = true;
-        boolean adIdEnabled = false;
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
-                        .setAdIdEnabled(adIdEnabled)
-                        .setAdultAccount(isAdult)
-                        .setU18Account(isU18Account)
-                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(true)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(false)
                         .setPrivacySandboxUiRequest(false)
                         .build();
 
-        mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
+        sCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
         AdservicesWorkflows.verifyNotification(
                 sContext,
@@ -114,21 +133,23 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18AdultBothTrueAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.enableU18();
         UiUtils.enableGa();
-        boolean entryPointEnabled = true;
-        boolean isU18Account = true, isAdult = true;
-        boolean adIdEnabled = true;
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
-                        .setAdIdEnabled(adIdEnabled)
-                        .setAdultAccount(isAdult)
-                        .setU18Account(isU18Account)
-                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(true)
                         .setPrivacySandboxUiRequest(false)
                         .build();
 
-        mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
+        sCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
         AdservicesWorkflows.verifyNotification(
                 sContext,
@@ -140,21 +161,23 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18TrueAdultFalseAdIdEnabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.enableU18();
         UiUtils.enableGa();
-        boolean entryPointEnabled = true;
-        boolean isU18Account = true, isAdult = false;
-        boolean adIdEnabled = true;
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
-                        .setAdIdEnabled(adIdEnabled)
-                        .setAdultAccount(isAdult)
-                        .setU18Account(isU18Account)
-                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(false)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(true)
                         .setPrivacySandboxUiRequest(false)
                         .build();
 
-        mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
+        sCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
         AdservicesWorkflows.verifyNotification(
                 sContext,
@@ -166,21 +189,23 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18AdultBothTrueAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.enableU18();
         UiUtils.enableGa();
-        boolean entryPointEnabled = true;
-        boolean isU18Account = true, isAdult = true;
-        boolean adIdEnabled = false;
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
-                        .setAdIdEnabled(adIdEnabled)
-                        .setAdultAccount(isAdult)
-                        .setU18Account(isU18Account)
-                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(true)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(true)
                         .setPrivacySandboxUiRequest(false)
                         .build();
 
-        mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
+        sCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
         AdservicesWorkflows.verifyNotification(
                 sContext,
@@ -192,21 +217,23 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18TrueAdultFalseAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.enableU18();
         UiUtils.enableGa();
-        boolean entryPointEnabled = true;
-        boolean isU18Account = true, isAdult = false;
-        boolean adIdEnabled = false;
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
-                        .setAdIdEnabled(adIdEnabled)
-                        .setAdultAccount(isAdult)
-                        .setU18Account(isU18Account)
-                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(false)
+                        .setU18Account(true)
+                        .setPrivacySandboxUiEnabled(true)
                         .setPrivacySandboxUiRequest(false)
                         .build();
 
-        mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
+        sCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
         AdservicesWorkflows.verifyNotification(
                 sContext,
@@ -218,27 +245,25 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18AdultBothFalseAdIdDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         UiUtils.enableU18();
         UiUtils.enableGa();
-        boolean entryPointEnabled = true;
-        boolean isU18Account = false, isAdult = false;
-        boolean adIdEnabled = false;
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
-                        .setAdIdEnabled(adIdEnabled)
-                        .setAdultAccount(isAdult)
-                        .setU18Account(isU18Account)
-                        .setPrivacySandboxUiEnabled(entryPointEnabled)
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(false)
+                        .setU18Account(false)
+                        .setPrivacySandboxUiEnabled(true)
                         .setPrivacySandboxUiRequest(false)
                         .build();
 
-        mCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
+        sCommonManager.enableAdServices(adServicesStates, CALLBACK_EXECUTOR, mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext,
-                mDevice, /* isDisplayed */
-                false, /* isEuTest */
-                false,
-                UiConstants.UX.U18_UX);
+                sContext, mDevice, false, false, UiConstants.UX.U18_UX);
     }
 }

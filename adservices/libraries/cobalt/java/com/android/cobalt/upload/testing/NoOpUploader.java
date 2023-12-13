@@ -21,23 +21,41 @@ import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
 import android.annotation.NonNull;
 
 import com.android.cobalt.upload.Uploader;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.cobalt.EncryptedMessage;
 import com.google.cobalt.Envelope;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-/** An uploader that doesn't upload, just tracks EncryptedMessages it receives. */
+/**
+ * An uploader that doesn't upload, just tracks EncryptedMessages it receives for the sake of
+ * testing.
+ */
+@VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
 public final class NoOpUploader implements Uploader {
     private final ImmutableList.Builder<EncryptedMessage> mEncryptedMessages;
 
+    /* The number of  times uploadDone was called. */
+    private int mUploadDoneCount;
+
     public NoOpUploader() {
         mEncryptedMessages = ImmutableList.builder();
+        mUploadDoneCount = 0;
     }
 
     /** Store the provided encrypted message. */
+    @Override
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public void upload(@NonNull EncryptedMessage encryptedMessage) {
         mEncryptedMessages.add(encryptedMessage);
+    }
+
+    /** Record the method was called. */
+    @Override
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public void uploadDone() {
+        ++mUploadDoneCount;
     }
 
     /**
@@ -57,5 +75,9 @@ public final class NoOpUploader implements Uploader {
                             }
                         })
                 .collect(toImmutableList());
+    }
+
+    public int getUploadDoneCount() {
+        return mUploadDoneCount;
     }
 }

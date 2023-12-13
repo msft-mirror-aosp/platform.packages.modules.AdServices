@@ -37,6 +37,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -45,24 +46,30 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.List;
@@ -76,6 +83,34 @@ public class MeasurementServiceTest {
     @Mock EnrollmentDao mMockEnrollmentDao;
     @Mock AppImportanceFilter mMockAppImportanceFilter;
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AggregateReportingJobService.class)
+                    .spyStatic(AggregateFallbackReportingJobService.class)
+                    .spyStatic(AppImportanceFilter.class)
+                    .spyStatic(AttributionJobService.class)
+                    .spyStatic(AttributionFallbackJobService.class)
+                    .spyStatic(ConsentManager.class)
+                    .spyStatic(UxStatesManager.class)
+                    .spyStatic(DevContextFilter.class)
+                    .spyStatic(EnrollmentDao.class)
+                    .spyStatic(EventReportingJobService.class)
+                    .spyStatic(PackageChangedReceiver.class)
+                    .spyStatic(EventFallbackReportingJobService.class)
+                    .spyStatic(DeleteExpiredJobService.class)
+                    .spyStatic(DeleteUninstalledJobService.class)
+                    .spyStatic(MddJobService.class)
+                    .spyStatic(EncryptionKeyJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(MeasurementImpl.class)
+                    .spyStatic(AsyncRegistrationQueueJobService.class)
+                    .spyStatic(AsyncRegistrationFallbackJobService.class)
+                    .spyStatic(VerboseDebugReportingFallbackJobService.class)
+                    .spyStatic(DebugReportingFallbackJobService.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
+
     private static final EnrollmentData ENROLLMENT =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E1")
@@ -85,7 +120,7 @@ public class MeasurementServiceTest {
                     .setAttributionTriggerRegistrationUrl(List.of("https://test.com/trigger"))
                     .setAttributionReportingUrl(List.of("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(List.of("https://test.com"))
-                    .setEncryptionKeyUrl(List.of("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     /** Setup for tests */
@@ -96,70 +131,12 @@ public class MeasurementServiceTest {
 
     /** Test kill switch off with consent given */
     @Test
-    public void testBindableMeasurementService_killSwitchOff_gaUxDisabled_consentGiven()
-            throws Exception {
-        runWithMocks(
-                /* killSwitchOff */ false,
-                /* consentGiven */ true,
-                /* isGaUxEnabled */ false,
-                () -> {
-                    // Execute
-                    final IBinder binder = onCreateAndOnBindService();
-
-                    // Verification
-                    assertNotNull(binder);
-                    verify(mMockConsentManager, times(1)).getConsent();
-                    ExtendedMockito.verify(
-                            () -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-                    assertJobScheduled(/* timesCalled */ 1);
-                });
-    }
-
-    /** Test kill switch off with consent revoked */
-    @Test
-    public void testBindableMeasurementService_killSwitchOff_gaUxDisabled_consentRevoked()
-            throws Exception {
-        runWithMocks(
-                /* killSwitchOff */ false,
-                /* consentRevoked */ false,
-                /* isGaUxEnabled */ false,
-                () -> {
-                    // Execute
-                    final IBinder binder = onCreateAndOnBindService();
-
-                    // Verification
-                    assertNotNull(binder);
-                    verify(mMockConsentManager, times(1)).getConsent();
-                    assertJobScheduled(/* timesCalled */ 0);
-                });
-    }
-
-    /** Test kill switch on */
-    @Test
-    public void testBindableMeasurementService_killSwitchOn_gaUxDisabled() throws Exception {
-        runWithMocks(
-                /* killSwitchOn */ true,
-                /* consentGiven */ true,
-                /* isGaUxEnabled */ false,
-                () -> {
-                    // Execute
-                    final IBinder binder = onCreateAndOnBindService();
-
-                    // Verification
-                    assertNull(binder);
-                    verify(mMockConsentManager, never()).getConsent();
-                    assertJobScheduled(/* timesCalled */ 0);
-                });
-    }
-
-    /** Test kill switch off with consent given */
-    @Test
     public void testBindableMeasurementService_killSwitchOff_gaUxEnabled_consentGiven()
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
+                /* consentNotifiedState */
                 /* consentGiven */ true,
-                /* isGaUxEnabled */ true,
                 () -> {
                     // Execute
                     final IBinder binder = onCreateAndOnBindService();
@@ -181,8 +158,8 @@ public class MeasurementServiceTest {
             throws Exception {
         runWithMocks(
                 /* killSwitchOff */ false,
+                /* consentNotifiedState */
                 /* consentRevoked */ false,
-                /* isGaUxEnabled */ true,
                 () -> {
                     // Execute
                     final IBinder binder = onCreateAndOnBindService();
@@ -202,7 +179,6 @@ public class MeasurementServiceTest {
         runWithMocks(
                 /* killSwitchOn */ true,
                 /* consentGiven */ true,
-                /* isGaUxEnabled */ false,
                 () -> {
                     // Execute
                     final IBinder binder = onCreateAndOnBindService();
@@ -229,101 +205,73 @@ public class MeasurementServiceTest {
     private void runWithMocks(
             boolean killSwitchStatus,
             boolean consentStatus,
-            boolean isGaUxEnabled,
             TestUtils.RunnableWithThrow execute)
             throws Exception {
-        // Start a mockitoSession to mock static method
-        final MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AggregateReportingJobService.class)
-                        .spyStatic(AggregateFallbackReportingJobService.class)
-                        .spyStatic(AppImportanceFilter.class)
-                        .spyStatic(AttributionJobService.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(DevContextFilter.class)
-                        .spyStatic(EnrollmentDao.class)
-                        .spyStatic(EventReportingJobService.class)
-                        .spyStatic(PackageChangedReceiver.class)
-                        .spyStatic(EventFallbackReportingJobService.class)
-                        .spyStatic(DeleteExpiredJobService.class)
-                        .spyStatic(DeleteUninstalledJobService.class)
-                        .spyStatic(MddJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementImpl.class)
-                        .spyStatic(AsyncRegistrationQueueJobService.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
-            doReturn(killSwitchStatus).when(mMockFlags).getMeasurementKillSwitch();
-            doReturn(isGaUxEnabled).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(killSwitchStatus).when(mMockFlags).getMeasurementKillSwitch();
 
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            ExtendedMockito.doReturn(mMockConsentManager)
-                    .when(() -> ConsentManager.getInstance(any()));
+        ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance(any()));
 
-            ExtendedMockito.doReturn(mDevContextFilter)
-                    .when(() -> DevContextFilter.create(any(Context.class)));
+        ExtendedMockito.doReturn(mDevContextFilter)
+                .when(() -> DevContextFilter.create(any(Context.class)));
 
-            final AdServicesApiConsent mockConsent = mock(AdServicesApiConsent.class);
-            doReturn(consentStatus).when(mockConsent).isGiven();
+        final AdServicesApiConsent mockConsent = mock(AdServicesApiConsent.class);
+        doReturn(consentStatus).when(mockConsent).isGiven();
 
-            if (isGaUxEnabled) {
-                doReturn(mockConsent)
-                        .when(mMockConsentManager)
-                        .getConsent(eq(AdServicesApiType.MEASUREMENTS));
-            } else {
-                doReturn(mockConsent).when(mMockConsentManager).getConsent();
-            }
+        doReturn(mockConsent)
+                .when(mMockConsentManager)
+                .getConsent(eq(AdServicesApiType.MEASUREMENTS));
 
-            ExtendedMockito.doReturn(mMockEnrollmentDao)
-                    .when(() -> EnrollmentDao.getInstance(any()));
-            doReturn(ENROLLMENT)
-                    .when(mMockEnrollmentDao)
-                    .getEnrollmentDataFromMeasurementUrl(any());
+        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance(any()));
+        doReturn(ENROLLMENT).when(mMockEnrollmentDao).getEnrollmentDataFromMeasurementUrl(any());
+        ExtendedMockito.doReturn(mMockMeasurementImpl)
+                .when(() -> MeasurementImpl.getInstance(any()));
 
-            ExtendedMockito.doReturn(mMockMeasurementImpl)
-                    .when(() -> MeasurementImpl.getInstance(any()));
+        ExtendedMockito.doReturn(mMockAppImportanceFilter)
+                .when(() -> AppImportanceFilter.create(any(), anyInt(), any()));
 
-            ExtendedMockito.doReturn(mMockAppImportanceFilter)
-                    .when(() -> AppImportanceFilter.create(any(), anyInt(), any()));
-
-            ExtendedMockito.doReturn(true)
-                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-            ExtendedMockito.doNothing()
-                    .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
-            ExtendedMockito.doNothing()
-                    .when(
-                            () ->
-                                    AggregateFallbackReportingJobService.scheduleIfNeeded(
-                                            any(), anyBoolean()));
-            ExtendedMockito.doNothing()
-                    .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
-
-            ExtendedMockito.doNothing()
-                    .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
-            ExtendedMockito.doNothing()
-                    .when(
-                            () ->
-                                    EventFallbackReportingJobService.scheduleIfNeeded(
-                                            any(), anyBoolean()));
-            ExtendedMockito.doNothing()
-                    .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
-            ExtendedMockito.doNothing()
-                    .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
-            ExtendedMockito.doReturn(true)
-                    .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
-            ExtendedMockito.doNothing()
-                    .when(
-                            () ->
-                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                                            any(), anyBoolean()));
-
-            // Execute
-            execute.run();
-        } finally {
-            session.finishMocking();
-        }
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
+        ExtendedMockito.doNothing()
+                .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> EventFallbackReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doReturn(true)
+                .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doReturn(true)
+                .when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
+        // Execute
+        execute.run();
     }
 
     private void assertJobScheduled(int timesCalled) {
@@ -335,6 +283,9 @@ public class MeasurementServiceTest {
                 times(timesCalled));
         ExtendedMockito.verify(
                 () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
         ExtendedMockito.verify(
                 () -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()),
@@ -351,7 +302,19 @@ public class MeasurementServiceTest {
         ExtendedMockito.verify(
                 () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
         ExtendedMockito.verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> VerboseDebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
+                times(timesCalled));
+        ExtendedMockito.verify(
+                () -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
     }
 }

@@ -15,9 +15,10 @@
  */
 package com.android.adservices.service.measurement.aggregation;
 
+import android.content.Context;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.common.AllowLists;
@@ -41,9 +42,9 @@ public final class AggregateEncryptionKeyManager {
     private final String mAggregationCoordinatorOriginList;
     private final String mAggregationCoordinatorPath;
 
-    public AggregateEncryptionKeyManager(DatastoreManager datastoreManager) {
+    public AggregateEncryptionKeyManager(DatastoreManager datastoreManager, Context context) {
         mDatastoreManager = datastoreManager;
-        mAggregateEncryptionKeyFetcher = new AggregateEncryptionKeyFetcher();
+        mAggregateEncryptionKeyFetcher = new AggregateEncryptionKeyFetcher(context);
         mClock = Clock.systemUTC();
         mAggregationCoordinatorOriginList =
                 AdServicesConfig.getMeasurementAggregationCoordinatorOriginList();
@@ -71,7 +72,8 @@ public final class AggregateEncryptionKeyManager {
     public List<AggregateEncryptionKey> getAggregateEncryptionKeys(
             Uri coordinatorOrigin, int numKeys) {
         if (!isAllowlisted(mAggregationCoordinatorOriginList, coordinatorOrigin.toString())) {
-            LogUtil.w("Fetching aggregate encryption keys failed, invalid url.");
+            LoggerFactory.getMeasurementLogger()
+                    .w("Fetching aggregate encryption keys failed, invalid url.");
             return Collections.emptyList();
         }
         Uri aggregationCoordinatorUrl = createURL(coordinatorOrigin, mAggregationCoordinatorPath);
@@ -105,7 +107,8 @@ public final class AggregateEncryptionKeyManager {
                 mDatastoreManager.runInTransaction((dao) ->
                         dao.deleteExpiredAggregateEncryptionKeys(eventTime));
             } else {
-                LogUtil.d("Fetching aggregate encryption keys over the network failed.");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Fetching aggregate encryption keys over the network failed.");
             }
         }
 

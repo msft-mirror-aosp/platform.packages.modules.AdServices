@@ -149,6 +149,13 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logMeasurementClickVerificationStats(
+            MeasurementClickVerificationStats measurementClickVerificationStats) {
+        mStatsdAdServicesLogger.logMeasurementClickVerificationStats(
+                measurementClickVerificationStats);
+    }
+
+    @Override
     public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
         mStatsdAdServicesLogger.logEnrollmentDataStats(mType, mIsSuccessful, mBuildId);
     }
@@ -176,5 +183,18 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
                 mEnrollmentRecordCountInTable,
                 mQueryParameter,
                 mErrorCause);
+    }
+
+    /** Logs encryption key fetch stats. */
+    @Override
+    public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {
+        mStatsdAdServicesLogger.logEncryptionKeyFetchedStats(stats);
+    }
+
+    /** Logs encryption key datastore transaction ended stats. */
+    @Override
+    public void logEncryptionKeyDbTransactionEndedStats(
+            AdServicesEncryptionKeyDbTransactionEndedStats stats) {
+        mStatsdAdServicesLogger.logEncryptionKeyDbTransactionEndedStats(stats);
     }
 }

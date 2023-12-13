@@ -22,16 +22,21 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEvent;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.internal.annotations.VisibleForTesting;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,33 +51,44 @@ import java.util.stream.Collectors;
 public class UpdateProcessingOrchestrator {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
+    @VisibleForTesting
+    public static final String COLLISION_ERROR =
+            "Updates JSON attempts to perform multiple operations on a single key";
+
     @NonNull private final ProtectedSignalsDao mProtectedSignalsDao;
     @NonNull private final UpdateProcessorSelector mUpdateProcessorSelector;
     @NonNull private final UpdateEncoderEventHandler mUpdateEncoderEventHandler;
+    @NonNull private final SignalEvictionController mSignalEvictionController;
 
     public UpdateProcessingOrchestrator(
             @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull UpdateProcessorSelector updateProcessorSelector,
-            @NonNull UpdateEncoderEventHandler updateEncoderEventHandler) {
+            @NonNull UpdateEncoderEventHandler updateEncoderEventHandler,
+            @NonNull SignalEvictionController signalEvictionController) {
         Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(updateProcessorSelector);
         Objects.requireNonNull(updateEncoderEventHandler);
+        Objects.requireNonNull(signalEvictionController);
         mProtectedSignalsDao = protectedSignalsDao;
         mUpdateProcessorSelector = updateProcessorSelector;
         mUpdateEncoderEventHandler = updateEncoderEventHandler;
+        mSignalEvictionController = signalEvictionController;
     }
 
-    /**
-     * Takes a signal update JSON and adds/removes signals based on it.
-     *
-     * @param json The JSON to process.
-     */
+    /** Takes a signal update JSON and adds/removes signals based on it. */
     public void processUpdates(
-            AdTechIdentifier adtech, String packageName, Instant creationTime, JSONObject json) {
+            AdTechIdentifier adtech,
+            String packageName,
+            Instant creationTime,
+            JSONObject json,
+            DevContext devContext) {
         sLogger.v("Processing signal updates for " + adtech);
         try {
             // Load the current signals, organizing them into a map for quick access
-            Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap = getCurrentSignals(adtech);
+            List<DBProtectedSignal> currentSignalsList =
+                    mProtectedSignalsDao.getSignalsByBuyer(adtech);
+            Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap =
+                    getCurrentSignalsMap(currentSignalsList);
 
             /*
              * Contains the following:
@@ -89,24 +105,56 @@ public class UpdateProcessingOrchestrator {
              */
             UpdateOutput combinedUpdates = runProcessors(json, currentSignalsMap);
 
+            List<DBProtectedSignal> updatedSignals =
+                    updateProtectedSignalInMemory(
+                            adtech, packageName, creationTime, currentSignalsList, combinedUpdates);
+
             sLogger.v(
                     "Finished parsing JSON %d signals to add, and %d signals to remove",
                     combinedUpdates.getToAdd().size(), combinedUpdates.getToRemove().size());
 
-            writeChanges(adtech, packageName, creationTime, combinedUpdates);
+            mSignalEvictionController.evict(adtech, updatedSignals, combinedUpdates);
+
+            writeChanges(adtech, combinedUpdates, devContext);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Couldn't unpack signal updates JSON", e);
         }
     }
 
+    private List<DBProtectedSignal> updateProtectedSignalInMemory(
+            AdTechIdentifier adTech,
+            String packageName,
+            Instant creationTime,
+            List<DBProtectedSignal> currentSignalList,
+            UpdateOutput combinedOutput) {
+        List<DBProtectedSignal> updatedSignalList = new ArrayList<>();
+
+        for (DBProtectedSignal signal : currentSignalList) {
+            if (!combinedOutput.getToRemove().contains(signal)) {
+                updatedSignalList.add(signal);
+            }
+        }
+
+        updatedSignalList.addAll(
+                combinedOutput.getToAdd().stream()
+                        .map(
+                                builder ->
+                                        builder.setBuyer(adTech)
+                                                .setPackageName(packageName)
+                                                .setCreationTime(creationTime)
+                                                .build())
+                        .collect(Collectors.toList()));
+        return updatedSignalList;
+    }
+
     /**
-     * @param adtech The adtech to retrieve signals for.
+     * @param currentSignalsList The current signal list for a buyer
      * @return A map from keys to the set of all signals associated with that key for the given
      *     buyer.
      */
-    private Map<ByteBuffer, Set<DBProtectedSignal>> getCurrentSignals(AdTechIdentifier adtech) {
+    private Map<ByteBuffer, Set<DBProtectedSignal>> getCurrentSignalsMap(
+            List<DBProtectedSignal> currentSignalsList) {
         Map<ByteBuffer, Set<DBProtectedSignal>> toReturn = new HashMap<>();
-        List<DBProtectedSignal> currentSignalsList = mProtectedSignalsDao.getSignalsByBuyer(adtech);
         for (DBProtectedSignal signal : currentSignalsList) {
             ByteBuffer wrappedKey = ByteBuffer.wrap(signal.getKey());
             if (!toReturn.containsKey(wrappedKey)) {
@@ -127,16 +175,14 @@ public class UpdateProcessingOrchestrator {
         for (Iterator<String> iter = json.keys(); iter.hasNext(); ) {
             String key = iter.next();
             sLogger.v("Running update processor %s", key);
-            JSONObject value = json.getJSONObject(key);
             UpdateOutput output =
                     mUpdateProcessorSelector
                             .getUpdateProcessor(key)
-                            .processUpdates(value, currentSignalsMap);
+                            .processUpdates(json.get(key), currentSignalsMap);
             combinedUpdates.getToAdd().addAll(output.getToAdd());
             combinedUpdates.getToRemove().addAll(output.getToRemove());
             if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {
-                throw new IllegalArgumentException(
-                        "Updates JSON attempts to perform multiple operations on a single key");
+                throw new IllegalArgumentException(COLLISION_ERROR);
             }
             combinedUpdates.getKeysTouched().addAll(output.getKeysTouched());
 
@@ -149,27 +195,20 @@ public class UpdateProcessingOrchestrator {
     }
 
     private void writeChanges(
-            AdTechIdentifier adtech,
-            String packageName,
-            Instant creationTime,
-            UpdateOutput combinedUpdates) {
+            AdTechIdentifier adTech, UpdateOutput combinedUpdates, DevContext devContext) {
         /* Modify the DB based on the output of the update processors. Might be worth skipping
          * this is both signalsToAdd and signalsToDelete are empty.
          */
         mProtectedSignalsDao.insertAndDelete(
                 combinedUpdates.getToAdd().stream()
-                        .map(
-                                builder ->
-                                        builder.setBuyer(adtech)
-                                                .setPackageName(packageName)
-                                                .setCreationTime(creationTime)
-                                                .build())
+                        .map(DBProtectedSignal.Builder::build)
                         .collect(Collectors.toList()),
                 combinedUpdates.getToRemove());
 
         // There is a valid possibility where there is no update for encoder
         if (combinedUpdates.getUpdateEncoderEvent() != null) {
-            mUpdateEncoderEventHandler.handle(adtech, combinedUpdates.getUpdateEncoderEvent());
+            mUpdateEncoderEventHandler.handle(
+                    adTech, combinedUpdates.getUpdateEncoderEvent(), devContext);
         }
     }
 }

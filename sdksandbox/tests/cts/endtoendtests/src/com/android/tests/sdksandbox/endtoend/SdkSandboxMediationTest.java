@@ -49,7 +49,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxMediationTest {
+public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     private static final String MEDIATOR_SDK_NAME =
             "com.android.sdksandbox.cts.provider.mediationtest";

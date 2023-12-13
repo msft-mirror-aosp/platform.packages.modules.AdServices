@@ -39,6 +39,7 @@ public class ReportInteractionInputTest {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String CALLER_SDK_NAME = "sdk.package.name";
     private String mInteractionData;
     private static final int DESTINATIONS =
             FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER;
@@ -63,6 +64,7 @@ public class ReportInteractionInputTest {
                         .setReportingDestinations(DESTINATIONS)
                         .setInputEvent(CLICK_EVENT)
                         .setAdId(AD_ID)
+                        .setCallerSdkName(CALLER_SDK_NAME)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -79,6 +81,7 @@ public class ReportInteractionInputTest {
         // KeyEventTest tests equality using the string representation of its keys
         assertEquals(CLICK_EVENT.toString(), fromParcel.getInputEvent().toString());
         assertEquals(AD_ID, fromParcel.getAdId());
+        assertEquals(CALLER_SDK_NAME, fromParcel.getCallerSdkName());
     }
 
     @Test
@@ -92,6 +95,7 @@ public class ReportInteractionInputTest {
                         .setReportingDestinations(DESTINATIONS)
                         .setInputEvent(null)
                         .setAdId(AD_ID)
+                        .setCallerSdkName(CALLER_SDK_NAME)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -107,6 +111,7 @@ public class ReportInteractionInputTest {
         assertEquals(DESTINATIONS, fromParcel.getReportingDestinations());
         assertThat(fromParcel.getInputEvent()).isNull();
         assertEquals(AD_ID, fromParcel.getAdId());
+        assertEquals(CALLER_SDK_NAME, fromParcel.getCallerSdkName());
     }
 
     @Test
@@ -120,6 +125,7 @@ public class ReportInteractionInputTest {
                         .setReportingDestinations(DESTINATIONS)
                         .setInputEvent(CLICK_EVENT)
                         .setAdId(null)
+                        .setCallerSdkName(CALLER_SDK_NAME)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -136,6 +142,38 @@ public class ReportInteractionInputTest {
         // KeyEventTest tests equality using the string representation of its keys
         assertEquals(CLICK_EVENT.toString(), fromParcel.getInputEvent().toString());
         assertThat(fromParcel.getAdId()).isNull();
+        assertEquals(CALLER_SDK_NAME, fromParcel.getCallerSdkName());
+    }
+
+    @Test
+    public void testWriteToParcel_nullCallerSdkName() throws Exception {
+        ReportInteractionInput input =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setInteractionKey(INTERACTION_KEY)
+                        .setInteractionData(mInteractionData)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setReportingDestinations(DESTINATIONS)
+                        .setInputEvent(CLICK_EVENT)
+                        .setAdId(AD_ID)
+                        .setCallerSdkName(null)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        input.writeToParcel(p, 0);
+        p.setDataPosition(0);
+
+        ReportInteractionInput fromParcel = ReportInteractionInput.CREATOR.createFromParcel(p);
+
+        assertEquals(AD_SELECTION_ID, fromParcel.getAdSelectionId());
+        assertEquals(INTERACTION_KEY, fromParcel.getInteractionKey());
+        assertEquals(mInteractionData, fromParcel.getInteractionData());
+        assertEquals(CALLER_PACKAGE_NAME, fromParcel.getCallerPackageName());
+        assertEquals(DESTINATIONS, fromParcel.getReportingDestinations());
+        // KeyEventTest tests equality using the string representation of its keys
+        assertEquals(CLICK_EVENT.toString(), fromParcel.getInputEvent().toString());
+        assertEquals(AD_ID, fromParcel.getAdId());
+        assertThat(fromParcel.getCallerSdkName()).isNull();
     }
 
     @Test

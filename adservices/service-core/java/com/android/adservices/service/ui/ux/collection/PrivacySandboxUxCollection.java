@@ -23,10 +23,12 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.base.PrivacySandboxUx;
 import com.android.adservices.service.ui.ux.impl.BetaUx;
 import com.android.adservices.service.ui.ux.impl.GaUx;
+import com.android.adservices.service.ui.ux.impl.RvcUx;
 import com.android.adservices.service.ui.ux.impl.U18Ux;
 import com.android.adservices.service.ui.ux.impl.UnsupportedUx;
 
@@ -40,9 +42,11 @@ public enum PrivacySandboxUxCollection {
 
     U18_UX(/* priority= */ 1, new U18Ux(), U18UxEnrollmentChannelCollection.values()),
 
-    GA_UX(/* priority= */ 2, new GaUx(), GaUxEnrollmentChannelCollection.values()),
+    RVC_UX(/* priority= */ 2, new RvcUx(), RvcUxEnrollmentChannelCollection.values()),
 
-    BETA_UX(/* priority= */ 3, new BetaUx(), BetaUxEnrollmentChannelCollection.values());
+    GA_UX(/* priority= */ 3, new GaUx(), GaUxEnrollmentChannelCollection.values()),
+
+    BETA_UX(/* priority= */ 4, new BetaUx(), BetaUxEnrollmentChannelCollection.values());
 
     private final int mPriority;
     private final PrivacySandboxUx mUx;

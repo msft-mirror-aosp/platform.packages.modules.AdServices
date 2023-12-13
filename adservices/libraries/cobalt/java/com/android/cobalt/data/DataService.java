@@ -109,8 +109,8 @@ public final class DataService {
      * @param reportKey the report to get the Count aggregated data for
      * @param mostRecentDayIndex the most recent day to check for aggregated events to send data for
      * @param dayIndexLoggerEnabled the day index that the logger was enabled
-     * @param generator an ObservationGenerator to convert the CountEvent for a day into
-     *     observations
+     * @param generator an ObservationGenerator to convert the EventRecordAndSystemProfile for a day
+     *     into observations
      */
     public ListenableFuture<Void> generateCountObservations(
             ReportKey reportKey,
@@ -260,7 +260,7 @@ public final class DataService {
                 mDaoBuildingBlocks.queryOneSystemProfileAndAggregateValue(
                         reportKey, dayIndex, eventVector, systemProfileHash);
 
-        if (existingSystemProfileAndAggregateValue.isEmpty()) {
+        if (!existingSystemProfileAndAggregateValue.isPresent()) {
             // No aggregate value was found for the provided report, day index, and event vector
             // combination, insert one.
             insertAggregateRow(
@@ -356,9 +356,11 @@ public final class DataService {
         // circumstances.
         for (int dayIndex = nextDayIndex; dayIndex <= mostRecentDayIndex; dayIndex++) {
             logInfo("Generating observations for day index %s for report %s", dayIndex, reportKey);
-            ImmutableListMultimap<SystemProfile, CountEvent> eventData =
-                    mDaoBuildingBlocks.queryCountEventsForDay(reportKey, dayIndex).stream()
-                            .collect(toImmutableListMultimap(CountEvent::systemProfile, e -> e));
+            ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> eventData =
+                    mDaoBuildingBlocks.queryEventRecordsForDay(reportKey, dayIndex).stream()
+                            .collect(
+                                    toImmutableListMultimap(
+                                            EventRecordAndSystemProfile::systemProfile, e -> e));
             ImmutableList<UnencryptedObservationBatch> batches =
                     generator.generateObservations(dayIndex, eventData);
             int numObservations =
@@ -382,7 +384,7 @@ public final class DataService {
             ReportKey reportKey, int mostRecentDayIndex, int dayIndexLoggerEnabled) {
         Optional<Integer> lastSentDayIndex = mDaoBuildingBlocks.queryLastSentDayIndex(reportKey);
 
-        if (lastSentDayIndex.isEmpty()) {
+        if (!lastSentDayIndex.isPresent()) {
             // Report is missing. Store it with most recent day index as last_sent_day_index, so it
             // can be updated at the end of the observation generation.
             mDaoBuildingBlocks.insertLastSentDayIndex(reportKey, mostRecentDayIndex);

@@ -19,7 +19,10 @@ package com.android.adservices.data.adselection.datahandlers;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 
+
 import com.google.auto.value.AutoValue;
+
+import java.time.Instant;
 
 /** Data class representing an ad selection run instantiation. */
 @AutoValue
@@ -32,6 +35,10 @@ public abstract class AdSelectionInitialization {
     /** Caller package name initiating this ad selection run. */
     @NonNull
     public abstract String getCallerPackageName();
+
+    /** The creation time for this ad selection run. */
+    @NonNull
+    public abstract Instant getCreationInstant();
 
     /**
      * @return generic builder
@@ -48,8 +55,14 @@ public abstract class AdSelectionInitialization {
      */
     @NonNull
     public static AdSelectionInitialization create(
-            @NonNull AdTechIdentifier seller, @NonNull String callerPackageName) {
-        return builder().setSeller(seller).setCallerPackageName(callerPackageName).build();
+            @NonNull AdTechIdentifier seller,
+            @NonNull String callerPackageName,
+            @NonNull Instant creationInstant) {
+        return builder()
+                .setSeller(seller)
+                .setCallerPackageName(callerPackageName)
+                .setCreationInstant(creationInstant)
+                .build();
     }
 
     /** Builder for AdSelectionInitialization. */
@@ -60,6 +73,9 @@ public abstract class AdSelectionInitialization {
 
         /** Sets the caller package name initiating this ad selection run. */
         public abstract Builder setCallerPackageName(@NonNull String callerPackageName);
+
+        /** Sets the caller package name initiating this ad selection run. */
+        public abstract Builder setCreationInstant(@NonNull Instant creationInstant);
 
         /** Builds a {@link AdSelectionInitialization} object. */
         @NonNull

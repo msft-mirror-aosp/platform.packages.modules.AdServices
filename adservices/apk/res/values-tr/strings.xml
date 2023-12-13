@@ -42,6 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Uygulamanın, AdService etkinleştirme durumu API\'sine erişmesine izin verir."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager API\'lerine erişim"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Uygulamanın, AdServicesManager API\'lerine erişmesine izin verir."</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdService güncelleme Reklam Kimliği API\'sine erişim."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Bir uygulamanın, AdService güncelleme Reklam Kimliği API\'sine erişmesine izin verir."</string>
     <string name="app_label" msgid="5844694701336604490">"Reklam Gizliliği"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android reklam gizliliği beta programına katılın"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"Android, uygulamaların daha gizlilik odaklı yöntemler kullanarak size reklam göstermesini sağlamanın yollarını araştırıyor"</string>
