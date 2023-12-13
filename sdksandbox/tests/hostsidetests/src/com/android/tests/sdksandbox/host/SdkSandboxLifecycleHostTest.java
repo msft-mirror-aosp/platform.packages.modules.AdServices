@@ -141,12 +141,11 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     public void testSandboxIsCreatedPerUser() throws Exception {
         assumeTrue(getDevice().isMultiUserSupported());
 
-        int initialUserId = getDevice().getCurrentUser();
         int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
         installPackageAsUser(APP_APK, false, secondaryUserId);
 
         // Start app for the primary user
-        startActivityAsUser(APP_PACKAGE, APP_ACTIVITY, initialUserId);
+        startActivity(APP_PACKAGE, APP_ACTIVITY);
         String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).contains(APP_PACKAGE + '\n');
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
@@ -159,7 +158,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
         // Start the app for the secondary user.
-        startActivityAsUser(APP_PACKAGE, APP_ACTIVITY, secondaryUserId);
+        startActivity(APP_PACKAGE, APP_ACTIVITY);
         // There should be two instances of app and sandbox processes - one for each user.
         assertThat(getProcessOccurrenceCount(APP_PACKAGE + '\n')).isEqualTo(2);
         assertThat(getProcessOccurrenceCount(SANDBOX_1_PROCESS_NAME)).isEqualTo(2);
@@ -442,20 +441,35 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
         mUserUtils.switchToSecondaryUser();
         installPackageAsUser(appApk2, false, secondaryUserId);
-        startActivityAsUser(APP_2_PACKAGE, APP_2_ACTIVITY, secondaryUserId);
+        startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
         String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).contains(APP_2_PROCESS_NAME + '\n');
         assertThat(processDump).contains(SANDBOX_2_PROCESS_NAME);
     }
 
     private void startActivity(String pkg, String activity) throws Exception {
-        getDevice().executeShellCommand(String.format("am start -W -n %s/.%s", pkg, activity));
-    }
-
-    private void startActivityAsUser(String pkg, String activity, int userId) throws Exception {
         getDevice()
                 .executeShellCommand(
-                        String.format("am start -W -n %s/.%s --user %d", pkg, activity, userId));
+                        String.format(
+                                "am start -W -n %s/.%s --user %d",
+                                pkg, activity, getDevice().getCurrentUser()));
+
+        // Check that the activity has started correctly by checking that its process has started.
+        // Depending on the test package configuration, the package may differ from the process
+        // name.
+        String expectedProcessName = pkg;
+        if (pkg.equals(APP_2_PACKAGE)) {
+            if (activity.equals(APP_2_ACTIVITY)) {
+                expectedProcessName = APP_2_PROCESS_NAME;
+            } else {
+                expectedProcessName = APP_2_PROCESS_NAME_2;
+            }
+        }
+        assertThat(
+                        getDevice()
+                                .executeShellCommand(
+                                        String.format("ps -A | grep %s", expectedProcessName)))
+                .isNotEmpty();
     }
 
     private void killApp(String pkg) throws Exception {

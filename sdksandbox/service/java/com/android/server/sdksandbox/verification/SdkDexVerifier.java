@@ -62,7 +62,7 @@ public class SdkDexVerifier {
     };
 
     private static SdkDexVerifier sSdkDexVerifier;
-    private ApiAllowlistProvider mApiAllowlistProvider = new ApiAllowlistProvider();
+    private ApiAllowlistProvider mApiAllowlistProvider;
 
     // Maps targetSdkVersion to its allowlist
     @GuardedBy("mPlatformApiAllowlistsLock")
@@ -76,10 +76,15 @@ public class SdkDexVerifier {
     public static SdkDexVerifier getInstance() {
         synchronized (SdkDexVerifier.class) {
             if (sSdkDexVerifier == null) {
-                sSdkDexVerifier = new SdkDexVerifier();
+                sSdkDexVerifier = new SdkDexVerifier(new Injector());
             }
         }
         return sSdkDexVerifier;
+    }
+
+    @VisibleForTesting
+    SdkDexVerifier(Injector injector) {
+        mApiAllowlistProvider = injector.getApiAllowlistProvider();
     }
 
     /**
@@ -196,14 +201,6 @@ public class SdkDexVerifier {
 
         return tokens.toArray(new String[tokens.size()]);
     }
-    /** Sets the {@link ApiAllowlistProvider} and clears out previously loaded allowlists */
-    @VisibleForTesting
-    public void setApiAllowlistProvider(ApiAllowlistProvider apiAllowlistProvider) {
-        mApiAllowlistProvider = apiAllowlistProvider;
-        synchronized (mPlatformApiAllowlistsLock) {
-            mPlatformApiAllowlists = null;
-        }
-    }
 
     /**
      * Initializes the allowlist for a given target sandbox sdk version
@@ -260,5 +257,21 @@ public class SdkDexVerifier {
             allowTrie.put(DEFAULT_RULES[i], getApiTokens(DEFAULT_RULES[i]));
         }
         return allowTrie;
+    }
+
+    static class Injector {
+        private ApiAllowlistProvider mAllowlistProvider;
+
+        Injector() {
+            mAllowlistProvider = new ApiAllowlistProvider();
+        }
+
+        Injector(ApiAllowlistProvider apiAllowlistProvider) {
+            mAllowlistProvider = apiAllowlistProvider;
+        }
+
+        ApiAllowlistProvider getApiAllowlistProvider() {
+            return mAllowlistProvider;
+        }
     }
 }

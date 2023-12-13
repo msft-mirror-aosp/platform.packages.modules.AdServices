@@ -1561,6 +1561,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
+    public boolean isSdkSandboxServiceRunning(String callingPackageName) {
+        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+
+        final long token = Binder.clearCallingIdentity();
+        try {
+            return isSdkSandboxServiceRunning(callingInfo);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    @Override
     public void stopSdkSandbox(String callingPackageName) {
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
 

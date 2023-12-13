@@ -23,8 +23,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
+import android.os.HandlerThread;
 import android.os.OutcomeReceiver;
+import android.os.Process;
 import android.provider.DeviceConfig;
 import android.util.Log;
 
@@ -40,8 +41,15 @@ import com.android.server.sdksandbox.verifier.SdkDexVerifier;
 public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
 
     private static final String TAG = "SdkSandboxVerifier";
-    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
+    private Handler mHandler;
     private SdkDexVerifier mSdkDexVerifier;
+
+    public SdkSandboxVerifierReceiver() {
+        HandlerThread handlerThread =
+                new HandlerThread("DexVerifierHandlerThread", Process.THREAD_PRIORITY_BACKGROUND);
+        handlerThread.start();
+        mHandler = new Handler(handlerThread.getLooper());
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -52,7 +60,7 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
         Log.d(TAG, "Received sdk sandbox verification intent " + intent.toString());
         Log.d(TAG, "Extras " + intent.getExtras());
 
-        verifySdkHandler(context, intent, MAIN_HANDLER);
+        verifySdkHandler(context, intent, mHandler);
     }
 
     @VisibleForTesting
@@ -78,10 +86,10 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
 
         String apkPath = intent.getData() != null ? intent.getData().getPath() : null;
 
-        PackageInfo packageInfo = null;
-        if (apkPath != null) {
-            packageInfo = context.getPackageManager().getPackageArchiveInfo(apkPath, /* flags */ 0);
-        }
+        PackageInfo packageInfo =
+                apkPath != null
+                        ? context.getPackageManager().getPackageArchiveInfo(apkPath, /* flags */ 0)
+                        : null;
 
         if (packageInfo == null) {
             Log.e(TAG, "Package data to verify was absent or invalid.");
