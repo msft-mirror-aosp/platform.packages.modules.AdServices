@@ -35,16 +35,16 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 public class SQLDatastoreManagerTest {
@@ -55,18 +55,18 @@ public class SQLDatastoreManagerTest {
     @Mock private Flags mFlags;
     @Mock AdServicesErrorLogger mErrorLogger;
     @Mock private LoggerFactory.Logger mLogger;
-    private MockitoSession mMockitoSession;
     private SQLDatastoreManager mSQLDatastoreManager;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(LoggerFactory.class)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setUp() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(LoggerFactory.class)
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
         mSQLDatastoreManager =
                 ExtendedMockito.spy(
                         new SQLDatastoreManager(
@@ -257,10 +257,5 @@ public class SQLDatastoreManagerTest {
                         any(),
                         eq(errorCode),
                         eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
-    }
-
-    @After
-    public void tearDown() {
-        mMockitoSession.finishMocking();
     }
 }
