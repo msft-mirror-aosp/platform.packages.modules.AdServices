@@ -27,7 +27,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "androidx.concurrent_concurrent-futures",
@@ -47,7 +47,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-java-beta01-nodeps",
         "androidx.annotation_annotation",
@@ -70,7 +70,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "kotlin-stdlib",
@@ -86,7 +86,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-beta01-nodeps",
         "androidx.annotation_annotation",
@@ -105,7 +105,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "androidx.concurrent_concurrent-futures",
@@ -125,7 +125,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-java-beta02-nodeps",
         "androidx.annotation_annotation",
@@ -148,7 +148,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "kotlin-stdlib",
@@ -164,7 +164,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-beta02-nodeps",
         "androidx.annotation_annotation",
@@ -183,7 +183,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "androidx.concurrent_concurrent-futures",
@@ -203,7 +203,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-java-beta03-nodeps",
         "androidx.annotation_annotation",
@@ -226,7 +226,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "kotlin-stdlib",
@@ -242,7 +242,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-beta03-nodeps",
         "androidx.annotation_annotation",
@@ -261,7 +261,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "androidx.concurrent_concurrent-futures",
@@ -281,7 +281,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-java-beta04-nodeps",
         "androidx.annotation_annotation",
@@ -304,7 +304,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "kotlin-stdlib",
@@ -320,7 +320,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-beta04-nodeps",
         "androidx.annotation_annotation",
@@ -339,7 +339,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "androidx.concurrent_concurrent-futures",
@@ -359,7 +359,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-java-beta05-nodeps",
         "androidx.annotation_annotation",
@@ -382,7 +382,7 @@ android_library_import {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
         "kotlin-stdlib",
@@ -398,7 +398,7 @@ android_library {
         "//apex_available:platform",
         "//apex_available:anyapex",
     ],
-    min_sdk_version: "14",
+    min_sdk_version: "19",
     static_libs: [
         "androidx.privacysandbox.ads_ads-adservices-beta05-nodeps",
         "androidx.annotation_annotation",
