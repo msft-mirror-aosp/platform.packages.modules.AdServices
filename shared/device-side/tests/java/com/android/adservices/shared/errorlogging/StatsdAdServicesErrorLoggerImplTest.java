@@ -28,23 +28,18 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public final class StatsdAdServicesErrorLoggerImplTest {
+@MockStatic(AdServicesStatsLog.class)
+public final class StatsdAdServicesErrorLoggerImplTest extends AdServicesExtendedMockitoTestCase {
 
     private final StatsdAdServicesErrorLogger mLogger =
             StatsdAdServicesErrorLoggerImpl.getInstance();
-
-    @Rule
-    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder()
-                    .mockStatic(AdServicesStatsLog.class)
-                    .build();
 
     @Test
     public void logAdServicesError_success() {

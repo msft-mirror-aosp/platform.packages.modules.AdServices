@@ -30,6 +30,7 @@ android_test {
         "androidx.test.core",
         "androidx.test.runner",
         "truth",
+        "adservices-test-utility",
     ],
     min_sdk_version: "30",
     test_suites: [

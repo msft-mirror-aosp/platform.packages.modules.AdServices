@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class AdServicesErrorStatsTest {
+public final class AdServicesErrorStatsTest {
     private static final int ERROR_CODE =
             AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
     private static final int PPAPI_NAME = 1;
