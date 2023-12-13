@@ -16,7 +16,6 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
-import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
@@ -91,16 +90,6 @@ public final class AdServicesFlagsSetterRule
                 .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
                 .setDisableTopicsEnrollmentCheckForTests(true)
                 .setConsentManagerDebugMode(true)
-                .setCompatModeFlags();
-    }
-
-    /** Factory method for AdId end-to-end CTS tests. */
-    public static AdServicesFlagsSetterRule forAdidE2ETests(String packageName) {
-        return forGlobalKillSwitchDisabledTests()
-                .setAdIdKillSwitchForTests(false)
-                .setFlag(KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT, true)
-                .setFlag(KEY_ADID_REQUEST_PERMITS_PER_SECOND, 25.0)
-                .setPpapiAppAllowList(packageName)
                 .setCompatModeFlags();
     }
 
