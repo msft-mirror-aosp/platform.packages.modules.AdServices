@@ -123,17 +123,16 @@ public class AppManifestConfigHelper {
             throws NameNotFoundException, XmlParseException, XmlPullParserException, IOException {
         Context context = ApplicationContextSingleton.get();
         LogUtil.v("getXmlParser(%s): context=%s", appPackageName, context);
-        boolean appExists = false;
-        boolean appHasConfig = false;
+        AppManifestConfigCall call = new AppManifestConfigCall(appPackageName);
+        call.enabledByDefault = enabledByDefault;
         // NOTE: resources is only used pre-S, but it must be called regardless to make sure the
         // app exists
         Resources resources = null;
         try {
             resources = context.getPackageManager().getResourcesForApplication(appPackageName);
-            appExists = true;
+            call.appExists = true;
         } catch (NameNotFoundException e) {
-            AppManifestConfigMetricsLogger.logUsage(
-                    appPackageName, appExists, appHasConfig, enabledByDefault);
+            AppManifestConfigMetricsLogger.logUsage(call);
             throw e;
         }
 
@@ -146,10 +145,9 @@ public class AppManifestConfigHelper {
         XmlResourceParser xmlResourceParser = null;
         if (resId != null) {
             xmlResourceParser = resources.getXml(resId);
-            appHasConfig = true;
+            call.appHasConfig = true;
         }
-        AppManifestConfigMetricsLogger.logUsage(
-                appPackageName, appExists, appHasConfig, enabledByDefault);
+        AppManifestConfigMetricsLogger.logUsage(call);
         return xmlResourceParser;
     }
 

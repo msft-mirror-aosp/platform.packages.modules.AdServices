@@ -206,8 +206,8 @@ public class AbstractSdkLevelSupportedRuleTest {
                 .that(actualRequiredRange)
                 .isEqualTo(expectedRequiredRange);
         expect.withMessage("getRequiredRange().reason")
-                .that(actualRequiredRange.reason)
-                .isEqualTo(expectedRequiredRange.reason);
+                .that(actualRequiredRange.reasons)
+                .containsExactlyElementsIn(expectedRequiredRange.reasons);
     }
 
     @Test
@@ -356,28 +356,31 @@ public class AbstractSdkLevelSupportedRuleTest {
         // Test with any-range constructor first
         var ruleForAnyLevel = new FakeSdkLevelSupportedRule(AndroidSdkRange.forAnyLevel());
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forAtLeast(S.getLevel()), REASON),
+                new RequiredRange(AndroidSdkRange.forAtLeast(S.getLevel()), REASON, REASON_R),
                 ruleForAnyLevel,
                 newTestMethod(ClassThatRequiresAtLeastR.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forAtLeast(S.getLevel()), REASON),
+                new RequiredRange(AndroidSdkRange.forAtLeast(S.getLevel()), REASON, REASON_S),
                 ruleForAnyLevel,
                 newTestMethod(ClassThatRequiresAtLeastS.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forAtLeast(S2.getLevel()), REASON),
+                new RequiredRange(AndroidSdkRange.forAtLeast(S2.getLevel()), REASON, REASON_S2),
                 ruleForAnyLevel,
                 newTestMethod(
                         ClassThatRequiresAtLeastS2.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forAtLeast(T.getLevel()), REASON),
+                new RequiredRange(AndroidSdkRange.forAtLeast(T.getLevel()), REASON, REASON_T),
                 ruleForAnyLevel,
                 newTestMethod(ClassThatRequiresAtLeastT.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forAtLeast(U.getLevel()), REASON),
+                new RequiredRange(AndroidSdkRange.forAtLeast(U.getLevel()), REASON, REASON_U),
                 ruleForAnyLevel,
                 newTestMethod(ClassThatRequiresAtLeastU.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forRange(S.getLevel(), S2.getLevel()), REASON),
+                new RequiredRange(
+                        AndroidSdkRange.forRange(S.getLevel(), S2.getLevel()),
+                        REASON,
+                        REASON_LESS_THAN_T),
                 ruleForAnyLevel,
                 newTestMethod(
                         ClassThatRequiresLessThanT.class, newAnnotationForAtLeast(S, REASON)));
@@ -385,28 +388,35 @@ public class AbstractSdkLevelSupportedRuleTest {
         var ruleForClosedRange =
                 new FakeSdkLevelSupportedRule(AndroidSdkRange.forRange(R.getLevel(), U.getLevel()));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forRange(S.getLevel(), U.getLevel()), REASON),
+                new RequiredRange(
+                        AndroidSdkRange.forRange(S.getLevel(), U.getLevel()), REASON, REASON_R),
                 ruleForClosedRange,
                 newTestMethod(ClassThatRequiresAtLeastR.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forRange(S.getLevel(), U.getLevel()), REASON),
+                new RequiredRange(
+                        AndroidSdkRange.forRange(S.getLevel(), U.getLevel()), REASON, REASON_S),
                 ruleForClosedRange,
                 newTestMethod(ClassThatRequiresAtLeastS.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forRange(S2.getLevel(), U.getLevel()), REASON),
+                new RequiredRange(
+                        AndroidSdkRange.forRange(S2.getLevel(), U.getLevel()), REASON, REASON_S2),
                 ruleForClosedRange,
                 newTestMethod(
                         ClassThatRequiresAtLeastS2.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forRange(T.getLevel(), U.getLevel()), REASON),
+                new RequiredRange(
+                        AndroidSdkRange.forRange(T.getLevel(), U.getLevel()), REASON, REASON_T),
                 ruleForClosedRange,
                 newTestMethod(ClassThatRequiresAtLeastT.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forExactly(U.getLevel()), REASON),
+                new RequiredRange(AndroidSdkRange.forExactly(U.getLevel()), REASON, REASON_U),
                 ruleForClosedRange,
                 newTestMethod(ClassThatRequiresAtLeastU.class, newAnnotationForAtLeast(S, REASON)));
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forRange(S.getLevel(), S2.getLevel()), REASON),
+                new RequiredRange(
+                        AndroidSdkRange.forRange(S.getLevel(), S2.getLevel()),
+                        REASON,
+                        REASON_LESS_THAN_T),
                 ruleForClosedRange,
                 newTestMethod(
                         ClassThatRequiresLessThanT.class, newAnnotationForAtLeast(S, REASON)));
@@ -419,15 +429,12 @@ public class AbstractSdkLevelSupportedRuleTest {
         // otherwise it would not scale.
 
         assertGetRequiredRange(
-                new RequiredRange(AndroidSdkRange.forAtLeast(U.getLevel()), REASON_R),
+                new RequiredRange(
+                        AndroidSdkRange.forAtLeast(U.getLevel()), REASON_R, REASON_T, REASON_U),
                 new FakeSdkLevelSupportedRule(AndroidSdkRange.forAtLeast(S.getLevel())),
                 newTestMethod(
                         ClassThatRequiresAtLeastTWhenSuperClassRequiresAtLeastU.class,
                         newAnnotationForAtLeast(R, REASON_R)));
-
-        // TODO(b/295269584): current the reason is always coming from test annotation, which
-        // doesn't make sense here (as the more restrict annotation is defined by the superclass).
-        // The proper solution would be merging all reasons (constructor + annotations)
     }
 
     @Test
@@ -462,15 +469,16 @@ public class AbstractSdkLevelSupportedRuleTest {
     private void expectAnnotationConvertedToRequiredRange(
             Annotation annotation, AndroidSdkRange expectedRange, String expectedReason) {
         var rule = newRuleForDeviceLevelAndRuleAtLeastLevel(ANY);
-        var expectRequiredRange = new RequiredRange(expectedRange, expectedReason);
+        var expectedRequiredRange = new RequiredRange(expectedRange, expectedReason);
         RequiredRange actualRequiredRange = rule.getRequiredRange(Arrays.asList(annotation));
 
         expect.withMessage("getRequiredRange(%s)", annotation)
                 .that(actualRequiredRange)
-                .isEqualTo(expectRequiredRange);
+                .isEqualTo(expectedRequiredRange);
+
         expect.withMessage("getRequiredRange(%s).reason", annotation)
-                .that(actualRequiredRange.reason)
-                .isEqualTo(expectedReason);
+                .that(actualRequiredRange.reasons)
+                .containsExactlyElementsIn(expectedRequiredRange.reasons);
     }
 
     @Test

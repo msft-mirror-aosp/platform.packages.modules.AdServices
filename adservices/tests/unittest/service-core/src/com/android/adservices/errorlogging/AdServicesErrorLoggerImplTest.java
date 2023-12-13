@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 
 import android.database.sqlite.SQLiteException;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorStats;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
@@ -37,9 +38,8 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-public class AdServicesErrorLoggerImplTest {
+public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCase {
     private AdServicesErrorLoggerImpl mErrorLogger;
 
     // Constants used for tests
@@ -54,7 +54,6 @@ public class AdServicesErrorLoggerImplTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
         mErrorLogger = new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock);
         doReturn(ImmutableList.of()).when(mFlags).getErrorCodeLoggingDenyList();
     }

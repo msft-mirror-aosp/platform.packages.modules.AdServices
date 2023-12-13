@@ -102,7 +102,7 @@ public final class ExtendedMockitoExpectations {
     public static ErrorLogUtilCallback mockErrorLogUtilWithThrowable() {
         ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
         doAnswer(
-                        (inv) -> {
+                        inv -> {
                             Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
                             callback.injectResult(
                                     new ErrorLogUtilInvocation(
@@ -124,7 +124,7 @@ public final class ExtendedMockitoExpectations {
     public static ErrorLogUtilCallback mockErrorLogUtilWithoutThrowable() {
         ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
         doAnswer(
-                        (inv) -> {
+                        inv -> {
                             Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
                             callback.injectResult(
                                     new ErrorLogUtilInvocation(
@@ -170,7 +170,7 @@ public final class ExtendedMockitoExpectations {
      */
     public static void mockDump(Runnable invocation, int pwArgIndex, String dump) {
         doAnswer(
-                        (inv) -> {
+                        inv -> {
                             PrintWriter pw = (PrintWriter) inv.getArgument(1);
                             pw.println(dump);
                             return null;

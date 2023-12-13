@@ -17,13 +17,13 @@
 package com.android.adservices.mockito;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,14 +32,20 @@ import static org.mockito.Mockito.when;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.Context;
+import android.util.Log;
 
+import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 
 /** Provides Mockito expectation for common calls. */
 public final class MockitoExpectations {
+
+    private static final String TAG = MockitoExpectations.class.getSimpleName();
 
     /**
      * Not a expectation itself, but it sets a mock as the application context on {@link
@@ -52,6 +58,26 @@ public final class MockitoExpectations {
         ApplicationContextSingleton.setForTests(context);
 
         return context;
+    }
+
+    /**
+     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
+     * object that blocks until that call is made.
+     */
+    public static NoFailureSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger) {
+        NoFailureSyncCallback<ApiCallStats> callback = new NoFailureSyncCallback<>();
+        doAnswer(
+                        inv -> {
+                            Log.v(TAG, "mockLogApiCallStats(): inv=" + inv);
+                            ApiCallStats apiCallStats = inv.getArgument(0);
+                            callback.injectResult(apiCallStats);
+                            return null;
+                        })
+                .when(adServicesLogger)
+                .logApiCallStats(any());
+
+        return callback;
     }
 
     /**

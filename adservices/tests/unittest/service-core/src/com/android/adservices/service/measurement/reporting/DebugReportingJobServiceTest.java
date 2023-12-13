@@ -47,6 +47,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -56,11 +57,12 @@ import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
@@ -83,6 +85,18 @@ public class DebugReportingJobServiceTest {
     private AdservicesJobServiceLogger mSpyLogger;
     private DebugReportingJobService mSpyService;
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AdServicesConfig.class)
+                    .spyStatic(DatastoreManagerFactory.class)
+                    .spyStatic(EnrollmentDao.class)
+                    .spyStatic(DebugReportingJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .mockStatic(ServiceCompatUtils.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setUp() {
@@ -108,7 +122,12 @@ public class DebugReportingJobServiceTest {
                     // Validate
                     assertFalse(result);
                     // Allow background thread to execute
+                    // TODO (b/298021244): replace sleep() with a better approach
                     Thread.sleep(WAIT_IN_MILLIS);
+                    if (!SdkLevel.isAtLeastT()) {
+                        // Additional sleep for S- test flakiness
+                        Thread.sleep(WAIT_IN_MILLIS);
+                    }
                     verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
                     verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
@@ -133,7 +152,13 @@ public class DebugReportingJobServiceTest {
                     // Validate
                     assertTrue(result);
                     // Allow background thread to execute
+                    // TODO (b/298021244): replace sleep() with a better approach
                     Thread.sleep(WAIT_IN_MILLIS);
+                    if (!SdkLevel.isAtLeastT()) {
+                        // Additional sleep for S- test flakiness
+                        Thread.sleep(WAIT_IN_MILLIS);
+                    }
+
                     verify(mMockDatastoreManager, times(2)).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
                     verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
@@ -372,18 +397,6 @@ public class DebugReportingJobServiceTest {
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AdServicesConfig.class)
-                        .spyStatic(DatastoreManagerFactory.class)
-                        .spyStatic(EnrollmentDao.class)
-                        .spyStatic(DebugReportingJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             Context context = Mockito.mock(Context.class);
             doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
             doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
@@ -410,9 +423,6 @@ public class DebugReportingJobServiceTest {
 
             // Execute
             execute.run();
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void enableKillSwitch() {

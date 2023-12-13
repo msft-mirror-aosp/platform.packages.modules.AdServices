@@ -57,6 +57,7 @@ import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -67,10 +68,10 @@ import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
@@ -96,6 +97,18 @@ public class EventFallbackReportingJobServiceTest {
 
     private AdservicesJobServiceLogger mSpyLogger;
     private Flags mMockFlags;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(DatastoreManagerFactory.class)
+                    .spyStatic(EnrollmentDao.class)
+                    .spyStatic(EventFallbackReportingJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .mockStatic(ServiceCompatUtils.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setUp() {
@@ -506,17 +519,6 @@ public class EventFallbackReportingJobServiceTest {
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(DatastoreManagerFactory.class)
-                        .spyStatic(EnrollmentDao.class)
-                        .spyStatic(EventFallbackReportingJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             // Setup mock everything in job
             mMockDatastoreManager = mock(DatastoreManager.class);
             doReturn(Optional.empty())
@@ -541,9 +543,6 @@ public class EventFallbackReportingJobServiceTest {
 
             // Execute
             execute.run();
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void enableKillSwitch() {
