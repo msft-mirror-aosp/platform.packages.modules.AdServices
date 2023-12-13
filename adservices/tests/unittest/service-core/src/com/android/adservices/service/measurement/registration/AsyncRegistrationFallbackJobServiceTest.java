@@ -39,6 +39,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,7 +51,6 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -132,7 +132,6 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 });
     }
 
-    @FlakyTest(bugId = 300551596)
     @Test
     public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
         runWithMocks(
@@ -145,7 +144,6 @@ public class AsyncRegistrationFallbackJobServiceTest {
                 });
     }
 
-    @FlakyTest(bugId = 300551596)
     @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
@@ -461,9 +459,9 @@ public class AsyncRegistrationFallbackJobServiceTest {
 
         // Validate
         assertTrue(result);
-        // Allow background thread to execute
-        Thread.sleep(WAIT_IN_MILLIS);
-        ExtendedMockito.verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        // Blocks until background thread finishes
+        mSpyService.getFutureForTesting().get();
+        verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1)).jobFinished(any(), anyBoolean());
         verify(mMockJobScheduler, never())
                 .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID));
     }
