@@ -24,10 +24,9 @@ import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobE
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
+import static com.android.adservices.mockito.MockitoExpectations.verifyOnJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -43,8 +42,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -393,14 +390,7 @@ public class DebugReportSenderJobServiceTest {
         testOnStartJobUpdateTimeoutHandled();
 
         verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
-        onJobDoneCallback.assertLoggingFinished();
-        verify(mSpyLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY),
-                        anyInt());
+        verifyOnJobFinishedLogged(mSpyLogger, onJobDoneCallback);
     }
 
     @Test
@@ -521,19 +511,14 @@ public class DebugReportSenderJobServiceTest {
     public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() throws InterruptedException {
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingEnabled();
         mockGetFlags(flags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
-        callback.assertLoggingFinished();
-        verify(mSpyLogger)
-                .logExecutionStats(
-                        anyInt(),
-                        anyLong(),
-                        eq(
-                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED),
-                        anyInt());
+        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
+        verifyBackgroundJobsSkipLogged(mSpyLogger, onJobDoneCallback);
     }
 
     @Test

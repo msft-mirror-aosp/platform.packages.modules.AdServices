@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -31,8 +32,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -686,13 +685,7 @@ public class AttributionJobServiceTest {
         ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
         ExtendedMockito.doNothing()
                 .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
-
-        // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        Mockito.doNothing()
-                .when(mSpyLogger)
-                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        ExtendedMockito.doReturn(mSpyLogger)
-                .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+        mockGetAdservicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();

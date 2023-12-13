@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
 import static com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService.VERBOSE_DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
 
@@ -24,8 +25,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -234,7 +233,7 @@ public class VerboseDebugReportingJobServiceTest {
 
                     // Execute
                     VerboseDebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -269,7 +268,7 @@ public class VerboseDebugReportingJobServiceTest {
 
                     // Execute
                     VerboseDebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -305,7 +304,7 @@ public class VerboseDebugReportingJobServiceTest {
 
                     // Execute
                     VerboseDebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -333,7 +332,7 @@ public class VerboseDebugReportingJobServiceTest {
 
                     // Execute
                     VerboseDebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ true);
+                            mockContext, /* forceSchedule= */ true);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -354,13 +353,13 @@ public class VerboseDebugReportingJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo = */ null)
+                    doReturn(/* noJobInfo= */ null)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID));
 
                     // Execute
                     VerboseDebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -393,30 +392,22 @@ public class VerboseDebugReportingJobServiceTest {
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-            // Setup mock everything in job
-            mMockDatastoreManager = mock(DatastoreManager.class);
-            doReturn(Optional.empty())
-                    .when(mMockDatastoreManager)
-                    .runInTransactionWithResult(any());
-            doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-            doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
-            ExtendedMockito.doReturn(mock(EnrollmentDao.class))
-                    .when(() -> EnrollmentDao.getInstance(any()));
-            ExtendedMockito.doReturn(mMockDatastoreManager)
-                    .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doNothing()
-                    .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
+        // Setup mock everything in job
+        mMockDatastoreManager = mock(DatastoreManager.class);
+        doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
+        doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
+        doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
+        doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+        ExtendedMockito.doReturn(mock(EnrollmentDao.class))
+                .when(() -> EnrollmentDao.getInstance(any()));
+        ExtendedMockito.doReturn(mMockDatastoreManager)
+                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
+        mockGetAdservicesJobServiceLogger(mSpyLogger);
 
-            // Mock AdservicesJobServiceLogger to not actually log the stats to server
-            Mockito.doNothing()
-                    .when(mSpyLogger)
-                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-            ExtendedMockito.doReturn(mSpyLogger)
-                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
-
-            // Execute
-            execute.run();
+        // Execute
+        execute.run();
     }
 
     private void enableKillSwitch() {
