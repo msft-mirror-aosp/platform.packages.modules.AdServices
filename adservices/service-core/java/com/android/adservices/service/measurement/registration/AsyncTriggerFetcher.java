@@ -35,8 +35,6 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -65,24 +63,20 @@ public class AsyncTriggerFetcher {
     private final MeasurementHttpClient mNetworkConnection;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
-    private final AdServicesLogger mLogger;
     private final Context mContext;
 
     public AsyncTriggerFetcher(Context context) {
         this(
                 context,
                 EnrollmentDao.getInstance(context),
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance());
+                FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
-    public AsyncTriggerFetcher(
-            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncTriggerFetcher(Context context, EnrollmentDao enrollmentDao, Flags flags) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
-        mLogger = logger;
         mNetworkConnection = new MeasurementHttpClient(context);
     }
 

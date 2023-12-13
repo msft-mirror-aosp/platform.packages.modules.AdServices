@@ -189,7 +189,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Before
     public void setup() {
         extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
-        mFetcher = spy(new AsyncTriggerFetcher(CONTEXT, mEnrollmentDao, mFlags, mLogger));
+        mFetcher = spy(new AsyncTriggerFetcher(CONTEXT, mEnrollmentDao, mFlags));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         ExtendedMockito.doReturn(Optional.of(ENROLLMENT_ID))
