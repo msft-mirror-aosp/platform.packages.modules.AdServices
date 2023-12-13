@@ -24,24 +24,16 @@ import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.UpdateAdIdRequest;
-import android.content.Context;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
-import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -49,24 +41,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 // TODO(b/302610220): Migrate the test to use a test helper class for AdservicesOutcomeReceiver.
-@RunWith(JUnit4.class)
-public class AdServicesCommonManagerTest {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCase {
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+
     private final AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forCommonManagerE2ETests(sContext.getPackageName());
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on S+.")
