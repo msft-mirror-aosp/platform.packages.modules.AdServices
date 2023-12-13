@@ -88,6 +88,11 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
+    public boolean isSdkSandboxServiceRunning(String callingPackageName) throws RemoteException {
+        return false;
+    }
+
+    @Override
     public void stopSdkSandbox(String callingPackageName) throws RemoteException {}
 
     @Override

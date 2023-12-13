@@ -48,6 +48,7 @@ interface ISdkSandboxManager {
     List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo);
     List<SandboxedSdk> getSandboxedSdks(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo);
     oneway void syncDataFromClient(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
+    boolean isSdkSandboxServiceRunning(in String callingPackageName);
     void stopSdkSandbox(in String callingPackageName);
     void logLatencies(in SandboxLatencyInfo sandboxLatencyInfo);
     void logSandboxActivityEvent(int method, int callResult, int latencyMillis);

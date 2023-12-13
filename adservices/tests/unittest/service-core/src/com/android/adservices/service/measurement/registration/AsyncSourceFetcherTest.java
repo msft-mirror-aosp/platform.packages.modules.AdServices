@@ -53,7 +53,7 @@ import android.view.MotionEvent.PointerProperties;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -67,6 +67,7 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableMultiset;
 
@@ -74,15 +75,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assume;
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -102,8 +99,10 @@ import java.util.stream.IntStream;
 import javax.net.ssl.HttpsURLConnection;
 
 /** Unit tests for {@link AsyncSourceFetcher} */
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(Enrollment.class)
 @RunWith(Parameterized.class)
-public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
+public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
@@ -159,14 +158,12 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
     private static final String PLATFORM_AD_ID_VALUE = "SAMPLE_PLATFORM_AD_ID_VALUE";
     private static final String DEBUG_AD_ID_VALUE = "SAMPLE_DEBUG_AD_ID_VALUE";
     private static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
-    AsyncSourceFetcher mFetcher;
+    private AsyncSourceFetcher mFetcher;
 
-    @Mock HttpsURLConnection mUrlConnection;
-    @Mock EnrollmentDao mEnrollmentDao;
-    @Mock Flags mFlags;
-    @Mock AdServicesLogger mLogger;
-
-    private MockitoSession mStaticMockSession;
+    @Mock private HttpsURLConnection mUrlConnection;
+    @Mock private EnrollmentDao mEnrollmentDao;
+    @Mock private Flags mFlags;
+    @Mock private AdServicesLogger mLogger;
 
     // Parameterised setup to run all the tests once with ARA parsing V1 flag on, and once with the
     // flag off.
@@ -183,30 +180,9 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
         mAraParsingAlignmentV1Enabled = araParsingAlignmentV1Enabled;
     }
 
-    @Rule(order = 11)
-    public ExternalResource externalResource =
-            new ExternalResource() {
-                protected void before() throws Throwable {
-                    setup();
-                }
-
-                protected void after() {
-                    try {
-                        cleanup();
-                    } catch (InterruptedException ignored) {
-                    }
-                }
-            };
-
+    @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(Enrollment.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
 
         mFetcher = spy(new AsyncSourceFetcher(sContext, mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
@@ -250,10 +226,6 @@ public final class AsyncSourceFetcherTest extends AdServicesUnitTestCase {
                 .thenReturn(Flags.MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW);
         when(mFlags.getMeasurementMinInstallAttributionWindow())
                 .thenReturn(Flags.MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW);
-    }
-
-    public void cleanup() throws InterruptedException {
-        mStaticMockSession.finishMocking();
     }
 
     @Test

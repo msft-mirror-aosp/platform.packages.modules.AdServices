@@ -307,6 +307,20 @@ public final class SdkSandboxManager {
     }
 
     /**
+     * Returns if SDK sandbox process corresponding to the app currently running.
+     *
+     * @hide
+     */
+    @TestApi
+    public boolean isSdkSandboxServiceRunning() {
+        try {
+            return mService.isSdkSandboxServiceRunning(mContext.getPackageName());
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Stops the SDK sandbox process corresponding to the app.
      *
      * @hide
