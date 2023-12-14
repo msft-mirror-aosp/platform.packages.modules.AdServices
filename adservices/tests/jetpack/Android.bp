@@ -418,6 +418,7 @@ android_test {
       // jetpack beta01 release has broken AdTechIdentifier toString, causing failures in ad selection
       "src/com/android/adservices/protectedaudience/FledgeCtsDebuggableJetpackTest.java",
     ],
+    min_sdk_version: "30",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -448,6 +449,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
+    min_sdk_version: "30",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -478,6 +480,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
+    min_sdk_version: "30",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -508,6 +511,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
+    min_sdk_version: "30",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -538,6 +542,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
+    min_sdk_version: "30",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
