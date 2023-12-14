@@ -42,6 +42,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
@@ -227,6 +228,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testAuctionScriptIsInvalidIfAnyRequiredFunctionDoesNotExist() throws Exception {
         assertFalse(
                 callJsValidation(
@@ -245,6 +247,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testCanCallScript() throws Exception {
         final AuctionScriptResult result =
                 callAuctionEngine(
@@ -260,6 +263,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testCanCallScriptRunWithCopier() throws Exception {
         final AuctionScriptResult result =
                 callAuctionEngine(
@@ -275,6 +279,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testThrowsJSExecutionExceptionIfTheFunctionIsNotFound() throws Exception {
         Exception exception =
                 Assert.assertThrows(
@@ -324,6 +329,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testGenerateBidSuccessfulCase() throws Exception {
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -361,6 +367,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testGenerateBidWithAdCostSuccessfulCaseCpcBillingEnabled() throws Exception {
         // Reinit engine with cpc billing enabled
         mAdSelectionScriptEngine =
@@ -513,6 +520,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testGenerateBidWithCopierSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
@@ -656,6 +664,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testGenerateBidV3WithCopierSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
@@ -716,6 +725,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testGenerateBidV3WithCopierWithAdCounterKeysSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
@@ -804,6 +814,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testGenerateBidBackwardCompatCaseSuccess() throws Exception {
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -943,6 +954,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testGenerateBidBackwardCompatCaseException() throws Exception {
         final String incompatibleVersionOfJS =
                 "function generateBids(ad, auction_signals, per_buyer_signals,"
@@ -1633,6 +1645,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testCanRunScriptWithStringInterpolationTokenInIt() throws Exception {
         final AuctionScriptResult result =
                 callAuctionEngine(
@@ -1648,6 +1661,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 304766178)
     public void testEncodeSignals()
             throws ExecutionException, InterruptedException, TimeoutException {
         List<String> seeds = List.of("SignalsA", "SignalsB");
