@@ -379,8 +379,8 @@ public interface Flags extends CommonFlags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2483"
-                    + "/99f68a201189da021b1f3dd4ebdef7b0fbe75892";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2867"
+                    + "/799a2e308daf8ccaa2fe9c9ef71b115a7f4a41c8";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {

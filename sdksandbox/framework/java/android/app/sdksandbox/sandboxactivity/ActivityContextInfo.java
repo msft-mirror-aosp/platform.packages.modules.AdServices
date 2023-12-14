@@ -41,5 +41,7 @@ public interface ActivityContextInfo {
     ApplicationInfo getSdkApplicationInfo();
 
     /** The flags which should be used to build the sandbox {@link Activity} context. */
-    int CONTEXT_FLAGS = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
+    default int getContextFlags() {
+        return Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
+    }
 }

@@ -89,6 +89,7 @@ public class AdServicesCommonService extends Service {
     // TODO(b/308009734): STOPSHIP - remove this method once the proper service is available
     @Override
     protected void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
+        enforceCallingPermission(android.Manifest.permission.DUMP, /* message = */ "dump()");
         if (args != null && args.length > 0 && args[0].equals("cmd")) {
             boolean enabled = FlagsFactory.getFlags().getAdServicesShellCommandEnabled();
             if (!enabled) {

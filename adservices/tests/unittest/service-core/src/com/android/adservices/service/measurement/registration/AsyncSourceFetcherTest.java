@@ -184,7 +184,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     public void setup() {
         extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
 
-        mFetcher = spy(new AsyncSourceFetcher(sContext, mEnrollmentDao, mFlags, mLogger));
+        mFetcher = spy(new AsyncSourceFetcher(sContext, mEnrollmentDao, mFlags));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         ExtendedMockito.doReturn(Optional.of(ENROLLMENT_ID))

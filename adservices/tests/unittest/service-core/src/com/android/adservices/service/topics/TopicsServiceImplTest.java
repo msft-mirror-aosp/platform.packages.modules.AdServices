@@ -37,7 +37,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -284,11 +283,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // And AppManifestConfigHelper calls AppManifestConfigMetricsLogger, which in turn does
         // stuff in a bg thread - chances are the test is done by the time the thread runs,
         // which could cause test failures (like lack of permission when calling Flags)
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AppManifestConfigMetricsLogger.logUsage(
-                                        any(), anyBoolean(), anyBoolean(), anyBoolean()));
+        ExtendedMockito.doNothing().when(() -> AppManifestConfigMetricsLogger.logUsage(any()));
     }
     @Test
     public void checkEmptySdkNameRequests() throws Exception {
