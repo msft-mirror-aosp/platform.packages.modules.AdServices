@@ -202,4 +202,139 @@ public class GetAdSelectionDataLatency {
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
     }
+
+    @Test
+    public void test_withoutFiltering_varyingCAs_1() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 1, /* nAdsPerCA= */ 5);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingCAs_1",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingCAs_10() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 10, /* nAdsPerCA= */ 5);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingCAs_10",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingCAs_100() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 100, /* nAdsPerCA= */ 5);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingBuyers_100",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingCAs_500() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 500, /* nAdsPerCA= */ 5);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingCAs_500",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingCAs_1000() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 1000, /* nAdsPerCA= */ 5);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingCAs_1000",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
 }
