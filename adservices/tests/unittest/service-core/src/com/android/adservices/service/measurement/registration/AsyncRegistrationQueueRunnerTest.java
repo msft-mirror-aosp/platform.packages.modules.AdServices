@@ -2653,7 +2653,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException, IOException {
         // Setup
         AsyncSourceFetcher mFetcher =
-                spy(new AsyncSourceFetcher(sDefaultContext, mEnrollmentDao, mFlags, mLogger));
+                spy(new AsyncSourceFetcher(sDefaultContext, mEnrollmentDao, mFlags));
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
                         Collections.singletonList(DEFAULT_REGISTRATION_PARAM_LIST),

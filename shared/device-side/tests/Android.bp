@@ -31,6 +31,7 @@ android_test {
         "androidx.test.runner",
         "auto_value_annotations",
         "truth",
+        "adservices-test-utility",
     ],
     plugins: ["auto_annotation_plugin"],
     min_sdk_version: "30",
