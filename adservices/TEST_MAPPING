@@ -208,6 +208,26 @@
       ]
     },
     {
+      // Install com.google.android.adservices.apex and run
+      // AdServicesServiceCoreMeasurementUnitTests.
+      "name": "AdServicesServiceCoreMeasurementUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run
+      // AdExtServicesServiceCoreMeasurementUnitTests.
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
       "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]",
       "options": [
@@ -624,6 +644,26 @@
     },
     {
       "name": "AdServicesServiceCoreAppsetIdUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.adservices.apex and run
+      // AdServicesServiceCoreMeasurementUnitTests.
+      "name": "AdServicesServiceCoreMeasurementUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run
+      // AdExtServicesServiceCoreMeasurementUnitTests.
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
