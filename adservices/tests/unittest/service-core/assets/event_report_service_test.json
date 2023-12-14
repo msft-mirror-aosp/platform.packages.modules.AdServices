@@ -18,7 +18,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -38,7 +39,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -46,7 +48,8 @@
         "responseCode": 200,
         "action": "SINGLE_REPORT",
         "result": 0,
-        "id": "ER1"
+        "id": "ER1",
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -67,7 +70,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -87,7 +91,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -95,7 +100,8 @@
         "responseCode": 400,
         "action": "SINGLE_REPORT",
         "result": 4,
-        "id": "ER1"
+        "id": "ER1",
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -116,7 +122,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example3.test"
           }
         ]
       },
@@ -136,7 +143,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example3.test"
           }
         ]
       },
@@ -144,7 +152,8 @@
         "responseCode": 200,
         "action": "SINGLE_REPORT",
         "result": 2,
-        "id": "ER1"
+        "id": "ER1",
+        "registration_origin": "https://subdomain.example3.test"
       }
     },
     {
@@ -165,7 +174,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "id": "ER2",
@@ -178,7 +188,8 @@
             "reportTime": 8443600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       } ,
@@ -198,7 +209,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "id": "ER2",
@@ -211,7 +223,8 @@
             "reportTime": 8443600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -219,7 +232,8 @@
         "responseCode": 200,
         "action": "ALL_REPORTS",
         "start": 8443600030,
-        "end": 8643600030
+        "end": 8643600030,
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -240,7 +254,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "id": "ER2",
@@ -253,7 +268,8 @@
             "reportTime": 8443600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "id": "ER3",
@@ -266,7 +282,8 @@
             "reportTime": 8243600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       } ,
@@ -286,7 +303,8 @@
             "reportTime": 8643600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "id": "ER2",
@@ -299,7 +317,8 @@
             "reportTime": 8443600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "id": "ER2",
@@ -312,7 +331,8 @@
             "reportTime": 8243600030,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
+            "randomizedTriggerRate":  0.0024263,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -320,57 +340,8 @@
         "responseCode": 200,
         "action": "ALL_REPORTS",
         "start": 8343600030,
-        "end": 8543600030
-      }
-    },
-    {
-      "name": "Single pending report, retrieving enrollment fails",
-      "input": {
-        "sources": [],
-        "triggers": [],
-        "attributions": [],
-        "event_reports": [
-          {
-            "id": "ER1",
-            "sourceEventId": 1,
-            "attributionDestination": "android-app://com.example2/d1",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 0,
-            "reportTime": 8643600030,
-            "triggerPriority": 101,
-            "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
-          }
-        ]
-      },
-      "output": {
-        "sources": [],
-        "triggers": [],
-        "attributions": [],
-        "event_reports": [
-          {
-            "id": "ER1",
-            "sourceEventId": 1,
-            "attributionDestination": "android-app://com.example2/d1",
-            "enrollmentId": "enrollment-id-3",
-            "triggerData": 2,
-            "triggerTime": 8640000002,
-            "status": 0,
-            "reportTime": 8643600030,
-            "triggerPriority": 101,
-            "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263
-          }
-        ]
-      },
-      "param": {
-        "responseCode": 200,
-        "action": "SINGLE_REPORT",
-        "result": 1,
-        "id": "ER1",
-	"notEnrolled": true
+        "end": 8543600030,
+        "registration_origin": "https://subdomain.example.test"
       }
     }
   ]

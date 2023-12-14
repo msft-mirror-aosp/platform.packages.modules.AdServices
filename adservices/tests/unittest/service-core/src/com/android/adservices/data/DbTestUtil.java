@@ -27,6 +27,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.measurement.MeasurementDbHelper;
+import com.android.adservices.data.shared.SharedDbHelper;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -39,9 +40,11 @@ public final class DbTestUtil {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String DATABASE_NAME_FOR_TEST = "adservices_test.db";
     private static final String MSMT_DATABASE_NAME_FOR_TEST = "adservices_msmt_test.db";
+    private static final String SHARED_DATABASE_NAME_FOR_TEST = "adservices_shared_test.db";
 
     private static DbHelper sSingleton;
     private static MeasurementDbHelper sMsmtSingleton;
+    private static SharedDbHelper sSharedSingleton;
 
     /** Erases all data from the table rows */
     public static void deleteTable(String tableName) {
@@ -79,6 +82,20 @@ public final class DbTestUtil {
                                 getDbHelperForTest());
             }
             return sMsmtSingleton;
+        }
+    }
+
+    public static SharedDbHelper getSharedDbHelperForTest() {
+        synchronized (SharedDbHelper.class) {
+            if (sSharedSingleton == null) {
+                sSharedSingleton =
+                        new SharedDbHelper(
+                                sContext,
+                                SHARED_DATABASE_NAME_FOR_TEST,
+                                SharedDbHelper.CURRENT_DATABASE_VERSION,
+                                getDbHelperForTest());
+            }
+            return sSharedSingleton;
         }
     }
 

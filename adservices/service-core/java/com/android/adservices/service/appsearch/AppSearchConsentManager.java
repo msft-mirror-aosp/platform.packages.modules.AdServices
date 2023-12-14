@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.appsearch;
 
+import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.adservices.AdServicesManager;
@@ -406,6 +408,17 @@ public class AppSearchConsentManager {
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(appConsentDao);
 
+        // On R/S, this function should never be executed because AppSearch to PPAPI and
+        // System Server migration is a T+ feature. On T+, this function should only execute
+        // if it's within the AdServices APK and not ExtServices. So check if it's within
+        // ExtServices, and bail out if that's the case on any platform.
+        String packageName = context.getPackageName();
+        if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
+            LogUtil.i(
+                    "Aborting attempt to migrate Consent data to PPAPI and System Service in"
+                            + " ExtServices");
+            return false;
+        }
         // Only perform migration if all the pre-conditions are met.
         // <p>a) The device is T+
         // <p>b) Data is not already migrated
@@ -492,5 +505,55 @@ public class AppSearchConsentManager {
                 .stream()
                 .map(applicationInfo -> applicationInfo.packageName)
                 .collect(Collectors.toSet());
+    }
+
+    /** Save the isAdIdEnabled bit. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        mAppSearchConsentWorker.setAdIdEnabled(isAdIdEnabled);
+    }
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    public Boolean isAdIdEnabled() {
+        return mAppSearchConsentWorker.isAdIdEnabled();
+    }
+
+    /** Save the isU18Account bit. */
+    public void setU18Account(boolean isU18Account) {
+        mAppSearchConsentWorker.setU18Account(isU18Account);
+    }
+
+    /** Returns whether the isU18Account bit is true. */
+    public Boolean isU18Account() {
+        return mAppSearchConsentWorker.isU18Account();
+    }
+
+    /** Save the isEntryPointEnabled bit. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        mAppSearchConsentWorker.setEntryPointEnabled(isEntryPointEnabled);
+    }
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    public Boolean isEntryPointEnabled() {
+        return mAppSearchConsentWorker.isEntryPointEnabled();
+    }
+
+    /** Save the isAdultAccount bit. */
+    public void setAdultAccount(boolean isAdultAccount) {
+        mAppSearchConsentWorker.setAdultAccount(isAdultAccount);
+    }
+
+    /** Returns whether the isAdultAccount bit is true. */
+    public Boolean isAdultAccount() {
+        return mAppSearchConsentWorker.isAdultAccount();
+    }
+
+    /** Save the wasU18NotificationDisplayed bit. */
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        mAppSearchConsentWorker.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+    }
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    public Boolean wasU18NotificationDisplayed() {
+        return mAppSearchConsentWorker.wasU18NotificationDisplayed();
     }
 }

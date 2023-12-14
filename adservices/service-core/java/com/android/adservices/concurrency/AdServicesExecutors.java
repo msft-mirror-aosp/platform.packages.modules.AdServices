@@ -22,6 +22,7 @@ import android.annotation.SuppressLint;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * ALl executors of the PP API module.
+ * All executors of the PP API module.
  *
  * @hide
  */
@@ -59,7 +60,8 @@ public final class AdServicesExecutors {
             public Thread newThread(Runnable runnable) {
                 Thread thread = Executors.defaultThreadFactory().newThread(runnable);
                 thread.setName(
-                        String.format("%s-%d", threadPrefix, mThreadCount.incrementAndGet()));
+                        String.format(
+                                Locale.US, "%s-%d", threadPrefix, mThreadCount.incrementAndGet()));
                 return thread;
             }
         };
@@ -70,14 +72,14 @@ public final class AdServicesExecutors {
             // executor tasks executing sequentially
             MoreExecutors.listeningDecorator(
                     new ThreadPoolExecutor(
-                            /* corePoolSize = */ Math.max(
+                            /* corePoolSize= */ Math.max(
                                     MIN_LIGHTWEIGHT_EXECUTOR_THREADS,
                                     Runtime.getRuntime().availableProcessors() - 2),
                             /* maximumPoolSize */
                             Math.max(
                                     MIN_LIGHTWEIGHT_EXECUTOR_THREADS,
                                     Runtime.getRuntime().availableProcessors() - 2),
-                            /* keepAliveTime = */ 60L,
+                            /* keepAliveTime= */ 60L,
                             TimeUnit.SECONDS,
                             new LinkedBlockingQueue<>(),
                             getFactory(LIGHTWEIGHT_NAME)));
@@ -96,13 +98,13 @@ public final class AdServicesExecutors {
     private static final ListeningExecutorService sBackgroundExecutor =
             MoreExecutors.listeningDecorator(
                     new ThreadPoolExecutor(
-                            /* corePoolSize = */ Math.max(
+                            /* corePoolSize= */ Math.max(
                                     MIN_BACKGROUND_EXECUTOR_THREADS,
                                     Runtime.getRuntime().availableProcessors()),
                             /* maximumPoolSize */ Math.max(
                                     MIN_BACKGROUND_EXECUTOR_THREADS,
                                     Runtime.getRuntime().availableProcessors()),
-                            /* keepAliveTime = */ 60L,
+                            /* keepAliveTime= */ 60L,
                             TimeUnit.SECONDS,
                             new LinkedBlockingQueue<>(),
                             getFactory(BACKGROUND_NAME)));
@@ -122,16 +124,16 @@ public final class AdServicesExecutors {
 
     private static final ScheduledThreadPoolExecutor sScheduler =
             new ScheduledThreadPoolExecutor(
-                    /* corePoolSize = */ Math.min(
+                    /* corePoolSize= */ Math.min(
                             MAX_SCHEDULED_EXECUTOR_THREADS,
                             Runtime.getRuntime().availableProcessors()),
                     getFactory(SCHEDULED_NAME));
 
     /**
      * Functions that require to be run with a delay, or have timed executions should run on this
-     * Executor
+     * Executor.
      *
-     * <p>Example includes having timeouts on Futures
+     * <p>Example includes having timeouts on Futures.
      *
      * @return
      */

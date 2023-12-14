@@ -359,8 +359,8 @@ public final class CacheManagerTest {
         // or the device was offline and no epoch computation was done.
 
         // Mock IPC calls
-        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(topic2);
-        TopicParcel topicParcel4 = BlockedTopicsManager.convertTopicToTopicParcel(topic4);
+        TopicParcel topicParcel2 = topic2.convertTopicToTopicParcel();
+        TopicParcel topicParcel4 = topic4.convertTopicToTopicParcel();
         doReturn(List.of(topicParcel2, topicParcel4))
                 .when(mMockAdServicesManager)
                 .retrieveAllBlockedTopics();
@@ -619,7 +619,7 @@ public final class CacheManagerTest {
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
 
         // Mock IPC calls
-        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(topic2);
+        TopicParcel topicParcel2 = topic2.convertTopicToTopicParcel();
         doReturn(List.of(topicParcel2)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // block topic 2.
         mTopicsDao.recordBlockedTopic(topic2);
@@ -1040,7 +1040,7 @@ public final class CacheManagerTest {
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
 
         // Mock IPC calls
-        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(topic2);
+        TopicParcel topicParcel2 = topic2.convertTopicToTopicParcel();
         doReturn(List.of(topicParcel2)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // Block Topics
         mTopicsDao.recordBlockedTopic(topic2);
@@ -1093,9 +1093,9 @@ public final class CacheManagerTest {
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 3L, returnedAppSdkTopicsMap3);
 
         // Mock IPC calls
-        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(topic1);
-        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(topic2);
-        TopicParcel topicParcel4 = BlockedTopicsManager.convertTopicToTopicParcel(topic4);
+        TopicParcel topicParcel1 = topic1.convertTopicToTopicParcel();
+        TopicParcel topicParcel2 = topic2.convertTopicToTopicParcel();
+        TopicParcel topicParcel4 = topic4.convertTopicToTopicParcel();
         doReturn(List.of(topicParcel1, topicParcel2, topicParcel4))
                 .when(mMockAdServicesManager)
                 .retrieveAllBlockedTopics();

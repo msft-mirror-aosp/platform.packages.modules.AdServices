@@ -17,7 +17,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-
+import android.net.Uri;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,17 +30,20 @@ public final class DebugReport {
     private final String mType;
     private final JSONObject mBody;
     private final String mEnrollmentId;
+    private final Uri mRegistrationOrigin;
 
     /** Create a new debug report object. */
     private DebugReport(
             @Nullable String id,
             @NonNull String type,
             @NonNull JSONObject body,
-            @NonNull String enrollmentId) {
+            @NonNull String enrollmentId,
+            @NonNull Uri registrationOrigin) {
         mId = id;
         mType = type;
         mBody = body;
         mEnrollmentId = enrollmentId;
+        mRegistrationOrigin = registrationOrigin;
     }
 
     @Override
@@ -51,12 +54,13 @@ public final class DebugReport {
         DebugReport key = (DebugReport) obj;
         return Objects.equals(mType, key.mType)
                 && Objects.equals(mBody, key.mBody)
-                && Objects.equals(mEnrollmentId, key.mEnrollmentId);
+                && Objects.equals(mEnrollmentId, key.mEnrollmentId)
+                && Objects.equals(mRegistrationOrigin, key.mRegistrationOrigin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mType, mBody, mEnrollmentId);
+        return Objects.hash(mType, mBody, mEnrollmentId, mRegistrationOrigin);
     }
 
     /** Unique identifier for the {@link DebugReport}. */
@@ -78,6 +82,10 @@ public final class DebugReport {
     public String getEnrollmentId() {
         return mEnrollmentId;
     }
+    /** Registration Origin URL */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
 
     /** Generate the JSON serialization of the debug report payload. */
     public JSONObject toPayloadJson() throws JSONException {
@@ -93,6 +101,7 @@ public final class DebugReport {
         private String mType;
         private JSONObject mBody;
         private String mEnrollmentId;
+        private Uri mRegistrationOrigin;
 
         public Builder() {}
 
@@ -131,12 +140,19 @@ public final class DebugReport {
             return this;
         }
 
+        /** See {@link DebugReport#getRegistrationOrigin()} ()}. */
+        @NonNull
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
         /** Build the DebugReport. */
         public @NonNull DebugReport build() {
             if (mType == null || mBody == null) {
                 throw new IllegalArgumentException("Uninitialized fields");
             }
-            return new DebugReport(mId, mType, mBody, mEnrollmentId);
+            return new DebugReport(mId, mType, mBody, mEnrollmentId, mRegistrationOrigin);
         }
     }
 }

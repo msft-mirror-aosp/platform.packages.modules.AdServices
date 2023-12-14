@@ -78,6 +78,7 @@ public final class SourceFixture {
                 .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
                 .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
+                .setCoarseEventReportDestinations(true)
                 .build();
     }
 
@@ -90,6 +91,7 @@ public final class SourceFixture {
                 List.of(Uri.parse("android-app://com.destination"));
         public static List<Uri> WEB_DESTINATIONS = List.of(Uri.parse("https://destination.com"));
         public static final Uri PUBLISHER = Uri.parse("android-app://com.publisher");
+        public static final Uri WEB_PUBLISHER = Uri.parse("https://publisher.com");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
         public static final String ENROLLMENT_ID = "enrollment-id";
         public static final Source.SourceType SOURCE_TYPE = Source.SourceType.EVENT;

@@ -31,6 +31,8 @@ import android.database.sqlite.SQLiteException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -53,10 +55,11 @@ public class AdServicesErrorLoggerImplTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         mErrorLogger = new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock);
+        doReturn(ImmutableList.of()).when(mFlags).getErrorCodeLoggingDenyList();
     }
 
     @Test
-    public void testLogError_flagDisabled() {
+    public void testLogError_errorLoggingFlagDisabled() {
         doReturn(false).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         mErrorLogger.logError(
@@ -67,7 +70,21 @@ public class AdServicesErrorLoggerImplTest {
     }
 
     @Test
-    public void testLogError_flagEnabled() {
+    public void testLogError_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
+        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
+        doReturn(ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR))
+                .when(mFlags)
+                .getErrorCodeLoggingDenyList();
+
+        mErrorLogger.logError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME,
+                CLASS_NAME, METHOD_NAME);
+
+        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
+    }
+
+    @Test
+    public void testLogError_errorLoggingFlagEnabled() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
         mErrorLogger.logError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR,
@@ -86,7 +103,7 @@ public class AdServicesErrorLoggerImplTest {
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_flagDisabled() {
+    public void testLogErrorWithExceptionInfo_errorLoggingFlagDisabled() {
         doReturn(false).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         mErrorLogger.logErrorWithExceptionInfo(
@@ -98,7 +115,22 @@ public class AdServicesErrorLoggerImplTest {
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_flagEnabled() {
+    public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled_errorCodeLoggingDenied() {
+        doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
+        doReturn(ImmutableList.of(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION))
+                .when(mFlags)
+                .getErrorCodeLoggingDenyList();
+
+        mErrorLogger.logErrorWithExceptionInfo(
+                new Exception(),
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                PPAPI_NAME);
+
+        verify(mStatsdLoggerMock, never()).logAdServicesError(any());
+    }
+
+    @Test
+    public void testLogErrorWithExceptionInfo_errorLoggingFlagEnabled() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         Exception exception = createSQLiteException(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
@@ -122,7 +154,7 @@ public class AdServicesErrorLoggerImplTest {
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_fullyQualifiedClassName_flagEnabled() {
+    public void testLogErrorWithExceptionInfo_fullyQualifiedClassName_errorLoggingFlagEnabled() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         String fullClassName = "com.android.adservices.topics.TopicsService";
@@ -147,7 +179,7 @@ public class AdServicesErrorLoggerImplTest {
     }
 
     @Test
-    public void testLogErrorWithExceptionInfo_emptyClassName_flagEnabled() {
+    public void testLogErrorWithExceptionInfo_emptyClassName_errorLoggingFlagEnabled() {
         doReturn(true).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         Exception exception = createSQLiteException(/* className = */ "", METHOD_NAME, LINE_NUMBER);

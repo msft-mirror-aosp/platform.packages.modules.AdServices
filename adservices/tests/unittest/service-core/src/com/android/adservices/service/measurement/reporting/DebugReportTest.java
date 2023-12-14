@@ -18,6 +18,10 @@ package com.android.adservices.service.measurement.reporting;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import android.net.Uri;
+
+import com.android.adservices.service.measurement.WebUtil;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -30,6 +34,11 @@ public final class DebugReportTest {
 
     private final String mType = "trigger-event-deduplicated";
     private final JSONObject mBodyJson = new JSONObject();
+
+    private static final Uri REGISTRATION_ORIGIN_1 =
+            WebUtil.validUri("https://subdomain.example1.test");
+    private static final Uri REGISTRATION_ORIGIN_2 =
+            WebUtil.validUri("https://subdomain.example2.test");
 
     @Before
     public void setup() throws JSONException {
@@ -44,6 +53,7 @@ public final class DebugReportTest {
         assertEquals(mType, debugReport.getType());
         assertEquals(mBodyJson, debugReport.getBody());
         assertEquals("2", debugReport.getEnrollmentId());
+        assertEquals(REGISTRATION_ORIGIN_1, debugReport.getRegistrationOrigin());
     }
 
     @Test
@@ -85,6 +95,7 @@ public final class DebugReportTest {
                         .setType(mType)
                         .setBody(mBodyJson)
                         .setEnrollmentId("2")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN_1)
                         .build());
     }
 
@@ -99,6 +110,7 @@ public final class DebugReportTest {
                 .setType(mType)
                 .setBody(mBodyJson)
                 .setEnrollmentId("2")
+                .setRegistrationOrigin(REGISTRATION_ORIGIN_1)
                 .build();
     }
 
@@ -108,6 +120,7 @@ public final class DebugReportTest {
                 .setType(mType)
                 .setBody(mBodyJson)
                 .setEnrollmentId("4")
+                .setRegistrationOrigin(REGISTRATION_ORIGIN_2)
                 .build();
     }
 }

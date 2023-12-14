@@ -413,9 +413,11 @@ public class ImpressionReporter {
                             REPORTING_URI_FIELD_NAME);
             try {
                 buyerValidator.validate(reportingUris.buyerReportingUri);
-                mFledgeAuthorizationFilter.assertAdTechEnrolled(
-                        AdTechIdentifier.fromString(reportingUris.buyerReportingUri.getHost()),
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+                if (!mFlags.getDisableFledgeEnrollmentCheck()) {
+                    mFledgeAuthorizationFilter.assertAdTechEnrolled(
+                            AdTechIdentifier.fromString(reportingUris.buyerReportingUri.getHost()),
+                            AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+                }
                 // Perform reporting if no exception was thrown
                 buyerFuture =
                         mAdServicesHttpsClient.getAndReadNothing(reportingUris.buyerReportingUri);

@@ -432,7 +432,7 @@ public class TopicsWorkerTest {
                 Topic.create(/* topic */ 1, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
 
         // Mock IPC calls
-        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(blockedTopic1);
+        TopicParcel topicParcel1 = blockedTopic1.convertTopicToTopicParcel();
         doReturn(List.of(topicParcel1)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         mTopicsDao.recordBlockedTopic(blockedTopic1);
 
@@ -473,7 +473,7 @@ public class TopicsWorkerTest {
 
         List<TopicParcel> topicParcels =
                 Arrays.stream(topics)
-                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
+                        .map(Topic::convertTopicToTopicParcel)
                         .collect(Collectors.toList());
         // Mock IPC calls
         doReturn(topicParcels).when(mMockAdServicesManager).retrieveAllBlockedTopics();
@@ -501,9 +501,9 @@ public class TopicsWorkerTest {
                 Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
 
         // Mock IPC calls
-        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(blockedTopic1);
-        TopicParcel topicParcel2 = BlockedTopicsManager.convertTopicToTopicParcel(blockedTopic2);
-        TopicParcel topicParcel3 = BlockedTopicsManager.convertTopicToTopicParcel(blockedTopic3);
+        TopicParcel topicParcel1 = blockedTopic1.convertTopicToTopicParcel();
+        TopicParcel topicParcel2 = blockedTopic2.convertTopicToTopicParcel();
+        TopicParcel topicParcel3 = blockedTopic3.convertTopicToTopicParcel();
         doReturn(List.of(topicParcel1, topicParcel2, topicParcel3))
                 .when(mMockAdServicesManager)
                 .retrieveAllBlockedTopics();
@@ -567,7 +567,7 @@ public class TopicsWorkerTest {
         mTopicsWorker.loadCache();
 
         // Mock IPC calls
-        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(topic1);
+        TopicParcel topicParcel1 = topic1.convertTopicToTopicParcel();
         doNothing().when(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcel1));
         doReturn(List.of(topicParcel1)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         mTopicsWorker.revokeConsentForTopic(topic1);
@@ -589,7 +589,7 @@ public class TopicsWorkerTest {
         mTopicsWorker.loadCache();
 
         // Mock IPC calls
-        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(topic1);
+        TopicParcel topicParcel1 = topic1.convertTopicToTopicParcel();
         doNothing().when(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcel1));
         doReturn(List.of(topicParcel1)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         // Revoke consent for topic1
@@ -645,7 +645,7 @@ public class TopicsWorkerTest {
         }
 
         // Mock IPC calls
-        TopicParcel topicParcel1 = BlockedTopicsManager.convertTopicToTopicParcel(topic1);
+        TopicParcel topicParcel1 = topic1.convertTopicToTopicParcel();
         doReturn(List.of(topicParcel1)).when(mMockAdServicesManager).retrieveAllBlockedTopics();
         mTopicsDao.recordBlockedTopic(topic1);
 

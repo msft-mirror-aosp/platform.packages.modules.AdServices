@@ -93,11 +93,9 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
             notificationManager.cancel(NOTIFICATION_ID);
         } catch (Exception e) {
             LogUtil.e(e.toString());
-            ErrorLogUtil.e(
+            ErrorLogUtil.e(e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DISMISS_NOTIFICATION_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    this.getClass().getSimpleName(),
-                    this.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
     }
 

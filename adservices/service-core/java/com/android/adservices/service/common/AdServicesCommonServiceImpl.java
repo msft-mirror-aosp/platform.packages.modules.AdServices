@@ -144,7 +144,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
                                     this.getClass().getSimpleName(),
-                                    this.getClass().getEnclosingMethod().getName());
+                                    new Object() {}.getClass().getEnclosingMethod().getName());
                         }
                         LogUtil.d(
                                 "adid status is "

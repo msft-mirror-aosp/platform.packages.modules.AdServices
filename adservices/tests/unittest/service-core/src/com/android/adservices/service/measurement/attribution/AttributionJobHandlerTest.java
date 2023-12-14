@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -53,7 +54,9 @@ import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -87,6 +90,7 @@ public class AttributionJobHandlerTest {
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
+    private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web.example.test");
     private static final Uri PUBLISHER = Uri.parse("android-app://publisher.app");
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://subdomain.example.test");
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(111111L);
@@ -119,6 +123,10 @@ public class AttributionJobHandlerTest {
 
     AttributionJobHandler mHandler;
 
+    EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+
+    SourceNoiseHandler mSourceNoiseHandler;
+
     @Mock
     IMeasurementDao mMeasurementDao;
 
@@ -148,12 +156,18 @@ public class AttributionJobHandlerTest {
     @Before
     public void before() {
         mDatastoreManager = new FakeDatastoreManager();
+        mEventReportWindowCalcDelegate = spy(new EventReportWindowCalcDelegate(mFlags));
+        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags));
         mHandler =
                 new AttributionJobHandler(
                         mDatastoreManager,
                         mFlags,
-                        new DebugReportApi(ApplicationProvider.getApplicationContext(), mFlags));
+                        new DebugReportApi(sContext, mFlags),
+                        mEventReportWindowCalcDelegate,
+                        mSourceNoiseHandler);
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
+        when(mFlags.getMeasurementMaxAttributionPerRateLimitWindow()).thenReturn(100);
+        when(mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()).thenReturn(10);
     }
 
     @Test
@@ -656,15 +670,17 @@ public class AttributionJobHandlerTest {
                         .setEventTriggers(eventTriggers)
                         .setStatus(Trigger.Status.PENDING)
                         .build();
-        Source source = spy(
+        Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setEventReportDedupKeys(new ArrayList<>())
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAppDestinations(List.of(APP_DESTINATION))
                         .setPublisherType(EventSurfaceType.APP)
                         .setPublisher(PUBLISHER)
-                        .build());
-        when(source.getReportingTime(anyLong(), anyInt())).thenReturn(5L);
+                        .build();
+        doReturn(5L)
+                .when(mEventReportWindowCalcDelegate)
+                .getReportingTime(any(Source.class), anyLong(), anyInt());
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -1116,6 +1132,59 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 WebUtil.validUri("https://trigger.example.test"),
                 eventReport.getRegistrationOrigin());
+    }
+
+    @Test
+    public void performPendingAttributions_GeneratesEventReport_WithCoarseDestinations()
+            throws DatastoreException {
+        Trigger trigger1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setRegistrationOrigin(WebUtil.validUri("https://trigger.example.test"))
+                        .build();
+        List<Source> matchingSourceList1 = new ArrayList<>();
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setRegistrationOrigin(WebUtil.validUri("https://source.example.test"))
+                        .setAppDestinations(Collections.singletonList(APP_DESTINATION))
+                        .setWebDestinations(Collections.singletonList(WEB_DESTINATION))
+                        .setCoarseEventReportDestinations(true)
+                        .build();
+        matchingSourceList1.add(source1);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger1.getId()));
+        when(mMeasurementDao.getTrigger(trigger1.getId())).thenReturn(trigger1);
+        when(mMeasurementDao.getMatchingActiveSources(trigger1)).thenReturn(matchingSourceList1);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source1.getId()))
+                .thenReturn(
+                        Pair.create(source1.getAppDestinations(), source1.getWebDestinations()));
+        when(mFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
+
+        assertTrue(mHandler.performPendingAttributions());
+        // Verify trigger status updates.
+        verify(mMeasurementDao).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
+        // Verify new event report insertion.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(
+                WebUtil.validUri("https://trigger.example.test"),
+                eventReport.getRegistrationOrigin());
+        List<Uri> reportDestinations = eventReport.getAttributionDestinations();
+        assertEquals(2, reportDestinations.size());
+        assertEquals(APP_DESTINATION, reportDestinations.get(0));
+        assertEquals(WEB_DESTINATION, reportDestinations.get(1));
     }
 
     @Test
@@ -2237,10 +2306,13 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
-                                source.getReportingTime(
-                                        trigger.getTriggerTime(), trigger.getDestinationType()))
+                                mEventReportWindowCalcDelegate.getReportingTime(
+                                        source,
+                                        trigger.getTriggerTime(),
+                                        trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
-                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .setRandomizedTriggerRate(
+                                mSourceNoiseHandler.getRandomAttributionProbability(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -2324,10 +2396,13 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
-                                source.getReportingTime(
-                                        trigger.getTriggerTime(), trigger.getDestinationType()))
+                                mEventReportWindowCalcDelegate.getReportingTime(
+                                        source,
+                                        trigger.getTriggerTime(),
+                                        trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
-                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .setRandomizedTriggerRate(
+                                mSourceNoiseHandler.getRandomAttributionProbability(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -2413,10 +2488,13 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
-                                source.getReportingTime(
-                                        trigger.getTriggerTime(), trigger.getDestinationType()))
+                                mEventReportWindowCalcDelegate.getReportingTime(
+                                        source,
+                                        trigger.getTriggerTime(),
+                                        trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
-                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .setRandomizedTriggerRate(
+                                mSourceNoiseHandler.getRandomAttributionProbability(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -2500,10 +2578,13 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
-                                source.getReportingTime(
-                                        trigger.getTriggerTime(), trigger.getDestinationType()))
+                                mEventReportWindowCalcDelegate.getReportingTime(
+                                        source,
+                                        trigger.getTriggerTime(),
+                                        trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
-                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .setRandomizedTriggerRate(
+                                mSourceNoiseHandler.getRandomAttributionProbability(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)
@@ -2590,10 +2671,13 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestinations(source.getAppDestinations())
                         .setEnrollmentId(source.getEnrollmentId())
                         .setReportTime(
-                                source.getReportingTime(
-                                        trigger.getTriggerTime(), trigger.getDestinationType()))
+                                mEventReportWindowCalcDelegate.getReportingTime(
+                                        source,
+                                        trigger.getTriggerTime(),
+                                        trigger.getDestinationType()))
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .setRandomizedTriggerRate(
+                                mSourceNoiseHandler.getRandomAttributionProbability(source))
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
                         .setRegistrationOrigin(REGISTRATION_URI)

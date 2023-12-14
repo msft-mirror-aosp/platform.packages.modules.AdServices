@@ -259,7 +259,7 @@ public class FledgeE2ETest {
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
 
-    private static final Flags DEFAULT_FLAGS = new FledgeE2ETestFlags(false, true, true);
+    private static final Flags DEFAULT_FLAGS = new FledgeE2ETestFlags(false, true, true, true);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
     private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
@@ -1370,6 +1370,7 @@ public class FledgeE2ETest {
     @Test
     public void testFledgeFlowSuccessWithMockServer_DoesNotReportToBuyerWhenEnrollmentFails()
             throws Exception {
+        initClients(false, true, true, false);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -1397,13 +1398,14 @@ public class FledgeE2ETest {
                         interactionReportingSemaphore,
                         true);
 
-        // Make buyer reporting fail enrollment check
+        // Make buyer impression reporting fail enrollment check
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
                 .assertAdTechEnrolled(
                         AdTechIdentifier.fromString(
                                 mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
                 .assertAdTechEnrolled(
@@ -1434,11 +1436,14 @@ public class FledgeE2ETest {
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
         reportImpressionAndAssertSuccess(resultSelectionId);
-        reportInteractionAndAssertSuccess(resultsCallback);
+        reportOnlyBuyerInteractionAndAssertSuccess(resultsCallback);
 
-        // Assert only seller reporting happened since buyer enrollment check fails
+        // Assert only seller impression reporting happened since buyer enrollment check fails
         assertTrue(impressionReportingSemaphore.tryAcquire(1, 10, TimeUnit.SECONDS));
-        assertTrue(interactionReportingSemaphore.tryAcquire(1, 10, TimeUnit.SECONDS));
+
+        // Assert buyer interaction reporting did not happen
+        assertTrue(interactionReportingSemaphore.tryAcquire(0, 10, TimeUnit.SECONDS));
+
         assertEquals(
                 "Extra calls made to MockWebServer",
                 0,
@@ -1448,10 +1453,10 @@ public class FledgeE2ETest {
                 0,
                 interactionReportingSemaphore.availablePermits());
 
-        // Verify 2 less requests since buyer reporting should not happen
+        // Verify 3 less requests than normal since only seller impression reporting happens
         mMockWebServerRule.verifyMockServerRequests(
                 server,
-                8,
+                7,
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
@@ -1788,7 +1793,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallFlagOffWithMockServer() throws Exception {
-        initClients(false, true, false);
+        initClients(false, true, false, true);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -2437,6 +2442,22 @@ public class FledgeE2ETest {
         assertTrue(reportInteractionTestCallback.mIsSuccess);
     }
 
+    private void reportOnlyBuyerInteractionAndAssertSuccess(AdSelectionTestCallback resultsCallback)
+            throws Exception {
+        ReportInteractionInput reportInteractionInput =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
+                        .setInteractionKey(CLICK_INTERACTION)
+                        .setInteractionData(INTERACTION_DATA)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .setReportingDestinations(BUYER_DESTINATION)
+                        .build();
+
+        ReportInteractionTestCallback reportInteractionTestCallback =
+                callReportInteraction(mAdSelectionService, reportInteractionInput);
+        assertTrue(reportInteractionTestCallback.mIsSuccess);
+    }
+
     private void reportImpressionAndAssertSuccess(long adSelectionId) throws Exception {
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2534,12 +2555,20 @@ public class FledgeE2ETest {
     }
 
     private void initClients(boolean gaUXEnabled, boolean registerAdBeaconEnabled) {
-        initClients(gaUXEnabled, registerAdBeaconEnabled, true);
+        initClients(gaUXEnabled, registerAdBeaconEnabled, true, true);
     }
 
     private void initClients(
-            boolean gaUXEnabled, boolean registerAdBeaconEnabled, boolean filtersEnabled) {
-        Flags flags = new FledgeE2ETestFlags(gaUXEnabled, registerAdBeaconEnabled, filtersEnabled);
+            boolean gaUXEnabled,
+            boolean registerAdBeaconEnabled,
+            boolean filtersEnabled,
+            boolean enrollmentCheckDisabled) {
+        Flags flags =
+                new FledgeE2ETestFlags(
+                        gaUXEnabled,
+                        registerAdBeaconEnabled,
+                        filtersEnabled,
+                        enrollmentCheckDisabled);
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
@@ -2975,12 +3004,17 @@ public class FledgeE2ETest {
         private final boolean mIsGaUxEnabled;
         private final boolean mRegisterAdBeaconEnabled;
         private final boolean mFiltersEnabled;
+        private final boolean mEnrollmentCheckDisabled;
 
         FledgeE2ETestFlags(
-                boolean isGaUxEnabled, boolean registerAdBeaconEnabled, boolean filtersEnabled) {
+                boolean isGaUxEnabled,
+                boolean registerAdBeaconEnabled,
+                boolean filtersEnabled,
+                boolean enrollmentCheckDisabled) {
             mIsGaUxEnabled = isGaUxEnabled;
             mRegisterAdBeaconEnabled = registerAdBeaconEnabled;
             mFiltersEnabled = filtersEnabled;
+            mEnrollmentCheckDisabled = enrollmentCheckDisabled;
         }
 
         @Override
@@ -3016,7 +3050,7 @@ public class FledgeE2ETest {
 
         @Override
         public boolean getDisableFledgeEnrollmentCheck() {
-            return true;
+            return mEnrollmentCheckDisabled;
         }
 
         @Override

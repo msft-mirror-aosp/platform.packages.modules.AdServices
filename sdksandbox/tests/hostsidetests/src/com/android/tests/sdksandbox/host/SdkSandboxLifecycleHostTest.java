@@ -139,7 +139,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(APP_PACKAGE + '\n');
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
-        getDevice().switchUser(secondaryUserId);
+        mUserUtils.switchToSecondaryUser();
 
         // Should still see an app/sdk sandbox running.
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");

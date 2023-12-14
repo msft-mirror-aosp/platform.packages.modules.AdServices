@@ -29,8 +29,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
-import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.settingslib.widget.MainSwitchBar;
@@ -68,10 +68,10 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     /**
-     * Provides {@link AdServicesApiConsent} displayed in {@link AdServicesSettingsMainFragment}
-     * as a Switch value.
+     * Provides {@link AdServicesApiConsent} displayed in {@link AdServicesSettingsMainActivity} as
+     * a Switch value.
      *
-     * @return {@link mAdServicesConsent} indicates if user has consented to PP API usage.
+     * @return {@link #mAdServicesConsent} indicates if user has consented to PP API usage.
      */
     public MutableLiveData<Boolean> getConsent() {
         return mAdServicesConsent;

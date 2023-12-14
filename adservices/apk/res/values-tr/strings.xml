@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Engellemeyi kaldır"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Engellediğiniz ilgi alanları"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Tüm ilgi alanlarını sıfırla"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Şu anda gösterilecek ilgi alanı yok"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Şu anda gösterilecek konu yok"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Şu anda gösterilecek ilgi alanı yok."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Şu anda gösterilecek konu yok.\n"<a href="https://support.google.com/android?p=ad_privacy">"Reklam konuları"</a>" hakkında daha fazla bilgi"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Özel Korumalı Alan"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android reklam gizliliği beta programı, uygulamaların size beğenebileceğiniz reklamları göstermek için kullanabileceği yeni özellikler sunar. Bu teknolojiler, cihaz tanımlayıcılarını kullanmaz.\n\nAndroid, ilginizi çekebilecek reklam türlerini tahmin edebilir ve bu ilgi alanlarını geçici olarak cihazınıza kaydedebilir. Böylece, uygulamalar, web sitelerindeki ve diğer geliştiricilerin uygulamalarındaki etkinliklerinizi izlemeden size alakalı reklamlar gösterebilir."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Engellenmiş ilgi alanınız yok"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Engellenen uygulamaları göster"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Uygulamaların tahmin ettiği ilgi alanlarını sıfırla"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Şu anda ilgi alanlarınızı tahmin eden uygulama yok"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Şu anda gösterilecek uygulama yok"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Şu anda gösterilecek uygulama yok. \n"<a href="https://support.google.com/android?p=ad_privacy">"Uygulama tarafından önerilen reklamlar"</a>" hakkında daha fazla bilgi"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Özel Korumalı Alan"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android reklam gizliliği beta programı, uygulamaların size beğenebileceğiniz reklamları göstermek için kullanabileceği yeni özellikler sunar. Bu teknolojiler, cihaz tanımlayıcılarını kullanmaz.\n\nUygulamalar, ilginizi çekebilecek reklam türlerini tahmin edebilir ve bu ilgi alanlarını geçici olarak cihazınıza kaydedebilir. Böylece, uygulamalar, web sitelerindeki ve diğer geliştiricilerin uygulamalarındaki etkinliklerinizi izlemeden size alakalı reklamlar gösterebilir."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Engellenmiş uygulamanız yok"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Uygulamaların önerdiği reklamlar sıfırlansın mı?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Listenizdeki uygulamalardan reklam önerisi verileri silinir ve uygulamalar bundan sonra yeni reklamlar önerir. Ancak, konuyla alakalı bazı reklamları görmeye devam edebilirsiniz."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Uygulama verileri sıfırlandı"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Tüm konular sıfırlansın mı?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Uygulamaların önerdiği reklamlar sıfırlansın mı?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Reklam konuları açık"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android, ilgilendiğiniz konuları not etmeye başlayacak olsa da ilk konuların görünmesi biraz zaman alabilir."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Reklam konuları kapatılsın mı?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Bu konu listesi silinecek. Android artık ilgilendiğiniz konuları not etmeyecek olsa da alakalı reklamlar görmeye devam edebilirsiniz."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Uygulama tarafından önerilen reklamlar açık"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Uygulamalar reklam önermeye başlayabilir. Reklam önermeye başlayan uygulamaların bir listesini görürsünüz."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Uygulama tarafından önerilen reklamlar kapatılsın mı?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Tüm reklam önerisi verileri silinecek. Uygulamalar artık reklam öneremeyecek olsa da alakalı reklamlar görmeye devam edebilirsiniz."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"Reklam ölçümü açık"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android, gösterdikleri reklamların performansını ölçmelerine yardımcı olmak için uygulamalarla yalnızca çok sınırlı miktarda bilgi paylaşabilir."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Reklam ölçümü kapatılsın mı?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Beklemede olan tüm reklam ölçümü raporları silinecek ve yeni rapor oluşturulmayacak ya da paylaşılmayacak."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Reklam gizliliği"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Reklam konuları"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Uygulamalar tarafından önerilen reklamlar"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android, son kullandığınız uygulamalara ve bu uygulamaları kullanma sıklığınıza bağlı olarak ilgilendiğiniz konuları not eder."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Kullandığınız uygulamalar ayrıca kullanım şeklinize bağlı olarak nelerden hoşlandığınızı belirleyebilir."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Kullandığınız uygulamalar gösterdikleri reklamların performansını ölçmelerine yardımcı olmak için Android\'den bilgi isteyebilir. Android, uygulamaların sınırlı veri türlerini toplamasına izin verir."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android\'de reklam gizliliği"</a>" hakkında daha fazla bilgi"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Açık/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> konu"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Açık/# konu}other{Açık/# konu}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Açık/<xliff:g id="APPS_COUNT">%1$d</xliff:g> uygulama"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Engellediğiniz uygulamalar"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Uygulamalar tarafından önerilen verileri sıfırla"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Kullandığınız uygulamaların, deneyiminizi kişiselleştirmek amacıyla, ilgilendiğiniz şeyleri hatırlaması yaygın bir durumdur. Uygulamalar ayrıca konularınızla ilgili bilgileri Android\'de depolayabilirler.\n\nÖrneğin, maraton antrenmanı ile ilgili bir uygulama kullanırsanız uygulama koşu ayakkabılarıyla ilgilendiğinize karar verebilir. Daha sonra kullandığınız farklı bir uygulama da, ilk uygulama tarafından önerilen koşu ayakkabılarına dair reklam gösterebilir.\n\nAndroid, uygulama tarafından önerilen verileri düzenli bir şekilde otomatik olarak siler. Tekrar kullandığınız bir uygulama listede yeniden görünebilir. İsterseniz bir uygulamanın sizin için reklamlar önermesini engelleyebilirsiniz.\n\nUygulamalarınızda gördüğünüz reklamlar bu ayara, reklam konuları ayarına, reklamveren kimliği ayarlarınıza ve uygulamanın kişiselleştirilmiş reklamlar kullanıp kullanmadığına bağlı olarak kişiselleştirilmiş olabilir."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Yeni reklam gizliliği özelliği mevcut"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Gösterdikleri reklamların performansını ölçmesine yardımcı olmak için uygulamalar arasında çok sınırlı bilgi paylaşılır"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Reklam ölçümü adı verilen yeni bir reklam gizliliği özelliğini kullanıma sunuyoruz. Android, uygulamaların gösterdikleri reklamların performansını ölçmesine yardımcı olmak için uygulamalar arasında çok sınırlı bilgi (ör. bir reklamın size gösterildiği saat) paylaşır."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Reklam gizlilik ayarlarında değişiklik yapabilirsiniz."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Kullandığınız uygulamalar, gösterdikleri reklamların performansını ölçmelerine yardımcı olmak için Android\'den bilgi isteyebilir. Android, uygulamaların sınırlı veri türlerini toplamasına izin verir."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Müzik, haber ve spor gibi ilgi alanlarını temsil eden sembollerin renkli çizimi"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Daire içindeki bir kilidin renkli çizimi"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kare oluşturan dokuz noktanın küçük siyah beyaz çizimi"</string>

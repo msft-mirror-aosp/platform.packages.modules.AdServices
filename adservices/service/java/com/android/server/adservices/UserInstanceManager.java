@@ -28,6 +28,7 @@ import com.android.server.adservices.rollback.RollbackHandlingManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -151,6 +152,27 @@ public class UserInstanceManager {
             // Delete all data in the database that belongs to this user
             mTopicsDao.clearAllBlockedTopicsOfUser(userIdentifier);
         }
+    }
+
+    void dump(PrintWriter writer, String[] args) {
+        writer.println("UserInstanceManager");
+        String prefix = "  ";
+        writer.printf("%smAdServicesBaseDir: %s\n", prefix, mAdServicesBaseDir);
+        synchronized (mLock) {
+            writer.printf("%smConsentManagerMapLocked: %s\n", prefix, mConsentManagerMapLocked);
+            writer.printf(
+                    "%smAppConsentManagerMapLocked: %s\n", prefix, mAppConsentManagerMapLocked);
+            writer.printf(
+                    "%smRollbackHandlingManagerMapLocked: %s\n",
+                    prefix, mRollbackHandlingManagerMapLocked);
+        }
+        synchronized (UserInstanceManager.class) {
+            writer.printf(
+                    "%smBlockedTopicsManagerMapLocked=%s\n",
+                    prefix, mBlockedTopicsManagerMapLocked);
+        }
+
+        mTopicsDao.dump(writer, prefix, args);
     }
 
     @VisibleForTesting

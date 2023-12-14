@@ -109,12 +109,9 @@ public class MddJobService extends JobService {
 
     @Override
     public boolean onStartJob(@NonNull JobParameters params) {
-        LogUtil.d("MddJobService.onStartJob");
-
-        // Record the invocation of onStartJob() for logging purpose.
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         int jobId = getMddTaskJobId(getMddTag(params));
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(jobId);
-
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d("Disabling MddJobService job because it's running in ExtServices on T+");
             return skipAndCancelBackgroundJob(
@@ -122,6 +119,10 @@ public class MddJobService extends JobService {
                     jobId,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
+
+        // Record the invocation of onStartJob() for logging purpose.
+        LogUtil.d("MddJobService.onStartJob");
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(jobId);
 
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("MDD background task is disabled, skipping and cancelling MddJobService");

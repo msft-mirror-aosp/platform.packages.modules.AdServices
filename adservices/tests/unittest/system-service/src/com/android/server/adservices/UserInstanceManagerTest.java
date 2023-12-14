@@ -19,6 +19,7 @@ package com.android.server.adservices;
 import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL_VERSION;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.topics.Topic;
 import android.app.adservices.topics.TopicParcel;
@@ -39,6 +40,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Set;
 
@@ -47,6 +50,8 @@ public class UserInstanceManagerTest {
     private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String TEST_BASE_PATH =
             APPLICATION_CONTEXT.getFilesDir().getAbsolutePath();
+    private static final String TOPICS_DAO_DUMP = "D'OHump!";
+
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
     private TopicsDao mTopicsDao;
 
@@ -228,5 +233,32 @@ public class UserInstanceManagerTest {
         assertThat(mTopicsDao.retrieveAllBlockedTopics(user0)).isEmpty();
         assertThat(blockedTopics1).hasSize(1);
         assertThat(blockedTopics1).containsExactly(topicToBlock1);
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        TopicsDao topicsDao =
+                new TopicsDao(mDBHelper) {
+                    @Override
+                    public void dump(PrintWriter writer, String prefix, String[] args) {
+                        writer.println(TOPICS_DAO_DUMP);
+                    }
+                };
+        UserInstanceManager mgr = new UserInstanceManager(topicsDao, TEST_BASE_PATH);
+
+        String dump;
+        String[] args = new String[0];
+        try (StringWriter sw = new StringWriter()) {
+            PrintWriter pw = new PrintWriter(sw);
+
+            mgr.dump(pw, args);
+
+            pw.flush();
+            dump = sw.toString();
+        }
+
+        // Content doesn't matter much, we just wanna make sure it doesn't crash (for example,
+        // by using the wrong %s / %d tokens) and that its components are dumped
+        assertWithMessage("content of dump()").that(dump).contains(TOPICS_DAO_DUMP);
     }
 }

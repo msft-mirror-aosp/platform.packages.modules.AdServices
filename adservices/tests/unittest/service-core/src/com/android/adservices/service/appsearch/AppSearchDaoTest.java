@@ -61,6 +61,7 @@ public class AppSearchDaoTest {
     @Mock SearchResults mSearchResults;
     @Mock List<SearchResult> mMockPage;
     @Mock GlobalSearchSession mGlobalSearchSession;
+    @Mock AppSearchSession mAppSearchSession;
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     private static final String ID = "1";
@@ -157,6 +158,52 @@ public class AppSearchDaoTest {
     }
 
     @Test
+    public void testReadAppSearchData_emptyQuery() {
+        AppSearchDao dao =
+                AppSearchDao.readAppSearchSessionData(
+                        AppSearchConsentDao.class,
+                        Futures.immediateFuture(mAppSearchSession),
+                        mExecutor,
+                        NAMESPACE,
+                        null);
+        assertThat(dao).isEqualTo(null);
+
+        AppSearchDao dao2 =
+                AppSearchDao.readAppSearchSessionData(
+                        AppSearchConsentDao.class,
+                        Futures.immediateFuture(mAppSearchSession),
+                        mExecutor,
+                        NAMESPACE,
+                        "");
+        assertThat(dao2).isEqualTo(null);
+    }
+
+    @Test
+    public void testReadAppSearchData() {
+        when(mMockPage.isEmpty()).thenReturn(false);
+        when(mSearchResults.getNextPageAsync()).thenReturn(Futures.immediateFuture(mMockPage));
+        AppSearchConsentDao dao = new AppSearchConsentDao(ID, ID, NAMESPACE, API_TYPE, CONSENT);
+        GenericDocument document =
+                new GenericDocument.Builder(NAMESPACE, ID, dao.getClass().getSimpleName())
+                        .setPropertyString("userId", ID)
+                        .setPropertyString("consent", CONSENT)
+                        .setPropertyString("apiType", API_TYPE)
+                        .build();
+        SearchResult searchResult =
+                new SearchResult.Builder(TEST, TEST).setGenericDocument(document).build();
+        when(mMockPage.get(0)).thenReturn(searchResult);
+        when(mAppSearchSession.search(any(), any())).thenReturn(mSearchResults);
+        AppSearchDao result =
+                AppSearchDao.readAppSearchSessionData(
+                        AppSearchConsentDao.class,
+                        Futures.immediateFuture(mAppSearchSession),
+                        mExecutor,
+                        NAMESPACE,
+                        TEST);
+        assertThat(result).isEqualTo(dao);
+    }
+
+    @Test
     public void testWriteConsentData_failure() {
         AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
         verify(mockSession, atMost(1)).setSchemaAsync(any(SetSchemaRequest.class));
@@ -177,7 +224,7 @@ public class AppSearchDaoTest {
         // Document fields defined on the class, so we use a subclass instance.
         AppSearchConsentDao dao = new AppSearchConsentDao(ID, ID, NAMESPACE, API_TYPE, CONSENT);
         FluentFuture<AppSearchBatchResult<String, Void>> result =
-                dao.writeConsentData(
+                dao.writeData(
                         Futures.immediateFuture(mockSession),
                         List.of(PACKAGE_IDENTIFIER),
                         mExecutor);
@@ -207,7 +254,7 @@ public class AppSearchDaoTest {
 
         // Verify that no exception is thrown.
         FluentFuture future =
-                dao.writeConsentData(
+                dao.writeData(
                         Futures.immediateFuture(mockSession),
                         List.of(PACKAGE_IDENTIFIER),
                         mExecutor);
@@ -234,12 +281,12 @@ public class AppSearchDaoTest {
         // We can't use the base class instance since writing will fail without the necessary
         // Document fields defined on the class, so we use a subclass instance.
         FluentFuture<AppSearchBatchResult<String, Void>> result =
-                AppSearchDao.deleteConsentData(
+                AppSearchDao.deleteData(
                         AppSearchConsentDao.class,
                         Futures.immediateFuture(mockSession),
                         mExecutor,
-                        NAMESPACE,
-                        TEST);
+                        TEST,
+                        NAMESPACE);
         ExecutionException e = assertThrows(ExecutionException.class, () -> result.get());
         assertThat(e.getMessage())
                 .isEqualTo(
@@ -265,12 +312,12 @@ public class AppSearchDaoTest {
 
         // Verify that no exception is thrown.
         FluentFuture future =
-                AppSearchDao.deleteConsentData(
+                AppSearchDao.deleteData(
                         AppSearchConsentDao.class,
                         Futures.immediateFuture(mockSession),
                         mExecutor,
-                        NAMESPACE,
-                        TEST);
+                        TEST,
+                        NAMESPACE);
         assertThat(future.get()).isNotNull();
     }
 }

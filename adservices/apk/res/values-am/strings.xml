@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"እገዳውን አንሳ"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"እርስዎ ያገዷቸው ዝንባሌዎች"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ሁሉንም ዝንባሌዎች ዳግም አስጀምር"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"አሁን ምንም የሚታዩ ዝንባሌዎች የሉም"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"አሁን ምንም የሚታዩ ርዕሶች የሉም"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"አሁን ምንም የሚታዩ ዝንባሌዎች የሉም።"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"አሁን ምንም የሚታዩ መተግበሪያዎች የሉም።\nስለ "<a href="https://support.google.com/android?p=ad_privacy">"የማስታወቂያ ርዕሶች"</a>" የበለጠ ይወቁ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"የግላዊነት Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"የAndroid ማስታወቂያዎች የግላዊነት ቅድመ ይሁንታ መተግበሪያዎች እርስዎ ሊወዷቸው የሚችሏቸው ማስታወቂያዎችን ለእርስዎ ለማሳየት ሊጠቀሙባቸው የሚችሉ አዲስ ባህሪያትን ያቀርባል። እነዚህ ቴክኖሎጂዎች የመሣሪያ ለዪዎችን አይጠቀሙም።\n\nAndroid እርስዎ ሊፈልጓቸው የሚችሉ የማስታወቂያ አይነቶችን መገመት እና እነዚህን ዝንባሌዎች በመሣሪያዎ ላይ በጊዜያዊነት ማስቀመጥ ይችላል። ይህ መተግበሪያዎች በሌሎች ገንቢዎች በተሰሩ ድር ጣቢያዎች እና መተግበሪያዎች ላይ እርስዎ የሚኖርዎትን እንቅስቃሴ ሳይከታተሉ ተዛማጅነት ያላቸው ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያስችላቸዋል።"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ምንም የታገዱ ዝንባሌዎች የሉዎትም"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"የታገዱ መተግበሪያዎችን አሳይ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"በመተግበሪያዎች የተገመቱ ዝንባሌዎችን ዳግም አስጀምር"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"አሁን ላይ ምንም መተግበሪያዎች ለእርስዎ ዝንባሌዎችን እያመነጩ አይደለም"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"አሁን ምንም የሚታዩ መተግበሪያዎች የሉም"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"አሁን ምንም የሚታዩ መተግበሪያዎች የሉም። \nስለ "<a href="https://support.google.com/android?p=ad_privacy">"በመተግበሪያ የተጠቆሙ ማስታወቂያዎች"</a>" የበለጠ ይወቁ"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"የግላዊነት Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"የAndroid ማስታወቂያዎች የግላዊነት ቅድመ ይሁንታ መተግበሪያዎች እርስዎ ሊወዷቸው የሚችሏቸው ማስታወቂያዎችን ለእርስዎ ለማሳየት ሊጠቀሙባቸው የሚችሉ አዲስ ባህሪያትን ያቀርባል። እነዚህ ቴክኖሎጂዎች የመሣሪያ ለዪዎችን አይጠቀሙም።\n\nመተግበሪያዎች እርስዎ ሊፈልጓቸው የሚችሉ የማስታወቂያ አይነቶችን መገመት እና እነዚህን ዝንባሌዎች በመሣሪያዎ ላይ በጊዜያዊነት ማስቀመጥ ይችላሉ። ይህ መተግበሪያዎች በሌሎች ገንቢዎች በተሰሩ ድር ጣቢያዎች እና መተግበሪያዎች ላይ እርስዎ የሚኖርዎትን እንቅስቃሴ ሳይከታተሉ ተዛማጅነት ያላቸው ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያስችላቸዋል።"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ምንም የታገዱ መተግበሪያዎች የሉዎትም"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"በመተግበሪያዎች የተጠቆሙ ማስታወቂያዎች ዳግም ይጀመሩ?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"በዝርዝርዎ ላይ ካሉ መተግበሪያዎች ያለ የማስታወቂያ ጥቆማ ውሂብ ይሰረዛል እና መተግበሪያዎቹ ለወደፊት አዳዲስ ማስታወቂያዎችን ይጠቁማሉ። አሁንም አንዳንድ ተዛማጅ ማስታወቂያዎችን ሊመለከቱ ይችላሉ።"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"የመተግበሪያ ውሂብ ዳግም ጀምሯል"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"ሁሉም ርዕሶች ዳግም ይጀምሩ?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"በመተግበሪያዎች የተጠቆሙ ማስታወቂያዎች ዳግም ይጀመሩ?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"የማስታወቂያ ርዕሶች በርተዋል"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android የዝንባሌ ርዕሶችን ማስታወሻ መያዝ ይጀምራል፣ ነገር ግን የእርስዎ የመጀመሪያው ርዕሶች እስኪታዩ የተወሰነ ጊዜ ሊወስዱ ይችላሉ።"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"የማስታወቂያ ርዕሶች ይጥፉ?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"ይህ የርዕሶች ዝርዝር ይሰረዛል። Android ከእንግዲህ የዝንባሌ ርዕሶችን ማስታወሻ አይዝም፣ ነገር ግን አሁንም አግባብነት ያላቸውን ማስታወቂያዎች ሊመለከቱ ይችላሉ።"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"በመተግበሪያ የተጠቆሙ ማስታወቂያዎች በርተዋል"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"መተግበሪያዎች ማስታወቂያዎችን መጠቆም ሊጀምሩ ይችላሉ። እነሱ አንዴ ማስታወቂያዎችን መጠቆም ሊጀምሩ እርስዎ የመተግበሪያዎች ዝርዝርን ይመለከታሉ።"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"በመተግበሪያ የተጠቆሙ ማስታወቂያዎች ይጥፉ?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"ሁሉም የማስታወቂያ ጥቆማ ውሂብ ይሰረዛል። መተግበሪያዎች ከእንግዲህ ማስታወቂያዎችን መጠቆም አይችሉም፣ ነገር ግን እርስዎ አግባብነት ያላቸውን ማስታወቂያዎች ሊመለከቱ ይችላሉ።"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"የማስታወቂያ ልኬት በርቷል"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android መተግበሪያዎችን የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት ለማገዝ ከመተግበሪያዎች ጋር ማጋራት የሚችለው በጣም የተገደበ መረጃን ብቻ ነው።"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"የማስታወቂያ ልኬት ይጥፋ?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"ሁሉም በመጠባበቅ ላይ ያሉ የማስታወቂያ ልኬት ሪፖርቶች ይሰረዛሉ እና ምንም አዲስ ሪፖርቶች አይመነጩም ወይም አይጋሩም።"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"የማስታወቂያ ግላዊነት"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"የማስታወቂያ ርዕሶች"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"በመተግበሪያ የተጠቆሙ ማስታወቂያዎች"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android በቅርብ ጊዜ በተጠቀሟቸው መተግበሪያዎች ላይ እና ምን ያህል በተደጋጋሚ እንደተጠቀሟቸው ላይ በመመስረት በዝንባሌ ርዕሶች ላይ ማስታወሻ ይይዛል።"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"እንዲሁም የሚጠቀሟቸው መተግበሪያዎች እርስዎ እነሱን በሚጠቀሙበት መንገድ መሰረት ምን እንደሚወዱ መወሰን ይችላሉ።"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች የተገደቡ የውሂብ ዓይነቶችን እንዲሰበስቡ ያደርጋል።"</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"ስለ "<a href="https://support.google.com/android?p=ad_privacy">"Android ላይ ያለ የማስታወቂያ ግላዊነት"</a>" የበለጠ ይወቁ"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"በርቷል / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ርዕሶች"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{በማሳየት ላይ / # ርዕስ}one{በማሳየት ላይ / # ርዕስ}other{በማሳየት ላይ / # ርዕሶች}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"በርቷል / <xliff:g id="APPS_COUNT">%1$d</xliff:g> መተግበሪያዎች"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"እርስዎ ያገዷቸው መተግበሪያዎች"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"በመተግበሪያ የተጠቆመ ውሂብን ዳግም አስጀምር"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ተሞክሮዎን ግላዊነት ለማላበስ እርስዎ የሚጠቀሟቸው መተግበሪያዎች የእርስዎ ዝንባሌን ማስታወሳቸው የተለመደ ነው። እንዲሁም መተግበሪያዎች ስለርዕሶችዎ በAndroid መረጃን ማከማቸት ይችላሉ።\n\nለምሳሌ ስለማራቶን ስልጠና አንድን መተግበሪያ ከተጠቀሙ መተግበሪያው እርስዎ በሩጫ ጫማዎች ላይ ዝንባሌ እንዳለዎት ሊወስን ይችላል። በኋላ ላይ የተለየ መተግበሪያ የሚጠቀሙ ከሆነ ያ መተግበሪያ በመጀመሪያው መተግበሪያ በአስተያየት የተጠቆሙ የሩጫ ጫማዎች ማስታወቂያ ሊያሳይዎት ይችላል።\n\nAndroid በመተግበሪያ አስተያየት የተደረገ ውሂብን በመደበኛነት በራስ ሰር ይሰርዛል። በድጋሚ የሚጠቀሙት መተግበሪያ በዝርዝሩ ላይ ዳግም ሊታይ ይችላል። ወይም መተግበሪያ ለእርስዎ ማስታወቂያን በአስተያየት ከመጠቆም ማገድ ይችላሉ።\n\nበመተግበሪያዎችዎ ውስጥ በዚህ ቅንብር፣ በማስታወቂያ ርዕሶቹ ቅንብር፣ በእርስዎ የማስታወቂያ መታወቂያ ቅንብሮች እና የሚጠቀሙት መተግበሪያ ማስታወቂያዎችን ግላዊነት በሚያላብስበት መንገድ መሰረት የሚያዩት ማስታወቂያ ግላዊነትን የተላበሰ ሊሆን ይችላል።"</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"አዲስ የማስታወቂያዎች የግላዊነት ባህሪ ይገኛል"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"የማስታወቂያ አፈጻጸምን እንዲለኩ ለማገዝ በመተግበሪያዎች መካከል በጣም የተገደበ መረጃ ብቻ ይጋራል።"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"የማስታወቂያ ልኬት የሚባል አዲስ የማስታወቂያ ግላዊነት ባህሪ እያስጀመርን ነው። Android በመተግበሪያዎች መካከል በጣም የተገደበ መረጃን ብቻ ያጋራል፣ ለምሳሌ የማስታወቂያዎችን አፈጻጸም ለመለካት መተግበሪያዎችን ለማገዝ አንድ ማስታወቂያ ለእርስዎ ሲታይ።"</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"እርስዎ በማስታወቂያ ግላዊነት ቅንብሮች ውስጥ ለውጦችን ማድረግ ይችላሉ።"</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች የተገደቡ የውሂብ ዓይነቶችን ብቻ እንዲሰበስቡ ያደርጋል።"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"እንደ ሙዚቃ፣ ዜና እና ስፖርት ያሉ የዝንባሌ ርዕሶችን የሚወክሉ በቀለም የተሞሉ የሥዕላዊ ማብራሪያ ምልክቶች"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"በክበብ ውስጥ ያለ በቀለም የተሞላ ቁልፍ ሥዕላዊ ማብራሪያ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ኩብ የሚፈጥሩ የዘጠኝ ነጥቦች ትንሽ ጥቁር እና ነጭ ሥዕላዊ ማብራሪያ"</string>
@@ -288,7 +304,7 @@
     <string name="topic10071" msgid="1288722040962471254">"መኪናዎች እና ተሸከርካሪዎች"</string>
     <string name="topic10072" msgid="9155509766616567261">"የጭነት መኪናዎች እና ተጎታቾች"</string>
     <string name="topic10073" msgid="3748676231341513738">"የቆዩ ተወዳጅ ተሽከርካሪዎች"</string>
-    <string name="topic10074" msgid="2040911547161463227">"ብጁ እና የከፍተኛ ስራ ተሽከርካሪዎች"</string>
+    <string name="topic10074" msgid="2040911547161463227">"ብጁ እና የከፍተኛ ሥራ ተሽከርካሪዎች"</string>
     <string name="topic10075" msgid="1242538698445713796">"የነዳጅ ዋጋዎች እና የተሽከርካሪ ነዳጅ"</string>
     <string name="topic10076" msgid="8674225812339579627">"የሞተር ተሽከርካሪዎች (በዓይነት)"</string>
     <string name="topic10077" msgid="3577709810751953433">"ራስ-ሰር ተሽከርካሪዎች"</string>

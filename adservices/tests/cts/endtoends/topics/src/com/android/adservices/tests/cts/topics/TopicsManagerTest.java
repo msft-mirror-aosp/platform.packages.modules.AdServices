@@ -19,6 +19,8 @@ package com.android.adservices.tests.cts.topics;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.assertThrows;
+
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
@@ -26,20 +28,22 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesSupportRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -93,10 +97,11 @@ public class TopicsManagerTest {
             "Incorrect taxonomy version detected. Please repo sync, build and install the new"
                     + " apex.";
 
+    // Skip the test if it runs on unsupported platforms.
+    @Rule public final AdServicesSupportRule mAdServicesSupportRule = new AdServicesSupportRule();
+
     @Before
     public void setup() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         // Kill adservices process to avoid interfering from other tests.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
@@ -120,6 +125,35 @@ public class TopicsManagerTest {
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+    }
+
+    @Test
+    public void testTopicsManager_testTopicsKillSwitch() throws Exception {
+        // Override Topics kill switch to disable Topics API.
+        overrideTopicsKillSwitch(true);
+
+        // Set classifier flag to use precomputed-then-on-device classifier.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+
+        // Default classifier uses the precomputed list first, then on-device classifier.
+        AdvertisingTopicsClient advertisingTopicsClient =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk1")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(false)
+                        .build();
+
+        // As the kill switch for Topics API is enabled, we should expect failure here.
+        assertThat(
+                assertThrows(
+                        ExecutionException.class,
+                        () -> advertisingTopicsClient.getTopics().get())
+                        .getMessage())
+                .isEqualTo("java.lang.IllegalStateException: Service is not available.");
+
+        // Override Topics kill switch to enable Topics API.
+        overrideTopicsKillSwitch(false);
     }
 
     @Test
@@ -282,6 +316,10 @@ public class TopicsManagerTest {
         overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Set classifier threshold back to default.
         overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
+    }
+
+    private void overrideTopicsKillSwitch(boolean val) {
+        ShellUtils.runShellCommand("device_config put adservices topics_kill_switch " + val);
     }
 
     // Override the flag to select classifier type.

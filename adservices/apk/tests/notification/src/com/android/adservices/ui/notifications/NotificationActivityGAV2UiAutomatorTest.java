@@ -38,7 +38,6 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -206,32 +205,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject appsTitle = getElement(R.string.settingsUI_apps_ga_title);
         ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_apps_ga_title);
         assertThat(appsTitle.exists()).isTrue();
-    }
-
-    @Test
-    public void privacyPolicyLinkTestRow() throws Exception {
-        String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
-        sDevice.pressHome();
-
-        /* isEUActivity false: Rest of World Notification landing page */
-        startActivity(false);
-        /* find the expander and click to expand to get the content */
-        UiObject moreExpander =
-                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
-        moreExpander.click();
-
-        UiObject sentence =
-                ApkTestUtil.scrollTo(
-                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
-        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
-                packageNameOfDefaultBrowser, sentence, 20)) {
-            return;
-        }
-        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
-            return;
-        }
-        Assert.fail("Web browser not found after several clicks on the last line");
     }
 
     private void startActivity(boolean isEUActivity) {

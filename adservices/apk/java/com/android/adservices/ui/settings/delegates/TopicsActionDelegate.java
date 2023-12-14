@@ -17,6 +17,7 @@ package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
 import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
@@ -27,7 +28,6 @@ import androidx.lifecycle.Observer;
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
@@ -76,7 +76,7 @@ public class TopicsActionDelegate {
                                 break;
                             case BLOCK_TOPIC:
                                 UiStatsLogger.logBlockTopicSelected(mTopicsActivity);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockTopicDialog(
                                                 mTopicsActivity, mTopicsViewModel, topic);
@@ -90,7 +90,7 @@ public class TopicsActionDelegate {
                                 break;
                             case RESET_TOPICS:
                                 UiStatsLogger.logResetTopicSelected(mTopicsActivity);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetTopicDialog(
                                                 mTopicsActivity, mTopicsViewModel);
@@ -146,6 +146,8 @@ public class TopicsActionDelegate {
                 .setText(R.string.settingsUI_reset_topics_ga_title);
         ((TextView) mTopicsActivity.findViewById(R.id.no_topics_state))
                 .setText(R.string.settingsUI_topics_view_no_topics_ga_text);
+        ((TextView) mTopicsActivity.findViewById(R.id.no_topics_state))
+                .setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     private void setBetaTopicsViewText() {

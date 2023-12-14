@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"अनब्लक गर्नुहोस्"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"तपाईंले ब्लक गर्नुभएका रुचिहरू"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"सबै रुचिहरू रिसेट गर्नुहोस्"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"यस बखत देखाउनका लागि कुनै पनि रुचि छैन"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"यस बखत देखाउनका लागि कुनै पनि विषय छैन"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"यस बखत देखाउनका लागि कुनै पनि रुचि छैन।"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"यस बखत देखाउनका लागि कुनै पनि विषय छैन।\n"<a href="https://support.google.com/android?p=ad_privacy">"विज्ञापनको विषय"</a>"का बारेमा थप जान्नुहोस्"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"प्राइभेसी स्यान्डबक्स"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android को विज्ञापनको गोपनीयतासम्बन्धी सुविधाको बिटा संस्करणले एपहरूले तपाईंलाई मन पर्न सक्ने विज्ञापनहरू देखाउनका निम्ति प्रयोग गर्न सक्ने नयाँ सुविधाहरू उपलब्ध गराउँछ। यी प्रविधिले डिभाइस आइडेन्टिफायर प्रयोग गर्दैनन्।\n\nAndroid ले तपाईंको रुचि हुन सक्ने विज्ञापनहरूका बारेमा अनुमान लगाउन र ती रुचिहरू अस्थायी रूपमा तपाईंको डिभाइसमा सेभ गर्न सक्छ। यसले गर्दा एपहरूले अन्य विकासकर्ताका वेबसाइट तथा एपहरूमा तपाईंले गर्ने क्रियाकलाप ट्र्याक नगरिकनै तपाईंलाई सान्दर्भिक विज्ञापनहरू देखाउन सक्छन्।"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"तपाईंले कुनै पनि रुचि ब्लक गर्नुभएको छैन"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ब्लक गरिएका एपहरू हेर्नुहोस्"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"एपहरूले अनुमान गरेका रुचि रिसेट गर्नुहोस्"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"हाल कुनै पनि एपले तपाईंका रुचिहरू सिर्जना गरिरहेका छैनन्"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"यस बखत देखाउनका लागि कुनै पनि एप छैन"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"यस बखत देखाउनका लागि कुनै पनि एप छैन। \n"<a href="https://support.google.com/android?p=ad_privacy">"एपले सिफारिस गरेका विज्ञापनहरू"</a>"का बारेमा थप जान्नुहोस्"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"प्राइभेसी स्यान्डबक्स"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android को विज्ञापनको गोपनीयतासम्बन्धी सुविधाको बिटा संस्करणले एपहरूले तपाईंलाई मन पर्न सक्ने विज्ञापनहरू देखाउनका निम्ति प्रयोग गर्न सक्ने नयाँ सुविधाहरू उपलब्ध गराउँछ। यी प्रविधिले डिभाइस आइडेन्टिफायर प्रयोग गर्दैनन्।\n\nएपहरूले तपाईंको रुचि हुन सक्ने विज्ञापनहरूका बारेमा अनुमान लगाउन र ती रुचिहरू अस्थायी रूपमा तपाईंको डिभाइसमा सेभ गर्न सक्छन्। यसले गर्दा एपहरूले अन्य विकासकर्ताका वेबसाइट तथा एपहरूमा तपाईंले गर्ने क्रियाकलाप ट्र्याक नगरिकनै तपाईंलाई सान्दर्भिक विज्ञापनहरू देखाउन सक्छन्।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"तपाईंले कुनै पनि एप ब्लक गर्नुभएको छैन"</string>
@@ -187,14 +187,25 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"एपले सिफारिस गरेका विज्ञापन रिसेट गर्ने हो?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"तपाईंको सूचीमा रहेका एपहरूले सिफारिस गरेका विज्ञापनसम्बन्धी डेटा मेटाइने छन् र ती एपले अबदेखि नयाँ विज्ञापनहरू सिफारिस गर्ने छन्। तपाईं अझै पनि ती रूचिसँग सम्बन्धित केही विज्ञापनहरू देख्न सक्नुहुन्छ।"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"एपसम्बन्धी डेटा रिसेट गरियो"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"सबै विषय रिसेट गर्ने हो?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"एपले सिफारिस गरेका विज्ञापन रिसेट गर्ने हो?"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"\"विज्ञापनका विषयहरू\" नामक सुविधा अन छ"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android ले तपाईंका रुचिका विषय याद राख्न थाल्ने छ तर तपाईंको पहिलो विषय देखिन केही समय लाग्न सक्छ।"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"\"विज्ञापनका विषयहरू\" अफ गर्ने हो?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"विषयहरूको यो सूची मेटाइने छ। Android ले अब तपाईंका रुचिका विषय याद राख्ने छैन तर तपाईंले अझै पनि सान्दर्भिक विज्ञापनहरू देख्ने सम्भावना हुन्छ।"</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"एपले सिफारिस गरेका विज्ञापनहरू नामक सुविधा अन छ"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"एपहरूले विज्ञापन सिफारिस गर्न थाल्न सक्छन्। एपहरूले विज्ञापन सिफारिस गर्न थालेपछि तपाईं ती एपको सूची देख्नुहुने छ।"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"एपले सिफारिस गरेका विज्ञापनहरू नामक सुविधा अफ गर्ने हो?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"एपहरूले सिफारिस गरेका विज्ञापनसम्बन्धी सबै डेटा मेटाइने छ। एपहरूले अब विज्ञापन सिफारिस गर्न सक्ने छैनन् तर तपाईंले अझै पनि सान्दर्भिक विज्ञापनहरू देख्ने सम्भावना हुन्छ।"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"विज्ञापनको पर्फर्मेन्स मापन गर्ने सुविधा अन छ"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ले एपहरूसँग उनीहरूको विज्ञापनको पर्फर्मेन्स मापन गर्न सघाउने ज्यादै सीमित जानकारी मात्र सेयर गर्न सक्छ।"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"विज्ञापनको पर्फर्मेन्स मापन गर्ने सुविधा अफ गर्ने हो?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"विज्ञापनको मापनसम्बन्धी सबै विचाराधीन रिपोर्टहरू मेटाइने छ र कुनै पनि नयाँ रिपोर्ट बनाइने छैन वा सेयर गरिने छैन।"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"विज्ञापनको गोपनीयता"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"विज्ञापनका विषयहरू"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"एपले सिफारिस गरेका विज्ञापनहरू"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android ले तपाईंले यो डिभाइसमा हालसालै चलाउनुभएका एप र तपाईं ती एप कति अन्तरालमा चलाउनुहुन्छ भन्ने कुराका आधारमा तपाईंका रुचिका विषयहरू थाहा पाउँछ।"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"तपाईंले चलाउने एपहरूले तपाईंले एपमा गरेका क्रियाकलापका आधारमा तपाईंलाई मन पर्ने कुराहरू निर्धारण गर्न पनि सक्छन्।"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"तपाईंले चलाउने एपहरूले Android सँग उनीहरूका विज्ञापनहरूको पर्फर्मेन्स मापन गर्न सघाउने जानकारी माग्न सक्छन्। Android ले एपहरूलाई सीमित प्रकारका डेटा सङ्कलन गर्ने अनुमति दिन्छ।"</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android मा विज्ञापनको गोपनीयता"</a>"का बारेमा थप जान्नुहोस्"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"अन / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> वटा विषय"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{अन / # विषय}other{अन / # वटा विषय}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"अन / <xliff:g id="APPS_COUNT">%1$d</xliff:g> वटा एप"</string>
@@ -211,6 +222,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"तपाईंले ब्लक गर्नुभएका एपहरू"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"एपले सिफारिस गरेका डेटा रिसेट गर्नुहोस्"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"तपाईंले चलाउने एपहरूले तपाईंलाई उपलब्ध गराइने सुविधा पर्सनलाइज गर्ने प्रयोजनका लागि तपाईंको रुचि भएका कुराहरू याद राख्नु सामान्य कुरा हो। एपहरूले Android मा तपाईंका विषयसम्बन्धी जानकारी भण्डारण गर्न पनि सक्छन्।\n\nउदाहरणका लागि, तपाईंले म्याराथन दौडको प्रशिक्षणसम्बन्धी कुनै एप चलाउनुभयो भने उक्त एपले तपाईं म्याराथन दौडमा लगाइने जुत्तामा रुचि राख्नुहुन्छ भन्ने कुरा बुझ्न सक्छ। तपाईंले पछि अर्कै एप चलाउनुभयो भने उक्त एपले तपाईंलाई पहिलो एपले सिफारिस गरेको दौडिँदा लगाइने जुत्ताको विज्ञापन देखाउन सक्छ।\n\nAndroid ले एपले सिफारिस गरेका डेटा नियमित रूपमा स्वतः मेटाउँछ। तपाईंले कुनै एप फेरि चलाउनुभयो भने यो सूचीमा उक्त एप फेरि देखिन सक्छ। वा तपाईं कुनै एपले तपाईंलाई विज्ञापन सिफारिस गर्न नपाउने गरी उक्त एप ब्लक गर्न सक्नुहुन्छ।\n\nतपाईंका एपहरूमा तपाईंलाई देखाइने कुनै विज्ञापन पर्सनलाइज गरिएको हुन सक्छ। विज्ञापन पर्सनलाइज गरिन्छ कि गरिँदैन भन्ने कुरा यो सेटिङ, विज्ञापनका विषयसम्बन्धी सेटिङ, तपाईंको विज्ञापन ID सम्बन्धी सेटिङ र तपाईंले चलाइरहनुभएको एपले विज्ञापन पर्सनलाइज गर्छ कि गर्दैन भन्ने कुरामा भर पर्छ।"</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"विज्ञापनको गोपनीयता कायम राख्ने नयाँ सुविधाहरू उपलब्ध छन्"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"विज्ञापनको पर्फर्मेन्स मापन गर्न मद्दत गर्ने प्रयोजनका लागि एपहरूका बिचमा अत्यन्तै सीमित जानकारी मात्र सेयर गरिन्छ"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"हामी \"विज्ञापनको मापन\" नामक विज्ञापनको गोपनीयता कायम राख्ने नयाँ सुविधा लन्च गर्दै छौँ। Android ले एपहरूलाई विज्ञापनको पर्फर्मेन्स मापन गर्न मद्दत गर्ने प्रयोजनका लागि एपहरूका बिचमा तपाईंलाई कुनै विज्ञापन कुन बेला देखाइएको थियो भन्ने जस्ता अत्यन्तै सीमित जानकारी मात्र सेयर गर्छ।"</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"तपाईं विज्ञापनको गोपनीयतासम्बन्धी सेटिङमा गई यी कुरा परिवर्तन गर्न सक्नुहुन्छ।"</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"तपाईंले चलाउने एपहरूले Android सँग उनीहरूका विज्ञापनहरूको पर्फर्मेन्स मापन गर्न सघाउने जानकारी माग्न सक्छन्। Android ले एपहरूलाई सीमित किसिमका जानकारी मात्र सङ्कलन गर्ने अनुमति दिन्छ।"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"सङ्गीत, समाचार र खेलकुद जस्ता तपाईंलाई रुचि लाग्ने विषयहरू जनाउने प्रतीकहरूको रङ्गीन चित्रण"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"वृत्तभित्र लक जनाउने प्रतीक भएको रङ्गीन चित्रण"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"नौ वटा बिन्दुले बनाइएको वर्ग आकारको सानो श्यामश्वेत चित्रण"</string>

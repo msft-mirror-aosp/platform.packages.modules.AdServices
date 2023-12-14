@@ -137,16 +137,16 @@
         "report_time": "1643237477618"
       }
     ],
-    "debug_report_results": [
+    "verbose_debug_reports": [
       {
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
             {
             "type": "trigger-aggregate-insufficient-budget",
             "body": {
-              "attribution_destination": "https://example.1d1.test",
+              "attribution_destination": "https://1d1.test",
               "trigger_debug_key": "8971346781",
-              "limit" : "65537",
+              "limit" : "65536",
               "source_debug_key": "347982378",
               "source_event_id": "1",
               "source_site": "android-app://example.1s1.test"

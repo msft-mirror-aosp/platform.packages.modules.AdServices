@@ -176,7 +176,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         for (String query : UPDATE_ASYNC_REGISTRATION_TABLE_QUERIES) {
             db.execSQL(query);
         }
-        db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_LATEST);
+        db.execSQL(MeasurementTables.CREATE_TABLE_DEBUG_REPORT_V3);
 
         alterEventReportTable(db);
         alterTriggerTable(db);

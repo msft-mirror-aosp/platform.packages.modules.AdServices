@@ -16,8 +16,6 @@
 
 package com.android.adservices.data.enrollment;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /** Container class for Enrollment table definitions and constants. */
@@ -41,7 +39,7 @@ public final class EnrollmentTables {
         String ENCRYPTION_KEY_URL = "encryption_key_url";
     }
 
-    public static final String CREATE_TABLE_ENROLLMENT_DATA =
+    public static final String CREATE_TABLE_ENROLLMENT_DATA_V1 =
             "CREATE TABLE "
                     + EnrollmentDataContract.TABLE
                     + " ("
@@ -64,8 +62,11 @@ public final class EnrollmentTables {
                     + ")";
 
     // Consolidated list of create statements for all tables.
-    public static final List<String> CREATE_STATEMENTS =
-            Collections.unmodifiableList(Arrays.asList(CREATE_TABLE_ENROLLMENT_DATA));
+    public static final List<String> CREATE_STATEMENTS = List.of(CREATE_TABLE_ENROLLMENT_DATA_V1);
+
+    // Consolidated list of create statements for all tables.
+    public static final List<String> CREATE_STATEMENTS_V1 =
+            List.of(CREATE_TABLE_ENROLLMENT_DATA_V1);
 
     // Private constructor to prevent instantiation.
     private EnrollmentTables() {}

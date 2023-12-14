@@ -29,6 +29,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -203,5 +204,10 @@ public class TopicsDao {
         } catch (SQLException e) {
             LogUtil.e("Failed to remove all blocked topics." + e.getMessage());
         }
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix, String[] args) {
+        mTopicsDbHelper.dump(writer, prefix, args);
     }
 }

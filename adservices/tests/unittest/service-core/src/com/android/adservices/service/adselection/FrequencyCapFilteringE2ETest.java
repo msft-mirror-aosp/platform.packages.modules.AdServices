@@ -234,7 +234,7 @@ public class FrequencyCapFilteringE2ETest {
                         mContextSpy.getPackageManager(),
                         new EnrollmentDao(
                                 mContextSpy,
-                                DbTestUtil.getDbHelperForTest(),
+                                DbTestUtil.getSharedDbHelperForTest(),
                                 flagsEnablingAdFiltering),
                         mAdServicesLoggerMock);
 

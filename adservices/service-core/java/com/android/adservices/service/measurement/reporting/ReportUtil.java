@@ -16,10 +16,11 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,13 +30,14 @@ import java.util.stream.Collectors;
 /** Report related utility methods. */
 public class ReportUtil {
     /**
-     * Prepares a list of attribution destinations for report JSON.
+     * Prepares an alphabetical ordered list of attribution destinations for report JSON. If any
+     * elements are found to be null, they are added at last.
      *
      * @param destinations a list of attribution destinations
      * @return an Object that is either String or JSONArray
      */
-    public static Object serializeAttributionDestinations(List<Uri> destinations)
-            throws JSONException {
+    @Nullable
+    public static Object serializeAttributionDestinations(@NonNull List<Uri> destinations) {
         if (destinations.size() == 0) {
             throw new IllegalArgumentException("Destinations list is empty");
         }
@@ -43,12 +45,10 @@ public class ReportUtil {
         if (destinations.size() == 1) {
             return destinations.get(0).toString();
         } else {
-            List<Uri> destinationsCopy = new ArrayList<>(destinations);
-            destinationsCopy.sort(Comparator.comparing(Uri::toString));
+            List<Uri> sortedDestinations = new ArrayList<>(destinations);
+            sortedDestinations.sort(Comparator.comparing(Uri::toString));
             return new JSONArray(
-                    destinationsCopy.stream()
-                            .map(Uri::toString)
-                            .collect(Collectors.toList()));
+                    sortedDestinations.stream().map(Uri::toString).collect(Collectors.toList()));
         }
     }
 }

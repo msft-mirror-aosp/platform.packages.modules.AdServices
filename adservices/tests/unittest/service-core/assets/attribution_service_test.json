@@ -5052,7 +5052,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.017022,
+          "randomizedTriggerRate":  0.0170218,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -5386,7 +5386,7 @@
           "reportTime": 8730000002,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.017022,
+          "randomizedTriggerRate":  0.0170218,
           "sourceId": "S1",
           "triggerId": "T1"
         }],

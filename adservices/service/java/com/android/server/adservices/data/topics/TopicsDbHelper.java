@@ -27,6 +27,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 
 import java.io.File;
+import java.io.PrintWriter;
 
 /**
  * Helper to manage the Topics API system service database. Designed as a singleton to make sure
@@ -114,5 +115,14 @@ public class TopicsDbHelper extends SQLiteOpenHelper {
             LogUtil.e(e, "Failed to get a writeable database");
             return null;
         }
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix, String[] args) {
+        writer.printf("%sTopicsDbHelper\n", prefix);
+        String prefix2 = prefix + "  ";
+        writer.printf("%sCURRENT_DATABASE_VERSION: %d\n", prefix2, CURRENT_DATABASE_VERSION);
+        writer.printf("%smDbFile: %s\n", prefix2, mDbFile);
+        writer.printf("%smDbVersion: %d\n", prefix2, mDbVersion);
     }
 }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.measurement.deletion;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
+
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.annotation.NonNull;
@@ -28,8 +30,11 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
@@ -112,6 +117,12 @@ public class MeasurementDataDeleter {
                     // Finally mark sources and triggers for deletion
                     dao.updateSourceStatus(sourceIds, Source.Status.MARKED_TO_DELETE);
                     dao.updateTriggerStatus(triggerIds, Trigger.Status.MARKED_TO_DELETE);
+
+                    // Log wipeout event triggered by request (from Chrome) to delete data of
+                    // package on device for parity
+                    WipeoutStatus wipeoutStatus = new WipeoutStatus();
+                    wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNKNOWN);
+                    logWipeoutStats(wipeoutStatus);
                 });
     }
 
@@ -179,5 +190,14 @@ public class MeasurementDataDeleter {
 
     private Uri getRegistrant(String packageName) {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
+    }
+
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
+        AdServicesLoggerImpl.getInstance()
+                .logMeasurementWipeoutStats(
+                        new MeasurementWipeoutStats.Builder()
+                                .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .build());
     }
 }

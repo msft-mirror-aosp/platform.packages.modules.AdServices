@@ -1541,13 +1541,13 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
-        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+        CustomAudience customAudienceRegularExpiry = createCustomAudience(BUYER_1, bidsForBuyer1);
 
         int caTimeToExpireSeconds = 2;
         // Since we cannot create CA which is already expired, we create one which expires in few
         // seconds
         // We will then wait till this CA expires before we run Ad Selection
-        CustomAudience customAudience2 =
+        CustomAudience customAudienceEarlyExpiry =
                 createCustomAudience(
                         BUYER_2,
                         bidsForBuyer2,
@@ -1556,12 +1556,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        joinCustomAudience(customAudience1);
+
+        // Join the CA with early expiry first, to avoid waiting too long for another CA join
+        joinCustomAudience(customAudienceEarlyExpiry);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        joinCustomAudience(customAudience2);
+        joinCustomAudience(customAudienceRegularExpiry);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1575,15 +1577,15 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setBuyer(customAudience1.getBuyer())
-                        .setName(customAudience1.getName())
+                        .setBuyer(customAudienceRegularExpiry.getBuyer())
+                        .setName(customAudienceRegularExpiry.getName())
                         .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setBuyer(customAudience2.getBuyer())
-                        .setName(customAudience2.getName())
+                        .setBuyer(customAudienceEarlyExpiry.getBuyer())
+                        .setName(customAudienceEarlyExpiry.getName())
                         .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
