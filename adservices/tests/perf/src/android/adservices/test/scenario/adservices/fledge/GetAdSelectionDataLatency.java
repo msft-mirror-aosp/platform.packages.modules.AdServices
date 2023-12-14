@@ -337,4 +337,58 @@ public class GetAdSelectionDataLatency {
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
     }
+
+    @Test
+    public void test_withoutFiltering_varyingAds_5() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 10, /* nAdsPerCA= */ 5);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingAds_5",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingAds_25() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 10, /* nAdsPerCA= */ 25);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingAds_25",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
 }
