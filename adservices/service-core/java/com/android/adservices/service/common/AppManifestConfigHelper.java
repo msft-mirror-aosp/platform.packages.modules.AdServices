@@ -118,23 +118,16 @@ public class AppManifestConfigHelper {
     }
 
     @Nullable
-    private static XmlResourceParser getXmlParser(
-            @NonNull String appPackageName, boolean enabledByDefault)
+    private static XmlResourceParser getXmlParser(AppManifestConfigCall call)
             throws NameNotFoundException, XmlParseException, XmlPullParserException, IOException {
         Context context = ApplicationContextSingleton.get();
-        LogUtil.v("getXmlParser(%s): context=%s", appPackageName, context);
-        AppManifestConfigCall call = new AppManifestConfigCall(appPackageName);
-        call.enabledByDefault = enabledByDefault;
-        // NOTE: resources is only used pre-S, but it must be called regardless to make sure the
-        // app exists
-        Resources resources = null;
-        try {
-            resources = context.getPackageManager().getResourcesForApplication(appPackageName);
-            call.appExists = true;
-        } catch (NameNotFoundException e) {
-            AppManifestConfigMetricsLogger.logUsage(call);
-            throw e;
-        }
+        String appPackageName = call.packageName;
+        LogUtil.v("getXmlParser(%s): context=%s", call.packageName, context);
+        // NOTE: resources is only used pre-S, but it must be called regardless to make sure the app
+        // exists
+        Resources resources =
+                context.getPackageManager().getResourcesForApplication(appPackageName);
+        call.appExists = true;
 
         Integer resId =
                 SdkLevel.isAtLeastS()
@@ -147,7 +140,6 @@ public class AppManifestConfigHelper {
             xmlResourceParser = resources.getXml(resId);
             call.appHasConfig = true;
         }
-        AppManifestConfigMetricsLogger.logUsage(call);
         return xmlResourceParser;
     }
 
@@ -184,18 +176,19 @@ public class AppManifestConfigHelper {
             ApiAccessChecker checker) {
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(enrollmentId);
-        boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
+        AppManifestConfigCall call = new AppManifestConfigCall(appPackageName);
+        call.enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
         try {
-            XmlResourceParser in = getXmlParser(appPackageName, enabledByDefault);
+            XmlResourceParser in = getXmlParser(call);
             if (in == null) {
                 LogUtil.v(
                         "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
-                        method, enabledByDefault, appPackageName);
-                return enabledByDefault;
+                        method, call.enabledByDefault, appPackageName);
+                return call.enabledByDefault;
             }
             AppManifestConfig appManifestConfig =
-                    AppManifestConfigParser.getConfig(in, enabledByDefault);
-            return checker.isAllowedAccess(appManifestConfig);
+                    AppManifestConfigParser.getConfig(in, call.enabledByDefault);
+            call.result = checker.isAllowedAccess(appManifestConfig);
         } catch (NameNotFoundException e) {
             LogUtil.v(
                     "Name not found while looking for manifest for app %s: %s", appPackageName, e);
@@ -205,8 +198,10 @@ public class AppManifestConfigHelper {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        } finally {
+            AppManifestConfigMetricsLogger.logUsage(call);
         }
-        return false;
+        return call.result;
     }
 
     private interface ApiAccessChecker {
