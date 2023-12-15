@@ -40,6 +40,7 @@ import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
@@ -431,6 +432,7 @@ public class TrustedServerAdSelectionRunnerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void verifyNoRequestCompressionWhenFlagDisabled() {
         Flags flags =
                 new Flags() {
