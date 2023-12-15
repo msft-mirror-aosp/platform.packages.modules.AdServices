@@ -126,15 +126,8 @@ public final class AppManifestConfigCallTest extends AdServicesUnitTestCase {
     }
 
     /** Gets a custom Mockito matcher for a {@link AppManifestConfigCall}, without the result. */
-    static AppManifestConfigCall appManifestConfigCall(
-            String packageName,
-            boolean appExists,
-            boolean appHasConfig,
-            boolean enabledByDefault,
-            int result) {
-        return argThat(
-                new AppManifestConfigCallMatcher(
-                        packageName, appExists, appHasConfig, enabledByDefault, result));
+    static AppManifestConfigCall appManifestConfigCall(String packageName, int result) {
+        return argThat(new AppManifestConfigCallMatcher(packageName, result));
     }
 
     // TODO(b/306417555): remove it / implement equals() on AppManifestConfigCall instead (once that
@@ -143,42 +136,22 @@ public final class AppManifestConfigCallTest extends AdServicesUnitTestCase {
             implements ArgumentMatcher<AppManifestConfigCall> {
 
         private final String mPackageName;
-        private final boolean mAppExists;
-        private final boolean mAppHasConfig;
-        private final boolean mEnabledByDefault;
         private final int mResult;
 
-        private AppManifestConfigCallMatcher(
-                String packageName,
-                boolean appExists,
-                boolean appHasConfig,
-                boolean enabledByDefault,
-                int result) {
+        private AppManifestConfigCallMatcher(String packageName, int result) {
             mPackageName = packageName;
-            mAppExists = appExists;
-            mAppHasConfig = appHasConfig;
-            mEnabledByDefault = enabledByDefault;
             mResult = result;
         }
 
         @Override
         public boolean matches(AppManifestConfigCall arg) {
-            return arg != null
-                    && arg.packageName.equals(mPackageName)
-                    && arg.appExists == mAppExists
-                    && arg.appHasConfig == mAppHasConfig
-                    && arg.enabledByDefault == mEnabledByDefault
-                    && arg.result == mResult;
+            return arg != null && arg.packageName.equals(mPackageName) && arg.result == mResult;
         }
 
         @Override
         public String toString() {
             AppManifestConfigCall call = new AppManifestConfigCall(mPackageName);
             call.result = mResult;
-            call.appExists = mAppExists;
-            call.appHasConfig = mAppHasConfig;
-            call.enabledByDefault = mEnabledByDefault;
-
             return call.toString();
         }
     }

@@ -129,29 +129,22 @@ public class AppManifestConfigHelper {
     }
 
     @Nullable
-    private static XmlResourceParser getXmlParser(AppManifestConfigCall call)
+    private static XmlResourceParser getXmlParser(String appPackageName)
             throws NameNotFoundException, XmlParseException, XmlPullParserException, IOException {
         Context context = ApplicationContextSingleton.get();
-        String appPackageName = call.packageName;
-        LogUtil.v("getXmlParser(%s): context=%s", call.packageName, context);
+        LogUtil.v("getXmlParser(%s): context=%s", appPackageName, context);
+
         // NOTE: resources is only used pre-S, but it must be called regardless to make sure the app
         // exists
         Resources resources =
                 context.getPackageManager().getResourcesForApplication(appPackageName);
-        call.appExists = true;
-
         Integer resId =
                 SdkLevel.isAtLeastS()
                         ? getAdServicesConfigResourceIdOnExistingPackageOnSPlus(
                                 context, appPackageName)
                         : getAdServicesConfigResourceIdOnRMinus(context, resources, appPackageName);
 
-        XmlResourceParser xmlResourceParser = null;
-        if (resId != null) {
-            xmlResourceParser = resources.getXml(resId);
-            call.appHasConfig = true;
-        }
-        return xmlResourceParser;
+        return resId != null ? resources.getXml(resId) : null;
     }
 
     @Nullable
@@ -181,28 +174,28 @@ public class AppManifestConfigHelper {
     }
 
     private static boolean isAllowedApiAccess(
-            String method,
-            String appPackageName,
-            String enrollmentId,
-            ApiAccessChecker checker) {
+            String method, String appPackageName, String enrollmentId, ApiAccessChecker checker) {
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(enrollmentId);
+
+        Context context = ApplicationContextSingleton.get();
         AppManifestConfigCall call = new AppManifestConfigCall(appPackageName);
-        call.enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
+        boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
+
         try {
-            XmlResourceParser in = getXmlParser(call);
+            XmlResourceParser in = getXmlParser(appPackageName);
             if (in == null) {
                 call.result =
-                        call.enabledByDefault
+                        enabledByDefault
                                 ? RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG
                                 : RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
                 LogUtil.v(
                         "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
-                        method, call.enabledByDefault, appPackageName);
-                return call.enabledByDefault;
+                        method, enabledByDefault, appPackageName);
+                return enabledByDefault;
             }
             AppManifestConfig appManifestConfig =
-                    AppManifestConfigParser.getConfig(in, call.enabledByDefault);
+                    AppManifestConfigParser.getConfig(in, enabledByDefault);
             call.result = checker.isAllowedAccess(appManifestConfig);
         } catch (NameNotFoundException e) {
             call.result = RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
