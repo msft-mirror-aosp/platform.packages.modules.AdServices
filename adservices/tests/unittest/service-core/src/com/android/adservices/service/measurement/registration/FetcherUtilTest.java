@@ -30,6 +30,7 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -42,12 +43,11 @@ import com.google.common.collect.ImmutableMap;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
@@ -68,31 +68,25 @@ public final class FetcherUtilTest {
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
     private static final Uri REGISTRANT_URI = WebUtil.validUri("https://bar.test");
     private static final String KEY = "key";
-
-    @Mock Flags mFlags;
-    @Mock AdServicesLogger mLogger;
-
-    private MockitoSession mStaticMockSession;
-
     public static final int UNKNOWN_SOURCE_TYPE = 0;
     public static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
     public static final int APP_REGISTRATION_SURFACE_TYPE = 2;
     public static final int UNKNOWN_STATUS = 0;
     public static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
 
+    @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
+
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void cleanup() throws InterruptedException {
-        mStaticMockSession.finishMocking();
     }
 
     @Test

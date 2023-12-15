@@ -159,8 +159,7 @@ public class MaintenanceJobServiceTest {
         testOnStartJob_killSwitchOff();
 
         // Verify logging methods are not invoked.
-        verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mSpyLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     @Test

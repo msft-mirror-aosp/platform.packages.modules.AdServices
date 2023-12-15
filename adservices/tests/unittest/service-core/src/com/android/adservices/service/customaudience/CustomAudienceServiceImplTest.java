@@ -44,7 +44,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -71,7 +70,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -91,6 +90,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -100,11 +100,12 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
 
-public final class CustomAudienceServiceImplTest extends AdServicesUnitTestCase {
+@MockStatic(BackgroundFetchJobService.class)
+public final class CustomAudienceServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
@@ -138,16 +139,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesUnitTestCase 
 
     private CustomAudienceServiceImpl mService;
 
-    private MockitoSession mStaticMockitoSession;
-
     @Before
     public void setup() throws Exception {
-        mStaticMockitoSession =
-                mockitoSession()
-                        .initMocks(this)
-                        .mockStatic(BackgroundFetchJobService.class)
-                        .startMocking();
-
         mService =
                 new CustomAudienceServiceImpl(
                         CONTEXT,
@@ -190,6 +183,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesUnitTestCase 
 
     @After
     public void teardown() {
+        // TODO(b/315812832): if a test method fails and call below also fails, the test failure
+        // will be the latter - not the former - which would make it harder to debug the real
+        // failure.
         verifyNoMoreInteractions(
                 mCustomAudienceImplMock,
                 mFledgeAuthorizationFilterMock,
@@ -201,7 +197,11 @@ public final class CustomAudienceServiceImplTest extends AdServicesUnitTestCase 
                 mAppImportanceFilterMock,
                 mConsentManagerMock,
                 mAdServicesLoggerMock);
-        mStaticMockitoSession.finishMocking();
+    }
+
+    @Override
+    protected Strictness getStrictness() {
+        return Strictness.STRICT_STUBS;
     }
 
     @Test
