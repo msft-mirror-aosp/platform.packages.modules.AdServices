@@ -125,8 +125,8 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                         if (resultCode != STATUS_SUCCESS) {
                             return;
                         }
-                        mAdIdWorker.getAdId(packageName, callingUid, callback);
 
+                        mAdIdWorker.getAdId(packageName, callingUid, callback);
                     } catch (Exception e) {
                         LogUtil.e(e, "Unable to send result to the callback");
                         ErrorLogUtil.e(
@@ -182,7 +182,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
 
     // Enforce whether caller is from foreground.
     private void enforceForeground(int callingUid) {
-        // If caller calls Topics API from Sandbox, regard it as foreground.
+        // If caller calls AdId API from Sandbox, regard it as foreground.
         // Also enable a flag to force switch on/off this enforcing.
         if (ProcessCompatUtils.isSdkSandboxUid(callingUid)
                 || !mFlags.getEnforceForegroundStatusForAdId()) {
@@ -291,5 +291,4 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         }
         return STATUS_SUCCESS;
     }
-
 }

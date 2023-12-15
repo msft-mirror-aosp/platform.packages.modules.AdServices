@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 /**
  * A class wrapper for the trigger specification from the input argument during source registration
@@ -35,7 +36,7 @@ public class TriggerSpec {
     private Long mEventReportWindowsStart;
     private List<Long> mEventReportWindowsEnd;
     private SummaryOperatorType mSummaryWindowOperator;
-    private List<Long> mSummaryBucket;
+    private List<Long> mSummaryBuckets;
 
     @Override
     public boolean equals(Object obj) {
@@ -47,7 +48,7 @@ public class TriggerSpec {
                 && mEventReportWindowsStart.equals(t.mEventReportWindowsStart)
                 && mEventReportWindowsEnd.equals(t.mEventReportWindowsEnd)
                 && mSummaryWindowOperator == t.mSummaryWindowOperator
-                && mSummaryBucket.equals(t.mSummaryBucket);
+                && mSummaryBuckets.equals(t.mSummaryBuckets);
     }
 
     @Override
@@ -57,7 +58,7 @@ public class TriggerSpec {
                 mEventReportWindowsStart,
                 mEventReportWindowsEnd,
                 mSummaryWindowOperator,
-                mSummaryBucket);
+                mSummaryBuckets);
     }
 
     /**
@@ -87,8 +88,8 @@ public class TriggerSpec {
     /**
      * @return Summary Bucket
      */
-    public List<Long> getSummaryBucket() {
-        return mSummaryBucket;
+    public List<Long> getSummaryBuckets() {
+        return mSummaryBuckets;
     }
 
     /**
@@ -109,11 +110,15 @@ public class TriggerSpec {
         windows.put("end_times", new JSONArray(mEventReportWindowsEnd));
         json.put("event_report_windows", windows);
         json.put("summary_window_operator", mSummaryWindowOperator.name().toLowerCase());
-        json.put("summary_buckets", new JSONArray(mSummaryBucket));
+        json.put("summary_buckets", new JSONArray(mSummaryBuckets));
         return json;
     }
 
-    private static <T extends Comparable<T>> boolean isStrictIncreasing(List<T> list) {
+    /** Util function to check if the provided list values are in strictly increasing order. */
+    public static <T extends Comparable<T>> boolean isStrictIncreasing(List<T> list) {
+        if (list.size() < 2) {
+            return true;
+        }
         for (int i = 1; i < list.size(); i++) {
             if (list.get(i).compareTo(list.get(i - 1)) <= 0) {
                 return false;
@@ -128,39 +133,43 @@ public class TriggerSpec {
         VALUE_SUM
     }
 
-    private static ArrayList<Long> getLongArrayFromJSON(JSONObject json, String key)
+    private static List<Long> getLongListFromJSON(JSONObject json, String key)
             throws JSONException {
-        ArrayList<Long> result = new ArrayList<>();
-        JSONArray valueArray = json.getJSONArray(key);
-        for (int i = 0; i < valueArray.length(); i++) {
-            result.add(valueArray.getLong(i));
+        return getLongListFromJSON(json.getJSONArray(key));
+    }
+
+    /**
+     * Parses long JSONArray into List<Long>
+     *
+     * @param jsonArray the JSON Array
+     * @return the parsed List<Long>
+     */
+    public static List<Long> getLongListFromJSON(JSONArray jsonArray) throws JSONException {
+        List<Long> result = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            result.add(jsonArray.getLong(i));
         }
         return result;
     }
 
-    private static ArrayList<UnsignedLong> getTriggerDataArrayFromJSON(JSONObject json, String key)
+    private static List<UnsignedLong> getTriggerDataArrayFromJSON(JSONObject json, String key)
             throws JSONException {
-        ArrayList<UnsignedLong> result = new ArrayList<>();
-        JSONArray valueArray = json.getJSONArray(key);
-        for (int i = 0; i < valueArray.length(); i++) {
-            result.add(new UnsignedLong(valueArray.getString(i)));
-        }
-        return result;
+        return getTriggerDataArrayFromJSON(json.getJSONArray(key));
     }
 
-    private void validateParameters() {
-        if (!isStrictIncreasing(mEventReportWindowsEnd)) {
-            throw new IllegalArgumentException(
-                    ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS
-                            + " not increasing");
+    /**
+     * Parses long JSONArray into List<UnsignedLong>
+     *
+     * @param jsonArray the JSON Array
+     * @return a list of UnsignedLong
+     */
+    public static List<UnsignedLong> getTriggerDataArrayFromJSON(JSONArray jsonArray)
+            throws JSONException {
+        List<UnsignedLong> result = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            result.add(new UnsignedLong(jsonArray.getString(i)));
         }
-        if (!isStrictIncreasing(mSummaryBucket)) {
-            throw new IllegalArgumentException(
-                    ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS + " not increasing");
-        }
-        if (mEventReportWindowsStart < 0) {
-            mEventReportWindowsStart = 0L;
-        }
+        return result;
     }
 
     /** */
@@ -171,57 +180,100 @@ public class TriggerSpec {
             mBuilding = new TriggerSpec();
             mBuilding.mSummaryWindowOperator = SummaryOperatorType.COUNT;
             mBuilding.mEventReportWindowsStart = 0L;
-            mBuilding.mSummaryBucket = new ArrayList<>();
+            mBuilding.mSummaryBuckets = new ArrayList<>();
             mBuilding.mEventReportWindowsEnd = new ArrayList<>();
 
             this.setTriggerData(
                     getTriggerDataArrayFromJSON(
-                            jsonObject, ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA));
-            if (mBuilding.mTriggerData.size()
-                    > PrivacyParams.getMaxFlexibleEventTriggerDataCardinality()) {
-                throw new IllegalArgumentException(
-                        "Trigger Data Cardinality Exceeds "
-                                + PrivacyParams.getMaxFlexibleEventTriggerDataCardinality());
-            }
-            JSONObject jsonReportWindows =
-                    jsonObject.getJSONObject(
-                            ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS);
-            if (!jsonReportWindows.isNull(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)) {
-                this.setEventReportWindowsStart(
-                        jsonReportWindows.getLong(
-                                ReportSpecUtil.FlexEventReportJsonKeys.START_TIME));
-            }
-            this.setEventReportWindowsEnd(
-                    getLongArrayFromJSON(
-                            jsonReportWindows, ReportSpecUtil.FlexEventReportJsonKeys.END_TIME));
-            if (mBuilding.mEventReportWindowsEnd.size()
-                    > PrivacyParams.getMaxFlexibleEventReportingWindows()) {
-                throw new IllegalArgumentException("Number of Reporting Windows Exceeds Limit");
+                            jsonObject, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA));
+            if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)) {
+                JSONObject jsonReportWindows =
+                        jsonObject.getJSONObject(
+                                TriggerSpecs.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS);
+                if (!jsonReportWindows.isNull(
+                        TriggerSpecs.FlexEventReportJsonKeys.START_TIME)) {
+                    this.setEventReportWindowsStart(
+                            jsonReportWindows.getLong(
+                                    TriggerSpecs.FlexEventReportJsonKeys.START_TIME));
+                }
+                this.setEventReportWindowsEnd(
+                        getLongListFromJSON(
+                                jsonReportWindows,
+                                TriggerSpecs.FlexEventReportJsonKeys.END_TIMES));
             }
 
             if (!jsonObject.isNull(
-                    ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
-                try {
-                    SummaryOperatorType op =
-                            SummaryOperatorType.valueOf(
-                                    jsonObject
-                                            .getString(
-                                                    ReportSpecUtil.FlexEventReportJsonKeys
-                                                            .SUMMARY_WINDOW_OPERATOR)
-                                            .toUpperCase());
-                    this.setSummaryWindowOperator(op);
-                } catch (IllegalArgumentException e) {
-                    // if a summary window operator is defined, but not in the pre-defined list, it
-                    // will throw to exception.
-                    throw new IllegalArgumentException(
-                            ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR
-                                    + " invalid");
-                }
+                    TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+                this.setSummaryWindowOperator(
+                        SummaryOperatorType.valueOf(
+                                jsonObject
+                                        .getString(
+                                                TriggerSpecs.FlexEventReportJsonKeys
+                                                        .SUMMARY_WINDOW_OPERATOR)
+                                        .toUpperCase()));
             }
-            this.setSummaryBucket(
-                    getLongArrayFromJSON(
-                            jsonObject, ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
-            mBuilding.validateParameters();
+            if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
+                this.setSummaryBuckets(
+                        getLongListFromJSON(
+                                jsonObject,
+                                TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS));
+            }
+        }
+
+        public Builder(
+                JSONObject jsonObject,
+                long defaultStart,
+                List<Long> defaultWindowEnds,
+                int maxEventLevelReports) throws JSONException, IllegalArgumentException {
+            mBuilding = new TriggerSpec();
+            mBuilding.mSummaryWindowOperator = SummaryOperatorType.COUNT;
+            mBuilding.mEventReportWindowsStart = defaultStart;
+            mBuilding.mSummaryBuckets = new ArrayList<>();
+            mBuilding.mEventReportWindowsEnd = defaultWindowEnds;
+
+            this.setTriggerData(
+                    getTriggerDataArrayFromJSON(
+                            jsonObject, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA));
+            if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)) {
+                JSONObject jsonReportWindows =
+                        jsonObject.getJSONObject(
+                                TriggerSpecs.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS);
+                if (!jsonReportWindows.isNull(
+                        TriggerSpecs.FlexEventReportJsonKeys.START_TIME)) {
+                    this.setEventReportWindowsStart(
+                            jsonReportWindows.getLong(
+                                    TriggerSpecs.FlexEventReportJsonKeys.START_TIME));
+                }
+
+                this.setEventReportWindowsEnd(
+                        getLongListFromJSON(
+                                jsonReportWindows,
+                                TriggerSpecs.FlexEventReportJsonKeys.END_TIMES));
+            }
+
+            if (!jsonObject.isNull(
+                    TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+                this.setSummaryWindowOperator(
+                        SummaryOperatorType.valueOf(
+                                jsonObject
+                                        .getString(
+                                                TriggerSpecs.FlexEventReportJsonKeys
+                                                        .SUMMARY_WINDOW_OPERATOR)
+                                        .toUpperCase()));
+            }
+            if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
+                List<Long> summaryBuckets =
+                        getLongListFromJSON(
+                                jsonObject,
+                                TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+                this.setSummaryBuckets(summaryBuckets.subList(
+                        0, Math.min(summaryBuckets.size(), maxEventLevelReports)));
+            } else {
+                this.setSummaryBuckets(
+                        LongStream.range(1, maxEventLevelReports + 1)
+                                .boxed()
+                                .collect(Collectors.toList()));
+            }
         }
 
         /** See {@link TriggerSpec#getTriggerData()} ()}. */
@@ -249,8 +301,8 @@ public class TriggerSpec {
         }
 
         /** See {@link TriggerSpec#getSummaryBucket()} ()}. */
-        public Builder setSummaryBucket(List<Long> summaryBucket) {
-            mBuilding.mSummaryBucket = summaryBucket;
+        public Builder setSummaryBuckets(List<Long> summaryBuckets) {
+            mBuilding.mSummaryBuckets = summaryBuckets;
             return this;
         }
 

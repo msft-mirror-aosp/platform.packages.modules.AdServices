@@ -29,7 +29,9 @@ import android.test.mock.MockContentResolver;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -43,6 +45,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.mockito.stubbing.Answer;
 
@@ -63,11 +66,17 @@ class TestObjectProvider {
     }
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
-            DatastoreManager datastoreManager, Flags flags) {
+            DatastoreManager datastoreManager, Flags flags, AdServicesErrorLogger errorLogger) {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
-                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags),
+                new DebugReportApi(
+                        ApplicationProvider.getApplicationContext(),
+                        flags,
+                        new EventReportWindowCalcDelegate(flags),
+                        new SourceNoiseHandler(flags),
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), errorLogger)),
                 new EventReportWindowCalcDelegate(flags),
                 new SourceNoiseHandler(flags),
                 AdServicesLoggerImpl.getInstance());
@@ -92,7 +101,8 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            DebugReportApi debugReportApi) {
+            DebugReportApi debugReportApi,
+            Flags flags) {
         SourceNoiseHandler sourceNoiseHandler =
                 spy(new SourceNoiseHandler(FlagsFactory.getFlagsForTest()));
         if (type == Type.DENOISED) {
@@ -119,11 +129,13 @@ class TestObjectProvider {
         }
 
         return new AsyncRegistrationQueueRunner(
+                ApplicationProvider.getApplicationContext(),
                 new MockContentResolver(),
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
                 datastoreManager,
                 debugReportApi,
-                sourceNoiseHandler);
+                sourceNoiseHandler,
+                flags);
     }
 }

@@ -26,11 +26,11 @@ android_test {
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
@@ -41,7 +41,6 @@ android_test {
     javacflags: ["-parameters"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     manifest: "AndroidManifest.xml",
 }
 
@@ -55,7 +54,7 @@ android_test {
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",

@@ -23,18 +23,15 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
-import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.collect.ImmutableMultiset;
 
-import org.json.JSONException;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -58,10 +55,12 @@ public class EventReport {
     private Source.SourceType mSourceType;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
+    @NonNull private List<UnsignedLong> mTriggerDebugKeys;
     private String mSourceId;
     private String mTriggerId;
     private Uri mRegistrationOrigin;
     private long mTriggerValue;
+    private Pair<Long, Long> mTriggerSummaryBucket;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -86,6 +85,7 @@ public class EventReport {
 
     private EventReport() {
         mTriggerDedupKey = null;
+        mTriggerDebugKeys = new ArrayList<>();
     }
 
     @Override
@@ -110,9 +110,12 @@ public class EventReport {
                 && mRandomizedTriggerRate == eventReport.mRandomizedTriggerRate
                 && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
                 && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
+                && Objects.equals(mTriggerDebugKeys, eventReport.mTriggerDebugKeys)
                 && Objects.equals(mSourceId, eventReport.mSourceId)
                 && Objects.equals(mTriggerId, eventReport.mTriggerId)
-                && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin)
+                && mTriggerValue == eventReport.mTriggerValue
+                && Objects.equals(mTriggerSummaryBucket, eventReport.mTriggerSummaryBucket);
     }
 
     @Override
@@ -132,18 +135,12 @@ public class EventReport {
                 mRandomizedTriggerRate,
                 mSourceDebugKey,
                 mTriggerDebugKey,
+                mTriggerDebugKeys,
                 mSourceId,
                 mTriggerId,
-                mRegistrationOrigin);
-    }
-
-    /**
-     * In flexible event API, the trigger priority might change so see a setter here
-     *
-     * @param priority the new priority
-     */
-    public void setTriggerPriority(long priority) {
-        mTriggerPriority = priority;
+                mRegistrationOrigin,
+                mTriggerValue,
+                mTriggerSummaryBucket);
     }
 
     /** Unique identifier for the report. */
@@ -243,6 +240,12 @@ public class EventReport {
         return mTriggerDebugKey;
     }
 
+    /** Trigger Debug Keys */
+    @NonNull
+    public List<UnsignedLong> getTriggerDebugKeys() {
+        return mTriggerDebugKeys;
+    }
+
     /** Source ID */
     public String getSourceId() {
         return mSourceId;
@@ -251,6 +254,11 @@ public class EventReport {
     /** Trigger ID */
     public String getTriggerId() {
         return mTriggerId;
+    }
+
+    /** Trigger summary bucket */
+    public Pair<Long, Long> getTriggerSummaryBucket() {
+        return mTriggerSummaryBucket;
     }
 
     /** Returns registration origin used to register the source and trigger */
@@ -263,6 +271,15 @@ public class EventReport {
         return mTriggerValue;
     }
 
+    /** Get Summary Bucket As String */
+    public String getStringEncodedTriggerSummaryBucket() {
+        if (mTriggerSummaryBucket == null) {
+            return null;
+        } else {
+            return mTriggerSummaryBucket.first + "," + mTriggerSummaryBucket.second;
+        }
+    }
+
     /** Builder for {@link EventReport} */
     public static final class Builder {
 
@@ -272,9 +289,7 @@ public class EventReport {
             mBuilding = new EventReport();
         }
 
-        /**
-         * See {@link EventReport#getId()}
-         */
+        /** See {@link EventReport#getId()} */
         public Builder setId(String id) {
             mBuilding.mId = id;
             return this;
@@ -378,6 +393,12 @@ public class EventReport {
             return this;
         }
 
+        /** See {@link EventReport#getTriggerDebugKeys()}} */
+        public Builder setTriggerDebugKeys(List<UnsignedLong> triggerDebugKeys) {
+            mBuilding.mTriggerDebugKeys = triggerDebugKeys;
+            return this;
+        }
+
         /** See {@link EventReport#getSourceId()} */
         public Builder setSourceId(String sourceId) {
             mBuilding.mSourceId = sourceId;
@@ -387,6 +408,32 @@ public class EventReport {
         /** See {@link EventReport#getTriggerId()} */
         public Builder setTriggerId(String triggerId) {
             mBuilding.mTriggerId = triggerId;
+            return this;
+        }
+
+        /**
+         * set the summary bucket from input DB text encode summary bucket
+         *
+         * @param summaryBucket the string encoded summary bucket
+         * @return builder
+         */
+        public Builder setTriggerSummaryBucket(@Nullable String summaryBucket) {
+            if (summaryBucket == null || summaryBucket.isEmpty()) {
+                mBuilding.mTriggerSummaryBucket = null;
+                return this;
+            }
+            String[] numbers = summaryBucket.split(",");
+
+            Long firstNumber = Long.parseLong(numbers[0].trim());
+            Long secondNumber = Long.parseLong(numbers[1].trim());
+            mBuilding.mTriggerSummaryBucket = new Pair<>(firstNumber, secondNumber);
+
+            return this;
+        }
+
+        /** See {@link EventReport#getTriggerSummaryBucket()} */
+        public Builder setTriggerSummaryBucket(@Nullable Pair<Long, Long> summaryBucket) {
+            mBuilding.mTriggerSummaryBucket = summaryBucket;
             return this;
         }
 
@@ -409,11 +456,10 @@ public class EventReport {
                 @NonNull Source source,
                 @NonNull Trigger trigger,
                 @NonNull EventTrigger eventTrigger,
-                @Nullable Pair<UnsignedLong, UnsignedLong> debugKeyPair,
+                @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair,
                 @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
                 @NonNull SourceNoiseHandler sourceNoiseHandler,
-                List<Uri> eventReportDestinations,
-                boolean enableFlexEventApi) {
+                List<Uri> eventReportDestinations) {
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceEventId = source.getEventId();
@@ -424,49 +470,53 @@ public class EventReport {
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
-            if (Debug.isAttributionDebugReportPermitted(source, trigger,
-                    mBuilding.mSourceDebugKey, mBuilding.mTriggerDebugKey)) {
+            if (mBuilding.mSourceDebugKey != null && mBuilding.mTriggerDebugKey != null) {
                 mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
             mBuilding.mSourceId = source.getId();
             mBuilding.mTriggerId = trigger.getId();
             mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
-            if (enableFlexEventApi
-                    && source.getTriggerSpecs() != null
-                    && !source.getTriggerSpecs().isEmpty()) {
-                // The source is using flexible event API
-                try {
-                    source.buildFlexibleEventReportApi();
-                } catch (JSONException e) {
-                    LogUtil.e(
-                            "EventReport::populateFromSourceAndTrigger cannot parse JSON for flex"
-                                    + " event API");
-                }
-                mBuilding.mTriggerPriority =
-                        source.getFlexEventReportSpec()
-                                .getHighestPriorityOfAttributedAndIncomingTriggers(
-                                        eventTrigger.getTriggerData(),
-                                        eventTrigger.getTriggerPriority());
-                mBuilding.mTriggerData = eventTrigger.getTriggerData();
-                mBuilding.mReportTime =
-                        ReportSpecUtil.getFlexEventReportingTime(
-                                source.getFlexEventReportSpec(),
-                                source.getEventTime(),
-                                trigger.getTriggerTime(),
-                                eventTrigger.getTriggerData());
-                mBuilding.mRandomizedTriggerRate =
-                        source.getFlexEventReportSpec().getFlipProbability();
-                mBuilding.mTriggerValue = eventTrigger.getTriggerValue();
-            } else {
-                mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
-                // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
-                mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
-                mBuilding.mReportTime =
-                        eventReportWindowCalcDelegate.getReportingTime(
-                                source, trigger.getTriggerTime(), trigger.getDestinationType());
-                mBuilding.mRandomizedTriggerRate =
-                        sourceNoiseHandler.getRandomAttributionProbability(source);
+            mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
+            // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
+            mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
+            mBuilding.mReportTime =
+                    eventReportWindowCalcDelegate.getReportingTime(
+                            source, trigger.getTriggerTime(), trigger.getDestinationType());
+            mBuilding.mRandomizedTriggerRate =
+                    sourceNoiseHandler.getRandomAttributionProbability(source);
+            return this;
+        }
+
+        /** Provides event report builder for flexible event-level reports */
+        public Builder getForFlex(
+                @NonNull Source source,
+                @NonNull Trigger trigger,
+                @NonNull AttributedTrigger attributedTrigger,
+                long reportTime,
+                @NonNull Pair<Long, Long> triggerSummaryBucket,
+                @Nullable UnsignedLong sourceDebugKey,
+                @NonNull List<UnsignedLong> debugKeys,
+                double flipProbability,
+                List<Uri> eventReportDestinations) {
+            mBuilding.mTriggerTime = trigger.getTriggerTime();
+            mBuilding.mSourceEventId = source.getEventId();
+            mBuilding.mEnrollmentId = source.getEnrollmentId();
+            mBuilding.mStatus = Status.PENDING;
+            mBuilding.mAttributionDestinations = eventReportDestinations;
+            mBuilding.mSourceType = source.getSourceType();
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            mBuilding.mTriggerDebugKeys = debugKeys;
+            mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
+            if (mBuilding.mSourceDebugKey != null && debugKeys.size() > 0) {
+                mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
+            mBuilding.mSourceId = source.getId();
+            mBuilding.mTriggerId = trigger.getId();
+            mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
+            mBuilding.mRandomizedTriggerRate = flipProbability;
+            mBuilding.mTriggerData = attributedTrigger.getTriggerData();
+            mBuilding.mReportTime = reportTime;
+            mBuilding.mTriggerSummaryBucket = triggerSummaryBucket;
             return this;
         }
 

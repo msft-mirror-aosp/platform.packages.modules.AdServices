@@ -184,6 +184,19 @@ public final class TopicsTables {
         String TAXONOMY_VERSION = "taxonomy_version";
         String MODEL_VERSION = "model_version";
         String TOPIC = "topic";
+        String LOGGED_TOPIC = "logged_topic";
+    }
+
+    /** The returned encrypted topic for the app or for the sdk. */
+    public interface ReturnedEncryptedTopicContract {
+        String TABLE = TOPICS_TABLE_PREFIX + "returned_encrypted_topics";
+        String ID = "_id";
+        String EPOCH_ID = "epoch_id";
+        String APP = "app";
+        String SDK = "sdk";
+        String ENCRYPTED_TOPIC = "encrypted_topic";
+        String ENCAPSULATED_KEY = "encapsulated_key";
+        String KEY_IDENTIFIER = "key_identifier";
     }
 
     /** Create Statement for the returned Topics table */
@@ -205,7 +218,30 @@ public final class TopicsTables {
                     + ReturnedTopicContract.MODEL_VERSION
                     + " INTEGER NOT NULL, "
                     + ReturnedTopicContract.TOPIC
-                    + " INTEGER NOT NULL"
+                    + " INTEGER NOT NULL, "
+                    + ReturnedTopicContract.LOGGED_TOPIC
+                    + " INTEGER"
+                    + ")";
+
+    /** Create Statement for the returned Encrypted Topics table */
+    public static final String CREATE_TABLE_RETURNED_ENCRYPTED_TOPIC =
+            "CREATE TABLE "
+                    + ReturnedEncryptedTopicContract.TABLE
+                    + "("
+                    + ReturnedEncryptedTopicContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + ReturnedEncryptedTopicContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + ReturnedEncryptedTopicContract.APP
+                    + " TEXT NOT NULL, "
+                    + ReturnedEncryptedTopicContract.SDK
+                    + " TEXT NOT NULL, "
+                    + ReturnedEncryptedTopicContract.ENCRYPTED_TOPIC
+                    + " BLOB NOT NULL, "
+                    + ReturnedEncryptedTopicContract.KEY_IDENTIFIER
+                    + " TEXT NOT NULL, "
+                    + ReturnedEncryptedTopicContract.ENCAPSULATED_KEY
+                    + " BLOB NOT NULL"
                     + ")";
 
     /**
@@ -348,13 +384,13 @@ public final class TopicsTables {
                             CREATE_TABLE_APP_CLASSIFICATION_TOPICS,
                             CREATE_TABLE_TOP_TOPICS,
                             CREATE_TABLE_RETURNED_TOPIC,
+                            CREATE_TABLE_RETURNED_ENCRYPTED_TOPIC,
                             CREATE_TABLE_USAGE_HISTORY,
                             CREATE_TABLE_APP_USAGE_HISTORY,
                             CREATE_TABLE_CALLER_CAN_LEARN_TOPICS,
                             CREATE_TABLE_BLOCKED_TOPICS,
                             CREATE_TABLE_EPOCH_ORIGIN,
                             CREATE_TABLE_TOPIC_CONTRIBUTORS));
-    // TODO(b/227393493): Should support a test if new table is added.
     // *******************************************************************************************
     // * NOTE: Please check below steps before adding a new table:
     // * 1) TopicsDao -> ALL_TOPICS_TABLES: User Consent to clear all tables

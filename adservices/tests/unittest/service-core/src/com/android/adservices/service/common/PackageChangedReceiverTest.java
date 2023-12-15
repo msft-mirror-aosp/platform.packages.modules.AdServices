@@ -54,6 +54,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
@@ -62,6 +63,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -100,10 +102,19 @@ public class PackageChangedReceiverTest {
     @Mock Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
+    private MockitoSession mStaticMockSession;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
+
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(AdServicesLoggerImpl.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+        ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
+                .when(AdServicesLoggerImpl::getInstance);
 
         // Mock TopicsWorker to test app update flow in topics API.
         mSpyTopicsWorker =
@@ -116,6 +127,11 @@ public class PackageChangedReceiverTest {
                                 FlagsFactory.getFlagsForTest()));
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+    }
+
+    @After
+    public void cleanup() {
+        mStaticMockSession.finishMocking();
     }
 
     private PackageChangedReceiver createSpyPackageReceiverForMeasurement() {
@@ -1017,6 +1033,7 @@ public class PackageChangedReceiverTest {
             // Verify method inside background thread executes
             assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
             verify(mAppInstallDaoMock).deleteByPackageName(any());
             verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());

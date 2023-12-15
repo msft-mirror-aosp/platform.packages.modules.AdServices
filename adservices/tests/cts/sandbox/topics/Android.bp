@@ -25,7 +25,7 @@ android_test {
         "adservices-clients",
         "compatibility-device-util-axt",
         "androidx.test.runner",
-        "truth-prebuilt",
+        "truth",
         "SdkSandboxTestUtils",
         "adservices-test-utility",
     ],
@@ -44,5 +44,4 @@ android_test {
         "mts-adservices",
         "general-tests",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }

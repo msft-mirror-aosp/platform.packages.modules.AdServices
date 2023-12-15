@@ -22,8 +22,11 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,6 +64,8 @@ public class AggregateReport {
     private String mTriggerId;
     private UnsignedLong mDedupKey;
     private Uri mRegistrationOrigin;
+    private Uri mAggregationCoordinatorOrigin;
+    private boolean mIsFakeReport;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -92,12 +97,13 @@ public class AggregateReport {
         mEnrollmentId = null;
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
-        mStatus = AggregateReport.Status.PENDING;
-        mDebugReportStatus = AggregateReport.DebugReportStatus.NONE;
+        mStatus = Status.PENDING;
+        mDebugReportStatus = DebugReportStatus.NONE;
         mSourceDebugKey = null;
         mTriggerDebugKey = null;
         mDedupKey = null;
         mRegistrationOrigin = null;
+        mAggregationCoordinatorOrigin = null;
     }
 
     @Override
@@ -122,7 +128,11 @@ public class AggregateReport {
                 && Objects.equals(mSourceId, aggregateReport.mSourceId)
                 && Objects.equals(mTriggerId, aggregateReport.mTriggerId)
                 && Objects.equals(mDedupKey, aggregateReport.mDedupKey)
-                && Objects.equals(mRegistrationOrigin, aggregateReport.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, aggregateReport.mRegistrationOrigin)
+                && Objects.equals(
+                        mAggregationCoordinatorOrigin,
+                        aggregateReport.mAggregationCoordinatorOrigin)
+                && mIsFakeReport == aggregateReport.mIsFakeReport;
     }
 
     @Override
@@ -143,7 +153,9 @@ public class AggregateReport {
                 mSourceId,
                 mTriggerId,
                 mDedupKey,
-                mRegistrationOrigin);
+                mRegistrationOrigin,
+                mAggregationCoordinatorOrigin,
+                mIsFakeReport);
     }
 
     /**
@@ -247,6 +259,16 @@ public class AggregateReport {
         return mRegistrationOrigin;
     }
 
+    /** Returns coordinator origin for aggregatable reports */
+    public Uri getAggregationCoordinatorOrigin() {
+        return mAggregationCoordinatorOrigin;
+    }
+
+    /** Is the report a null report. */
+    public boolean isFakeReport() {
+        return mIsFakeReport;
+    }
+
     /**
      * Generates String for debugCleartextPayload. JSON for format : { "operation": "histogram",
      * "data": [{ "bucket": 1369, "value": 32768 }, { "bucket": 3461, "value": 1664 }] }
@@ -284,7 +306,8 @@ public class AggregateReport {
             }
             return aggregateHistogramContributions;
         } catch (JSONException e) {
-            LogUtil.e(e, "Failed to parse contributions on Aggregate report.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Failed to parse contributions on Aggregate report.");
             return Collections.emptyList();
         }
     }
@@ -384,6 +407,7 @@ public class AggregateReport {
             mAttributionReport.mStatus = status;
             return this;
         }
+
         /** See {@link AggregateReport#getDebugReportStatus()} */
         public Builder setDebugReportStatus(@DebugReportStatus int debugReportStatus) {
             mAttributionReport.mDebugReportStatus = debugReportStatus;
@@ -411,34 +435,93 @@ public class AggregateReport {
         }
 
         /** See {@link AggregateReport#getSourceId()} */
-        public AggregateReport.Builder setSourceId(String sourceId) {
+        public Builder setSourceId(String sourceId) {
             mAttributionReport.mSourceId = sourceId;
             return this;
         }
 
         /** See {@link AggregateReport#getTriggerId()} */
-        public AggregateReport.Builder setTriggerId(String triggerId) {
+        public Builder setTriggerId(String triggerId) {
             mAttributionReport.mTriggerId = triggerId;
             return this;
         }
 
         /** See {@link AggregateReport#getDedupKey()} */
         @NonNull
-        public AggregateReport.Builder setDedupKey(@Nullable UnsignedLong dedupKey) {
+        public Builder setDedupKey(@Nullable UnsignedLong dedupKey) {
             mAttributionReport.mDedupKey = dedupKey;
             return this;
         }
 
         /** See {@link AggregateReport#getRegistrationOrigin()} ()} */
         @NonNull
-        public AggregateReport.Builder setRegistrationOrigin(Uri registrationOrigin) {
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mAttributionReport.mRegistrationOrigin = registrationOrigin;
             return this;
         }
 
+        /** See {@link AggregateReport#getAggregationCoordinatorOrigin()} ()} */
+        public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
+            mAttributionReport.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
+            return this;
+        }
+
+        /** See {@link AggregateReport#isFakeReport()} */
+        public Builder setIsFakeReport(boolean isFakeReport) {
+            mAttributionReport.mIsFakeReport = isFakeReport;
+            return this;
+        }
+
         /**
-         * Build the {@link AggregateReport}.
+         * Given a {@link Trigger} trigger, source registration time, reporting delay, and the api
+         * version, initialize an {@link AggregateReport.Builder} builder that builds a null
+         * aggregate report. A null aggregate report is used to obscure the number of real aggregate
+         * reports.
+         *
+         * @param trigger the trigger that created a real aggregate report
+         * @param fakeSourceTime a fake source registration time
+         * @param delay amount of delay in ms to wait before sending out report
+         * @param apiVersion api version string that is sent to aggregate service
+         * @return builder initialized to build a null aggregate report
+         * @throws JSONException thrown if fake contributions create invalid JSON. Fake
+         *     contributions are hardcoded, so this should not be thrown.
          */
+        public Builder getNullAggregateReportBuilder(
+                Trigger trigger, long fakeSourceTime, long delay, String apiVersion)
+                throws JSONException {
+            long reportTime = trigger.getTriggerTime() + delay;
+            AggregateHistogramContribution paddingContribution =
+                    new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+
+            String debugPayload =
+                    AggregateReport.generateDebugPayload(List.of(paddingContribution));
+
+            mAttributionReport.mApiVersion = apiVersion;
+            mAttributionReport.mPublisher = Uri.EMPTY;
+            mAttributionReport.mRegistrationOrigin = trigger.getRegistrationOrigin();
+            mAttributionReport.mAttributionDestination = trigger.getAttributionDestinationBaseUri();
+            mAttributionReport.mSourceRegistrationTime = fakeSourceTime;
+            mAttributionReport.mScheduledReportTime = reportTime;
+            mAttributionReport.mDebugCleartextPayload = debugPayload;
+            mAttributionReport.mSourceDebugKey = null;
+            mAttributionReport.mTriggerDebugKey = trigger.getDebugKey();
+            mAttributionReport.mIsFakeReport = true;
+            mAttributionReport.mTriggerId = trigger.getId();
+
+            if (trigger.getAggregationCoordinatorOrigin() != null) {
+                mAttributionReport.mAggregationCoordinatorOrigin =
+                        trigger.getAggregationCoordinatorOrigin();
+            } else {
+                mAttributionReport.mAggregationCoordinatorOrigin =
+                        Uri.parse(
+                                AdServicesConfig
+                                        .getMeasurementDefaultAggregationCoordinatorOrigin());
+            }
+
+            return this;
+        }
+
+        /** Build the {@link AggregateReport}. */
         public AggregateReport build() {
             return mAttributionReport;
         }

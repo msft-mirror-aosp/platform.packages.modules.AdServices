@@ -29,9 +29,11 @@ import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -40,6 +42,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
@@ -52,6 +55,8 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
@@ -61,40 +66,32 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(BackgroundJobsManager.class)
+@SpyStatic(ConsentManager.class)
+@SpyStatic(UxStatesManager.class)
 @RunWith(AndroidJUnit4.class)
-public class SettingsActivityUiAutomatorTest {
+public final class SettingsActivityUiAutomatorTest extends AdServicesExtendedMockitoTestCase {
+
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
-    private static final int LAUNCH_TIMEOUT = 5000;
+    private static final int LAUNCH_TIMEOUT = 5_000;
+
     private static UiDevice sDevice;
 
     private String mTestName;
-    private MockitoSession mStaticMockSession;
     private ConsentManager mConsentManager;
-    @Mock Flags mMockFlags;
-    @Mock UxStatesManager mUxStatesManager;
+    @Mock private Flags mMockFlags;
+    @Mock private UxStatesManager mUxStatesManager;
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
 
-        // Static mocking
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(UxStatesManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(false).when(mMockFlags).getUiDialogFragmentEnabled();
@@ -162,6 +159,7 @@ public class SettingsActivityUiAutomatorTest {
                 .when(() -> UxStatesManager.getInstance(any(Context.class)));
         doReturn(false).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn(BETA_UX).when(mUxStatesManager).getUx();
+        doReturn(BETA_UX).when(mConsentManager).getUx();
 
         startActivityFromHomeAndCheckMainSwitch();
     }
@@ -191,15 +189,9 @@ public class SettingsActivityUiAutomatorTest {
 
     @After
     public void teardown() {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -312,10 +304,10 @@ public class SettingsActivityUiAutomatorTest {
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
         // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        clickResetBtn();
 
         // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        clickResetBtn();
 
         verify(mConsentManager, times(2)).resetMeasurement();
     }
@@ -490,6 +482,7 @@ public class SettingsActivityUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 295896410, detail = "UX test time out in presubmit")
     public void disableDialogFeatureTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -544,6 +537,8 @@ public class SettingsActivityUiAutomatorTest {
      */
     @Test
     public void blockedTopicsWhenEmptyStateButtonTest() throws UiObjectNotFoundException {
+        // Topics UI is not available on R
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S);
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         // Return an empty topics list
@@ -559,5 +554,16 @@ public class SettingsActivityUiAutomatorTest {
         UiObject blockedTopicsWhenEmptyStateButton =
                 ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_blocked_topics_title);
         assertThat(blockedTopicsWhenEmptyStateButton.isEnabled()).isTrue();
+    }
+
+    public void clickResetBtn() throws UiObjectNotFoundException {
+        // R Msmt UI is not scrollable
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            ApkTestUtil.click(
+                    sDevice,
+                    com.android.adservices.api.R.string.settingsUI_measurement_view_reset_title);
+        } else {
+            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
+        }
     }
 }

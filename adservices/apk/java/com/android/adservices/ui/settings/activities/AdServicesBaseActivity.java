@@ -15,6 +15,9 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -39,12 +42,15 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Context context = getApplicationContext();
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-            OTAResourcesManager.applyOTAResources(getApplicationContext(), false);
+            OTAResourcesManager.applyOTAResources(context, false);
         }
-        if (FlagsFactory.getFlags().getU18UxEnabled()) {
-            initWithUx(this, getApplicationContext());
+        if (isUxStatesReady(this)) {
+            initWithUx(this, context);
         }
     }
 

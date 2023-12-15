@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.shared.testing.common.FileHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import java.io.File;
@@ -47,6 +48,7 @@ public class ApkTestUtil {
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
     private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
     private static final int SCROLL_TIMEOUT = 500;
+    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1000;
 
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.
@@ -64,6 +66,7 @@ public class ApkTestUtil {
     public static UiObject getConsentSwitch(UiDevice device) throws UiObjectNotFoundException {
         UiObject consentSwitch =
                 device.findObject(new UiSelector().className("android.widget.Switch"));
+        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
 
         // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
         // devices.
@@ -72,7 +75,7 @@ public class ApkTestUtil {
                 500,
                 consentSwitch.getVisibleBounds().centerX(),
                 0,
-                1000);
+                100);
 
         return consentSwitch;
     }
@@ -80,6 +83,7 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        obj.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         if (!obj.exists()) {
             obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
         }
@@ -95,6 +99,12 @@ public class ApkTestUtil {
     public static void scrollToAndClick(UiDevice device, int resId)
             throws UiObjectNotFoundException {
         UiObject obj = scrollTo(device, resId);
+        // objects may be partially hidden by the status bar and nav bars.
+        obj.clickTopLeft();
+    }
+
+    public static void click(UiDevice device, int resId) throws UiObjectNotFoundException {
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
         // objects may be partially hidden by the status bar and nav bars.
         obj.clickTopLeft();
     }
@@ -189,7 +199,10 @@ public class ApkTestUtil {
                     new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                             .format(Date.from(Instant.now()));
 
-            File screenshotFile = new File("/sdcard/Pictures/" + methodName + timeStamp + ".png");
+            File screenshotFile =
+                    new File(
+                            FileHelper.getAdServicesTestsOutputDir(),
+                            methodName + timeStamp + ".png");
             device.takeScreenshot(screenshotFile);
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());

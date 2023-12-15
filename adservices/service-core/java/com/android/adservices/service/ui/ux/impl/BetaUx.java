@@ -15,7 +15,7 @@
  */
 package com.android.adservices.service.ui.ux.impl;
 
-import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -46,11 +46,5 @@ public class BetaUx implements PrivacySandboxUx {
             Context context,
             ConsentManager consentManager) {
         enrollmentChannel.enroll(context, consentManager);
-    }
-
-    /** Select one of the available Beta UX modes for the user. */
-    public void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {
-        // TO-DO(b/284175944): Add mode logic.
     }
 }

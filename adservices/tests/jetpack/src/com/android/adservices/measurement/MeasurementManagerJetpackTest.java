@@ -15,8 +15,6 @@
  */
 package com.android.adservices.measurement;
 
-import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -130,9 +128,6 @@ public class MeasurementManagerJetpackTest {
     @Test
     public void testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors()
             throws Exception {
-        final String flags = runShellCommand("device_config list adservices");
-        System.out.println("RMARCUS:");
-        System.out.println(flags);
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder(
                                 DeletionRequest.DELETION_MODE_ALL,

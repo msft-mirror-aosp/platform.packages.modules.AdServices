@@ -22,10 +22,14 @@ import android.util.Pair;
 
 import com.android.adservices.service.enrollment.EnrollmentData;
 
+import java.util.List;
 import java.util.Set;
 
 /** Interface for enrollment related data access operations. */
 public interface IEnrollmentDao {
+
+    /** Returns all enrollment data in enrollment table. */
+    List<EnrollmentData> getAllEnrollmentData();
 
     /**
      * Returns the {@link EnrollmentData}.
@@ -86,6 +90,20 @@ public interface IEnrollmentDao {
     EnrollmentData getEnrollmentDataFromSdkName(String sdkName);
 
     /**
+     * Returns the number of enrollment records in the DB table.
+     *
+     * @return count of records in the enrollment table
+     */
+    Long getEnrollmentRecordsCount();
+
+    /**
+     * Returns the number of enrollment records in the DB table for logging purposes.
+     *
+     * @return count of records in the enrollment table
+     */
+    int getEnrollmentRecordCountForLogging();
+
+    /**
      * Inserts {@link EnrollmentData} into DB table.
      *
      * @param enrollmentData the EnrollmentData to insert.
@@ -107,4 +125,13 @@ public interface IEnrollmentDao {
      * @return true if the operation was successful, false, otherwise.
      */
     boolean deleteAll();
+
+    /**
+     * Overwrites all {@link EnrollmentData} in DB table. Delete records that aren't included list.
+     * Updates/inserts those included.
+     *
+     * @param newEnrollments List of {@link EnrollmentData} to overwrite table with.
+     * @return true if the operation was successful, false, otherwise.
+     */
+    boolean overwriteData(List<EnrollmentData> newEnrollments);
 }

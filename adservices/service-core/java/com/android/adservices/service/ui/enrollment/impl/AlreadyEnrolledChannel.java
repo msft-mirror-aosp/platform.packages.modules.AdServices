@@ -16,12 +16,16 @@
 
 package com.android.adservices.service.ui.enrollment.impl;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
+
 import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
@@ -37,10 +41,12 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
             UxStatesManager uxStatesManager) {
         switch (uxCollection) {
             case GA_UX:
-                return consentManager.wasGaUxNotificationDisplayed();
+                return consentManager.wasGaUxNotificationDisplayed()
+                        || isPreNotificationManualUser(consentManager, uxStatesManager);
             case BETA_UX:
                 return consentManager.wasNotificationDisplayed();
             case U18_UX:
+            case RVC_UX:
                 return consentManager.wasU18NotificationDisplayed();
             default:
                 // Unsupported and non-valid UXs can never have enrollment channels.
@@ -48,6 +54,23 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
         }
     }
 
+    private static boolean isPreNotificationManualUser(
+            ConsentManager consentManager, UxStatesManager uxStatesManager) {
+        if (uxStatesManager.getFlag(KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE)
+                && consentManager.getUserManualInteractionWithConsent()
+                        == MANUAL_INTERACTIONS_RECORDED) {
+            return true;
+        }
+        return false;
+    }
+
     /** No-Op if the user has already enrolled. */
-    public void enroll(Context context, ConsentManager consentManager) {}
+    public void enroll(Context context, ConsentManager consentManager) {
+        if (!consentManager.wasGaUxNotificationDisplayed()
+                && isPreNotificationManualUser(
+                        consentManager, UxStatesManager.getInstance(context))) {
+            UiStatsLogger.logRequestedNotificationIneligible();
+            consentManager.recordGaUxNotificationDisplayed(true);
+        }
+    }
 }

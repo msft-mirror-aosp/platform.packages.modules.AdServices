@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
+import android.annotation.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
 /** AdId part of the app manifest config (<ad-services-config>). */
-public class AppManifestAdIdConfig {
-    private final boolean mAllowAllToAccess;
-    private final List<String> mAllowAdPartnersToAccess;
+final class AppManifestAdIdConfig extends AppManifestApiConfig {
+
+    @Nullable private static AppManifestAdIdConfig sEnabledByDefaultInstance;
 
     /**
      * Constructor.
@@ -31,21 +32,14 @@ public class AppManifestAdIdConfig {
      * @param allowAllToAccess corresponds to the boolean in the config.
      * @param allowAdPartnersToAccess corresponds to the list in the config.
      */
-    public AppManifestAdIdConfig(
-            boolean allowAllToAccess, @NonNull List<String> allowAdPartnersToAccess) {
-        mAllowAllToAccess = allowAllToAccess;
-        mAllowAdPartnersToAccess = allowAdPartnersToAccess;
+    public AppManifestAdIdConfig(boolean allowAllToAccess, List<String> allowAdPartnersToAccess) {
+        super(allowAllToAccess, allowAdPartnersToAccess);
     }
 
-    /** Getter for allowAllToAccess. */
-    @NonNull
-    public boolean getAllowAllToAccess() {
-        return mAllowAllToAccess;
-    }
-
-    /** Getter for allowAdPartnersToAccess. */
-    @NonNull
-    public List<String> getAllowAdPartnersToAccess() {
-        return mAllowAdPartnersToAccess;
+    static AppManifestAdIdConfig getEnabledByDefaultInstance() {
+        if (sEnabledByDefaultInstance == null) {
+            sEnabledByDefaultInstance = new AppManifestAdIdConfig(true, Collections.emptyList());
+        }
+        return sEnabledByDefaultInstance;
     }
 }

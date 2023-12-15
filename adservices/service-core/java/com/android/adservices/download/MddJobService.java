@@ -153,7 +153,7 @@ public class MddJobService extends JobService {
                         sBlockingExecutor.execute(
                                 () -> {
                                     EnrollmentDataDownloadManager.getInstance(MddJobService.this)
-                                            .readAndInsertEnrolmentDataFromMdd();
+                                            .readAndInsertEnrollmentDataFromMdd();
 
                                     // Logging has to happen before jobFinished() is called. Due to
                                     // JobScheduler infra, the JobService instance will end its
@@ -353,7 +353,8 @@ public class MddJobService extends JobService {
     }
 
     /** Schedule MDD background tasks. */
-    private static void schedule(
+    @VisibleForTesting
+    static void schedule(
             Context context,
             @NonNull JobScheduler jobScheduler,
             long jobPeriodMs,

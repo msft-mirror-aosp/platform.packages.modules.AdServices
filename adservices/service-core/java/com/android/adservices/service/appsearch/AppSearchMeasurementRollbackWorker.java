@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.content.Context;
 import android.os.Build;
+import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 import androidx.appsearch.app.AppSearchSession;
@@ -27,7 +28,9 @@ import androidx.appsearch.platformstorage.PlatformStorage;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.consent.ConsentConstants;
+import com.android.adservices.service.measurement.rollback.MeasurementRollbackWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -48,8 +51,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-class AppSearchMeasurementRollbackWorker {
-    private static final String DATABASE_NAME = "measurement_rollback";
+public final class AppSearchMeasurementRollbackWorker implements MeasurementRollbackWorker<String> {
+    private static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("measurement_rollback");
 
     // At the worker level, we ensure that writes do not conflict with any other writes/reads.
     private static final ReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock();
@@ -58,6 +62,7 @@ class AppSearchMeasurementRollbackWorker {
     private static final int TIMEOUT_MS = 2000;
 
     private final String mUserId;
+    private final String mAdServicesPackageName;
     private final ListenableFuture<AppSearchSession> mSearchSession;
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
 
@@ -66,19 +71,22 @@ class AppSearchMeasurementRollbackWorker {
         Objects.requireNonNull(userId);
 
         mUserId = userId;
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(context);
         mSearchSession =
                 PlatformStorage.createSearchSessionAsync(
                         new PlatformStorage.SearchContext.Builder(context, DATABASE_NAME).build());
     }
 
-    static AppSearchMeasurementRollbackWorker getInstance(
+    /** Return an instance of {@link AppSearchMeasurementRollbackWorker} */
+    public static AppSearchMeasurementRollbackWorker getInstance(
             @NonNull Context context, @NonNull String userId) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(userId);
         return new AppSearchMeasurementRollbackWorker(context, userId);
     }
 
-    void recordAdServicesDeletionOccurred(
+    @Override
+    public void recordAdServicesDeletionOccurred(
             @AdServicesManager.DeletionApiType int deletionApiType, long currentApexVersion) {
         READ_WRITE_LOCK.writeLock().lock();
         try {
@@ -110,8 +118,9 @@ class AppSearchMeasurementRollbackWorker {
                 currentApexVersion);
     }
 
-    void clearAdServicesDeletionOccurred(@NonNull String rowId) {
-        Objects.requireNonNull(rowId);
+    @Override
+    public void clearAdServicesDeletionOccurred(@NonNull String storageIdentifier) {
+        Objects.requireNonNull(storageIdentifier);
 
         READ_WRITE_LOCK.writeLock().lock();
         try {
@@ -119,10 +128,10 @@ class AppSearchMeasurementRollbackWorker {
                             AppSearchMeasurementRollbackDao.class,
                             mSearchSession,
                             mExecutor,
-                            rowId,
+                            storageIdentifier,
                             AppSearchMeasurementRollbackDao.NAMESPACE)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            LogUtil.d("Deleted MeasurementRollback data from AppSearch for: %s", rowId);
+            LogUtil.d("Deleted MeasurementRollback data from AppSearch for: %s", storageIdentifier);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             LogUtil.e(e, "Failed to delete MeasurementRollback data in AppSearch");
             throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
@@ -131,15 +140,16 @@ class AppSearchMeasurementRollbackWorker {
         }
     }
 
-    AppSearchMeasurementRollbackDao getAdServicesDeletionRollbackMetadata(
+    @Override
+    public Pair<Long, String> getAdServicesDeletionRollbackMetadata(
             @AdServicesManager.DeletionApiType int deletionApiType) {
         READ_WRITE_LOCK.writeLock().lock();
         try {
             AppSearchMeasurementRollbackDao dao =
                     AppSearchMeasurementRollbackDao.readDocument(
-                            mSearchSession, mExecutor, mUserId);
+                            mSearchSession, mExecutor, mUserId, mAdServicesPackageName);
             LogUtil.d("Result of query for AppSearchMeasurementRollbackDao: %s", dao);
-            return dao;
+            return dao == null ? null : Pair.create(dao.getApexVersion(), dao.getId());
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
         }
