@@ -32,6 +32,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -287,6 +288,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     }
     @Test
     public void checkEmptySdkNameRequests() throws Exception {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         mockGetTopicsDisableDirectAppCalls(true);
 
         GetTopicsParam request =
@@ -297,6 +299,12 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         invokeGetTopicsAndVerifyError(mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
     }
 
     @Test
