@@ -46,11 +46,13 @@ public final class AdServicesFlagsSetterRule
                 DeviceSideSystemPropertiesHelper.getInstance());
     }
 
-    private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
+    /** Factory method that only {@link #setDefaultLogcatTags() sets the default logcat tags}. */
+    public static AdServicesFlagsSetterRule withDefaultLogcatTags() {
         return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
     }
 
-    private static AdServicesFlagsSetterRule withAllLogcatTags() {
+    /** Factory method that only {@link #setAllLogcatTags() sets all relevant logcat tags}. */
+    public static AdServicesFlagsSetterRule withAllLogcatTags() {
         return new AdServicesFlagsSetterRule().setAllLogcatTags();
     }
 
@@ -108,11 +110,6 @@ public final class AdServicesFlagsSetterRule
                 .setTopicsEpochJobPeriodMsForTests(epochPeriodMs)
                 .setTopicsPercentageForRandomTopicForTests(pctRandomTopic)
                 .setCompatModeFlags();
-    }
-
-    /** Factory method for AdservicesCommonManager end-to-end CTS tests. */
-    public static AdServicesFlagsSetterRule forCommonManagerE2ETests(String packageName) {
-        return withDefaultLogcatTags().setCompatModeFlags().setPpapiAppAllowList(packageName);
     }
 
     // NOTE: add more factory methods as needed
