@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import androidx.test.runner.AndroidJUnit4;
 
+import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.PrivacyLevel;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +47,6 @@ public final class PrivacyGeneratorStatisticalTest {
                     .setId(5)
                     .setPrivacyLevel(PrivacyLevel.LOW_PRIVACY)
                     .build();
-    private static final ImmutableList<Integer> sEmptyIndices = ImmutableList.of();
 
     private final SecureRandom mSecureRandom;
     private final PrivacyGenerator mPrivacyGenerator;
@@ -99,7 +99,7 @@ public final class PrivacyGeneratorStatisticalTest {
         ReportDefinition report = sReportTemplate.toBuilder().setPoissonMean(poissonMean).build();
         int totalIndicesAdded = 0;
         for (int i = 0; i < numTrials; i++) {
-            totalIndicesAdded += mPrivacyGenerator.addNoise(sEmptyIndices, maxIndex, report).size();
+            totalIndicesAdded += mPrivacyGenerator.generateNoise(maxIndex, report).size();
         }
         double stddev = Math.sqrt((double) (numTrials * (1 + maxIndex)) * poissonMean);
         double expectedIndicesAdded = (double) (numTrials * (1 + maxIndex)) * poissonMean;
@@ -231,11 +231,11 @@ public final class PrivacyGeneratorStatisticalTest {
         int numIndicesAdded = 0;
         int[] indexCounts = new int[n];
         while (numIndicesAdded < numTrials) {
-            ImmutableList<Integer> noisedIndices =
-                    mPrivacyGenerator.addNoise(sEmptyIndices, maxIndex, report);
-            for (int i : noisedIndices) {
+            ImmutableList<PrivateIndexObservation> noisedIndices =
+                    mPrivacyGenerator.generateNoise(maxIndex, report);
+            for (PrivateIndexObservation o : noisedIndices) {
                 numIndicesAdded++;
-                indexCounts[i]++;
+                indexCounts[(int) o.getIndex()]++;
                 if (numIndicesAdded >= numTrials) {
                     break;
                 }

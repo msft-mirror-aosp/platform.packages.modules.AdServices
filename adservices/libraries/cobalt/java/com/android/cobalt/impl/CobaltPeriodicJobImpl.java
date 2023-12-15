@@ -31,7 +31,7 @@ import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ObservationStoreEntity;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.domain.Project;
-import com.android.cobalt.observations.CountObservationGenerator;
+import com.android.cobalt.observations.ObservationGeneratorFactory;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.CobaltClock;
 import com.android.cobalt.system.SystemClock;
@@ -46,7 +46,6 @@ import com.google.cobalt.ObservationBatch;
 import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
@@ -87,12 +86,10 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
     private final Duration mUploadDoneDelay;
     private final SystemClock mSystemClock;
     private final boolean mEnabled;
-    private final SystemData mSystemData;
-    private final PrivacyGenerator mPrivacyGenerator;
-    private final SecureRandom mSecureRandom;
     private final Uploader mUploader;
     private final Encrypter mEncrypter;
     private final ByteString mApiKey;
+    private final ObservationGeneratorFactory mObservationGeneratorFactory;
 
     public CobaltPeriodicJobImpl(
             @NonNull Project project,
@@ -118,12 +115,15 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
         mUploadDoneDelay = Objects.requireNonNull(uploadDoneDelay);
         mSystemClock = Objects.requireNonNull(systemClock);
         mEnabled = enabled;
-        mSystemData = Objects.requireNonNull(systemData);
-        mPrivacyGenerator = Objects.requireNonNull(privacyGenerator);
-        mSecureRandom = Objects.requireNonNull(secureRandom);
         mUploader = Objects.requireNonNull(uploader);
         mEncrypter = Objects.requireNonNull(encrypter);
         mApiKey = Objects.requireNonNull(apiKey);
+        mObservationGeneratorFactory =
+                new ObservationGeneratorFactory(
+                        mProject,
+                        Objects.requireNonNull(systemData),
+                        Objects.requireNonNull(privacyGenerator),
+                        Objects.requireNonNull(secureRandom));
     }
 
     /**
@@ -180,23 +180,11 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
                                 metric.getId(),
                                 report.getId());
                 relevantReports.add(reportKey);
-                if (report.getReportType() != ReportType.FLEETWIDE_OCCURRENCE_COUNTS) {
-                    // Skip observation generation after recording the report is relevant in case
-                    // a disabled report may be enabled again.
-                    continue;
-                }
                 logInfo(
                         "Generating observations for day %s for report %s",
                         dayIndexToGenerate, reportKey);
                 ObservationGenerator generator =
-                        new CountObservationGenerator(
-                                mSystemData,
-                                mPrivacyGenerator,
-                                mSecureRandom,
-                                mProject.getCustomerId(),
-                                mProject.getProjectId(),
-                                metric,
-                                report);
+                        mObservationGeneratorFactory.getObservationGenerator(metric, report);
                 results.add(
                         mDataService.generateCountObservations(
                                 reportKey, dayIndexToGenerate, dayIndexLoggerEnabled, generator));
