@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.adservices.common;
+package com.android.adservices.service.shell;
 
-import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_ECHO;
-import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_HELP;
-import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
-import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
-import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_IS_ALLOWED_TOPICS_ACCESS;
-import static com.android.adservices.common.AdServicesShellCommandHandler.CMD_SHORT_HELP;
-import static com.android.adservices.common.AdServicesShellCommandHandler.ERROR_EMPTY_COMMAND;
-import static com.android.adservices.common.AdServicesShellCommandHandler.ERROR_TEMPLATE_INVALID_ARGS;
-import static com.android.adservices.common.AdServicesShellCommandHandler.HELP_ECHO;
-import static com.android.adservices.common.AdServicesShellCommandHandler.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
-import static com.android.adservices.common.AdServicesShellCommandHandler.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
-import static com.android.adservices.common.AdServicesShellCommandHandler.HELP_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_ECHO;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_HELP;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_SHORT_HELP;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.ERROR_EMPTY_COMMAND;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.ERROR_TEMPLATE_INVALID_ARGS;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_ECHO;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.mock;
 
-import android.content.Context;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -61,12 +59,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     public void testInvalidConstructor() throws Exception {
         assertThrows(
                 NullPointerException.class,
-                () -> new AdServicesShellCommandHandler(mCmd.context, (PrintWriter) null));
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new AdServicesShellCommandHandler(
-                                /* context= */ null, mock(PrintWriter.class)));
+                () -> new AdServicesShellCommandHandler((PrintWriter) null));
     }
 
     @Test
@@ -286,13 +279,11 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
 
     /** Helper to run a command and get the output. */
     private static final class OneTimeCommand {
-        private final StringWriter mOutStringWriter = new StringWriter();
-        private final PrintWriter mOut = new PrintWriter(mOutStringWriter);
         public final Expect expect;
 
-        public final Context context = mock(Context.class);
-        public final AdServicesShellCommandHandler cmd =
-                new AdServicesShellCommandHandler(context, mOut);
+        private final StringWriter mOutStringWriter = new StringWriter();
+        private final PrintWriter mOut = new PrintWriter(mOutStringWriter);
+        public final AdServicesShellCommandHandler cmd = new AdServicesShellCommandHandler(mOut);
 
         private boolean mOutCalled;
 
