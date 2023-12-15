@@ -425,7 +425,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                             mAdSelectionEntryDao,
                                             auctionServerEnabledForUpdateHistogram),
-                                    auctionResultValidator);
+                                    auctionResultValidator,
+                                    mFlags,
+                                    mAdServicesLogger);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });

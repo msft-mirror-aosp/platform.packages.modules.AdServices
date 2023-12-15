@@ -3351,6 +3351,14 @@ public interface Flags extends CommonFlags {
         return FLEDGE_DATA_VERSION_HEADER_ENABLED;
     }
 
+    // New fledge beacon reporting metrics flag.
+    boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge beacon reporting metrics is enabled. */
+    default boolean getFledgeBeaconReportingMetricsEnabled() {
+        return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.
