@@ -16,18 +16,19 @@
 
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -40,6 +41,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -169,10 +171,16 @@ public class AsyncRegistrationQueueJobServiceTest {
                     JobServiceLoggingCallback onStartJobCallback =
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+                    doReturn(
+                                    AsyncRegistrationQueueRunner.ProcessingResult
+                                            .SUCCESS_ALL_RECORDS_PROCESSED)
+                            .when(mSpyService)
+                            .processAsyncRecords();
 
                     onStartJob_killSwitchOff();
 
-                    verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+                    verify(mSpyLogger).recordOnStartJob(anyInt());
+                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
                 });
     }
 
@@ -182,29 +190,28 @@ public class AsyncRegistrationQueueJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    CountDownLatch countDownLatch = createCountDownLatch();
-                    ExtendedMockito.doNothing()
-                            .when(
-                                    () ->
-                                            AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                                                    any(), anyBoolean()));
+                    doReturn(
+                                    AsyncRegistrationQueueRunner.ProcessingResult
+                                            .SUCCESS_ALL_RECORDS_PROCESSED)
+                            .when(mSpyService)
+                            .processAsyncRecords();
 
                     // Execute
                     mSpyService.onStartJob(mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    countDownLatch = createCountDownLatch();
+
+                    // Verify before executing again to make sure the lock has been unlocked
+                    ExtendedMockito.verify(
+                            () -> mSpyService.scheduleIfNeeded(any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).times(1));
+
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
 
-                    // Validate
+                    // Validate the job ran successfully twice
                     assertTrue(result);
-
-                    // Verify the job ran successfully twice
-                    ExtendedMockito.verify(mSpyService, times(2)).jobFinished(any(), anyBoolean());
+                    ExtendedMockito.verify(
+                            () -> mSpyService.scheduleIfNeeded(any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).times(2));
+                    ExtendedMockito.verify(mSpyService, never()).jobFinished(any(), anyBoolean());
                     verify(mMockJobScheduler, never())
                             .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
@@ -236,6 +243,149 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // field is not logged
                     verifyLoggingNotHappened(mSpyLogger);
                 });
+    }
+
+    @Test
+    public void testRescheduling_threadInterruptedWhileProcessingRecords_dontRescheduleManually()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    // Failure while processing records
+                    ExtendedMockito.doReturn(
+                                    AsyncRegistrationQueueRunner.ProcessingResult
+                                            .THREAD_INTERRUPTED)
+                            .when(mSpyService)
+                            .processAsyncRecords();
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate, reschedule job with jobFinished
+                    assertTrue(result);
+                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                            .recordJobFinished(
+                                    eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID),
+                                    /* isSuccessful= */ eq(false),
+                                    /* shouldRetry= */ eq(true));
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
+                            .jobFinished(any(), eq(/* wantsReschedule= */ true));
+                    ExtendedMockito.verify(
+                            () ->
+                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()),
+                            never());
+                    verify(mSpyService, never()).scheduleImmediately(any());
+                });
+    }
+
+    @Test
+    public void testRescheduling_successNoMoreRecordsToProcess_rescheduleManually()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    // Successful processing
+                    ExtendedMockito.doReturn(
+                                    AsyncRegistrationQueueRunner.ProcessingResult
+                                            .SUCCESS_ALL_RECORDS_PROCESSED)
+                            .when(mSpyService)
+                            .processAsyncRecords();
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate, do not reschedule with jobFinished, but reschedule manually
+                    assertTrue(result);
+                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                            .recordJobFinished(
+                                    eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID),
+                                    /* isSuccessful= */ eq(true),
+                                    /* shouldRetry= */ eq(false));
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
+                    ExtendedMockito.verify(
+                            () ->
+                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).times(1));
+                    verify(mSpyService, never()).scheduleImmediately(any());
+                });
+    }
+
+    @Test
+    public void testRescheduling_hasMoreRecordsToProcess_rescheduleImmediately() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    disableKillSwitch();
+
+                    // Pending records
+                    ExtendedMockito.doReturn(
+                                    AsyncRegistrationQueueRunner.ProcessingResult
+                                            .SUCCESS_WITH_PENDING_RECORDS)
+                            .when(mSpyService)
+                            .processAsyncRecords();
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate, do not reschedule with jobFinished, but reschedule immediately
+                    assertTrue(result);
+                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                            .recordJobFinished(
+                                    eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID),
+                                    /* isSuccessful= */ eq(true),
+                                    /* shouldRetry= */ eq(true));
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
+                    ExtendedMockito.verify(
+                            () ->
+                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()),
+                            never());
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
+                            .scheduleImmediately(any());
+                });
+    }
+
+    @Test
+    public void testScheduleImmediately_killSwitchOff_rescheduleImmediately() {
+        // Setup
+        disableKillSwitch();
+        JobScheduler jobScheduler = mock(JobScheduler.class);
+        Context context = mock(Context.class);
+        doReturn(jobScheduler).when(context).getSystemService(eq(JobScheduler.class));
+
+        // Execute
+        mSpyService.scheduleImmediately(context);
+
+        // Validate jobInfo params to run immediately
+        ArgumentCaptor<JobInfo> captorJobInfo = ArgumentCaptor.forClass(JobInfo.class);
+        verify(jobScheduler, times(1)).schedule(captorJobInfo.capture());
+        JobInfo jobInfo = captorJobInfo.getValue();
+        assertNotNull(jobInfo);
+        assertNull(jobInfo.getTriggerContentUris());
+        assertEquals(-1, jobInfo.getTriggerContentUpdateDelay());
+        assertEquals(-1, jobInfo.getTriggerContentMaxDelay());
+        assertEquals(JobInfo.NETWORK_TYPE_ANY, jobInfo.getNetworkType());
+    }
+
+    @Test
+    public void testScheduleImmediately_killSwitchOn_dontReschedule() {
+        // Setup
+        enableKillSwitch();
+        JobScheduler jobScheduler = mock(JobScheduler.class);
+        Context context = mock(Context.class);
+        doReturn(jobScheduler).when(context).getSystemService(eq(JobScheduler.class));
+
+        // Execute
+        mSpyService.scheduleImmediately(context);
+
+        // Validate, job did not schedule
+        verify(jobScheduler, never()).schedule(any());
     }
 
     @Test
@@ -505,48 +655,38 @@ public class AsyncRegistrationQueueJobServiceTest {
     private void onStartJob_killSwitchOff() throws Exception {
         // Setup
         disableKillSwitch();
-        ExtendedMockito.doNothing()
-                .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing().when(() -> mSpyService.scheduleIfNeeded(any(), anyBoolean()));
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
         // Validate
         assertTrue(result);
-        // Allow background thread to execute
-        Thread.sleep(WAIT_IN_MILLIS);
-        ExtendedMockito.verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        ExtendedMockito.verify(
+                () -> mSpyService.scheduleIfNeeded(any(), eq(true)),
+                timeout(WAIT_IN_MILLIS).times(1));
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-            Context context = Mockito.mock(Context.class);
-            doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
-            doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
-            // Setup mock everything in job
-            mMockDatastoreManager = mock(DatastoreManager.class);
-            doReturn(Optional.empty())
-                    .when(mMockDatastoreManager)
-                    .runInTransactionWithResult(any());
-            doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-            doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(context).when(mSpyService).getApplicationContext();
-            ExtendedMockito.doReturn(mock(EnrollmentDao.class))
-                    .when(() -> EnrollmentDao.getInstance(any()));
-            ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
-                    .when(AdServicesLoggerImpl::getInstance);
-            ExtendedMockito.doReturn(mMockDatastoreManager)
-                    .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-
-            // Mock AdservicesJobServiceLogger to not actually log the stats to server
-            Mockito.doNothing()
-                    .when(mSpyLogger)
-                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-            ExtendedMockito.doReturn(mSpyLogger)
-                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
-
-            // Execute
-            execute.run();
+        Context context = Mockito.mock(Context.class);
+        doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
+        doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
+        // Setup mock everything in job
+        mMockDatastoreManager = mock(DatastoreManager.class);
+        doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
+        doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
+        doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
+        doReturn(context).when(mSpyService).getApplicationContext();
+        ExtendedMockito.doReturn(mock(EnrollmentDao.class))
+                .when(() -> EnrollmentDao.getInstance(any()));
+        ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
+                .when(AdServicesLoggerImpl::getInstance);
+        ExtendedMockito.doReturn(mMockDatastoreManager)
+                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        mockGetAdservicesJobServiceLogger(mSpyLogger);
+        // Execute
+        execute.run();
     }
 
     private void enableKillSwitch() {
@@ -560,12 +700,6 @@ public class AsyncRegistrationQueueJobServiceTest {
     private void toggleKillSwitch(boolean value) {
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(value).when(mMockFlags).getAsyncRegistrationJobQueueKillSwitch();
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
     }
 
     private Object countDown(CountDownLatch countDownLatch) {

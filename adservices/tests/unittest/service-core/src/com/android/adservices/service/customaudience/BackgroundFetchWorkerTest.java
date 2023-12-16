@@ -572,6 +572,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 316155251)
     public void testStopWorkPreemptsDataUpdates() throws Exception {
         int numEligibleCustomAudiences = 16;
         CountDownLatch beforeUpdatingCasLatch = new CountDownLatch(numEligibleCustomAudiences / 4);

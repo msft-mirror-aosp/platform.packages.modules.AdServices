@@ -201,16 +201,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
-    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
-    public T setAdserviceEnableStatus(boolean value) {
-        return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
-    }
-
-    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
-    public T setUpdateAdIdCacheEnabled(boolean value) {
-        return setFlag(FlagsConstants.KEY_AD_ID_CACHE_ENABLED, value);
-    }
-
     /**
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.

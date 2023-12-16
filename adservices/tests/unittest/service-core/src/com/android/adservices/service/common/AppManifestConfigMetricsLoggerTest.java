@@ -367,7 +367,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         AppManifestConfigMetricsLogger.logUsage(call);
     }
 
-    /** Gets a custom Mockito matcher for a {@link AppManifestConfigCall}. */
+    /** Gets a custom Mockito matcher for a {@link AppManifestConfigCall}, without the result. */
     static AppManifestConfigCall appManifestConfigCall(
             String packageName, boolean appExists, boolean appHasConfig, boolean enabledByDefault) {
         return argThat(
@@ -410,7 +410,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
             call.appHasConfig = mAppHasConfig;
             call.enabledByDefault = mEnabledByDefault;
 
-            return call.toString();
+            return call.toString() + " {NOT CHECING RESULT}";
         }
     }
 

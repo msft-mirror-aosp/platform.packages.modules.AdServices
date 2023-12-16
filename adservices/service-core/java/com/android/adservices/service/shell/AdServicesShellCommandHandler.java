@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.service.shell;
 
 import android.annotation.Nullable;
-import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -32,6 +31,7 @@ import java.util.Objects;
 
 // TODO(b/308009734): arg parsing logic mostly copied from on BasicShellCommandHandler, it might be
 // worth to refactor it once the handler is called by both system_server and service.
+
 /**
  * Service-side version of {@code cmd adservices_manager}.
  *
@@ -39,40 +39,30 @@ import java.util.Objects;
  */
 public final class AdServicesShellCommandHandler {
 
-    // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    private static final String TAG = "AdServicesShellCmd";
-    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
-
     @VisibleForTesting static final String CMD_SHORT_HELP = "-h";
     @VisibleForTesting static final String CMD_HELP = "help";
     @VisibleForTesting static final String CMD_ECHO = "echo";
 
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_ATTRIBUTION_ACCESS = "is-allowed-attribution-access";
-
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
             "is-allowed-custom-audiences-access";
-
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
-
     @VisibleForTesting
     static final String HELP_ECHO =
             CMD_ECHO + " <message> - prints the given message (useful to check cmd is working).";
-
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_ATTRIBUTION_ACCESS =
             CMD_IS_ALLOWED_ATTRIBUTION_ACCESS
                     + " <package_name> <enrollment_id> - checks if the given enrollment id is"
                     + " allowed to use the Attribution APIs in the given app.";
-
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
             CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS
                     + " <package_name> <enrollment_id> - checks if the given enrollment id is"
                     + " allowed to use the Custom Audience APIs in the given app.";
-
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
             CMD_IS_ALLOWED_TOPICS_ACCESS
@@ -84,19 +74,19 @@ public final class AdServicesShellCommandHandler {
 
     @VisibleForTesting
     static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s). Syntax: %s";
-
+    // TODO(b/280460130): use adservice helpers for tag name / logging methods
+    private static final String TAG = "AdServicesShellCmd";
+    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
     private static final int RESULT_OK = 0;
     private static final int RESULT_GENERIC_ERROR = -1;
 
-    private final Context mContext;
     private final PrintWriter mOut;
 
     private String[] mArgs;
     private int mArgPos;
     private String mCurArgData;
 
-    public AdServicesShellCommandHandler(Context context, PrintWriter out) {
-        mContext = Objects.requireNonNull(context, "context cannot be null");
+    public AdServicesShellCommandHandler(PrintWriter out) {
         mOut = Objects.requireNonNull(out, "out cannot be null");
     }
 
