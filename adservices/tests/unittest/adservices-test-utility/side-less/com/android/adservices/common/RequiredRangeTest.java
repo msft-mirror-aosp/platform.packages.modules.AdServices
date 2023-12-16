@@ -15,8 +15,8 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkRange;
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.RequiredRange;
+import com.android.adservices.common.AndroidSdk.Range;
 
 import com.google.common.truth.Expect;
 
@@ -26,12 +26,13 @@ import org.junit.Test;
 public final class RequiredRangeTest {
 
     private static final String REASON = "To get to the other side.";
+    private static final String NULL_REASON = null;
 
     @Rule public final Expect expect = Expect.create();
 
     @Test
     public void testToString() {
-        var range = AndroidSdkRange.forAnyLevel();
+        var range = Range.forAnyLevel();
         var requiredRange = new RequiredRange(range, REASON);
 
         String toString = requiredRange.toString();
@@ -42,16 +43,14 @@ public final class RequiredRangeTest {
 
     @Test
     public void testEqualsHashCode() {
-        var range1 = AndroidSdkRange.forAnyLevel();
-        var range2 = AndroidSdkRange.forExactly(42);
+        var range1 = Range.forAnyLevel();
+        var range2 = Range.forExactly(42);
 
         expectEquals(new RequiredRange(range1, REASON), new RequiredRange(range1, REASON));
-        expectEquals(
-                new RequiredRange(range1, REASON), new RequiredRange(range1, /* reason= */ null));
+        expectEquals(new RequiredRange(range1, REASON), new RequiredRange(range1, NULL_REASON));
 
         expectNotEquals(new RequiredRange(range1, REASON), new RequiredRange(range2, REASON));
-        expectNotEquals(
-                new RequiredRange(range1, REASON), new RequiredRange(range2, /* reason= */ null));
+        expectNotEquals(new RequiredRange(range1, REASON), new RequiredRange(range2, NULL_REASON));
     }
 
     private void expectEquals(RequiredRange requiredRange1, RequiredRange requiredRange2) {

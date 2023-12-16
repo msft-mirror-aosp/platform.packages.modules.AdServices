@@ -126,6 +126,12 @@ public class AsyncRegistrationQueueRunner {
         mLogger = logger;
     }
 
+    enum ProcessingResult {
+        THREAD_INTERRUPTED,
+        SUCCESS_WITH_PENDING_RECORDS,
+        SUCCESS_ALL_RECORDS_PROCESSED
+    }
+
     /**
      * Returns an instance of AsyncRegistrationQueueRunner.
      *
@@ -140,7 +146,7 @@ public class AsyncRegistrationQueueRunner {
     }
 
     /** Processes records in the AsyncRegistration Queue table. */
-    public void runAsyncRegistrationQueueWorker() {
+    public ProcessingResult runAsyncRegistrationQueueWorker() {
         int recordServiceLimit = mFlags.getMeasurementMaxRegistrationsPerJobInvocation();
         int retryLimit = mFlags.getMeasurementMaxRetriesPerRegistrationRequest();
 
@@ -154,33 +160,49 @@ public class AsyncRegistrationQueueRunner {
                         .d(
                                 "AsyncRegistrationQueueRunner runAsyncRegistrationQueueWorker "
                                         + "thread interrupted, exiting early.");
-                return;
+                return ProcessingResult.THREAD_INTERRUPTED;
             }
 
-            Optional<AsyncRegistration> optAsyncRegistration =
-                    mDatastoreManager.runInTransactionWithResult(
-                            (dao) ->
-                                    dao.fetchNextQueuedAsyncRegistration(
-                                            retryLimit, failedOrigins));
-
-            AsyncRegistration asyncRegistration;
-            if (optAsyncRegistration.isPresent()) {
-                asyncRegistration = optAsyncRegistration.get();
-            } else {
+            AsyncRegistration asyncRegistration = fetchNext(retryLimit, failedOrigins);
+            if (null == asyncRegistration) {
                 LoggerFactory.getMeasurementLogger()
                         .d("AsyncRegistrationQueueRunner: no async registration fetched.");
-                return;
+                return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
             }
 
-            if (asyncRegistration.isSourceRequest()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d("AsyncRegistrationQueueRunner:" + " processing source");
-                processSourceRegistration(asyncRegistration, failedOrigins);
-            } else {
-                LoggerFactory.getMeasurementLogger()
-                        .d("AsyncRegistrationQueueRunner:" + " processing trigger");
-                processTriggerRegistration(asyncRegistration, failedOrigins);
-            }
+            processAsyncRecord(asyncRegistration, failedOrigins);
+        }
+
+        return hasPendingRecords(retryLimit, failedOrigins);
+    }
+
+    private AsyncRegistration fetchNext(int retryLimit, Set<Uri> failedOrigins) {
+        return mDatastoreManager
+                .runInTransactionWithResult(
+                        (dao) -> dao.fetchNextQueuedAsyncRegistration(retryLimit, failedOrigins))
+                .orElse(null);
+    }
+
+    private void processAsyncRecord(AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
+        if (asyncRegistration.isSourceRequest()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner:" + " processing source");
+            processSourceRegistration(asyncRegistration, failedOrigins);
+        } else {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner:" + " processing trigger");
+            processTriggerRegistration(asyncRegistration, failedOrigins);
+        }
+    }
+
+    private ProcessingResult hasPendingRecords(int retryLimit, Set<Uri> failedOrigins) {
+        AsyncRegistration asyncRegistration = fetchNext(retryLimit, failedOrigins);
+        if (null == asyncRegistration) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner: no more pending async records.");
+            return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
+        } else {
+            return ProcessingResult.SUCCESS_WITH_PENDING_RECORDS;
         }
     }
 

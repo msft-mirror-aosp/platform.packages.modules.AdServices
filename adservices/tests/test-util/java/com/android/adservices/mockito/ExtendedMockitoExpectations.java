@@ -22,8 +22,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
 
@@ -102,7 +102,7 @@ public final class ExtendedMockitoExpectations {
     public static ErrorLogUtilCallback mockErrorLogUtilWithThrowable() {
         ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
         doAnswer(
-                        (inv) -> {
+                        inv -> {
                             Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
                             callback.injectResult(
                                     new ErrorLogUtilInvocation(
@@ -124,7 +124,7 @@ public final class ExtendedMockitoExpectations {
     public static ErrorLogUtilCallback mockErrorLogUtilWithoutThrowable() {
         ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
         doAnswer(
-                        (inv) -> {
+                        inv -> {
                             Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
                             callback.injectResult(
                                     new ErrorLogUtilInvocation(
@@ -170,7 +170,7 @@ public final class ExtendedMockitoExpectations {
      */
     public static void mockDump(Runnable invocation, int pwArgIndex, String dump) {
         doAnswer(
-                        (inv) -> {
+                        inv -> {
                             PrintWriter pw = (PrintWriter) inv.getArgument(1);
                             pw.println(dump);
                             return null;
@@ -178,15 +178,24 @@ public final class ExtendedMockitoExpectations {
                 .when(() -> invocation.run());
     }
 
-    /** Mock {@link AdservicesJobServiceLogger} to not actually log the stats to server. */
+    /** Mocks {@link AdservicesJobServiceLogger} to not actually log the stats to server. */
     public static AdservicesJobServiceLogger mockAdservicesJobServiceLogger(
             Context context, StatsdAdServicesLogger statsDLogger) {
         AdservicesJobServiceLogger logger =
                 spy(new AdservicesJobServiceLogger(context, Clock.SYSTEM_CLOCK, statsDLogger));
-        doNothing().when(logger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        doReturn(logger).when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+
+        mockGetAdservicesJobServiceLogger(logger);
+        doNothing().when(logger).recordOnStartJob(anyInt());
+        doNothing().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
+        doNothing().when(logger).recordJobSkipped(anyInt(), anyInt());
+        doNothing().when(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
 
         return logger;
+    }
+
+    /** Mocks {@link AdservicesJobServiceLogger#getInstance(Context)} to return a mocked logger. */
+    public static void mockGetAdservicesJobServiceLogger(AdservicesJobServiceLogger logger) {
+        doReturn(logger).when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
     }
 
     /**
