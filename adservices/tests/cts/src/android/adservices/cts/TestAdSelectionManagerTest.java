@@ -39,6 +39,7 @@ import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.net.Uri;
 import android.os.Process;
 
@@ -51,7 +52,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -142,7 +142,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionId() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
         sLogger.i("Calling Report Impression");
 
         AdSelectionClient adSelectionClient =
@@ -155,7 +155,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionId_usingGetMethodToCreateManager() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
         sLogger.i("Calling Report Impression");
 
         AdSelectionClient adSelectionClient =
@@ -279,7 +279,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionConfigNoBuyers() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()
                         .setContext(sContext)
@@ -290,7 +290,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionConfigNoBuyers_usingGetMethodToCreateManager() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()
                         .setContext(sContext)

@@ -45,6 +45,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -56,12 +57,11 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -99,7 +99,6 @@ public class EventReportingJobHandlerTest {
 
     @Mock EnrollmentDao mEnrollmentDao;
     @Mock private Flags mMockFlags;
-    private StaticMockitoSession mMockitoSession;
 
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
@@ -109,6 +108,13 @@ public class EventReportingJobHandlerTest {
     EventReportingJobHandler mSpyEventReportingJobHandler;
     EventReportingJobHandler mSpyDebugEventReportingJobHandler;
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(ErrorLogUtil.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     class FakeDatasoreManager extends DatastoreManager {
         FakeDatasoreManager() {
@@ -133,12 +139,6 @@ public class EventReportingJobHandlerTest {
 
     @Before
     public void setUp() throws DatastoreException {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ErrorLogUtil.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         mMockFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
@@ -898,10 +898,5 @@ public class EventReportingJobHandlerTest {
         verify(mMeasurementDao)
                 .incrementAndGetReportingRetryCount(
                         eventReport1.getId(), KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
-    }
-
-    @After
-    public void tearDown() {
-        mMockitoSession.finishMocking();
     }
 }

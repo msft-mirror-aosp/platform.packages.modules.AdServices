@@ -142,6 +142,9 @@ public class ContentValueFixtures {
 
         // Added in V22
         public static final String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
+
+        // Added in V30
+        public static final String TRIGGER_DATA_MATCHING = Source.TriggerDataMatching.EXACT.name();
     }
 
     public static class SourceDestinationValues {
@@ -233,6 +236,9 @@ public class ContentValueFixtures {
 
         // Added in V25
         public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
+
+        // Added in V29
+        public static final int SCOPE = 0;
     }
 
     public static class EventReportValues {
@@ -733,6 +739,20 @@ public class ContentValueFixtures {
         return values;
     }
 
+    /** Returns content values for source version 29 */
+    public static ContentValues generateSourceContentValuesV29() {
+        return generateSourceContentValuesV22();
+    }
+
+    /** Returns content values for source version 30 */
+    public static ContentValues generateSourceContentValuesV30() {
+        ContentValues values = generateSourceContentValuesV29();
+        values.put(
+                MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
+                SourceValues.TRIGGER_DATA_MATCHING);
+        return values;
+    }
+
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
 
@@ -1041,6 +1061,25 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AttributionContract.REGISTRATION_ORIGIN,
                 AttributionValues.REGISTRATION_ORIGIN.toString());
+        return values;
+    }
+
+    /** Return content values for an attribution record version 26 */
+    public static ContentValues generateAttributionContentValuesV26() {
+        return generateAttributionContentValuesV25();
+    }
+
+    /** Return content values for an attribution record version 28 */
+    public static ContentValues generateAttributionContentValuesV28() {
+        return generateAttributionContentValuesV26();
+    }
+
+    /** Return content values for an attribution record version 29 */
+    public static ContentValues generateAttributionContentValuesV29() {
+        ContentValues values = generateAttributionContentValuesV28();
+        values.put(
+                MeasurementTables.AttributionContract.SCOPE,
+                AttributionValues.SCOPE);
         return values;
     }
 

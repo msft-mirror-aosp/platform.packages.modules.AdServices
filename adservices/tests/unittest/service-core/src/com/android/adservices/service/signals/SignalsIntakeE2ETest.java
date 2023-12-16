@@ -76,12 +76,14 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
@@ -138,6 +140,7 @@ public class SignalsIntakeE2ETest {
     private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     private UpdateProcessorSelector mUpdateProcessorSelector;
     private UpdateEncoderEventHandler mUpdateEncoderEventHandler;
+    private SignalEvictionController mSignalEvictionController;
     private AdTechUriValidator mAdtechUriValidator;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -173,9 +176,21 @@ public class SignalsIntakeE2ETest {
                         mBackgroundExecutorService);
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
+        int oversubscriptionBytesLimit =
+                FlagsFactory.getFlagsForTest()
+                        .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
+        mSignalEvictionController =
+                new SignalEvictionController(
+                        ImmutableList.of(),
+                        FlagsFactory.getFlagsForTest()
+                                .getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                        oversubscriptionBytesLimit);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
-                        mSignalsDao, mUpdateProcessorSelector, mUpdateEncoderEventHandler);
+                        mSignalsDao,
+                        mUpdateProcessorSelector,
+                        mUpdateEncoderEventHandler,
+                        mSignalEvictionController);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(

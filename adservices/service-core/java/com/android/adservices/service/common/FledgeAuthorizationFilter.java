@@ -212,7 +212,7 @@ public class FledgeAuthorizationFilter {
         }
 
         if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                context, appPackageName, enrollmentData.getEnrollmentId())) {
+                appPackageName, enrollmentData.getEnrollmentId())) {
             sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
@@ -298,7 +298,7 @@ public class FledgeAuthorizationFilter {
 
         boolean isAllowedCustomAudiencesAccess =
                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        context, appPackageName, enrollmentData.getEnrollmentId());
+                        appPackageName, enrollmentData.getEnrollmentId());
         boolean isEnrollmentBlocklisted =
                 PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
         int errorCause = EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue();

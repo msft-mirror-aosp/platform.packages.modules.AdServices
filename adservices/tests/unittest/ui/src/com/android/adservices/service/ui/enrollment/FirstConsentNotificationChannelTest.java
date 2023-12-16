@@ -25,63 +25,38 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
 
-import android.content.Context;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.impl.FirstConsentNotificationChannel;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
-public class FirstConsentNotificationChannelTest {
+@SpyStatic(ConsentNotificationJobService.class)
+public class FirstConsentNotificationChannelTest extends AdServicesExtendedMockitoTestCase {
     private final FirstConsentNotificationChannel mFirstConsentNotificationChannel =
             new FirstConsentNotificationChannel();
 
-    @Mock private Context mContext;
     @Mock private PrivacySandboxUxCollection mPrivacySandboxUxCollection;
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
-    private MockitoSession mStaticMockSession;
 
     @Before
     public void setup() throws IOException {
-        MockitoAnnotations.initMocks(this);
-
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(UxStatesManager.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(ConsentNotificationJobService.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-
         // Do not trigger real notifications.
         doNothing()
                 .when(
                         () ->
                                 ConsentNotificationJobService.schedule(
-                                        any(Context.class), anyBoolean(), anyBoolean()));
-    }
-
-    @After
-    public void teardown() throws IOException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+                                        any(), anyBoolean(), anyBoolean()));
     }
 
     @Test
@@ -136,38 +111,27 @@ public class FirstConsentNotificationChannelTest {
 
     @Test
     public void enrollTest_nonReconsentNotification() {
-        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
+        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), anyBoolean(), eq(false)),
-                times(1));
+        verify(() -> ConsentNotificationJobService.schedule(any(), anyBoolean(), eq(false)));
     }
 
     @Test
     public void enrollTest_adIdEnabledFirstConsentNotification() {
         doReturn(true).when(mConsentManager).isAdIdEnabled();
 
-        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
+        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(true), eq(false)),
-                times(1));
+        verify(() -> ConsentNotificationJobService.schedule(any(), eq(true), eq(false)));
     }
 
     @Test
     public void enrollTest_adIdDisabledFirstConsentNotification() {
         doReturn(false).when(mConsentManager).isAdIdEnabled();
 
-        mFirstConsentNotificationChannel.enroll(mContext, mConsentManager);
+        mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(false), eq(false)),
-                times(1));
+        verify(() -> ConsentNotificationJobService.schedule(any(), eq(false), eq(false)));
     }
+
 }

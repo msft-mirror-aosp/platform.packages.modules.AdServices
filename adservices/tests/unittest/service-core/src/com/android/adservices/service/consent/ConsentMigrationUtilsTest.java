@@ -239,7 +239,7 @@ public class ConsentMigrationUtilsTest {
         verifyNoMoreInteractions(mAppSearchConsentManagerMock);
 
         verify(mAdServicesExtDataManagerMock).getAdServicesExtData();
-        verify(mAdServicesExtDataManagerMock).clearAllDataAsync();
+        verify(mAdServicesExtDataManagerMock).clearDataOnOtaAsync();
         verifyNoMoreInteractions(mAdServicesExtDataManagerMock);
     }
 
@@ -289,7 +289,7 @@ public class ConsentMigrationUtilsTest {
         verifyNoMoreInteractions(mAppSearchConsentManagerMock);
 
         verify(mAdServicesExtDataManagerMock).getAdServicesExtData();
-        verify(mAdServicesExtDataManagerMock).clearAllDataAsync();
+        verify(mAdServicesExtDataManagerMock).clearDataOnOtaAsync();
         verifyNoMoreInteractions(mAdServicesExtDataManagerMock);
     }
 

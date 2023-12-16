@@ -48,6 +48,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /** Integration tests for {@link AggregateReportingJobHandler} */
@@ -58,7 +59,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
     private final AdServicesLogger mLogger;
     private final AdServicesErrorLogger mErrorLogger;
 
-    @Parameterized.Parameters(name = "{3}")
+    @Parameterized.Parameters(name = "{4}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open("aggregate_report_service_test.json");
         return AbstractDbIntegrationTest.getTestCasesFrom(
@@ -68,8 +69,12 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
     public AggregateReportingJobHandlerIntegrationTest(
-            DbState input, DbState output, JSONObject param, String name) {
-        super(input, output);
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            JSONObject param,
+            String name) {
+        super(input, output, flagsMap);
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
         mLogger = Mockito.mock(AdServicesLogger.class);

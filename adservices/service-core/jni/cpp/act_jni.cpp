@@ -21,6 +21,7 @@
 #include <vector>
 #include <google/protobuf/message_lite.h>
 
+
 using namespace private_join_and_compute::anonymous_counting_tokens;
 
 
@@ -243,5 +244,105 @@ JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJni_verifyTokensRespon
                     env, IllegalStateExceptionClass, status.ToString().c_str());
         return false;
     }
+}
+
+
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_recoverTokens(
+    JNIEnv *env,
+    jclass,
+    jbyteArray messagesInBytes,
+    jbyteArray tokenRequestInBytes,
+    jbyteArray tokensRequestPrivateStateInBytes,
+    jbyteArray tokensResponseInBytes,
+    jbyteArray schemeParametersInBytes,
+    jbyteArray clientPublicParametersInBytes,
+    jbyteArray clientPrivateParametersInBytes,
+    jbyteArray serverPublicParametersInBytes
+) {
+    MessagesSet messagesProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &messagesProto, messagesInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing MessagesSet Proto");
+        return nullptr;
+    }
+    std::vector<std::string> messagesVector(messagesProto.message_size());
+    for(int i = 0; i < messagesProto.message_size(); i++) {
+        messagesVector[i] = messagesProto.message(i);
+    }
+
+    TokensRequest tokenRequestProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &tokenRequestProto, tokenRequestInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing TokensRequest Proto");
+        return nullptr;
+    }
+
+    TokensRequestPrivateState tokensRequestPrivateStateProto;
+    if(!jni_util::JniUtil::BytesToCppProto(
+                env, &tokensRequestPrivateStateProto, tokensRequestPrivateStateInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing TokensRequestPrivateState Proto");
+        return nullptr;
+    }
+
+    TokensResponse tokensResponseProto;
+    if(!jni_util::JniUtil::BytesToCppProto(env, &tokensResponseProto, tokensResponseInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing TokensResponse Proto");
+        return nullptr;
+    }
+
+    SchemeParameters schemeParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(
+            env, &schemeParametersProto, schemeParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing SchemeParameters Proto");
+        return nullptr;
+    }
+    ClientPublicParameters clientPublicParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(
+                env, &clientPublicParametersProto, clientPublicParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ClientPublicParameters Proto");
+        return nullptr;
+    }
+    ClientPrivateParameters clientPrivateParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(
+                env, &clientPrivateParametersProto, clientPublicParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing SchemeParameters Proto");
+        return nullptr;
+    }
+    ServerPublicParameters serverPublicParametersProto;
+    if(!jni_util::JniUtil::BytesToCppProto(
+                    env, &serverPublicParametersProto, serverPublicParametersInBytes)) {
+        jni_util::JniUtil::ThrowJavaException(
+            env, IllegalArgumentExceptionClass, "Error parsing ServerPublicParameters Proto");
+        return nullptr;
+    }
+
+    std::unique_ptr<AnonymousCountingTokens> act = AnonymousCountingTokensV0::Create();
+
+    auto status_or = (act -> RecoverTokens(
+                                              messagesVector,
+                                              tokenRequestProto,
+                                              tokensRequestPrivateStateProto,
+                                              tokensResponseProto,
+                                              schemeParametersProto,
+                                              clientPublicParametersProto,
+                                              clientPrivateParametersProto,
+                                              serverPublicParametersProto));
+
+
+
+    if (!status_or.ok()) {
+        jni_util::JniUtil::ThrowJavaException(
+                    env, IllegalArgumentExceptionClass, status_or.status().ToString().c_str());
+        return nullptr;
+    }
+    std::vector<Token> tokens = std::move(status_or).value();
+    TokensSet tokens_set_proto;
+    *tokens_set_proto.mutable_tokens() = {tokens.begin(), tokens.end()};
+    return jni_util::JniUtil::SerializeProtoToJniByteArray(env, tokens_set_proto);
 }
 

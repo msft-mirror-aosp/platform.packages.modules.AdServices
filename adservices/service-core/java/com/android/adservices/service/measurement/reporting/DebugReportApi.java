@@ -153,8 +153,7 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_SUCCESS)) {
             return;
         }
-        if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
-                || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
+        if (!isSourcePermissionGranted(source)) {
             LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", Type.SOURCE_SUCCESS);
             return;
         }
@@ -189,8 +188,7 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_NOISED)) {
             return;
         }
-        if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
-                || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
+        if (!isSourcePermissionGranted(source)) {
             LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", Type.SOURCE_NOISED);
             return;
         }
@@ -212,8 +210,7 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_STORAGE_LIMIT)) {
             return;
         }
-        if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
-                || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
+        if (!isSourcePermissionGranted(source)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Skipping debug report %s", Type.SOURCE_STORAGE_LIMIT);
             return;
@@ -237,8 +234,7 @@ public class DebugReportApi {
                 source.isDebugReporting(), Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR)) {
             return;
         }
-        if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
-                || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
+        if (!isSourcePermissionGranted(source)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Skipping debug report %s", Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
             return;
@@ -260,8 +256,7 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_UNKNOWN_ERROR)) {
             return;
         }
-        if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
-                || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
+        if (!isSourcePermissionGranted(source)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Skipping debug report %s", Type.SOURCE_UNKNOWN_ERROR);
             return;
@@ -287,8 +282,7 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
-        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
-                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+        if (!isTriggerPermissionGranted(trigger)) {
             LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
             return;
         }
@@ -317,8 +311,7 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
-        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
-                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+        if (!isSourceAndTriggerPermissionsGranted(source, trigger)) {
             LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
             return;
         }
@@ -350,8 +343,7 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
-        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
-                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+        if (!isSourceAndTriggerPermissionsGranted(source, trigger)) {
             LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
             return;
         }
@@ -495,6 +487,24 @@ public class DebugReportApi {
             }
         }
         return PermissionState.NONE;
+    }
+
+    /**
+     * Check AdId and ArDebug permissions for both source and trigger. Return true if all of them
+     * are not in {@link PermissionState#DENIED} state.
+     */
+    private boolean isSourceAndTriggerPermissionsGranted(Source source, Trigger trigger) {
+        return isSourcePermissionGranted(source) && isTriggerPermissionGranted(trigger);
+    }
+
+    private boolean isSourcePermissionGranted(Source source) {
+        return getAdIdPermissionFromSource(source) != PermissionState.DENIED
+                && getArDebugPermissionFromSource(source) != PermissionState.DENIED;
+    }
+
+    private boolean isTriggerPermissionGranted(Trigger trigger) {
+        return getAdIdPermissionFromTrigger(trigger) != PermissionState.DENIED
+                && getArDebugPermissionFromTrigger(trigger) != PermissionState.DENIED;
     }
 
     /** Get is Ad tech not op-in and log */

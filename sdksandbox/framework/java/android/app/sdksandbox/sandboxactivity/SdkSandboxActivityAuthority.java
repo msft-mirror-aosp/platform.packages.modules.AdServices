@@ -62,7 +62,8 @@ public abstract class SdkSandboxActivityAuthority {
      */
     @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
     @FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public static boolean isSdkSandboxActivity(@NonNull Context context, @Nullable Intent intent) {
+    public static boolean isSdkSandboxActivityIntent(
+            @NonNull Context context, @Nullable Intent intent) {
         if (intent == null) {
             return false;
         }
@@ -87,7 +88,7 @@ public abstract class SdkSandboxActivityAuthority {
      *
      * @param intent an {@link Intent} for a sandbox {@link android.app.Activity} containing
      *     information to identify the SDK which requested the activity.
-     * @return {@link ActivityContextInfoProvider} instance.
+     * @return {@link ActivityContextInfo} instance.
      * @throws IllegalArgumentException if the intent doesn't refer to a registered {@link
      *     android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler}
      * @throws IllegalStateException if Customized SDK Context flag is not enabled

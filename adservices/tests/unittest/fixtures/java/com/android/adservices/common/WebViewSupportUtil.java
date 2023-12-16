@@ -27,40 +27,47 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public final class WebViewSupportUtil {
+
+    private static final String TAG = "WebViewSupportUtil";
+
     /**
      * @return instance of SupportedByConditionRule which checks if Javascript Sandbox is available
      */
-    public static SupportedByConditionRule createJSSandboxAvailableRule() {
-        return new SupportedByConditionRule(
-                "WebView does not support JS Sandbox",
-                JSScriptEngine.AvailabilityChecker::isJSSandboxAvailable);
-    }
-
-    /**
-     * @return instance of SupportedByConditionRule which checks if Javascript Sandbox supports
-     *     setting configurable max heap size
-     */
-    public static SupportedByConditionRule createJSSandboxConfigurableHeapSizeRule(
-            Context context) {
+    public static SupportedByConditionRule createJSSandboxAvailableRule(Context context) {
         Objects.requireNonNull(context);
         return new SupportedByConditionRule(
-                "JS Sandbox does not support configurable heap size",
-                () -> WebViewSupportUtil.isConfigurableHeapSizeSupported(context));
+                "JS Sandbox is not available", () -> isJSSandboxAvailable(context));
     }
 
     /**
-     * @return a boolean to indicate if Javascript sandbox is supported for Fledge.
+     * @return instance of SupportedByConditionRule which checks if Javascript Sandbox supports WASM
+     *     for Fledge/Protected Audience
      */
-    public static boolean isJSSandboxAvailableForFledge(Context context)
-            throws ExecutionException, InterruptedException, TimeoutException {
-        return JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
-                && isConfigurableHeapSizeSupported(context);
+    public static SupportedByConditionRule createWasmSupportAvailableRule(Context context) {
+        Objects.requireNonNull(context);
+        return new SupportedByConditionRule(
+                "JS Sandbox does not support WASM", () -> isWasmSupportAvailable(context));
     }
 
-    private static boolean isConfigurableHeapSizeSupported(Context context)
+    /**
+     * @return a boolean to indicate if Javascript sandbox is available.
+     */
+    public static boolean isJSSandboxAvailable(Context context)
             throws ExecutionException, InterruptedException, TimeoutException {
-        return JSScriptEngine.getInstance(context, LoggerFactory.getFledgeLogger())
-                .isConfigurableHeapSizeSupported()
-                .get(2, TimeUnit.SECONDS);
+        return JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
+                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        .isConfigurableHeapSizeSupported()
+                        .get(2, TimeUnit.SECONDS);
+    }
+
+    /**
+     * @return a boolean to indicate if Javascript sandbox supports WASM.
+     */
+    public static boolean isWasmSupportAvailable(Context context)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
+                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        .isWasmSupported()
+                        .get(2, TimeUnit.SECONDS);
     }
 }

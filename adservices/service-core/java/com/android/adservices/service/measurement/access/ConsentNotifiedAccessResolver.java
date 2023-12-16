@@ -24,8 +24,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.CachedFlags;
 
 /**
  * API access gate on whether consent notification was displayed. {@link #isAllowed(Context)} will
@@ -37,18 +37,18 @@ import com.android.adservices.service.consent.ConsentManager;
 public class ConsentNotifiedAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Consent notification has not been displayed.";
     private final ConsentManager mConsentManager;
-    private final Flags mFlags;
+    private final CachedFlags mFlags;
     @NonNull private final UserConsentAccessResolver mUserConsentAccessResolver;
 
     public ConsentNotifiedAccessResolver(
-            @NonNull ConsentManager consentManager, @NonNull Flags flags) {
+            @NonNull ConsentManager consentManager, @NonNull CachedFlags flags) {
         this(consentManager, flags, new UserConsentAccessResolver(consentManager));
     }
 
     @VisibleForTesting
     public ConsentNotifiedAccessResolver(
             @NonNull ConsentManager consentManager,
-            @NonNull Flags flags,
+            @NonNull CachedFlags flags,
             @NonNull UserConsentAccessResolver userConsentAccessResolver) {
         mConsentManager = consentManager;
         mFlags = flags;

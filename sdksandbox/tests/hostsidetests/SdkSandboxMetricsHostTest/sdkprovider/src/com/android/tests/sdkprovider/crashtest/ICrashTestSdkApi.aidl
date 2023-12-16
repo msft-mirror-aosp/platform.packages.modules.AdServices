@@ -16,5 +16,5 @@ import android.app.ApplicationExitInfo;
 
 interface ICrashTestSdkApi {
     oneway void triggerCrash();
-    ApplicationExitInfo getLastApplicationExitInfo();
+    List<ApplicationExitInfo> getSdkSandboxExitReasons();
 }

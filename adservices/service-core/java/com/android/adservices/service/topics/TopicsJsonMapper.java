@@ -16,8 +16,12 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_SERIALIZATION_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -62,8 +66,11 @@ public class TopicsJsonMapper {
                             .put(KEY_MODEL_VERSION, topic.getModelVersion())
                             .put(KEY_TAXONOMY_VERSION, topic.getTaxonomyVersion()));
         } catch (JSONException e) {
-            sLogger.d("JSON serialization failed for %s", topic);
-            // TODO(b/310699530): Add CEL for Encryption.
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_SERIALIZATION_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+            sLogger.e("JSON serialization failed for %s", topic);
             return Optional.empty();
         }
     }

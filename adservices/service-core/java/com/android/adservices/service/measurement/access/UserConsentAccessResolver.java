@@ -25,7 +25,6 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -47,12 +46,9 @@ public class UserConsentAccessResolver implements IAccessResolver {
 
     @Override
     public boolean isAllowed(@NonNull Context context) {
-        AdServicesApiConsent userConsent;
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent =
+                mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
+
         return userConsent.isGiven();
     }
 

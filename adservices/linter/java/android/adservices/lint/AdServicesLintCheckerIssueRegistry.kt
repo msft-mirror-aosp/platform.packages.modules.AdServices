@@ -24,11 +24,13 @@ import com.google.auto.service.AutoService
 @AutoService(IssueRegistry::class)
 @Suppress("UnstableApiUsage")
 class AdServicesLintCheckerIssueRegistry : IssueRegistry() {
-    override val issues = listOf(
+    override val issues =
+        listOf(
             BackCompatAndroidProcessDetector.ISSUE,
             BackCompatJobServiceDetector.ISSUE,
-            BackCompatNewFileDetector.ISSUE
-    )
+            BackCompatNewFileDetector.ISSUE,
+            RoomDatabaseMigrationDetector.ISSUE,
+        )
 
     override val api: Int
         get() = CURRENT_API
@@ -39,9 +41,10 @@ class AdServicesLintCheckerIssueRegistry : IssueRegistry() {
         // Registry works with lower linter API version.
         get() = 11
 
-    override val vendor = Vendor(
+    override val vendor =
+        Vendor(
             vendorName = "Android",
             feedbackUrl = "http://b/issues/new?component=1210174",
             contact = "gehuang@google.com"
-    )
+        )
 }

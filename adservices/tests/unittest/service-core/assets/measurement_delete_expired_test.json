@@ -74,7 +74,9 @@
         "event_reports": [],
         "attributions": []
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "1 expired Trigger and 1 non-expired Trigger",
@@ -153,7 +155,9 @@
         "event_reports": [],
         "attributions": []
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "Expired Aggregate Reports by report time & delivery",
@@ -209,7 +213,9 @@
           }
         ]
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "1 expired Attribution and 1 non-expired Attribution",
@@ -261,7 +267,9 @@
           }
         ]
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "1 non-expired AsyncRegistration, 1 expired AsyncRegistration, 1 AsyncRegistration both expired and past retry limit, and 1 AsyncRegistration only past retry limit",
@@ -370,7 +378,9 @@
           }
         ]
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "1 non-expired DebugReport, 1 expired DebugReport",
@@ -411,7 +421,9 @@
         ],
         "key_values": []
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "1 each Expired DebugRetry, EventRetry, DebugEventRetry, AggregateRetry, DebugAggregateRetry",
@@ -454,7 +466,9 @@
         "debug_reports": [],
         "key_values": []
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "1 each non-Expired DebugRetry, EventRetry, DebugEventRetry, AggregateRetry, DebugAggregateRetry",
@@ -584,7 +598,9 @@
           }
         ]
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "1 each non-Expired and 1 each Expired DebugRetry, EventRetry, and AggregateRetry",
@@ -739,7 +755,9 @@
           }
         ]
       },
-      "retry-limit": true
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
     },
     {
       "name": "1 non-expired DebugReport, 1 expired DebugReport. Retry Off",
@@ -777,7 +795,9 @@
         ],
         "key_values": []
       },
-      "retry-limit": false
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "false"
+      }
     }
   ]
 }

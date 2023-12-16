@@ -333,6 +333,14 @@ public final class SandboxLatencyInfo implements Parcelable {
         return getLatency(mTimeSystemServerCalledApp, mTimeAppReceivedCallFromSystemServer);
     }
 
+    /**
+     * Returns total latency of the API call. Call finish time is defined depending on the API
+     * called.
+     */
+    public int getTotalCallLatency() {
+        return getLatency(mTimeAppCalledSystemServer, getTotalCallFinishTime());
+    }
+
     public boolean isSuccessfulAtAppToSystemServer() {
         return mSandboxStatus != SANDBOX_STATUS_FAILED_AT_APP_TO_SYSTEM_SERVER;
     }
@@ -369,6 +377,10 @@ public final class SandboxLatencyInfo implements Parcelable {
         return mSandboxStatus != SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_APP;
     }
 
+    public boolean isTotalCallSuccessful() {
+        return mSandboxStatus == SANDBOX_STATUS_SUCCESS;
+    }
+
     @VisibleForTesting
     public long getTimeAppCalledSystemServer() {
         return mTimeAppCalledSystemServer;
@@ -377,6 +389,30 @@ public final class SandboxLatencyInfo implements Parcelable {
     @VisibleForTesting
     public long getTimeAppReceivedCallFromSystemServer() {
         return mTimeAppReceivedCallFromSystemServer;
+    }
+
+    private long getTotalCallFinishTime() {
+        switch (mMethod) {
+            case METHOD_LOAD_SDK:
+            case METHOD_REQUEST_SURFACE_PACKAGE:
+                return mTimeAppReceivedCallFromSystemServer;
+            case METHOD_GET_SANDBOXED_SDKS:
+            case METHOD_GET_SANDBOXED_SDKS_VIA_CONTROLLER:
+            case METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE:
+            case METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE:
+            case METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES:
+            case METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK:
+            case METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK:
+                return mTimeSystemServerCallFinished;
+                // TODO(b/243367105): change finish time for the method once latency for all stages
+                // is logged.
+            case METHOD_SYNC_DATA_FROM_CLIENT:
+                return mTimeSystemServerReceivedCallFromApp;
+            case METHOD_UNLOAD_SDK:
+                return mTimeSystemServerCalledApp;
+            default:
+                return -1;
+        }
     }
 
     private int getLatency(long timeEventStarted, long timeEventFinished) {

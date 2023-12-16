@@ -24,6 +24,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
+import android.app.sdksandbox.sdkprovider.SdkSandboxClientImportanceListener;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.ComponentName;
 import android.content.Context;
@@ -80,8 +81,14 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     private static final String ASSET_FILE = "test-asset.txt";
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
 
+    private final ClientImportanceListener mClientImportanceListener =
+            new ClientImportanceListener();
+
     CtsSdkProviderApiImpl(Context context) {
         mContext = context;
+        SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
+        controller.registerSdkSandboxClientImportanceListener(
+                Runnable::run, mClientImportanceListener);
     }
 
     @Override
@@ -319,6 +326,37 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         }
     }
 
+    @Override
+    public void waitForStateChangeDetection(
+            int expectedForegroundValue, int expectedBackgroundValue) {
+        final int waitIntervalMs = 200;
+        for (int wait = 0; wait <= 30000; wait += waitIntervalMs) {
+            if (verifyStateChangeCountValue(expectedForegroundValue, expectedBackgroundValue)) {
+                return;
+            }
+            try {
+                Thread.sleep(waitIntervalMs);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (!verifyStateChangeCountValue(expectedForegroundValue, expectedBackgroundValue)) {
+            throw new IllegalStateException("SDK did not detect correct app state change.");
+        }
+    }
+
+    private boolean verifyStateChangeCountValue(
+            int expectedForegroundValue, int expectedBackgroundValue) {
+        return mClientImportanceListener.mForegroundDetectionCount == expectedForegroundValue
+                && mClientImportanceListener.mBackgroundDetectionCount == expectedBackgroundValue;
+    }
+
+    @Override
+    public void unregisterSdkSandboxClientImportanceListener() {
+        mContext.getSystemService(SdkSandboxController.class)
+                .unregisterSdkSandboxClientImportanceListener(mClientImportanceListener);
+    }
+
     private void registerLifecycleEvents(
             IActivityStarter iActivityStarter,
             Activity sandboxActivity,
@@ -510,6 +548,21 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 exportSchema = false)
         public abstract static class TestDatabase extends RoomDatabase {
             public abstract UserDao userDao();
+        }
+    }
+
+    private class ClientImportanceListener implements SdkSandboxClientImportanceListener {
+
+        int mBackgroundDetectionCount = 0;
+        int mForegroundDetectionCount = 0;
+
+        @Override
+        public void onForegroundImportanceChanged(boolean isForeground) {
+            if (isForeground) {
+                mForegroundDetectionCount++;
+            } else {
+                mBackgroundDetectionCount++;
+            }
         }
     }
 }

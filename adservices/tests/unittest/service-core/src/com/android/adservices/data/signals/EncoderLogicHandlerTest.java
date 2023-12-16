@@ -266,6 +266,16 @@ public class EncoderLogicHandlerTest {
     }
 
     @Test
+    public void testDeleteEncoderForBuyer() {
+        AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
+        mEncoderLogicHandler.deleteEncoderForBuyer(buyer);
+
+        verify(mEncoderLogicMetadataDao).deleteEncoder(buyer);
+        verify(mEncoderPersistenceDao).deleteEncoder(buyer);
+        verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer);
+    }
+
+    @Test
     public void testDeleteEncodersForBuyers() {
         AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;

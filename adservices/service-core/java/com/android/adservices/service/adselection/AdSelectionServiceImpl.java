@@ -425,7 +425,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                             mAdSelectionEntryDao,
                                             auctionServerEnabledForUpdateHistogram),
-                                    auctionResultValidator);
+                                    auctionResultValidator,
+                                    mFlags,
+                                    mAdServicesLogger);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
@@ -777,7 +779,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mFlags,
                                     mAdSelectionServiceFilter,
                                     mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
-                                    callingUid);
+                                    callingUid,
+                                    mShouldUseUnifiedTables);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }
@@ -896,7 +899,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 devContext,
                                 measurementService,
                                 mConsentManager,
-                                mContext)
+                                mContext,
+                                mShouldUseUnifiedTables)
                         .getEventReporter();
 
         eventReporter.reportInteraction(inputParams, callback);

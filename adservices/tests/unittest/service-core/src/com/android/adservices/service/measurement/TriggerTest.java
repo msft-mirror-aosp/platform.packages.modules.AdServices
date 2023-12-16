@@ -22,12 +22,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -751,7 +751,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void parseEventTriggers_equal() throws JSONException {
+    public void parseEventTriggers_handlesValueField() throws JSONException {
         // setup
         JSONObject filtersMap1 =
                 new JSONObject(
@@ -828,9 +828,10 @@ public class TriggerTest {
                                                 .build()))
                         .build();
 
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Action
-        List<EventTrigger> actualEventTriggers =
-                trigger.parseEventTriggers(FlagsFactory.getFlagsForTest());
+        List<EventTrigger> actualEventTriggers = trigger.parseEventTriggers(mFlags);
 
         // Assertion
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);

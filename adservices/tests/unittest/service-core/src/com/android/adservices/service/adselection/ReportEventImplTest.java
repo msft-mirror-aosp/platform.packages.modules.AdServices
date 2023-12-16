@@ -44,7 +44,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.DataHandlersFixture;
@@ -85,6 +89,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -101,7 +106,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -127,6 +134,9 @@ public class ReportEventImplTest {
             ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+    private static final int SELLER_AND_BUYER_DESTINATION =
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER |
+                    ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final String CLICK_EVENT = "click";
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -200,7 +210,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         Uri baseBuyerUri = mMockWebServerRule.uriForPath(BUYER_INTERACTION_REPORTING_PATH);
 
@@ -256,6 +267,10 @@ public class ReportEventImplTest {
 
     @Test
     public void testImplSuccessfullyReportsRegisteredInteractions() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -302,10 +317,22 @@ public class ReportEventImplTest {
                 .containsExactly(
                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     @Test
     public void testImplDoesNotCrashAfterSellerReportingThrowsAnException() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -374,10 +401,22 @@ public class ReportEventImplTest {
         // Assert buyer reporting was done
         assertEquals(
                 BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     @Test
     public void testImplDoesNotCrashAfterBuyerReportingThrowsAnException() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -446,10 +485,22 @@ public class ReportEventImplTest {
         // Assert seller reporting was done
         assertEquals(
                 SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     @Test
     public void testImplOnlyReportsBuyersRegisteredInteractions() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -504,10 +555,22 @@ public class ReportEventImplTest {
         // Assert buyer reporting was done
         assertEquals(
                 BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(1);
     }
 
     @Test
     public void testImplOnlyReportsSellerRegisteredInteractions() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -562,6 +625,14 @@ public class ReportEventImplTest {
         // Assert seller reporting was done
         assertEquals(
                 SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(1);
     }
 
     @Test
@@ -595,7 +666,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         // Allow the first call and filter the second
         doNothing()
@@ -678,7 +750,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
@@ -848,6 +921,10 @@ public class ReportEventImplTest {
 
     @Test
     public void testImplFailsWhenThrottled() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
                 AD_SELECTION_ID,
@@ -892,6 +969,14 @@ public class ReportEventImplTest {
         // First call should succeed
         // Count down callback + log interaction.
         ReportInteractionTestCallback callbackFirstCall = callReportInteraction(inputParams, true);
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
 
         doThrow(new FilterException(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE)))
                 .when(mAdSelectionServiceFilterMock)
@@ -938,6 +1023,7 @@ public class ReportEventImplTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_RATE_LIMIT_REACHED),
                         anyInt());
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -1167,7 +1253,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
 
         assertFalse(callback.mIsSuccess);
@@ -1183,6 +1270,10 @@ public class ReportEventImplTest {
     @Test
     public void testReportEventImplSucceedsWhenNotFindingRegisteredAdInteractions()
             throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
         mMockWebServerRule.startMockWebServer(
@@ -1214,6 +1305,14 @@ public class ReportEventImplTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_SUCCESS),
                         anyInt());
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock, times(1))
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_AND_BUYER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(0);
     }
 
     @Test
@@ -1286,7 +1385,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -1371,7 +1471,8 @@ public class ReportEventImplTest {
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
-                        DevContext.createForDevOptionsDisabled());
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);

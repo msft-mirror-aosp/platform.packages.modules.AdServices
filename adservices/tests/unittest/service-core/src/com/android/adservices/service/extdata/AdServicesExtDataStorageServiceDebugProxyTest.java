@@ -33,14 +33,13 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
-import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.ExceptionFailureSyncCallback;
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 
 import com.google.common.truth.Expect;
@@ -147,7 +146,6 @@ public class AdServicesExtDataStorageServiceDebugProxyTest {
 
     @Test
     public void testSetAdServicesExtData_onResultSet() throws Exception {
-
         AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         mSpyProxy.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
@@ -163,13 +161,5 @@ public class AdServicesExtDataStorageServiceDebugProxyTest {
         mSpyProxy.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
         Exception exception = receiver.assertErrorReceived();
         expect.that(exception).hasMessageThat().isEqualTo(TEST_EXCEPTION_MSG);
-    }
-
-    private static final class AdServicesOutcomeReceiverForTests<T>
-            extends ExceptionFailureSyncCallback<T>
-            implements AdServicesOutcomeReceiver<T, Exception> {
-        AdServicesOutcomeReceiverForTests() {
-            super();
-        }
     }
 }

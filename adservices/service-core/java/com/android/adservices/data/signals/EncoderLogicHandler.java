@@ -254,13 +254,18 @@ public class EncoderLogicHandler {
     /** Deletes the encoder endpoint and logic for a list of buyers */
     public void deleteEncodersForBuyers(Set<AdTechIdentifier> buyers) {
         for (AdTechIdentifier buyer : buyers) {
-            ReentrantLock buyerLock = getBuyerLock(buyer);
-            if (buyerLock.tryLock()) {
-                mEncoderLogicMetadataDao.deleteEncoder(buyer);
-                mEncoderPersistenceDao.deleteEncoder(buyer);
-                mEncoderEndpointsDao.deleteEncoderEndpoint(buyer);
-                buyerLock.unlock();
-            }
+            deleteEncoderForBuyer(buyer);
+        }
+    }
+
+    /** Deletes the encoder endpoint and logic for a certain buyer. */
+    public void deleteEncoderForBuyer(AdTechIdentifier buyer) {
+        ReentrantLock buyerLock = getBuyerLock(buyer);
+        if (buyerLock.tryLock()) {
+            mEncoderLogicMetadataDao.deleteEncoder(buyer);
+            mEncoderPersistenceDao.deleteEncoder(buyer);
+            mEncoderEndpointsDao.deleteEncoderEndpoint(buyer);
+            buyerLock.unlock();
         }
     }
 }

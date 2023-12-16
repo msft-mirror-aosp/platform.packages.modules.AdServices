@@ -96,13 +96,33 @@ class FetcherUtil {
     }
 
     /** Validates both string type and long parsing */
-    public static Optional<Long> extractLong(JSONObject obj, String key) {
+    public static Optional<Long> extractLongString(JSONObject obj, String key) {
         try {
             Object maybeValue = obj.get(key);
             if (!(maybeValue instanceof String)) {
                 return Optional.empty();
             }
             return Optional.of(Long.parseLong((String) maybeValue));
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "extractLongString: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+    }
+
+    /** Validates an integral number */
+    public static boolean is64BitInteger(Object obj) {
+        return (obj instanceof Integer) || (obj instanceof Long);
+    }
+
+    /** Validates both number type and long parsing */
+    public static Optional<Long> extractLong(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!is64BitInteger(maybeValue)) {
+                return Optional.empty();
+            }
+            return Optional.of(Long.parseLong(String.valueOf(maybeValue)));
         } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
                     .d(e, "extractLong: caught exception. Key: %s", key);

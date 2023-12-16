@@ -92,6 +92,8 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
+import android.adservices.adselection.ReportEventRequest;
+
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
@@ -102,6 +104,10 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /** Unit tests for {@link AdServicesLoggerImpl}. */
 public class AdServicesLoggerImplTest {
@@ -720,6 +726,76 @@ public class AdServicesLoggerImplTest {
         ArgumentCaptor<AdServicesEncryptionKeyDbTransactionEndedStats> argumentCaptor =
                 ArgumentCaptor.forClass(AdServicesEncryptionKeyDbTransactionEndedStats.class);
         verify(mStatsdLoggerMock).logEncryptionKeyDbTransactionEndedStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
+    }
+
+    @Test
+    public void testLogDestinationRegisteredBeaconsReportedStats() {
+        List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
+                keySizeRangeTypeList = Arrays.asList(
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .LARGER_THAN_MAXIMUM_KEY_SIZE,
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .SMALLER_THAN_MAXIMUM_KEY_SIZE,
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .EQUAL_TO_MAXIMUM_KEY_SIZE);
+
+        DestinationRegisteredBeaconsReportedStats stats =
+                DestinationRegisteredBeaconsReportedStats.builder()
+                        .setBeaconReportingDestinationType(
+                                ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
+                        .setAttemptedRegisteredBeacons(5)
+                        .setAttemptedKeySizesRangeType(keySizeRangeTypeList)
+                        .setTableNumRows(25)
+                        .setAdServicesStatusCode(0)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logDestinationRegisteredBeaconsReportedStats(stats);
+
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+        verify(mStatsdLoggerMock).logDestinationRegisteredBeaconsReportedStats(
+                argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
+    }
+
+    @Test
+    public void testLogReportInteractionApiCalledStats() {
+        ReportInteractionApiCalledStats stats =
+                ReportInteractionApiCalledStats.builder()
+                        .setBeaconReportingDestinationType(
+                                ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
+                        .setNumMatchingUris(5)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logReportInteractionApiCalledStats(stats);
+
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+        verify(mStatsdLoggerMock).logReportInteractionApiCalledStats(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
+    }
+
+    @Test
+    public void testLogInteractionReportingTableClearedStats() {
+        InteractionReportingTableClearedStats stats =
+                InteractionReportingTableClearedStats.builder()
+                        .setNumUrisCleared(100)
+                        .setNumUnreportedUris(50)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logInteractionReportingTableClearedStats(stats);
+
+        ArgumentCaptor<InteractionReportingTableClearedStats> argumentCaptor =
+                ArgumentCaptor.forClass(InteractionReportingTableClearedStats.class);
+        verify(mStatsdLoggerMock).logInteractionReportingTableClearedStats(
+                argumentCaptor.capture());
         assertEquals(stats, argumentCaptor.getValue());
     }
 }

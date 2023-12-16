@@ -61,7 +61,7 @@ public class EventReportWindowCalcDelegate {
      */
     public int getMaxReportCount(@NonNull Source source, boolean isInstallCase) {
         // TODO(b/290101531): Cleanup flags
-        if (mFlags.getMeasurementFlexLiteAPIEnabled() && source.getMaxEventLevelReports() != null) {
+        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.getMaxEventLevelReports() != null) {
             return source.getMaxEventLevelReports();
         }
         if (source.getSourceType() == Source.SourceType.EVENT
@@ -137,7 +137,7 @@ public class EventReportWindowCalcDelegate {
 
     private Pair<Long, Long> getFinalReportingWindow(
             Source source, List<Pair<Long, Long>> earlyWindows) {
-        if (mFlags.getMeasurementFlexLiteAPIEnabled() && source.hasManualEventReportWindows()) {
+        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.hasManualEventReportWindows()) {
             List<Pair<Long, Long>> windowList = source.parsedProcessedEventReportWindows();
             return windowList.get(windowList.size() - 1);
         }
@@ -226,7 +226,7 @@ public class EventReportWindowCalcDelegate {
      */
     private List<Pair<Long, Long>> getEarlyReportingWindows(Source source, boolean installState) {
         // TODO(b/290221611) Remove early reporting windows from code, only use them for flags.
-        if (mFlags.getMeasurementFlexLiteAPIEnabled() && source.hasManualEventReportWindows()) {
+        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.hasManualEventReportWindows()) {
             List<Pair<Long, Long>> windows = source.parsedProcessedEventReportWindows();
             // Select early windows only i.e. skip the last element
             return windows.subList(0, windows.size() - 1);

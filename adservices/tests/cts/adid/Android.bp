@@ -40,7 +40,6 @@ android_test {
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     manifest: "AndroidManifest.xml",
 }
 

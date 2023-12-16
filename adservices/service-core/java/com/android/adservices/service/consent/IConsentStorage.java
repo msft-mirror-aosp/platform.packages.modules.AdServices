@@ -89,7 +89,7 @@ public interface IConsentStorage {
     ImmutableList<String> getAppsWithRevokedConsent() throws IOException;
 
     /**
-     * Retrieves the consent for all PP API services.
+     * Retrieves the consent for all services.
      *
      * <p>To read from PPAPI consent if source of truth is PPAPI. To read from system server consent
      * if source of truth is system server or dual sources.
@@ -101,7 +101,7 @@ public interface IConsentStorage {
     AdServicesApiConsent getConsent(@NonNull AdServicesApiType apiType) throws IOException;
 
     /**
-     * Get the current privacy sandbox feature.
+     * Gets the current privacy sandbox feature.
      *
      * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
@@ -120,7 +120,7 @@ public interface IConsentStorage {
     boolean getDefaultAdIdState();
 
     /**
-     * Retrieves the PP API default consent.
+     * Retrieves the default consent.
      *
      * @return AdServicesApiConsent.
      */
@@ -178,7 +178,7 @@ public interface IConsentStorage {
     /** Saves the default AdId state bit to data stores based on source of truth. */
     void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException;
 
-    /** Saves the PP API default consent of a user. */
+    /** Saves the default consent of a user. */
     void recordDefaultConsent(@NonNull AdServicesApiType apiType, boolean defaultConsent)
             throws IOException;
 
@@ -197,14 +197,14 @@ public interface IConsentStorage {
     /** Saves information to the storage that user interacted with consent manually. */
     void recordUserManualInteractionWithConsent(int interaction) throws IOException;
 
-    /** Set the AdIdEnabled bit to storage. */
+    /** Sets the AdIdEnabled bit to storage. */
     void setAdIdEnabled(boolean isAdIdEnabled) throws IOException;
 
-    /** Set the AdultAccount bit to storage. */
+    /** Sets the AdultAccount bit to storage. */
     void setAdultAccount(boolean isAdultAccount) throws IOException;
 
     /**
-     * Sets the consent for this user ID for this API type in AppSearch. If we do not get
+     * Sets the consent for this user ID for this API type in storage. If we do not get
      * confirmation that the write was successful, then we throw an exception so that user does not
      * incorrectly think that the consent is updated.
      *
@@ -235,25 +235,25 @@ public interface IConsentStorage {
     boolean setConsentForAppIfNew(@NonNull String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException;
 
-    /** Set the current privacy sandbox feature. */
+    /** Sets the current privacy sandbox feature. */
     void setCurrentPrivacySandboxFeature(@NonNull PrivacySandboxFeatureType featureType)
             throws IOException;
 
-    /** Set the current enrollment channel to storage. */
+    /** Sets the current enrollment channel to storage. */
     void setEnrollmentChannel(
             @NonNull PrivacySandboxUxCollection ux,
             @NonNull PrivacySandboxEnrollmentChannelCollection channel);
 
-    /** Set the EntryPointEnabled bit to storage . */
+    /** Sets the EntryPointEnabled bit to storage . */
     void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException;
 
-    /** Set the U18Account bit to storage. */
+    /** Sets the U18Account bit to storage. */
     void setU18Account(boolean isU18Account) throws IOException;
 
-    /** Set the U18NotificationDisplayed bit to storage. */
+    /** Sets the U18NotificationDisplayed bit to storage. */
     void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) throws IOException;
 
-    /** Set the current UX to storage. */
+    /** Sets the current UX to storage. */
     void setUx(PrivacySandboxUxCollection ux);
 
     /**

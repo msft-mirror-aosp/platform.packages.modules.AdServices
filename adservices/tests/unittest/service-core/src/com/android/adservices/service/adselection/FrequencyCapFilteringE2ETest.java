@@ -49,6 +49,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -93,20 +94,18 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.time.Duration;
@@ -117,7 +116,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class FrequencyCapFilteringE2ETest {
+@SpyStatic(FlagsFactory.class)
+public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
+
     private static final int CALLBACK_WAIT_MS = 500;
     private static final int SELECT_ADS_CALLBACK_WAIT_MS = 10_000;
     private static final long AD_SELECTION_ID_BUYER_1 = 20;
@@ -177,7 +178,6 @@ public class FrequencyCapFilteringE2ETest {
                                                     .build())
                                     .build())
                     .build();
-    private MockitoSession mStaticMockSession;
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private HttpCache mHttpCacheMock;
@@ -212,13 +212,6 @@ public class FrequencyCapFilteringE2ETest {
 
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
                         .build()
@@ -301,7 +294,7 @@ public class FrequencyCapFilteringE2ETest {
                         .build();
 
         // Required stub for Custom Audience DB persistence
-        doReturn(flagsEnablingAdFiltering).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(flagsEnablingAdFiltering);
 
         // Required stub for Ad Selection call
         doReturn(DevContext.createForDevOptionsDisabled())
@@ -348,13 +341,6 @@ public class FrequencyCapFilteringE2ETest {
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
                 .fetchPayload(any(AdServicesHttpClientRequest.class));
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -559,7 +545,8 @@ public class FrequencyCapFilteringE2ETest {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Collections.singletonList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -592,7 +579,8 @@ public class FrequencyCapFilteringE2ETest {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback callback = callSelectAds();
 
@@ -625,7 +613,8 @@ public class FrequencyCapFilteringE2ETest {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -670,7 +659,8 @@ public class FrequencyCapFilteringE2ETest {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -705,7 +695,8 @@ public class FrequencyCapFilteringE2ETest {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_2)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -792,7 +783,8 @@ public class FrequencyCapFilteringE2ETest {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -907,7 +899,8 @@ public class FrequencyCapFilteringE2ETest {
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
-                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 

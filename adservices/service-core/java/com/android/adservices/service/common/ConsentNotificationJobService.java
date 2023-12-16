@@ -20,6 +20,7 @@ import static com.android.adservices.data.common.AdservicesEntryPointConstant.FI
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -226,7 +227,11 @@ public class ConsentNotificationJobService extends JobService {
                 "ConsentNotificationJobService states. isAdIdEnabled: %s, isEeaDevice: %s,"
                         + " isEeaNotification: %s.",
                 mConsentManager.isAdIdEnabled(), mUxStatesManager.isEeaDevice(), isEeaNotification);
-        mConsentManager.recordDefaultConsent(!isEeaNotification);
+        if (mConsentManager.getUx() == RVC_UX) {
+            mConsentManager.recordMeasurementDefaultConsent(!isEeaNotification);
+        } else {
+            mConsentManager.recordDefaultConsent(!isEeaNotification);
+        }
         boolean reConsentStatus = params.getExtras().getBoolean(RE_CONSENT_STATUS, false);
 
         AdServicesExecutors.getBackgroundExecutor()

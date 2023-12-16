@@ -32,6 +32,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -52,20 +53,15 @@ public class AppManifestConfigHelper {
      * Attribution API.
      *
      * <p>If there is a parse error, it returns false.
-     *
-     * @param context the context for the API call. This needs to be the context where the calling
-     *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read.
      * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
      *     manifest config.
      */
     public static boolean isAllowedAttributionAccess(
-            @NonNull Context context,
             @NonNull String appPackageName,
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedAttributionAccess()",
-                context,
                 appPackageName,
                 enrollmentId,
                 config -> config.isAllowedAttributionAccess(enrollmentId));
@@ -76,19 +72,14 @@ public class AppManifestConfigHelper {
      * associated with an ad tech is permitted to use the Custom Audience API.
      *
      * <p>If there is a parse error, it returns {@code false}.
-     *
-     * @param context the context for the API call. This needs to be the context where the calling
-     *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read
      * @param enrollmentId the enrollment ID associate with the ad tech
      */
     public static boolean isAllowedCustomAudiencesAccess(
-            @NonNull Context context,
             @NonNull String appPackageName,
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedCustomAudiencesAccess()",
-                context,
                 appPackageName,
                 enrollmentId,
                 config -> config.isAllowedCustomAudiencesAccess(enrollmentId));
@@ -99,22 +90,17 @@ public class AppManifestConfigHelper {
      * API.
      *
      * <p>If there is a parse error, it returns false.
-     *
-     * @param context the context for the API call. This needs to be the context where the calling
-     *     UID is that of the API caller.
      * @param useSandboxCheck whether to use the sandbox check.
      * @param appPackageName the package name of the app whose manifest config will be read.
      * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
      *     manifest config.
      */
     public static boolean isAllowedTopicsAccess(
-            @NonNull Context context,
             @NonNull boolean useSandboxCheck,
             @NonNull String appPackageName,
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedTopicsAccess()",
-                context,
                 appPackageName,
                 enrollmentId,
                 config -> {
@@ -132,22 +118,16 @@ public class AppManifestConfigHelper {
     }
 
     @Nullable
-    private static XmlResourceParser getXmlParser(
-            @NonNull Context context, @NonNull String appPackageName, boolean enabledByDefault)
+    private static XmlResourceParser getXmlParser(AppManifestConfigCall call)
             throws NameNotFoundException, XmlParseException, XmlPullParserException, IOException {
-        boolean appExists = false;
-        boolean appHasConfig = false;
-        // NOTE: resources is only used pre-S, but it must be called regardless to make sure the
-        // app exists
-        Resources resources = null;
-        try {
-            resources = context.getPackageManager().getResourcesForApplication(appPackageName);
-            appExists = true;
-        } catch (NameNotFoundException e) {
-            AppManifestConfigMetricsLogger.logUsage(
-                    context, appPackageName, appExists, appHasConfig, enabledByDefault);
-            throw e;
-        }
+        Context context = ApplicationContextSingleton.get();
+        String appPackageName = call.packageName;
+        LogUtil.v("getXmlParser(%s): context=%s", call.packageName, context);
+        // NOTE: resources is only used pre-S, but it must be called regardless to make sure the app
+        // exists
+        Resources resources =
+                context.getPackageManager().getResourcesForApplication(appPackageName);
+        call.appExists = true;
 
         Integer resId =
                 SdkLevel.isAtLeastS()
@@ -158,10 +138,8 @@ public class AppManifestConfigHelper {
         XmlResourceParser xmlResourceParser = null;
         if (resId != null) {
             xmlResourceParser = resources.getXml(resId);
-            appHasConfig = true;
+            call.appHasConfig = true;
         }
-        AppManifestConfigMetricsLogger.logUsage(
-                context, appPackageName, appExists, appHasConfig, enabledByDefault);
         return xmlResourceParser;
     }
 
@@ -193,24 +171,24 @@ public class AppManifestConfigHelper {
 
     private static boolean isAllowedApiAccess(
             String method,
-            Context context,
             String appPackageName,
             String enrollmentId,
             ApiAccessChecker checker) {
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(enrollmentId);
-        boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
+        AppManifestConfigCall call = new AppManifestConfigCall(appPackageName);
+        call.enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
         try {
-            XmlResourceParser in = getXmlParser(context, appPackageName, enabledByDefault);
+            XmlResourceParser in = getXmlParser(call);
             if (in == null) {
                 LogUtil.v(
                         "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
-                        method, enabledByDefault, appPackageName);
-                return enabledByDefault;
+                        method, call.enabledByDefault, appPackageName);
+                return call.enabledByDefault;
             }
             AppManifestConfig appManifestConfig =
-                    AppManifestConfigParser.getConfig(in, enabledByDefault);
-            return checker.isAllowedAccess(appManifestConfig);
+                    AppManifestConfigParser.getConfig(in, call.enabledByDefault);
+            call.result = checker.isAllowedAccess(appManifestConfig);
         } catch (NameNotFoundException e) {
             LogUtil.v(
                     "Name not found while looking for manifest for app %s: %s", appPackageName, e);
@@ -220,8 +198,10 @@ public class AppManifestConfigHelper {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        } finally {
+            AppManifestConfigMetricsLogger.logUsage(call);
         }
-        return false;
+        return call.result;
     }
 
     private interface ApiAccessChecker {

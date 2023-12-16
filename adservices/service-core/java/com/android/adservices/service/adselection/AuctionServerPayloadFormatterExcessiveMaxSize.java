@@ -22,6 +22,7 @@ import static com.android.adservices.service.adselection.AuctionServerPayloadFor
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.nio.ByteBuffer;
@@ -59,6 +60,8 @@ public class AuctionServerPayloadFormatterExcessiveMaxSize
             @NonNull AuctionServerPayloadUnformattedData unformattedData, int compressorVersion) {
         Objects.requireNonNull(unformattedData);
 
+        int traceCookie = Tracing.beginAsyncSection(Tracing.FORMAT_PAYLOAD_EXCESSIVE_MAX_SIZE);
+
         byte[] data = unformattedData.getData();
 
         // Empty payload to fill in
@@ -82,7 +85,10 @@ public class AuctionServerPayloadFormatterExcessiveMaxSize
                 META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE,
                 data.length);
 
-        return AuctionServerPayloadFormattedData.create(payload);
+        AuctionServerPayloadFormattedData formattedData =
+                AuctionServerPayloadFormattedData.create(payload);
+        Tracing.endAsyncSection(Tracing.FORMAT_PAYLOAD_EXCESSIVE_MAX_SIZE, traceCookie);
+        return formattedData;
     }
 
     /** Extracts the original payload from padded data and the compression algorithm identifier. */

@@ -16,7 +16,7 @@
 
 package android.app.sdksandbox.sandboxactivity;
 
-import static android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority.isSdkSandboxActivity;
+import static android.app.sdksandbox.sandboxactivity.SdkSandboxActivityAuthority.isSdkSandboxActivityIntent;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -85,20 +85,20 @@ public class SdkSandboxActivityAuthorityTest {
 
     @Test
     @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testSdkSandboxActivity() {
+    public void testSdkSandboxActivityIntent() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
         final String sandboxPackageName = context.getPackageManager().getSdkSandboxPackageName();
 
-        assertThat(isSdkSandboxActivity(context, new Intent())).isFalse();
+        assertThat(isSdkSandboxActivityIntent(context, new Intent())).isFalse();
         assertThat(
-                        isSdkSandboxActivity(
+                        isSdkSandboxActivityIntent(
                                 context,
                                 new Intent(SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY)))
                 .isTrue();
-        assertThat(isSdkSandboxActivity(context, new Intent().setPackage(sandboxPackageName)))
+        assertThat(isSdkSandboxActivityIntent(context, new Intent().setPackage(sandboxPackageName)))
                 .isTrue();
         assertThat(
-                        isSdkSandboxActivity(
+                        isSdkSandboxActivityIntent(
                                 context,
                                 new Intent()
                                         .setComponent(new ComponentName(sandboxPackageName, ""))))

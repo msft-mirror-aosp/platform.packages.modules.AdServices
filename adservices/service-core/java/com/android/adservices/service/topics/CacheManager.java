@@ -168,7 +168,7 @@ public class CacheManager {
                 mTopicsDao.retrieveReturnedTopics(currentEpochId, lookbackEpochs + 1);
         // Map<EpochId, Map<Pair<App, Sdk>, EncryptedTopic>
         Map<Long, Map<Pair<String, String>, EncryptedTopic>> cachedEncryptedTopicsFromDb = Map.of();
-        if (mFlags.getTopicsEnableEncryption()) {
+        if (mFlags.getTopicsEncryptionEnabled()) {
             cachedEncryptedTopicsFromDb =
                     mTopicsDao.retrieveReturnedEncryptedTopics(currentEpochId, lookbackEpochs + 1);
             sLogger.v(
@@ -241,7 +241,7 @@ public class CacheManager {
                         }
 
                         EncryptedTopic encryptedTopic = EncryptedTopic.getDefaultInstance();
-                        if (mFlags.getTopicsEnableEncryption()) {
+                        if (mFlags.getTopicsEncryptionEnabled()) {
                             // Add encrypted Topic if encryption feature flag is turned on.
                             try {
                                 encryptedTopic =

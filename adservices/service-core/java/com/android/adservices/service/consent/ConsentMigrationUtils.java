@@ -89,7 +89,7 @@ public final class ConsentMigrationUtils {
             }
 
             // No longer need access to Android R data. Safe to clear here.
-            adExtDataManager.clearAllDataAsync();
+            adExtDataManager.clearDataOnOtaAsync();
         } catch (Exception e) {
             LogUtil.e("Consent migration to AppSearch failed: ", e);
         }

@@ -801,7 +801,7 @@ public final class EpochManagerTest {
                 .thenReturn(Optional.of(expectedEncryptedTopic));
 
         // Mock encryption db and feature flag.
-        when(mMockFlag.getTopicsEnableEncryption()).thenReturn(true);
+        when(mMockFlag.getTopicsEncryptionEnabled()).thenReturn(true);
         when(mMockFlag.getEnableDatabaseSchemaVersion9()).thenReturn(true);
 
         epochManager.processEpoch();

@@ -57,11 +57,13 @@ public class SdkApi extends ISdkApi.Stub {
     private static final String MEDIATEE_SDK_NAME = "com.android.sdksandboxcode_mediatee";
 
     private final Context mContext;
+    private final PlayerViewProvider mPlayerViewProvider;
 
     private WebView mWebView;
 
-    public SdkApi(Context sdkContext) {
+    public SdkApi(Context sdkContext, PlayerViewProvider playerViewProvider) {
         mContext = sdkContext;
+        mPlayerViewProvider = playerViewProvider;
         if (SdkLevel.isAtLeastU()) {
             preloadWebViewForActivity(sdkContext);
         }
@@ -194,6 +196,16 @@ public class SdkApi extends ISdkApi.Stub {
         final String filesDir = mContext.getFilesDir().getAbsolutePath();
         final String perSdkDir = mContext.getDataDir().getAbsolutePath();
         return filesDir.startsWith(perSdkDir);
+    }
+
+    @Override
+    public void notifyMainActivityStarted() {
+        mPlayerViewProvider.onHostActivityStarted();
+    }
+
+    @Override
+    public void notifyMainActivityStopped() {
+        mPlayerViewProvider.onHostActivityStopped();
     }
 
     private SharedPreferences getClientSharedPreferences() {
