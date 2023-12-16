@@ -451,6 +451,107 @@ public class GetAdSelectionDataLatency {
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
     }
 
+    @Test
+    public void test_withoutFiltering_varyingAds_125() throws Exception {
+        increaseMaximumAds();
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 10, /* nAdsPerCA= */ 125);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingAds_125",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetMaximumAds();
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingAds_500() throws Exception {
+        increaseMaximumAds();
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 10, /* nAdsPerCA= */ 500);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingAds_500",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetMaximumAds();
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingAds_1000() throws Exception {
+        increaseMaximumAds();
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 4, /* nCAsPerBuyer= */ 10, /* nAdsPerCA= */ 1000);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingAds_1000",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetMaximumAds();
+    }
+
+    void increaseMaximumAds() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_max_num_ads 1000");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_max_ads_size_b 1048576");
+    }
+
+    void resetMaximumAds() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_max_num_ads 100");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_max_ads_size_b 10240");
+    }
+
     void increasePayloadBucketSize() {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_auction_server_payload_bucket_sizes"
