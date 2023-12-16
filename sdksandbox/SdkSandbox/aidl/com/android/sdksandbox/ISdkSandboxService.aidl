@@ -40,4 +40,5 @@ oneway interface ISdkSandboxService {
                   in SandboxLatencyInfo sandboxLatencyInfo);
     void unloadSdk(in String sdkName, in IUnloadSdkInSandboxCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);
     void syncDataFromClient(in SharedPreferencesUpdate update);
+    void notifySdkSandboxClientImportanceChange(boolean isForeground);
 }

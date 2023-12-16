@@ -31,7 +31,7 @@ import java.util.Objects;
 /** Class to hold input to measurement source registration calls from web context. */
 public final class WebSourceRegistrationRequest implements Parcelable {
     private static final String ANDROID_APP_SCHEME = "android-app";
-    private static final int WEB_SOURCE_PARAMS_MAX_COUNT = 20;
+    private static final int WEB_SOURCE_PARAMS_MAX_COUNT = 80;
 
     /** Creator for Paracelable (via reflection). */
     @NonNull

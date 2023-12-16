@@ -33,6 +33,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ProcessingResult;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -79,38 +80,60 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 AdServicesExecutors.getBlockingExecutor()
                         .submit(
                                 () -> {
-                                    processAsyncRecords();
+                                    ProcessingResult result = processAsyncRecords();
+                                    LoggerFactory.getMeasurementLogger()
+                                            .d(
+                                                    "AsyncRegistrationQueueJobService finished"
+                                                            + " processing [%s]",
+                                                    result);
 
-                                    boolean shouldRetry = false;
+                                    final boolean shouldRetry =
+                                            !ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED.equals(
+                                                    result);
+                                    final boolean isSuccessful =
+                                            !ProcessingResult.THREAD_INTERRUPTED.equals(result);
                                     AdservicesJobServiceLogger.getInstance(
                                                     AsyncRegistrationQueueJobService.this)
                                             .recordJobFinished(
                                                     MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
-                                                    /* isSuccessful */ true,
+                                                    isSuccessful,
                                                     shouldRetry);
 
-                                    jobFinished(params, shouldRetry);
-                                    // jobFinished is asynchronous, so forcing scheduling avoiding
-                                    // concurrency issue
-                                    scheduleIfNeeded(this, /* forceSchedule */ true);
+                                    switch (result) {
+                                        case SUCCESS_ALL_RECORDS_PROCESSED:
+                                            // Force scheduling to avoid concurrency issue
+                                            scheduleIfNeeded(this, /* forceSchedule */ true);
+                                            break;
+                                        case SUCCESS_WITH_PENDING_RECORDS:
+                                            scheduleImmediately(
+                                                    AsyncRegistrationQueueJobService.this);
+                                            break;
+                                        case THREAD_INTERRUPTED:
+                                        default:
+                                            // Reschedule with back-off criteria specified when it
+                                            // was
+                                            // scheduled
+                                            jobFinished(params, /* wantsReschedule= */ true);
+                                    }
                                 });
         return true;
     }
 
     @VisibleForTesting
-    void processAsyncRecords() {
+    ProcessingResult processAsyncRecords() {
         final JobLockHolder lock = JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING);
         if (lock.tryLock()) {
             try {
-                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                return AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
                         .runAsyncRegistrationQueueWorker();
-                return;
             } finally {
                 lock.unlock();
             }
         }
         LoggerFactory.getMeasurementLogger()
                 .d("AsyncRegistrationQueueJobService did not acquire the lock");
+        // Another thread is already processing async registrations.
+        return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
     }
 
     @Override
@@ -180,6 +203,34 @@ public class AsyncRegistrationQueueJobService extends JobService {
             LoggerFactory.getMeasurementLogger()
                     .d("AsyncRegistrationQueueJobService already scheduled, skipping reschedule");
         }
+    }
+
+    @VisibleForTesting
+    void scheduleImmediately(Context context) {
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getAsyncRegistrationJobQueueKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("AsyncRegistrationQueueJobService is disabled, skip scheduling");
+            return;
+        }
+
+        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        if (jobScheduler == null) {
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
+            return;
+        }
+
+        final JobInfo job =
+                new JobInfo.Builder(
+                                MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
+                                new ComponentName(context, AsyncRegistrationQueueJobService.class))
+                        .setRequiredNetworkType(
+                                flags.getMeasurementAsyncRegistrationQueueJobRequiredNetworkType())
+                        .build();
+
+        schedule(jobScheduler, job);
+        LoggerFactory.getMeasurementLogger()
+                .d("AsyncRegistrationQueueJobService scheduled to run immediately");
     }
 
     private boolean skipAndCancelBackgroundJob(

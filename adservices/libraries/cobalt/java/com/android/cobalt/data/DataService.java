@@ -29,6 +29,7 @@ import com.google.cobalt.SystemProfile;
 import com.google.cobalt.UnencryptedObservationBatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -103,7 +104,7 @@ public final class DataService {
      *   <li>Load the aggregated data for each day that needs observations to be generated.
      *   <li>Call the ObservationGenerator to generate observations for each day.
      *   <li>Store the observations in the database.
-     *   <li>Update the last_sent_day_index for the report.
+     *   <li>Updates the last_sent_day_index for the report.
      * </ol>
      *
      * @param reportKey the report to get the Count aggregated data for
@@ -165,7 +166,7 @@ public final class DataService {
     }
 
     /**
-     * Update the aggregated data for a COUNT report in response to an event that occurred.
+     * Updates the aggregated data for a COUNT report in response to an event that occurred.
      *
      * <p>For the given report, dayIndex, systemProfile, and eventVector at the time of the event,
      * check whether the database already contains an entry. If so, add count to its aggregateValue
@@ -198,6 +199,47 @@ public final class DataService {
                                                 eventVector,
                                                 eventVectorBufferMax,
                                                 count)),
+                mExecutorService);
+    }
+
+    /**
+     * Updates the aggregated data for a STRING_COUNT report in response to an event that occurred.
+     *
+     * <p>For the given report, dayIndex, systemProfile, and eventVector at the time of the event,
+     * check whether the string hash can be logged or the database already contains an entry. If so,
+     * add the string occurrence to its aggregateValue and update the entry. If not, create a new
+     * entry with a single string occurrence count as the aggregateValue, if the string buffer max
+     * hasn't been reached. This only supports the REPORT_ALL system profile selection policy.
+     *
+     * @param reportKey the report being aggregated
+     * @param dayIndex the day on which the event occurred
+     * @param systemProfile the SystemProfile on the device at the time of the event
+     * @param eventVector the event the value was logged for
+     * @param eventVectorBufferMax the maximum number of event vectors to store per
+     *     report/day/profile
+     * @param stringBufferMax the maximum number of strings to store per report/day
+     * @param stringValue the logged string
+     */
+    public ListenableFuture<Void> aggregateString(
+            ReportKey reportKey,
+            int dayIndex,
+            SystemProfile systemProfile,
+            EventVector eventVector,
+            long eventVectorBufferMax,
+            long stringBufferMax,
+            String stringValue) {
+        return Futures.submit(
+                () ->
+                        mCobaltDatabase.runInTransaction(
+                                () ->
+                                        aggregateStringSync(
+                                                reportKey,
+                                                dayIndex,
+                                                systemProfile,
+                                                eventVector,
+                                                eventVectorBufferMax,
+                                                stringBufferMax,
+                                                stringValue)),
                 mExecutorService);
     }
 
@@ -251,6 +293,69 @@ public final class DataService {
             EventVector eventVector,
             long eventVectorBufferMax,
             long count) {
+        aggregateValueReportAll(
+                reportKey,
+                dayIndex,
+                systemProfile,
+                eventVector,
+                eventVectorBufferMax,
+                count,
+                LogAggregators.countAggregator());
+    }
+
+    private void aggregateStringSync(
+            ReportKey reportKey,
+            int dayIndex,
+            SystemProfile systemProfile,
+            EventVector eventVector,
+            long eventVectorBufferMax,
+            long stringBufferMax,
+            String stringValue) {
+        HashCode hash = StringHashEntity.getHash(stringValue);
+        int index =
+                mDaoBuildingBlocks.queryStringListIndex(reportKey, dayIndex, stringBufferMax, hash);
+        if (index == -1) {
+            return;
+        }
+
+        StringHashEntity stringHash = StringHashEntity.create(reportKey, dayIndex, index, hash);
+        if (aggregateValueReportAll(
+                reportKey,
+                dayIndex,
+                systemProfile,
+                eventVector,
+                eventVectorBufferMax,
+                stringHash,
+                LogAggregators.stringIndexAggregator())) {
+            // `stringHash`'s index was written to the database, ensure it and the string it's for
+            // are in the string hash table for report/day combination.
+            mDaoBuildingBlocks.insertStringHash(stringHash);
+        }
+    }
+
+    /**
+     * Generic method for aggregated values and updating them in the aggregate store with a system
+     * profile selection policy of REPORT_ALL.
+     *
+     * @param <ToAggregate> the type of the value being aggregated
+     * @param reportKey the report being aggregated
+     * @param dayIndex the day on which the event occurred
+     * @param systemProfile the SystemProfile on the device at the time of the event
+     * @param eventVector the event the value was logged for
+     * @param eventVectorBufferMax the maximum number of event vectors to store per
+     *     report/day/profile
+     * @param value the new value
+     * @param aggregator the {@link LogAggregator} used to aggregate the new and existing values
+     * @return whether a value was inserted or updated in the aggregate store
+     */
+    private <ToAggregate> boolean aggregateValueReportAll(
+            ReportKey reportKey,
+            int dayIndex,
+            SystemProfile systemProfile,
+            EventVector eventVector,
+            long eventVectorBufferMax,
+            ToAggregate value,
+            LogAggregator aggregator) {
         long systemProfileHash = SystemProfileEntity.getSystemProfileHash(systemProfile);
         mDaoBuildingBlocks.insertSystemProfile(
                 SystemProfileEntity.create(systemProfileHash, systemProfile));
@@ -263,14 +368,13 @@ public final class DataService {
         if (!existingSystemProfileAndAggregateValue.isPresent()) {
             // No aggregate value was found for the provided report, day index, and event vector
             // combination, insert one.
-            insertAggregateRow(
+            return insertAggregateRow(
                     reportKey,
                     dayIndex,
                     systemProfileHash,
                     eventVector,
                     eventVectorBufferMax,
-                    AggregateValue.newBuilder().setIntegerValue(count).build());
-            return;
+                    aggregator.initialValue(value));
         }
 
         // An existing entry matches the provided report, day index, and event vector combination,
@@ -286,27 +390,27 @@ public final class DataService {
                     dayIndex,
                     eventVector,
                     systemProfileHash,
-                    existingAggregateValue.toBuilder()
-                            .setIntegerValue(existingAggregateValue.getIntegerValue() + count)
-                            .build());
-            return;
+                    aggregator.aggregateValues(value, existingAggregateValue));
+            return true;
         }
 
         // All system profiles should be reported, add the system profile and value.
-        insertAggregateRow(
+        return insertAggregateRow(
                 reportKey,
                 dayIndex,
                 systemProfileHash,
                 eventVector,
                 eventVectorBufferMax,
-                AggregateValue.newBuilder().setIntegerValue(count).build());
+                aggregator.initialValue(value));
     }
 
     /**
      * Associates `newValue` with the provided report, day index, event vector, and system profile
      * in the DB, if present. Does nothing otherwise.
+     *
+     * @return true if a value was inserted, false otherwise
      */
-    private void insertAggregateRow(
+    private boolean insertAggregateRow(
             ReportKey reportKey,
             int dayIndex,
             long systemProfileHash,
@@ -315,11 +419,12 @@ public final class DataService {
             AggregateValue newValue) {
         if (!canAddEventVectorToSystemProfile(
                 reportKey, dayIndex, systemProfileHash, eventVectorBufferMax)) {
-            return;
+            return false;
         }
         mDaoBuildingBlocks.insertAggregateValue(
                 AggregateStoreEntity.create(
                         reportKey, dayIndex, eventVector, systemProfileHash, newValue));
+        return true;
     }
 
     private boolean canAddEventVectorToSystemProfile(

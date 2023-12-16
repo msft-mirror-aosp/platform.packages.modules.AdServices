@@ -74,6 +74,7 @@ import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.TriggerSpecsUtil;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ProcessingResult;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -302,7 +303,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -314,9 +316,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
@@ -362,7 +365,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -375,9 +379,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         Thread.currentThread().interrupt();
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.THREAD_INTERRUPTED, result);
         verify(mAsyncSourceFetcher, times(0))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(0)).insertEventReport(any(EventReport.class));
@@ -387,6 +392,23 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 ArgumentCaptor.forClass(KeyValueData.class);
         verify(mMeasurementDao, times(0)).insertOrUpdateKeyValueData(any(KeyValueData.class));
         verify(mMeasurementDao, times(0)).deleteAsyncRegistration(any(String.class));
+    }
+
+    @Test
+    public void testRecordsExceedMaxRegistrationsPerJob_returnSuccessWithPendingRecords()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
+        when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
+                .thenReturn(validAsyncRegistration);
+
+        // Execution
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+
+        // Assertions
+        assertEquals(ProcessingResult.SUCCESS_WITH_PENDING_RECORDS, result);
     }
 
     // Tests for redirect types
@@ -420,7 +442,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -432,12 +455,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
@@ -492,7 +516,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -504,12 +529,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
@@ -556,7 +582,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -568,12 +595,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
@@ -640,7 +668,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -652,9 +681,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<Source> sourceCaptor = ArgumentCaptor.forClass(Source.class);
@@ -712,7 +742,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -724,9 +755,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<Source> sourceCaptor = ArgumentCaptor.forClass(Source.class);
@@ -783,7 +815,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -795,9 +828,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<Source> sourceCaptor = ArgumentCaptor.forClass(Source.class);
@@ -855,7 +889,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -867,9 +902,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<Source> sourceCaptor = ArgumentCaptor.forClass(Source.class);
@@ -904,7 +940,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -916,12 +953,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
@@ -974,7 +1012,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -986,12 +1025,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
@@ -1035,7 +1075,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -1047,12 +1088,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
@@ -1096,7 +1138,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -1108,12 +1151,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
@@ -1161,7 +1205,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -1173,9 +1218,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
@@ -1215,12 +1261,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
@@ -1260,12 +1308,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
@@ -1312,12 +1362,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
 
@@ -1356,12 +1408,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchSource(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, never()).updateRetryCount(any());
@@ -1397,7 +1451,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
@@ -1410,9 +1465,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
@@ -1444,12 +1500,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
@@ -1479,12 +1537,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
@@ -1520,12 +1580,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
@@ -1567,7 +1629,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
         KeyValueData redirectCount =
                 new KeyValueData.Builder()
                         .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
@@ -1579,9 +1642,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, never()).updateRetryCount(any());
@@ -1632,12 +1696,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
@@ -1676,12 +1742,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
@@ -1718,12 +1786,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchSource(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
@@ -1769,12 +1839,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, never()).updateRetryCount(any());
@@ -1804,12 +1876,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
@@ -1838,12 +1912,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
@@ -1879,12 +1955,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
@@ -1920,12 +1998,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchTrigger(any(), any(), any());
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
-                .thenReturn(validAsyncRegistration);
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
         // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mAsyncTriggerFetcher, times(1))
                 .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, never()).updateRetryCount(any());
@@ -2653,7 +2733,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException, IOException {
         // Setup
         AsyncSourceFetcher mFetcher =
-                spy(new AsyncSourceFetcher(sDefaultContext, mEnrollmentDao, mFlags, mLogger));
+                spy(new AsyncSourceFetcher(sDefaultContext, mEnrollmentDao, mFlags));
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
                         Collections.singletonList(DEFAULT_REGISTRATION_PARAM_LIST),
@@ -2706,9 +2786,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 mContentResolver);
 
         // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
 
-        // Assertion
+        // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(datastoreManager, times(2)).runInTransaction(consumerArgCaptor.capture());
         consumerArgCaptor.getValue().accept(mMeasurementDao);
         try (Cursor cursor =

@@ -177,6 +177,7 @@ import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_MAX_R
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE;
+import static com.android.adservices.service.Flags.FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_CPC_BILLING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS;
@@ -572,6 +573,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUN
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B;
@@ -600,6 +602,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREME
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
@@ -3546,6 +3549,51 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getFledgeDataVersionHeaderEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetBeaconReportingMetricsEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeBeaconReportingMetricsEnabled())
+                .isEqualTo(
+                        FLEDGE_BEACON_REPORTING_METRICS_ENABLED
+                                && FLEDGE_REGISTER_AD_BEACON_ENABLED);
+
+        // Now overriding with the FLEDGE_REGISTER_AD_BEACON_ENABLED from PH.
+        boolean phOverridingFledgeRegisterAdBeaconEnabled = !FLEDGE_REGISTER_AD_BEACON_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
+                Boolean.toString(phOverridingFledgeRegisterAdBeaconEnabled),
+                /* makeDefault */ false);
+
+        // Only turn on FLEDGE_REGISTER_AD_BEACON_ENABLED, getFledgeBeaconReportingMetricsEnabled()
+        // should still return false.
+        assertThat(mPhFlags.getFledgeBeaconReportingMetricsEnabled()).isEqualTo(false);
+
+        // Now overriding with the FLEDGE_BEACON_REPORTING_METRICS_ENABLED from PH.
+        boolean phOverridingFledgeBeaconReportingMetricsEnabled =
+                phOverridingFledgeRegisterAdBeaconEnabled;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED,
+                Boolean.toString(phOverridingFledgeBeaconReportingMetricsEnabled),
+                /* makeDefault */ false);
+
+        // Turn on both FLEDGE_BEACON_REPORTING_METRICS_ENABLED and
+        // FLEDGE_REGISTER_AD_BEACON_ENABLED, getFledgeBeaconReportingMetricsEnabled() should
+        // return true.
+        assertThat(mPhFlags.getFledgeBeaconReportingMetricsEnabled()).isEqualTo(true);
+
+        // Now flipping FLEDGE_REGISTER_AD_BEACON_ENABLED, getFledgeBeaconReportingMetricsEnabled()
+        // should return false.
+        phOverridingFledgeRegisterAdBeaconEnabled = !phOverridingFledgeRegisterAdBeaconEnabled;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
+                Boolean.toString(phOverridingFledgeRegisterAdBeaconEnabled),
+                /* makeDefault */ false);
+        assertThat(mPhFlags.getFledgeBeaconReportingMetricsEnabled()).isEqualTo(false);
     }
 
     @Test

@@ -105,6 +105,12 @@ class AttributionJobHandler {
         ATTRIBUTED
     }
 
+    enum ProcessingResult {
+        FAILURE,
+        SUCCESS_WITH_PENDING_RECORDS,
+        SUCCESS_ALL_RECORDS_PROCESSED
+    }
+
     AttributionJobHandler(DatastoreManager datastoreManager, DebugReportApi debugReportApi) {
         this(
                 datastoreManager,
@@ -139,32 +145,34 @@ class AttributionJobHandler {
      *
      * @return false if there are datastore failures or pending {@link Trigger} left, true otherwise
      */
-    boolean performPendingAttributions() {
+    ProcessingResult performPendingAttributions() {
         Optional<List<String>> pendingTriggersOpt = mDatastoreManager
                 .runInTransactionWithResult(IMeasurementDao::getPendingTriggerIds);
         if (!pendingTriggersOpt.isPresent()) {
             // Failure during trigger retrieval
             // Reschedule for retry
-            return false;
+            return ProcessingResult.FAILURE;
         }
         List<String> pendingTriggers = pendingTriggersOpt.get();
-
-        for (int i = 0;
-                i < pendingTriggers.size()
-                        && i < mFlags.getMeasurementMaxAttributionsPerInvocation();
-                i++) {
+        final int numRecordsToProcess =
+                Math.min(
+                        pendingTriggers.size(),
+                        mFlags.getMeasurementMaxAttributionsPerInvocation());
+        for (int i = 0; i < numRecordsToProcess; i++) {
             AttributionStatus attributionStatus = new AttributionStatus();
             boolean success = performAttribution(pendingTriggers.get(i), attributionStatus);
             logAttributionStats(attributionStatus);
             if (!success) {
                 // Failure during trigger attribution
                 // Reschedule for retry
-                return false;
+                return ProcessingResult.FAILURE;
             }
         }
 
         // Reschedule if there are unprocessed pending triggers.
-        return mFlags.getMeasurementMaxAttributionsPerInvocation() >= pendingTriggers.size();
+        return pendingTriggers.size() > numRecordsToProcess
+                ? ProcessingResult.SUCCESS_WITH_PENDING_RECORDS
+                : ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
     }
 
     /**
