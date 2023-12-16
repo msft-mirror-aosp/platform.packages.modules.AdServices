@@ -36,6 +36,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -201,6 +202,64 @@ public class GetAdSelectionDataLatency {
                         (endTime - startTime) / NANO_TO_MILLISECONDS));
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingBuyers_500() throws Exception {
+        increasePayloadBucketSize();
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 500, /* nCAsPerBuyer= */ 1, /* nAdsPerCA= */ 5);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingBuyers_500",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetPayloadBucketSize();
+    }
+
+    @Test
+    public void test_withoutFiltering_varyingBuyers_1000() throws Exception {
+        increasePayloadBucketSize();
+        List<CustomAudience> customAudiences =
+                CustomAudienceFixture.getNValidCustomAudiences(
+                        /* nBuyers= */ 1000, /* nCAsPerBuyer= */ 1, /* nAdsPerCA= */ 5);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        long startTime = System.nanoTime();
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        long endTime = System.nanoTime();
+        Log.i(
+                TAG,
+                generateLogLabel(
+                        getClass().getSimpleName(),
+                        "test_withoutFiltering_varyingBuyers_1000",
+                        (endTime - startTime) / NANO_TO_MILLISECONDS));
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetPayloadBucketSize();
     }
 
     @Test
@@ -390,5 +449,17 @@ public class GetAdSelectionDataLatency {
                         (endTime - startTime) / NANO_TO_MILLISECONDS));
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+    }
+
+    void increasePayloadBucketSize() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_payload_bucket_sizes"
+                    + " 0,1024,2048,4096,8192,16384,32768,65536,131072,262174,524288,1048576");
+    }
+
+    void resetPayloadBucketSize() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_payload_bucket_sizes"
+                    + " 0,1024,2048,4096,8192,16384,32768,65536");
     }
 }
