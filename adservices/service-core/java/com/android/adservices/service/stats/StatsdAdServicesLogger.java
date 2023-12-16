@@ -121,7 +121,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 apiCallStats.getAppPackageName(),
                 apiCallStats.getSdkPackageName(),
                 apiCallStats.getLatencyMillisecond(),
-                apiCallStats.getResultCode());
+                apiCallStats.getResultCode(),
+                /* failureReason */ 0);
     }
 
     /** log method for UI stats. */
@@ -138,7 +139,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 "",
                 "",
                 latencyMs,
-                resultCode);
+                resultCode,
+                /* failureReason */ 0);
     }
 
     @Override
