@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.encryptionkey;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.spe.AdservicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 
@@ -24,8 +25,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -171,7 +170,7 @@ public class EncryptionKeyJobServiceTest {
                     // Execute
                     assertFalse(
                             EncryptionKeyJobService.scheduleIfNeeded(
-                                    mockContext, /* forceSchedule = */ false));
+                                    mockContext, /* forceSchedule= */ false));
 
                     // Validate
                     ExtendedMockito.verify(
@@ -213,7 +212,7 @@ public class EncryptionKeyJobServiceTest {
                     // Execute
                     assertFalse(
                             EncryptionKeyJobService.scheduleIfNeeded(
-                                    mockContext, /* forceSchedule = */ false));
+                                    mockContext, /* forceSchedule= */ false));
 
                     // Validate
                     ExtendedMockito.verify(
@@ -248,7 +247,7 @@ public class EncryptionKeyJobServiceTest {
                     // Execute
                     assertTrue(
                             EncryptionKeyJobService.scheduleIfNeeded(
-                                    mockContext, /* forceSchedule = */ false));
+                                    mockContext, /* forceSchedule= */ false));
 
                     // Validate
                     ExtendedMockito.verify(() -> EncryptionKeyJobService.schedule(any(), any()));
@@ -275,7 +274,7 @@ public class EncryptionKeyJobServiceTest {
                     // Execute
                     assertTrue(
                             EncryptionKeyJobService.scheduleIfNeeded(
-                                    mockContext, /* forceSchedule = */ true));
+                                    mockContext, /* forceSchedule= */ true));
 
                     // Validate
                     ExtendedMockito.verify(
@@ -296,14 +295,14 @@ public class EncryptionKeyJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo = */ null)
+                    doReturn(/* noJobInfo= */ null)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(ENCRYPTION_KEY_JOB_ID));
 
                     // Execute
                     assertTrue(
                             EncryptionKeyJobService.scheduleIfNeeded(
-                                    mockContext, /* forceSchedule = */ false));
+                                    mockContext, /* forceSchedule= */ false));
 
                     // Validate
                     ExtendedMockito.verify(
@@ -357,13 +356,7 @@ public class EncryptionKeyJobServiceTest {
             ExtendedMockito.doReturn(mock(EncryptionKeyDao.class))
                     .when(() -> EncryptionKeyDao.getInstance(any()));
             ExtendedMockito.doNothing().when(() -> EncryptionKeyJobService.schedule(any(), any()));
-
-            // Mock AdservicesJobServiceLogger to not actually log the stats to server
-            Mockito.doNothing()
-                    .when(mSpyLogger)
-                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-            ExtendedMockito.doReturn(mSpyLogger)
-                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+            mockGetAdservicesJobServiceLogger(mSpyLogger);
 
             // Execute
             execute.run();

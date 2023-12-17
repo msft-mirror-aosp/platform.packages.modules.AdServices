@@ -35,6 +35,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS__DESTINATION__SELLER_DESTINATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
@@ -43,12 +47,15 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockM
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+
+import android.adservices.adselection.ReportEventRequest;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
@@ -67,6 +74,9 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class StatsdAdServicesLoggerTest {
     // Atom IDs
@@ -105,6 +115,9 @@ public class StatsdAdServicesLoggerTest {
                     .setPrecomputedClassifierStatus(
                             PrecomputedClassifierStatus.PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                     .build();
+
+    private static final int SELLER_DESTINATION =
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private MockitoSession mMockitoSession;
     private StatsdAdServicesLogger mLogger;
@@ -1014,6 +1027,115 @@ public class StatsdAdServicesLoggerTest {
                                 eq(WRITE_TRANSACTION_TYPE.getValue()),
                                 eq(INSERT_EXCEPTION.getValue()),
                                 eq(INSERT_KEY.getValue()));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logDestinationRegisteredBeaconsReportedStats_success() {
+        List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
+                keySizeRangeTypeList = Arrays.asList(
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .LARGER_THAN_MAXIMUM_KEY_SIZE,
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .SMALLER_THAN_MAXIMUM_KEY_SIZE,
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .EQUAL_TO_MAXIMUM_KEY_SIZE);
+        int[] keySizeRangeTypeArray = new int[] {
+                /* LARGER_THAN_MAXIMUM_KEY_SIZE */ 4,
+                /* SMALLER_THAN_MAXIMUM_KEY_SIZE */ 2,
+                /* EQUAL_TO_MAXIMUM_KEY_SIZE */ 3};
+
+        DestinationRegisteredBeaconsReportedStats stats =
+                DestinationRegisteredBeaconsReportedStats.builder()
+                        .setBeaconReportingDestinationType(SELLER_DESTINATION)
+                        .setAttemptedRegisteredBeacons(5)
+                        .setAttemptedKeySizesRangeType(keySizeRangeTypeList)
+                        .setTableNumRows(25)
+                        .setAdServicesStatusCode(0)
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(
+                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(DESTINATION_REGISTERED_BEACONS),
+                                eq(SELLER_DESTINATION),
+                                eq(/* attemptedRegisteredBeacons */ 5),
+                                eq(/* attemptedKeySizesRangeType */ keySizeRangeTypeArray),
+                                eq(/* tableNumRows */ 25),
+                                eq(/* adServicesStatusCode */ 0)
+                        );
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logReportInteractionApiCalledStats_success() {
+        ReportInteractionApiCalledStats stats =
+                ReportInteractionApiCalledStats.builder()
+                        .setBeaconReportingDestinationType(SELLER_DESTINATION)
+                        .setNumMatchingUris(5)
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(
+                        anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logReportInteractionApiCalledStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(REPORT_INTERACTION_API_CALLED),
+                                eq(SELLER_DESTINATION),
+                                eq(/* numMatchingUris */ 5)
+                        );
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logInteractionReportingTableClearedStats_success() {
+        InteractionReportingTableClearedStats stats =
+                InteractionReportingTableClearedStats.builder()
+                        .setNumUrisCleared(25)
+                        .setNumUnreportedUris(5)
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(
+                        anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logInteractionReportingTableClearedStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(INTERACTION_REPORTING_TABLE_CLEARED),
+                                eq(/* numUrisCleared */ 25),
+                                eq(/* numUnreportedUris */ 5)
+                        );
 
         ExtendedMockito.verify(writeInvocation);
 

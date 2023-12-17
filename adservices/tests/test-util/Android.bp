@@ -109,6 +109,7 @@ filegroup {
     name: "adservices-extended-mockito-rule-sources",
     srcs: [
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
+        "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
     ],
     path: "java",
     visibility: [

@@ -23,6 +23,10 @@ import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
+
+import com.android.ctssdkprovider.ICtsSdkProviderApi;
 
 import java.util.List;
 
@@ -59,5 +63,49 @@ public class MediationTestSdkApiImpl extends IMediationTestSdkApi.Stub {
         } catch (Throwable e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Checks that the mediator can invoke an interface defined by a mediatee, either inside or
+     * outside the sandbox.
+     */
+    @Override
+    public void checkCanCallMediateeInterface(boolean inSandbox, String expectedValue) {
+        ICtsSdkProviderApi sdk = getMediateeInterface(inSandbox);
+        String clientPackageName;
+        try {
+            clientPackageName = sdk.getClientPackageName();
+        } catch (RemoteException e) {
+            throw new IllegalStateException("Cannot invoke interface: " + e.getMessage());
+        }
+        if (!clientPackageName.equals(expectedValue)) {
+            throw new IllegalStateException(
+                    "String "
+                            + clientPackageName
+                            + " did not match expected value "
+                            + expectedValue);
+        }
+    }
+
+    private ICtsSdkProviderApi getMediateeInterface(boolean inSandbox) {
+        if (inSandbox) {
+            List<SandboxedSdk> sandboxedSdks = getSandboxedSdks();
+            for (SandboxedSdk sandboxedSdk : sandboxedSdks) {
+                IBinder iBinder = sandboxedSdk.getInterface();
+                if (iBinder.queryLocalInterface(ICtsSdkProviderApi.DESCRIPTOR) != null) {
+                    return ICtsSdkProviderApi.Stub.asInterface(iBinder);
+                }
+            }
+        } else {
+            List<AppOwnedSdkSandboxInterface> appOwnedInterfaces =
+                    getAppOwnedSdkSandboxInterfaces();
+            for (AppOwnedSdkSandboxInterface appOwnedInterface : appOwnedInterfaces) {
+                IBinder iBinder = appOwnedInterface.getInterface();
+                if (iBinder.queryLocalInterface(ICtsSdkProviderApi.DESCRIPTOR) != null) {
+                    return ICtsSdkProviderApi.Stub.asInterface(iBinder);
+                }
+            }
+        }
+        throw new IllegalStateException("No mediatee interface found.");
     }
 }

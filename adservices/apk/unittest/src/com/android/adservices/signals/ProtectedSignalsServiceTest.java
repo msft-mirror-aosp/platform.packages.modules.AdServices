@@ -35,6 +35,7 @@ import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.PackageChangedReceiver;
@@ -43,19 +44,21 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.signals.ProtectedSignalsServiceImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 /** Service tests for protected signals */
+@SpyStatic(ConsentManager.class)
+@SpyStatic(ProtectedSignalsServiceImpl.class)
+@SpyStatic(PackageChangedReceiver.class)
+@SpyStatic(MddJobService.class)
 @RunWith(MockitoJUnitRunner.class)
-public class ProtectedSignalsServiceTest {
+public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockitoTestCase {
 
     private final Flags mFlagsWithKillSwitchOnGaUxDisabled =
             new FlagsWithKillSwitchOnGaUxDisabled();
@@ -68,28 +71,6 @@ public class ProtectedSignalsServiceTest {
     @Mock private ProtectedSignalsServiceImpl mMockProtectedSignalsServiceImpl;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private PackageManager mPackageManagerMock;
-
-    private MockitoSession mStaticMockSession;
-
-    /** Setup the test */
-    @Before
-    public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(ConsentManager.class)
-                        .spyStatic(ProtectedSignalsServiceImpl.class)
-                        .spyStatic(PackageChangedReceiver.class)
-                        .mockStatic(MddJobService.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    /** Teardown the test */
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
-    }
 
     /**
      * Test whether the service is not bindable when the kill switch is off with the GA UX flag off.
