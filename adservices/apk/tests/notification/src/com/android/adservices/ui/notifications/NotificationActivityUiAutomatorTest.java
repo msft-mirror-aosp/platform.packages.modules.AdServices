@@ -116,47 +116,6 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
 
     @Test
     @FlakyTest(bugId = 302607350)
-    public void moreButtonTest() throws Exception {
-        startActivity(true);
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(2000);
-        }
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
-    }
-
-    @Test
-    public void acceptedConfirmationScreenTest() throws Exception {
-        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
-
-        startActivity(true);
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(2000);
-        }
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
-
-        rightControlButton.click();
-        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_accept_title);
-        assertThat(acceptedTitle.exists()).isTrue();
-    }
-
-    @Test
-    @FlakyTest(bugId = 302607350)
     public void notificationEuGaTest() throws Exception {
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();

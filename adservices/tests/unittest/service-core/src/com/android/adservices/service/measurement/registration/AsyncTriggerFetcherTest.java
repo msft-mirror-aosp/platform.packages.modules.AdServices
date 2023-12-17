@@ -6050,26 +6050,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     private static AsyncRegistration appTriggerRegistrationRequest(
             RegistrationRequest registrationRequest) {
-        // Necessary for testing
-        String enrollmentId = "";
-        if (EnrollmentDao.getInstance(CONTEXT)
-                        .getEnrollmentDataFromMeasurementUrl(
-                                registrationRequest
-                                        .getRegistrationUri()
-                                        .buildUpon()
-                                        .clearQuery()
-                                        .build())
-                != null) {
-            enrollmentId =
-                    EnrollmentDao.getInstance(CONTEXT)
-                            .getEnrollmentDataFromMeasurementUrl(
-                                    registrationRequest
-                                            .getRegistrationUri()
-                                            .buildUpon()
-                                            .clearQuery()
-                                            .build())
-                            .getEnrollmentId();
-        }
         return createAsyncRegistration(
                 UUID.randomUUID().toString(),
                 registrationRequest.getRegistrationUri(),
@@ -6091,26 +6071,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     private static AsyncRegistration appTriggerRegistrationRequestWithAdId(
             RegistrationRequest registrationRequest) {
-        // Necessary for testing
-        String enrollmentId = "";
-        if (EnrollmentDao.getInstance(CONTEXT)
-                        .getEnrollmentDataFromMeasurementUrl(
-                                registrationRequest
-                                        .getRegistrationUri()
-                                        .buildUpon()
-                                        .clearQuery()
-                                        .build())
-                != null) {
-            enrollmentId =
-                    EnrollmentDao.getInstance(CONTEXT)
-                            .getEnrollmentDataFromMeasurementUrl(
-                                    registrationRequest
-                                            .getRegistrationUri()
-                                            .buildUpon()
-                                            .clearQuery()
-                                            .build())
-                            .getEnrollmentId();
-        }
         return createAsyncRegistration(
                 UUID.randomUUID().toString(),
                 registrationRequest.getRegistrationUri(),
@@ -6136,28 +6096,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         if (webTriggerRegistrationRequest.getTriggerParams().size() > 0) {
             WebTriggerParams webTriggerParams =
                     webTriggerRegistrationRequest.getTriggerParams().get(0);
-            // Necessary for testing
-            String enrollmentId = "";
-            if (EnrollmentDao.getInstance(CONTEXT)
-                            .getEnrollmentDataFromMeasurementUrl(
-                                    webTriggerRegistrationRequest
-                                            .getTriggerParams()
-                                            .get(0)
-                                            .getRegistrationUri()
-                                            .buildUpon()
-                                            .clearQuery()
-                                            .build())
-                    != null) {
-                enrollmentId =
-                        EnrollmentDao.getInstance(CONTEXT)
-                                .getEnrollmentDataFromMeasurementUrl(
-                                        webTriggerParams
-                                                .getRegistrationUri()
-                                                .buildUpon()
-                                                .clearQuery()
-                                                .build())
-                                .getEnrollmentId();
-            }
             return createAsyncRegistration(
                     UUID.randomUUID().toString(),
                     webTriggerParams.getRegistrationUri(),
