@@ -15,18 +15,16 @@
  */
 package com.android.adservices.service.common;
 
-import com.android.internal.annotations.VisibleForTesting;
-
 import java.util.Objects;
 
 // TODO(b/310270746): make it package-protected when TopicsServiceImplTest is refactored
-@VisibleForTesting
 /** Represents a call to a public {@link AppManifestConfigHelper} method. */
 public final class AppManifestConfigCall {
-    public String packageName;
+    public final String packageName;
     public boolean appExists;
     public boolean appHasConfig;
     public boolean enabledByDefault;
+    public boolean result;
 
     public AppManifestConfigCall(String packageName) {
         this.packageName = Objects.requireNonNull(packageName, "packageName cannot be null");
@@ -42,6 +40,8 @@ public final class AppManifestConfigCall {
                 + appHasConfig
                 + ", enabledByDefault="
                 + enabledByDefault
+                + ", result="
+                + result
                 + "]";
     }
 }

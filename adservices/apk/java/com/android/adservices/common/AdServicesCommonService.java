@@ -29,6 +29,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
 import com.android.adservices.service.common.AdServicesSyncUtil;
+import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.notifications.ConsentNotificationTrigger;
@@ -105,7 +106,7 @@ public class AdServicesCommonService extends Service {
             LogUtil.w(
                     "Using dump to call AdServicesShellCommandHandler - should NOT happen on"
                             + " production");
-            new AdServicesShellCommandHandler(/* context= */ this, pw).run(realArgs);
+            new AdServicesShellCommandHandler(pw).run(realArgs);
             return;
         }
         super.dump(fd, pw, args);

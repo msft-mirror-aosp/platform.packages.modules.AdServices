@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType;
+
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
@@ -40,6 +42,7 @@ import com.android.adservices.data.adselection.datahandlers.WinningCustomAudienc
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
@@ -51,8 +54,10 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -112,6 +117,9 @@ public class PersistAdSelectionResultRunner {
     private final long mOverallTimeout;
     // TODO(b/291680065): Remove when owner field is returned from B&A
     private final boolean mForceSearchOnAbsentOwner;
+    @NonNull private final Flags mFlags;
+    @NonNull private final AdServicesLogger mAdServicesLogger;
+
     private ReportingRegistrationLimits mReportingLimits;
     @NonNull private AuctionServerDataCompressor mDataCompressor;
     @NonNull private AuctionServerPayloadExtractor mPayloadExtractor;
@@ -133,7 +141,9 @@ public class PersistAdSelectionResultRunner {
             final boolean forceContinueOnAbsentOwner,
             @NonNull final ReportingRegistrationLimits reportingLimits,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
-            @NonNull final AuctionResultValidator auctionResultValidator) {
+            @NonNull final AuctionResultValidator auctionResultValidator,
+            @NonNull final Flags flags,
+            @NonNull final AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -145,6 +155,8 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(reportingLimits);
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(auctionResultValidator);
+        Objects.requireNonNull(flags);
+        Objects.requireNonNull(adServicesLogger);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -160,6 +172,8 @@ public class PersistAdSelectionResultRunner {
         mReportingLimits = reportingLimits;
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mAuctionResultValidator = auctionResultValidator;
+        mFlags = flags;
+        mAdServicesLogger = adServicesLogger;
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */
@@ -551,20 +565,23 @@ public class PersistAdSelectionResultRunner {
     private void persistAdInteractionKeysAndUrls(
             AuctionResult auctionResult, long adSelectionId, AdTechIdentifier seller) {
         final WinReportingUrls winReportingUrls = auctionResult.getWinReportingUrls();
+        final Map<String, String> attemptedBuyerInteractionReportingUrls =
+                winReportingUrls.getBuyerReportingUrls().getInteractionReportingUrls();
+        final Map<String, String> attemptedSellerInteractionReportingUrls =
+                winReportingUrls.getTopLevelSellerReportingUrls().getInteractionReportingUrls();
+
         final Map<String, Uri> buyerInteractionReportingUrls =
                 filterInvalidInteractionUri(
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
                         auctionResult.getBuyer(),
                         BUYER_INTERACTION_REPORTING_URI_FIELD_NAME,
-                        winReportingUrls.getBuyerReportingUrls().getInteractionReportingUrls());
+                        attemptedBuyerInteractionReportingUrls);
         final Map<String, Uri> sellerInteractionReportingUrls =
                 filterInvalidInteractionUri(
                         ValidatorUtil.AD_TECH_ROLE_SELLER,
                         seller.toString(),
                         SELLER_INTERACTION_REPORTING_URI_FIELD_NAME,
-                        winReportingUrls
-                                .getTopLevelSellerReportingUrls()
-                                .getInteractionReportingUrls());
+                        attemptedSellerInteractionReportingUrls);
         sLogger.v("Valid buyer interaction urls: %s", buyerInteractionReportingUrls);
         persistAdInteractionKeysAndUrls(
                 buyerInteractionReportingUrls,
@@ -575,6 +592,42 @@ public class PersistAdSelectionResultRunner {
                 sellerInteractionReportingUrls,
                 adSelectionId,
                 ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER);
+
+        if (mFlags.getFledgeBeaconReportingMetricsEnabled()) {
+            int totalNumRegisteredAdInteractions =
+                    (int) mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions();
+            long maxInteractionKeySize = mReportingLimits.getMaxInteractionKeySize();
+
+            mAdServicesLogger.logDestinationRegisteredBeaconsReportedStats(
+                    DestinationRegisteredBeaconsReportedStats.builder()
+                            .setBeaconReportingDestinationType(
+                                    ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER)
+                            .setAttemptedRegisteredBeacons(
+                                    attemptedBuyerInteractionReportingUrls.size())
+                            .setAttemptedKeySizesRangeType(
+                                    DestinationRegisteredBeaconsReportedStats
+                                            .getInteractionKeySizeRangeTypeList(
+                                                    attemptedBuyerInteractionReportingUrls
+                                                            .keySet(),
+                                                    maxInteractionKeySize))
+                            .setTableNumRows(totalNumRegisteredAdInteractions)
+                            .build());
+
+            mAdServicesLogger.logDestinationRegisteredBeaconsReportedStats(
+                    DestinationRegisteredBeaconsReportedStats.builder()
+                            .setBeaconReportingDestinationType(
+                                    ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
+                            .setAttemptedRegisteredBeacons(
+                                    attemptedSellerInteractionReportingUrls.size())
+                            .setAttemptedKeySizesRangeType(
+                                    DestinationRegisteredBeaconsReportedStats
+                                            .getInteractionKeySizeRangeTypeList(
+                                                    attemptedSellerInteractionReportingUrls
+                                                            .keySet(),
+                                                    maxInteractionKeySize))
+                            .setTableNumRows(totalNumRegisteredAdInteractions)
+                            .build());
+        }
     }
 
     private void persistAdInteractionKeysAndUrls(

@@ -219,6 +219,19 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
+    /** Invoked when the client app changes foreground importance */
+    public void notifySdkSandboxClientImportanceChange(boolean isForeground) {
+        enforceCallerIsSystemServer();
+
+        final long token = Binder.clearCallingIdentity();
+        try {
+            SdkSandboxLocalSingleton.getExistingInstance()
+                    .notifySdkSandboxClientImportanceChange(isForeground);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
     /** Syncs data from client. */
     public void syncDataFromClient(SharedPreferencesUpdate update) {
         enforceCallerIsSystemServer();
@@ -532,6 +545,11 @@ public class SdkSandboxServiceImpl extends Service {
         public void syncDataFromClient(@NonNull SharedPreferencesUpdate update) {
             Objects.requireNonNull(update, "update should not be null");
             SdkSandboxServiceImpl.this.syncDataFromClient(update);
+        }
+
+        @Override
+        public void notifySdkSandboxClientImportanceChange(boolean isForeground) {
+            SdkSandboxServiceImpl.this.notifySdkSandboxClientImportanceChange(isForeground);
         }
     }
 

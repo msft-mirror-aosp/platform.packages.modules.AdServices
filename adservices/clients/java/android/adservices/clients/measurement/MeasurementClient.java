@@ -16,6 +16,7 @@
 
 package android.adservices.clients.measurement;
 
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceRegistrationRequest;
@@ -25,7 +26,6 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
-import android.os.OutcomeReceiver;
 import android.view.InputEvent;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -64,7 +64,7 @@ public class MeasurementClient {
                             attributionSource,
                             inputEvent,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(@NonNull Object ignoredResult) {
                                     completer.set(null);
@@ -92,7 +92,7 @@ public class MeasurementClient {
                     mMeasurementManager.registerTrigger(
                             trigger,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(@NonNull Object ignoredResult) {
                                     completer.set(null);
@@ -119,7 +119,7 @@ public class MeasurementClient {
                     mMeasurementManager.registerWebSource(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(@NonNull Object ignoredResult) {
                                     completer.set(null);
@@ -148,7 +148,7 @@ public class MeasurementClient {
                     mMeasurementManager.registerWebTrigger(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(@NonNull Object ignoredResult) {
                                     completer.set(null);
@@ -176,7 +176,7 @@ public class MeasurementClient {
                     mMeasurementManager.deleteRegistrations(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(@NonNull Object ignoredResult) {
                                     completer.set(null);

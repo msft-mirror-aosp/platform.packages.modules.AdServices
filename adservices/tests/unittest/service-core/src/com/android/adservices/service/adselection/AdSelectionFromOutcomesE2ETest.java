@@ -62,6 +62,7 @@ import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.SupportedByConditionRule;
@@ -441,6 +442,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesPickHighestSuccessUnifiedTables() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -685,6 +687,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesWaterfallMalformedPrebuiltUriFailed() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);

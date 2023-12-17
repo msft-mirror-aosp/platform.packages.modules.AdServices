@@ -50,8 +50,9 @@ public final class AppManifestConfigMetricsLogger {
     private static final int FLAG_APP_HAS_CONFIG = 0x2;
     private static final int FLAG_ENABLED_BY_DEFAULT = 0x4;
 
+    // TODO(b/310270746): make it package-protected when TopicsServiceImplTest is refactored
+    /** Represents a call to a public {@link AppManifestConfigHelper} method. */
     /** Logs the app usage. */
-    @VisibleForTesting // TODO(b/310270746): remove public when TopicsServiceImplTest is refactored
     public static void logUsage(AppManifestConfigCall call) {
         Objects.requireNonNull(call, "call cannot be null");
         AdServicesExecutors.getBackgroundExecutor().execute(() -> handleLogUsage(call));

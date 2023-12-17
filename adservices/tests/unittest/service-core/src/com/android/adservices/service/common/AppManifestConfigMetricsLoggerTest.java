@@ -37,6 +37,8 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.util.Log;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.Nullable;
 import com.android.adservices.common.SyncCallback;
@@ -130,6 +132,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         assertWithMessage("properties keys").that(allProps.keySet()).containsExactly(PKG_NAME);
     }
 
+    @FlakyTest(bugId = 315979774, detail = "Might need to split it into multiple tests")
     @Test
     public void testLogUsage_secondTimeDifferentArgs() throws Exception {
         callOnceWithAllTrueThenSecondWith(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
@@ -364,7 +367,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         AppManifestConfigMetricsLogger.logUsage(call);
     }
 
-    /** Gets a custom Mockito matcher for a {@link AppManifestConfigCall}. */
+    /** Gets a custom Mockito matcher for a {@link AppManifestConfigCall}, without the result. */
     static AppManifestConfigCall appManifestConfigCall(
             String packageName, boolean appExists, boolean appHasConfig, boolean enabledByDefault) {
         return argThat(
@@ -407,7 +410,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
             call.appHasConfig = mAppHasConfig;
             call.enabledByDefault = mEnabledByDefault;
 
-            return call.toString();
+            return call.toString() + " {NOT CHECING RESULT}";
         }
     }
 

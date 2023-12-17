@@ -627,8 +627,7 @@ public class AsyncTriggerFetcher {
             JSONArray aggregateDeduplicationKeys) throws JSONException {
         JSONArray validAggregateDeduplicationKeys = new JSONArray();
         if (aggregateDeduplicationKeys.length()
-                > FlagsFactory.getFlags()
-                        .getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
+                > mFlags.getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Aggregate deduplication keys have more keys than permitted. %s",
