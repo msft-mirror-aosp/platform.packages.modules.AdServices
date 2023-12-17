@@ -358,6 +358,12 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
         return getThis();
     }
 
+    /** Gets the value of the given flag. */
+    @Nullable
+    public final String getFlag(String flag) {
+        return mDeviceConfig.get(flag);
+    }
+
     // TODO(295007931): abstract SDK-related methods in a new SdkLevelHelper and reuse them on
     // SdkLevelSupportRule
     /** Gets the device's SDK level. */
@@ -538,7 +544,7 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
 
     // Single SetFlagEnabled annotations present
     private void setAnnotatedFlag(SetFlagEnabled annotation) {
-        setFlag(annotation.name(), true);
+        setFlag(annotation.value(), true);
     }
 
     // Multiple SetFlagEnabled annotations present
@@ -550,7 +556,7 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
 
     // Single SetFlagDisabled annotations present
     private void setAnnotatedFlag(SetFlagDisabled annotation) {
-        setFlag(annotation.name(), false);
+        setFlag(annotation.value(), false);
     }
 
     // Multiple SetFlagDisabled annotations present

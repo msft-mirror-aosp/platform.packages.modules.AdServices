@@ -31,21 +31,15 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
@@ -54,9 +48,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 // TODO(b/243062789): Test should not use CountDownLatch or Sleep.
-@RunWith(JUnit4.class)
-public class TopicsManagerTest {
-    private static final String TAG = "TopicsManagerTest";
+public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
 
     // Test constants for testing encryption
     static final String PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
@@ -100,7 +92,7 @@ public class TopicsManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext);
 
     // Assert message statements.
     private static final String INCORRECT_MODEL_VERSION_MESSAGE =
@@ -108,18 +100,6 @@ public class TopicsManagerTest {
     private static final String INCORRECT_TAXONOMY_VERSION_MESSAGE =
             "Incorrect taxonomy version detected. Please repo sync, build and install the new"
                     + " apex.";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.forTopicsE2ETests();
 
     @Before
     public void setup() throws Exception {

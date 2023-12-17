@@ -34,14 +34,14 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 
 import java.util.concurrent.Executor;
 
@@ -57,6 +57,10 @@ public class AppSearchMeasurementRollbackDaoTest {
     private final String mAdServicePackageName =
             AppSearchConsentWorker.getAdServicesPackageName(mContext);
     @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this).mockStatic(AppSearchDao.class).build();
 
     @Test
     public void testGetProperties() {
@@ -134,9 +138,6 @@ public class AppSearchMeasurementRollbackDaoTest {
 
     @Test
     public void testReadDocument_invalidInputs() {
-        MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession().initMocks(this).startMocking();
-        try {
             assertThrows(
                     NullPointerException.class,
                     () ->
@@ -156,19 +157,10 @@ public class AppSearchMeasurementRollbackDaoTest {
                             AppSearchMeasurementRollbackDao.readDocument(
                                     mAppSearchSession, mExecutor, "", mAdServicePackageName))
                     .isNull();
-        } finally {
-            mockitoSession.finishMocking();
-        }
     }
 
     @Test
     public void testReadDocument() {
-        MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(AppSearchDao.class)
-                        .initMocks(this)
-                        .startMocking();
-        try {
             AppSearchMeasurementRollbackDao mockDao =
                     Mockito.mock(AppSearchMeasurementRollbackDao.class);
             doReturn(mockDao)
@@ -190,8 +182,5 @@ public class AppSearchMeasurementRollbackDaoTest {
                                     eq(AppSearchMeasurementRollbackDao.NAMESPACE),
                                     eq(AppSearchMeasurementRollbackDao.getQuery(USER1)),
                                     eq(mAdServicePackageName)));
-        } finally {
-            mockitoSession.finishMocking();
-        }
     }
 }
