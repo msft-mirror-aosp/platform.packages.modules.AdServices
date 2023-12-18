@@ -27,12 +27,6 @@ import static com.android.adservices.service.common.AppManifestConfigCall.RESULT
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigCallTest.appManifestConfigCall;
-import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_DOES_NOT_EXIST;
-import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_DOES_NOT_HAVE_CONFIG;
-import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_EXISTS;
-import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.APP_HAS_CONFIG;
-import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.ENABLED_BY_DEFAULT;
-import static com.android.adservices.service.common.AppManifestConfigMetricsLoggerTest.NOT_ENABLED_BY_DEFAULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -124,7 +118,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
-        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT, RESULT_ALLOWED);
+        verifyLogUsage(RESULT_ALLOWED);
     }
 
     @Test
@@ -139,7 +133,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
-        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT, RESULT_ALLOWED);
+        verifyLogUsage(RESULT_ALLOWED);
     }
 
     @Test
@@ -155,7 +149,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
-        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT, RESULT_ALLOWED);
+        verifyLogUsage(RESULT_ALLOWED);
     }
 
     @Test
@@ -171,7 +165,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
-        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT, RESULT_ALLOWED);
+        verifyLogUsage(RESULT_ALLOWED);
     }
 
     @Test
@@ -307,7 +301,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 ENROLLMENT_ID))
                 .isEqualTo(expectedAllowed);
 
-        verifyLogUsage(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT, result);
+        verifyLogUsage(result);
     }
 
     @Test
@@ -319,12 +313,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         assertNoAccessAllowed();
 
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
-        verifyLogUsage(
-                APP_EXISTS,
-                APP_HAS_CONFIG,
-                NOT_ENABLED_BY_DEFAULT,
-                RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR,
-                times(4));
+        verifyLogUsage(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR, times(4));
     }
 
     @Test
@@ -336,12 +325,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         assertNoAccessAllowed();
 
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
-        verifyLogUsage(
-                APP_EXISTS,
-                APP_HAS_CONFIG,
-                NOT_ENABLED_BY_DEFAULT,
-                RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR,
-                times(4));
+        verifyLogUsage(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR, times(4));
     }
 
     @Test
@@ -355,12 +339,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         assertNoAccessAllowed();
 
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
-        verifyLogUsage(
-                APP_EXISTS,
-                APP_HAS_CONFIG,
-                ENABLED_BY_DEFAULT,
-                RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR,
-                times(4));
+        verifyLogUsage(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR, times(4));
     }
 
     @Test
@@ -374,12 +353,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         assertNoAccessAllowed();
 
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
-        verifyLogUsage(
-                APP_EXISTS,
-                APP_HAS_CONFIG,
-                ENABLED_BY_DEFAULT,
-                RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR,
-                times(4));
+        verifyLogUsage(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR, times(4));
     }
 
     @Test
@@ -388,12 +362,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertNoAccessAllowed();
 
-        verifyLogUsage(
-                APP_DOES_NOT_EXIST,
-                APP_DOES_NOT_HAVE_CONFIG,
-                NOT_ENABLED_BY_DEFAULT,
-                RESULT_DISALLOWED_APP_DOES_NOT_EXIST,
-                times(4));
+        verifyLogUsage(RESULT_DISALLOWED_APP_DOES_NOT_EXIST, times(4));
     }
 
     @Test
@@ -403,12 +372,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertNoAccessAllowed();
 
-        verifyLogUsage(
-                APP_DOES_NOT_EXIST,
-                APP_DOES_NOT_HAVE_CONFIG,
-                ENABLED_BY_DEFAULT,
-                RESULT_DISALLOWED_APP_DOES_NOT_EXIST,
-                times(4));
+        verifyLogUsage(RESULT_DISALLOWED_APP_DOES_NOT_EXIST, times(4));
     }
 
     @Test
@@ -419,12 +383,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertNoAccessAllowed();
 
-        verifyLogUsage(
-                APP_EXISTS,
-                APP_DOES_NOT_HAVE_CONFIG,
-                NOT_ENABLED_BY_DEFAULT,
-                RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG,
-                times(4));
+        verifyLogUsage(RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG, times(4));
     }
 
     @Test
@@ -435,12 +394,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertNoAccessAllowed();
 
-        verifyLogUsage(
-                APP_EXISTS,
-                APP_DOES_NOT_HAVE_CONFIG,
-                NOT_ENABLED_BY_DEFAULT,
-                RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG,
-                times(4));
+        verifyLogUsage(RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG, times(4));
     }
 
     @Test
@@ -453,12 +407,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertAllAccessAllowed();
 
-        verifyLogUsage(
-                APP_EXISTS,
-                APP_DOES_NOT_HAVE_CONFIG,
-                ENABLED_BY_DEFAULT,
-                RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG,
-                times(4));
+        verifyLogUsage(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG, times(4));
     }
 
     @Test
@@ -471,12 +420,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertAllAccessAllowed();
 
-        verifyLogUsage(
-                APP_EXISTS,
-                APP_DOES_NOT_HAVE_CONFIG,
-                ENABLED_BY_DEFAULT,
-                RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG,
-                times(4));
+        verifyLogUsage(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG, times(4));
     }
 
     private void mockSdkLevelR() {
@@ -611,9 +555,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         expect.withMessage("isAllowedTopicsAccess(ctx, %s, %s)", PACKAGE_NAME, ENROLLMENT_ID)
                 .that(
                         AppManifestConfigHelper.isAllowedTopicsAccess(
-                                /* useSandboxCheck= */ false,
-                                PACKAGE_NAME,
-                                ENROLLMENT_ID))
+                                /* useSandboxCheck= */ false, PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
         verifyErrorLogUtilErrorLogged(any(), never());
@@ -629,25 +571,16 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 mode);
     }
 
-    private void verifyLogUsage(
-            boolean appExists, boolean appHasConfig, boolean enabledByDefault, int result) {
-        verifyLogUsage(appExists, appHasConfig, enabledByDefault, result, times(1));
+    private void verifyLogUsage(int result) {
+        verifyLogUsage(result, times(1));
     }
 
-    private void verifyLogUsage(
-            boolean appExists,
-            boolean appHasConfig,
-            boolean enabledByDefault,
-            int result,
-            VerificationMode mode) {
+    private void verifyLogUsage(int result, VerificationMode mode) {
         verify(
                 () ->
                         AppManifestConfigMetricsLogger.logUsage(
                                 appManifestConfigCall(
                                         PACKAGE_NAME,
-                                        appExists,
-                                        appHasConfig,
-                                        enabledByDefault,
                                         result)),
                 mode);
     }

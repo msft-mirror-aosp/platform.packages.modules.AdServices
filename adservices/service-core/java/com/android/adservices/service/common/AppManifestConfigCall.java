@@ -37,11 +37,6 @@ public final class AppManifestConfigCall {
     public final String packageName;
     public int result;
 
-    // TODO(b/306417555): get rid of fields below - just result is enough
-    public boolean appExists;
-    public boolean appHasConfig;
-    public boolean enabledByDefault;
-
     public AppManifestConfigCall(String packageName) {
         this.packageName = Objects.requireNonNull(packageName, "packageName cannot be null");
     }
@@ -50,12 +45,6 @@ public final class AppManifestConfigCall {
     public String toString() {
         return "AppManifestConfigCall[pkg="
                 + packageName
-                + ", appExists="
-                + appExists
-                + ", appHasConfig="
-                + appHasConfig
-                + ", enabledByDefault="
-                + enabledByDefault
                 + ", result="
                 + resultToString(result)
                 + "]";
