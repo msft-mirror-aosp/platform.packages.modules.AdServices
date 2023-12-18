@@ -224,7 +224,18 @@ public class FetchCustomAudienceImplTest {
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                         DevContext.createForDevOptionsDisabled());
-
+        doReturn(BUYER)
+                .when(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        mFetchUri,
+                        VALID_OWNER,
+                        false,
+                        true,
+                        true,
+                        Process.myUid(),
+                        API_NAME,
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.builder().setDevOptionsEnabled(true).build());
         doReturn(
                         CustomAudienceStats.builder()
                                 .setTotalCustomAudienceCount(1)
@@ -825,6 +836,7 @@ public class FetchCustomAudienceImplTest {
                                         .setBody(getFullSuccessfulJsonResponseString(BUYER))));
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+
         assertEquals(1, mockWebServer.getRequestCount());
         assertTrue(callback.mIsSuccess);
         verify(mCustomAudienceDaoMock)
@@ -832,6 +844,34 @@ public class FetchCustomAudienceImplTest {
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
                         DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_withDevOptionsEnabled() throws Exception {
+        // Respond with a complete custom audience including the request values as is.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(getFullSuccessfulJsonResponseString(BUYER))));
+
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        FetchCustomAudienceTestCallback callback = new FetchCustomAudienceTestCallback(resultLatch);
+        mFetchCustomAudienceImpl.doFetchCustomAudience(
+                mInputBuilder.build(),
+                callback,
+                DevContext.builder().setDevOptionsEnabled(true).build());
+        resultLatch.await();
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(callback.mIsSuccess);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        /*debuggable=*/ true);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
     }

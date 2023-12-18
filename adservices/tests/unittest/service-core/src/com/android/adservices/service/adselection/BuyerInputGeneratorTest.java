@@ -161,9 +161,7 @@ public class BuyerInputGeneratorTest {
                 createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
         // Insert a CA without ad render id. This should get filtered out.
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(),
-                Uri.EMPTY,
-                /*debuggable=*/ false);
+                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(), Uri.EMPTY, false);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -231,9 +229,7 @@ public class BuyerInputGeneratorTest {
                 createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
         // Insert a CA without ad render id. This should get filtered out.
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(),
-                Uri.EMPTY,
-                /*debuggable=*/ false);
+                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(), Uri.EMPTY, false);
 
         // Signals
         Map<AdTechIdentifier, DBEncodedPayload> encodedPayloads =
@@ -288,9 +284,7 @@ public class BuyerInputGeneratorTest {
                 createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
         // Insert a CA without ad render id. This should get filtered out.
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(),
-                Uri.EMPTY,
-                /*debuggable=*/ false);
+                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(), Uri.EMPTY, false);
 
         BuyerInputGenerator buyerInputGeneratorSignalsDisabled =
                 new BuyerInputGenerator(
@@ -357,7 +351,7 @@ public class BuyerInputGeneratorTest {
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "testCA")
                         .build(),
                 Uri.EMPTY,
-                /*debuggable=*/ false);
+                false);
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
                         .createCompressedBuyerInputs()
@@ -379,10 +373,8 @@ public class BuyerInputGeneratorTest {
         DBCustomAudience customAudienceBuyer2 =
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_2, "testCA2")
                         .build();
-        mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                customAudienceBuyer1, Uri.EMPTY, /*debuggable=*/ false);
-        mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                customAudienceBuyer2, Uri.EMPTY, /*debuggable=*/ false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer1, Uri.EMPTY, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer2, Uri.EMPTY, false);
 
         // Set AdFiltering to return only one custom audience.
         when(mAdFiltererMock.filterCustomAudiences(any()))
@@ -441,7 +433,7 @@ public class BuyerInputGeneratorTest {
                             .build();
             customAudiences.put(name, thisCustomAudience);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                    thisCustomAudience, Uri.EMPTY, /*debuggable=*/ false);
+                    thisCustomAudience, Uri.EMPTY, false);
         }
         return customAudiences;
     }
