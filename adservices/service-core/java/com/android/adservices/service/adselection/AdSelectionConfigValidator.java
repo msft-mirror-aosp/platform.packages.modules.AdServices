@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -110,20 +110,22 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
                     adSelectionConfig.getTrustedScoringSignalsUri(), violations);
         }
 
-        violations.addAll(validateContextualAds(adSelectionConfig.getBuyerContextualAds()));
+        violations.addAll(
+                validateSignedContextualAds(adSelectionConfig.getBuyerSignedContextualAds()));
     }
 
-    private ImmutableList<String> validateContextualAds(
-            Map<AdTechIdentifier, ContextualAds> contextualAdsMap) {
+    private ImmutableList<String> validateSignedContextualAds(
+            Map<AdTechIdentifier, SignedContextualAds> signedContextualAdsMap) {
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
 
-        for (Map.Entry<AdTechIdentifier, ContextualAds> entry : contextualAdsMap.entrySet()) {
+        for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
+                signedContextualAdsMap.entrySet()) {
             // Validate that the buyer decision logic for Contextual Ads satisfies buyer eTLD+1
             AdTechUriValidator buyerUriValidator =
                     new AdTechUriValidator(
                             ValidatorUtil.AD_TECH_ROLE_BUYER,
                             entry.getValue().getBuyer().toString(),
-                            ContextualAds.class.getName(),
+                            SignedContextualAds.class.getName(),
                             CONTEXTUAL_ADS_DECISION_LOGIC_FIELD_NAME);
             buyerUriValidator.addValidation(entry.getValue().getDecisionLogicUri(), violations);
 

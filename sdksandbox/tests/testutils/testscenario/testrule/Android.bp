@@ -22,7 +22,7 @@ android_library {
          "src/**/*.java",
     ],
     static_libs: [
-        "truth-prebuilt",
+        "truth",
         "CtsSdkSandboxTestExecutor",
         "SdkSandboxTestUtils",
         "compatibility-device-util-axt",

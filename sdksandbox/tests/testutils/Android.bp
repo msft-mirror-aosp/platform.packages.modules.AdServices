@@ -20,13 +20,15 @@ java_library {
     name: "SdkSandboxTestUtils",
     srcs: [
         "src/**/testutils/*.java",
+        "src/com/android/server/sdksandbox/*.java"
     ],
     libs: [
         "framework-sdksandbox.impl",
     ],
     static_libs: [
         "service-sdksandbox.impl",
-        "truth-prebuilt",
+        "adservices-test-utility",
+        "truth",
         "androidx.test.ext.junit",
         "SdkSandbox-java-lib",
         "platform-screenshot-diff-core",

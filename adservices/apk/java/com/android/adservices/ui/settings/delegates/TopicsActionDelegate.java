@@ -83,7 +83,7 @@ public class TopicsActionDelegate {
                                 }
                                 break;
                             case BLOCK_TOPIC:
-                                UiStatsLogger.logBlockTopicSelected(mTopicsActivity);
+                                UiStatsLogger.logBlockTopicSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockTopicDialog(
@@ -97,7 +97,7 @@ public class TopicsActionDelegate {
                                 }
                                 break;
                             case RESET_TOPICS:
-                                UiStatsLogger.logResetTopicSelected(mTopicsActivity);
+                                UiStatsLogger.logResetTopicSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetTopicDialog(

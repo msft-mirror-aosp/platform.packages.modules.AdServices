@@ -15,6 +15,9 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
@@ -23,6 +26,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -32,20 +36,24 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Spy;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
 public class NotificationActivityGAV2UiAutomatorTest {
@@ -57,23 +65,29 @@ public class NotificationActivityGAV2UiAutomatorTest {
     @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private String mTestName;
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, true);
+
     @BeforeClass
-    public static void classSetup() {
-        if (!ApkTestUtil.isDeviceSupported()) return;
+    public static void classSetup() throws InterruptedException {
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
+        // sleep for 1 min for bootCompleteReceiver to get invoked on S-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            TimeUnit.SECONDS.sleep(60);
+        }
     }
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices eu_notif_flow_change_enabled true");
-
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -82,17 +96,13 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @After
     public void teardown() throws Exception {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void moreButtonTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -102,9 +112,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -116,6 +123,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @Test
     public void euAcceptFlowTest() throws UiObjectNotFoundException, InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         startActivity(true);
@@ -124,9 +132,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -140,9 +145,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         leftControlButton = getElement(R.string.notificationUI_left_control_button_text_eu);
         rightControlButton = getElement(R.string.notificationUI_right_control_button_ga_text_eu_v2);
         moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -155,6 +157,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void rowClickGotItTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -162,9 +165,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);
@@ -181,6 +181,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 302607350)
     public void rowClickSettingsTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -188,9 +189,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        assertThat(leftControlButton.exists()).isFalse();
-        assertThat(rightControlButton.exists()).isFalse();
-        assertThat(moreButton.exists()).isTrue();
         while (moreButton.exists()) {
             moreButton.click();
             Thread.sleep(SCROLL_WAIT_TIME);

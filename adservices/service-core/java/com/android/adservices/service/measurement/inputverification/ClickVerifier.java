@@ -16,50 +16,91 @@
 
 package com.android.adservices.service.measurement.inputverification;
 
+import android.annotation.NonNull;
 import android.content.Context;
 import android.hardware.input.InputManager;
 import android.view.InputEvent;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementClickVerificationStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Class for handling navigation event verification. */
 public class ClickVerifier {
-    private final InputManager mInputManager;
-    private final Flags mFlags;
+    @NonNull private final InputManager mInputManager;
+    @NonNull private final Flags mFlags;
+
+    @NonNull private final AdServicesLogger mAdServicesLogger;
 
     public ClickVerifier(Context context) {
         mInputManager = context.getSystemService(InputManager.class);
         mFlags = FlagsFactory.getFlags();
+        mAdServicesLogger = AdServicesLoggerImpl.getInstance();
     }
 
     @VisibleForTesting
-    ClickVerifier(InputManager inputManager, Flags flags) {
+    ClickVerifier(
+            @NonNull InputManager inputManager,
+            @NonNull Flags flags,
+            @NonNull AdServicesLogger adServicesLogger) {
         mInputManager = inputManager;
         mFlags = flags;
+        mAdServicesLogger = adServicesLogger;
     }
 
     /**
      * Checks if the {@link InputEvent} passed with a click registration can be verified. In order
-     * for an InputEvent to be verified, the event time of the InputEvent has to be within {@link
+     * for an InputEvent to be verified:
+     *
+     * <p>1. The event time of the InputEvent has to be within {@link
      * com.android.adservices.service.PhFlags#MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS }
      * of the API call.
+     *
+     * <p>2. The InputEvent has to be verified by the system {@link InputManager}.
      *
      * @param event The InputEvent passed with the registration call.
      * @param registerTimestamp The time of the registration call.
      * @return Whether the InputEvent can be verified.
      */
-    public boolean isInputEventVerifiable(InputEvent event, long registerTimestamp) {
-        return isInputEventVerifiableBySystem(event)
-                && isInputEventWithinValidTimeRange(registerTimestamp, event);
+    public boolean isInputEventVerifiable(
+            @NonNull InputEvent event, long registerTimestamp, String sourceRegistrant) {
+        boolean isInputEventVerified = true;
+        MeasurementClickVerificationStats.Builder clickVerificationStatsBuilder =
+                MeasurementClickVerificationStats.builder();
+        clickVerificationStatsBuilder.setInputEventPresent(true);
+
+        if (!isInputEventVerifiableBySystem(event, clickVerificationStatsBuilder)) {
+            isInputEventVerified = false;
+        }
+
+        if (!isInputEventWithinValidTimeRange(
+                registerTimestamp, event, clickVerificationStatsBuilder)) {
+            isInputEventVerified = false;
+        }
+
+        clickVerificationStatsBuilder.setSourceType(
+                (isInputEventVerified ? Source.SourceType.NAVIGATION : Source.SourceType.EVENT)
+                        .getIntValue());
+        clickVerificationStatsBuilder.setSourceRegistrant(sourceRegistrant);
+
+        logClickVerificationStats(clickVerificationStatsBuilder, mAdServicesLogger);
+
+        return isInputEventVerified;
     }
 
     /** Checks whether the InputEvent can be verified by the system. */
     @VisibleForTesting
-    boolean isInputEventVerifiableBySystem(InputEvent event) {
-        return !mFlags.getMeasurementIsClickVerifiedByInputEvent()
-                || mInputManager.verifyInputEvent(event) != null;
+    boolean isInputEventVerifiableBySystem(
+            InputEvent event, MeasurementClickVerificationStats.Builder stats) {
+        boolean isVerifiedBySystem = mInputManager.verifyInputEvent(event) != null;
+
+        stats.setSystemClickVerificationEnabled(mFlags.getMeasurementIsClickVerifiedByInputEvent());
+        stats.setSystemClickVerificationSuccessful(isVerifiedBySystem);
+        return !mFlags.getMeasurementIsClickVerifiedByInputEvent() || isVerifiedBySystem;
     }
 
     /**
@@ -68,8 +109,18 @@ public class ClickVerifier {
      * com.android.adservices.service.PhFlags#MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS}
      */
     @VisibleForTesting
-    boolean isInputEventWithinValidTimeRange(long registerTimestamp, InputEvent event) {
-        return registerTimestamp - event.getEventTime()
-                <= mFlags.getMeasurementRegistrationInputEventValidWindowMs();
+    boolean isInputEventWithinValidTimeRange(
+            long registerTimestamp,
+            InputEvent event,
+            MeasurementClickVerificationStats.Builder stats) {
+        long inputEventDelay = registerTimestamp - event.getEventTime();
+        stats.setInputEventDelayMillis(inputEventDelay);
+        stats.setValidDelayWindowMillis(mFlags.getMeasurementRegistrationInputEventValidWindowMs());
+        return inputEventDelay <= mFlags.getMeasurementRegistrationInputEventValidWindowMs();
+    }
+
+    private void logClickVerificationStats(
+            MeasurementClickVerificationStats.Builder stats, AdServicesLogger adServicesLogger) {
+        adServicesLogger.logMeasurementClickVerificationStats(stats.build());
     }
 }

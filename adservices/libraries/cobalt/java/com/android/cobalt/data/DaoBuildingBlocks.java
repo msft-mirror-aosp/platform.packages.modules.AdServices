@@ -16,7 +16,10 @@
 
 package com.android.cobalt.data;
 
+import static java.util.stream.Collectors.toList;
+
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.MapInfo;
 import androidx.room.OnConflictStrategy;
@@ -24,6 +27,8 @@ import androidx.room.Query;
 import androidx.room.Update;
 
 import com.google.cobalt.AggregateValue;
+import com.google.cobalt.UnencryptedObservationBatch;
+import com.google.common.hash.HashCode;
 
 import java.util.List;
 import java.util.Map;
@@ -36,7 +41,7 @@ import java.util.Optional;
 @Dao
 abstract class DaoBuildingBlocks {
     /**
-     * Insert an entry into the system profiles table.
+     * Inserts an entry into the system profiles table.
      *
      * @param systemProfileEntity the system profile to insert
      */
@@ -44,7 +49,7 @@ abstract class DaoBuildingBlocks {
     abstract Void insertSystemProfile(SystemProfileEntity systemProfileEntity);
 
     /**
-     * Insert an aggregate value in the aggregate store.
+     * Inserts an aggregate value in the aggregate store.
      *
      * @param aggregateStoreEntity the aggregate to insert
      */
@@ -52,7 +57,15 @@ abstract class DaoBuildingBlocks {
     abstract Void insertAggregateValue(AggregateStoreEntity aggregateStoreEntity);
 
     /**
-     * Insert the value for ths key of `globalValueEntity`.
+     * Inserts a string hash into the string hashes store.
+     *
+     * @param stringHashEntity the string hash to insert
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    abstract Void insertStringHash(StringHashEntity stringHashEntity);
+
+    /**
+     * Inserts the value for ths key of `globalValueEntity`.
      *
      * @param globalValueEntity the key, value pair to insert or update
      */
@@ -60,7 +73,7 @@ abstract class DaoBuildingBlocks {
     abstract Void insertGlobalValue(GlobalValueEntity globalValueEntity);
 
     /**
-     * Insert or update the value for ths key of `globalValueEntity`.
+     * Inserts or update the value for ths key of `globalValueEntity`.
      *
      * @param globalValueEntity the key, value pair to insert or update
      */
@@ -68,7 +81,18 @@ abstract class DaoBuildingBlocks {
     abstract Void insertOrReplaceGlobalValue(GlobalValueEntity globalValueEntity);
 
     /**
-     * Insert the day a report was last sent.
+     * Inserts the day a report was last sent.
+     *
+     * @param reportKey the report
+     * @param dayIndex the day
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    Void insertLastSentDayIndex(ReportKey reportKey, int dayIndex) {
+        return insertLastSentDayIndex(ReportEntity.create(reportKey, dayIndex));
+    }
+
+    /**
+     * Inserts the day a report was last sent.
      *
      * @param reportEntity the report and day index to insert
      */
@@ -76,12 +100,34 @@ abstract class DaoBuildingBlocks {
     abstract Void insertLastSentDayIndex(ReportEntity reportEntity);
 
     /**
-     * Insert observations into the observation store.
+     * Inserts observation batches into the observation store.
+     *
+     * @param observationBatches the observation batches to insert
+     */
+    Void insertObservationBatches(List<UnencryptedObservationBatch> observationBatches) {
+        return insertObservations(
+                observationBatches.stream()
+                        .map(ObservationStoreEntity::createForInsertion)
+                        .collect(toList()));
+    }
+
+    /**
+     * Inserts observations into the observation store.
      *
      * @param observationStoreEntities the observations to insert
      */
     @Insert(onConflict = OnConflictStrategy.ROLLBACK)
     abstract Void insertObservations(List<ObservationStoreEntity> observationStoreEntities);
+
+    /**
+     * Update the day a report was last sent.
+     *
+     * @param reportKey the report
+     * @param dayIndex the new day index day index to update
+     */
+    Void updateLastSentDayIndex(ReportKey reportKey, int dayIndex) {
+        return updateLastSentDayIndex(ReportEntity.create(reportKey, dayIndex));
+    }
 
     /**
      * Update the day a report was last sent.
@@ -309,10 +355,77 @@ abstract class DaoBuildingBlocks {
     }
 
     /**
+     * Returns the index a string hash should be assigned for a report on a given day. The returned
+     * value will be the index of `stringHashHint` if it exists in the list, the next string index
+     * value if string buffer max does not apply, or -1 if the string buffer max is in effect.
+     *
+     * @param customerId the customer id to search under
+     * @param projectId the project id to search under
+     * @param metricId the metric id to search under
+     * @param reportId the report id to search under
+     * @param dayIndex the day to search under
+     * @param stringBufferMax the maximum number of strings that should be stored
+     * @param stringHashHint the string hash that will be added
+     * @return the index that should be used for `stringHashHint` or -1 if it should not be inserted
+     */
+    @Query(
+            "SELECT CASE "
+                    + "  WHEN hash_is_equal THEN max_list_index "
+                    + "  WHEN :stringBufferMax < 1 THEN max_list_index + 1 "
+                    + "  WHEN max_list_index + 1 < :stringBufferMax THEN max_list_index + 1 "
+                    + "  ELSE -1 "
+                    + "END "
+                    + "FROM ("
+                    + "  SELECT "
+                    + "  string_hash = :stringHashHint AS hash_is_equal, "
+                    + "  MAX(list_index) AS max_list_index "
+                    + "  FROM StringHashes "
+                    + "  WHERE customer_id = :customerId "
+                    + "    AND project_id = :projectId "
+                    + "    AND metric_id = :metricId "
+                    + "    AND report_id = :reportId "
+                    + "    AND day_index = :dayIndex "
+                    + "  GROUP BY string_hash = :stringHashHint "
+                    + "  ORDER BY hash_is_equal DESC "
+                    + ") "
+                    + "LIMIT 1")
+    abstract int queryStringListIndex(
+            long customerId,
+            long projectId,
+            long metricId,
+            long reportId,
+            int dayIndex,
+            long stringBufferMax,
+            HashCode stringHashHint);
+
+    /**
+     * Returns the index a string hash should be assigned for a report on a given day. The returned
+     * value will be the index of `stringHashHint` if it exists in the list, the next string index
+     * value if string buffer max does not apply, or -1 if the string buffer max is in effect.
+     *
+     * @param reportKey the report
+     * @param dayIndex the day to search under
+     * @param stringBufferMax the maximum number of strings that should be stored
+     * @param stringHashHint the string hash that will be added
+     * @return the index that should be used for `stringHashHint` or -1 if it should not be inserted
+     */
+    int queryStringListIndex(
+            ReportKey reportKey, int dayIndex, long stringBufferMax, HashCode stringHashHint) {
+        return queryStringListIndex(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId(),
+                dayIndex,
+                stringBufferMax,
+                stringHashHint);
+    }
+
+    /**
      * Count the number of distinct event vectors saved for a report on a given day and under a
      * specific system profile.
      *
-     * @param customerId the customer id to search ue under
+     * @param customerId the customer id to search under
      * @param projectId the project id to search under
      * @param metricId the metric id to search under
      * @param reportId the report id to search under
@@ -340,6 +453,22 @@ abstract class DaoBuildingBlocks {
     /**
      * Get the aggregated values for a given report on a given day.
      *
+     * @param reportKey the report to search under
+     * @param dayIndex the day to search under
+     * @return a list of events to be used for observation generation
+     */
+    List<EventRecordAndSystemProfile> queryEventRecordsForDay(ReportKey reportKey, int dayIndex) {
+        return queryEventRecordsForDay(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId(),
+                dayIndex);
+    }
+
+    /**
+     * Get the aggregated values for a given report on a given day.
+     *
      * @param customerId the customer id to search under
      * @param projectId the project id to search under
      * @param metricId the metric id to search under
@@ -349,7 +478,6 @@ abstract class DaoBuildingBlocks {
      */
     @Query(
             "SELECT "
-                    + "aggregate.system_profile_hash, "
                     + "profile.system_profile, "
                     + "aggregate.event_vector, "
                     + "aggregate.aggregate_value "
@@ -364,19 +492,37 @@ abstract class DaoBuildingBlocks {
                     + "AND day_index= :dayIndex "
                     + "ORDER BY aggregate.system_profile_hash, "
                     + "aggregate.event_vector")
-    abstract List<CountEvent> queryCountEventsForDay(
+    abstract List<EventRecordAndSystemProfile> queryEventRecordsForDay(
             long customerId, long projectId, long metricId, long reportId, int dayIndex);
 
     /**
-     * Return the observations in the observation store, ordered by creation time.
+     * Returns the observations in the observation store, ordered by creation time.
      *
      * @return an list of observations, ordered by creation time
      */
-    @Query("SELECT * FROM ObservationStore ORDER BY observation_store_id")
+    @Query("SELECT * FROM ObservationStore ORDER BY observation_store_id ASC")
     abstract List<ObservationStoreEntity> queryOldestObservations();
 
     /**
-     * Return the day a report was last sent, if in the reports table.
+     * Returns the day a report was last sent, if in the reports table.
+     *
+     * @param reportKey the report
+     * @return the last sent day index, if found
+     */
+    Optional<Integer> queryLastSentDayIndex(ReportKey reportKey) {
+        return queryLastSentDayIndex(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId());
+    }
+
+    /** Returns the keys of all reports in the report store. */
+    @Query("SELECT customer_id, project_id, metric_id, report_id FROM Reports")
+    abstract List<ReportKey> queryReportKeys();
+
+    /**
+     * Returns the day a report was last sent, if in the reports table.
      *
      * @param customerId the customer id for the report
      * @param projectId the project id for the report
@@ -421,4 +567,12 @@ abstract class DaoBuildingBlocks {
      */
     @Query("DELETE FROM ObservationStore WHERE observation_store_id IN (:observationStoreIds)")
     abstract Void deleteByObservationId(List<Integer> observationStoreIds);
+
+    /**
+     * Delete the specified reports from the report store.
+     *
+     * @param reportKeys the reports to delete
+     */
+    @Delete(entity = ReportEntity.class)
+    abstract Void deleteReports(List<ReportKey> reportKeys);
 }

@@ -22,17 +22,18 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
@@ -54,6 +55,7 @@ import dalvik.system.PathClassLoader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -89,7 +91,7 @@ public class SdkSandboxTest {
     private static final String SDK_PROVIDER_CLASS = "com.android.testprovider.TestProvider";
     // Key passed to TestProvider to trigger a load error.
     private static final String THROW_EXCEPTION_KEY = "throw-exception";
-    private static final long TIME_SYSTEM_SERVER_CALLED_SANDBOX = 3;
+    private static final long TIME_SYSTEM_SERVER_CALL_FINISHED = 3;
     private static final long TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER = 5;
     private static final long TIME_SANDBOX_CALLED_SDK = 7;
     private static final long TIME_SDK_CALL_COMPLETED = 9;
@@ -109,7 +111,7 @@ public class SdkSandboxTest {
             new SharedPreferencesUpdate(KEYS_TO_SYNC, getBundleFromMap(TEST_DATA));
     private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO = new SandboxLatencyInfo();
 
-    private static boolean sCustomizedSdkContextEnabled;
+    private static boolean sCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
     private static SdkSandboxActivityRegistry sSdkSandboxActivityRegistry;
 
     private Context mContext;
@@ -144,6 +146,9 @@ public class SdkSandboxTest {
         }
     }
 
+    @Rule
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
     @BeforeClass
     public static void setupClass() {
         // Required to create a SurfaceControlViewHost
@@ -154,7 +159,7 @@ public class SdkSandboxTest {
                         InstrumentationRegistry.getInstrumentation().getContext(),
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         "sdksandbox_customized_sdk_context_enabled");
-        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
+        sCustomizedSdkContextEnabled &= Boolean.parseBoolean(stateManager.get());
         sSdkSandboxActivityRegistry = Mockito.spy(SdkSandboxActivityRegistry.getInstance());
     }
 
@@ -169,12 +174,20 @@ public class SdkSandboxTest {
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mContext = Mockito.spy(context);
-        mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
-        mInjector = Mockito.spy(new InjectorForTest(mContext));
-        Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
-        mService = new SdkSandboxServiceImpl(mInjector);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
         mLoader = getClassLoader(mApplicationInfo);
+        if (sCustomizedSdkContextEnabled) {
+            Mockito.doReturn(mContext)
+                    .when(mContext)
+                    .createContextForSdkInSandbox(Mockito.any(), Mockito.anyInt());
+            Mockito.doReturn(mLoader).when(mContext).getClassLoader();
+        }
+
+        mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
+        Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
+
+        mInjector = Mockito.spy(new InjectorForTest(mContext));
+        mService = new SdkSandboxServiceImpl(mInjector);
     }
 
     @After
@@ -269,8 +282,6 @@ public class SdkSandboxTest {
 
         SdkSandboxStorageCallback sdkSandboxStorageCallback = new SdkSandboxStorageCallback();
         mService.computeSdkStorage(sharedPaths, sdkPaths, sdkSandboxStorageCallback);
-
-        Thread.sleep(5000);
 
         assertThat(sdkSandboxStorageCallback.getSdkStorage()).isEqualTo(1024F);
         assertThat(sdkSandboxStorageCallback.getSharedStorage()).isEqualTo(1024F);
@@ -403,30 +414,6 @@ public class SdkSandboxTest {
     }
 
     @Test
-    public void testDisabledWhenWebviewNotResolvable() throws Exception {
-        // WebView provider cannot be resolved, therefore sandbox should be disabled.
-        Mockito.doReturn(null)
-                .when(mSpyPackageManager)
-                .getPackageInfo(
-                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
-        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-        mService.isDisabled(callback);
-        assertThat(callback.mIsDisabled).isTrue();
-    }
-
-    @Test
-    public void testNotDisabledWhenWebviewResolvable() throws Exception {
-        // WebView provider can be resolved, therefore sandbox should not be disabled.
-        Mockito.doReturn(new PackageInfo())
-                .when(mSpyPackageManager)
-                .getPackageInfo(
-                        Mockito.anyString(), Mockito.any(PackageManager.PackageInfoFlags.class));
-        SdkSandboxDisabledCallback callback = new SdkSandboxDisabledCallback();
-        mService.isDisabled(callback);
-        assertThat(callback.isDisabled()).isFalse();
-    }
-
-    @Test
     public void testSyncDataFromClient_StoresInClientSharedPreference() throws Exception {
         mService.syncDataFromClient(TEST_UPDATE);
 
@@ -505,11 +492,11 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_loadSdk_success() throws Exception {
-        SANDBOX_LATENCY_INFO.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+        SANDBOX_LATENCY_INFO.setTimeSystemServerCallFinished(TIME_SYSTEM_SERVER_CALL_FINISHED);
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         TIME_SANDBOX_CALLED_SDK,
                         TIME_SDK_CALL_COMPLETED,
@@ -528,11 +515,11 @@ public class SdkSandboxTest {
                 SANDBOX_LATENCY_INFO);
         loadSdkCallback.assertLoadSdkIsSuccessful();
 
-        assertThat(loadSdkCallback.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
+        assertThat(loadSdkCallback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
-                                        - TIME_SYSTEM_SERVER_CALLED_SANDBOX));
+                                        - TIME_SYSTEM_SERVER_CALL_FINISHED));
         assertThat(loadSdkCallback.mSandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
 
@@ -548,11 +535,11 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_unloadSdk_success() throws Exception {
-        SANDBOX_LATENCY_INFO.setTimeSystemServerCalledSandbox(TIME_SYSTEM_SERVER_CALLED_SANDBOX);
+        SANDBOX_LATENCY_INFO.setTimeSystemServerCallFinished(TIME_SYSTEM_SERVER_CALL_FINISHED);
         SANDBOX_LATENCY_INFO.setTimeSandboxReceivedCallFromSystemServer(
                 TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER);
 
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         // loadSdk mocks
                         TIME_SANDBOX_CALLED_SDK,
@@ -576,10 +563,11 @@ public class SdkSandboxTest {
                 SANDBOX_LATENCY_INFO);
         loadSdkCallback.assertLoadSdkIsSuccessful();
 
-        final UnloadSdkCallbackImpl unloadSdkCallback = new UnloadSdkCallbackImpl();
-        mService.unloadSdk(SDK_NAME, unloadSdkCallback, SANDBOX_LATENCY_INFO);
+        UnloadSdkInSandboxCallbackImpl unloadSdkInSandboxCallback =
+                new UnloadSdkInSandboxCallbackImpl();
+        mService.unloadSdk(SDK_NAME, unloadSdkInSandboxCallback, SANDBOX_LATENCY_INFO);
 
-        final SandboxLatencyInfo sandboxLatencyInfo = unloadSdkCallback.getSandboxLatencyInfo();
+        SandboxLatencyInfo sandboxLatencyInfo = unloadSdkInSandboxCallback.getSandboxLatencyInfo();
 
         assertThat(sandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
@@ -602,7 +590,7 @@ public class SdkSandboxTest {
 
     @Test
     public void testLatencyMetrics_requestSurfacePackage_success() throws Exception {
-        Mockito.when(mInjector.getCurrentTime())
+        Mockito.when(mInjector.elapsedRealtime())
                 .thenReturn(
                         // loadSdk mocks
                         TIME_SANDBOX_CALLED_SDK,
@@ -642,11 +630,11 @@ public class SdkSandboxTest {
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNotNull();
-        assertThat(callback.mSandboxLatencyInfo.getLatencySystemServerToSandbox())
+        assertThat(callback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
                 .isEqualTo(
                         (int)
                                 (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
-                                        - TIME_SYSTEM_SERVER_CALLED_SANDBOX));
+                                        - TIME_SYSTEM_SERVER_CALL_FINISHED));
         assertThat(callback.mSandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
         assertThat(callback.mSandboxLatencyInfo.getSandboxLatency())
@@ -679,7 +667,7 @@ public class SdkSandboxTest {
                         null,
                         null,
                         false),
-                new InjectorForTest(mContext),
+                new SdkSandboxServiceImpl.Injector(mContext),
                 SANDBOX_LATENCY_INFO,
                 sdkHolderCallback);
         mCallback.assertLoadSdkIsSuccessful();
@@ -779,7 +767,7 @@ public class SdkSandboxTest {
         }
     }
 
-    private static class UnloadSdkCallbackImpl extends IUnloadSdkCallback.Stub {
+    private static class UnloadSdkInSandboxCallbackImpl extends IUnloadSdkInSandboxCallback.Stub {
         private SandboxLatencyInfo mSandboxLatencyInfo;
 
         @Override
@@ -833,26 +821,6 @@ public class SdkSandboxTest {
             mErrorCode = errorCode;
             mSuccessful = false;
             mLatch.countDown();
-        }
-    }
-
-    private static class SdkSandboxDisabledCallback extends ISdkSandboxDisabledCallback.Stub {
-        private final CountDownLatch mLatch;
-        private boolean mIsDisabled;
-
-        SdkSandboxDisabledCallback() {
-            mLatch = new CountDownLatch(1);
-        }
-
-        @Override
-        public void onResult(boolean isDisabled) {
-            mIsDisabled = isDisabled;
-            mLatch.countDown();
-        }
-
-        boolean isDisabled() throws Exception {
-            assertThat(mLatch.await(1, TimeUnit.SECONDS)).isTrue();
-            return mIsDisabled;
         }
     }
 

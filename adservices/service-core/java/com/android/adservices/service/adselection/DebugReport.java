@@ -19,8 +19,10 @@ package com.android.adservices.service.adselection;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 
 import com.google.auto.value.AutoValue;
 
@@ -32,10 +34,7 @@ import com.google.auto.value.AutoValue;
 abstract class DebugReport {
 
     @NonNull
-    abstract String getCustomAudienceName();
-
-    @NonNull
-    abstract AdTechIdentifier getCustomAudienceBuyer();
+    abstract CustomAudienceSignals getCustomAudienceSignals();
 
     @Nullable
     abstract AdTechIdentifier getSeller();
@@ -56,9 +55,7 @@ abstract class DebugReport {
     @AutoValue.Builder
     abstract static class Builder {
 
-        abstract Builder setCustomAudienceName(String customAudienceName);
-
-        abstract Builder setCustomAudienceBuyer(AdTechIdentifier customAudienceOwner);
+        abstract Builder setCustomAudienceSignals(CustomAudienceSignals customAudienceSignals);
 
         abstract Builder setSeller(AdTechIdentifier seller);
 

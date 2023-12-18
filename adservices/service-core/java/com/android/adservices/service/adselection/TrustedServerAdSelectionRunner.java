@@ -108,6 +108,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AdRenderIdValidator adRenderIdValidator,
             @NonNull final DebugReporting debugReporting,
             int callerUid) {
@@ -124,8 +125,10 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
                 debugReporting,
-                callerUid);
+                callerUid,
+                false);
 
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
@@ -134,7 +137,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         adServicesHttpsClient,
-                        flags);
+                        flags,
+                        devContext);
     }
 
     @VisibleForTesting
@@ -153,6 +157,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final JsFetcher jsFetcher,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final DebugReporting debugReporting) {
@@ -171,8 +176,10 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
                 adSelectionExecutionLogger,
-                debugReporting);
+                debugReporting,
+                false);
 
         this.mJsFetcher = jsFetcher;
         DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());

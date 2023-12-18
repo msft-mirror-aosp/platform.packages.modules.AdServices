@@ -22,19 +22,18 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical">
+        android:scrollbars="vertical"
+        android:focusableInTouchMode="true">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:focusableInTouchMode="true" >
+            android:orientation="vertical">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingStart="24dp"
                 android:paddingEnd="24dp"
-                android:orientation="vertical"
-                android:focusableInTouchMode="true" >
+                android:orientation="vertical">
                 <TextView
                     android:id="@+id/above_pic_paragraph"
                     android:layout_marginTop="8dp"
@@ -62,7 +61,8 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:title="@string/settingsUI_privacy_sandbox_beta_switch_title"
-                android:textDirection="locale" />
+                android:textDirection="locale"
+                android:focusable="true"/>
 
             <LinearLayout
                 android:id="@+id/privacy_sandbox_controls"
@@ -71,6 +71,7 @@
                 android:orientation="vertical" >
                 <LinearLayout
                     android:id="@+id/topics_preference"
+                    android:focusable="true"
                     style="@style/PreferenceStyle"
                     >
                     <TextView
@@ -86,6 +87,7 @@
 
                 <LinearLayout
                     android:id="@+id/apps_preference"
+                    android:focusable="true"
                     style="@style/PreferenceStyle"
                     >
                     <TextView
@@ -102,6 +104,7 @@
                 <LinearLayout
                     android:id="@+id/measurement_preference"
                     style="@style/PreferenceStyle"
+                    android:focusable="true"
                     android:visibility="gone"
                     >
                     <TextView
@@ -122,8 +125,8 @@
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="24dp"
                 android:paddingBottom="48dp"
-                android:orientation="vertical"
-                android:focusableInTouchMode="true" >
+                android:focusable="false"
+                android:orientation="vertical">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -175,7 +178,7 @@
                 android:paddingHorizontal="24dp"
                 android:paddingBottom="48dp"
                 android:orientation="vertical"
-                android:focusableInTouchMode="true"
+                android:focusable="false"
                 android:visibility="gone">
                 <ImageView
                     android:layout_width="wrap_content"
@@ -207,6 +210,7 @@
                 <TextView
                     android:id="@+id/main_view_ga_footer_learn_more"
                     android:text="@string/settingsU_main_view_learn_more"
+                    android:paddingTop="8dp"
                     style="@style/MainStyle.Body2" />
 
             </LinearLayout>

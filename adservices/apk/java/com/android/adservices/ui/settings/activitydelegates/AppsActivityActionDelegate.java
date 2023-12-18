@@ -159,6 +159,9 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initU18() {}
 
+    @Override
+    public void initRvc() {}
+
     private void configureSharedElements() {
         // recycler view (apps list)
         Function<App, OnClickListener> getOnclickListener =
@@ -193,6 +196,8 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
         // reset apps button
         configureElement(
                 R.id.reset_apps_button, button -> mAppsViewModel.resetAppsButtonClickHandler());
+
+        configureNotifyAdapterDataChange(mAppsViewModel.getApps(), adapter);
     }
 
     private void listenToAppsViewModelUiEvents() {
@@ -209,15 +214,23 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
                     try {
                         switch (event) {
                             case SWITCH_ON_APPS:
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptInAppsDialog(mActivity);
+                                }
                                 mAppsViewModel.setAppsConsent(true);
                                 mAppsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_APPS:
-                                mAppsViewModel.setAppsConsent(false);
-                                mAppsViewModel.refresh();
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptOutAppsDialog(
+                                            mActivity, mAppsViewModel);
+                                } else {
+                                    mAppsViewModel.setAppsConsent(false);
+                                    mAppsViewModel.refresh();
+                                }
                                 break;
                             case BLOCK_APP:
-                                UiStatsLogger.logBlockAppSelected(mActivity);
+                                UiStatsLogger.logBlockAppSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockAppDialog(
@@ -231,7 +244,7 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case RESET_APPS:
-                                UiStatsLogger.logResetAppSelected(mActivity);
+                                UiStatsLogger.logResetAppSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetAppDialog(

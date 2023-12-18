@@ -101,4 +101,42 @@ public interface AdServicesLogger {
     /** Logs measurement delayed source registration stats. */
     void logMeasurementDelayedSourceRegistrationStats(
             MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats);
+
+    /** Logs measurement click verification stats. */
+    void logMeasurementClickVerificationStats(
+            MeasurementClickVerificationStats measurementClickVerificationStats);
+
+    /** Logs enrollment data stats. */
+    void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId);
+
+    /** Logs enrollment matching stats. */
+    void logEnrollmentMatchStats(boolean mIsSuccessful, int mBuildId);
+
+    /** Logs enrollment file download stats. */
+    void logEnrollmentFileDownloadStats(boolean mIsSuccessful, int mBuildId);
+
+    /** Logs enrollment failure stats. */
+    void logEnrollmentFailedStats(
+            int mBuildId,
+            int mDataFileGroupStatus,
+            int mEnrollmentRecordCountInTable,
+            String mQueryParameter,
+            int mErrorCause);
+
+    /** Logs encryption key fetch stats. */
+    void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats);
+
+    /** Logs encryption key datastore transaction ended stats. */
+    void logEncryptionKeyDbTransactionEndedStats(
+            AdServicesEncryptionKeyDbTransactionEndedStats stats);
+
+    /** Logs destinationRegisteredBeacon reported stats. */
+    void logDestinationRegisteredBeaconsReportedStats(
+            DestinationRegisteredBeaconsReportedStats stats);
+
+    /** Logs beacon level reporting for ReportInteraction API called stats. */
+    void logReportInteractionApiCalledStats(ReportInteractionApiCalledStats stats);
+
+    /** Logs beacon level reporting for clearing interaction reporting table stats. */
+    void logInteractionReportingTableClearedStats(InteractionReportingTableClearedStats stats);
 }

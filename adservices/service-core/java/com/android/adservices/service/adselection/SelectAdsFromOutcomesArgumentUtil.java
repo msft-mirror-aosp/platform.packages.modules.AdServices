@@ -20,6 +20,7 @@ import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -35,15 +36,15 @@ public class SelectAdsFromOutcomesArgumentUtil {
     // No instance of this class is supposed to be created
     private SelectAdsFromOutcomesArgumentUtil() {}
 
-    /** Converts {@link AdSelectionIdWithBidAndRenderUri} object to Json object */
+    /** Converts {@link AdSelectionResultBidAndUri} object to Json object */
     public static JSScriptArgument asScriptArgument(
-            String name, AdSelectionIdWithBidAndRenderUri adSelectionIdWithBidAndRenderUri) {
+            String name, AdSelectionResultBidAndUri adSelectionIdWithBidAndRenderUri) {
         return recordArg(
                 name,
                 // Parse as a string, so we won't lose precision in JS
                 stringArg(
                         ID_FIELD_NAME,
                         Long.toString(adSelectionIdWithBidAndRenderUri.getAdSelectionId())),
-                numericArg(BID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getBid()));
+                numericArg(BID_FIELD_NAME, adSelectionIdWithBidAndRenderUri.getWinningAdBid()));
     }
 }

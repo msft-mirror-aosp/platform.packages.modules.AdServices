@@ -32,4 +32,10 @@ interface ICtsSdkProviderApi {
     String getPackageName();
     String getOpPackageName();
     String getClientPackageName();
+    void checkRoomDatabaseAccess();
+    void checkCanUseSharedPreferences();
+    void checkReadFileDescriptor(in ParcelFileDescriptor fd, String expectedValue);
+    ParcelFileDescriptor createFileDescriptor(String valueToWrite);
+    void waitForStateChangeDetection(int expectedForegroundValue, int expectedBackgroundValue);
+    void unregisterSdkSandboxClientImportanceListener();
 }

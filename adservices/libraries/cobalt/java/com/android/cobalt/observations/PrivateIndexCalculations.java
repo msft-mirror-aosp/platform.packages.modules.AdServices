@@ -16,9 +16,10 @@
 
 package com.android.cobalt.observations;
 
+import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
+
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.util.stream.Collectors.toList;
 
 import com.android.cobalt.data.EventVector;
 
@@ -188,8 +189,7 @@ final class PrivateIndexCalculations {
     }
 
     private static ImmutableList<Integer> getSortedEnumeratedEventCodes(MetricDimension dimension) {
-        return ImmutableList.copyOf(
-                dimension.getEventCodesMap().keySet().stream().sorted().collect(toList()));
+        return dimension.getEventCodesMap().keySet().stream().sorted().collect(toImmutableList());
     }
 
     private static int getNumEventCodes(MetricDimension dimension) {

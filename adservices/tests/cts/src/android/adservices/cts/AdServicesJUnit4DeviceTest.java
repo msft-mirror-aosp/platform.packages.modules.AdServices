@@ -53,7 +53,7 @@ public class AdServicesJUnit4DeviceTest {
 
     @Test
     public void testBinderServiceIsPublished() {
-        assumeTrue("SDK level must be at least T", SdkLevel.isAtLeastT());
+        assumeTrue("SDK level must be at least U", SdkLevel.isAtLeastU());
         String cmd = "service check adservices_manager";
 
         assertWithMessage("output of '%s'", cmd)

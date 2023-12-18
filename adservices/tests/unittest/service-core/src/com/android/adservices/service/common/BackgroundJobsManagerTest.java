@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
@@ -25,12 +27,17 @@ import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIO
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -43,18 +50,25 @@ import static org.mockito.Mockito.verify;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
+import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.adselection.DebugReportSenderJobService;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
+import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -84,6 +98,13 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
 
                     BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
 
@@ -95,7 +116,14 @@ public class BackgroundJobsManagerTest {
                     // all the jobs, there will be two attempts to schedule the maintenance job, but
                     // in fact only one maintenance job will be scheduled (due to deduplication)
                     assertMaintenanceJobScheduled(2);
+                    // Mdd job is scheduled in scheduleAllBackgroundJobs,
+                    // scheduleTopicsBackgroundJobs, and scheduleMeasurementBackgroundJobs.
                     assertMddJobsScheduled(3);
+                    // Encryption key job is scheduled in scheduleTopicsBackgroundJobs, and
+                    // scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(2);
+                    assertCobaltJobScheduled(1);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -109,6 +137,13 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
 
                     BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
 
@@ -120,7 +155,13 @@ public class BackgroundJobsManagerTest {
                     // all the jobs, there will be two attempts to schedule the maintenance job, but
                     // in fact only one maintenance job will be scheduled (due to deduplication)
                     assertMaintenanceJobScheduled(2);
+                    // Mdd job is scheduled in scheduleAllBackgroundJobs and
+                    // scheduleTopicsBackgroundJobs.
                     assertMddJobsScheduled(2);
+                    // Encryption key job is scheduled in scheduleTopicsBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(1);
+                    assertCobaltJobScheduled(1);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -134,13 +175,26 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
 
                     BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
 
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(1);
+                    // Mdd job is scheduled in scheduleAllBackgroundJobs and
+                    // scheduleMeasurementBackgroundJobs.
                     assertMddJobsScheduled(2);
+                    // Encryption key job is scheduled in scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(1);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -154,6 +208,10 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(true)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
 
                     BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
 
@@ -166,6 +224,43 @@ public class BackgroundJobsManagerTest {
                     // in fact only one maintenance job will be scheduled (due to deduplication)
                     assertMaintenanceJobScheduled(2);
                     assertMddJobsScheduled(0);
+                    assertCobaltJobScheduled(1);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
+                });
+    }
+
+    @Test
+    public void testScheduleAllBackgroundJobs_encryptionKeyKillSwitchOn() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(true)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
+
+                    BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(1);
+                    assertTopicsJobsScheduled(1);
+                    // maintenance job is needed for both Fledge and Topics
+                    // since those APIs in the GA UX can be controlled separately, maintenance job
+                    // will be schedule for both Fledge and Topics. If there is a need to schedule
+                    // all the jobs, there will be two attempts to schedule the maintenance job, but
+                    // in fact only one maintenance job will be scheduled (due to deduplication)
+                    assertMaintenanceJobScheduled(2);
+                    assertMddJobsScheduled(3);
+                    assertEncryptionKeyJobsScheduled(0);
+                    assertCobaltJobScheduled(1);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -179,13 +274,27 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
 
                     BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
 
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(1);
                     assertMaintenanceJobScheduled(1);
+                    // Mdd job is scheduled in scheduleAllBackgroundJobs and
+                    // scheduleTopicsBackgroundJobs.
                     assertMddJobsScheduled(3);
+                    // Encryption key job is scheduled in scheduleTopicsBackgroundJobs, and
+                    // scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(2);
+                    assertCobaltJobScheduled(1);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -199,13 +308,53 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
                     BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
 
                     assertMeasurementJobsScheduled(1);
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
+                    // Mdd job is scheduled in scheduleAllBackgroundJobs and
+                    // scheduleMeasurementBackgroundJobs.
                     assertMddJobsScheduled(2);
+                    // Encryption key job is scheduled in scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(1);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
+                });
+    }
+
+    @Test
+    public void testScheduleAllBackgroundJobs_cobaltLoggingDisabled() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
+
+                    BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(1);
+                    assertTopicsJobsScheduled(1);
+                    assertMaintenanceJobScheduled(2);
+                    // Mdd job is scheduled in scheduleAllBackgroundJobs,
+                    // scheduleTopicsBackgroundJobs, and scheduleMeasurementBackgroundJobs.
+                    assertMddJobsScheduled(3);
+                    // Encryption key job is scheduled in scheduleTopicsBackgroundJobs, and
+                    // scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(2);
+                    assertCobaltJobScheduled(0);
                 });
     }
 
@@ -222,6 +371,9 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
                     assertMddJobsScheduled(0);
+                    assertEncryptionKeyJobsScheduled(0);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -238,6 +390,9 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
                     assertMddJobsScheduled(1);
+                    assertEncryptionKeyJobsScheduled(1);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -246,6 +401,7 @@ public class BackgroundJobsManagerTest {
         runWithMocks(
                 () -> {
                     ExtendedMockito.doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
                     BackgroundJobsManager.scheduleTopicsBackgroundJobs(Mockito.mock(Context.class));
 
@@ -253,6 +409,9 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
                     assertMddJobsScheduled(0);
+                    assertEncryptionKeyJobsScheduled(0);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -261,6 +420,7 @@ public class BackgroundJobsManagerTest {
         runWithMocks(
                 () -> {
                     ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
                     BackgroundJobsManager.scheduleTopicsBackgroundJobs(Mockito.mock(Context.class));
 
@@ -268,6 +428,9 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(1);
                     assertMaintenanceJobScheduled(1);
                     assertMddJobsScheduled(1);
+                    assertEncryptionKeyJobsScheduled(1);
+                    assertCobaltJobScheduled(1);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -283,6 +446,8 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
                     assertMddJobsScheduled(0);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -291,6 +456,9 @@ public class BackgroundJobsManagerTest {
         runWithMocks(
                 () -> {
                     ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
 
                     BackgroundJobsManager.scheduleFledgeBackgroundJobs(Mockito.mock(Context.class));
 
@@ -298,6 +466,63 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(1);
                     assertMddJobsScheduled(0);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
+                });
+    }
+
+    @Test
+    public void testScheduleFledgeBackgroundJobs_selectAdsKillSwitchOnDebugReportingOn()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+                    ExtendedMockito.doReturn(true)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
+
+                    BackgroundJobsManager.scheduleFledgeBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(0);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(1);
+                    assertMddJobsScheduled(0);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(1);
+                });
+    }
+
+    @Test
+    public void testScheduleCobaltBackgroundJobs_CobaltLoggingEnabled() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
+
+                    BackgroundJobsManager.scheduleCobaltBackgroundJob(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(0);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(0);
+                    assertMddJobsScheduled(0);
+                    assertCobaltJobScheduled(1);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
+                });
+    }
+
+    @Test
+    public void testScheduleCobaltBackgroundJobs_CobaltLoggingdisabled() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
+
+                    BackgroundJobsManager.scheduleCobaltBackgroundJob(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(0);
+                    assertTopicsJobsScheduled(0);
+                    assertMaintenanceJobScheduled(0);
+                    assertMddJobsScheduled(0);
+                    assertCobaltJobScheduled(0);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
     }
 
@@ -317,12 +542,15 @@ public class BackgroundJobsManagerTest {
                 .cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(MEASUREMENT_ATTRIBUTION_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
+                .cancel(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()));
+        verify(mockJobScheduler, times(1)).cancel(eq(PERIODIC_SIGNALS_ENCODING_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(CONSENT_NOTIFICATION_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()));
@@ -330,8 +558,16 @@ public class BackgroundJobsManagerTest {
                 .cancel(eq(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1)).cancel(eq(ENCRYPTION_KEY_PERIODIC_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId()));
+        verify(mockJobScheduler, times(1))
+                .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1))
+                .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1))
+                .cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1)).cancel(eq(COBALT_LOGGING_JOB.getJobId()));
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
@@ -340,6 +576,7 @@ public class BackgroundJobsManagerTest {
                         .spyStatic(AggregateReportingJobService.class)
                         .spyStatic(AggregateFallbackReportingJobService.class)
                         .spyStatic(AttributionJobService.class)
+                        .spyStatic(AttributionFallbackJobService.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(EpochJobService.class)
                         .spyStatic(EventReportingJobService.class)
@@ -349,7 +586,13 @@ public class BackgroundJobsManagerTest {
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
+                        .spyStatic(EncryptionKeyJobService.class)
                         .spyStatic(AsyncRegistrationQueueJobService.class)
+                        .spyStatic(AsyncRegistrationFallbackJobService.class)
+                        .spyStatic(DebugReportingFallbackJobService.class)
+                        .spyStatic(VerboseDebugReportingFallbackJobService.class)
+                        .spyStatic(CobaltJobService.class)
+                        .spyStatic(DebugReportSenderJobService.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
@@ -364,6 +607,11 @@ public class BackgroundJobsManagerTest {
                                             any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    AttributionFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> EpochJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
@@ -381,12 +629,32 @@ public class BackgroundJobsManagerTest {
                     .when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(
                             () ->
                                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                             any(), anyBoolean()));
-
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    AsyncRegistrationFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    DebugReportingFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                                            any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> CobaltJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doNothing()
+                    .when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
             // Execute
             execute.run();
         } finally {
@@ -405,6 +673,9 @@ public class BackgroundJobsManagerTest {
                 () -> AttributionJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
         ExtendedMockito.verify(
+                () -> AttributionFallbackJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+        ExtendedMockito.verify(
                 () -> EventReportingJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
         ExtendedMockito.verify(
@@ -419,11 +690,26 @@ public class BackgroundJobsManagerTest {
         ExtendedMockito.verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
+        ExtendedMockito.verify(
+                () -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+        ExtendedMockito.verify(
+                () -> VerboseDebugReportingFallbackJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+        ExtendedMockito.verify(
+                () -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
     }
 
     private void assertMaintenanceJobScheduled(int numberOfTimes) {
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+    }
+
+    private void assertAdSelectionDebugReportSenderJobScheduled(int numberOfTimes) {
+        ExtendedMockito.verify(
+                () -> DebugReportSenderJobService.scheduleIfNeeded(any(), eq(false)),
                 times(numberOfTimes));
     }
 
@@ -435,5 +721,16 @@ public class BackgroundJobsManagerTest {
     private void assertMddJobsScheduled(int numberOfTimes) {
         ExtendedMockito.verify(
                 () -> MddJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
+    }
+
+    private void assertEncryptionKeyJobsScheduled(int numberOfTimes) {
+        ExtendedMockito.verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
+    }
+
+    private void assertCobaltJobScheduled(int numberOfTimes) {
+        ExtendedMockito.verify(
+                () -> CobaltJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
     }
 }

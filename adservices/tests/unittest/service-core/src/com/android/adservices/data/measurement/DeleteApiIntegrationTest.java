@@ -23,12 +23,16 @@ import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tests for {@link MeasurementDao} browser deletion that affect the database.
@@ -45,17 +50,25 @@ import java.util.List;
 public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
     private static final String TEST_DIR = "msmt_browser_deletion_tests";
     private final JSONObject mParam;
+    private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
     @SuppressWarnings("unused")
     public DeleteApiIntegrationTest(
-            DbState input, DbState output, JSONObject param, String name) {
-        super(input, output);
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            JSONObject param,
+            String name) {
+        super(input, output, flagsMap);
         mParam = param;
+        mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
-    @Parameterized.Parameters(name = "{3}")
+    @Parameterized.Parameters(name = "{4}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<>();
@@ -94,9 +107,10 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
         Integer finalDeletionMode = deletionMode;
 
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
         MeasurementDataDeleter measurementDataDeleter =
-                new MeasurementDataDeleter(datastoreManager);
+                new MeasurementDataDeleter(
+                        datastoreManager, FlagsFactory.getFlags(), mLogger);
         measurementDataDeleter.delete(
                 new DeletionParam.Builder(
                                 originList,

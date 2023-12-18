@@ -24,8 +24,11 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
+import com.google.errorprone.annotations.Immutable;
+
 /** Base enrollment channel for all privacy sandbox UXs. */
 @RequiresApi(Build.VERSION_CODES.S)
+@Immutable
 public interface PrivacySandboxEnrollmentChannel {
 
     /** Is a user eligible for a particular UX enrollment channel. */

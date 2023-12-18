@@ -43,7 +43,6 @@ public class DBAdSelectionEntryTest {
     private static final long AD_SELECTION_ID = 1;
     private static final String BUYER_CONTEXTUAL_SIGNALS = "buyer_contextual_signals";
     private static final String SELLER_CONTEXTUAL_SIGNALS = "seller_contextual_signals";
-
     private static final double BID = 5;
 
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =

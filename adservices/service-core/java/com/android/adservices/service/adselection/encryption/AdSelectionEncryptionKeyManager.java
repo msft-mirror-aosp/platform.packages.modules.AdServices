@@ -32,6 +32,8 @@ import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -135,8 +137,8 @@ public class AdSelectionEncryptionKeyManager {
     public FluentFuture<ObliviousHttpKeyConfig> getLatestOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs) {
-        return FluentFuture.from(
-                        immediateFuture(getLatestActiveKeyOfType(adSelectionEncryptionKeyType)))
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_LATEST_OHTTP_KEY_CONFIG);
+        return FluentFuture.from(immediateFuture(getLatestKeyOfType(adSelectionEncryptionKeyType)))
                 .transformAsync(
                         encryptionKey ->
                                 encryptionKey == null
@@ -147,10 +149,15 @@ public class AdSelectionEncryptionKeyManager {
                 .transform(
                         key -> {
                             try {
-                                return getOhttpKeyConfigForKey(key);
+                                ObliviousHttpKeyConfig configKey = getOhttpKeyConfigForKey(key);
+                                Tracing.endAsyncSection(
+                                        Tracing.GET_LATEST_OHTTP_KEY_CONFIG, traceCookie);
+                                return configKey;
                             } catch (InvalidKeySpecException e) {
                                 // TODO(b/286839408): Delete all keys of given keyType if they
                                 //  can't be parsed into key config.
+                                Tracing.endAsyncSection(
+                                        Tracing.GET_LATEST_OHTTP_KEY_CONFIG, traceCookie);
                                 throw new IllegalStateException(
                                         "Unable to parse the key into ObliviousHttpKeyConfig.");
                             }
@@ -194,6 +201,7 @@ public class AdSelectionEncryptionKeyManager {
 
         return keys.isEmpty() ? null : selectRandomDbKeyAndParse(keys);
     }
+
     /**
      * For given AdSelectionKeyType, this method does the following - 1. Fetches the active key from
      * the server. 2. Once the active keys are fetched, it persists the fetched key to
@@ -225,14 +233,15 @@ public class AdSelectionEncryptionKeyManager {
                     "Uri to fetch active key of type " + adSelectionKeyType + " is null.");
         }
 
-        return FluentFuture.from(mAdServicesHttpsClient.fetchPayload(fetchUri))
+        return FluentFuture.from(
+                        mAdServicesHttpsClient.fetchPayload(
+                                fetchUri, DevContext.createForDevOptionsDisabled()))
                 .transform(
                         response -> parseKeyResponse(response, adSelectionKeyType),
                         mLightweightExecutor)
                 .transform(
                         result -> {
-                            sLogger.d(
-                                    "Persisting " + result.size() + " fetched active keys.");
+                            sLogger.d("Persisting " + result.size() + " fetched active keys.");
 
                             mEncryptionKeyDao.insertAllKeys(result);
                             mEncryptionKeyDao.deleteExpiredRowsByType(

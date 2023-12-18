@@ -36,6 +36,7 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 
@@ -151,7 +152,10 @@ public class BackgroundFetchRunner {
         updateCustomAudienceExecutionLogger.start();
 
         return fetchAndValidateCustomAudienceUpdatableData(
-                        jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUri())
+                        jobStartTime,
+                        fetchData.getBuyer(),
+                        fetchData.getDailyUpdateUri(),
+                        fetchData.getIsDebuggable())
                 .transform(
                         updatableData -> {
                             int numOfAds = FIELD_UNSET;
@@ -201,13 +205,23 @@ public class BackgroundFetchRunner {
     public FluentFuture<CustomAudienceUpdatableData> fetchAndValidateCustomAudienceUpdatableData(
             @NonNull Instant jobStartTime,
             @NonNull AdTechIdentifier buyer,
-            @NonNull Uri dailyFetchUri) {
+            @NonNull Uri dailyFetchUri,
+            boolean isDebuggable) {
         Objects.requireNonNull(jobStartTime);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(dailyFetchUri);
 
+        // If a CA was created in a debuggable context, set the developer context to assume
+        // developer options are enabled (as they were at the time of CA creation).
+        // This allows for testing against localhost servers outside the context of a binder
+        // connection from a debuggable app.
+        DevContext devContext =
+                isDebuggable
+                        ? DevContext.builder().setDevOptionsEnabled(true).build()
+                        : DevContext.createForDevOptionsDisabled();
+
         // TODO(b/234884352): Perform k-anon check on daily fetch URI
-        return FluentFuture.from(mHttpsClient.fetchPayload(dailyFetchUri))
+        return FluentFuture.from(mHttpsClient.fetchPayload(dailyFetchUri, devContext))
                 .transform(
                         updateResponse ->
                                 Pair.create(

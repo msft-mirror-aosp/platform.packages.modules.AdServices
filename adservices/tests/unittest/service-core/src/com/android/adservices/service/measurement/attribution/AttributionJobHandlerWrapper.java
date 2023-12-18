@@ -44,10 +44,12 @@ public class AttributionJobHandlerWrapper {
                         debugReportApi,
                         eventReportWindowCalcDelegate,
                         sourceNoiseHandler,
-                        logger);
+                        logger,
+                        new XnaSourceCreator(flags));
     }
 
     public boolean performPendingAttributions() {
-        return mAttributionJobHandler.performPendingAttributions();
+        return AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED
+                == mAttributionJobHandler.performPendingAttributions();
     }
 }

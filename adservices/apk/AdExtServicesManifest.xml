@@ -65,41 +65,49 @@
                 android:description="@string/permdesc_accessAdServicesAdId"
                 android:protectionLevel="normal"/>
 
+    <!-- Note: Signature permissions for AdServices code running in ExtServices APK must be
+    redefined with the suffix _COMPAT since the ExtServices and AdServices APKs are signed by
+    different keys. -->
+
     <!-- Allows AdServices to access API for Ad ID. -->
-    <permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID"
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID_COMPAT"
                 android:label="@string/permlab_adServicesAccessAdId"
                 android:description="@string/permdesc_adServicesAccessAdId"
                 android:protectionLevel="signature"/>
 
     <!-- Allows AdServices to access API for App set ID. -->
-    <permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID"
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID_COMPAT"
                 android:label="@string/permlab_adServicesAccessAppSetId"
                 android:description="@string/permdesc_adServicesAccessAppSetId"
                 android:protectionLevel="signature"/>
 
+    <!-- Allows AdServices to access API for AdServices Cobalt upload. -->
+    <permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD_COMPAT"
+                android:label="@string/permlab_adServicesAccessAdServicesCobaltUpload"
+                android:description="@string/permdesc_adServicesAccessAdServicesCobaltUpload"
+                android:protectionLevel="signature"/>
+
     <!-- Allows the caller to modify AdService's state via Common Service. -->
-    <permission android:name="android.permission.MODIFY_ADSERVICES_STATE"
+    <permission android:name="android.permission.MODIFY_ADSERVICES_STATE_COMPAT"
                 android:label="@string/permlab_modifyAdServicesState"
                 android:description="@string/permdesc_modifyAdServicesState"
                 android:protectionLevel="signature|configurator"/>
 
     <!-- Allows the caller to get AdService's state via Common Service. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_STATE"
+    <permission android:name="android.permission.ACCESS_ADSERVICES_STATE_COMPAT"
                 android:label="@string/permlab_accessAdServicesState"
                 android:description="@string/permdesc_accessAdServicesState"
                 android:protectionLevel="signature|configurator"/>
 
-    <!-- Permission to allow calling AdServiceManager's APIs. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER"
-                android:label="@string/permlab_accessAdServicesManager"
-                android:description="@string/permdesc_accessAdServicesManager"
-                android:protectionLevel="signature"/>
+    <!-- Permission to allow calling updating AdId Cache API via Common Service. -->
+    <permission android:name="android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT"
+                android:label="@string/permlab_updateAdservicesAdId"
+                android:description="@string/permdesc_updateAdservicesAdId"
+                android:protectionLevel="signature|configurator"/>
 
-    <!-- Allow AdServicesApk (PPAPI) to call AdService's system service. -->
-    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER"/>
-
-    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID"/>
-    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID"/>
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID_COMPAT"/>
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID_COMPAT"/>
+    <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD_COMPAT" />
 
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -223,6 +231,17 @@
             </intent-filter>
         </service>
 
+        <service android:name=
+                     "android.adservices.signals.ProtectedSignalsService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false"
+                 android:process=".adservices">
+            <intent-filter android:priority="1">
+                <action android:name=
+                            "android.adservices.signals.PROTECTED_SIGNALS_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <service android:name="com.android.adservices.topics.TopicsService"
                  android:exported="true"
                  android:visibleToInstantApps="false"
@@ -286,6 +305,12 @@
                  android:process=".adservices">
         </service>
 
+        <!-- Encryption key fetch job. -->
+        <service android:name="com.android.adservices.service.encryptionkey.EncryptionKeyJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
         <!-- Enable Notification Job. -->
         <service android:name="com.android.adservices.service.common.ConsentNotificationJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
@@ -300,8 +325,15 @@
         </service>
 
         <!-- Measurement debug report upload job. -->
-        <service
-            android:name="com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.DebugReportingJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:process=".adservices">
+        </service>
+
+        <!-- Measurement verbose debug report upload job. -->
+        <service android:name=
+              "com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:process=".adservices">
         </service>
@@ -361,6 +393,20 @@
                  android:process=".adservices">
         </service>
 
+        <!-- FLEDGE Ad selection debug report sender Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- FLEDGE Protected Signals periodic encoding job -->
+        <service android:name=
+                     "com.android.adservices.service.signals.PeriodicEncodingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
         <!-- Measurement Registration Job -->
         <service android:name=
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService"
@@ -372,6 +418,26 @@
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
                  android:process=".adservices">
+        </service>
+
+        <!-- Measurement Verbose Debug Reporting Fallback Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- Measurement Debug Reporting Fallback Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- Cobalt Logging Job -->
+        <service android:name="com.android.adservices.cobalt.CobaltJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:process=".adservices">
         </service>
 
         <provider
@@ -390,9 +456,16 @@
             android:process=".adservices"
         />
 
+        <provider
+            android:name="com.android.adservices.service.common.AdServicesInternalProvider"
+            android:authorities="com.android.ext.adservices.provider.internal"
+            android:exported="false"
+            android:process=".adservices"
+        />
+
         <!-- Boot completed receiver registers package changed event receivers. -->
         <receiver android:name="com.android.adservices.service.common.AdExtBootCompletedReceiver"
-                  android:enabled="@bool/atLeastS"
+                  android:enabled="@bool/isAdExtBootCompletedReceiverEnabled"
                   android:exported="true"
                   android:process=".adservices">
             <intent-filter>

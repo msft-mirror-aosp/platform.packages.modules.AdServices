@@ -29,6 +29,7 @@ import com.google.common.io.BaseEncoding;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 
 public class DBEncryptionContextTest {
     private static final long CONTEXT_ID_1 = 1L;
@@ -41,6 +42,7 @@ public class DBEncryptionContextTest {
                     .getBytes(StandardCharsets.UTF_8);
     private static final byte[] SHARED_SECRET_BYTES =
             SHARED_SECRET_STRING.getBytes(StandardCharsets.UTF_8);
+    private Clock mClock = Clock.systemUTC();
 
     @Test
     public void testBuildEncryptionContext_success() throws Exception {
@@ -51,6 +53,7 @@ public class DBEncryptionContextTest {
                 DBEncryptionContext.builder()
                         .setContextId(CONTEXT_ID_1)
                         .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
+                        .setCreationInstant(mClock.instant())
                         .setKeyConfig(keyConfig.serializeKeyConfigToBytes())
                         .setSharedSecret(SHARED_SECRET_BYTES)
                         .setSeed(SEED_BYTES)
