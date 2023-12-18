@@ -29,7 +29,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -51,7 +50,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 
 import java.io.File;
@@ -365,53 +363,6 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         call.enabledByDefault = enabledByDefault;
         Log.v(mTag, "logUsageAndDontWait(call=" + call + ")");
         AppManifestConfigMetricsLogger.logUsage(call);
-    }
-
-    /** Gets a custom Mockito matcher for a {@link AppManifestConfigCall}, without the result. */
-    static AppManifestConfigCall appManifestConfigCall(
-            String packageName, boolean appExists, boolean appHasConfig, boolean enabledByDefault) {
-        return argThat(
-                new AppManifestConfigCallMatcher(
-                        packageName, appExists, appHasConfig, enabledByDefault));
-    }
-
-    private static final class AppManifestConfigCallMatcher
-            implements ArgumentMatcher<AppManifestConfigCall> {
-
-        private final String mPackageName;
-        private final boolean mAppExists;
-        private final boolean mAppHasConfig;
-        private final boolean mEnabledByDefault;
-
-        private AppManifestConfigCallMatcher(
-                String packageName,
-                boolean appExists,
-                boolean appHasConfig,
-                boolean enabledByDefault) {
-            mPackageName = packageName;
-            mAppExists = appExists;
-            mAppHasConfig = appHasConfig;
-            mEnabledByDefault = enabledByDefault;
-        }
-
-        @Override
-        public boolean matches(AppManifestConfigCall arg) {
-            return arg != null
-                    && arg.packageName.equals(mPackageName)
-                    && arg.appExists == mAppExists
-                    && arg.appHasConfig == mAppHasConfig
-                    && arg.enabledByDefault == mEnabledByDefault;
-        }
-
-        @Override
-        public String toString() {
-            AppManifestConfigCall call = new AppManifestConfigCall(mPackageName);
-            call.appExists = mAppExists;
-            call.appHasConfig = mAppHasConfig;
-            call.enabledByDefault = mEnabledByDefault;
-
-            return call.toString() + " {NOT CHECING RESULT}";
-        }
     }
 
     // TODO(b/309857141): move to its own class / common package (it will be done in a later CL so
