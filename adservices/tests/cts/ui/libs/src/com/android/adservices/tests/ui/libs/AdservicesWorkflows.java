@@ -135,6 +135,10 @@ public class AdservicesWorkflows {
                 UiUtils.enableGa();
                 UiUtils.enableU18();
                 break;
+            case RVC_UX:
+                UiUtils.enableGa();
+                UiUtils.enableRvc();
+                break;
         }
 
         UiUtils.setFlipFlow(isV2);
