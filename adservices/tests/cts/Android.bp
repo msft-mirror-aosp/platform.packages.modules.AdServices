@@ -35,6 +35,7 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
     plugins: [
         "auto_value_plugin",
@@ -81,6 +82,7 @@ android_test {
         "cts_root",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
     plugins: [
         "auto_value_plugin",
@@ -174,6 +176,7 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [

@@ -42,7 +42,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     min_sdk_version: "Tiramisu",
     manifest: "CtsAdServicesEndToEndTestsManifest.xml",
@@ -62,4 +62,3 @@ android_test {
     manifest: "CtsAdExtServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdExtServicesEndToEndTests.xml",
 }
-
