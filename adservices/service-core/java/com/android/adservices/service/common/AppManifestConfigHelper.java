@@ -16,6 +16,15 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
+import static com.android.adservices.service.common.AppManifestConfigCall.isAllowed;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
@@ -107,8 +116,10 @@ public class AppManifestConfigHelper {
                     // If the request comes directly from the app, check that the app has declared
                     // that it includes this Sdk library.
                     if (!useSandboxCheck) {
-                        return config.getIncludesSdkLibraryConfig().contains(enrollmentId)
-                                && config.isAllowedTopicsAccess(enrollmentId);
+                        return (config.getIncludesSdkLibraryConfig().contains(enrollmentId)
+                                        && isAllowed(config.isAllowedTopicsAccess(enrollmentId)))
+                                ? RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID
+                                : RESULT_DISALLOWED_BY_APP;
                     }
 
                     // If the request comes from the SdkRuntime, then the app had to have declared
@@ -181,6 +192,10 @@ public class AppManifestConfigHelper {
         try {
             XmlResourceParser in = getXmlParser(call);
             if (in == null) {
+                call.result =
+                        call.enabledByDefault
+                                ? RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG
+                                : RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
                 LogUtil.v(
                         "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
                         method, call.enabledByDefault, appPackageName);
@@ -190,9 +205,11 @@ public class AppManifestConfigHelper {
                     AppManifestConfigParser.getConfig(in, call.enabledByDefault);
             call.result = checker.isAllowedAccess(appManifestConfig);
         } catch (NameNotFoundException e) {
+            call.result = RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
             LogUtil.v(
                     "Name not found while looking for manifest for app %s: %s", appPackageName, e);
         } catch (Exception e) {
+            call.result = RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR;
             LogUtil.e(e, "App manifest parse failed.");
             ErrorLogUtil.e(
                     e,
@@ -201,10 +218,10 @@ public class AppManifestConfigHelper {
         } finally {
             AppManifestConfigMetricsLogger.logUsage(call);
         }
-        return call.result;
+        return isAllowed(call.result);
     }
 
     private interface ApiAccessChecker {
-        boolean isAllowedAccess(AppManifestConfig config);
+        int isAllowedAccess(AppManifestConfig config);
     }
 }
