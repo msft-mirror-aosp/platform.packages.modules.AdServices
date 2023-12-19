@@ -50,6 +50,7 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
 }
 
@@ -80,5 +81,6 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
 }
