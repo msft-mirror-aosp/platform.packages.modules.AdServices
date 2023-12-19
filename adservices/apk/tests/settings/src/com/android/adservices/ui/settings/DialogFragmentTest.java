@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.RemoteException;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
@@ -138,12 +139,13 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         startActivityFromHomeAndCheckMainSwitch();
     }
 
-    private void startActivityFromHomeAndCheckMainSwitch() {
+    private void startActivityFromHomeAndCheckMainSwitch() throws RemoteException {
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // Start from the home screen
         sDevice.pressHome();
+        sDevice.setOrientationNatural();
 
         // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();
