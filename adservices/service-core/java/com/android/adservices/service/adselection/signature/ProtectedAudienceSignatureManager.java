@@ -42,18 +42,47 @@ import java.util.stream.Collectors;
  */
 public class ProtectedAudienceSignatureManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final EnrollmentDao mEnrollmentDao;
-    private final EncryptionKeyDao mEncryptionKeyDao;
+
+    /**
+     * This P-256 ECDSA key is used to verify signatures if {@link
+     * com.android.adservices.service.FlagsConstants #KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK} is set to
+     * true.
+     *
+     * <p>This enables CTS and integration testing.
+     *
+     * <p>To test with this key, {@link SignedContextualAds} should be signed with {@link
+     * ProtectedAudienceSignatureManager#PRIVATE_TEST_KEY_STRING}.
+     */
+    public static final String PUBLIC_TEST_KEY_STRING =
+            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+Eyo0TOllW8as2pTTzxawQ57pXJiH16VERgHqcV1/YpADt3iq6"
+                    + "9vbhwW8Ksi3M0GrxacOuge/AwiM7Uh6+V3PA==";
+
+    /**
+     * Private key pair of the {@link ProtectedAudienceSignatureManager#PUBLIC_TEST_KEY_STRING}
+     *
+     * <p>See {@link ProtectedAudienceSignatureManager#PUBLIC_TEST_KEY_STRING}
+     */
+    public static final String PRIVATE_TEST_KEY_STRING =
+            "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgECetqRr9eE9DKKjILR+hP66Y1niEw/bqPD/MNx"
+                    + "PTMvmhRANCAAT4TKjRM6WVbxqzalNPPFrBDnulcmIfXpURGAepxXX9ikAO3eKrr29uHBbwqyLczQ"
+                    + "avFpw66B78DCIztSHr5Xc8";
+
+    @NonNull private final EnrollmentDao mEnrollmentDao;
+    @NonNull private final EncryptionKeyDao mEncryptionKeyDao;
+    private final boolean mIsEnrollmentCheckEnabled;
 
     private final SignatureVerifier mSignatureVerifier;
 
     public ProtectedAudienceSignatureManager(
-            @NonNull EnrollmentDao enrollmentDao, @NonNull EncryptionKeyDao encryptionKeyDao) {
+            @NonNull EnrollmentDao enrollmentDao,
+            @NonNull EncryptionKeyDao encryptionKeyDao,
+            boolean isEnrollmentCheckEnabled) {
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(encryptionKeyDao);
 
         mEnrollmentDao = enrollmentDao;
         mEncryptionKeyDao = encryptionKeyDao;
+        mIsEnrollmentCheckEnabled = isEnrollmentCheckEnabled;
 
         mSignatureVerifier = new ECDSASignatureVerifier();
     }
@@ -66,6 +95,8 @@ public class ProtectedAudienceSignatureManager {
         mEnrollmentDao = enrollmentDao;
         mEncryptionKeyDao = encryptionKeyDao;
         mSignatureVerifier = signatureVerifier;
+
+        mIsEnrollmentCheckEnabled = true;
     }
 
     /**
@@ -95,6 +126,12 @@ public class ProtectedAudienceSignatureManager {
 
     @VisibleForTesting
     List<byte[]> fetchPublicKeyForAdTech(AdTechIdentifier adTech) {
+        Base64.Decoder decoder = Base64.getDecoder();
+        if (!mIsEnrollmentCheckEnabled) {
+            sLogger.v("Enrollment check is disabled, returning the default key");
+            return Collections.singletonList(decoder.decode(PUBLIC_TEST_KEY_STRING));
+        }
+
         sLogger.v("Fetching EnrollmentData for %s", adTech);
         EnrollmentData enrollmentData =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
@@ -110,7 +147,6 @@ public class ProtectedAudienceSignatureManager {
                         enrollmentData.getEnrollmentId(), EncryptionKey.KeyType.SIGNING);
 
         sLogger.v("Received %s signing key(s)", encryptionKeys.size());
-        Base64.Decoder decoder = Base64.getDecoder();
         return encryptionKeys.stream()
                 .sorted(Comparator.comparingLong(EncryptionKey::getExpiration))
                 .map(key -> decoder.decode(key.getBody()))

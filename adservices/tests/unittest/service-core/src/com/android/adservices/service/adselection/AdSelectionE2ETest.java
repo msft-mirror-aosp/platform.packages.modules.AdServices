@@ -53,6 +53,7 @@ import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.PREBUILT_FEATURE_IS_DISABLED;
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -7856,7 +7857,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             .setKeyType(EncryptionKey.KeyType.SIGNING)
                             .setEncryptionKeyUrl(encryptionKeyUrl)
                             .setProtocolType(EncryptionKey.ProtocolType.ECDSA)
-                            .setBody(SignedContextualAdsFixture.PUBLIC_KEY_STRING)
+                            .setBody(PUBLIC_TEST_KEY_STRING)
                             .setReportingOrigin(reportingOriginUrl)
                             .build());
         }
