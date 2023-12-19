@@ -137,4 +137,31 @@ public class AdSelectionDatabaseMigrationTest {
         cursor.moveToFirst();
         assertEquals(reportingDataTable, cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
     }
+
+    @Test
+    public void testMigrate7To8() throws IOException {
+        String adSelectionTable = "ad_selection";
+
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 7);
+        Cursor cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, adSelectionTable));
+        // The ad selection table should already exist
+        assertEquals(1, cursor.getCount());
+
+        String reportingComputationInfoTable = "reporting_computation_info";
+        // Re-open the database with version 8 and provide MIGRATION_7_8 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 8, true);
+        cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, adSelectionTable));
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+        assertEquals(adSelectionTable, cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
+
+        cursor =
+                db.query(
+                        String.format(QUERY_TABLES_FROM_SQL_MASTER, reportingComputationInfoTable));
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+        assertEquals(
+                reportingComputationInfoTable,
+                cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
+    }
 }

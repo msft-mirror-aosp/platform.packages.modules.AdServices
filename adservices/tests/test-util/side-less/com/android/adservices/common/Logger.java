@@ -108,7 +108,7 @@ public final class Logger {
 
     @Override
     public String toString() {
-        return mRealLogger.toString();
+        return "Logger[realLogger=" + mRealLogger + ", tag=" + mTag + "]";
     }
 
     /** Level of log messages. */

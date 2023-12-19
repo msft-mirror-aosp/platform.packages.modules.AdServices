@@ -30,7 +30,8 @@ import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ObservationStoreEntity;
 import com.android.cobalt.data.ReportKey;
-import com.android.cobalt.observations.CountObservationGenerator;
+import com.android.cobalt.domain.Project;
+import com.android.cobalt.observations.ObservationGeneratorFactory;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.CobaltClock;
 import com.android.cobalt.system.SystemClock;
@@ -38,17 +39,13 @@ import com.android.cobalt.system.SystemData;
 import com.android.cobalt.upload.Uploader;
 import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.cobalt.CobaltRegistry;
-import com.google.cobalt.CustomerConfig;
 import com.google.cobalt.EncryptedMessage;
 import com.google.cobalt.Envelope;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ObservationBatch;
 import com.google.cobalt.ObservationMetadata;
-import com.google.cobalt.ProjectConfig;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
@@ -81,9 +78,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
     // The largest aggregation window period (in days) that is supported.
     @VisibleForTesting public static final int LARGEST_AGGREGATION_WINDOW = 30;
 
-    private final CobaltRegistry mRegistry;
-    private final int mCustomerId;
-    private final int mProjectId;
+    private final Project mProject;
     private final ReleaseStage mReleaseStage;
     private final DataService mDataService;
     private final ExecutorService mExecutor;
@@ -91,15 +86,13 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
     private final Duration mUploadDoneDelay;
     private final SystemClock mSystemClock;
     private final boolean mEnabled;
-    private final SystemData mSystemData;
-    private final PrivacyGenerator mPrivacyGenerator;
-    private final SecureRandom mSecureRandom;
     private final Uploader mUploader;
     private final Encrypter mEncrypter;
     private final ByteString mApiKey;
+    private final ObservationGeneratorFactory mObservationGeneratorFactory;
 
     public CobaltPeriodicJobImpl(
-            @NonNull CobaltRegistry registry,
+            @NonNull Project project,
             @NonNull ReleaseStage releaseStage,
             @NonNull DataService dataService,
             @NonNull ExecutorService executor,
@@ -113,7 +106,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
             @NonNull ByteString apiKey,
             @NonNull Duration uploadDoneDelay,
             boolean enabled) {
-        mRegistry = Objects.requireNonNull(registry);
+        mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
         mDataService = Objects.requireNonNull(dataService);
         mExecutor = Objects.requireNonNull(executor);
@@ -122,17 +115,15 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
         mUploadDoneDelay = Objects.requireNonNull(uploadDoneDelay);
         mSystemClock = Objects.requireNonNull(systemClock);
         mEnabled = enabled;
-        mSystemData = Objects.requireNonNull(systemData);
-        mPrivacyGenerator = Objects.requireNonNull(privacyGenerator);
-        mSecureRandom = Objects.requireNonNull(secureRandom);
         mUploader = Objects.requireNonNull(uploader);
         mEncrypter = Objects.requireNonNull(encrypter);
         mApiKey = Objects.requireNonNull(apiKey);
-
-        CustomerConfig customer = registry.getCustomers(0);
-        mCustomerId = customer.getCustomerId();
-        ProjectConfig project = customer.getProjects(0);
-        mProjectId = project.getProjectId();
+        mObservationGeneratorFactory =
+                new ObservationGeneratorFactory(
+                        mProject,
+                        Objects.requireNonNull(systemData),
+                        Objects.requireNonNull(privacyGenerator),
+                        Objects.requireNonNull(secureRandom));
     }
 
     /**
@@ -167,9 +158,6 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
      * @return the oldest day index aggregate values which should be kept for
      */
     private FluentFuture<Void> generateAndSaveObservations(Instant initialTimeEnabled) {
-        checkArgument(mRegistry.getCustomersCount() == 1, "must be one customer");
-        checkArgument(mRegistry.getCustomers(0).getProjectsCount() == 1, "must be one project");
-
         logInfo("Start observation generation");
 
         CobaltClock currentClock = new CobaltClock(mSystemClock.currentTimeMillis());
@@ -186,25 +174,17 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
             int dayIndexLoggerEnabled = initialEnabledClock.dayIndex(metric);
             for (ReportDefinition report : toGenerate.getValue()) {
                 ReportKey reportKey =
-                        ReportKey.create(mCustomerId, mProjectId, metric.getId(), report.getId());
+                        ReportKey.create(
+                                mProject.getCustomerId(),
+                                mProject.getProjectId(),
+                                metric.getId(),
+                                report.getId());
                 relevantReports.add(reportKey);
-                if (report.getReportType() != ReportType.FLEETWIDE_OCCURRENCE_COUNTS) {
-                    // Skip observation generation after recording the report is relevant in case
-                    // a disabled report may be enabled again.
-                    continue;
-                }
                 logInfo(
                         "Generating observations for day %s for report %s",
                         dayIndexToGenerate, reportKey);
                 ObservationGenerator generator =
-                        new CountObservationGenerator(
-                                mSystemData,
-                                mPrivacyGenerator,
-                                mSecureRandom,
-                                mCustomerId,
-                                mProjectId,
-                                metric,
-                                report);
+                        mObservationGeneratorFactory.getObservationGenerator(metric, report);
                 results.add(
                         mDataService.generateCountObservations(
                                 reportKey, dayIndexToGenerate, dayIndexLoggerEnabled, generator));
@@ -303,15 +283,9 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
      */
     private ImmutableMap<MetricDefinition, ImmutableList<ReportDefinition>>
             metricsAndReportsToGenerate() {
-        checkArgument(mRegistry.getCustomersCount() == 1, "must be one customer");
-        CustomerConfig customer = mRegistry.getCustomers(0);
-
-        checkArgument(customer.getProjectsCount() == 1, "must be one project");
-        ProjectConfig project = customer.getProjects(0);
-
         ImmutableMap.Builder<MetricDefinition, ImmutableList<ReportDefinition>> metricsAndReports =
                 ImmutableMap.builder();
-        for (MetricDefinition metric : project.getMetricsList()) {
+        for (MetricDefinition metric : mProject.getMetrics()) {
             if (mReleaseStage.getNumber() > metric.getMetaData().getMaxReleaseStageValue()) {
                 // Don't upload a metric that is not enabled for the current release stage.
                 continue;

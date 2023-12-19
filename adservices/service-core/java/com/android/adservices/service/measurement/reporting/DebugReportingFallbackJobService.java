@@ -200,17 +200,20 @@ public class DebugReportingFallbackJobService extends JobService {
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.DEBUG_EVENT,
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.FALLBACK,
+                                getApplicationContext())
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 new AggregateReportingJobHandler(
                                 enrollmentDao,
                                 datastoreManager,
-                                new AggregateEncryptionKeyManager(datastoreManager),
+                                new AggregateEncryptionKeyManager(
+                                        datastoreManager, getApplicationContext()),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.DEBUG_AGGREGATE,
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.FALLBACK,
+                                getApplicationContext())
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 return;

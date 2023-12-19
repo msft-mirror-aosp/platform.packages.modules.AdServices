@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import android.annotation.NonNull;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -51,7 +52,11 @@ import java.util.concurrent.TimeUnit;
  * @hide
  */
 final class AggregateEncryptionKeyFetcher {
-    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final MeasurementHttpClient mNetworkConnection;
+
+    AggregateEncryptionKeyFetcher(Context context) {
+        mNetworkConnection = new MeasurementHttpClient(context);
+    }
 
     /**
      * Provides a testing hook.

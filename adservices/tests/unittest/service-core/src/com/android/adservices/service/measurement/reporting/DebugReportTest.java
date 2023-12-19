@@ -40,6 +40,9 @@ public final class DebugReportTest {
     private static final Uri REGISTRATION_ORIGIN_2 =
             WebUtil.validUri("https://subdomain.example2.test");
 
+    private static final Uri SOURCE_REGISTRANT = Uri.parse("android-app://com.example.abc");
+    private static final long INSERTION_TIME = 1617297798;
+
     @Before
     public void setup() throws JSONException {
         mBodyJson.put("attribution_destination", "https://destination.example");
@@ -97,6 +100,8 @@ public final class DebugReportTest {
                         .setEnrollmentId("2")
                         .setRegistrationOrigin(REGISTRATION_ORIGIN_1)
                         .setReferenceId("6")
+                        .setRegistrant(SOURCE_REGISTRANT)
+                        .setInsertionTime(INSERTION_TIME)
                         .build());
     }
 
@@ -113,6 +118,8 @@ public final class DebugReportTest {
                 .setEnrollmentId("2")
                 .setRegistrationOrigin(REGISTRATION_ORIGIN_1)
                 .setReferenceId("6")
+                .setRegistrant(SOURCE_REGISTRANT)
+                .setInsertionTime(INSERTION_TIME)
                 .build();
     }
 
@@ -124,6 +131,8 @@ public final class DebugReportTest {
                 .setEnrollmentId("4")
                 .setRegistrationOrigin(REGISTRATION_ORIGIN_2)
                 .setReferenceId("5")
+                .setRegistrant(SOURCE_REGISTRANT)
+                .setInsertionTime(INSERTION_TIME)
                 .build();
     }
 }

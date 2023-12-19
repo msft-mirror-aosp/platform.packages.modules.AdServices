@@ -28,7 +28,7 @@ android_test {
         "adservices-test-utility",
         "auto_value_annotations",
         "androidx.test.core",
-        "truth-prebuilt",
+        "truth",
     ],
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",

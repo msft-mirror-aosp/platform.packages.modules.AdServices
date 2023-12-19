@@ -159,6 +159,9 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initU18() {}
 
+    @Override
+    public void initRvc() {}
+
     private void configureSharedElements() {
         // recycler view (apps list)
         Function<App, OnClickListener> getOnclickListener =
@@ -227,7 +230,7 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case BLOCK_APP:
-                                UiStatsLogger.logBlockAppSelected(mActivity);
+                                UiStatsLogger.logBlockAppSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockAppDialog(
@@ -241,7 +244,7 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case RESET_APPS:
-                                UiStatsLogger.logResetAppSelected(mActivity);
+                                UiStatsLogger.logResetAppSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetAppDialog(

@@ -21,7 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 
 import androidx.test.filters.FlakyTest;
@@ -31,7 +33,6 @@ import com.android.compatibility.common.util.ShellUtils;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 /** End-to-end test for report impression. */
 public class AdSelectionReportingTest extends FledgeScenarioTest {
@@ -81,8 +82,7 @@ public class AdSelectionReportingTest extends FledgeScenarioTest {
     }
 
     @Test
-    public void testReportImpression_buyerResponseOverTimeoutThreshold_sellerRequestSucceeds()
-            throws Exception {
+    public void testReportImpression_buyerLogicTimesOut_reportingFails() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-060.json", getCacheBusterPrefix());
@@ -91,19 +91,22 @@ public class AdSelectionReportingTest extends FledgeScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
+            AdSelectionOutcome adSelectionOutcome = doSelectAds(config);
             Exception exception =
                     assertThrows(
                             ExecutionException.class,
                             () ->
                                     doReportImpression(
-                                            doSelectAds(config).getAdSelectionId(), config));
-            assertThat(exception.getCause()).isInstanceOf(TimeoutException.class);
+                                            adSelectionOutcome.getAdSelectionId(), config));
+            assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
         } finally {
             leaveCustomAudience(SHOES_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+        assertThat(dispatcher.getCalledPaths())
+                .containsNoneIn(dispatcher.getVerifyNotCalledPaths());
     }
 
     @Test

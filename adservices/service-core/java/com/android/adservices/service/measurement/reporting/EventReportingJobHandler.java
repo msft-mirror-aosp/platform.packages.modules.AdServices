@@ -16,11 +16,14 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -58,10 +61,15 @@ public class EventReportingJobHandler {
     private ReportingStatus.ReportType mReportType;
     private ReportingStatus.UploadMethod mUploadMethod;
 
+    private Context mContext;
+
     @VisibleForTesting
     EventReportingJobHandler(
-            EnrollmentDao enrollmentDao, DatastoreManager datastoreManager, Flags flags) {
-        this(enrollmentDao, datastoreManager, flags, AdServicesLoggerImpl.getInstance());
+            EnrollmentDao enrollmentDao,
+            DatastoreManager datastoreManager,
+            Flags flags,
+            Context context) {
+        this(enrollmentDao, datastoreManager, flags, AdServicesLoggerImpl.getInstance(), context);
     }
 
     EventReportingJobHandler(
@@ -70,13 +78,15 @@ public class EventReportingJobHandler {
             Flags flags,
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
-            ReportingStatus.UploadMethod uploadMethod) {
+            ReportingStatus.UploadMethod uploadMethod,
+            Context context) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
         mReportType = reportType;
         mUploadMethod = uploadMethod;
+        mContext = context;
     }
 
     @VisibleForTesting
@@ -84,11 +94,13 @@ public class EventReportingJobHandler {
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
-            AdServicesLogger logger) {
+            AdServicesLogger logger,
+            Context context) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
+        mContext = context;
     }
 
     /**
@@ -157,15 +169,19 @@ public class EventReportingJobHandler {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
             } else {
                 reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            int retryCount =
+                                    dao.incrementAndGetReportingRetryCount(
+                                            eventReportId,
+                                            mIsDebugInstance
+                                                    ? KeyValueData.DataType
+                                                            .DEBUG_EVENT_REPORT_RETRY_COUNT
+                                                    : KeyValueData.DataType
+                                                            .EVENT_REPORT_RETRY_COUNT);
+                            reportingStatus.setRetryCount(retryCount);
+                        });
             }
-            mDatastoreManager.runInTransaction(
-                    (dao) -> {
-                        int retryCount =
-                                dao.incrementAndGetReportingRetryCount(
-                                        eventReportId,
-                                        KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
-                        reportingStatus.setRetryCount(retryCount);
-                    });
             logReportingStats(reportingStatus);
         }
         return true;
@@ -202,6 +218,7 @@ public class EventReportingJobHandler {
                         -> dao.getEventReport(eventReportId));
         if (!eventReportOpt.isPresent()) {
             LoggerFactory.getMeasurementLogger().d("Event report not found");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_FOUND);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         EventReport eventReport = eventReportOpt.get();
@@ -255,7 +272,7 @@ public class EventReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
@@ -266,7 +283,7 @@ public class EventReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
@@ -290,7 +307,7 @@ public class EventReportingJobHandler {
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
                     && ThreadLocalRandom.current().nextFloat()
@@ -318,6 +335,7 @@ public class EventReportingJobHandler {
                 .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
                 .setSourceDebugKey(eventReport.getSourceDebugKey())
                 .setTriggerDebugKey(eventReport.getTriggerDebugKey())
+                .setTriggerDebugKeys(eventReport.getTriggerDebugKeys())
                 .setTriggerSummaryBucket(eventReport.getTriggerSummaryBucket())
                 .build()
                 .toJson();
@@ -329,7 +347,7 @@ public class EventReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject eventReportPayload)
             throws IOException {
-        EventReportSender eventReportSender = new EventReportSender(mIsDebugInstance);
+        EventReportSender eventReportSender = new EventReportSender(mIsDebugInstance, mContext);
         return eventReportSender.sendReport(adTechDomain, eventReportPayload);
     }
 

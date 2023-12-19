@@ -290,6 +290,11 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Encryption key fetch job. -->
+        <service android:name="com.android.adservices.service.encryptionkey.EncryptionKeyJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Enable Notification Job. -->
         <service android:name="com.android.adservices.service.common.ConsentNotificationJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
@@ -421,6 +426,12 @@
             android:name=
                 "com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider"
             android:authorities="com.android.adservices.provider.asyncregistration"
+            android:exported="false"
+        />
+        <provider
+            android:name=
+                "com.android.adservices.service.common.AdServicesInternalProvider"
+            android:authorities="com.android.adservices.provider.internal"
             android:exported="false"
         />
     </application>

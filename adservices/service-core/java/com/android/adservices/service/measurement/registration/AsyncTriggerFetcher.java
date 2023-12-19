@@ -15,8 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
-
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
@@ -31,13 +29,12 @@ import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.XNetworkData;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -63,27 +60,24 @@ import java.util.Set;
  */
 public class AsyncTriggerFetcher {
 
-    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final MeasurementHttpClient mNetworkConnection;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
-    private final AdServicesLogger mLogger;
     private final Context mContext;
 
     public AsyncTriggerFetcher(Context context) {
         this(
                 context,
                 EnrollmentDao.getInstance(context),
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance());
+                FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
-    public AsyncTriggerFetcher(
-            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncTriggerFetcher(Context context, EnrollmentDao enrollmentDao, Flags flags) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
-        mLogger = logger;
+        mNetworkConnection = new MeasurementHttpClient(context);
     }
 
     /**
@@ -418,7 +412,7 @@ public class AsyncTriggerFetcher {
                 if (!eventTriggerDatum.isNull("priority")) {
                     if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                         Optional<Long> maybePriority =
-                                FetcherUtil.extractLong(eventTriggerDatum, "priority");
+                                FetcherUtil.extractLongString(eventTriggerDatum, "priority");
                         if (!maybePriority.isPresent()) {
                             return Optional.empty();
                         }
@@ -440,13 +434,18 @@ public class AsyncTriggerFetcher {
                         if (!maybeValue.isPresent()) {
                             return Optional.empty();
                         }
-                        validEventTriggerDatum.put("value", String.valueOf(maybeValue.get()));
+                        long value = maybeValue.get();
+                        if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                            return Optional.empty();
+                        }
+                        validEventTriggerDatum.put("value", value);
                     } else {
                         try {
-                            validEventTriggerDatum.put(
-                                    "value",
-                                    String.valueOf(
-                                            Long.parseLong(eventTriggerDatum.getString("value"))));
+                            long value = Long.parseLong(eventTriggerDatum.getString("value"));
+                            if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                                return Optional.empty();
+                            }
+                            validEventTriggerDatum.put("value", value);
                         } catch (NumberFormatException e) {
                             LoggerFactory.getMeasurementLogger()
                                     .d(e, "getValidEventTriggerData: parsing value failed.");
@@ -611,8 +610,10 @@ public class AsyncTriggerFetcher {
             }
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                 Object maybeInt = aggregateValues.get(id);
-                if (!(maybeInt instanceof Integer) || ((Integer) maybeInt) < 1
-                        || ((Integer) maybeInt) > MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                if (!(maybeInt instanceof Integer)
+                        || ((Integer) maybeInt) < 1
+                        || ((Integer) maybeInt)
+                                > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
                     LoggerFactory.getMeasurementLogger()
                             .d("Aggregate values '" + id + "' is invalid. %s", maybeInt);
                     return false;
@@ -626,8 +627,7 @@ public class AsyncTriggerFetcher {
             JSONArray aggregateDeduplicationKeys) throws JSONException {
         JSONArray validAggregateDeduplicationKeys = new JSONArray();
         if (aggregateDeduplicationKeys.length()
-                > FlagsFactory.getFlags()
-                        .getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
+                > mFlags.getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Aggregate deduplication keys have more keys than permitted. %s",

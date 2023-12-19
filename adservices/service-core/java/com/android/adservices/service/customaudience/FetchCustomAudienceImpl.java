@@ -257,7 +257,8 @@ public class FetchCustomAudienceImpl {
                 filterAndValidateRequest(request, devContext)
                         .transformAsync(ignoredVoid -> performFetch(devContext), mExecutorService)
                         .transformAsync(this::validateResponse, mExecutorService)
-                        .transformAsync(this::persistResponse, mExecutorService)
+                        .transformAsync(
+                                ignoredVoid -> persistResponse(devContext), mExecutorService)
                         .addCallback(
                                 new FutureCallback<Void>() {
                                     @Override
@@ -437,7 +438,7 @@ public class FetchCustomAudienceImpl {
                         }));
     }
 
-    private ListenableFuture<Void> persistResponse(Void ignoredVoid) {
+    private ListenableFuture<Void> persistResponse(DevContext devContext) {
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
@@ -480,7 +481,9 @@ public class FetchCustomAudienceImpl {
 
                             // Persist response
                             mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                                    customAudience, mFusedCustomAudience.getDailyUpdateUri());
+                                    customAudience,
+                                    mFusedCustomAudience.getDailyUpdateUri(),
+                                    devContext.getDevOptionsEnabled());
                             return null;
                         }));
     }

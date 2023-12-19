@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.app.adservices.AdServicesManager;
 import android.content.Context;
+import android.util.Pair;
 
 import androidx.appsearch.app.AppSearchBatchResult;
 import androidx.appsearch.app.AppSearchSession;
@@ -39,20 +40,19 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.consent.ConsentConstants;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.List;
@@ -69,22 +69,22 @@ public class AppSearchMeasurementRollbackWorkerTest {
     private static final int FUTURE_TIMEOUT_MILLISECONDS = 3000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final String mAdServicesPackageName =
+            AppSearchConsentWorker.getAdServicesPackageName(mContext);
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
     private AppSearchMeasurementRollbackWorker mWorker;
-    private MockitoSession mMockitoSession;
-
     @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .mockStatic(PlatformStorage.class)
+                    .mockStatic(AppSearchDao.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setup() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PlatformStorage.class)
-                        .mockStatic(AppSearchDao.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
         ArgumentCaptor<PlatformStorage.SearchContext> cap =
                 ArgumentCaptor.forClass(PlatformStorage.SearchContext.class);
         doReturn(mAppSearchSession)
@@ -92,11 +92,6 @@ public class AppSearchMeasurementRollbackWorkerTest {
 
         mWorker = AppSearchMeasurementRollbackWorker.getInstance(mContext, USERID);
         assertThat(cap.getValue().getDatabaseName()).isEqualTo(EXPECTED_DATABASE_NAME);
-    }
-
-    @After
-    public void teardown() {
-        mMockitoSession.finishMocking();
     }
 
     @Test
@@ -177,13 +172,13 @@ public class AppSearchMeasurementRollbackWorkerTest {
                 .when(
                         () ->
                                 AppSearchDao.readAppSearchSessionData(
-                                        any(), any(), any(), any(), any()));
+                                        any(), any(), any(), any(), any(), any()));
 
-        AppSearchMeasurementRollbackDao dao =
+        Pair<Long, String> dao =
                 mWorker.getAdServicesDeletionRollbackMetadata(
                         AdServicesManager.MEASUREMENT_DELETION);
         assertThat(dao).isNotNull();
-        assertThat(dao.getApexVersion()).isEqualTo(APEX_VERSION);
+        assertThat(dao.first).isEqualTo(APEX_VERSION);
         verify(
                 () ->
                         AppSearchDao.readAppSearchSessionData(
@@ -191,7 +186,8 @@ public class AppSearchMeasurementRollbackWorkerTest {
                                 eq(mAppSearchSession),
                                 any(),
                                 eq(AppSearchMeasurementRollbackDao.NAMESPACE),
-                                eq(AppSearchMeasurementRollbackDao.getQuery(USERID))));
+                                eq(AppSearchMeasurementRollbackDao.getQuery(USERID)),
+                                eq(mAdServicesPackageName)));
     }
 
     @Test
@@ -200,9 +196,9 @@ public class AppSearchMeasurementRollbackWorkerTest {
                 .when(
                         () ->
                                 AppSearchDao.readAppSearchSessionData(
-                                        any(), any(), any(), any(), any()));
+                                        any(), any(), any(), any(), any(), any()));
 
-        AppSearchMeasurementRollbackDao dao =
+        Pair<Long, String> dao =
                 mWorker.getAdServicesDeletionRollbackMetadata(
                         AdServicesManager.MEASUREMENT_DELETION);
         assertThat(dao).isNull();
@@ -213,7 +209,8 @@ public class AppSearchMeasurementRollbackWorkerTest {
                                 eq(mAppSearchSession),
                                 any(),
                                 eq(AppSearchMeasurementRollbackDao.NAMESPACE),
-                                eq(AppSearchMeasurementRollbackDao.getQuery(USERID))));
+                                eq(AppSearchMeasurementRollbackDao.getQuery(USERID)),
+                                eq(mAdServicesPackageName)));
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

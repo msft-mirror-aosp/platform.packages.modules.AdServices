@@ -28,7 +28,7 @@ android_test_helper_app {
             "adservices-test-utility",
             "androidx.concurrent_concurrent-futures",
             "compatibility-device-util-axt",
-            "truth-prebuilt",
+            "truth",
     ],
     libs: [
         "android.test.base",

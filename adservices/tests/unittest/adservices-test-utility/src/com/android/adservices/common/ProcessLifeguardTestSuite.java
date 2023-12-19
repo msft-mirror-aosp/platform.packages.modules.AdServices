@@ -40,6 +40,9 @@ import org.junit.runners.JUnit4;
 import org.junit.runners.Suite;
 import org.junit.runners.model.Statement;
 
+// TODO(b/302757068): these tests doesn't seem to working anymore - if the rule is created with
+// IGNORE mode, they still pass
+
 /**
  * Test suite that asserts an exception thrown in the background in one thread doesn't crash another
  * test.
@@ -91,7 +94,9 @@ public final class ProcessLifeguardTestSuite {
     @RunWith(JUnit4.class)
     public static final class Test1ThrowsInBg {
 
-        @Rule public final ProcessLifeguardRule rule = new ProcessLifeguardRule();
+        @Rule
+        public final ProcessLifeguardRule rule =
+                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FORWARD);
 
         @Test
         public void doIt() throws Exception {
@@ -133,7 +138,8 @@ public final class ProcessLifeguardTestSuite {
                 new UncaughtBackgroundExceptionCheckerRule();
 
         @Rule(order = 1)
-        public final ProcessLifeguardRule rule = new ProcessLifeguardRule();
+        public final ProcessLifeguardRule rule =
+                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FORWARD);
 
         @Test
         public void doIt() throws Exception {
@@ -148,7 +154,9 @@ public final class ProcessLifeguardTestSuite {
     @RunWith(JUnit4.class)
     public static final class Test3MakesSureProcessDidntCrash {
 
-        @Rule public final ProcessLifeguardRule rule = new ProcessLifeguardRule();
+        @Rule
+        public final ProcessLifeguardRule rule =
+                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FORWARD);
 
         @Test
         public void doIt() {

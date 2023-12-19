@@ -96,17 +96,21 @@ public class Source {
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
     @Nullable private List<AttributedTrigger> mAttributedTriggers;
-    @Nullable private ReportSpec mFlexEventReportSpec;
+    @Nullable private TriggerSpecs mTriggerSpecs;
     @Nullable private String mTriggerSpecsString;
+    @Nullable private Long mNumStates;
+    @Nullable private Double mFlipProbability;
     @Nullable private Integer mMaxEventLevelReports;
     @Nullable private String mEventAttributionStatusString;
     @Nullable private String mPrivacyParametersString = null;
+    private TriggerDataMatching mTriggerDataMatching;
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
     private boolean mCoarseEventReportDestinations;
     @Nullable private UnsignedLong mSharedDebugKey;
     private List<Pair<Long, Long>> mParsedEventReportWindows;
+    private boolean mDropSourceIfInstalled;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -146,7 +150,7 @@ public class Source {
      */
     @Nullable
     public static List<Pair<Long, Long>> getOrDefaultEventReportWindows(
-            @Nullable String eventReportWindows,
+            @Nullable JSONObject eventReportWindows,
             @NonNull SourceType sourceType,
             long expiryDelta,
             @NonNull Flags flags) {
@@ -223,32 +227,70 @@ public class Source {
      * @param flags flag values
      */
     public boolean hasValidInformationGain(@NonNull Flags flags) {
-        return isFlexLiteApiValueValid(flags) && isFlexEventApiValueValid(flags);
+        if (mTriggerSpecs != null) {
+            return isFlexEventApiValueValid(flags);
+        }
+        return isFlexLiteApiValueValid(flags);
+    }
+
+    private double getInformationGainThreshold(Flags flags) {
+        int destinationMultiplier = getDestinationTypeMultiplier(flags);
+        if (destinationMultiplier == 2) {
+            return mSourceType == SourceType.EVENT
+                    ? flags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent()
+                    : flags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
+        }
+        return mSourceType == SourceType.EVENT
+                ? flags.getMeasurementFlexApiMaxInformationGainEvent()
+                : flags.getMeasurementFlexApiMaxInformationGainNavigation();
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexLiteAPIEnabled()
-                || (mEventReportWindows == null && mMaxEventLevelReports == null)) {
+        if (!flags.getMeasurementFlexLiteApiEnabled()) {
             return true;
         }
-        double informationGainThreshold =
-                mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexApiMaxInformationGainEvent()
-                        : flags.getMeasurementFlexApiMaxInformationGainNavigation();
+        return Combinatorics.getInformationGain(getNumStates(flags), getFlipProbability(flags))
+                <= getInformationGainThreshold(flags);
+    }
 
+    private void buildPrivacyParameters(Flags flags) {
+        if (mTriggerSpecs != null) {
+            // Flex source has num states set during registration but not during attribution; also
+            // num states is only needed for information gain calculation, which is handled during
+            // registration. We set flip probability here for use in noising during registration and
+            // availability for debug reporting during attribution.
+            setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
+            return;
+        }
+        boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
         EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
                 new EventReportWindowCalcDelegate(flags);
-        boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
-        long numStates =
-                Combinatorics.getNumStatesArithmetic(
-                        eventReportWindowCalcDelegate.getMaxReportCount(this, installCase),
-                        getTriggerDataCardinality(),
-                        eventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                                this, installCase));
-        double flipProbability = Combinatorics.getFlipProbability(numStates);
+        int reportingWindowCountForNoising =
+                eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this, installCase);
+        int maxReportCount =
+                eventReportWindowCalcDelegate.getMaxReportCount(this, installCase);
+        int destinationMultiplier = getDestinationTypeMultiplier(flags);
+        long numberOfStates =
+                Combinatorics.getNumberOfStarsAndBarsSequences(
+                        /*numStars=*/ maxReportCount,
+                        /*numBars=*/ getTriggerDataCardinality()
+                                * reportingWindowCountForNoising
+                                * destinationMultiplier);
+        setNumStates(numberOfStates);
+        setFlipProbability(Combinatorics.getFlipProbability(numberOfStates));
+    }
 
-        return Combinatorics.getInformationGain(numStates, flipProbability)
-                <= informationGainThreshold;
+    /**
+     * Returns the number of destination types to use in privacy computations.
+     */
+    public int getDestinationTypeMultiplier(Flags flags) {
+        boolean shouldReportCoarseDestinations =
+                flags.getMeasurementEnableCoarseEventReportDestinations()
+                        && hasCoarseEventReportDestinations();
+        return !shouldReportCoarseDestinations && hasAppDestinations()
+                        && hasWebDestinations()
+                ? SourceNoiseHandler.DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
+                : SourceNoiseHandler.SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
     }
 
     /** Returns true is manual event reporting windows are set otherwise false; */
@@ -278,6 +320,12 @@ public class Source {
         int FALSELY = 3;
     }
 
+    /** The choice of the summary operator with the reporting window */
+    public enum TriggerDataMatching {
+        MODULUS,
+        EXACT
+    }
+
     public enum SourceType {
         EVENT("event"),
         NAVIGATION("navigation");
@@ -291,6 +339,10 @@ public class Source {
         public String getValue() {
             return mValue;
         }
+
+        public int getIntValue() {
+            return this.equals(SourceType.NAVIGATION) ? 1 : 0;
+        }
     }
 
     private Source() {
@@ -301,6 +353,7 @@ public class Source {
         // Making this default explicit since it anyway would occur on an uninitialised int field.
         mPublisherType = EventSurfaceType.APP;
         mAttributionMode = AttributionMode.UNASSIGNED;
+        mTriggerDataMatching = TriggerDataMatching.MODULUS;
         mIsInstallAttributed = false;
         mIsDebugReporting = false;
     }
@@ -351,6 +404,9 @@ public class Source {
      * @return Cardinality of {@link Trigger} metadata
      */
     public int getTriggerDataCardinality() {
+        if (getTriggerSpecs() != null) {
+            return getTriggerSpecs().getTriggerDataCardinality();
+        }
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
                 : PrivacyParams.getNavigationTriggerDataCardinality();
@@ -362,6 +418,17 @@ public class Source {
     @Nullable
     public List<AttributedTrigger> getAttributedTriggers() {
         return mAttributedTriggers;
+    }
+
+    /**
+     * @return all the attributed trigger IDs
+     */
+    public List<String> getAttributedTriggerIds() {
+        List<String> result = new ArrayList<>();
+        for (AttributedTrigger attributedTrigger : mAttributedTriggers) {
+            result.add(attributedTrigger.getTriggerId());
+        }
+        return result;
     }
 
     /**
@@ -389,11 +456,11 @@ public class Source {
     }
 
     /**
-     * @return the flex event report specifications
+     * @return the flex event trigger specification
      */
     @Nullable
-    public ReportSpec getFlexEventReportSpec() {
-        return mFlexEventReportSpec;
+    public TriggerSpecs getTriggerSpecs() {
+        return mTriggerSpecs;
     }
 
     @Override
@@ -440,13 +507,15 @@ public class Source {
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
                 && Objects.equals(mAttributedTriggers, source.mAttributedTriggers)
-                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
+                && Objects.equals(mTriggerSpecs, source.mTriggerSpecs)
                 && Objects.equals(mTriggerSpecsString, source.mTriggerSpecsString)
                 && Objects.equals(mMaxEventLevelReports, source.mMaxEventLevelReports)
                 && Objects.equals(
                         mEventAttributionStatusString, source.mEventAttributionStatusString)
                 && Objects.equals(mPrivacyParametersString, source.mPrivacyParametersString)
-                && Objects.equals(mSharedDebugKey, source.mSharedDebugKey);
+                && Objects.equals(mTriggerDataMatching, source.mTriggerDataMatching)
+                && Objects.equals(mSharedDebugKey, source.mSharedDebugKey)
+                && mDropSourceIfInstalled == source.mDropSourceIfInstalled;
     }
 
     @Override
@@ -486,13 +555,15 @@ public class Source {
                 mRegistrationOrigin,
                 mDebugJoinKey,
                 mAttributedTriggers,
-                mFlexEventReportSpec,
+                mTriggerSpecs,
                 mTriggerSpecsString,
+                mTriggerDataMatching,
                 mMaxEventLevelReports,
                 mEventAttributionStatusString,
                 mPrivacyParametersString,
                 mCoarseEventReportDestinations,
-                mSharedDebugKey);
+                mSharedDebugKey,
+                mDropSourceIfInstalled);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -654,6 +725,11 @@ public class Source {
         return mAttributionMode;
     }
 
+    /** Specification for trigger matching behaviour. Values: Modulus, Exact. */
+    public TriggerDataMatching getTriggerDataMatching() {
+        return mTriggerDataMatching;
+    }
+
     /**
      * Attribution window for install events.
      */
@@ -687,20 +763,9 @@ public class Source {
      *
      * @return whether the parameters of flexible are valid
      */
+    @VisibleForTesting
     public boolean isFlexEventApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexibleEventReportingApiEnabled()
-                || mFlexEventReportSpec == null) {
-            return true;
-        }
-        double informationGainThreshold =
-                mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexApiMaxInformationGainEvent()
-                        : flags.getMeasurementFlexApiMaxInformationGainNavigation();
-
-        if (mFlexEventReportSpec.getInformationGain() > informationGainThreshold) {
-            return false;
-        }
-        return true;
+        return mTriggerSpecs.getInformationGain(this, flags) <= getInformationGainThreshold(flags);
     }
 
     /**
@@ -855,7 +920,7 @@ public class Source {
      * where the conversion occurred or merge app and web destinations. Set to true of both app and
      * web destination should be merged into the array of event report.
      */
-    public boolean getCoarseEventReportDestinations() {
+    public boolean hasCoarseEventReportDestinations() {
         return mCoarseEventReportDestinations;
     }
 
@@ -865,8 +930,27 @@ public class Source {
     }
 
     /** Returns trigger specs */
-    public String getTriggerSpecs() {
+    public String getTriggerSpecsString() {
         return mTriggerSpecsString;
+    }
+
+    /**
+     * Returns the number of report states for the source (used only for computation and not
+     * stored in the datastore)
+     */
+    private Long getNumStates(Flags flags) {
+        if (mNumStates == null) {
+            buildPrivacyParameters(flags);
+        }
+        return mNumStates;
+    }
+
+    /** Returns flip probability (used only for computation and not stored in the datastore) */
+    public Double getFlipProbability(Flags flags) {
+        if (mFlipProbability == null) {
+            buildPrivacyParameters(flags);
+        }
+        return mFlipProbability;
     }
 
     /** Returns max bucket increments */
@@ -918,6 +1002,16 @@ public class Source {
     /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
+    }
+
+    /** Set the number of report states for the {@link Source}. */
+    private void setNumStates(long numStates) {
+        mNumStates = numStates;
+    }
+
+    /** Set flip probability for the {@link Source}. */
+    private void setFlipProbability(double flipProbability) {
+        mFlipProbability = flipProbability;
     }
 
     /**
@@ -1026,6 +1120,11 @@ public class Source {
         return mSharedDebugKey;
     }
 
+    /** Returns true if the source should be dropped when the app is already installed. */
+    public boolean shouldDropSourceIfInstalled() {
+        return mDropSourceIfInstalled;
+    }
+
     /** Returns true if the source has app destination(s), false otherwise. */
     public boolean hasAppDestinations() {
         return mAppDestinations != null && mAppDestinations.size() > 0;
@@ -1068,12 +1167,12 @@ public class Source {
         }
     }
 
-    /** Build the flexible event report API from the raw string */
-    public void buildFlexibleEventReportApi() throws JSONException {
+    /** Build the trigger specs from the raw string */
+    public void buildTriggerSpecs() throws JSONException {
         buildAttributedTriggers();
-        if (mFlexEventReportSpec == null) {
-            mFlexEventReportSpec =
-                    new ReportSpec(
+        if (mTriggerSpecs == null) {
+            mTriggerSpecs =
+                    new TriggerSpecs(
                             mTriggerSpecsString,
                             getOrDefaultMaxEventLevelReports(
                                     mSourceType, mMaxEventLevelReports, FlagsFactory.getFlags()),
@@ -1139,9 +1238,11 @@ public class Source {
             builder.setDebugAdId(copyFrom.mDebugAdId);
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             builder.setAttributedTriggers(copyFrom.mAttributedTriggers);
-            builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
+            builder.setTriggerSpecs(copyFrom.mTriggerSpecs);
+            builder.setTriggerDataMatching(copyFrom.mTriggerDataMatching);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
+            builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
             return builder;
         }
 
@@ -1315,6 +1416,13 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getTriggerDataMatching()} */
+        @NonNull
+        public Builder setTriggerDataMatching(TriggerDataMatching triggerDataMatching) {
+            mBuilding.mTriggerDataMatching = triggerDataMatching;
+            return this;
+        }
+
         /** See {@link Source#getInstallAttributionWindow()} */
         @NonNull
         public Builder setInstallAttributionWindow(long installAttributionWindow) {
@@ -1434,40 +1542,24 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getFlexEventReportSpec()} */
+        /** See {@link Source#getTriggerSpecs()} */
         @NonNull
-        public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
-            mBuilding.mFlexEventReportSpec = flexEventReportSpec;
+        public Builder setTriggerSpecs(@Nullable TriggerSpecs triggerSpecs) {
+            mBuilding.mTriggerSpecs = triggerSpecs;
             return this;
         }
 
-        /** See {@link Source#getFlexEventReportSpec()} */
-        @NonNull
-        public Builder buildInitialFlexEventReportSpec(@NonNull Flags flags) throws JSONException {
-            // TODO(b/290100712): Refactor to remove this method
-            if (mBuilding.mTriggerSpecsString == null || mBuilding.mTriggerSpecsString.isEmpty()) {
-                return this;
-            }
-            mBuilding.mFlexEventReportSpec =
-                    new ReportSpec(
-                            mBuilding.mTriggerSpecsString,
-                            getOrDefaultMaxEventLevelReports(
-                                    mBuilding.mSourceType, mBuilding.mMaxEventLevelReports, flags),
-                            null);
-            return this;
-        }
-
-        /** See {@link Source#getCoarseEventReportDestinations()} */
+        /** See {@link Source#hasCoarseEventReportDestinations()} */
         @NonNull
         public Builder setCoarseEventReportDestinations(boolean coarseEventReportDestinations) {
             mBuilding.mCoarseEventReportDestinations = coarseEventReportDestinations;
             return this;
         }
 
-        /** See {@link Source#getTriggerSpecs()} */
+        /** See {@link Source#getTriggerSpecsString()} */
         @NonNull
-        public Builder setTriggerSpecs(@Nullable String triggerSpecs) {
-            mBuilding.mTriggerSpecsString = triggerSpecs;
+        public Builder setTriggerSpecsString(@Nullable String triggerSpecsString) {
+            mBuilding.mTriggerSpecsString = triggerSpecsString;
             return this;
         }
 
@@ -1496,6 +1588,13 @@ public class Source {
         @NonNull
         public Builder setSharedDebugKey(@Nullable UnsignedLong sharedDebugKey) {
             mBuilding.mSharedDebugKey = sharedDebugKey;
+            return this;
+        }
+
+        /** See {@link Source#shouldDropSourceIfInstalled()}. */
+        @NonNull
+        public Builder setDropSourceIfInstalled(boolean dropSourceIfInstalled) {
+            mBuilding.mDropSourceIfInstalled = dropSourceIfInstalled;
             return this;
         }
 

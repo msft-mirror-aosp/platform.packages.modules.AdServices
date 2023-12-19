@@ -16,6 +16,8 @@
 
 package android.sdksandbox.test.scenario.testsdk;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
@@ -27,6 +29,8 @@ final class ClientAppUtils {
 
     private static final String LOAD_AD_BUTTON = "loadAdButton";
     private static final long UI_NAVIGATION_WAIT_MS = 1000;
+    private static final int UI_WAIT_LOAD_AD_MS = 1000;
+    private static final int UI_RETRIES_WAIT_LOAD_AD = 5;
 
     public static final String AD_LOADED_BUTTON_TEXT = "Load Ad (Ad loaded)";
 
@@ -71,6 +75,27 @@ final class ClientAppUtils {
         } else {
             throw new RuntimeException("Did not find 'Load Ad' button.");
         }
+    }
+
+    /**
+     * Assert ad is loaded.
+     *
+     * @param uiDevice is the device that is being used.
+     */
+    public void assertAdLoaded(UiDevice uiDevice) throws Exception {
+        int retries = 0;
+        boolean adLoaded = false;
+        // wait until Ad Loaded.
+        while (!adLoaded && retries < UI_RETRIES_WAIT_LOAD_AD) {
+            Thread.sleep(UI_WAIT_LOAD_AD_MS);
+            if (getLoadAdButton(uiDevice).getText().equals(ClientAppUtils.AD_LOADED_BUTTON_TEXT)) {
+                adLoaded = true;
+            }
+            retries++;
+        }
+
+        assertThat(getLoadAdButton(uiDevice).getText())
+                .isEqualTo(ClientAppUtils.AD_LOADED_BUTTON_TEXT);
     }
 
     /**

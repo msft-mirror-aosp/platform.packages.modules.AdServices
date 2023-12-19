@@ -39,6 +39,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -71,7 +72,8 @@ class ReportAndRegisterEventImpl extends EventReporter {
             @NonNull DevContext devContext,
             @NonNull MeasurementImpl measurementService,
             @NonNull ConsentManager consentManager,
-            @NonNull Context context) {
+            @NonNull Context context,
+            boolean shouldUseUnifiedTables) {
         super(
                 adSelectionEntryDao,
                 adServicesHttpsClient,
@@ -82,7 +84,8 @@ class ReportAndRegisterEventImpl extends EventReporter {
                 adSelectionServiceFilter,
                 callerUid,
                 fledgeAuthorizationFilter,
-                devContext);
+                devContext,
+                shouldUseUnifiedTables);
 
         Objects.requireNonNull(measurementService);
         Objects.requireNonNull(context);
@@ -134,6 +137,15 @@ class ReportAndRegisterEventImpl extends EventReporter {
         reportingUrisFuture
                 .transformAsync(
                         reportingUris -> {
+                            if (mFlags.getFledgeBeaconReportingMetricsEnabled()) {
+                                mAdServicesLogger.logReportInteractionApiCalledStats(
+                                        ReportInteractionApiCalledStats.builder()
+                                                .setBeaconReportingDestinationType(
+                                                        input.getReportingDestinations())
+                                                .setNumMatchingUris(reportingUris.size())
+                                                .build()
+                                );
+                            }
                             if (canMeasurementRegisterAndReport(input)) {
                                 return reportAndRegisterUris(reportingUris, input);
                             } else {
@@ -190,12 +202,9 @@ class ReportAndRegisterEventImpl extends EventReporter {
         }
 
         // Check if user consent is granted.
-        AdServicesApiConsent userConsent = AdServicesApiConsent.REVOKED;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent =
+                mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
+
         if (!userConsent.isGiven()) {
             sLogger.v("Skipping event registration: User consent is revoked.");
             return false;

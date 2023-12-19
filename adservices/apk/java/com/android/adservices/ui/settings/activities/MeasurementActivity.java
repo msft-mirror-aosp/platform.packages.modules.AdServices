@@ -63,6 +63,11 @@ public class MeasurementActivity extends AdServicesBaseActivity {
         initActivity();
     }
 
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
     private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()

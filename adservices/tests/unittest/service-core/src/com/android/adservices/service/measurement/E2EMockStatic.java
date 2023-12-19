@@ -62,10 +62,7 @@ public final class E2EMockStatic implements StaticMockFixture {
                 .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
         // Pass manifest checks
         doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), any(), anyString()));
+                .when(() -> AppManifestConfigHelper.isAllowedAttributionAccess(any(), anyString()));
     }
 
     /** {@inheritDoc} */

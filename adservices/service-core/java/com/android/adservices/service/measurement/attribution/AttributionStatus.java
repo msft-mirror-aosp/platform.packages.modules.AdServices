@@ -93,7 +93,9 @@ public class AttributionStatus {
         NO_MATCHING_SOURCE(4),
         TOP_LEVEL_FILTER_MATCH_FAILURE(5),
         RATE_LIMIT_EXCEEDED(6),
-        NO_REPORTS_GENERATED(7);
+        NO_REPORTS_GENERATED(7),
+        JOB_RETRY_LIMIT_EXCEEDED(8),
+        TRIGGER_NOT_FOUND(9);
         private final int mValue;
 
         FailureType(int value) {

@@ -101,6 +101,16 @@ public final class PermissionHelper {
     }
 
     /**
+     * @return {@code true} if the caller has the permission to invoke Protected Signals APIs.
+     */
+    public static boolean hasProtectedSignalsPermission(
+            @NonNull Context context, @NonNull String appPackageName) {
+        // TODO(b/236268316): Add check for SDK permission.
+        return hasPermission(
+                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
+    }
+
+    /**
      * @return {@code true} if the caller has the permission to invoke AdService's state
      *     modification API.
      */

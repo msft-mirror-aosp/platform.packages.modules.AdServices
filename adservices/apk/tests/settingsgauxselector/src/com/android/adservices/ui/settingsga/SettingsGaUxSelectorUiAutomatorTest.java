@@ -15,6 +15,12 @@
  */
 package com.android.adservices.ui.settingsga;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
@@ -34,14 +40,16 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -54,6 +62,20 @@ public class SettingsGaUxSelectorUiAutomatorTest {
 
     private String mTestName;
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
+                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setFlag(KEY_U18_UX_ENABLED, true)
+                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_DEBUG_UX, "GA_UX")
+                    .setCompatModeFlags();
+
     @Before
     public void setup() {
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
@@ -64,23 +86,10 @@ public class SettingsGaUxSelectorUiAutomatorTest {
         // Start from the home screen
         sDevice.pressHome();
 
-        // set flag
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_ad_services_system_api true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices debug_ux GA_UX");
-
         // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
     }
 
     @After
@@ -90,10 +99,6 @@ public class SettingsGaUxSelectorUiAutomatorTest {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test

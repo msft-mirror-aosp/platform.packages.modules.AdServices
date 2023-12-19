@@ -21,9 +21,9 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Datastore manager for SQLite database. */

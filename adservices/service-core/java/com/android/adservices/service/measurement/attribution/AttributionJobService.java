@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.attribution.AttributionJobHandler.ProcessingResult;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.util.JobLockHolder;
@@ -89,47 +90,61 @@ public class AttributionJobService extends JobService {
         mExecutorFuture =
                 sBackgroundExecutor.submit(
                         () -> {
-                            boolean needsRescheduling = processPendingAttributions();
+                            ProcessingResult result = acquireLockAndProcessPendingAttributions();
+                            LoggerFactory.getMeasurementLogger()
+                                    .d("AttributionJobService finished processing [%s]", result);
 
+                            final boolean shouldRetry =
+                                    !ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED.equals(result);
+                            final boolean isSuccessful = !ProcessingResult.FAILURE.equals(result);
                             AdservicesJobServiceLogger.getInstance(AttributionJobService.this)
                                     .recordJobFinished(
                                             MEASUREMENT_ATTRIBUTION_JOB_ID,
-                                            /* isSuccessful= */ true,
-                                            needsRescheduling);
+                                            isSuccessful,
+                                            shouldRetry);
 
-                            jobFinished(params, needsRescheduling);
-                            // jobFinished is asynchronous, so forcing scheduling avoiding
-                            // concurrency issue
-                            scheduleIfNeeded(this, /* forceSchedule */ true);
+                            switch (result) {
+                                case SUCCESS_ALL_RECORDS_PROCESSED:
+                                    // Force scheduling to avoid concurrency issue
+                                    scheduleIfNeeded(this, /* forceSchedule */ true);
+                                    break;
+                                case SUCCESS_WITH_PENDING_RECORDS:
+                                    scheduleImmediately(AttributionJobService.this);
+                                    break;
+                                case FAILURE:
+                                default:
+                                    // Reschedule with back-off criteria specified when it was
+                                    // scheduled
+                                    jobFinished(params, /* wantsReschedule= */ true);
+                            }
+
                             DebugReportingJobService.scheduleIfNeeded(
                                     getApplicationContext(), /* forceSchedule */ false);
                         });
         return true;
     }
 
-    /**
-     * Returns false if the job doesn't need to be rescheduled. If there are pending records to be
-     * processed it will return true.
-     */
     @VisibleForTesting
-    boolean processPendingAttributions() {
+    ProcessingResult acquireLockAndProcessPendingAttributions() {
         final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
         if (lock.tryLock()) {
             try {
-                return new AttributionJobHandler(
-                                DatastoreManagerFactory.getDatastoreManager(
-                                        getApplicationContext()),
-                                new DebugReportApi(
-                                        getApplicationContext(), FlagsFactory.getFlags()))
-                        .performPendingAttributions();
+                return processPendingAttributions();
             } finally {
                 lock.unlock();
             }
         }
         LoggerFactory.getMeasurementLogger().d("AttributionJobService did not acquire the lock");
-        // Returning false to not reschedule. A call to be rescheduled will be made once the job
-        // finishes. Another thread is already processing attribution.
-        return false;
+        // Another thread is already processing attribution. Returning success to not reschedule.
+        return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
+    }
+
+    @VisibleForTesting
+    ProcessingResult processPendingAttributions() {
+        return new AttributionJobHandler(
+                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext()),
+                        new DebugReportApi(getApplicationContext(), FlagsFactory.getFlags()))
+                .performPendingAttributions();
     }
 
     @Override
@@ -194,6 +209,31 @@ public class AttributionJobService extends JobService {
             LoggerFactory.getMeasurementLogger()
                     .d("AttributionJobService already scheduled, skipping reschedule");
         }
+    }
+
+    @VisibleForTesting
+    void scheduleImmediately(Context context) {
+        if (FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch()) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("AttributionJobService is disabled, skip scheduling");
+            return;
+        }
+
+        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        if (jobScheduler == null) {
+            LoggerFactory.getMeasurementLogger().e("JobScheduler not found");
+            return;
+        }
+
+        final JobInfo job =
+                new JobInfo.Builder(
+                                MEASUREMENT_ATTRIBUTION_JOB_ID,
+                                new ComponentName(context, AttributionJobService.class))
+                        .build();
+
+        schedule(jobScheduler, job);
+        LoggerFactory.getMeasurementLogger()
+                .d("AttributionJobService scheduled to run immediately");
     }
 
     private boolean skipAndCancelBackgroundJob(

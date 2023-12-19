@@ -205,7 +205,8 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
                                 datastoreManager,
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.FALLBACK,
+                                getApplicationContext())
                         .performScheduledPendingReports();
                 return;
             } finally {

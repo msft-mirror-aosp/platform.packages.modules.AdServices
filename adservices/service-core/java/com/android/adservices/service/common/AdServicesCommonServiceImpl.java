@@ -58,6 +58,7 @@ import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
+import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
@@ -285,7 +286,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             @NonNull IEnableAdServicesCallback callback) {
         LogUtil.d(ENABLE_AD_SERVICES_API_CALLED_MESSAGE);
 
+        Trace.beginSection("AdServicesCommonService#EnableAdServices_PermissionCheck");
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+        Trace.endSection();
 
         sBackgroundExecutor.execute(
                 () -> {
@@ -308,7 +311,10 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
 
+                        Trace.beginSection("AdServicesCommonService#EnableAdServices_UxEngineFlow");
                         mUxEngine.start(adServicesStates);
+                        Trace.endSection();
+
                         LogUtil.d("enableAdServices(): UxEngine started.");
 
                         callback.onResult(

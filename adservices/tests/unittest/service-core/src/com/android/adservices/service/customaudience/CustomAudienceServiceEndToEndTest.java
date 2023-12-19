@@ -44,6 +44,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -109,7 +111,6 @@ import com.google.mockwebserver.MockWebServer;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -175,6 +176,8 @@ public class CustomAudienceServiceEndToEndTest {
     private MockitoSession mStaticMockSession = null;
 
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
+    @Mock private CustomAudienceValidator mCustomAudienceValidatorMock;
 
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
@@ -356,7 +359,7 @@ public class CustomAudienceServiceEndToEndTest {
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
@@ -378,7 +381,7 @@ public class CustomAudienceServiceEndToEndTest {
                         CommonFixture.VALID_BUYER_1,
                         VALID_NAME));
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
@@ -749,7 +752,7 @@ public class CustomAudienceServiceEndToEndTest {
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
@@ -763,7 +766,7 @@ public class CustomAudienceServiceEndToEndTest {
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
                 callback.getException().getMessage());
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
@@ -968,7 +971,7 @@ public class CustomAudienceServiceEndToEndTest {
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         MY_APP_PACKAGE_NAME,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
@@ -992,7 +995,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(otherOwner, BUYER_1, NAME_1));
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         MY_APP_PACKAGE_NAME,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
@@ -1104,7 +1107,7 @@ public class CustomAudienceServiceEndToEndTest {
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         incorrectPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE);
@@ -1132,7 +1135,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         incorrectPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE);
@@ -1286,7 +1289,7 @@ public class CustomAudienceServiceEndToEndTest {
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         incorrectPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
@@ -1331,7 +1334,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
                         incorrectPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
@@ -1382,88 +1385,110 @@ public class CustomAudienceServiceEndToEndTest {
                         MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
     }
 
-    @Ignore("b/294363254")
     @Test
     public void testCustomAudience_throttledSubsequentCallFails() {
-        doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
+        class FlagsWithLowRateLimit implements Flags {
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public float getSdkRequestPermitsPerSecond() {
+                return 1f;
+            }
+        }
+
+        Flags flagsWithLowRateLimit = new FlagsWithLowRateLimit();
+
+        doReturn(flagsWithLowRateLimit).when(FlagsFactory::getFlags);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        CustomAudienceQuantityChecker customAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
-
-        CustomAudienceValidator customAudienceValidator =
-                new CustomAudienceValidator(
-                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        CommonFixture.FLAGS_FOR_TEST,
-                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
-                        RENDER_ID_VALIDATOR_NO_OP);
         Throttler.destroyExistingThrottler();
-        CustomAudienceServiceImpl customAudienceService =
-                mService =
-                        new CustomAudienceServiceImpl(
-                                CONTEXT,
-                                new CustomAudienceImpl(
-                                        mCustomAudienceDao,
-                                        customAudienceQuantityChecker,
-                                        customAudienceValidator,
-                                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                        CommonFixture.FLAGS_FOR_TEST),
-                                new FledgeAuthorizationFilter(
-                                        CONTEXT.getPackageManager(),
-                                        EnrollmentDao.getInstance(CONTEXT),
-                                        mAdServicesLogger),
-                                mConsentManagerMock,
-                                mDevContextFilter,
-                                MoreExecutors.newDirectExecutorService(),
-                                mAdServicesLogger,
-                                mAppImportanceFilter,
-                                CommonFixture.FLAGS_FOR_TEST,
-                                CallingAppUidSupplierProcessImpl.create(),
-                                new CustomAudienceServiceFilter(
-                                        CONTEXT,
-                                        mConsentManagerMock,
-                                        CommonFixture.FLAGS_FOR_TEST,
-                                        mAppImportanceFilter,
-                                        new FledgeAuthorizationFilter(
-                                                CONTEXT.getPackageManager(),
-                                                EnrollmentDao.getInstance(CONTEXT),
-                                                mAdServicesLogger),
-                                        new FledgeAllowListsFilter(
-                                                CommonFixture.FLAGS_FOR_TEST, mAdServicesLogger),
-                                        Throttler.getInstance(CommonFixture.FLAGS_FOR_TEST)),
-                                new AdFilteringFeatureFactory(
-                                        mAppInstallDao,
-                                        mFrequencyCapDao,
-                                        CommonFixture.FLAGS_FOR_TEST));
+        try {
+            CustomAudienceServiceImpl customAudienceService =
+                    mService =
+                            new CustomAudienceServiceImpl(
+                                    CONTEXT,
+                                    new CustomAudienceImpl(
+                                            mCustomAudienceDao,
+                                            mCustomAudienceQuantityCheckerMock,
+                                            mCustomAudienceValidatorMock,
+                                            CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                            flagsWithLowRateLimit),
+                                    new FledgeAuthorizationFilter(
+                                            CONTEXT.getPackageManager(),
+                                            EnrollmentDao.getInstance(CONTEXT),
+                                            mAdServicesLogger),
+                                    mConsentManagerMock,
+                                    mDevContextFilter,
+                                    MoreExecutors.newDirectExecutorService(),
+                                    mAdServicesLogger,
+                                    mAppImportanceFilter,
+                                    flagsWithLowRateLimit,
+                                    CallingAppUidSupplierProcessImpl.create(),
+                                    new CustomAudienceServiceFilter(
+                                            CONTEXT,
+                                            mConsentManagerMock,
+                                            flagsWithLowRateLimit,
+                                            mAppImportanceFilter,
+                                            new FledgeAuthorizationFilter(
+                                                    CONTEXT.getPackageManager(),
+                                                    EnrollmentDao.getInstance(CONTEXT),
+                                                    mAdServicesLogger),
+                                            new FledgeAllowListsFilter(
+                                                    flagsWithLowRateLimit, mAdServicesLogger),
+                                            Throttler.getInstance(flagsWithLowRateLimit)),
+                                    new AdFilteringFeatureFactory(
+                                            mAppInstallDao,
+                                            mFrequencyCapDao,
+                                            flagsWithLowRateLimit));
 
-        // The first call should succeed
-        ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();
-        customAudienceService.joinCustomAudience(
-                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackFirstCall);
+            // The first call should succeed
+            ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();
+            customAudienceService.joinCustomAudience(
+                    CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackFirstCall);
 
-        // The immediate subsequent call should be throttled
-        ResultCapturingCallback callbackSubsequentCall = new ResultCapturingCallback();
-        customAudienceService.joinCustomAudience(
-                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackSubsequentCall);
+            // The immediate subsequent call should be throttled
+            ResultCapturingCallback callbackSubsequentCall = new ResultCapturingCallback();
+            customAudienceService.joinCustomAudience(
+                    CUSTOM_AUDIENCE_PK1_1,
+                    CustomAudienceFixture.VALID_OWNER,
+                    callbackSubsequentCall);
 
-        assertTrue(callbackFirstCall.isSuccess());
-        assertEquals(
-                DB_CUSTOM_AUDIENCE_PK1_1,
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                        CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER_1,
-                        VALID_NAME));
+            assertWithMessage("First callback success")
+                    .that(callbackFirstCall.isSuccess())
+                    .isTrue();
+            assertWithMessage("Inserted CA")
+                    .that(
+                            mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                                    CustomAudienceFixture.VALID_OWNER,
+                                    CommonFixture.VALID_BUYER_1,
+                                    VALID_NAME))
+                    .isEqualTo(DB_CUSTOM_AUDIENCE_PK1_1);
 
-        assertFalse(callbackSubsequentCall.isSuccess());
-        assertTrue(callbackSubsequentCall.getException() instanceof LimitExceededException);
-        assertEquals(
-                AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE,
-                callbackSubsequentCall.getException().getMessage());
-        resetThrottlerToNoRateLimits();
+            assertWithMessage("Second callback success")
+                    .that(callbackSubsequentCall.isSuccess())
+                    .isFalse();
+            assertWithMessage("Second callback exception")
+                    .that(callbackSubsequentCall.getException())
+                    .isInstanceOf(LimitExceededException.class);
+            assertWithMessage("Second callback exception")
+                    .that(callbackSubsequentCall.getException())
+                    .hasMessageThat()
+                    .isEqualTo(AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE);
+        } finally {
+            resetThrottlerToNoRateLimits();
+        }
     }
 
     /**

@@ -51,6 +51,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -96,11 +97,13 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         AdServicesExecutors.getBlockingExecutor(),
                                         TIMEOUT_MS,
                                         TIMEOUT_MS,
-                                        MAX_SIZE_BYTES)),
+                                        FlagsFactory.getFlags()
+                                                .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
-                                new UpdateEncoderEventHandler(context)),
+                                new UpdateEncoderEventHandler(context),
+                                new SignalEvictionController()),
                         new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME)),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(context),
@@ -184,7 +187,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredProtectedSignalsPermission(
                 mContext, updateSignalsInput.getCallerPackageName(), apiName);
 
         final int callerUid = getCallingUid(apiName);

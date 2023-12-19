@@ -15,25 +15,17 @@
  */
 package com.android.adservices.tests.adid;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
-import android.content.Context;
 import android.os.LimitExceededException;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -43,23 +35,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class AdIdCompatibleManagerTest {
+public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final float DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND = 25f;
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
-
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAdidE2ETests(sContext.getPackageName());
-
-    // TODO(b/285894099): Remove the rule once AdId is enabled on R.
-    @Rule(order = 2)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
@@ -85,8 +63,8 @@ public final class AdIdCompatibleManagerTest {
                 };
         adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
         AdId resultAdId = future.get();
-        Assert.assertNotNull(resultAdId.getAdId());
-        Assert.assertNotNull(resultAdId.isLimitAdTrackingEnabled());
+        assertThat(resultAdId.getAdId()).isNotNull();
+        assertThat(resultAdId.isLimitAdTrackingEnabled()).isFalse();
     }
 
     @Test
@@ -97,7 +75,7 @@ public final class AdIdCompatibleManagerTest {
         final long nowInMillis = System.currentTimeMillis();
         final float requestPerSecond = flags.getAdIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(getAdIdAndVerifyRateLimitReached(adIdCompatibleManager));
+            assertThat(getAdIdAndVerifyRateLimitReached(adIdCompatibleManager)).isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -111,7 +89,7 @@ public final class AdIdCompatibleManagerTest {
         final boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 

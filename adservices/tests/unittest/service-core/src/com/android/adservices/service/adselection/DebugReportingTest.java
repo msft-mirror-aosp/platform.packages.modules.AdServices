@@ -52,6 +52,7 @@ public class DebugReportingTest {
     private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final int CALLER_UID = Process.myUid();
+    private static final long AD_ID_FETCHER_TIMEOUT_MS = 50;
     @Mock private Flags mFlagsMock;
     @Mock private AdServicesHttpsClient mHttpClientMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
@@ -62,56 +63,81 @@ public class DebugReportingTest {
     public void setUp() {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         MockitoAnnotations.initMocks(this);
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(true);
+        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(false);
         when(mFlagsMock.getFledgeEventLevelDebugReportSendImmediately()).thenReturn(false);
-        when(mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID))
+        when(mFlagsMock.getAdIdFetcherTimeoutMs()).thenReturn(AD_ID_FETCHER_TIMEOUT_MS);
+        when(mAdIdFetcher.isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(true));
     }
 
     @Test
-    public void isEnabled_withLatDisabledAndFlagEnabled_returnsTrue() {
+    public void isDisabled_withAdIdServiceKillSwitchTrue_returnsFalse() {
         when(mFlagsMock.getAdIdKillSwitch()).thenReturn(true);
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
-        when(mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID))
+        when(mAdIdFetcher.isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
+                .thenReturn(Futures.immediateFuture(false));
+
+        DebugReporting debugReporting = initDebugReporting();
+
+        assertThat(debugReporting.isEnabled()).isFalse();
+        assertThat(debugReporting).isInstanceOf(DebugReportingDisabled.class);
+        verify(mAdIdFetcher, never())
+                .isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS);
+    }
+
+    @Test
+    public void isEnabled_withLatDisabledAndFlagEnabled_returnsTrue() {
+        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
+        when(mAdIdFetcher.isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
 
         DebugReporting debugReporting = initDebugReporting();
 
         assertThat(debugReporting.isEnabled()).isTrue();
         assertThat(debugReporting).isInstanceOf(DebugReportingEnabled.class);
-        verify(mAdIdFetcher, times(1)).isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID);
+        verify(mAdIdFetcher, times(1))
+                .isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS);
     }
 
     @Test
     public void isEnabled_withFlagDisabled_returnsFalse() {
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(true);
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
         DebugReporting debugReporting = initDebugReporting();
 
         assertThat(debugReporting.isEnabled()).isFalse();
         assertThat(debugReporting).isInstanceOf(DebugReportingDisabled.class);
-        verify(mAdIdFetcher, never()).isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID);
+        verify(mAdIdFetcher, never())
+                .isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS);
     }
 
     @Test
     public void isEnabled_withLatEnabled_returnsFalse() {
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(true);
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
-        when(mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID))
+        when(mAdIdFetcher.isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(true));
 
         DebugReporting debugReporting = initDebugReporting();
 
         assertThat(debugReporting.isEnabled()).isFalse();
         assertThat(debugReporting).isInstanceOf(DebugReportingDisabled.class);
-        verify(mAdIdFetcher, times(1)).isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID);
+        verify(mAdIdFetcher, times(1))
+                .isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS);
     }
 
     @Test
     public void getScriptStrategy_isEnabled_returnsCorrect() {
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
-        when(mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID))
+        when(mAdIdFetcher.isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
 
         DebugReporting debugReporting = initDebugReporting();
@@ -134,7 +160,8 @@ public class DebugReportingTest {
     public void getSenderStrategy_isSentImmediatelyEnabled_returnsCorrect() {
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
         when(mFlagsMock.getFledgeEventLevelDebugReportSendImmediately()).thenReturn(true);
-        when(mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID))
+        when(mAdIdFetcher.isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
 
         DebugReporting debugReporting = initDebugReporting();
@@ -146,7 +173,8 @@ public class DebugReportingTest {
     @Test
     public void getSenderStrategy_isEnabled_returnsCorrect() {
         when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
-        when(mAdIdFetcher.isLimitedAdTrackingEnabled(CALLER_PACKAGE_NAME, CALLER_UID))
+        when(mAdIdFetcher.isLimitedAdTrackingEnabled(
+                        CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
 
         DebugReporting debugReporting = initDebugReporting();

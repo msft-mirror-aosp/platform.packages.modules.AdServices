@@ -21,6 +21,8 @@ import android.annotation.Nullable;
 import android.net.Uri;
 import android.util.Pair;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.json.JSONArray;
 
 import java.util.ArrayList;
@@ -54,16 +56,28 @@ public class ReportUtil {
     }
 
     /**
+     * Prepares a list of {@code UnsignedLong}s for report JSON.
+     *
+     * @param unsignedLongs a list of {@code UnsignedLong}s
+     * @return a JSONArray
+     */
+    @Nullable
+    public static JSONArray serializeUnsignedLongs(@NonNull List<UnsignedLong> unsignedLongs) {
+        return new JSONArray(
+                unsignedLongs.stream().map(UnsignedLong::toString).collect(Collectors.toList()));
+    }
+
+    /**
      * Prepare summary bucket for report JSON
      *
      * @param summaryBucket the summary bucket
-     * @return the string encoded summary bucket in format [start, end]
+     * @return the encoded summary bucket in format [start, end]
      */
     @Nullable
-    public static String serializeSummaryBucket(@NonNull Pair<Long, Long> summaryBucket) {
+    public static JSONArray serializeSummaryBucket(@NonNull Pair<Long, Long> summaryBucket) {
         JSONArray result = new JSONArray();
         result.put(summaryBucket.first);
         result.put(summaryBucket.second);
-        return result.toString();
+        return result;
     }
 }

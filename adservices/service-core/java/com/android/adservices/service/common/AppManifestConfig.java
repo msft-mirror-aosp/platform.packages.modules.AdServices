@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_ADID;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_APPSETID;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_ATTRIBUTION;
@@ -96,9 +101,9 @@ public final class AppManifestConfig {
      * Returns if the ad partner is permitted to access Attribution API for config represented by
      * this object.
      *
-     * <p>If the tag is not found in the app manifest config, returns {@code false}.
+     * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public boolean isAllowedAttributionAccess(@NonNull String enrollmentId) {
+    public int isAllowedAttributionAccess(@NonNull String enrollmentId) {
         return isAllowedAccess(TAG_ATTRIBUTION, mAttributionConfig, enrollmentId);
     }
 
@@ -119,9 +124,9 @@ public final class AppManifestConfig {
      * Returns {@code true} if an ad tech with the given enrollment ID is permitted to access Custom
      * Audience API for config represented by this object.
      *
-     * <p>If the tag is not found in the app manifest config, returns {@code false}.
+     * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public boolean isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
+    public int isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
         return isAllowedAccess(TAG_CUSTOM_AUDIENCES, mCustomAudiencesConfig, enrollmentId);
     }
 
@@ -140,9 +145,9 @@ public final class AppManifestConfig {
      * Returns if the ad partner is permitted to access Topics API for config represented by this
      * object.
      *
-     * <p>If the tag is not found in the app manifest config, returns {@code false}.
+     * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public boolean isAllowedTopicsAccess(@NonNull String enrollmentId) {
+    public int isAllowedTopicsAccess(@NonNull String enrollmentId) {
         return isAllowedAccess(TAG_TOPICS, mTopicsConfig, enrollmentId);
     }
 
@@ -159,9 +164,9 @@ public final class AppManifestConfig {
     /**
      * Returns if sdk is permitted to access AdId API for config represented by this object.
      *
-     * <p>If the tag is not found in the app manifest config, returns {@code false}.
+     * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public boolean isAllowedAdIdAccess(@NonNull String sdk) {
+    public int isAllowedAdIdAccess(@NonNull String sdk) {
         return isAllowedAccess(TAG_ADID, mAdIdConfig, sdk);
     }
 
@@ -181,9 +186,9 @@ public final class AppManifestConfig {
     /**
      * Returns if sdk is permitted to access AppSetId API for config represented by this object.
      *
-     * <p>If the tag is not found in the app manifest config, returns {@code false}.
+     * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public boolean isAllowedAppSetIdAccess(@NonNull String sdk) {
+    public int isAllowedAppSetIdAccess(@NonNull String sdk) {
         return isAllowedAccess(TAG_APPSETID, mAppSetIdConfig, sdk);
     }
 
@@ -200,15 +205,21 @@ public final class AppManifestConfig {
         return null;
     }
 
-    private boolean isAllowedAccess(
+    private int isAllowedAccess(
             String tag, @Nullable AppManifestApiConfig config, String partnerId) {
         if (config == null) {
             LogUtil.v(
                     "app manifest config tag '%s' not found, returning %b", tag, mEnabledByDefault);
-            return mEnabledByDefault;
+            return mEnabledByDefault
+                    ? RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION
+                    : RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION;
         }
-
-        return config.getAllowAllToAccess()
-                || config.getAllowAdPartnersToAccess().contains(partnerId);
+        if (config.getAllowAllToAccess()) {
+            return RESULT_ALLOWED_APP_ALLOWS_ALL;
+        }
+        if (config.getAllowAdPartnersToAccess().contains(partnerId)) {
+            return RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
+        }
+        return RESULT_DISALLOWED_BY_APP;
     }
 }

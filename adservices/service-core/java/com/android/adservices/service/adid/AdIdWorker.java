@@ -20,7 +20,6 @@ import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
-import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -56,11 +55,11 @@ public class AdIdWorker {
      * existing instance will be returned.
      */
     @NonNull
-    public static AdIdWorker getInstance(Context context) {
+    public static AdIdWorker getInstance() {
         if (sAdIdWorker == null) {
             synchronized (AdIdWorker.class) {
                 if (sAdIdWorker == null) {
-                    sAdIdWorker = new AdIdWorker(AdIdCacheManager.getInstance(context));
+                    sAdIdWorker = new AdIdWorker(AdIdCacheManager.getInstance());
                 }
             }
         }

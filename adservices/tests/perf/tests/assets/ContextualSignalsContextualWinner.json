@@ -16,5 +16,5 @@
     "seller_debug_id": "seller_123",
     "seller_signals": "[[72]]"
   },
-  "client_type": "ANDROID"
+  "client_type": "CLIENT_TYPE_ANDROID"
 }

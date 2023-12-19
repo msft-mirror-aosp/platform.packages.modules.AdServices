@@ -40,7 +40,8 @@ import java.util.Objects;
             DBBuyerDecisionOverride.class,
             DBReportingData.class,
             DBAdSelectionInitialization.class,
-            DBAdSelectionResult.class
+            DBAdSelectionResult.class,
+            DBReportingComputationInfo.class
         },
         version = AdSelectionDatabase.DATABASE_VERSION,
         autoMigrations = {
@@ -50,12 +51,13 @@ import java.util.Objects;
             @AutoMigration(from = 4, to = 5),
             @AutoMigration(from = 5, to = 6),
             @AutoMigration(from = 6, to = 7),
+            @AutoMigration(from = 7, to = 8)
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 7;
+    public static final int DATABASE_VERSION = 8;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adselection.db");

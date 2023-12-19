@@ -124,16 +124,32 @@ public class AggregatePayloadGenerator {
             if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
                 AggregateHistogramContribution paddingContribution =
                         new AggregateHistogramContribution.Builder()
-                                .setKey(BigInteger.valueOf(0L))
-                                .setValue(0)
+                                .setPaddingContribution()
                                 .build();
-                IntStream.range(
-                                contributions.size(),
-                                mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
-                        .forEach(i -> contributions.add(paddingContribution));
+
+                padContributions(contributions, paddingContribution);
             }
             return Optional.of(contributions);
         }
         return Optional.empty();
+    }
+
+    /**
+     * Given a list of {@link AggregateHistogramContribution} actual contributions and a single
+     * {@link AggregateHistogramContribution} padding contribution, append the maximum number of
+     * padding contributions to the actual attributions, in place. The maximum number of
+     * contributions is defined in the flags. If the number of actual contributions is already at
+     * the maximum limit, then do nothing.
+     *
+     * @param contributions actual contributions
+     * @param padding the contribution that will act as the pad value.
+     */
+    public void padContributions(
+            List<AggregateHistogramContribution> contributions,
+            AggregateHistogramContribution padding) {
+        IntStream.range(
+                        contributions.size(),
+                        mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+                .forEach(i -> contributions.add(padding));
     }
 }

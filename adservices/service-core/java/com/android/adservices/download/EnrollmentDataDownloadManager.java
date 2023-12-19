@@ -19,6 +19,7 @@ package com.android.adservices.download;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
+import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.MDD_DOWNLOAD_JOB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
@@ -34,10 +35,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.encryptionkey.EncryptionKey;
+import com.android.adservices.service.encryptionkey.EncryptionKeyFetcher;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -60,6 +64,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /** Handles EnrollmentData download from MDD server to device. */
@@ -73,6 +78,7 @@ public class EnrollmentDataDownloadManager {
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
     private final EnrollmentUtil mEnrollmentUtil;
+    private final EncryptionKeyFetcher mEncryptionKeyFetcher;
 
     private static final String GROUP_NAME = "adtech_enrollment_data";
     private static final String DOWNLOADED_ENROLLMENT_DATA_FILE_ID = "adtech_enrollment_data.csv";
@@ -85,18 +91,24 @@ public class EnrollmentDataDownloadManager {
                 context,
                 flags,
                 AdServicesLoggerImpl.getInstance(),
-                EnrollmentUtil.getInstance(context));
+                EnrollmentUtil.getInstance(context),
+                new EncryptionKeyFetcher(MDD_DOWNLOAD_JOB));
     }
 
     @VisibleForTesting
     EnrollmentDataDownloadManager(
-            Context context, Flags flags, AdServicesLogger logger, EnrollmentUtil enrollmentUtil) {
+            Context context,
+            Flags flags,
+            AdServicesLogger logger,
+            EnrollmentUtil enrollmentUtil,
+            EncryptionKeyFetcher encryptionKeyFetcher) {
         mContext = context.getApplicationContext();
         mMobileDataDownload = MobileDataDownloadFactory.getMdd(context, flags);
         mFileStorage = MobileDataDownloadFactory.getFileStorage(context);
         mFlags = flags;
         mLogger = logger;
         mEnrollmentUtil = enrollmentUtil;
+        mEncryptionKeyFetcher = encryptionKeyFetcher;
     }
 
     /** Gets an instance of EnrollmentDataDownloadManager to be used. */
@@ -109,7 +121,8 @@ public class EnrollmentDataDownloadManager {
                                     context,
                                     FlagsFactory.getFlags(),
                                     AdServicesLoggerImpl.getInstance(),
-                                    EnrollmentUtil.getInstance(context));
+                                    EnrollmentUtil.getInstance(context),
+                                    new EncryptionKeyFetcher(MDD_DOWNLOAD_JOB));
                 }
             }
         }
@@ -139,7 +152,9 @@ public class EnrollmentDataDownloadManager {
             return Futures.immediateFuture(DownloadStatus.SKIP);
         }
         boolean shouldTrimEnrollmentData = mFlags.getEnrollmentMddRecordDeletionEnabled();
-        if (processDownloadedFile(enrollmentDataFile, shouldTrimEnrollmentData)) {
+        Optional<List<EnrollmentData>> enrollmentDataList =
+                processDownloadedFile(enrollmentDataFile, shouldTrimEnrollmentData);
+        if (enrollmentDataList.isPresent()) {
             SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.clear().putBoolean(fileGroupBuildId, true);
             if (!editor.commit()) {
@@ -153,6 +168,12 @@ public class EnrollmentDataDownloadManager {
                             + "Enrollment Mdd Record Deletion Feature Enabled: %b",
                     fileGroupBuildId, shouldTrimEnrollmentData);
             mEnrollmentUtil.logEnrollmentFileDownloadStats(mLogger, true, fileGroupBuildId);
+
+            if (!mFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()) {
+                // For new enrollment, fetch and save encryption/signing keys into DB.
+                LogUtil.i("Fetch and save encryption/signing keys for new enrollment.");
+                fetchEncryptionKeysForNewEnrollment(enrollmentDataList.get());
+            }
             return Futures.immediateFuture(DownloadStatus.SUCCESS);
         } else {
             mEnrollmentUtil.logEnrollmentFileDownloadStats(mLogger, false, fileGroupBuildId);
@@ -160,7 +181,29 @@ public class EnrollmentDataDownloadManager {
         }
     }
 
-    private boolean processDownloadedFile(ClientFile enrollmentDataFile, boolean trimTable) {
+    private void fetchEncryptionKeysForNewEnrollment(List<EnrollmentData> enrollmentDataList) {
+        EncryptionKeyDao encryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
+        for (EnrollmentData enrollmentData : enrollmentDataList) {
+            List<EncryptionKey> existingKeys =
+                    encryptionKeyDao.getEncryptionKeyFromEnrollmentId(
+                            enrollmentData.getEnrollmentId());
+            // New enrollment which doesn't have any keys before, fetch keys for the first time.
+            if (existingKeys == null || existingKeys.size() == 0) {
+                Optional<List<EncryptionKey>> currentEncryptionKeys =
+                        mEncryptionKeyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
+                if (currentEncryptionKeys.isEmpty()) {
+                    LogUtil.d("No encryption key is provided by this enrollment data.");
+                } else {
+                    for (EncryptionKey encryptionKey : currentEncryptionKeys.get()) {
+                        encryptionKeyDao.insert(encryptionKey);
+                    }
+                }
+            }
+        }
+    }
+
+    private Optional<List<EnrollmentData>> processDownloadedFile(
+            ClientFile enrollmentDataFile, boolean trimTable) {
         LogUtil.d("Inserting MDD data into DB.");
         try {
             InputStream inputStream =
@@ -187,37 +230,38 @@ public class EnrollmentDataDownloadManager {
                                     .setAttributionSourceRegistrationUrl(
                                             data[3].contains(" ")
                                                     ? Arrays.asList(data[3].split(" "))
-                                                    : Arrays.asList(data[3]))
+                                                    : List.of(data[3]))
                                     .setAttributionTriggerRegistrationUrl(
                                             data[4].contains(" ")
                                                     ? Arrays.asList(data[4].split(" "))
-                                                    : Arrays.asList(data[4]))
+                                                    : List.of(data[4]))
                                     .setAttributionReportingUrl(
                                             data[5].contains(" ")
                                                     ? Arrays.asList(data[5].split(" "))
-                                                    : Arrays.asList(data[5]))
+                                                    : List.of(data[5]))
                                     .setRemarketingResponseBasedRegistrationUrl(
                                             data[6].contains(" ")
                                                     ? Arrays.asList(data[6].split(" "))
-                                                    : Arrays.asList(data[6]))
+                                                    : List.of(data[6]))
                                     .setEncryptionKeyUrl(data[7])
                                     .build();
                     newEnrollments.add(enrollmentData);
                 }
             }
             if (trimTable) {
-                return enrollmentDao.overwriteData(newEnrollments);
+                enrollmentDao.overwriteData(newEnrollments);
+                return Optional.of(newEnrollments);
             }
             for (EnrollmentData enrollmentData : newEnrollments) {
                 enrollmentDao.insert(enrollmentData);
             }
-            return true;
+            return Optional.of(newEnrollments);
         } catch (IOException e) {
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
-            return false;
+            return Optional.empty();
         }
     }
 

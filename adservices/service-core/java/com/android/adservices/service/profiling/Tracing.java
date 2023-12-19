@@ -24,8 +24,19 @@ import java.util.concurrent.ThreadLocalRandom;
 /** Utility class providing methods for using {@link android.os.Trace}. */
 public final class Tracing {
 
-    public static final String FILTER_CA = "FilterCustomAudiences";
-    public static final String FILTER_CONTEXTUAL = "FilterContextualAds";
+    public static final String FILTERER_FILTER_CA = "AdFilterer#FilterCustomAudiences";
+    public static final String FILTERER_FOR_EACH_CA = "AdFilterer#ForEachCustomAudience";
+    public static final String FILTERER_FOR_EACH_AD = "AdFilterer#ForEachAd";
+    public static final String FILTERER_FREQUENCY_CAP = "AdFilterer#doesAdPassFrequencyCapFilters";
+    public static final String FILTERER_FREQUENCY_CAP_WIN =
+            "AdFilterer#doesAdPassFrequencyCapFiltersForWinType";
+    public static final String FREQUENCY_CAP_GET_NUM_EVENTS_CA =
+            "FrequencyCapDao#getNumEventsForCustomAudienceAfterTime";
+    public static final String FREQUENCY_CAP_GET_NUM_EVENTS_BUYER =
+            "FrequencyCapDao#getNumEventsForBuyerAfterTime";
+    public static final String FILTERER_FREQUENCY_CAP_NON_WIN =
+            "AdFilterer#doesAdPassFrequencyCapFiltersForNonWinType";
+    public static final String FILTERER_FILTER_CONTEXTUAL = "AdFilterer#FilterContextualAds";
     public static final String RUN_AD_SELECTION = "RunOnDeviceAdSelection";
     public static final String PERSIST_AD_SELECTION = "PersistOnDeviceAdSelection";
     public static final String GET_BUYERS_CUSTOM_AUDIENCE = "GetBuyersCustomAudience";
@@ -62,7 +73,16 @@ public final class Tracing {
     public static final String GET_FILTERED_BUYERS_CA =
             "BuyerInputGenerator#getFilteredCustomAudiences";
     public static final String GET_BUYERS_PS = "BuyerInputGenerator#getBuyersProtectedSignals";
+    public static final String GET_COMPRESSED_BUYERS_INPUTS =
+            "BuyerInputGenerator#getCompressedBuyerInputs";
+    public static final String AUCTION_SERVER_GZIP_COMPRESS =
+            "AuctionServerDataCompressorGzip#compress";
+    public static final String FORMAT_PAYLOAD_V0 = "AuctionServerPayloadFormatterV0#apply";
+    public static final String FORMAT_PAYLOAD_EXCESSIVE_MAX_SIZE =
+            "AuctionServerPayloadFormatterExcessiveMaxSize#apply";
     public static final String CREATE_BUYER_INPUTS = "BuyerInputGenerator#createBuyerInputs";
+    public static final String CREATE_GET_AD_SELECTION_DATA_PAYLOAD =
+            "GetAdSelectionDataRunner#createPayload";
     public static final String ORCHESTRATE_GET_AD_SELECTION_DATA =
             "GetAdSelectionDataRunner#orchestrateGetAdSelectionDataRunner";
     public static final String PERSIST_AD_SELECTION_ID_REQUEST =

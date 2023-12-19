@@ -30,6 +30,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.Validator;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -110,7 +111,9 @@ public class CustomAudienceImpl {
      *     application identifier
      */
     public void joinCustomAudience(
-            @NonNull CustomAudience customAudience, @NonNull String callerPackageName) {
+            @NonNull CustomAudience customAudience,
+            @NonNull String callerPackageName,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callerPackageName);
         Instant currentTime = mClock.instant();
@@ -140,7 +143,9 @@ public class CustomAudienceImpl {
 
         sLogger.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dbCustomAudience, customAudience.getDailyUpdateUri());
+                dbCustomAudience,
+                customAudience.getDailyUpdateUri(),
+                devContext.getDevOptionsEnabled());
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */

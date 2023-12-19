@@ -401,9 +401,11 @@ public class JSScriptEngine {
             mLogger.d(
                     "Evaluating JS script with associated WASM on thread %s",
                     Thread.currentThread().getName());
-
-            if (!jsIsolate.provideNamedData(WASM_MODULE_BYTES_ID, wasmBinary)) {
-                throw new JSExecutionException("Unable to pass WASM byte array to JS Isolate");
+            try {
+                jsIsolate.provideNamedData(WASM_MODULE_BYTES_ID, wasmBinary);
+            } catch (IllegalStateException ise) {
+                mLogger.d(ise, "Unable to pass WASM byte array to JS Isolate");
+                throw new JSExecutionException("Unable to pass WASM byte array to JS Isolate", ise);
             }
         } else {
             mLogger.d("Evaluating JS script on thread %s", Thread.currentThread().getName());

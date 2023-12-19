@@ -142,6 +142,19 @@ public class AdServicesStatusUtils {
      * <p>This error may be considered similar to {@link LimitExceededException}.
      */
     public static final int STATUS_SERVER_RATE_LIMIT_REACHED = 17;
+    /**
+     * Consent notification has not been displayed yet. AdServices is not available.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET = 18;
+
+    /**
+     * Result code for Encryption related failures.
+     *
+     * <p>This error may be considered similar to {@link IllegalArgumentException}.
+     */
+    public static final int STATUS_ENCRYPTION_FAILURE = 19;
 
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
@@ -189,6 +202,8 @@ public class AdServicesStatusUtils {
     /** The error message to be returned along with {@link InvalidObjectException}. */
     public static final String INVALID_OBJECT_ERROR_MESSAGE =
             "The service received an invalid object from the server.";
+    /** The error message to be returned along with {@link IllegalArgumentException}. */
+    public static final String ENCRYPTION_FAILURE_MESSAGE = "Failed to encrypt responses.";
 
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
@@ -199,11 +214,14 @@ public class AdServicesStatusUtils {
     @NonNull
     public static Exception asException(@StatusCode int statusCode) {
         switch (statusCode) {
+            case STATUS_ENCRYPTION_FAILURE:
+                return new IllegalArgumentException(ENCRYPTION_FAILURE_MESSAGE);
             case STATUS_INVALID_ARGUMENT:
                 return new IllegalArgumentException();
             case STATUS_IO_ERROR:
                 return new IOException();
             case STATUS_KILLSWITCH_ENABLED: // Intentional fallthrough
+            case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
                 return new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
@@ -261,7 +279,9 @@ public class AdServicesStatusUtils {
                 STATUS_TIMEOUT,
                 STATUS_JS_SANDBOX_UNAVAILABLE,
                 STATUS_INVALID_OBJECT,
-                STATUS_SERVER_RATE_LIMIT_REACHED
+                STATUS_SERVER_RATE_LIMIT_REACHED,
+                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
+                STATUS_ENCRYPTION_FAILURE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

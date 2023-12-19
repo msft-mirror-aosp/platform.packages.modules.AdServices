@@ -24,9 +24,9 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,6 +38,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 /** Integration tests for {@link EventReportingJobHandler} */
@@ -49,7 +50,7 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
     private final AdServicesLogger mLogger;
     private final AdServicesErrorLogger mErrorLogger;
 
-    @Parameterized.Parameters(name = "{3}")
+    @Parameterized.Parameters(name = "{4}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open("event_report_service_test.json");
         return AbstractDbIntegrationTest.getTestCasesFrom(
@@ -59,8 +60,12 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
     public EventReportingJobHandlerIntegrationTest(
-            DbState input, DbState output, JSONObject param, String name) {
-        super(input, output);
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            JSONObject param,
+            String name) {
+        super(input, output, flagsMap);
         mParam = param;
         mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
         mFlags = Mockito.mock(Flags.class);
@@ -84,7 +89,7 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         EventReportingJobHandler spyReportingService =
                 Mockito.spy(
                         new EventReportingJobHandler(
-                                mEnrollmentDao, datastoreManager, mFlags, mLogger));
+                                mEnrollmentDao, datastoreManager, mFlags, mLogger, sContext));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

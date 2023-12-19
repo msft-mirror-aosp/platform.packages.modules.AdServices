@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -38,7 +39,8 @@ public class AggregateReportSender extends MeasurementReportSender {
 
     private String mReportUriPath;
 
-    public AggregateReportSender(boolean isDebugReport) {
+    public AggregateReportSender(boolean isDebugReport, Context context) {
+        super(context);
         this.mReportUriPath = AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
         if (isDebugReport) {
             this.mReportUriPath = DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;

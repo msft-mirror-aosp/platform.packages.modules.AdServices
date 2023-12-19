@@ -109,8 +109,8 @@
       ]
     },
     {
-      // Install com.google.android.extservices.apex and run AdServicesCobaltUnitTests.
-      "name": "AdServicesCobaltUnitTests[com.google.android.extservices.apex]",
+      // Install com.google.android.extservices.apex and run AdExtServicesCobaltUnitTests.
+      "name": "AdExtServicesCobaltUnitTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -208,6 +208,26 @@
       ]
     },
     {
+      // Install com.google.android.adservices.apex and run
+      // AdServicesServiceCoreMeasurementUnitTests.
+      "name": "AdServicesServiceCoreMeasurementUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run
+      // AdExtServicesServiceCoreMeasurementUnitTests.
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
       "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]",
       "options": [
@@ -246,6 +266,15 @@
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesDebuggableDeviceTestCases.
       "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesRootTestCases.
+      "name": "CtsAdServicesRootTestCases[com.google.android.adservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -462,6 +491,15 @@
       ]
     },
     {
+      // Install com.google.android.extservices.apex and run CtsAdExtServicesExtDataStorageServiceTest.
+      "name": "CtsAdExtServicesExtDataStorageServiceTest[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]",
       "options": [
@@ -502,7 +540,8 @@
       "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]",
       "options": [
         {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
+          // NOTE: host-side tests use a different package
+          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
         }
       ]
     },
@@ -511,37 +550,14 @@
       "name": "CtsAdExtServicesHostTests[com.google.android.extservices.apex]",
       "options": [
         {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
+          // NOTE: host-side tests use a different package
+          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
         }
       ]
     },
     {
       // Install com.google.android.extservices.apex and run AdExtServicesEndToEndTests.
       "name": "AdExtServicesEndToEndTests[com.google.android.extservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesBetaUxCtsRootTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "LegacyAdServicesGaUxCtsRootTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesGaUxDebugChannelCtsRootTest[com.google.android.adservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -564,8 +580,27 @@
           "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
+    },
+    {
+      "name": "AdServicesManagerServiceTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesExtDataStorageServiceTest[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     }
   ],
+
+  // Tests in platform presubmit are running against the git_main branch. This list should only include AdServices tests.
+  // Add ExtServices tests to "mainline-presubmit".
   "presubmit": [
     {
       "name": "AdServicesCobaltUnitTests",
@@ -592,23 +627,7 @@
       ]
     },
     {
-      "name": "AdExtServicesServiceCoreUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
       "name": "AdServicesServiceCoreAdIdUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdExtServicesServiceCoreAdIdUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -624,14 +643,6 @@
       ]
     },
     {
-      "name": "AdExtServicesServiceCoreAppSearchUnitTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
       "name": "AdServicesServiceCoreAppsetIdUnitTests",
       "options": [
         {
@@ -640,7 +651,19 @@
       ]
     },
     {
-      "name": "AdExtServicesServiceCoreAppsetIdUnitTests",
+      // Install com.google.android.adservices.apex and run
+      // AdServicesServiceCoreMeasurementUnitTests.
+      "name": "AdServicesServiceCoreMeasurementUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run
+      // AdExtServicesServiceCoreMeasurementUnitTests.
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -776,6 +799,14 @@
       ]
     },
     {
+      "name": "CtsAdServicesExtDataStorageServiceTest",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "CtsAppSetIdEndToEndTest",
       "options": [
         {
@@ -792,6 +823,9 @@
       ]
     }
   ],
+
+  // Tests in platform postsubmit are running against the git_main branch. This list should only include AdServices tests.
+  // Add ExtServices tests to "mainline-presubmit".
   "postsubmit": [
     {
       "name": "AdServicesMddIntegrationTests",
@@ -810,58 +844,10 @@
       ]
     },
     {
-      "name": "AdServicesBetaUxCtsRootTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "LegacyAdServicesGaUxCtsRootTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesGaUxDebugChannelCtsRootTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesGaUxAlreadyEnrolledChannelTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesGaUxGraduationChannelTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
       "name": "AdServicesUIUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdExtServicesUIUnitTests",
-      "options": [
-        {
-        "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
     }

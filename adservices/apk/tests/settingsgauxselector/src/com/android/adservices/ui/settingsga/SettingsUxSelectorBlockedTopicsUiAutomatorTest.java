@@ -16,6 +16,16 @@
 
 package com.android.adservices.ui.settings;
 
+import static com.android.adservices.service.FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
@@ -25,7 +35,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
-import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
@@ -41,16 +50,16 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -88,40 +97,39 @@ public class SettingsUxSelectorBlockedTopicsUiAutomatorTest {
 
     private String mTestName;
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setTopicsKillSwitch(false)
+                    .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, 2)
+                    .setFlag(KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 2)
+                    .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)
+                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
+                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
+                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setFlag(KEY_U18_UX_ENABLED, true)
+                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_DEBUG_UX, "GA_UX")
+                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
+                    .setCompatModeFlags();
+
     @Before
     public void setup() {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
-
         // Initialize UiDevice instance.
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // Start from the home screen.
         sDevice.pressHome();
 
-        // set flag
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_ad_services_system_api true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices u18_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices debug_ux GA_UX");
-
         // Wait for launcher.
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCHER_LAUNCH_TIMEOUT);
-
-        // Override epoch length.
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // Override needful PH Flags.
-        overridePrerequisiteFlags();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
     }
 
     @After
@@ -131,14 +139,6 @@ public class SettingsUxSelectorBlockedTopicsUiAutomatorTest {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
-
-        // Reset epoch length.
-        overrideEpochPeriod(FlagsFactory.getFlagsForTest().getTopicsEpochJobPeriodMs());
-        // Reset PH Flags to default values.
-        resetFlagsToDefault();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
@@ -416,42 +416,6 @@ public class SettingsUxSelectorBlockedTopicsUiAutomatorTest {
     // Toggles GA UX.
     private void shouldEnableGaUx(boolean isEnabled) {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled " + isEnabled);
-    }
-
-    // Overrides Prerequisite flags before the test.
-    private void overridePrerequisiteFlags() {
-        // Disable kill switches
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-        ShellUtils.runShellCommand("device_config put adservices topics_kill_switch false");
-        // Set Consent and Blocked Topics source of truth to PPAPI_AND_SYSTEM_SERVER
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-        ShellUtils.runShellCommand("device_config put adservices blocked_topics_source_of_truth 2");
-        // Temporarily disable Device Config sync.
-        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
-        // Enable dialogs feature in order to test it
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
-        // Disable enrollment check in test
-        ShellUtils.runShellCommand("setprop debug.adservices.disable_topics_enrollment_check true");
-        // Disable MDD in test
-        ShellUtils.runShellCommand(
-                "device_config put adservices classifier_force_use_bundled_files true");
-        ShellUtils.runShellCommand("setprop log.tag.adservices VERBOSE");
-    }
-
-    // Overrides Prerequisite flags back to default after the test.
-    private void resetFlagsToDefault() {
-        ShellUtils.runShellCommand("device_config delete adservices global_kill_switch");
-        ShellUtils.runShellCommand("device_config delete adservices topics_kill_switch");
-        ShellUtils.runShellCommand("device_config delete adservices consent_source_of_truth");
-        ShellUtils.runShellCommand(
-                "device_config delete adservices blocked_topics_source_of_truth");
-        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests none");
-        ShellUtils.runShellCommand("device_config delete adservices ui_dialogs_feature_enabled");
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check false");
-        ShellUtils.runShellCommand(
-                "device_config delete adservices classifier_force_use_bundled_files");
-        ShellUtils.runShellCommand("device_config delete adservices ga_ux_enabled");
     }
 
     // Get the adservices package name. Copied over from com.android.adservices.AdServicesCommon

@@ -87,7 +87,7 @@ public class AggregatableAttributionTrigger {
 
         Filter filter = new Filter(flags);
         for (AggregateDeduplicationKey key : getAggregateDeduplicationKeys().get()) {
-            if (sourceFilterMap.getAttributionFilterMap().isEmpty()) {
+            if (sourceFilterMap.isEmpty(flags)) {
                 return Optional.of(key);
             }
             if (key.getFilterSet().isPresent()

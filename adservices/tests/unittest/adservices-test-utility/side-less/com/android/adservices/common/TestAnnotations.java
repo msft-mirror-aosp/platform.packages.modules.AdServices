@@ -15,25 +15,28 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
+import com.android.adservices.common.AndroidSdk.Level;
+import com.android.adservices.common.AndroidSdk.Range;
 
 import com.google.auto.value.AutoAnnotation;
 
 import java.lang.annotation.Annotation;
 
 /** Provides {@code auto-value-annotation}s for annotations used on test cases. */
-public final class TestAnnotations {
+final class TestAnnotations {
 
     private TestAnnotations() {
         throw new UnsupportedOperationException("provides only static methods");
     }
 
-    public static Annotation newAnnotationForAtLeast(AndroidSdkLevel level, String reason) {
+    public static Annotation newAnnotationForAtLeast(Level level, String reason) {
         switch (level) {
             case R:
                 return sdkLevelAtLeastR(reason);
             case S:
                 return sdkLevelAtLeastS(reason);
+            case S2:
+                return sdkLevelAtLeastS2(reason);
             case T:
                 return sdkLevelAtLeastT(reason);
             case U:
@@ -54,6 +57,11 @@ public final class TestAnnotations {
     }
 
     @AutoAnnotation
+    public static RequiresSdkLevelAtLeastS2 sdkLevelAtLeastS2(String reason) {
+        return new AutoAnnotation_TestAnnotations_sdkLevelAtLeastS2(reason);
+    }
+
+    @AutoAnnotation
     public static RequiresSdkLevelAtLeastT sdkLevelAtLeastT(String reason) {
         return new AutoAnnotation_TestAnnotations_sdkLevelAtLeastT(reason);
     }
@@ -61,5 +69,15 @@ public final class TestAnnotations {
     @AutoAnnotation
     public static RequiresSdkLevelAtLeastU sdkLevelAtLeastU(String reason) {
         return new AutoAnnotation_TestAnnotations_sdkLevelAtLeastU(reason);
+    }
+
+    @AutoAnnotation
+    public static RequiresSdkRange newAnnotationForLessThanT(String reason) {
+        return sdkRange(Range.NO_MIN, AndroidSdk.PRE_T, reason);
+    }
+
+    @AutoAnnotation
+    public static RequiresSdkRange sdkRange(int atLeast, int atMost, String reason) {
+        return new AutoAnnotation_TestAnnotations_sdkRange(atLeast, atMost, reason);
     }
 }

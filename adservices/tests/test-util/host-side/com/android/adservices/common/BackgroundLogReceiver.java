@@ -19,6 +19,10 @@ package com.android.adservices.common;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.tradefed.device.BackgroundDeviceAction;
 import com.android.tradefed.device.ITestDevice;
+import com.android.tradefed.result.ByteArrayInputStreamSource;
+import com.android.tradefed.result.InputStreamSource;
+import com.android.tradefed.result.LogDataType;
+import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +34,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /** Enables capturing device logs and exposing them to the host test. */
-// TODO(b/288892905) consolidate with existing logcat receiver
 public final class BackgroundLogReceiver extends MultiLineReceiver {
     private volatile boolean mCancelled;
     private final List<String> mLines = new ArrayList<>();
@@ -61,6 +64,7 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
         Arrays.stream(lines).filter(s -> !s.trim().isEmpty()).forEach(mLines::add);
 
         if (mEarlyStopCondition != null && mEarlyStopCondition.test(lines)) {
+            stopBackgroundCollection();
             mCountDownLatch.countDown();
         }
     }
@@ -71,7 +75,8 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
     }
 
     /**
-     * Begins log collection. This method needs to be only used once per instance.
+     * Collects logs until timeout or stop condition is reached. This method needs to be only used
+     * once per instance.
      *
      * @param timeoutMilliseconds the maximum time after which log collection should stop, if the
      *     early stop condition was not encountered previously.
@@ -80,6 +85,12 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
      * @throws InterruptedException if the current thread is interrupted
      */
     public boolean collectLogs(long timeoutMilliseconds) throws InterruptedException {
+        startBackgroundCollection();
+        return waitForLogs(timeoutMilliseconds);
+    }
+
+    /** Begins log collection. This method needs to be only used once per instance. */
+    public void startBackgroundCollection() {
         if (mBackgroundDeviceAction != null) {
             throw new IllegalStateException("This method should only be called once per instance");
         }
@@ -87,16 +98,49 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
         mBackgroundDeviceAction =
                 new BackgroundDeviceAction(mLogcatCmd, mName, mTestDevice, this, 0);
         mBackgroundDeviceAction.start();
+    }
+
+    /**
+     * Wait until timeout or stop condition is reached. This method can only be used once per
+     * instance.
+     *
+     * @param timeoutMilliseconds the maximum time after which log collection should stop, if the
+     *     early stop condition was not encountered previously.
+     * @return true if log collection stopped because the early stop condition was encountered,
+     *     false if log collection stopped due to timeout
+     * @throws InterruptedException if the current thread is interrupted
+     */
+    public boolean waitForLogs(long timeoutMilliseconds) throws InterruptedException {
+        if (mBackgroundDeviceAction == null) {
+            throw new IllegalStateException(
+                    "Log collection not started. Call startBackgroundCollection first");
+        }
 
         boolean earlyStop = mCountDownLatch.await(timeoutMilliseconds, TimeUnit.MILLISECONDS);
-        stop();
-
+        stopBackgroundCollection();
         return earlyStop;
     }
 
-    private void stop() {
+    /** Stops log collection and adds all logs to input logger. */
+    public void stopAndAddTestLog(DeviceJUnit4ClassRunner.TestLogData logger) {
         if (mBackgroundDeviceAction != null) mBackgroundDeviceAction.cancel();
         if (isCancelled()) return;
+        mCancelled = true;
+
+        String joined = String.join("\n", mLines);
+        try (InputStreamSource data = new ByteArrayInputStreamSource(joined.getBytes())) {
+            logger.addTestLog(mName, LogDataType.TEXT, data);
+        }
+    }
+
+    /** Ends log collection. This method needs to be only used once per instance. */
+    private void stopBackgroundCollection() {
+        if (mBackgroundDeviceAction != null) {
+            mBackgroundDeviceAction.cancel();
+        }
+        if (isCancelled()) {
+            return;
+        }
         mCancelled = true;
     }
 
@@ -122,19 +166,23 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
 
     /** Builder class for the BackgroundLogReceiver. */
     public static final class Builder {
+        private String mName = "background-logcat-receiver";
         private ITestDevice mDevice;
         private String mLogCatCommand;
         private Predicate<String[]> mEarlyStopCondition;
 
+        public Builder setName(String name) {
+            mName = Objects.requireNonNull(name);
+            return this;
+        }
+
         public Builder setDevice(ITestDevice device) {
-            Objects.requireNonNull(device);
-            mDevice = device;
+            mDevice = Objects.requireNonNull(device);
             return this;
         }
 
         public Builder setLogCatCommand(String command) {
-            Objects.requireNonNull(command);
-            mLogCatCommand = command;
+            mLogCatCommand = Objects.requireNonNull(command);
             return this;
         }
 
@@ -154,8 +202,7 @@ public final class BackgroundLogReceiver extends MultiLineReceiver {
             Objects.requireNonNull(mDevice);
             Objects.requireNonNull(mLogCatCommand);
 
-            return new BackgroundLogReceiver(
-                    "background-logcat-receiver", mLogCatCommand, mDevice, mEarlyStopCondition);
+            return new BackgroundLogReceiver(mName, mLogCatCommand, mDevice, mEarlyStopCondition);
         }
     }
 }

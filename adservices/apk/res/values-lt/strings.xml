@@ -42,10 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Leidžiama programai pasiekti skelbimų paslaugos įgalinimo būsenos API."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Prieiga prie „AdServicesManager“ API"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Leidžiama programai pasiekti „AdServicesManager“ API."</string>
-    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
-    <skip />
-    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
-    <skip />
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"Prieiga prie „AdService“ naujinio reklamavimo ID API."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Leidžiama programai pasiekti „AdService“ naujinio reklamavimo ID API."</string>
     <string name="app_label" msgid="5844694701336604490">"Su skelbimais susijęs privatumas"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Prisijunkite prie „Android“ su skelbimais susijusio privatumo beta versijos programos"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"„Android“ bando rasti privatesnių būdų, kaip programos gali jums rodyti skelbimus"</string>

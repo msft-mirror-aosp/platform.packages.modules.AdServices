@@ -19,15 +19,16 @@ package com.android.server.adservices.consent;
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
-import com.android.server.adservices.common.BooleanFileDatastore;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -591,5 +592,13 @@ public final class ConsentManager {
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix) {
+        writer.printf("%sConsentManager:\n", prefix);
+        String prefix2 = prefix + "  ";
+
+        mDatastore.dump(writer, prefix2);
     }
 }

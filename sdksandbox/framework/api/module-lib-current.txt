@@ -1,6 +1,4 @@
 // Signature format: 2.0
-// - add-additional-overrides=no
-// - migrating=Migration in progress see b/299366704
 package android.app.sdksandbox {
 
   public final class SdkSandboxManager {
@@ -9,20 +7,6 @@ package android.app.sdksandbox {
 
   public class SdkSandboxManagerFrameworkInitializer {
     method public static void registerServiceWrappers();
-  }
-
-}
-
-package android.app.sdksandbox.sandboxactivity {
-
-  public interface ActivityContextInfo {
-    method @NonNull public android.content.pm.ApplicationInfo getSdkApplicationInfo();
-    field public static final int CONTEXT_FLAGS = 3; // 0x3
-  }
-
-  public abstract class ActivityContextInfoProvider {
-    method @NonNull public android.app.sdksandbox.sandboxactivity.ActivityContextInfo getActivityContextInfo(@NonNull android.content.Intent);
-    method @NonNull public static android.app.sdksandbox.sandboxactivity.ActivityContextInfoProvider getInstance();
   }
 
 }

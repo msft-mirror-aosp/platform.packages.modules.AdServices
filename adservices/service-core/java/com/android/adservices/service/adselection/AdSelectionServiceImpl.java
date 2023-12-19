@@ -71,12 +71,12 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
@@ -137,8 +137,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final EncodedPayloadDao mEncodedPayloadDao;
     @NonNull private final FrequencyCapDao mFrequencyCapDao;
-    @NonNull private final EncryptionContextDao mEncryptionContextDao;
     @NonNull private final EncryptionKeyDao mEncryptionKeyDao;
+    @NonNull private final EnrollmentDao mEnrollmentDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ExecutorService mLightweightExecutor;
     @NonNull private final ExecutorService mBackgroundExecutor;
@@ -156,6 +156,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @NonNull private final AdIdFetcher mAdIdFetcher;
+    private final boolean mShouldUseUnifiedTables;
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
                     + " the app is not debuggable.";
@@ -167,8 +168,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull EncodedPayloadDao encodedPayloadDao,
             @NonNull FrequencyCapDao frequencyCapDao,
-            @NonNull EncryptionContextDao encryptionContextDao,
             @NonNull EncryptionKeyDao encryptionKeyDao,
+            @NonNull EnrollmentDao enrollmentDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService lightweightExecutorService,
@@ -184,15 +185,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull ConsentManager consentManager,
             @NonNull ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
-            @NonNull AdIdFetcher adIdFetcher) {
+            @NonNull AdIdFetcher adIdFetcher,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedPayloadDao);
         Objects.requireNonNull(frequencyCapDao);
-        Objects.requireNonNull(encryptionContextDao);
         Objects.requireNonNull(encryptionKeyDao);
+        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContextFilter);
         Objects.requireNonNull(lightweightExecutorService);
@@ -211,8 +213,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mCustomAudienceDao = customAudienceDao;
         mEncodedPayloadDao = encodedPayloadDao;
         mFrequencyCapDao = frequencyCapDao;
-        mEncryptionContextDao = encryptionContextDao;
         mEncryptionKeyDao = encryptionKeyDao;
+        mEnrollmentDao = enrollmentDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
         mLightweightExecutor = lightweightExecutorService;
@@ -231,6 +233,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionDebugReportDao = adSelectionDebugReportDao;
         mAdIdFetcher = adIdFetcher;
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -246,8 +249,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                 ProtectedSignalsDatabase.getInstance(context).getEncodedPayloadDao(),
                 SharedStorageDatabase.getInstance(context).frequencyCapDao(),
-                AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
-                AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
+                EncryptionKeyDao.getInstance(context),
+                EnrollmentDao.getInstance(context),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.create(context, FlagsFactory.getFlags())),
@@ -294,10 +297,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
-                        AdIdWorker.getInstance(context),
+                        AdIdWorker.getInstance(),
                         AdServicesExecutors.getLightWeightExecutor(),
-                        AdServicesExecutors.getScheduler(),
-                        FlagsFactory.getFlags()));
+                        AdServicesExecutors.getScheduler()),
+                BinderFlagReader.readFlag(
+                        () ->
+                                FlagsFactory.getFlags()
+                                        .getFledgeOnDeviceAuctionShouldUseUnifiedTables()));
     }
 
     @Override
@@ -326,29 +332,14 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
                 () -> {
-                    GetAdSelectionDataRunner runner =
-                            new GetAdSelectionDataRunner(
-                                    mObliviousHttpEncryptor,
-                                    mAdSelectionEntryDao,
-                                    mCustomAudienceDao,
-                                    mEncodedPayloadDao,
-                                    mAdSelectionServiceFilter,
-                                    mAdFilteringFeatureFactory.getAdFilterer(),
-                                    mBackgroundExecutor,
-                                    mLightweightExecutor,
-                                    mScheduledExecutor,
-                                    mFlags,
-                                    callingUid,
-                                    devContext,
-                                    mAdIdFetcher);
-                    runner.run(inputParams, callback);
+                    runGetAdSelectionData(inputParams, callback, callingUid, devContext);
                     Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, traceCookie);
                 });
     }
@@ -379,7 +370,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -434,7 +425,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mAdFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                             mAdSelectionEntryDao,
                                             auctionServerEnabledForUpdateHistogram),
-                                    auctionResultValidator);
+                                    auctionResultValidator,
+                                    mFlags,
+                                    mAdServicesLogger);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
@@ -480,7 +473,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -498,6 +491,76 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 callingUid,
                                 devContext,
                                 auctionServerEnabledForUpdateHistogram));
+    }
+
+    private void runGetAdSelectionData(
+            GetAdSelectionDataInput inputParams,
+            GetAdSelectionDataCallback callback,
+            int callingUid,
+            DevContext devContext) {
+        ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
+                AuctionServerDebugReporting.createInstance(
+                        mFlags,
+                        mAdIdFetcher,
+                        inputParams.getCallerPackageName(),
+                        callingUid,
+                        mLightweightExecutor);
+
+        FluentFuture.from(auctionServerDebugReportingFuture)
+                .addCallback(
+                        new FutureCallback<>() {
+                            @Override
+                            public void onSuccess(
+                                    AuctionServerDebugReporting auctionServerDebugReporting) {
+                                sLogger.v(
+                                        "Auction Server Debug reporting enabled: %b",
+                                        auctionServerDebugReporting.isEnabled());
+                                GetAdSelectionDataRunner runner =
+                                        new GetAdSelectionDataRunner(
+                                                mObliviousHttpEncryptor,
+                                                mAdSelectionEntryDao,
+                                                mCustomAudienceDao,
+                                                mEncodedPayloadDao,
+                                                mAdSelectionServiceFilter,
+                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mBackgroundExecutor,
+                                                mLightweightExecutor,
+                                                AdServicesExecutors.getBlockingExecutor(),
+                                                mScheduledExecutor,
+                                                mFlags,
+                                                callingUid,
+                                                devContext,
+                                                auctionServerDebugReporting);
+                                runner.run(inputParams, callback);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                sLogger.e(
+                                        t,
+                                        "Failed to create Auction Server Debug Reporting instance,"
+                                                + " debug reporting is disabled");
+                                GetAdSelectionDataRunner runner =
+                                        new GetAdSelectionDataRunner(
+                                                mObliviousHttpEncryptor,
+                                                mAdSelectionEntryDao,
+                                                mCustomAudienceDao,
+                                                mEncodedPayloadDao,
+                                                mAdSelectionServiceFilter,
+                                                mAdFilteringFeatureFactory.getAdFilterer(),
+                                                mBackgroundExecutor,
+                                                mLightweightExecutor,
+                                                AdServicesExecutors.getBlockingExecutor(),
+                                                mScheduledExecutor,
+                                                mFlags,
+                                                callingUid,
+                                                devContext,
+                                                AuctionServerDebugReporting
+                                                        .createForDebugReportingDisabled());
+                                runner.run(inputParams, callback);
+                            }
+                        },
+                        mLightweightExecutor);
     }
 
     private void runAdSelection(
@@ -611,6 +674,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutor,
                         mBackgroundExecutor,
@@ -626,7 +691,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mAdSelectionEntryDao, auctionServerEnabledForUpdateHistogram),
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         debugReporting,
-                        callerUid);
+                        callerUid,
+                        mShouldUseUnifiedTables);
         runner.runAdSelection(inputParams, callback, devContext, fullCallback);
     }
 
@@ -645,6 +711,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutor,
                         mBackgroundExecutor,
@@ -694,7 +762,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -715,7 +783,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mFlags,
                                     mAdSelectionServiceFilter,
                                     mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
-                                    callingUid);
+                                    callingUid,
+                                    mShouldUseUnifiedTables);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
     }
@@ -736,7 +805,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, requestParams.getCallerPackageName(), apiName);
 
         DevContext devContext = mDevContextFilter.createDevContext();
@@ -780,7 +849,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mAdSelectionServiceFilter,
                             mFledgeAuthorizationFilter,
                             mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
-                            callingUid);
+                            callingUid,
+                            mShouldUseUnifiedTables);
             reporter.reportImpression(requestParams, callback);
         }
     }
@@ -801,7 +871,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
         int callerUid = getCallingUid(apiName);
@@ -833,7 +903,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 devContext,
                                 measurementService,
                                 mConsentManager,
-                                mContext)
+                                mContext,
+                                mShouldUseUnifiedTables)
                         .getEventReporter();
 
         eventReporter.reportInteraction(inputParams, callback);
@@ -857,7 +928,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, request.getCallerPackageName(), apiName);
 
         AppInstallAdvertisersSetter setter =
@@ -889,7 +960,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
         final int callingUid = getCallingUid(apiName);
@@ -917,7 +988,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 adCounterHistogramLowerMaxTotalEventCount,
                                 adCounterHistogramAbsoluteMaxPerBuyerEventCount,
                                 adCounterHistogramLowerMaxPerBuyerEventCount,
-                                auctionServerEnabledForUpdateHistogram),
+                                auctionServerEnabledForUpdateHistogram,
+                                mShouldUseUnifiedTables),
                         mBackgroundExecutor,
                         // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
                         //  after aligning on Clock usage
@@ -961,7 +1033,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -1028,7 +1100,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -1078,7 +1150,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -1133,7 +1205,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -1184,7 +1256,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -1233,7 +1305,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         int callingUid = getCallingUid(apiName);
@@ -1283,7 +1355,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         // TODO(b/265204820): Implement service
@@ -1321,7 +1393,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         // TODO(b/265204820): Implement service
@@ -1356,7 +1428,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         // TODO(b/265204820): Implement service

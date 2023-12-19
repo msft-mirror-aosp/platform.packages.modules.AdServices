@@ -37,6 +37,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
@@ -157,8 +158,8 @@ public final class SdkSandboxManager {
     private TimeProvider mTimeProvider;
 
     static class TimeProvider {
-        long getCurrentTime() {
-            return System.currentTimeMillis();
+        long elapsedRealtime() {
+            return SystemClock.elapsedRealtime();
         }
     }
 
@@ -228,21 +229,33 @@ public final class SdkSandboxManager {
      * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
      * Bundle, Executor, OutcomeReceiver)}, its value should define the integer width of the {@link
      * SurfacePackage} in pixels.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_WIDTH_IN_PIXELS =
             "android.app.sdksandbox.extra.WIDTH_IN_PIXELS";
     /**
      * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
      * Bundle, Executor, OutcomeReceiver)}, its value should define the integer height of the {@link
      * SurfacePackage} in pixels.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_HEIGHT_IN_PIXELS =
             "android.app.sdksandbox.extra.HEIGHT_IN_PIXELS";
     /**
      * The name of key to be used in the Bundle fields of {@link #requestSurfacePackage(String,
      * Bundle, Executor, OutcomeReceiver)}, its value should define the integer ID of the logical
      * display to display the {@link SurfacePackage}.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_DISPLAY_ID = "android.app.sdksandbox.extra.DISPLAY_ID";
 
     /**
@@ -250,14 +263,22 @@ public final class SdkSandboxManager {
      * Bundle, Executor, OutcomeReceiver)}, its value should present the token returned by {@link
      * android.view.SurfaceView#getHostToken()} once the {@link android.view.SurfaceView} has been
      * added to the view hierarchy. Only a non-null value is accepted to enable ANR reporting.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_HOST_TOKEN = "android.app.sdksandbox.extra.HOST_TOKEN";
 
     /**
      * The name of key in the Bundle which is passed to the {@code onResult} function of the {@link
      * OutcomeReceiver} which is field of {@link #requestSurfacePackage(String, Bundle, Executor,
      * OutcomeReceiver)}, its value presents the requested {@link SurfacePackage}.
+     *
+     * @deprecated Parameter for {@link #requestSurfacePackage(String, Bundle, Executor,
+     *     OutcomeReceiver)} which is getting deprecated.
      */
+    @Deprecated
     public static final String EXTRA_SURFACE_PACKAGE =
             "android.app.sdksandbox.extra.SURFACE_PACKAGE";
 
@@ -283,6 +304,20 @@ public final class SdkSandboxManager {
     @SdkSandboxState
     public static int getSdkSandboxState() {
         return SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION;
+    }
+
+    /**
+     * Returns if SDK sandbox process corresponding to the app currently running.
+     *
+     * @hide
+     */
+    @TestApi
+    public boolean isSdkSandboxServiceRunning() {
+        try {
+            return mService.isSdkSandboxServiceRunning(mContext.getPackageName());
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
     }
 
     /**
@@ -319,11 +354,13 @@ public final class SdkSandboxManager {
         synchronized (mLifecycleCallbacks) {
             final SdkSandboxProcessDeathCallbackProxy callbackProxy =
                     new SdkSandboxProcessDeathCallbackProxy(callbackExecutor, callback);
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(
+                            SandboxLatencyInfo.METHOD_ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
             try {
                 mService.addSdkSandboxProcessDeathCallback(
-                        mContext.getPackageName(),
-                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                        callbackProxy);
+                        mContext.getPackageName(), sandboxLatencyInfo, callbackProxy);
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
             }
@@ -348,11 +385,15 @@ public final class SdkSandboxManager {
                 final SdkSandboxProcessDeathCallbackProxy callbackProxy =
                         mLifecycleCallbacks.get(i);
                 if (callbackProxy.callback == callback) {
+                    SandboxLatencyInfo sandboxLatencyInfo =
+                            new SandboxLatencyInfo(
+                                    SandboxLatencyInfo
+                                            .METHOD_REMOVE_SDK_SANDBOX_LIFECYCLE_CALLBACK);
+                    sandboxLatencyInfo.setTimeAppCalledSystemServer(
+                            mTimeProvider.elapsedRealtime());
                     try {
                         mService.removeSdkSandboxProcessDeathCallback(
-                                mContext.getPackageName(),
-                                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
-                                callbackProxy);
+                                mContext.getPackageName(), sandboxLatencyInfo, callbackProxy);
                     } catch (RemoteException e) {
                         throw e.rethrowFromSystemServer();
                     }
@@ -374,11 +415,11 @@ public final class SdkSandboxManager {
      */
     public void registerAppOwnedSdkSandboxInterface(
             @NonNull AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(
+                        SandboxLatencyInfo.METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
-            SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(
-                            SandboxLatencyInfo.METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
             mService.registerAppOwnedSdkSandboxInterface(
                     mContext.getPackageName(), appOwnedSdkSandboxInterface, sandboxLatencyInfo);
         } catch (RemoteException e) {
@@ -392,11 +433,11 @@ public final class SdkSandboxManager {
      * @param name the name under which AppOwnedSdkSandboxInterface was registered.
      */
     public void unregisterAppOwnedSdkSandboxInterface(@NonNull String name) {
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(
+                        SandboxLatencyInfo.METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
-            SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(
-                            SandboxLatencyInfo.METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
             mService.unregisterAppOwnedSdkSandboxInterface(
                     mContext.getPackageName(), name, sandboxLatencyInfo);
         } catch (RemoteException e) {
@@ -411,11 +452,11 @@ public final class SdkSandboxManager {
      *     AppOwnedSdkSandboxInterface}
      */
     public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(
+                        SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES);
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
-            SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(
-                            SandboxLatencyInfo.METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.getCurrentTime());
             return mService.getAppOwnedSdkSandboxInterfaces(
                     mContext.getPackageName(), sandboxLatencyInfo);
         } catch (RemoteException e) {
@@ -466,11 +507,11 @@ public final class SdkSandboxManager {
         } else {
             appProcessToken = null;
         }
+        // TODO(b/297352617): add timeAppCalledSystemServer to the constructor.
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
-            // TODO(b/297352617): add timeAppCalledSystemServer to the constructor.
-            SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
             mService.loadSdk(
                     mContext.getPackageName(),
                     appProcessToken,
@@ -489,10 +530,10 @@ public final class SdkSandboxManager {
      * @return List of {@link SandboxedSdk} containing all currently loaded SDKs.
      */
     public @NonNull List<SandboxedSdk> getSandboxedSdks() {
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS);
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
         try {
-            SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
             return mService.getSandboxedSdks(mContext.getPackageName(), sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
@@ -514,10 +555,10 @@ public final class SdkSandboxManager {
     public void unloadSdk(@NonNull String sdkName) {
         Objects.requireNonNull(sdkName, "sdkName should not be null");
         try {
-            mService.unloadSdk(
-                    mContext.getPackageName(),
-                    sdkName,
-                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
+            SandboxLatencyInfo sandboxLatencyInfo =
+                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_UNLOAD_SDK);
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
+            mService.unloadSdk(mContext.getPackageName(), sdkName, sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -554,7 +595,10 @@ public final class SdkSandboxManager {
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_HEIGHT_IN_PIXELS
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_DISPLAY_ID
      * @see android.app.sdksandbox.SdkSandboxManager#EXTRA_HOST_TOKEN
+     * @deprecated This method will no longer be supported through {@link SdkSandboxManager}. Please
+     *     consider using androidx.privacysandbox library as an alternative
      */
+    @Deprecated
     public void requestSurfacePackage(
             @NonNull String sdkName,
             @NonNull Bundle params,
@@ -599,7 +643,7 @@ public final class SdkSandboxManager {
 
             SandboxLatencyInfo sandboxLatencyInfo =
                     new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(System.currentTimeMillis());
+            sandboxLatencyInfo.setTimeAppCalledSystemServer(mTimeProvider.elapsedRealtime());
 
             final RequestSurfacePackageReceiverProxy callbackProxy =
                     new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver, mService);
@@ -648,6 +692,9 @@ public final class SdkSandboxManager {
         if (!SdkLevel.isAtLeastU()) {
             throw new UnsupportedOperationException();
         }
+
+        long timeEventStarted = mTimeProvider.elapsedRealtime();
+
         Intent intent = new Intent();
         intent.setAction(ACTION_START_SANDBOXED_ACTIVITY);
         intent.setPackage(mContext.getPackageManager().getSdkSandboxPackageName());
@@ -657,6 +704,22 @@ public final class SdkSandboxManager {
         intent.putExtras(params);
 
         fromActivity.startActivity(intent);
+
+        logStartSdkSandboxActivityEvent(timeEventStarted);
+    }
+
+    // TODO(b/304459399): move Sandbox Activity latency logging to its own class
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    private void logStartSdkSandboxActivityEvent(long timeEventStarted) {
+        try {
+            // TODO(b/305240130): retrieve SDK info from sandbox process
+            mService.logSandboxActivityEvent(
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                    (int) (mTimeProvider.elapsedRealtime() - timeEventStarted));
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
     }
 
     /**
@@ -782,7 +845,8 @@ public final class SdkSandboxManager {
         }
 
         private void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
-            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(System.currentTimeMillis());
+            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
+                    SystemClock.elapsedRealtime());
             try {
                 mService.logLatencies(sandboxLatencyInfo);
             } catch (RemoteException e) {
@@ -836,7 +900,8 @@ public final class SdkSandboxManager {
         }
 
         private void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
-            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(System.currentTimeMillis());
+            sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
+                    SystemClock.elapsedRealtime());
             try {
                 mService.logLatencies(sandboxLatencyInfo);
             } catch (RemoteException e) {

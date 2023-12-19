@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
@@ -55,6 +56,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.adselection.DebugReportSenderJobService;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
@@ -96,6 +98,9 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
                     ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
@@ -114,6 +119,9 @@ public class BackgroundJobsManagerTest {
                     // Mdd job is scheduled in scheduleAllBackgroundJobs,
                     // scheduleTopicsBackgroundJobs, and scheduleMeasurementBackgroundJobs.
                     assertMddJobsScheduled(3);
+                    // Encryption key job is scheduled in scheduleTopicsBackgroundJobs, and
+                    // scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(2);
                     assertCobaltJobScheduled(1);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -129,6 +137,9 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
                     ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
@@ -147,6 +158,8 @@ public class BackgroundJobsManagerTest {
                     // Mdd job is scheduled in scheduleAllBackgroundJobs and
                     // scheduleTopicsBackgroundJobs.
                     assertMddJobsScheduled(2);
+                    // Encryption key job is scheduled in scheduleTopicsBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(1);
                     assertCobaltJobScheduled(1);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -162,6 +175,9 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
                     ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
@@ -175,6 +191,8 @@ public class BackgroundJobsManagerTest {
                     // Mdd job is scheduled in scheduleAllBackgroundJobs and
                     // scheduleMeasurementBackgroundJobs.
                     assertMddJobsScheduled(2);
+                    // Encryption key job is scheduled in scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(1);
                     assertCobaltJobScheduled(0);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -212,6 +230,41 @@ public class BackgroundJobsManagerTest {
     }
 
     @Test
+    public void testScheduleAllBackgroundJobs_encryptionKeyKillSwitchOn() throws Exception {
+        runWithMocks(
+                () -> {
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+                    ExtendedMockito.doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(true)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
+                    ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getFledgeEventLevelDebugReportingEnabled();
+
+                    BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
+
+                    assertMeasurementJobsScheduled(1);
+                    assertTopicsJobsScheduled(1);
+                    // maintenance job is needed for both Fledge and Topics
+                    // since those APIs in the GA UX can be controlled separately, maintenance job
+                    // will be schedule for both Fledge and Topics. If there is a need to schedule
+                    // all the jobs, there will be two attempts to schedule the maintenance job, but
+                    // in fact only one maintenance job will be scheduled (due to deduplication)
+                    assertMaintenanceJobScheduled(2);
+                    assertMddJobsScheduled(3);
+                    assertEncryptionKeyJobsScheduled(0);
+                    assertCobaltJobScheduled(1);
+                    assertAdSelectionDebugReportSenderJobScheduled(0);
+                });
+    }
+
+    @Test
     public void testScheduleAllBackgroundJobs_selectAdsKillSwitchOn() throws Exception {
         runWithMocks(
                 () -> {
@@ -221,6 +274,9 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
                     ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
@@ -234,6 +290,9 @@ public class BackgroundJobsManagerTest {
                     // Mdd job is scheduled in scheduleAllBackgroundJobs and
                     // scheduleTopicsBackgroundJobs.
                     assertMddJobsScheduled(3);
+                    // Encryption key job is scheduled in scheduleTopicsBackgroundJobs, and
+                    // scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(2);
                     assertCobaltJobScheduled(1);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -249,6 +308,9 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
                     ExtendedMockito.doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
                     BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
@@ -259,6 +321,8 @@ public class BackgroundJobsManagerTest {
                     // Mdd job is scheduled in scheduleAllBackgroundJobs and
                     // scheduleMeasurementBackgroundJobs.
                     assertMddJobsScheduled(2);
+                    // Encryption key job is scheduled in scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(1);
                     assertCobaltJobScheduled(0);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -274,6 +338,9 @@ public class BackgroundJobsManagerTest {
                     ExtendedMockito.doReturn(false)
                             .when(mMockFlags)
                             .getMddBackgroundTaskKillSwitch();
+                    ExtendedMockito.doReturn(false)
+                            .when(mMockFlags)
+                            .getEncryptionKeyPeriodicFetchKillSwitch();
                     ExtendedMockito.doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
 
                     BackgroundJobsManager.scheduleAllBackgroundJobs(Mockito.mock(Context.class));
@@ -284,6 +351,9 @@ public class BackgroundJobsManagerTest {
                     // Mdd job is scheduled in scheduleAllBackgroundJobs,
                     // scheduleTopicsBackgroundJobs, and scheduleMeasurementBackgroundJobs.
                     assertMddJobsScheduled(3);
+                    // Encryption key job is scheduled in scheduleTopicsBackgroundJobs, and
+                    // scheduleMeasurementBackgroundJobs.
+                    assertEncryptionKeyJobsScheduled(2);
                     assertCobaltJobScheduled(0);
                 });
     }
@@ -301,6 +371,7 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
                     assertMddJobsScheduled(0);
+                    assertEncryptionKeyJobsScheduled(0);
                     assertCobaltJobScheduled(0);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -319,6 +390,7 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
                     assertMddJobsScheduled(1);
+                    assertEncryptionKeyJobsScheduled(1);
                     assertCobaltJobScheduled(0);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -337,6 +409,7 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(0);
                     assertMaintenanceJobScheduled(0);
                     assertMddJobsScheduled(0);
+                    assertEncryptionKeyJobsScheduled(0);
                     assertCobaltJobScheduled(0);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -355,6 +428,7 @@ public class BackgroundJobsManagerTest {
                     assertTopicsJobsScheduled(1);
                     assertMaintenanceJobScheduled(1);
                     assertMddJobsScheduled(1);
+                    assertEncryptionKeyJobsScheduled(1);
                     assertCobaltJobScheduled(1);
                     assertAdSelectionDebugReportSenderJobScheduled(0);
                 });
@@ -484,6 +558,7 @@ public class BackgroundJobsManagerTest {
                 .cancel(eq(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()));
+        verify(mockJobScheduler, times(1)).cancel(eq(ENCRYPTION_KEY_PERIODIC_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
@@ -511,6 +586,7 @@ public class BackgroundJobsManagerTest {
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(MddJobService.class)
+                        .spyStatic(EncryptionKeyJobService.class)
                         .spyStatic(AsyncRegistrationQueueJobService.class)
                         .spyStatic(AsyncRegistrationFallbackJobService.class)
                         .spyStatic(DebugReportingFallbackJobService.class)
@@ -553,6 +629,8 @@ public class BackgroundJobsManagerTest {
                     .when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doReturn(true)
                     .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+            ExtendedMockito.doReturn(true)
+                    .when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()
                     .when(
                             () ->
@@ -643,6 +721,12 @@ public class BackgroundJobsManagerTest {
     private void assertMddJobsScheduled(int numberOfTimes) {
         ExtendedMockito.verify(
                 () -> MddJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
+    }
+
+    private void assertEncryptionKeyJobsScheduled(int numberOfTimes) {
+        ExtendedMockito.verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(), eq(false)),
+                times(numberOfTimes));
     }
 
     private void assertCobaltJobScheduled(int numberOfTimes) {

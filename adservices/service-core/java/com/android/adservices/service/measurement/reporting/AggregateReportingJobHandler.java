@@ -16,11 +16,15 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -63,6 +67,8 @@ public class AggregateReportingJobHandler {
     private ReportingStatus.UploadMethod mUploadMethod;
     private final AdServicesLogger mLogger;
 
+    private final Context mContext;
+
     AggregateReportingJobHandler(
             EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
@@ -70,7 +76,8 @@ public class AggregateReportingJobHandler {
             Flags flags,
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
-            ReportingStatus.UploadMethod uploadMethod) {
+            ReportingStatus.UploadMethod uploadMethod,
+            Context context) {
         mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
@@ -78,6 +85,7 @@ public class AggregateReportingJobHandler {
         mLogger = logger;
         mReportType = reportType;
         mUploadMethod = uploadMethod;
+        mContext = context;
     }
 
     @VisibleForTesting
@@ -86,7 +94,8 @@ public class AggregateReportingJobHandler {
             DatastoreManager datastoreManager,
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             Flags flags,
-            AdServicesLogger logger) {
+            AdServicesLogger logger,
+            Context context) {
         this(
                 enrollmentDao,
                 datastoreManager,
@@ -94,7 +103,8 @@ public class AggregateReportingJobHandler {
                 flags,
                 logger,
                 ReportingStatus.ReportType.UNKNOWN,
-                ReportingStatus.UploadMethod.UNKNOWN);
+                ReportingStatus.UploadMethod.UNKNOWN,
+                context);
     }
 
     /**
@@ -168,16 +178,21 @@ public class AggregateReportingJobHandler {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
                     } else {
                         reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                        mDatastoreManager.runInTransaction(
+                                (dao) -> {
+                                    int retryCount =
+                                            dao.incrementAndGetReportingRetryCount(
+                                                    aggregateReportId,
+                                                    mIsDebugInstance
+                                                            ? KeyValueData.DataType
+                                                                .DEBUG_AGGREGATE_REPORT_RETRY_COUNT
+                                                            : KeyValueData.DataType
+                                                                .AGGREGATE_REPORT_RETRY_COUNT);
+                                    reportingStatus.setRetryCount(retryCount);
+                                });
                     }
-                    mDatastoreManager.runInTransaction(
-                            (dao) -> {
-                                int retryCount =
-                                        dao.incrementAndGetReportingRetryCount(
-                                                aggregateReportId,
-                                                KeyValueData.DataType.AGGREGATE_REPORT_RETRY_COUNT);
-                                reportingStatus.setRetryCount(retryCount);
-                            });
                     logReportingStats(reportingStatus);
+
                 }
             } else {
                 LoggerFactory.getMeasurementLogger()
@@ -193,7 +208,7 @@ public class AggregateReportingJobHandler {
             return "";
         }
         if (report.getSourceId() == null) {
-            LoggerFactory.getMeasurementLogger().d("SourceId is null on event report.");
+            LoggerFactory.getMeasurementLogger().d("SourceId is null on aggregate report.");
             return "";
         }
         Optional<String> sourceRegistrant =
@@ -222,6 +237,7 @@ public class AggregateReportingJobHandler {
                         -> dao.getAggregateReport(aggregateReportId));
         if (!aggregateReportOpt.isPresent()) {
             LoggerFactory.getMeasurementLogger().d("Aggregate report not found");
+            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_FOUND);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
@@ -276,7 +292,7 @@ public class AggregateReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
@@ -286,7 +302,7 @@ public class AggregateReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
@@ -311,7 +327,7 @@ public class AggregateReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportingJobsThrowCryptoException()
                     && ThreadLocalRandom.current().nextFloat()
@@ -325,7 +341,7 @@ public class AggregateReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
                     && ThreadLocalRandom.current().nextFloat()
@@ -373,7 +389,8 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject aggregateReportBody)
             throws IOException {
-        AggregateReportSender aggregateReportSender = new AggregateReportSender(mIsDebugInstance);
+        AggregateReportSender aggregateReportSender =
+                new AggregateReportSender(mIsDebugInstance, mContext);
         return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
     }
 

@@ -15,7 +15,13 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.shared.testing.common.FileHelper.writeFile;
+
 import android.os.Looper;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.List;
 
 /**
  * Rule used to protect the test process from crashing if an uncaught exception is thrown in the
@@ -27,12 +33,86 @@ import android.os.Looper;
  */
 public final class ProcessLifeguardRule extends AbstractProcessLifeguardRule {
 
-    public ProcessLifeguardRule() {
-        super(AndroidLogger.getInstance());
+    public ProcessLifeguardRule(Mode mode) {
+        super(AndroidLogger.getInstance(), mode);
     }
 
     @Override
     protected boolean isMainThread() {
         return Looper.getMainLooper().isCurrentThread();
+    }
+
+    @Override
+    protected void ignoreUncaughtBackgroundException(
+            String testName,
+            Thread thread,
+            List<String> allTests,
+            List<String> lastTests,
+            Throwable uncaughtThrowable) {
+        super.ignoreUncaughtBackgroundException(
+                testName, thread, allTests, lastTests, uncaughtThrowable);
+        writeToTestStorage(
+                testName, thread, allTests, lastTests, /* testFailure= */ null, uncaughtThrowable);
+    }
+
+    @Override
+    protected UncaughtBackgroundException newUncaughtBackgroundException(
+            String testName,
+            Thread thread,
+            List<String> allTests,
+            List<String> lastTests,
+            Throwable uncaughtThrowable) {
+        writeToTestStorage(
+                testName, thread, allTests, lastTests, /* testFailure= */ null, uncaughtThrowable);
+        return super.newUncaughtBackgroundException(
+                testName, thread, allTests, lastTests, uncaughtThrowable);
+    }
+
+    @Override
+    protected UncaughtBackgroundException newUncaughtBackgroundException(
+            String testName,
+            Thread thread,
+            List<String> allTests,
+            List<String> lastTests,
+            Throwable testFailure,
+            Throwable uncaughtThrowable) {
+        writeToTestStorage(testName, thread, allTests, lastTests, testFailure, uncaughtThrowable);
+        return super.newUncaughtBackgroundException(
+                testName, thread, allTests, lastTests, testFailure, uncaughtThrowable);
+    }
+
+    private void writeToTestStorage(
+            String testName,
+            Thread thread,
+            List<String> allTests,
+            List<String> lastTests,
+            @Nullable Throwable testFailure,
+            Throwable uncaughtThrowable) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+
+        sw.append("Mode: ").append(mMode.toString()).append("\n");
+        sw.append("Thread: ").append(thread.toString()).append("\n");
+
+        sw.append("Uncaught failure: ");
+        uncaughtThrowable.printStackTrace(pw);
+        if (testFailure != null) {
+            sw.append("Test failure: ");
+            testFailure.printStackTrace(pw);
+        }
+
+        sw.append("" + allTests.size()).append(" total tests:\n");
+        allTests.forEach(t -> sw.append('\t').append(t).append('\n'));
+        sw.append("" + lastTests.size()).append(" tests since last failure:\n");
+        lastTests.forEach(t -> sw.append('\t').append(t).append('\n'));
+
+        writeFile(
+                getClass().getSimpleName()
+                        + "-"
+                        + testName
+                        + "-"
+                        + System.currentTimeMillis()
+                        + ".txt",
+                sw.toString());
     }
 }

@@ -18,7 +18,6 @@ package com.android.adservices.ui.settings;
 
 import static com.google.common.truth.Truth.assertThat;
 
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -36,8 +35,8 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.Flags;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
@@ -47,6 +46,7 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -67,6 +67,10 @@ public class AppConsentSettingsUiAutomatorTest {
 
     private String mTestName;
 
+    @Rule(order = 0)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @Before
     public void setup() throws UiObjectNotFoundException {
         String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APP_APK_PATH);
@@ -77,10 +81,6 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // Start from the home screen
         sDevice.pressHome();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
     }
 
     @After
@@ -91,10 +91,6 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
         ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_APP_NAME);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     // TODO: Remove this blank test along with the other @Ignore. b/268351419

@@ -17,6 +17,7 @@
 package android.adservices.test.scenario.adservices.ui;
 
 import android.content.Context;
+import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
@@ -24,15 +25,15 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -47,35 +48,35 @@ public class NotificationLandingPage {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static UiDevice sDevice;
 
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @Before
     public void setup() throws Exception {
-        UiUtils.disableGlobalKillswitch();
         UiUtils.setFlipFlow(false);
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
         AdservicesTestHelper.killAdservicesProcess(sContext);
+
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
     }
 
     @After
     public void teardown() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @Test
     public void testNotificationLandingPage() throws Exception {
         final long start = System.currentTimeMillis();
+
+        Trace.beginSection("NotificationTriggerEvent");
         AdservicesWorkflows.testNotificationActivityFlow(
                 sContext, sDevice, true, UiConstants.UX.GA_UX, false, false, true);
+        Trace.endSection();
+
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "(" + UI_NOTIFICATION_LATENCY_METRIC + ": " + duration + ")");
     }

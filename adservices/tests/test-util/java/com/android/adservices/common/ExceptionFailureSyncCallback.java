@@ -20,6 +20,9 @@ import androidx.annotation.Nullable;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 // TODO(b/302757068): add unit tests (and/or convert tests from OutcomeReceiverForTestsTest)
 /**
  * Custom {@link SyncCallback} where the error type is an exception.
@@ -102,7 +105,7 @@ public abstract class ExceptionFailureSyncCallback<T> extends SyncCallback<T, Ex
             throws InterruptedException {
         Preconditions.checkArgument(expectedClass != null, "expectedClass cannot be null");
         Exception error = assertErrorReceived();
-        Preconditions.checkState(
+        checkState(
                 expectedClass.isInstance(error),
                 ERROR_WRONG_EXCEPTION_RECEIVED,
                 expectedClass,
@@ -126,5 +129,16 @@ public abstract class ExceptionFailureSyncCallback<T> extends SyncCallback<T, Ex
     /** Gets the result returned by {@link #onResult(Object)}. */
     public T getResult() {
         return getResultReceived();
+    }
+
+    // TODO(b/303886367): move to common helper
+    @FormatMethod
+    private static void checkState(
+            boolean expression,
+            @FormatString String messageTemplate,
+            @Nullable Object... messageArgs) {
+        if (!expression) {
+            throw new IllegalStateException(String.format(messageTemplate, messageArgs));
+        }
     }
 }

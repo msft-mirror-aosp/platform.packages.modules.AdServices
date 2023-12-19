@@ -24,7 +24,9 @@ import static com.android.adservices.data.measurement.MeasurementTables.MSMT_TAB
 import static com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -53,23 +55,24 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture.ValidAsyncRegistrationParams;
+import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.PrivacyParams;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
@@ -78,6 +81,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -86,11 +90,11 @@ import com.google.common.collect.ImmutableMultiset;
 import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
@@ -156,22 +160,30 @@ public class MeasurementDaoTest {
     private static final Uri REGISTRATION_ORIGIN =
             WebUtil.validUri("https://subdomain.example.test");
 
+    private static final Uri REGISTRANT = Uri.parse("android-app://com.example.abc");
+    private static final Uri INSTALLED_REGISTRANT = Uri.parse("android-app://installed-registrant");
+    private static final Uri NOT_INSTALLED_REGISTRANT =
+            Uri.parse("android-app://not-installed-registrant");
+
+    private static final long INSERTION_TIME = 1617297798;
+
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
-    private MockitoSession mStaticMockSession;
     private Flags mFlags;
     private DatastoreManager mDatastoreManager;
     public static final Uri REGISTRATION_ORIGIN_2 =
             WebUtil.validUri("https://subdomain_2.example.test");
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(MeasurementDbHelper.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
+
     @Before
     public void before() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementDbHelper.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         mFlags = FlagsFactory.getFlagsForTest();
         mDatastoreManager =
@@ -186,8 +198,6 @@ public class MeasurementDaoTest {
         for (String table : ALL_MSMT_TABLES) {
             db.delete(table, null, null);
         }
-
-        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -195,6 +205,8 @@ public class MeasurementDaoTest {
         Source validSource =
                 SourceFixture.getValidSourceBuilder()
                         .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .build();
         mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
 
@@ -213,6 +225,7 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getRegistrant(), source.getRegistrant());
         assertEquals(validSource.getEventTime(), source.getEventTime());
         assertEquals(validSource.getExpiryTime(), source.getExpiryTime());
+        assertEquals(validSource.getStatus(), source.getStatus());
         assertEquals(validSource.getEventReportWindow(), source.getEventReportWindow());
         assertEquals(
                 validSource.getAggregatableReportWindow(), source.getAggregatableReportWindow());
@@ -234,8 +247,9 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
         assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
         assertEquals(
-                validSource.getCoarseEventReportDestinations(),
-                source.getCoarseEventReportDestinations());
+                validSource.hasCoarseEventReportDestinations(),
+                source.hasCoarseEventReportDestinations());
+        assertEquals(validSource.getTriggerDataMatching(), source.getTriggerDataMatching());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
         assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());
 
@@ -266,7 +280,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao -> measurementDao.getSource(sourceId))
                         .get();
-        source.buildFlexibleEventReportApi();
+        source.buildTriggerSpecs();
 
         assertNotNull(source);
         assertNotNull(source.getId());
@@ -296,16 +310,16 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
         assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
         assertEquals(
-                validSource.getFlexEventReportSpec().getMaxReports(),
+                validSource.getTriggerSpecs().getMaxReports(),
                 source.getMaxEventLevelReports().intValue());
         assertEquals(
-                validSource.getFlexEventReportSpec().encodeTriggerSpecsToJson(),
-                source.getTriggerSpecs());
+                validSource.getTriggerSpecs().encodeToJson(),
+                source.getTriggerSpecsString());
         assertNull(source.getEventAttributionStatus());
         assertEquals(
-                validSource.getFlexEventReportSpec().encodePrivacyParametersToJSONString(),
+                validSource.getTriggerSpecs().encodePrivacyParametersToJSONString(),
                 source.getPrivacyParameters());
-        assertEquals(validSource.getFlexEventReportSpec(), source.getFlexEventReportSpec());
+        assertEquals(validSource.getTriggerSpecs(), source.getTriggerSpecs());
 
         // Assert destinations were inserted into the source destination table.
         Pair<List<Uri>, List<Uri>> destinations =
@@ -476,6 +490,163 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testGetUninstalledAppNamesContainingData_withDataInSource() {
+        // Setup records in source storage
+        final List<Uri> appsInstalled =
+                List.of(buildRegistrant("foo"), buildRegistrant("bar"), buildRegistrant("baz"));
+        final List<Uri> appsNotInstalled = List.of(buildRegistrant("qux"), buildRegistrant("quux"));
+        insertSourceForPackageName(
+                Stream.concat(appsInstalled.stream(), appsNotInstalled.stream())
+                        .toArray(Uri[]::new));
+
+        // Execution
+        final Optional<List<Uri>> uninstalledAppNames =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getUninstalledAppNamesHavingMeasurementData(
+                                        appsInstalled));
+
+        // Validation, apps not installed should be returned
+        assertNotNull(uninstalledAppNames);
+        assertTrue(uninstalledAppNames.isPresent());
+        assertEquals(2, uninstalledAppNames.get().size());
+        Set<Uri> result = new HashSet<>(uninstalledAppNames.get());
+        assertTrue(result.contains(buildRegistrant("qux")));
+        assertTrue(result.contains(buildRegistrant("quux")));
+    }
+
+    @Test
+    public void testGetUninstalledAppNamesContainingData_withDataInTrigger() {
+        // Setup records in trigger storage
+        final List<Uri> appsInstalled =
+                List.of(buildRegistrant("foo"), buildRegistrant("bar"), buildRegistrant("baz"));
+        final List<Uri> appsNotInstalled = List.of(buildRegistrant("qux"), buildRegistrant("quux"));
+        insertTriggerForPackageName(
+                Stream.concat(appsInstalled.stream(), appsNotInstalled.stream())
+                        .toArray(Uri[]::new));
+
+        // Execution
+        final Optional<List<Uri>> uninstalledAppNames =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getUninstalledAppNamesHavingMeasurementData(
+                                        appsInstalled));
+
+        // Validation, apps not installed should be returned
+        assertNotNull(uninstalledAppNames);
+        assertTrue(uninstalledAppNames.isPresent());
+        assertEquals(2, uninstalledAppNames.get().size());
+        Set<Uri> result = new HashSet<>(uninstalledAppNames.get());
+        assertTrue(result.contains(buildRegistrant("qux")));
+        assertTrue(result.contains(buildRegistrant("quux")));
+    }
+
+    @Test
+    public void testGetUninstalledAppNamesContainingData_withDataInTriggerAndSource() {
+        // Setup records in source and trigger storage
+        final List<Uri> appsInstalled =
+                List.of(buildRegistrant("foo"), buildRegistrant("bar"), buildRegistrant("baz"));
+        final List<Uri> appsNotInstalled = List.of(buildRegistrant("qux"), buildRegistrant("quux"));
+        final Uri[] appNames =
+                Stream.concat(appsInstalled.stream(), appsNotInstalled.stream())
+                        .toArray(Uri[]::new);
+        insertSourceForPackageName(appNames);
+        insertTriggerForPackageName(appNames);
+
+        // Execution
+        final Optional<List<Uri>> uninstalledAppNames =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getUninstalledAppNamesHavingMeasurementData(
+                                        appsInstalled));
+
+        // Validation, apps not installed should be returned
+        assertNotNull(uninstalledAppNames);
+        assertTrue(uninstalledAppNames.isPresent());
+        assertEquals(2, uninstalledAppNames.get().size());
+        Set<Uri> result = new HashSet<>(uninstalledAppNames.get());
+        assertTrue(result.contains(buildRegistrant("qux")));
+        assertTrue(result.contains(buildRegistrant("quux")));
+    }
+
+    @Test
+    public void testGetUninstalledAppNamesContainingData_withDataInAsync() {
+        // Setup records in source storage
+        final List<Uri> appsInstalled =
+                List.of(buildRegistrant("foo"), buildRegistrant("bar"), buildRegistrant("baz"));
+        final List<Uri> appsNotInstalled = List.of(buildRegistrant("qux"), buildRegistrant("quux"));
+        insertAsyncRecordForPackageName(
+                Stream.concat(appsInstalled.stream(), appsNotInstalled.stream())
+                        .toArray(Uri[]::new));
+
+        // Execution
+        final Optional<List<Uri>> uninstalledAppNames =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getUninstalledAppNamesHavingMeasurementData(
+                                        appsInstalled));
+
+        // Validation, apps not installed should be returned
+        assertNotNull(uninstalledAppNames);
+        assertTrue(uninstalledAppNames.isPresent());
+        assertEquals(2, uninstalledAppNames.get().size());
+        Set<Uri> result = new HashSet<>(uninstalledAppNames.get());
+        assertTrue(result.contains(buildRegistrant("qux")));
+        assertTrue(result.contains(buildRegistrant("quux")));
+    }
+
+    @Test
+    public void testGetUninstalledAppNamesContainingData_withAnyDataAndNoAppsUninstalled() {
+        // Setup records in source storage (any storage), all these apps are still installed
+        final List<Uri> appsInstalled =
+                List.of(
+                        buildRegistrant("foo"),
+                        buildRegistrant("bar"),
+                        buildRegistrant("baz"),
+                        buildRegistrant("qux"),
+                        buildRegistrant("quux"));
+        insertSourceForPackageName(appsInstalled.stream().toArray(Uri[]::new));
+
+        // Execution
+        final Optional<List<Uri>> uninstalledAppNames =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getUninstalledAppNamesHavingMeasurementData(
+                                        appsInstalled));
+
+        // Validation, apps not installed should be returned
+        assertNotNull(uninstalledAppNames);
+        assertTrue(uninstalledAppNames.isPresent());
+        assertTrue(uninstalledAppNames.get().isEmpty());
+        assertEquals(0, uninstalledAppNames.get().size());
+    }
+
+    @Test
+    public void testGetUninstalledAppNamesContainingData_withNoData() {
+        // Setup records, these apps don't have source nor trigger data
+        final List<Uri> appsInstalled =
+                List.of(
+                        buildRegistrant("foo"),
+                        buildRegistrant("bar"),
+                        buildRegistrant("baz"),
+                        buildRegistrant("qux"),
+                        buildRegistrant("quux"));
+
+        // Execution
+        final Optional<List<Uri>> uninstalledAppNames =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getUninstalledAppNamesHavingMeasurementData(
+                                        appsInstalled));
+
+        // Validation, apps not installed should be returned
+        assertNotNull(uninstalledAppNames);
+        assertTrue(uninstalledAppNames.isPresent());
+        assertTrue(uninstalledAppNames.get().isEmpty());
+        assertEquals(0, uninstalledAppNames.get().size());
+    }
+
+    @Test
     public void testCountDistinctReportingOriginPerPublisherXDestinationInAttribution_atWindow() {
         Uri sourceSite = Uri.parse("android-app://publisher.app");
         Uri appDestination = Uri.parse("android-app://destination.app");
@@ -535,14 +706,7 @@ public class MeasurementDaoTest {
         try (Cursor cursor =
                 MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
-                        .query(
-                                MeasurementTables.DebugReportContract.TABLE,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null)) {
+                        .query(DebugReportContract.TABLE, null, null, null, null, null, null)) {
             assertTrue(cursor.moveToNext());
             DebugReport report = SqliteObjectMapper.constructDebugReportFromCursor(cursor);
             assertNotNull(report);
@@ -552,6 +716,8 @@ public class MeasurementDaoTest {
             assertEquals(debugReport.getEnrollmentId(), report.getEnrollmentId());
             assertEquals(debugReport.getRegistrationOrigin(), report.getRegistrationOrigin());
             assertEquals(debugReport.getReferenceId(), report.getReferenceId());
+            assertEquals(debugReport.getInsertionTime(), report.getInsertionTime());
+            assertEquals(debugReport.getRegistrant(), report.getRegistrant());
         }
     }
 
@@ -874,7 +1040,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -888,7 +1054,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -947,7 +1113,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -961,7 +1127,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1006,7 +1172,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1020,7 +1186,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(3),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1084,7 +1250,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        6,
                         true,
                         true,
                         5000000000L,
@@ -1111,9 +1277,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1127,7 +1293,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(9),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1138,7 +1304,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1192,7 +1358,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        6,
                         true,
                         true,
                         5000000000L,
@@ -1221,7 +1387,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.APP,
                                             "unmatched-enrollment-id",
@@ -1235,7 +1401,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(0),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.APP,
                                             "unmatched-enrollment-id",
@@ -1246,7 +1412,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1299,7 +1465,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        6,
                         true,
                         true,
                         5000000000L,
@@ -1326,9 +1492,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1342,7 +1508,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(9),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1353,7 +1519,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(5),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1371,7 +1537,7 @@ public class MeasurementDaoTest {
         Uri publisherAsSuffix = WebUtil.validUri("https://prefix-publisher.test");
         List<Source> activeSourcesWithAppAndWebDestinations =
                 getSourcesWithDifferentDestinations(
-                        4,
+                        8,
                         true,
                         true,
                         4500000000L,
@@ -1416,7 +1582,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        5,
                         true,
                         true,
                         5000000000L,
@@ -1446,9 +1612,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(4),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1460,9 +1626,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(3),
+                            Integer.valueOf(4),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1473,7 +1639,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(4),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1527,7 +1693,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        6,
                         true,
                         true,
                         5000000000L,
@@ -1554,9 +1720,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(5),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1570,7 +1736,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(9),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1581,7 +1747,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(2),
+                            Integer.valueOf(5),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1635,7 +1801,7 @@ public class MeasurementDaoTest {
                         Source.Status.ACTIVE);
         List<Source> ignoredSources =
                 getSourcesWithDifferentDestinations(
-                        10,
+                        4,
                         true,
                         true,
                         5000000000L,
@@ -1662,9 +1828,9 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(1),
+                            Integer.valueOf(2),
                             measurementDao
-                                    .countDistinctDestPerPubXEnrollmentInActiveSourceInWindow(
+                                    .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1678,7 +1844,7 @@ public class MeasurementDaoTest {
                     assertEquals(
                             Integer.valueOf(8),
                             measurementDao
-                                    .countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+                                    .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                                             publisher,
                                             EventSurfaceType.WEB,
                                             SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -1689,7 +1855,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(1),
+                            Integer.valueOf(2),
                             measurementDao
                                     .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                             publisher,
@@ -1745,7 +1911,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1778,7 +1944,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1811,7 +1977,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.WEB,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1845,7 +2011,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     differentEnrollment,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1878,7 +2044,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -1911,7 +2077,7 @@ public class MeasurementDaoTest {
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
                                     System.currentTimeMillis(),
-                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -2518,6 +2684,118 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void deleteFlexEventReportsAndAttributions_success() throws JSONException {
+        // Setup - Creates the following -
+        // source - S1, S2
+        // trigger - T1, T2, T3
+        // event reports - (E13, E23) (E11_1, E11_2, E11_3) (E21) (E22_1, E22_2)
+        // attributions
+        //    (ATT11_00 (aggregate scope), ATT11_01 (aggregate scope))
+        //    (ATT11_1, ATT11_2, ATT11_3) (ATT21) (ATT22_1, ATT22_2)
+        prepareDataForFlexEventReportAndAttributionDeletion();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        // Assert attributions present
+        assertNotNull(getAttribution("ATT11_1", db));
+        assertNotNull(getAttribution("ATT11_2", db));
+        assertNotNull(getAttribution("ATT11_3", db));
+        assertNotNull(getAttribution("ATT21", db));
+        assertNotNull(getAttribution("ATT22_1", db));
+        assertNotNull(getAttribution("ATT22_2", db));
+
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    // Assert sources and triggers present
+                    assertNotNull(measurementDao.getSource("S1"));
+                    assertNotNull(measurementDao.getSource("S2"));
+                    assertNotNull(measurementDao.getTrigger("T1"));
+                    assertNotNull(measurementDao.getTrigger("T2"));
+
+                    // Validate presence of unmatched event reports
+                    measurementDao.getEventReport("E13");
+                    measurementDao.getEventReport("E23");
+
+                    // Event report group 1
+                    // Validate event reports present
+                    EventReport e111 = measurementDao.getEventReport("E11_1");
+                    EventReport e112 = measurementDao.getEventReport("E11_2");
+
+                    // Deletion
+                    measurementDao.deleteFlexEventReportsAndAttributions(
+                            List.of(e111, e112));
+
+                    // Validate event report deletion
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E11_1");
+                            });
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E11_2");
+                            });
+                    assertNotNull(measurementDao.getEventReport("E11_3"));
+
+                    // Event report group 2
+                    // Validate event reports present
+                    EventReport e21 = measurementDao.getEventReport("E21");
+
+                    // Deletion
+                    measurementDao.deleteFlexEventReportsAndAttributions(
+                            List.of(e21));
+
+                    // Validate event report deletion
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E21");
+                            });
+
+                    // Event report group 3
+                    // Validate event reports present (retrieval doesn't throw)
+                    measurementDao.getEventReport("E22_1");
+                    EventReport e222 = measurementDao.getEventReport("E22_2");
+
+                    // Deletion
+                    measurementDao.deleteFlexEventReportsAndAttributions(
+                            List.of(e222));
+
+                    // Validate event report deletion
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E22_2");
+                            });
+                    assertNotNull(measurementDao.getEventReport("E22_1"));
+
+                    // Validate sources and triggers present
+                    assertNotNull(measurementDao.getSource("S1"));
+                    assertNotNull(measurementDao.getSource("S2"));
+                    assertNotNull(measurementDao.getTrigger("T1"));
+                    assertNotNull(measurementDao.getTrigger("T2"));
+
+                    // Validate presence of unmatched event reports
+                    measurementDao.getEventReport("E13");
+                    measurementDao.getEventReport("E23");
+                });
+
+        // Validate attribution deletion
+        assertNotNull(getAttribution("ATT11_00", db));
+        assertNotNull(getAttribution("ATT11_01", db));
+        assertNull(getAttribution("ATT11_1", db));
+        assertNull(getAttribution("ATT11_2", db));
+        assertNotNull(getAttribution("ATT11_3", db));
+        assertNull(getAttribution("ATT21", db));
+        // Attribution deletion order within the group associated with an event report is generally
+        // by insertion order, although it's not guaranteed. We deleted event report E22_2 but the
+        // first limited associated attribution returned is ATT22_1.
+        assertNull(getAttribution("ATT22_1", db));
+        assertNotNull(getAttribution("ATT22_2", db));
+    }
+
+    @Test
     public void deleteSources_providedIds_deletesMatchingSourcesAndRelatedData()
             throws JSONException {
         // Setup - Creates the following -
@@ -2691,6 +2969,105 @@ public class MeasurementDaoTest {
         assertEquals(2, DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE));
     }
 
+    // Setup - Creates the following -
+    // source - S1, S2
+    // trigger - T1, T2
+    // event reports - E11_1, E11_2, E11_3, E21, E22_1, E22_2
+    // attributions - ATT11_1, ATT11_2, ATT11_3, ATT21, ATT22_1, ATT22_2
+    private void prepareDataForFlexEventReportAndAttributionDeletion() throws JSONException {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Source s1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("S1")
+                        .build();
+        Source s2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setId("S2")
+                        .build();
+        Trigger t1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T1")
+                        .build();
+        Trigger t2 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T2")
+                        .build();
+        Trigger t3 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T2")
+                        .build();
+        EventReport e111 = createEventReportForSourceAndTrigger("E11_1", s1, t1);
+        EventReport e112 = createEventReportForSourceAndTrigger("E11_2", s1, t1);
+        EventReport e113 = createEventReportForSourceAndTrigger("E11_3", s1, t1);
+        EventReport e21 = createEventReportForSourceAndTrigger("E21", s2, t1);
+        EventReport e221 = createEventReportForSourceAndTrigger("E22_1", s2, t2);
+        EventReport e222 = createEventReportForSourceAndTrigger("E22_2", s2, t2);
+        EventReport e13 = createEventReportForSourceAndTrigger("E13", s1, t3);
+        EventReport e23 = createEventReportForSourceAndTrigger("E23", s2, t3);
+        Attribution att1100 =
+                createAttribution(
+                        "ATT11_00",
+                        Attribution.Scope.AGGREGATE,
+                        s1.getId(),
+                        t1.getId());
+        Attribution att1101 =
+                createAttribution(
+                        "ATT11_01",
+                        Attribution.Scope.AGGREGATE,
+                        s1.getId(),
+                        t1.getId());
+        Attribution att111 =
+                createAttribution(
+                        "ATT11_1", s1.getId(), t1.getId());
+        Attribution att112 =
+                createAttribution(
+                        "ATT11_2", s1.getId(), t1.getId());
+        Attribution att113 =
+                createAttribution(
+                        "ATT11_3", s1.getId(), t1.getId());
+        Attribution att21 =
+                createAttribution(
+                        "ATT21", s2.getId(), t1.getId());
+        Attribution att221 =
+                createAttribution(
+                        "ATT22_1", s2.getId(), t2.getId());
+        Attribution att222 =
+                createAttribution(
+                        "ATT22_2", s2.getId(), t2.getId());
+
+        insertSource(s1, s1.getId());
+        insertSource(s2, s2.getId());
+        AbstractDbIntegrationTest.insertToDb(t1, db);
+        AbstractDbIntegrationTest.insertToDb(t2, db);
+        AbstractDbIntegrationTest.insertToDb(e111, db);
+        AbstractDbIntegrationTest.insertToDb(e112, db);
+        AbstractDbIntegrationTest.insertToDb(e113, db);
+        AbstractDbIntegrationTest.insertToDb(e21, db);
+        AbstractDbIntegrationTest.insertToDb(e221, db);
+        AbstractDbIntegrationTest.insertToDb(e222, db);
+        AbstractDbIntegrationTest.insertToDb(e13, db);
+        AbstractDbIntegrationTest.insertToDb(e23, db);
+        AbstractDbIntegrationTest.insertToDb(att1100, db);
+        AbstractDbIntegrationTest.insertToDb(att1101, db);
+        AbstractDbIntegrationTest.insertToDb(att111, db);
+        AbstractDbIntegrationTest.insertToDb(att112, db);
+        AbstractDbIntegrationTest.insertToDb(att113, db);
+        AbstractDbIntegrationTest.insertToDb(att21, db);
+        AbstractDbIntegrationTest.insertToDb(att221, db);
+        AbstractDbIntegrationTest.insertToDb(att222, db);
+    }
+
+    // Setup - Creates the following -
+    // source - S1, S2, S3, S4
+    // trigger - T1, T2, T3, T4
+    // event reports - E11, E12, E21, E22, E23, E33, E44
+    // aggregate reports - AR11, AR12, AR21, AR34
+    // attributions - ATT11, ATT12, ATT21, ATT22, ATT33, ATT44
     private void prepareDataForSourceAndTriggerDeletion() throws JSONException {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Source s1 =
@@ -2745,21 +3122,21 @@ public class MeasurementDaoTest {
         AggregateReport ar21 = createAggregateReportForSourceAndTrigger("AR21", s2, t1);
         AggregateReport ar34 = createAggregateReportForSourceAndTrigger("AR34", s3, t4);
         Attribution att11 =
-                createAttributionWithSourceAndTriggerIds(
+                createAttribution(
                         "ATT11", s1.getId(), t1.getId()); // deleted
         Attribution att12 =
-                createAttributionWithSourceAndTriggerIds(
+                createAttribution(
                         "ATT12", s1.getId(), t2.getId()); // deleted
         Attribution att21 =
-                createAttributionWithSourceAndTriggerIds(
+                createAttribution(
                         "ATT21", s2.getId(), t1.getId()); // deleted
         Attribution att22 =
-                createAttributionWithSourceAndTriggerIds(
+                createAttribution(
                         "ATT22", s2.getId(), t2.getId()); // deleted
         Attribution att33 =
-                createAttributionWithSourceAndTriggerIds("ATT33", s3.getId(), t3.getId());
+                createAttribution("ATT33", s3.getId(), t3.getId());
         Attribution att44 =
-                createAttributionWithSourceAndTriggerIds("ATT44", s4.getId(), t4.getId());
+                createAttribution("ATT44", s4.getId(), t4.getId());
 
         insertSource(s1, s1.getId());
         insertSource(s2, s2.getId());
@@ -2991,6 +3368,9 @@ public class MeasurementDaoTest {
                             values.put(
                                     MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                                     aggregateReport.getAttributionDestination().toString());
+                            values.put(
+                                    MeasurementTables.AggregateReport.IS_FAKE_REPORT,
+                                    aggregateReport.isFakeReport());
                             db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
                         });
 
@@ -3016,6 +3396,23 @@ public class MeasurementDaoTest {
                 attributionDestinations4, EventSurfaceType.WEB, destination4ExpectedCounts);
         assertAggregateReportCount(
                 attributionDestinations5, EventSurfaceType.APP, destination5ExpectedCounts);
+    }
+
+    @Test
+    public void getAggregateReportById_fakeReport() {
+        AggregateReport ar11 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("11")
+                        .setIsFakeReport(true)
+                        .build();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        AbstractDbIntegrationTest.insertToDb(ar11, db);
+
+        Optional<AggregateReport> resOpt =
+                mDatastoreManager.runInTransactionWithResult((dao) -> dao.getAggregateReport("11"));
+        assertTrue(resOpt.isPresent());
+        AggregateReport res = resOpt.get();
+        assertTrue(res.isFakeReport());
     }
 
     @Test
@@ -3491,13 +3888,13 @@ public class MeasurementDaoTest {
                         .setReportTime(10000L)
                         .build());
         Source originalSource = sourceList.get(0);
-        originalSource.getFlexEventReportSpec().insertAttributedTrigger(eventReportList.get(0));
+        insertAttributedTrigger(originalSource.getTriggerSpecs(), eventReportList.get(0));
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     Source newSource = measurementDao.getSource(originalSource.getId());
                     assertNotEquals(originalSource, newSource);
                     assertEquals(
-                            0, newSource.getFlexEventReportSpec().getAttributedTriggers().size());
+                            0, newSource.getTriggerSpecs().getAttributedTriggers().size());
                 });
         mDatastoreManager.runInTransaction(
                 measurementDao ->
@@ -3980,49 +4377,6 @@ public class MeasurementDaoTest {
         assertFalse(result3.isPresent());
     }
 
-    private void insertInDb(SQLiteDatabase db, Source source) {
-        ContentValues values = new ContentValues();
-        values.put(SourceContract.ID, source.getId());
-        values.put(SourceContract.STATUS, Source.Status.ACTIVE);
-        values.put(SourceContract.EVENT_TIME, source.getEventTime());
-        values.put(SourceContract.EXPIRY_TIME, source.getExpiryTime());
-        values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
-        values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
-        values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
-        values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
-        if (source.getAttributedTriggers() != null) {
-            values.put(SourceContract.EVENT_ATTRIBUTION_STATUS, source.attributedTriggersToJson());
-        }
-        db.insert(SourceContract.TABLE, null, values);
-
-        // Insert source destinations
-        if (source.getAppDestinations() != null) {
-            for (Uri appDestination : source.getAppDestinations()) {
-                ContentValues destinationValues = new ContentValues();
-                destinationValues.put(
-                        MeasurementTables.SourceDestination.SOURCE_ID, source.getId());
-                destinationValues.put(
-                        MeasurementTables.SourceDestination.DESTINATION_TYPE, EventSurfaceType.APP);
-                destinationValues.put(
-                        MeasurementTables.SourceDestination.DESTINATION, appDestination.toString());
-                db.insert(MeasurementTables.SourceDestination.TABLE, null, destinationValues);
-            }
-        }
-
-        if (source.getWebDestinations() != null) {
-            for (Uri webDestination : source.getWebDestinations()) {
-                ContentValues destinationValues = new ContentValues();
-                destinationValues.put(
-                        MeasurementTables.SourceDestination.SOURCE_ID, source.getId());
-                destinationValues.put(
-                        MeasurementTables.SourceDestination.DESTINATION_TYPE, EventSurfaceType.WEB);
-                destinationValues.put(
-                        MeasurementTables.SourceDestination.DESTINATION, webDestination.toString());
-                db.insert(MeasurementTables.SourceDestination.TABLE, null, destinationValues);
-            }
-        }
-    }
-
     @Test
     public void testInsertAggregateEncryptionKey() {
         String keyId = "38b1d571-f924-4dc0-abe1-e2bac9b6a6be";
@@ -4266,6 +4620,7 @@ public class MeasurementDaoTest {
                         .build();
         Attribution attribution =
                 new Attribution.Builder()
+                        .setScope(Attribution.Scope.AGGREGATE)
                         .setEnrollmentId(source.getEnrollmentId())
                         .setDestinationOrigin(source.getWebDestinations().get(0).toString())
                         .setDestinationSite(source.getAppDestinations().get(0).toString())
@@ -4283,13 +4638,54 @@ public class MeasurementDaoTest {
                 });
 
         // Assertion
-        AtomicLong attributionsCount = new AtomicLong();
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    attributionsCount.set(dao.getAttributionsPerRateLimitWindow(source, trigger));
-                });
-
-        assertEquals(1L, attributionsCount.get());
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(AttributionContract.TABLE, null, null, null, null, null, null)) {
+            assertTrue(cursor.moveToNext());
+            assertEquals(
+                    attribution.getScope(),
+                    cursor.getInt(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.SCOPE)));
+            assertEquals(
+                    attribution.getEnrollmentId(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.ENROLLMENT_ID)));
+            assertEquals(
+                    attribution.getDestinationOrigin(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.DESTINATION_ORIGIN)));
+            assertEquals(
+                    attribution.getDestinationSite(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.DESTINATION_SITE)));
+            assertEquals(
+                    attribution.getSourceOrigin(),
+                    cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.AttributionContract.SOURCE_ORIGIN)));
+            assertEquals(
+                    attribution.getSourceSite(),
+                    cursor.getString(
+                            cursor.getColumnIndex(
+                                    MeasurementTables.AttributionContract.SOURCE_SITE)));
+            assertEquals(
+                    attribution.getRegistrant(),
+                    cursor.getString(
+                            cursor.getColumnIndex(
+                                    MeasurementTables.AttributionContract.REGISTRANT)));
+            assertEquals(
+                    attribution.getTriggerTime(),
+                    cursor.getLong(
+                            cursor.getColumnIndex(
+                                    MeasurementTables.AttributionContract.TRIGGER_TIME)));
+            assertEquals(
+                    attribution.getRegistrationOrigin(),
+                    Uri.parse(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables.AttributionContract
+                                                    .REGISTRATION_ORIGIN))));
+        }
     }
 
     @Test
@@ -4310,7 +4706,7 @@ public class MeasurementDaoTest {
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(
                                 trigger.getTriggerTime()
-                                        - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS
+                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
                                         + 1)
                         .setRegistrationOrigin(trigger.getRegistrationOrigin())
                         .build();
@@ -4332,6 +4728,96 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void getAttributionsPerRateLimitWindow_atTimeWindowScoped_countsAttribution() {
+        // Setup
+        Source source = SourceFixture.getValidSource();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
+                        .build();
+
+        Attribution eventAttribution =
+                getAttributionBuilder(source, trigger).setScope(Attribution.Scope.EVENT).build();
+
+        Attribution aggregateAttribution =
+                getAttributionBuilder(source, trigger)
+                        .setScope(Attribution.Scope.AGGREGATE)
+                        .build();
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertAttribution(eventAttribution);
+                    dao.insertAttribution(aggregateAttribution);
+                });
+
+        // Assertion
+        AtomicLong eventAttributionsCount = new AtomicLong();
+        AtomicLong aggregateAttributionsCount = new AtomicLong();
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    eventAttributionsCount.set(
+                            dao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.EVENT, source, trigger));
+                    aggregateAttributionsCount.set(
+                            dao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.AGGREGATE, source, trigger));
+                });
+
+        assertEquals(1L, eventAttributionsCount.get());
+        assertEquals(1L, aggregateAttributionsCount.get());
+    }
+
+    @Test
+    public void getAttributionsPerRateLimitWindow_beyondTimeWindowScoped_countsAttribution() {
+        // Setup
+        Source source = SourceFixture.getValidSource();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
+                        .build();
+
+        Attribution eventAttribution =
+                getAttributionBuilder(source, trigger)
+                        .setTriggerTime(
+                                trigger.getTriggerTime()
+                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS)
+                        .setScope(Attribution.Scope.EVENT)
+                        .build();
+
+        Attribution aggregateAttribution =
+                getAttributionBuilder(source, trigger)
+                        .setTriggerTime(
+                                trigger.getTriggerTime()
+                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS)
+                        .setScope(Attribution.Scope.AGGREGATE)
+                        .build();
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertAttribution(eventAttribution);
+                    dao.insertAttribution(aggregateAttribution);
+                });
+
+        // Assertion
+        AtomicLong eventAttributionsCount = new AtomicLong();
+        AtomicLong aggregateAttributionsCount = new AtomicLong();
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    eventAttributionsCount.set(
+                            dao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.EVENT, source, trigger));
+                    aggregateAttributionsCount.set(
+                            dao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.AGGREGATE, source, trigger));
+                });
+
+        assertEquals(0L, eventAttributionsCount.get());
+        assertEquals(0L, aggregateAttributionsCount.get());
+    }
+
+    @Test
     public void testGetAttributionsPerRateLimitWindow_beyondTimeWindow() {
         // Setup
         Source source = SourceFixture.getValidSource();
@@ -4349,7 +4835,7 @@ public class MeasurementDaoTest {
                         .setRegistrant(source.getRegistrant().toString())
                         .setTriggerTime(
                                 trigger.getTriggerTime()
-                                        - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS)
+                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS)
                         .setRegistrationOrigin(trigger.getRegistrationOrigin())
                         .build();
 
@@ -4401,817 +4887,13 @@ public class MeasurementDaoTest {
                         .getCount());
     }
 
-    @Test
-    public void testDeleteAppRecordsNotPresentForSources() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-
-        List<Source> sourceList = new ArrayList<>();
-        // Source registrant is still installed, record is not deleted.
-        sourceList.add(
-                new Source.Builder()
-                        .setId("1")
-                        .setEventId(new UnsignedLong(1L))
-                        .setAppDestinations(
-                                List.of(Uri.parse("android-app://installed-app-destination")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setPublisher(Uri.parse("android-app://installed-registrant"))
-                        .setStatus(Source.Status.ACTIVE)
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        // Source registrant is not installed, record is deleted.
-        sourceList.add(
-                new Source.Builder()
-                        .setId("2")
-                        .setEventId(new UnsignedLong(2L))
-                        .setAppDestinations(
-                                List.of(Uri.parse("android-app://installed-app-destination")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://not-installed-registrant"))
-                        .setPublisher(Uri.parse("android-app://not-installed-registrant"))
-                        .setStatus(Source.Status.ACTIVE)
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        // Source registrant is installed and status is active on not installed destination, record
-        // is not deleted.
-        sourceList.add(
-                new Source.Builder()
-                        .setId("3")
-                        .setEventId(new UnsignedLong(3L))
-                        .setAppDestinations(
-                                List.of(Uri.parse("android-app://not-installed-app-destination")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setPublisher(Uri.parse("android-app://installed-registrant"))
-                        .setStatus(Source.Status.ACTIVE)
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-
-        // Source registrant is installed and status is ignored on not installed destination, record
-        // is deleted.
-        sourceList.add(
-                new Source.Builder()
-                        .setId("4")
-                        .setEventId(new UnsignedLong(4L))
-                        .setAppDestinations(
-                                List.of(Uri.parse("android-app://not-installed-app-destination")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setPublisher(Uri.parse("android-app://installed-registrant"))
-                        .setStatus(Source.Status.IGNORED)
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-
-        // Source registrant is installed and status is ignored on installed destination, record is
-        // not deleted.
-        sourceList.add(
-                new Source.Builder()
-                        .setId("5")
-                        .setEventId(new UnsignedLong(5L))
-                        .setAppDestinations(
-                                List.of(Uri.parse("android-app://installed-app-destination")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setPublisher(Uri.parse("android-app://installed-registrant"))
-                        .setStatus(Source.Status.IGNORED)
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-
-        sourceList.forEach(
-                source -> {
-                    ContentValues values = new ContentValues();
-                    values.put(SourceContract.ID, source.getId());
-                    values.put(SourceContract.EVENT_ID, source.getEventId().toString());
-                    values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
-                    values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
-                    values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
-                    values.put(SourceContract.STATUS, source.getStatus());
-                    values.put(
-                            SourceContract.REGISTRATION_ORIGIN,
-                            source.getRegistrationOrigin().toString());
-                    db.insert(SourceContract.TABLE, /* nullColumnHack */ null, values);
-
-                    maybeInsertSourceDestinations(db, source, source.getId());
-                });
-
-        long count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
-        assertEquals(5, count);
-
-        List<Uri> installedUriList = new ArrayList<>();
-        installedUriList.add(Uri.parse("android-app://installed-registrant"));
-        installedUriList.add(Uri.parse("android-app://installed-app-destination"));
-
-        assertTrue(
-                mDatastoreManager
-                        .runInTransactionWithResult(
-                                measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
-                        .get());
-
-        count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
-        assertEquals(3, count);
-
-        Cursor cursor =
-                db.query(
-                        SourceContract.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-        while (cursor.moveToNext()) {
-            String id =
-                    cursor.getString(cursor.getColumnIndex(MeasurementTables.SourceContract.ID));
-            assertThat(Arrays.asList("1", "3", "5")).contains(id);
-        }
-    }
-
-    @Test
-    public void testDeleteAppRecordsNotPresentForTriggers() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-        List<Trigger> triggerList = new ArrayList<>();
-        // Trigger registrant is still installed, record will not be deleted.
-        triggerList.add(
-                new Trigger.Builder()
-                        .setId("1")
-                        .setAttributionDestination(
-                                Uri.parse("android-app://attribution-destination"))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
-                        .build());
-
-        // Trigger registrant is not installed, record will be deleted.
-        triggerList.add(
-                new Trigger.Builder()
-                        .setId("2")
-                        .setAttributionDestination(
-                                Uri.parse("android-app://attribution-destination"))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://not-installed-registrant"))
-                        .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
-                        .build());
-
-        triggerList.forEach(
-                trigger -> {
-                    ContentValues values = new ContentValues();
-                    values.put(TriggerContract.ID, trigger.getId());
-                    values.put(
-                            TriggerContract.ATTRIBUTION_DESTINATION,
-                            trigger.getAttributionDestination().toString());
-                    values.put(TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
-                    values.put(TriggerContract.REGISTRANT, trigger.getRegistrant().toString());
-                    values.put(
-                            TriggerContract.REGISTRATION_ORIGIN,
-                            trigger.getRegistrationOrigin().toString());
-                    db.insert(TriggerContract.TABLE, /* nullColumnHack */ null, values);
-                });
-
-        long count = DatabaseUtils.queryNumEntries(db, TriggerContract.TABLE, /* selection */ null);
-        assertEquals(2, count);
-
-        List<Uri> installedUriList = new ArrayList<>();
-        installedUriList.add(Uri.parse("android-app://installed-registrant"));
-
-        assertTrue(
-                mDatastoreManager
-                        .runInTransactionWithResult(
-                                measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
-                        .get());
-
-        count = DatabaseUtils.queryNumEntries(db, TriggerContract.TABLE, /* selection */ null);
-        assertEquals(1, count);
-
-        Cursor cursor =
-                db.query(
-                        TriggerContract.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-        while (cursor.moveToNext()) {
-            Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(cursor);
-            assertEquals("1", trigger.getId());
-        }
-    }
-
-    @Test
-    public void testDeleteAppRecordsNotPresentForEventReports() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-        List<EventReport> eventReportList = new ArrayList<>();
-        // Event report attribution destination is still installed, record will not be deleted.
-        eventReportList.add(
-                new EventReport.Builder()
-                        .setId("1")
-                        .setAttributionDestinations(List.of(
-                                Uri.parse(
-                                        "android-app://installed-attribution-destination")))
-                        .build());
-        // Event report attribution destination is not installed, record will be deleted.
-        eventReportList.add(
-                new EventReport.Builder()
-                        .setId("2")
-                        .setAttributionDestinations(List.of(
-                                Uri.parse(
-                                        "android-app://not-installed-attribution-destination")))
-                        .build());
-        eventReportList.forEach(
-                eventReport -> {
-                    ContentValues values = new ContentValues();
-                    values.put(EventReportContract.ID, eventReport.getId());
-                    values.put(
-                            EventReportContract.ATTRIBUTION_DESTINATION,
-                            eventReport.getAttributionDestinations().get(0).toString());
-                    db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
-                });
-
-        long count =
-                DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
-        assertEquals(2, count);
-
-        List<Uri> installedUriList = new ArrayList<>();
-        installedUriList.add(Uri.parse("android-app://installed-attribution-destination"));
-
-        assertTrue(
-                mDatastoreManager
-                        .runInTransactionWithResult(
-                                measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
-                        .get());
-
-        count = DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
-        assertEquals(1, count);
-
-        Cursor cursor =
-                db.query(
-                        EventReportContract.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-        while (cursor.moveToNext()) {
-            EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
-            assertEquals("1", eventReport.getId());
-        }
-    }
-
-    @Test
-    public void constructEventReportFromCursor_missingTriggerSummaryBucket_noException() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-        List<EventReport> eventReportList = new ArrayList<>();
-
-        // set a valid trigger summary bucket
-        eventReportList.add(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId("2")
-                        .setTriggerSummaryBucket("10,99")
-                        .build());
-        // set null for trigger summary bucket explicitly
-        String emptySummaryBucket = null;
-        eventReportList.add(
-                EventReportFixture.getBaseEventReportBuild()
-                        .setId("3")
-                        .setTriggerSummaryBucket(emptySummaryBucket)
-                        .build());
-
-        eventReportList.forEach(
-                eventReport -> {
-                    ContentValues values = new ContentValues();
-                    values.put(
-                            MeasurementTables.EventReportContract.ID, UUID.randomUUID().toString());
-                    values.put(
-                            MeasurementTables.EventReportContract.TRIGGER_SUMMARY_BUCKET,
-                            eventReport.getStringEncodedTriggerSummaryBucket());
-                    db.insert(EventReportContract.TABLE, /* nullColumnHack */ null, values);
-                });
-
-        long count =
-                DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
-        assertEquals(2, count);
-
-        List<EventReport> results = new ArrayList<>();
-        Cursor cursor =
-                db.query(
-                        EventReportContract.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-        while (cursor.moveToNext()) {
-            EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
-            results.add(eventReport);
-        }
-        assertEquals(
-                eventReportList.get(0).getStringEncodedTriggerSummaryBucket(),
-                results.get(0).getStringEncodedTriggerSummaryBucket());
-        assertEquals(
-                eventReportList.get(1).getStringEncodedTriggerSummaryBucket(),
-                results.get(1).getStringEncodedTriggerSummaryBucket());
-    }
-
-    @Test
-    public void testDeleteAppRecordsNotPresentForAggregateReports() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-        List<AggregateReport> aggregateReportList = new ArrayList<>();
-        // Aggregate report attribution destination and publisher is still installed, record will
-        // not be deleted.
-        aggregateReportList.add(
-                new AggregateReport.Builder()
-                        .setId("1")
-                        .setAttributionDestination(
-                                Uri.parse("android-app://installed-attribution-destination"))
-                        .setPublisher(Uri.parse("android-app://installed-publisher"))
-                        .build());
-        // Aggregate report attribution destination is not installed, record will be deleted.
-        aggregateReportList.add(
-                new AggregateReport.Builder()
-                        .setId("2")
-                        .setAttributionDestination(
-                                Uri.parse("android-app://not-installed-attribution-destination"))
-                        .setPublisher(Uri.parse("android-app://installed-publisher"))
-                        .build());
-        // Aggregate report publisher is not installed, record will be deleted.
-        aggregateReportList.add(
-                new AggregateReport.Builder()
-                        .setId("3")
-                        .setAttributionDestination(
-                                Uri.parse("android-app://installed-attribution-destination"))
-                        .setPublisher(Uri.parse("android-app://not-installed-publisher"))
-                        .build());
-        aggregateReportList.forEach(
-                aggregateReport -> {
-                    ContentValues values = new ContentValues();
-                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
-                    values.put(
-                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
-                            aggregateReport.getAttributionDestination().toString());
-                    values.put(
-                            MeasurementTables.AggregateReport.PUBLISHER,
-                            aggregateReport.getPublisher().toString());
-                    db.insert(
-                            MeasurementTables.AggregateReport.TABLE, /* nullColumnHack */
-                            null,
-                            values);
-                });
-
-        long count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.AggregateReport.TABLE, /* selection */ null);
-        assertEquals(3, count);
-
-        List<Uri> installedUriList = new ArrayList<>();
-        installedUriList.add(Uri.parse("android-app://installed-attribution-destination"));
-        installedUriList.add(Uri.parse("android-app://installed-publisher"));
-
-        assertTrue(
-                mDatastoreManager
-                        .runInTransactionWithResult(
-                                measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
-                        .get());
-
-        count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.AggregateReport.TABLE, /* selection */ null);
-        assertEquals(1, count);
-
-        Cursor cursor =
-                db.query(
-                        MeasurementTables.AggregateReport.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-        while (cursor.moveToNext()) {
-            AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
-            assertEquals("1", aggregateReport.getId());
-        }
-    }
-
-    @Test
-    public void testDeleteAppRecordsNotPresentForAttributions() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-        List<Attribution> attributionList = new ArrayList<>();
-        // Attribution has source site and destination site still installed, record will not be
-        // deleted.
-        attributionList.add(
-                new Attribution.Builder()
-                        .setId("1")
-                        .setSourceSite("android-app://installed-source-site")
-                        .setSourceOrigin("android-app://installed-source-site")
-                        .setDestinationSite("android-app://installed-destination-site")
-                        .setDestinationOrigin("android-app://installed-destination-site")
-                        .setRegistrant("android-app://installed-source-site")
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        // Attribution has source site not installed, record will be deleted.
-        attributionList.add(
-                new Attribution.Builder()
-                        .setId("2")
-                        .setSourceSite("android-app://not-installed-source-site")
-                        .setSourceOrigin("android-app://not-installed-source-site")
-                        .setDestinationSite("android-app://installed-destination-site")
-                        .setDestinationOrigin("android-app://installed-destination-site")
-                        .setRegistrant("android-app://installed-source-site")
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        // Attribution has destination site not installed, record will be deleted.
-        attributionList.add(
-                new Attribution.Builder()
-                        .setId("3")
-                        .setSourceSite("android-app://installed-source-site")
-                        .setSourceOrigin("android-app://installed-source-site")
-                        .setDestinationSite("android-app://not-installed-destination-site")
-                        .setDestinationOrigin("android-app://not-installed-destination-site")
-                        .setRegistrant("android-app://installed-source-site")
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        attributionList.forEach(
-                attribution -> {
-                    ContentValues values = new ContentValues();
-                    values.put(AttributionContract.ID, attribution.getId());
-                    values.put(AttributionContract.SOURCE_SITE, attribution.getSourceSite());
-                    values.put(AttributionContract.SOURCE_ORIGIN, attribution.getSourceOrigin());
-                    values.put(
-                            AttributionContract.DESTINATION_SITE, attribution.getDestinationSite());
-                    values.put(
-                            AttributionContract.DESTINATION_ORIGIN,
-                            attribution.getDestinationOrigin());
-                    values.put(AttributionContract.REGISTRANT, attribution.getRegistrant());
-                    values.put(AttributionContract.ENROLLMENT_ID, attribution.getEnrollmentId());
-                    db.insert(AttributionContract.TABLE, /* nullColumnHack */ null, values);
-                });
-
-        long count =
-                DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE, /* selection */ null);
-        assertEquals(3, count);
-
-        List<Uri> installedUriList = new ArrayList<>();
-        installedUriList.add(Uri.parse("android-app://installed-source-site"));
-        installedUriList.add(Uri.parse("android-app://installed-destination-site"));
-
-        assertTrue(
-                mDatastoreManager
-                        .runInTransactionWithResult(
-                                measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
-                        .get());
-
-        count = DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE, /* selection */ null);
-        assertEquals(1, count);
-
-        Cursor cursor =
-                db.query(
-                        AttributionContract.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-        while (cursor.moveToNext()) {
-            Attribution attribution = constructAttributionFromCursor(cursor);
-            assertEquals("1", attribution.getId());
-        }
-    }
-
-    @Test
-    public void testDeleteAppRecordsNotPresentForEventReportsFromSources() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-
-        List<Source> sourceList = new ArrayList<>();
-        sourceList.add(
-                new Source.Builder() // deleted
-                        .setId("1")
-                        .setEventId(new UnsignedLong(1L))
-                        .setAppDestinations(List.of(Uri.parse("android-app://app-destination-1")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://uninstalled-app"))
-                        .setPublisher(Uri.parse("android-app://uninstalled-app"))
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        sourceList.add(
-                new Source.Builder()
-                        .setId("2")
-                        .setEventId(new UnsignedLong(2L))
-                        .setAppDestinations(List.of(Uri.parse("android-app://app-destination-2")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://installed-app"))
-                        .setPublisher(Uri.parse("android-app://installed-app"))
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        sourceList.forEach(source -> insertSource(source, source.getId()));
-
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("1")
-                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
-                        .setRegistrant(Uri.parse("android-app://installed-app"))
-                        .build();
-        AbstractDbIntegrationTest.insertToDb(trigger, db);
-
-        List<EventReport> reportList = new ArrayList<>();
-        reportList.add(
-                new EventReport.Builder()
-                        .setId("1") // deleted
-                        .setSourceEventId(new UnsignedLong(1L))
-                        .setAttributionDestinations(
-                                List.of(Uri.parse("android-app://app-destination-1")))
-                        .setEnrollmentId("enrollment-id")
-                        .setTriggerData(new UnsignedLong(5L))
-                        .setSourceId(sourceList.get(0).getId())
-                        .setTriggerId(trigger.getId())
-                        .setSourceType(sourceList.get(0).getSourceType())
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        reportList.add(
-                new EventReport.Builder()
-                        .setId("2")
-                        .setSourceEventId(new UnsignedLong(2L))
-                        .setAttributionDestinations(
-                                List.of(Uri.parse("android-app://app-destination-2")))
-                        .setEnrollmentId("enrollment-id")
-                        .setTriggerData(new UnsignedLong(5L))
-                        .setSourceId(sourceList.get(1).getId())
-                        .setTriggerId(trigger.getId())
-                        .setSourceType(sourceList.get(1).getSourceType())
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        reportList.forEach(report -> AbstractDbIntegrationTest.insertToDb(report, db));
-
-        long count =
-                DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
-        assertEquals(2, count);
-
-        List<Uri> installedUriList = new ArrayList<>();
-        installedUriList.add(Uri.parse("android-app://installed-app"));
-        installedUriList.add(Uri.parse("android-app://app-destination-1"));
-        installedUriList.add(Uri.parse("android-app://app-destination-2"));
-
-        assertTrue(
-                mDatastoreManager
-                        .runInTransactionWithResult(
-                                measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
-                        .get());
-
-        count = DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
-        assertEquals(1, count);
-
-        Cursor cursor =
-                db.query(
-                        EventReportContract.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-        while (cursor.moveToNext()) {
-            EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
-            assertEquals("2", eventReport.getId());
-        }
-    }
-
-    @Test
-    public void testDeleteAppRecordsNotPresentForLargeAppList() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-        List<Source> sourceList = new ArrayList<>();
-
-        int limit = 5000;
-        sourceList.add(
-                new Source.Builder()
-                        .setId("1")
-                        .setEventId(new UnsignedLong(1L))
-                        .setAppDestinations(List.of(Uri.parse("android-app://app-destination-1")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://installed-app" + limit))
-                        .setPublisher(Uri.parse("android-app://installed-app" + limit))
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        sourceList.add(
-                new Source.Builder()
-                        .setId("2")
-                        .setEventId(new UnsignedLong(1L))
-                        .setAppDestinations(List.of(Uri.parse("android-app://app-destination-1")))
-                        .setEnrollmentId("enrollment-id")
-                        .setRegistrant(Uri.parse("android-app://installed-app" + (limit + 1)))
-                        .setPublisher(Uri.parse("android-app://installed-app" + (limit + 1)))
-                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                        .build());
-        sourceList.forEach(
-                source -> {
-                    ContentValues values = new ContentValues();
-                    values.put(SourceContract.ID, source.getId());
-                    values.put(SourceContract.EVENT_ID, source.getEventId().toString());
-                    values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
-                    values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
-                    values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
-                    values.put(
-                            SourceContract.REGISTRATION_ORIGIN,
-                            source.getRegistrationOrigin().toString());
-                    db.insert(SourceContract.TABLE, /* nullColumnHack */ null, values);
-
-                    maybeInsertSourceDestinations(db, source, source.getId());
-                });
-
-        long count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
-        assertEquals(2, count);
-
-        List<Uri> installedUriList = new ArrayList<>();
-        for (int i = 0; i <= limit; i++) {
-            installedUriList.add(Uri.parse("android-app://installed-app" + i));
-        }
-
-        assertTrue(
-                mDatastoreManager
-                        .runInTransactionWithResult(
-                                measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
-                        .get());
-
-        count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void testDeleteAppRecordsNotPresentForAsyncRegistrations() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-
-        List<AsyncRegistration> asyncRegistrationList = new ArrayList<>();
-
-        asyncRegistrationList.add(buildAsyncRegistration("1"));
-
-        asyncRegistrationList.add(buildAsyncRegistration("2"));
-
-        asyncRegistrationList.add(buildAsyncRegistrationWithNotRegistrant("3"));
-
-        asyncRegistrationList.add(buildAsyncRegistration("4"));
-
-        asyncRegistrationList.add(buildAsyncRegistrationWithNotRegistrant("5"));
-
-        asyncRegistrationList.forEach(
-                asyncRegistration -> {
-                    ContentValues values = new ContentValues();
-                    values.put(AsyncRegistrationContract.ID, asyncRegistration.getId());
-                    values.put(
-                            AsyncRegistrationContract.REGISTRANT,
-                            asyncRegistration.getRegistrant().toString());
-                    values.put(
-                            AsyncRegistrationContract.TOP_ORIGIN,
-                            asyncRegistration.getTopOrigin().toString());
-                    values.put(
-                            AsyncRegistrationContract.AD_ID_PERMISSION,
-                            asyncRegistration.getDebugKeyAllowed());
-                    values.put(
-                            AsyncRegistrationContract.TYPE, asyncRegistration.getType().toString());
-                    values.put(
-                            AsyncRegistrationContract.REGISTRATION_ID,
-                            asyncRegistration.getRegistrationId());
-                    db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
-                });
-
-        long count =
-                DatabaseUtils.queryNumEntries(
-                        db, AsyncRegistrationContract.TABLE, /* selection */ null);
-        assertEquals(5, count);
-
-        List<Uri> installedUriList = new ArrayList<>();
-        installedUriList.add(Uri.parse("android-app://installed-registrant"));
-
-        assertTrue(
-                mDatastoreManager.runInTransaction(
-                        measurementDao ->
-                                measurementDao.deleteAppRecordsNotPresent(installedUriList)));
-
-        count =
-                DatabaseUtils.queryNumEntries(
-                        db, AsyncRegistrationContract.TABLE, /* selection */ null);
-        assertEquals(3, count);
-
-        Cursor cursor =
-                db.query(
-                        AsyncRegistrationContract.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-
-        Set<String> ids = new HashSet<>(Arrays.asList("1", "2", "4"));
-        List<AsyncRegistration> asyncRegistrations = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            AsyncRegistration asyncRegistration =
-                    SqliteObjectMapper.constructAsyncRegistration(cursor);
-            asyncRegistrations.add(asyncRegistration);
-        }
-        assertTrue(asyncRegistrations.size() == 3);
-        for (AsyncRegistration asyncRegistration : asyncRegistrations) {
-            assertTrue(ids.contains(asyncRegistration.getId()));
-        }
-    }
-
-    @Test
-    public void testDeleteAppRecordsForAsyncRegistrations() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-
-        List<AsyncRegistration> asyncRegistrationList = new ArrayList<>();
-
-        asyncRegistrationList.add(buildAsyncRegistration("1"));
-
-        asyncRegistrationList.add(buildAsyncRegistrationWithNotDestination("2"));
-
-        asyncRegistrationList.add(buildAsyncRegistrationWithNotRegistrant("3"));
-
-        asyncRegistrationList.add(buildAsyncRegistration("4"));
-
-        asyncRegistrationList.add(buildAsyncRegistrationWithNotRegistrant("5"));
-
-        asyncRegistrationList.forEach(
-                asyncRegistration -> {
-                    ContentValues values = new ContentValues();
-                    values.put(AsyncRegistrationContract.ID, asyncRegistration.getId());
-                    values.put(
-                            AsyncRegistrationContract.REGISTRANT,
-                            asyncRegistration.getRegistrant().toString());
-                    values.put(
-                            AsyncRegistrationContract.TOP_ORIGIN,
-                            asyncRegistration.getTopOrigin().toString());
-                    values.put(
-                            AsyncRegistrationContract.OS_DESTINATION,
-                            asyncRegistration.getOsDestination().toString());
-                    values.put(
-                            AsyncRegistrationContract.AD_ID_PERMISSION,
-                            asyncRegistration.getDebugKeyAllowed());
-                    values.put(
-                            AsyncRegistrationContract.TYPE, asyncRegistration.getType().toString());
-                    values.put(
-                            AsyncRegistrationContract.REGISTRATION_ID,
-                            asyncRegistration.getRegistrationId());
-                    db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
-                });
-
-        long count =
-                DatabaseUtils.queryNumEntries(
-                        db, AsyncRegistrationContract.TABLE, /* selection */ null);
-        assertEquals(5, count);
-
-        assertTrue(
-                mDatastoreManager.runInTransaction(
-                        measurementDao ->
-                                measurementDao.deleteAppRecords(
-                                        Uri.parse("android-app://installed-registrant"))));
-
-        count =
-                DatabaseUtils.queryNumEntries(
-                        db, AsyncRegistrationContract.TABLE, /* selection */ null);
-        assertEquals(2, count);
-
-        Cursor cursor =
-                db.query(
-                        AsyncRegistrationContract.TABLE,
-                        /* columns */ null,
-                        /* selection */ null,
-                        /* selectionArgs */ null,
-                        /* groupBy */ null,
-                        /* having */ null,
-                        /* orderBy */ null);
-
-        Set<String> ids = new HashSet<>(Arrays.asList("3", "5"));
-        List<AsyncRegistration> asyncRegistrations = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            AsyncRegistration asyncRegistration =
-                    SqliteObjectMapper.constructAsyncRegistration(cursor);
-            asyncRegistrations.add(asyncRegistration);
-        }
-        for (AsyncRegistration asyncRegistration : asyncRegistrations) {
-            assertTrue(ids.contains(asyncRegistration.getId()));
-        }
-    }
-
     private static AsyncRegistration buildAsyncRegistration(String id) {
 
         return new AsyncRegistration.Builder()
                 .setId(id)
                 .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                .setRegistrant(INSTALLED_REGISTRANT)
+                .setTopOrigin(INSTALLED_REGISTRANT)
                 .setAdIdPermission(false)
                 .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                 .setRegistrationId(UUID.randomUUID().toString())
@@ -5222,8 +4904,8 @@ public class MeasurementDaoTest {
         return new AsyncRegistration.Builder()
                 .setId(id)
                 .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
-                .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                .setRegistrant(INSTALLED_REGISTRANT)
+                .setTopOrigin(INSTALLED_REGISTRANT)
                 .setAdIdPermission(false)
                 .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                 .setRequestTime(Long.MAX_VALUE)
@@ -5235,8 +4917,8 @@ public class MeasurementDaoTest {
         return new AsyncRegistration.Builder()
                 .setId(id)
                 .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                .setRegistrant(Uri.parse("android-app://not-installed-registrant"))
-                .setTopOrigin(Uri.parse("android-app://not-installed-registrant"))
+                .setRegistrant(NOT_INSTALLED_REGISTRANT)
+                .setTopOrigin(NOT_INSTALLED_REGISTRANT)
                 .setAdIdPermission(false)
                 .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                 .setRegistrationId(UUID.randomUUID().toString())
@@ -5249,29 +4931,73 @@ public class MeasurementDaoTest {
         DebugReport debugReport = createDebugReport();
 
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
-        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(DebugReportContract.ID, debugReport.getId());
+        values.put(DebugReportContract.TYPE, debugReport.getType());
+        values.put(DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
         values.put(
-                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
-        values.put(
-                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                DebugReportContract.REGISTRATION_ORIGIN,
                 debugReport.getRegistrationOrigin().toString());
-        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+        db.insert(DebugReportContract.TABLE, null, values);
 
         long count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+                DatabaseUtils.queryNumEntries(db, DebugReportContract.TABLE, /* selection */ null);
         assertEquals(1, count);
 
         assertTrue(
                 mDatastoreManager.runInTransaction(
                         measurementDao -> measurementDao.deleteDebugReport(debugReport.getId())));
 
-        count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        count = DatabaseUtils.queryNumEntries(db, DebugReportContract.TABLE, /* selection */ null);
         assertEquals(0, count);
+    }
+
+    @Test
+    public void testDeleteDebugReports_byRegistrantAndRange() {
+        final String registrantMatching = "foo";
+        final long insertionTimeWithinRange = 1701206853050L;
+        final long insertionTimeNotWithinRange = 1701206853000L;
+        DebugReport debugReportMatchingRegistrantAndWithinRange =
+                createDebugReport(
+                        /* id= */ "1",
+                        buildRegistrant(registrantMatching),
+                        insertionTimeWithinRange);
+
+        DebugReport debugReportNotMatchingRegistrantAndWithinRange =
+                createDebugReport(/* id= */ "2", buildRegistrant("bar"), insertionTimeWithinRange);
+
+        DebugReport debugReportMatchingRegistrantAndNotWithinRange =
+                createDebugReport(
+                        /* id= */ "3",
+                        buildRegistrant(registrantMatching),
+                        insertionTimeNotWithinRange);
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertDebugReport(debugReportMatchingRegistrantAndWithinRange);
+                    dao.insertDebugReport(debugReportNotMatchingRegistrantAndWithinRange);
+                    dao.insertDebugReport(debugReportMatchingRegistrantAndNotWithinRange);
+                });
+
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.deleteDebugReports(
+                                buildRegistrant(registrantMatching),
+                                /* start= */ Instant.ofEpochMilli(insertionTimeWithinRange - 1),
+                                /* end= */ Instant.ofEpochMilli(insertionTimeWithinRange + 1)));
+
+        Set<String> ids = new HashSet<>();
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(DebugReportContract.TABLE, null, null, null, null, null, null)) {
+            while (cursor.moveToNext()) {
+                ids.add(cursor.getString(cursor.getColumnIndexOrThrow(DebugReportContract.ID)));
+            }
+        }
+        assertEquals(2, ids.size());
+        assertTrue(ids.contains("2"));
+        assertTrue(ids.contains("3"));
     }
 
     @Test
@@ -5280,19 +5006,17 @@ public class MeasurementDaoTest {
         DebugReport debugReport = createDebugReport();
 
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
-        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(DebugReportContract.ID, debugReport.getId());
+        values.put(DebugReportContract.TYPE, debugReport.getType());
+        values.put(DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
         values.put(
-                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
-        values.put(
-                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                DebugReportContract.REGISTRATION_ORIGIN,
                 debugReport.getRegistrationOrigin().toString());
-        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+        db.insert(DebugReportContract.TABLE, null, values);
 
         long count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+                DatabaseUtils.queryNumEntries(db, DebugReportContract.TABLE, /* selection */ null);
         assertEquals(1, count);
 
         assertTrue(
@@ -5315,19 +5039,17 @@ public class MeasurementDaoTest {
         DebugReport debugReport = createDebugReport();
 
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
-        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(DebugReportContract.ID, debugReport.getId());
+        values.put(DebugReportContract.TYPE, debugReport.getType());
+        values.put(DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
         values.put(
-                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
-        values.put(
-                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                DebugReportContract.REGISTRATION_ORIGIN,
                 debugReport.getRegistrationOrigin().toString());
-        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+        db.insert(DebugReportContract.TABLE, null, values);
 
         long count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+                DatabaseUtils.queryNumEntries(db, DebugReportContract.TABLE, /* selection */ null);
         assertEquals(1, count);
 
         assertTrue(
@@ -5358,8 +5080,8 @@ public class MeasurementDaoTest {
                 new AsyncRegistration.Builder()
                         .setId("1")
                         .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                        .setRegistrant(INSTALLED_REGISTRANT)
+                        .setTopOrigin(INSTALLED_REGISTRANT)
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
@@ -5372,8 +5094,8 @@ public class MeasurementDaoTest {
                 new AsyncRegistration.Builder()
                         .setId("2")
                         .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                        .setRegistrant(INSTALLED_REGISTRANT)
+                        .setTopOrigin(INSTALLED_REGISTRANT)
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
@@ -5386,8 +5108,8 @@ public class MeasurementDaoTest {
                 new AsyncRegistration.Builder()
                         .setId("3")
                         .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                        .setRegistrant(INSTALLED_REGISTRANT)
+                        .setTopOrigin(INSTALLED_REGISTRANT)
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
@@ -5400,8 +5122,8 @@ public class MeasurementDaoTest {
                 new AsyncRegistration.Builder()
                         .setId("4")
                         .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
-                        .setRegistrant(Uri.parse("android-app://installed-registrant"))
-                        .setTopOrigin(Uri.parse("android-app://installed-registrant"))
+                        .setRegistrant(INSTALLED_REGISTRANT)
+                        .setTopOrigin(INSTALLED_REGISTRANT)
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
@@ -5762,9 +5484,9 @@ public class MeasurementDaoTest {
                 DatabaseUtils.longForQuery(
                         db,
                         "SELECT COUNT("
-                                + MeasurementTables.DebugReportContract.ID
+                                + DebugReportContract.ID
                                 + ") FROM "
-                                + MeasurementTables.DebugReportContract.TABLE,
+                                + DebugReportContract.TABLE,
                         null));
         // Increment Attempt Record 1
         mDatastoreManager.runInTransaction(
@@ -5780,11 +5502,11 @@ public class MeasurementDaoTest {
                 DatabaseUtils.longForQuery(
                         db,
                         "SELECT COUNT("
-                                + MeasurementTables.DebugReportContract.ID
+                                + DebugReportContract.ID
                                 + ") FROM "
-                                + MeasurementTables.DebugReportContract.TABLE
+                                + DebugReportContract.TABLE
                                 + " WHERE "
-                                + MeasurementTables.DebugReportContract.ID
+                                + DebugReportContract.ID
                                 + " = ?",
                         new String[] {debugReport2.getId()}));
 
@@ -5794,11 +5516,11 @@ public class MeasurementDaoTest {
                 DatabaseUtils.longForQuery(
                         db,
                         "SELECT COUNT("
-                                + MeasurementTables.DebugReportContract.ID
+                                + DebugReportContract.ID
                                 + ") FROM "
-                                + MeasurementTables.DebugReportContract.TABLE
+                                + DebugReportContract.TABLE
                                 + " WHERE "
-                                + MeasurementTables.DebugReportContract.ID
+                                + DebugReportContract.ID
                                 + " = ?",
                         new String[] {debugReport1.getId()}));
     }
@@ -5811,32 +5533,81 @@ public class MeasurementDaoTest {
         ExtendedMockito.doReturn(1).when(mockFlags).getMeasurementReportingRetryLimit();
         ExtendedMockito.doReturn(false).when(mockFlags).getMeasurementReportingRetryLimitEnabled();
 
-        DebugReport debugReport = createDebugReport();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getReadableDatabase();
+
+        DebugReport debugReport1 =
+                new DebugReport.Builder()
+                        .setId("reportId1")
+                        .setType("trigger-event-deduplicated")
+                        .setBody(
+                                " {\n"
+                                        + "      \"attribution_destination\":"
+                                        + " \"https://destination.example\",\n"
+                                        + "      \"source_event_id\": \"45623\"\n"
+                                        + "    }")
+                        .setEnrollmentId("1")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .setInsertionTime(System.currentTimeMillis() + 60000L)
+                        .build();
+
+        DebugReport debugReport2 =
+                new DebugReport.Builder()
+                        .setId("reportId2")
+                        .setType("trigger-event-deduplicated")
+                        .setBody(
+                                " {\n"
+                                        + "      \"attribution_destination\":"
+                                        + " \"https://destination.example\",\n"
+                                        + "      \"source_event_id\": \"45623\"\n"
+                                        + "    }")
+                        .setEnrollmentId("1")
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .setInsertionTime(System.currentTimeMillis() - 60000L)
+                        .build();
         // Insert
-        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport));
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport1));
+        mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport2));
+
         // Increment Attempt
         mDatastoreManager.runInTransaction(
                 (dao) ->
                         dao.incrementAndGetReportingRetryCount(
-                                debugReport.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
+                                debugReport1.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
         // Delete Expired
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
-        try (Cursor cursor =
-                MeasurementDbHelper.getInstance(sContext)
-                        .getReadableDatabase()
-                        .query(
-                                MeasurementTables.DebugReportContract.TABLE,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null)) {
-            // Assert Record not removed while Limiting Disabled
-            assertTrue(cursor.moveToNext());
-            DebugReport report = SqliteObjectMapper.constructDebugReportFromCursor(cursor);
-            assertNotNull(report);
-        }
+        long earliestValidInsertion = System.currentTimeMillis();
+
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao ->
+                                measurementDao.deleteExpiredRecords(earliestValidInsertion, 0)));
+
+        // Assert Record 1 remains because not expired and Retry Limiting Off.
+        assertEquals(
+                1,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.DebugReportContract.ID
+                                + ") FROM "
+                                + MeasurementTables.DebugReportContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.DebugReportContract.ID
+                                + " = ?",
+                        new String[] {debugReport1.getId()}));
+
+        // Assert Record 2 Removed because expired.
+        assertEquals(
+                0,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.DebugReportContract.ID
+                                + ") FROM "
+                                + MeasurementTables.DebugReportContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.DebugReportContract.ID
+                                + " = ?",
+                        new String[] {debugReport2.getId()}));
     }
 
     @Test
@@ -6071,7 +5842,7 @@ public class MeasurementDaoTest {
         long expiryTime =
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return new Source.Builder()
                 .setEventId(new UnsignedLong(0L))
                 .setEventTime(eventTime)
@@ -6098,7 +5869,7 @@ public class MeasurementDaoTest {
         long expiryTime =
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return getSourcesWithDifferentDestinations(
                 numSources,
                 hasAppDestinations,
@@ -6122,7 +5893,7 @@ public class MeasurementDaoTest {
         long expiryTime =
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return getSourcesWithDifferentDestinations(
                 numSources,
                 hasAppDestinations,
@@ -6182,7 +5953,7 @@ public class MeasurementDaoTest {
         long expiryTime =
                 eventTime
                         + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
         return getSourcesWithDifferentRegistrationOrigins(
                 numSources,
                 appDestinations,
@@ -6262,10 +6033,21 @@ public class MeasurementDaoTest {
         assertNotEquals("Attribution insertion failed", -1, row);
     }
 
-    private static Attribution createAttributionWithSourceAndTriggerIds(
-            String attributionId, String sourceId, String triggerId) {
+    private static Attribution createAttribution(
+            String attributionId,
+            String sourceId,
+            String triggerId) {
+        return createAttribution(attributionId, Attribution.Scope.EVENT, sourceId, triggerId);
+    }
+
+    private static Attribution createAttribution(
+            String attributionId,
+            @Attribution.Scope int scope,
+            String sourceId,
+            String triggerId) {
         return new Attribution.Builder()
                 .setId(attributionId)
+                .setScope(scope)
                 .setTriggerTime(0L)
                 .setSourceSite("android-app://source.app")
                 .setSourceOrigin("android-app://source.app")
@@ -7134,10 +6916,10 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void fetchMatchingSourcesFlexibleEventApi_bringsMatchingSources_expectedSourceReturned()
+    public void fetchFlexSourceIdsFor_bringsMatchingSources_expectedSourceReturned()
             throws JSONException {
         // Setup
-        ReportSpec testReportSpec = SourceFixture.getValidReportSpecCountBased();
+        TriggerSpecs testTriggerSpecs = SourceFixture.getValidTriggerSpecsCountBased();
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -7145,11 +6927,12 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
-                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
-                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJSONString())
                         .build();
-        source1.buildFlexibleEventReportApi();
+        source1.buildTriggerSpecs();
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
@@ -7157,32 +6940,36 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
-                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
-                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJSONString())
                         .build();
-        source2.buildFlexibleEventReportApi();
+        source2.buildTriggerSpecs();
 
-        List<ReportSpec> reportSpecs = List.of(
-                source1.getFlexEventReportSpec(),
-                source2.getFlexEventReportSpec());
+        List<TriggerSpecs> triggerSpecsList = List.of(
+                source1.getTriggerSpecs(),
+                source2.getTriggerSpecs());
 
-        for (ReportSpec reportSpec : reportSpecs) {
-            reportSpec.insertAttributedTrigger(
+        for (TriggerSpecs triggerSpecs : triggerSpecsList) {
+            insertAttributedTrigger(
+                    triggerSpecs,
                     EventReportFixture.getBaseEventReportBuild()
                             .setTriggerId("123456")
                             .setTriggerData(new UnsignedLong(2L))
                             .setTriggerPriority(1L)
                             .setTriggerValue(1L)
                             .build());
-            reportSpec.insertAttributedTrigger(
+            insertAttributedTrigger(
+                    triggerSpecs,
                     EventReportFixture.getBaseEventReportBuild()
                             .setTriggerId("234567")
                             .setTriggerData(new UnsignedLong(2L))
                             .setTriggerPriority(1L)
                             .setTriggerValue(1L)
                             .build());
-            reportSpec.insertAttributedTrigger(
+            insertAttributedTrigger(
+                    triggerSpecs,
                     EventReportFixture.getBaseEventReportBuild()
                             .setTriggerId("345678")
                             .setTriggerData(new UnsignedLong(2L))
@@ -7198,13 +6985,15 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
-                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
-                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJSONString())
                         .build();
-        source3.buildFlexibleEventReportApi();
+        source3.buildTriggerSpecs();
 
-        source3.getFlexEventReportSpec().insertAttributedTrigger(
+        insertAttributedTrigger(
+                source3.getTriggerSpecs(),
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerId("123456")
                         .setTriggerData(new UnsignedLong(2L))
@@ -7220,51 +7009,39 @@ public class MeasurementDaoTest {
         // Execution
         mDatastoreManager.runInTransaction(
                 dao -> {
-                    List<String> actualSources =
-                            dao.fetchMatchingSourcesFlexibleEventApi(
-                                    new ArrayList<>(Collections.singletonList("123456")));
-                    Collections.sort(actualSources);
-                    List<String> expected =
-                            new ArrayList<>(Arrays.asList("source1", "source2", "source3"));
-                    assertEquals(3, actualSources.size());
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(Collections.singletonList("123456"));
+                    Set<String> expected = Set.of("source1", "source2", "source3");
                     assertEquals(expected, actualSources);
                 });
 
         mDatastoreManager.runInTransaction(
                 dao -> {
-                    List<String> actualSources =
-                            dao.fetchMatchingSourcesFlexibleEventApi(
-                                    new ArrayList<>(Collections.singletonList("234567")));
-                    Collections.sort(actualSources);
-                    List<String> expected = new ArrayList<>(Arrays.asList("source1", "source2"));
-                    assertEquals(2, actualSources.size());
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(Collections.singletonList("234567"));
+                    Set<String> expected = Set.of("source1", "source2");
                     assertEquals(expected, actualSources);
                 });
 
         mDatastoreManager.runInTransaction(
                 dao -> {
-                    List<String> actualSources =
-                            dao.fetchMatchingSourcesFlexibleEventApi(
-                                    new ArrayList<>(Collections.singletonList("23456")));
-                    Collections.sort(actualSources);
-                    assertEquals(0, actualSources.size());
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(Collections.singletonList("23456"));
+                    assertEquals(Collections.emptySet(), actualSources);
                 });
 
         mDatastoreManager.runInTransaction(
                 dao -> {
-                    List<String> actualSources =
-                            dao.fetchMatchingSourcesFlexibleEventApi(new ArrayList<>());
-                    Collections.sort(actualSources);
-                    assertEquals(0, actualSources.size());
-                    assertEquals(new ArrayList<>(), actualSources);
+                    Set<String> actualSources = dao.fetchFlexSourceIdsFor(new ArrayList<>());
+                    assertEquals(Collections.emptySet(), actualSources);
                 });
     }
 
     @Test
-    public void fetchMatchingSourcesFlexibleEventApi_emptyInputSourceId_noSourceReturned()
+    public void fetchFlexSourceIdsFor_emptyInputSourceId_noSourceReturned()
             throws JSONException {
         // Setup
-        ReportSpec testReportSpec = SourceFixture.getValidReportSpecCountBased();
+        TriggerSpecs testTriggerSpecs = SourceFixture.getValidTriggerSpecsCountBased();
         Source source1 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -7272,11 +7049,12 @@ public class MeasurementDaoTest {
                         .setEventTime(5000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source1")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
-                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
-                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJSONString())
                         .build();
-        source1.buildFlexibleEventReportApi();
+        source1.buildTriggerSpecs();
 
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -7285,32 +7063,36 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source2")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
-                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
-                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJSONString())
                         .build();
-        source2.buildFlexibleEventReportApi();
+        source2.buildTriggerSpecs();
 
-        List<ReportSpec> reportSpecs = List.of(
-                source1.getFlexEventReportSpec(),
-                source2.getFlexEventReportSpec());
+        List<TriggerSpecs> triggerSpecsList = List.of(
+                source1.getTriggerSpecs(),
+                source2.getTriggerSpecs());
 
-        for (ReportSpec reportSpec : reportSpecs) {
-            reportSpec.insertAttributedTrigger(
+        for (TriggerSpecs triggerSpecs : triggerSpecsList) {
+            insertAttributedTrigger(
+                    triggerSpecs,
                     EventReportFixture.getBaseEventReportBuild()
                             .setTriggerId("123456")
                             .setTriggerData(new UnsignedLong(2L))
                             .setTriggerPriority(1L)
                             .setTriggerValue(1L)
                             .build());
-            reportSpec.insertAttributedTrigger(
+            insertAttributedTrigger(
+                    triggerSpecs,
                     EventReportFixture.getBaseEventReportBuild()
                             .setTriggerId("234567")
                             .setTriggerData(new UnsignedLong(2L))
                             .setTriggerPriority(1L)
                             .setTriggerValue(1L)
                             .build());
-            reportSpec.insertAttributedTrigger(
+            insertAttributedTrigger(
+                    triggerSpecs,
                     EventReportFixture.getBaseEventReportBuild()
                             .setTriggerId("345678")
                             .setTriggerData(new UnsignedLong(2L))
@@ -7326,13 +7108,15 @@ public class MeasurementDaoTest {
                         .setEventTime(10000)
                         .setRegistrant(Uri.parse("android-app://com.registrant1"))
                         .setId("source3")
-                        .setTriggerSpecs(testReportSpec.encodeTriggerSpecsToJson())
-                        .setMaxEventLevelReports(testReportSpec.getMaxReports())
-                        .setPrivacyParameters(testReportSpec.encodePrivacyParametersToJSONString())
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJSONString())
                         .build();
-        source3.buildFlexibleEventReportApi();
+        source3.buildTriggerSpecs();
 
-        source3.getFlexEventReportSpec().insertAttributedTrigger(
+        insertAttributedTrigger(
+                source3.getTriggerSpecs(),
                 EventReportFixture.getBaseEventReportBuild()
                         .setTriggerId("123456")
                         .setTriggerData(new UnsignedLong(2L))
@@ -7348,34 +7132,132 @@ public class MeasurementDaoTest {
         // Execution
         mDatastoreManager.runInTransaction(
                 dao -> {
-                    List<String> actualSources =
-                            dao.fetchMatchingSourcesFlexibleEventApi(
-                                    new ArrayList<>(Collections.singletonList("123456")));
-                    Collections.sort(actualSources);
-                    List<String> expected =
-                            new ArrayList<>(Arrays.asList("source1", "source2", "source3"));
-                    assertEquals(3, actualSources.size());
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(Collections.singletonList("123456"));
+                    Set<String> expected = Set.of("source1", "source2", "source3");
                     assertEquals(expected, actualSources);
                 });
 
         mDatastoreManager.runInTransaction(
                 dao -> {
-                    List<String> actualSources =
-                            dao.fetchMatchingSourcesFlexibleEventApi(
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(Collections.singletonList("234567"));
+                    Set<String> expected = Set.of("source1", "source2");
+                    assertEquals(expected, actualSources);
+                });
+
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(Collections.singletonList("23456"));
+                    assertEquals(Collections.emptySet(), actualSources);
+                });
+    }
+
+    @Test
+    public void fetchFlexSourceIdsFor_doesNotMatchV1Sources() throws JSONException {
+        // Setup
+        EventReport eventReport1 =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build();
+        EventReport eventReport2 =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("234567")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build();
+        EventReport eventReport3 =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("345678")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build();
+
+        TriggerSpecs testTriggerSpecs = SourceFixture.getValidTriggerSpecsCountBased();
+
+        // Flex source
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(5000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source1")
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                        .build();
+        source1.buildTriggerSpecs();
+
+        insertAttributedTrigger(source1.getTriggerSpecs(), eventReport1);
+        insertAttributedTrigger(source1.getTriggerSpecs(), eventReport2);
+        insertAttributedTrigger(source1.getTriggerSpecs(), eventReport3);
+
+        // Non-flex (V1) source
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source2")
+                        .build();
+        source2.buildAttributedTriggers();
+
+        insertAttributedTrigger(source2.getAttributedTriggers(), eventReport1);
+        insertAttributedTrigger(source2.getAttributedTriggers(), eventReport2);
+        insertAttributedTrigger(source2.getAttributedTriggers(), eventReport3);
+
+        // Flex source
+        Source source3 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source3")
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                        .build();
+        source3.buildTriggerSpecs();
+
+        insertAttributedTrigger(source3.getTriggerSpecs(), eventReport1);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        List.of(source1, source2, source3).forEach(source -> insertInDb(db, source));
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(Collections.singletonList("123456"));
+                    Set<String> expected = Set.of("source1", "source3");
+                    assertEquals(expected, actualSources);
+                });
+
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(
                                     new ArrayList<>(Collections.singletonList("234567")));
-                    Collections.sort(actualSources);
-                    List<String> expected = new ArrayList<>(Arrays.asList("source1", "source2"));
-                    assertEquals(2, actualSources.size());
+                    Set<String> expected = Set.of("source1");
                     assertEquals(expected, actualSources);
                 });
 
         mDatastoreManager.runInTransaction(
                 dao -> {
-                    List<String> actualSources =
-                            dao.fetchMatchingSourcesFlexibleEventApi(
-                                    new ArrayList<>(Collections.singletonList("23456")));
-                    Collections.sort(actualSources);
-                    assertEquals(0, actualSources.size());
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(Collections.singletonList("23456"));
+                    assertEquals(Collections.emptySet(), actualSources);
                 });
     }
 
@@ -7445,7 +7327,7 @@ public class MeasurementDaoTest {
                     // --- DELETE behaviour ---
                     // Delete Nothing
                     // No Matches
-                    List<String> actualTriggers =
+                    Set<String> actualTriggers =
                             dao.fetchMatchingTriggers(
                                     Uri.parse("android-app://com.registrant1"),
                                     Instant.ofEpochMilli(0),
@@ -8461,19 +8343,6 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void generateUnionQueryFromTriggerIds_equal() {
-        List<String> triggerIds = new ArrayList<>(Arrays.asList("123", "234", "345"));
-        String query =
-                MeasurementDao.generateUnionQueryFromTriggerIds(
-                        triggerIds, "source_table", "trigger_ids");
-        String expected =
-                "SELECT * FROM source_table WHERE trigger_ids LIKE '%\"123\"%' UNION\n"
-                        + "SELECT * FROM source_table WHERE trigger_ids LIKE '%\"234\"%' UNION\n"
-                        + "SELECT * FROM source_table WHERE trigger_ids LIKE '%\"345\"%'";
-        assertEquals(expected.replaceAll("\\s+", " "), query.replaceAll("\\s+", " "));
-    }
-
-    @Test
     public void getPendingAggregateReportIdsByCoordinatorInWindow() {
         AggregateReport ar11 =
                 AggregateReportFixture.getValidAggregateReportBuilder()
@@ -8823,7 +8692,7 @@ public class MeasurementDaoTest {
                         (dao) -> {
                             // Adds records to KeyValueData table for Retry Count.
                             dao.incrementAndGetReportingRetryCount(
-                                    "1", DataType.EVENT_REPORT_RETRY_COUNT);
+                                    "1", DataType.DEBUG_EVENT_REPORT_RETRY_COUNT);
                             return dao.getPendingDebugEventReportIds();
                         });
         res = resOpt.get();
@@ -8901,7 +8770,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void incrementReportRetry() {
+    public void incrementReportRetryIncrements() {
         final String eventId = "TestIdEvent";
         final String aggregateId = "TestIdAggregate";
         final String debugId = "TestIdDebug";
@@ -8911,26 +8780,44 @@ public class MeasurementDaoTest {
                     dao.incrementAndGetReportingRetryCount(
                             eventId, DataType.EVENT_REPORT_RETRY_COUNT);
                     dao.incrementAndGetReportingRetryCount(
+                            eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
                             aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
+                            aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT);
                     dao.incrementAndGetReportingRetryCount(
                             debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
                 });
         Optional<KeyValueData> eventCount =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getKeyValueData(eventId, DataType.EVENT_REPORT_RETRY_COUNT));
+        Optional<KeyValueData> debugEventCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT));
         Optional<KeyValueData> aggregateCount =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) ->
                                 dao.getKeyValueData(
                                         aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        Optional<KeyValueData> debugAggregateCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT));
         Optional<KeyValueData> debugCount =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
 
         assertTrue(eventCount.isPresent());
         assertEquals(1, (eventCount.get().getReportRetryCount()));
+        assertTrue(debugEventCount.isPresent());
+        assertEquals(1, (debugEventCount.get().getReportRetryCount()));
         assertTrue(aggregateCount.isPresent());
         assertEquals(1, (aggregateCount.get().getReportRetryCount()));
+        assertTrue(debugAggregateCount.isPresent());
+        assertEquals(1, (debugAggregateCount.get().getReportRetryCount()));
         assertTrue(debugCount.isPresent());
         assertEquals(1, (debugCount.get().getReportRetryCount()));
 
@@ -8949,16 +8836,120 @@ public class MeasurementDaoTest {
                         (dao) ->
                                 dao.getKeyValueData(
                                         aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        debugEventCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT));
+        debugAggregateCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT));
         debugCount =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
 
         assertTrue(eventCount.isPresent());
         assertEquals(2, (eventCount.get().getReportRetryCount()));
+        assertTrue(debugEventCount.isPresent());
+        assertEquals(1, (debugEventCount.get().getReportRetryCount()));
         assertTrue(aggregateCount.isPresent());
         assertEquals(2, (aggregateCount.get().getReportRetryCount()));
+        assertTrue(debugAggregateCount.isPresent());
+        assertEquals(1, (debugAggregateCount.get().getReportRetryCount()));
         assertTrue(debugCount.isPresent());
         assertEquals(1, (debugCount.get().getReportRetryCount()));
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.incrementAndGetReportingRetryCount(
+                            eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
+                            aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT);
+                    dao.incrementAndGetReportingRetryCount(
+                            debugId, DataType.DEBUG_REPORT_RETRY_COUNT);
+                });
+        eventCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getKeyValueData(eventId, DataType.EVENT_REPORT_RETRY_COUNT));
+        aggregateCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.AGGREGATE_REPORT_RETRY_COUNT));
+        debugEventCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        eventId, DataType.DEBUG_EVENT_REPORT_RETRY_COUNT));
+        debugAggregateCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getKeyValueData(
+                                        aggregateId, DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT));
+        debugCount =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getKeyValueData(debugId, DataType.DEBUG_REPORT_RETRY_COUNT));
+
+        assertTrue(eventCount.isPresent());
+        assertEquals(2, (eventCount.get().getReportRetryCount()));
+        assertTrue(debugEventCount.isPresent());
+        assertEquals(2, (debugEventCount.get().getReportRetryCount()));
+        assertTrue(aggregateCount.isPresent());
+        assertEquals(2, (aggregateCount.get().getReportRetryCount()));
+        assertTrue(debugAggregateCount.isPresent());
+        assertEquals(2, (debugAggregateCount.get().getReportRetryCount()));
+        assertTrue(debugCount.isPresent());
+        assertEquals(2, (debugCount.get().getReportRetryCount()));
+    }
+
+    private void insertInDb(SQLiteDatabase db, Source source) {
+        ContentValues values = new ContentValues();
+        values.put(SourceContract.ID, source.getId());
+        values.put(SourceContract.STATUS, Source.Status.ACTIVE);
+        values.put(SourceContract.EVENT_TIME, source.getEventTime());
+        values.put(SourceContract.EXPIRY_TIME, source.getExpiryTime());
+        values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
+        values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
+        values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
+        values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
+        if (source.getAttributedTriggers() != null) {
+            values.put(SourceContract.EVENT_ATTRIBUTION_STATUS, source.attributedTriggersToJson());
+        }
+        if (source.getTriggerSpecs() != null) {
+            values.put(
+                    MeasurementTables.SourceContract.TRIGGER_SPECS,
+                    source.getTriggerSpecs().encodeToJson());
+        }
+        db.insert(SourceContract.TABLE, null, values);
+
+        // Insert source destinations
+        if (source.getAppDestinations() != null) {
+            for (Uri appDestination : source.getAppDestinations()) {
+                ContentValues destinationValues = new ContentValues();
+                destinationValues.put(
+                        MeasurementTables.SourceDestination.SOURCE_ID, source.getId());
+                destinationValues.put(
+                        MeasurementTables.SourceDestination.DESTINATION_TYPE, EventSurfaceType.APP);
+                destinationValues.put(
+                        MeasurementTables.SourceDestination.DESTINATION, appDestination.toString());
+                db.insert(MeasurementTables.SourceDestination.TABLE, null, destinationValues);
+            }
+        }
+
+        if (source.getWebDestinations() != null) {
+            for (Uri webDestination : source.getWebDestinations()) {
+                ContentValues destinationValues = new ContentValues();
+                destinationValues.put(
+                        MeasurementTables.SourceDestination.SOURCE_ID, source.getId());
+                destinationValues.put(
+                        MeasurementTables.SourceDestination.DESTINATION_TYPE, EventSurfaceType.WEB);
+                destinationValues.put(
+                        MeasurementTables.SourceDestination.DESTINATION, webDestination.toString());
+                db.insert(MeasurementTables.SourceDestination.TABLE, null, destinationValues);
+            }
+        }
     }
 
     private void queryAndAssertSourceEntries(
@@ -9037,8 +9028,7 @@ public class MeasurementDaoTest {
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),
-                        source.getAttributionDestinations(trigger.getDestinationType()),
-                        mFlags.getMeasurementFlexibleEventReportingApiEnabled())
+                        source.getAttributionDestinations(trigger.getDestinationType()))
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
@@ -9046,8 +9036,12 @@ public class MeasurementDaoTest {
     }
 
     private DebugReport createDebugReport() {
+        return createDebugReport(UUID.randomUUID().toString(), REGISTRANT, INSERTION_TIME);
+    }
+
+    private DebugReport createDebugReport(String id, Uri registrant, long insertionTime) {
         return new DebugReport.Builder()
-                .setId("reportId")
+                .setId(id)
                 .setType("trigger-event-deduplicated")
                 .setBody(
                         " {\n"
@@ -9057,7 +9051,76 @@ public class MeasurementDaoTest {
                                 + "    }")
                 .setEnrollmentId("1")
                 .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                .setRegistrant(registrant)
+                .setInsertionTime(insertionTime)
                 .build();
+    }
+
+    private DebugReport buildDebugReportWithInstalledRegistrant(String id) {
+        return new DebugReport.Builder()
+                .setId(id)
+                .setType("trigger-event-deduplicated")
+                .setBody(
+                        " {\n"
+                                + "      \"attribution_destination\":"
+                                + " \"https://destination.example\",\n"
+                                + "      \"source_event_id\": \"45623\"\n"
+                                + "    }")
+                .setEnrollmentId("1")
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                .setRegistrant(INSTALLED_REGISTRANT)
+                .setInsertionTime(INSERTION_TIME)
+                .build();
+    }
+
+    private DebugReport buildDebugReportWithNotInstalledRegistrant(String id) {
+        return new DebugReport.Builder()
+                .setId(id)
+                .setType("trigger-event-deduplicated")
+                .setBody(
+                        " {\n"
+                                + "      \"attribution_destination\":"
+                                + " \"https://destination.example\",\n"
+                                + "      \"source_event_id\": \"45623\"\n"
+                                + "    }")
+                .setEnrollmentId("1")
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                .setRegistrant(NOT_INSTALLED_REGISTRANT)
+                .setInsertionTime(INSERTION_TIME)
+                .build();
+    }
+
+    private Uri buildRegistrant(String appName) {
+        return Uri.parse("android-app://" + appName);
+    }
+
+    private void insertAsyncRecordForPackageName(Uri... registrants) {
+        for (Uri registrant : registrants) {
+            AsyncRegistration validRecord =
+                    AsyncRegistrationFixture.getValidAsyncRegistrationBuilder()
+                            .setRegistrant(registrant)
+                            .build();
+
+            mDatastoreManager.runInTransaction((dao) -> dao.insertAsyncRegistration(validRecord));
+        }
+    }
+
+    private void insertSourceForPackageName(Uri... registrants) {
+        for (Uri registrant : registrants) {
+            Source validSource =
+                    SourceFixture.getValidSourceBuilder().setRegistrant(registrant).build();
+
+            mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
+        }
+    }
+
+    private void insertTriggerForPackageName(Uri... registrants) {
+        for (Uri registrant : registrants) {
+            Trigger validTrigger =
+                    TriggerFixture.getValidTriggerBuilder().setRegistrant(registrant).build();
+
+            mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(validTrigger));
+        }
     }
 
     private void setupSourceAndTriggerData() {
@@ -9400,12 +9463,31 @@ public class MeasurementDaoTest {
         }
     }
 
+    private static Attribution.Builder getAttributionBuilder(Source source, Trigger trigger) {
+        return new Attribution.Builder()
+                .setEnrollmentId(source.getEnrollmentId())
+                .setDestinationOrigin(source.getWebDestinations().get(0).toString())
+                .setDestinationSite(source.getAppDestinations().get(0).toString())
+                .setSourceOrigin(source.getPublisher().toString())
+                .setSourceSite(source.getPublisher().toString())
+                .setRegistrant(source.getRegistrant().toString())
+                .setTriggerTime(
+                        trigger.getTriggerTime()
+                                - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
+                                + 1)
+                .setRegistrationOrigin(trigger.getRegistrationOrigin());
+    }
+
     /** Create {@link Attribution} object from SQLite datastore. */
     private static Attribution constructAttributionFromCursor(Cursor cursor) {
         Attribution.Builder builder = new Attribution.Builder();
         int index = cursor.getColumnIndex(MeasurementTables.AttributionContract.ID);
         if (index > -1 && !cursor.isNull(index)) {
             builder.setId(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(MeasurementTables.AttributionContract.SCOPE);
+        if (index > -1 && !cursor.isNull(index)) {
+            builder.setScope(cursor.getInt(index));
         }
         index = cursor.getColumnIndex(MeasurementTables.AttributionContract.SOURCE_SITE);
         if (index > -1 && !cursor.isNull(index)) {
@@ -9442,20 +9524,66 @@ public class MeasurementDaoTest {
         return builder.build();
     }
 
+    private Attribution getAttribution(String attributionId, SQLiteDatabase db) {
+        try (Cursor cursor =
+                        db.query(
+                                MeasurementTables.AttributionContract.TABLE,
+                                /* columns= */ null,
+                                MeasurementTables.AttributionContract.ID + " = ? ",
+                                new String[] {attributionId},
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            if (cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return constructAttributionFromCursor(cursor);
+        }
+    }
+
+    private static void insertAttributedTrigger(TriggerSpecs triggerSpecs,
+            EventReport eventReport) {
+        triggerSpecs.getAttributedTriggers().add(
+                new AttributedTrigger(
+                        eventReport.getTriggerId(),
+                        eventReport.getTriggerPriority(),
+                        eventReport.getTriggerData(),
+                        eventReport.getTriggerValue(),
+                        eventReport.getTriggerTime(),
+                        eventReport.getTriggerDedupKey(),
+                        eventReport.getTriggerDebugKey(),
+                        false));
+    }
+
+    private static void insertAttributedTrigger(List<AttributedTrigger> attributedTriggers,
+            EventReport eventReport) {
+        attributedTriggers.add(
+                new AttributedTrigger(
+                        eventReport.getTriggerId(),
+                        eventReport.getTriggerData(),
+                        eventReport.getTriggerDedupKey()));
+    }
+
     private static String getFirstSourceIdFromDatastore() {
+        return getFirstIdFromDatastore(SourceContract.TABLE, SourceContract.ID);
+    }
+
+    private static String getFirstIdFromDatastore(String tableName, String idColumn) {
         try (Cursor cursor =
                 MeasurementDbHelper.getInstance(sContext)
                         .getReadableDatabase()
                         .query(
-                                SourceContract.TABLE,
-                                new String[] {SourceContract.ID},
+                                tableName,
+                                new String[] {idColumn},
                                 null,
                                 null,
                                 null,
                                 null,
                                 null)) {
             assertTrue(cursor.moveToNext());
-            return cursor.getString(cursor.getColumnIndex(SourceContract.ID));
+            return cursor.getString(cursor.getColumnIndex(idColumn));
         }
     }
 

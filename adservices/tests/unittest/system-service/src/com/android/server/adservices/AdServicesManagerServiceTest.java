@@ -16,7 +16,8 @@
 
 package com.android.server.adservices;
 
-import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -83,7 +84,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1028,15 +1028,8 @@ public class AdServicesManagerServiceTest {
                 .enforceCallingPermission(eq(android.Manifest.permission.DUMP), isNull());
         mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
-        String dump;
-        try (StringWriter sw = new StringWriter()) {
-            PrintWriter pw = new PrintWriter(sw);
+        String dump = dump(pw -> mService.dump(/* fd= */ null, pw, /* args= */ null));
 
-            mService.dump(/* fd= */ null, pw, /* args= */ null);
-
-            pw.flush();
-            dump = sw.toString();
-        }
         // Content doesn't matter much, we just wanna make sure it doesn't crash (for example,
         // by using the wrong %s / %d tokens) and that its components are dumped
         assertWithMessage("content of dump()").that(dump).contains(USER_INSTANCE_MANAGER_DUMP);

@@ -44,25 +44,27 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementReportsStats;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -107,7 +109,14 @@ public class AggregateReportingJobHandlerTest {
     AggregateReportingJobHandler mAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyDebugAggregateReportingJobHandler;
-    private StaticMockitoSession mMockitoSession;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(ErrorLogUtil.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     class FakeDatasoreManager extends DatastoreManager {
 
@@ -151,7 +160,10 @@ public class AggregateReportingJobHandlerTest {
                         mDatastoreManager,
                         mockKeyManager,
                         mMockFlags,
-                        mLogger);
+                        mLogger,
+                        ReportingStatus.ReportType.AGGREGATE,
+                        ReportingStatus.UploadMethod.UNKNOWN,
+                        sContext);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
         mSpyDebugAggregateReportingJobHandler =
                 Mockito.spy(
@@ -160,25 +172,17 @@ public class AggregateReportingJobHandlerTest {
                                         mDatastoreManager,
                                         mockKeyManager,
                                         mMockFlags,
-                                        mLogger)
+                                        mLogger,
+                                        ReportingStatus.ReportType.AGGREGATE,
+                                        ReportingStatus.UploadMethod.UNKNOWN,
+                                        sContext)
                                 .setIsDebugInstance(true));
 
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ErrorLogUtil.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-    }
-
-    @After
-    public void after() {
-        mMockitoSession.finishMocking();
     }
 
     @Test
@@ -528,8 +532,8 @@ public class AggregateReportingJobHandlerTest {
                         1000, 1100));
 
         verify(mMeasurementDao, times(2)).markAggregateReportStatus(any(), anyInt());
-        verify(mTransaction, times(7)).begin();
-        verify(mTransaction, times(7)).end();
+        verify(mTransaction, times(5)).begin();
+        verify(mTransaction, times(5)).end();
     }
 
     @Test
@@ -560,7 +564,8 @@ public class AggregateReportingJobHandlerTest {
                         new FakeDatasoreManager(),
                         mockKeyManager,
                         mMockFlags,
-                        mLogger);
+                        mLogger,
+                        sContext);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
 
         assertTrue(
@@ -618,6 +623,73 @@ public class AggregateReportingJobHandlerTest {
         // 1 transaction for initial retrieval of pending report ids.
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
+    }
+
+    @Test
+    public void testPerformScheduledPendingReports_LogZeroRetryCount()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport1 = createASampleAggregateReport();
+        JSONObject aggregateReportBody1 = createASampleAggregateReportBody(aggregateReport1);
+
+        when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
+                .thenReturn(
+                        Map.of(COORDINATOR_ORIGIN.toString(), List.of(aggregateReport1.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport1.getId()))
+                .thenReturn(aggregateReport1);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), Mockito.any());
+        doReturn(aggregateReportBody1)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport1, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture());
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertEquals(
+                measurementReportsStats.getType(), ReportingStatus.ReportType.AGGREGATE.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.SUCCESS.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.UNKNOWN.getValue());
+        verify(mMeasurementDao, never()).incrementAndGetReportingRetryCount(any(), any());
+    }
+
+    @Test
+    public void testPerformScheduledPendingReports_LogReportNotFound() throws DatastoreException {
+        AggregateReport aggregateReport1 = createASampleAggregateReport();
+
+        when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
+                .thenReturn(
+                        Map.of(COORDINATOR_ORIGIN.toString(), List.of(aggregateReport1.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport1.getId())).thenReturn(null);
+
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture());
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertEquals(
+                measurementReportsStats.getType(), ReportingStatus.ReportType.AGGREGATE.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.FAILURE.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.REPORT_NOT_FOUND.getValue());
+        verify(mMeasurementDao)
+                .incrementAndGetReportingRetryCount(
+                        aggregateReport1.getId(),
+                        KeyValueData.DataType.AGGREGATE_REPORT_RETRY_COUNT);
     }
 
     @Test

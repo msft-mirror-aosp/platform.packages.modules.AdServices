@@ -93,7 +93,7 @@ public class UxEngine {
 
             // Entry point request should not trigger enrollment but should refresh the UX states.
             if (adServicesStates.isPrivacySandboxUiRequest()) {
-                UiStatsLogger.logEntryPointClicked(mContext);
+                UiStatsLogger.logEntryPointClicked();
                 return;
             }
 

@@ -61,7 +61,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void unloadSdk(
-            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {}
+            String callingPackageName, String sdkName, SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void requestSurfacePackage(
@@ -88,6 +88,11 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
+    public boolean isSdkSandboxServiceRunning(String callingPackageName) throws RemoteException {
+        return false;
+    }
+
+    @Override
     public void stopSdkSandbox(String callingPackageName) throws RemoteException {}
 
     @Override
@@ -100,17 +105,20 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public void addSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
     public void removeSdkSandboxProcessDeathCallback(
             String callingPackageName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
     public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {}
+
+    @Override
+    public void logSandboxActivityEvent(int method, int callResult, int latencyMillis) {}
 
     @Override
     public IBinder getAdServicesManager() {

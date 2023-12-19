@@ -33,7 +33,6 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
@@ -46,6 +45,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.mockito.stubbing.Answer;
 
@@ -129,6 +129,7 @@ class TestObjectProvider {
         }
 
         return new AsyncRegistrationQueueRunner(
+                ApplicationProvider.getApplicationContext(),
                 new MockContentResolver(),
                 asyncSourceFetcher,
                 asyncTriggerFetcher,

@@ -22,16 +22,21 @@ import android.provider.DeviceConfig;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class SelectAdsFlagRule implements TestRule {
+
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @Override
     public Statement apply(Statement base, Description description) {
         return new Statement() {
@@ -105,12 +110,8 @@ public class SelectAdsFlagRule implements TestRule {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_custom_audience_service_kill_switch false");
         ShellUtils.runShellCommand(
-                "device_config put adservices fledge_custom_audience_service_kill_switch false");
+                "device_config put adservices fledge_select_ads_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
-        // Extra flags to set for enabling AdServices on Android S-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
     }
 }

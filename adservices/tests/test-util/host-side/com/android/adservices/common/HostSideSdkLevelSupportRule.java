@@ -15,14 +15,15 @@
  */
 package com.android.adservices.common;
 
-import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.adservices.common.AndroidSdk.Level;
+import com.android.adservices.common.AndroidSdk.Range;
 import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractSdkLevelSupportedRule}. */
 public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    private HostSideSdkLevelSupportRule(AndroidSdkLevel level) {
-        super(ConsoleLogger.getInstance(), level);
+    private HostSideSdkLevelSupportRule(Level atLeast) {
+        super(ConsoleLogger.getInstance(), Range.forAtLeast(atLeast.getLevel()));
     }
 
     public void setDevice(ITestDevice device) {
@@ -42,46 +43,26 @@ public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupported
      * </ul>
      */
     public static HostSideSdkLevelSupportRule forAnyLevel() {
-        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.ANY);
+        return new HostSideSdkLevelSupportRule(Level.ANY);
     }
 
     /** Gets a rule that ensures test is executed on Android S+. Skips test otherwise. */
     public static HostSideSdkLevelSupportRule forAtLeastS() {
-        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.S);
+        return new HostSideSdkLevelSupportRule(Level.S);
     }
 
     /** Gets a rule that ensures test is executed on Android T+. Skips test otherwise. */
     public static HostSideSdkLevelSupportRule forAtLeastT() {
-        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.T);
+        return new HostSideSdkLevelSupportRule(Level.T);
     }
 
     /** Gets a rule that ensures test is executed on Android U+. Skips test otherwise. */
     public static HostSideSdkLevelSupportRule forAtLeastU() {
-        return new HostSideSdkLevelSupportRule(AndroidSdkLevel.U);
+        return new HostSideSdkLevelSupportRule(Level.U);
     }
 
     @Override
-    public boolean isAtLeastR() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.R);
-    }
-
-    @Override
-    public boolean isAtLeastS() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.S);
-    }
-
-    @Override
-    public boolean isAtLeastT() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.T);
-    }
-
-    @Override
-    public boolean isAtLeastU() throws DeviceNotAvailableException {
-        return isDeviceApiLevelAtLeast(AndroidSdkLevel.U);
-    }
-
-    private boolean isDeviceApiLevelAtLeast(AndroidSdkLevel level)
-            throws DeviceNotAvailableException {
-        return TestDeviceHelper.getTestDevice().getApiLevel() >= level.getLevel();
+    public Level getDeviceApiLevel() {
+        return Level.forLevel(TestDeviceHelper.getApiLevel());
     }
 }

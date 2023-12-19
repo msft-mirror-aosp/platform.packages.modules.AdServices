@@ -116,7 +116,8 @@ public final class EventFallbackReportingJobService extends JobService {
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
                                 ReportingStatus.ReportType.EVENT,
-                                ReportingStatus.UploadMethod.FALLBACK)
+                                ReportingStatus.UploadMethod.FALLBACK,
+                                getApplicationContext())
                         .performScheduledPendingReportsInWindow(
                                 System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
                                 System.currentTimeMillis() - eventMainReportingJobPeriodMs);

@@ -49,6 +49,7 @@ public class AttributionJobHandlerWrapper {
     }
 
     public boolean performPendingAttributions() {
-        return mAttributionJobHandler.performPendingAttributions();
+        return AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED
+                == mAttributionJobHandler.performPendingAttributions();
     }
 }

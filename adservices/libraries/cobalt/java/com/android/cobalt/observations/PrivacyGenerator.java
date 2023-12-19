@@ -18,6 +18,7 @@ package com.android.cobalt.observations;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;
 import com.google.common.collect.ImmutableList;
 import com.google.common.math.BigDecimalMath;
@@ -35,17 +36,14 @@ public final class PrivacyGenerator {
     }
 
     /**
-     * Adds noise to a list of private indices.
+     * Generates noise for a report.
      *
-     * <p>Each private index is an observation which actually occurred.
-     *
-     * @param indices the private indices
      * @param maxIndex the maximum private index value for the report
      * @param reportDefinition the privacy-enabled report containing the privacy parameters
      * @return private indices that include noise according to the report's privacy parameters
      */
-    ImmutableList<Integer> addNoise(
-            ImmutableList<Integer> indices, int maxIndex, ReportDefinition reportDefinition) {
+    ImmutableList<PrivateIndexObservation> generateNoise(
+            int maxIndex, ReportDefinition reportDefinition) {
         checkArgument(maxIndex >= 0, "maxIndex value cannot be negative");
         double lambda = reportDefinition.getPoissonMean();
         checkArgument(lambda > 0, "poisson_mean must be positive, got %s", lambda);
@@ -66,13 +64,15 @@ public final class PrivacyGenerator {
 
         int addedOnes = samplePoissonDistribution(lambdaTimesNumIndex);
 
-        ImmutableList.Builder<Integer> withNoise = ImmutableList.<Integer>builder();
-        withNoise.addAll(indices);
+        ImmutableList.Builder<PrivateIndexObservation> noise = ImmutableList.builder();
         for (int i = 0; i < addedOnes; ++i) {
-            withNoise.add(sampleUniformDistribution(maxIndex));
+            noise.add(
+                    PrivateIndexObservation.newBuilder()
+                            .setIndex(sampleUniformDistribution(maxIndex))
+                            .build());
         }
 
-        return withNoise.build();
+        return noise.build();
     }
 
     /**

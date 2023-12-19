@@ -30,6 +30,7 @@ public final class ReportObjects {
     public final List<JSONObject> mDebugEventReportObjects;
     public final List<JSONObject> mDebugAggregateReportObjects;
     public final List<JSONObject> mDebugReportObjects;
+    public final List<JSONObject> mUnparsableRegistrationObjects;
 
     public ReportObjects() {
         mEventReportObjects = new ArrayList<>();
@@ -37,6 +38,7 @@ public final class ReportObjects {
         mDebugEventReportObjects = new ArrayList<>();
         mDebugAggregateReportObjects = new ArrayList<>();
         mDebugReportObjects = new ArrayList<>();
+        mUnparsableRegistrationObjects = new ArrayList<>();
     }
 
     public ReportObjects(
@@ -44,11 +46,13 @@ public final class ReportObjects {
             List<JSONObject> aggregateReportObjects,
             List<JSONObject> debugEventReportObjects,
             List<JSONObject> debugAggregateReportObjects,
-            List<JSONObject> debugReportObjects) {
+            List<JSONObject> debugReportObjects,
+            List<JSONObject> unparsableRegistrationObjects) {
         mEventReportObjects = eventReportObjects;
         mAggregateReportObjects = aggregateReportObjects;
         mDebugEventReportObjects = debugEventReportObjects;
         mDebugAggregateReportObjects = debugAggregateReportObjects;
         mDebugReportObjects = debugReportObjects;
+        mUnparsableRegistrationObjects = unparsableRegistrationObjects;
     }
 }

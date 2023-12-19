@@ -73,6 +73,8 @@ public class AdSelectionDataE2ETest {
             "CustomAudienceServerAuctionFiveBuyersMultipleCa.json";
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
+    private static final String SFE_ADDRESS = "https://seller1-nmb.sfe-gcp.com/v1/selectAd";
+    private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
 
@@ -125,7 +127,10 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_ONE_BUYER, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_ONE_BUYER,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
@@ -167,7 +172,10 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_FIVE_BUYERS, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_FIVE_BUYERS,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
@@ -208,7 +216,10 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_ONE_BUYER, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_ONE_BUYER,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
@@ -252,7 +263,10 @@ public class AdSelectionDataE2ETest {
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER, outcome.getAdSelectionData());
+                        CONTEXTUAL_SIGNALS_CONTEXTUAL_WINNER,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()

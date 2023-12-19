@@ -42,10 +42,8 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager ನ API ಗಳಿಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager ನ API ಗಳನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್ ಒಂದನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <!-- no translation found for permlab_accessUpdateAdIdCache (6912755067998635886) -->
-    <skip />
-    <!-- no translation found for permdesc_accessUpdateAdIdCache (2907546830224186022) -->
-    <skip />
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"AdService ನ ಅಪ್‌ಡೇಟ್‌ AdId API ಗೆ ಇರುವ ಆ್ಯಕ್ಸೆಸ್."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"AdService ನ ಅಪ್‌ಡೇಟ್‌ AdId API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್ ಅನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="app_label" msgid="5844694701336604490">"ಆ್ಯಡ್ ಗೌಪ್ಯತೆ"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Android ನ ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆಯ ಬೀಟಾವನ್ನು ಸೇರಿಕೊಳ್ಳಿ"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"ನಿಮಗೆ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಆ್ಯಪ್‌ಗಳು ಬಳಸಬಹುದಾದ ಇನ್ನಷ್ಟು ಖಾಸಗಿ ವಿಧಾನಗಳನ್ನು Android ಎಕ್ಸ್‌ಪ್ಲೋರ್ ಮಾಡುತ್ತಿದೆ"</string>

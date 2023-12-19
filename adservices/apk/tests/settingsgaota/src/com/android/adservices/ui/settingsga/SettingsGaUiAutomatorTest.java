@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settingsga;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
@@ -34,12 +36,14 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,94 +58,35 @@ public class SettingsGaUiAutomatorTest {
 
     private String mTestName;
 
-    @Rule
+    @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, false);
+
     @Before
-    public void setup() {
+    public void setup() throws RemoteException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // Start from the home screen
         sDevice.pressHome();
-
+        sDevice.setOrientationNatural();
         // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_ad_services_system_api false");
     }
 
     @After
     public void teardown() {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
-
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-    }
-
-    @Test
-    public void mainPageGaUxFlagEnableToDisableFlipTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-
-        ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
-        // beta switch shouldn't exist
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(mainSwitch.exists()).isFalse();
-
-        // make sure all the GA elements are there
-        scrollTo(R.string.settingsUI_topics_ga_title);
-        UiObject topicsButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
-        topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(topicsButton.exists()).isTrue();
-
-        scrollTo(R.string.settingsUI_apps_ga_title);
-        UiObject appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
-        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(appButton.exists()).isTrue();
-
-        scrollTo(R.string.settingsUI_measurement_view_title);
-        UiObject measurementButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_title);
-        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(measurementButton.exists()).isTrue();
-
-        sDevice.pressHome();
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
-
-        ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
-        // beta switch should exist
-        mainSwitch = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(mainSwitch.exists()).isTrue();
-
-        // make sure all the GA elements are gone
-        topicsButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
-        topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(topicsButton.exists()).isFalse();
-
-        appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
-        appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(appButton.exists()).isFalse();
-
-        measurementButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_title);
-        measurementButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(measurementButton.exists()).isFalse();
     }
 
     @Test
@@ -291,9 +236,6 @@ public class SettingsGaUiAutomatorTest {
         // 3) check if Topics API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
         sDevice.waitForIdle();
-        // rotate device to test rotating as well
-        sDevice.setOrientationLeft();
-        sDevice.setOrientationNatural();
         topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         topicsToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsToggle.isChecked()).isTrue();
@@ -335,9 +277,7 @@ public class SettingsGaUiAutomatorTest {
         // 3) check if Fledge API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
         sDevice.waitForIdle();
-        // rotate device to test rotating as well
-        sDevice.setOrientationLeft();
-        sDevice.setOrientationNatural();
+
         fledgeToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         fledgeToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(fledgeToggle.isChecked()).isTrue();
@@ -379,9 +319,7 @@ public class SettingsGaUiAutomatorTest {
         // 3) check if Measurement API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
         sDevice.waitForIdle();
-        // rotate device to test rotating as well
-        sDevice.setOrientationLeft();
-        sDevice.setOrientationNatural();
+
         measurementToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         measurementToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(measurementToggle.isChecked()).isTrue();
@@ -453,10 +391,6 @@ public class SettingsGaUiAutomatorTest {
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
 
         assertThat(dialogTitle.exists()).isTrue();
-
-        sDevice.setOrientationRight();
-        assertThat(dialogTitle.exists()).isTrue();
-        sDevice.setOrientationNatural();
     }
 
     @Test

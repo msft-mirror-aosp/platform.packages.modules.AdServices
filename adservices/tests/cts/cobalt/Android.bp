@@ -24,7 +24,7 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
@@ -34,11 +34,10 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
 }
@@ -51,7 +50,7 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -62,7 +61,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "31",

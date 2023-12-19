@@ -40,6 +40,7 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -50,15 +51,13 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
-public class CustomAudienceServiceFilterTest {
+public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTestCase {
+
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
 
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
@@ -92,8 +91,6 @@ public class CustomAudienceServiceFilterTest {
 
     @Mock private Throttler mMockThrottler;
 
-    private MockitoSession mStaticMockSession = null;
-
     private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
 
     private static final AdTechIdentifier SELLER_VALID =
@@ -107,11 +104,6 @@ public class CustomAudienceServiceFilterTest {
 
     @Before
     public void setUp() throws Exception {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
                         mContext,
@@ -123,13 +115,6 @@ public class CustomAudienceServiceFilterTest {
                         mMockThrottler);
 
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString())).thenReturn(true);
-    }
-
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test

@@ -16,13 +16,16 @@
 
 package com.android.adservices.common;
 
-import android.os.SystemProperties;
-import android.text.TextUtils;
 
-import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
+import android.os.SystemProperties;
+
+import com.android.compatibility.common.util.ShellUtils;
+
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 /** Device-side implementation of {@link SystemPropertiesHelper.Interface}. */
-final class DeviceSideSystemPropertiesHelper implements SystemPropertiesHelper.Interface {
+final class DeviceSideSystemPropertiesHelper extends SystemPropertiesHelper.Interface {
 
     private static final Logger sLogger =
             new Logger(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.class);
@@ -34,7 +37,9 @@ final class DeviceSideSystemPropertiesHelper implements SystemPropertiesHelper.I
         return sInstance;
     }
 
-    private DeviceSideSystemPropertiesHelper() {}
+    private DeviceSideSystemPropertiesHelper() {
+        super(AndroidLogger.getInstance());
+    }
 
     @Override
     public String get(String name) {
@@ -42,27 +47,9 @@ final class DeviceSideSystemPropertiesHelper implements SystemPropertiesHelper.I
     }
 
     @Override
-    public void set(String name, String value) {
-        sLogger.v("set(%s, %s)", name, value);
-
-        if (!TextUtils.isEmpty(value)) {
-            runShellCommand("setprop %s %s", name, value);
-            return;
-        }
-        // TODO(b/293132368): UIAutomation doesn't support passing a "" or '' - it will quote
-        // them, which would cause the property value to be "" or '', not the empty String.
-        // Another approach would be calling SystemProperties.set(), but that method is hidden
-        // (b/294414609)
-        sLogger.w(
-                "NOT resetting property %s to empty String as it's not supported by"
-                        + " runShellCommand(), but setting it as null",
-                name);
-        runShellCommand("setprop %s null", name);
-    }
-
-    @Override
-    public String dumpSystemProperties() {
-        return runShellCommand("getprop").trim();
+    @FormatMethod
+    protected String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+        return ShellUtils.runShellCommand(cmdFmt, cmdArgs);
     }
 
     @Override

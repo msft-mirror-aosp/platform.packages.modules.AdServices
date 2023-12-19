@@ -66,18 +66,16 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -86,7 +84,6 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -114,6 +111,7 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -163,7 +161,7 @@ public class ReportAndRegisterEventE2ETest {
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
-    private EncryptionContextDao mEncryptionContextDao;
+    private EnrollmentDao mEnrollmentDao;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
@@ -230,11 +228,11 @@ public class ReportAndRegisterEventE2ETest {
 
     @Spy
     private AsyncSourceFetcher mAsyncSourceFetcherSpy =
-            new AsyncSourceFetcher(CONTEXT, mEnrollmentDaoMock, mFlags, mAdServicesLoggerMock);
+            new AsyncSourceFetcher(CONTEXT, mEnrollmentDaoMock, mFlags);
 
     @Spy
     private AsyncTriggerFetcher mAsyncTriggerFetcherSpy =
-            new AsyncTriggerFetcher(CONTEXT, mEnrollmentDaoMock, mFlags, mAdServicesLoggerMock);
+            new AsyncTriggerFetcher(CONTEXT, mEnrollmentDaoMock, mFlags);
 
     @Mock private DebugReportApi mDebugReportApiMock;
     @Mock private SourceNoiseHandler mSourceNoiseHandlerMock;
@@ -284,13 +282,8 @@ public class ReportAndRegisterEventE2ETest {
 
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(
-                                ApplicationProvider.getApplicationContext(),
-                                AdSelectionServerDatabase.class)
-                        .build();
-        mEncryptionContextDao = serverDb.encryptionContextDao();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(CONTEXT);
+        mEnrollmentDao = EnrollmentDao.getInstance(CONTEXT);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
@@ -303,7 +296,9 @@ public class ReportAndRegisterEventE2ETest {
                                 mMeasurementDataDeleterMock,
                                 mContentResolverMock));
         doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance(CONTEXT));
-        doReturn(true).when(mClickVerifierMock).isInputEventVerifiable(any(), anyLong());
+        doReturn(true)
+                .when(mClickVerifierMock)
+                .isInputEventVerifiable(any(), anyLong(), anyString());
         when(mEnrollmentDaoMock.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(ENROLLMENT_DATA);
 
@@ -321,6 +316,7 @@ public class ReportAndRegisterEventE2ETest {
         mAsyncRegistrationQueueRunnerSpy =
                 spy(
                         new AsyncRegistrationQueueRunner(
+                                CONTEXT,
                                 mContentResolverMock,
                                 mAsyncSourceFetcherSpy,
                                 mAsyncTriggerFetcherSpy,
@@ -983,8 +979,8 @@ public class ReportAndRegisterEventE2ETest {
                 mCustomAudienceDao,
                 mEncodedPayloadDao,
                 mFrequencyCapDao,
-                mEncryptionContextDao,
                 mEncryptionKeyDao,
+                mEnrollmentDao,
                 mHttpsClientSpy,
                 mDevContextFilterMock,
                 mLightweightExecutorService,
@@ -1000,7 +996,8 @@ public class ReportAndRegisterEventE2ETest {
                 mConsentManagerMock,
                 mObliviousHttpEncryptorMock,
                 mAdSelectionDebugReportDaoMock,
-                mAdIdFetcher);
+                mAdIdFetcher,
+                false);
     }
 
     private void initializeReportingArtifacts() throws JSONException {

@@ -822,6 +822,8 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
+        // Rotate the device to portrait
+        sUiDevice.setOrientationPortrait();
         // Assert Portrait Rotation.
         assertTrue(
                 sUiDevice.wait(
@@ -853,6 +855,8 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
         assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
 
+        // Rotate the device to portrait
+        sUiDevice.setOrientationPortrait();
         // Assert Portrait Rotation.
         assertTrue(
                 sUiDevice.wait(

@@ -20,23 +20,20 @@ import android.Manifest;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.MeasurementManager;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.DropCachesRule;
 import android.platform.test.rule.KillAppsRule;
-import android.provider.DeviceConfig;
 import android.util.Log;
-import android.view.InputEvent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -47,7 +44,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 
-import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -63,9 +59,8 @@ public class AbstractMeasurementLatencyTest {
             (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                     ? CONTEXT.getSystemService(MeasurementManager.class)
                     : MeasurementManager.get(CONTEXT);
-    private static UiDevice sDevice;
 
-    @Rule
+    @Rule(order = 0)
     public RuleChain rules =
             RuleChain.outerRule(
                             new CleanPackageRule(
@@ -79,6 +74,10 @@ public class AbstractMeasurementLatencyTest {
                                             ApplicationProvider.getApplicationContext())))
                     .around(new DropCachesRule());
 
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @BeforeClass
     public static void setup() throws Exception {
         InstrumentationRegistry.getInstrumentation()
@@ -90,74 +89,43 @@ public class AbstractMeasurementLatencyTest {
         final String path = SERVER_BASE_URI + SOURCE_PATH;
 
         Stopwatch timer = Stopwatch.createStarted();
+        MEASUREMENT_MANAGER.registerSource(
+                Uri.parse(path),
+                /* inputEvent */ null,
+                CALLBACK_EXECUTOR,
+                new AdServicesOutcomeReceiver<>() {
+                    @Override
+                    public void onResult(@NonNull Object ignoredResult) {
+                        timer.stop();
+                    }
 
-        if (SdkLevel.isAtLeastS()) {
-            MEASUREMENT_MANAGER.registerSource(
-                    Uri.parse(path),
-                    /* inputEvent */ null,
-                    CALLBACK_EXECUTOR,
-                    new android.os.OutcomeReceiver<Object, Exception>() {
-                        @Override
-                        public void onResult(@NonNull Object ignoredResult) {
-                            timer.stop();
-                        }
-
-                        @Override
-                        public void onError(@NonNull Exception error) {
-                            timer.stop();
-                            Assert.fail();
-                        }
-                    });
-        } else {
-            // TODO (b/298437332): Remove API access via reflection once APIs are unhidden.
-            Method registerSourceMethod =
-                    MeasurementManager.class.getMethod(
-                            "registerSource",
-                            Uri.class,
-                            InputEvent.class,
-                            Executor.class,
-                            AdServicesOutcomeReceiver.class);
-            registerSourceMethod.invoke(
-                    MEASUREMENT_MANAGER,
-                    Uri.parse(path),
-                    null,
-                    CALLBACK_EXECUTOR,
-                    constructAdServicesReceiver(timer));
-        }
+                    @Override
+                    public void onError(@NonNull Exception error) {
+                        timer.stop();
+                        Assert.fail();
+                    }
+                });
 
         Log.i(TAG, generateLogLabel(testClassName, testName, timer.elapsed(TimeUnit.MILLISECONDS)));
     }
 
-    protected void runGetMeasurementApiStatus(String testClassName, String testName)
-            throws Exception {
+    protected void runGetMeasurementApiStatus(String testClassName, String testName) {
         Stopwatch timer = Stopwatch.createStarted();
 
-        if (SdkLevel.isAtLeastS()) {
-            MEASUREMENT_MANAGER.getMeasurementApiStatus(
-                    CALLBACK_EXECUTOR,
-                    new android.os.OutcomeReceiver<Integer, Exception>() {
-                        @Override
-                        public void onResult(@NonNull Integer ignoredResult) {
-                            timer.stop();
-                        }
+        MEASUREMENT_MANAGER.getMeasurementApiStatus(
+                CALLBACK_EXECUTOR,
+                new AdServicesOutcomeReceiver<>() {
+                    @Override
+                    public void onResult(@NonNull Integer ignoredResult) {
+                        timer.stop();
+                    }
 
-                        @Override
-                        public void onError(@NonNull Exception error) {
-                            timer.stop();
-                            Assert.fail();
-                        }
-                    });
-
-        } else {
-            // TODO (b/298437332): Remove API access via reflection once APIs are unhidden.
-            Method registerSourceMethod =
-                    MeasurementManager.class.getMethod(
-                            "getMeasurementApiStatus",
-                            Executor.class,
-                            AdServicesOutcomeReceiver.class);
-            registerSourceMethod.invoke(
-                    MEASUREMENT_MANAGER, CALLBACK_EXECUTOR, constructAdServicesReceiver(timer));
-        }
+                    @Override
+                    public void onError(@NonNull Exception error) {
+                        timer.stop();
+                        Assert.fail();
+                    }
+                });
 
         Log.i(TAG, generateLogLabel(testClassName, testName, timer.elapsed(TimeUnit.MILLISECONDS)));
     }
@@ -173,154 +141,66 @@ public class AbstractMeasurementLatencyTest {
                 + " ms)";
     }
 
-    protected void warmupAdServices() throws Exception {
+    protected void warmupAdServices() {
         final String path = SERVER_BASE_URI + SOURCE_PATH;
 
-        if (SdkLevel.isAtLeastS()) {
-            MEASUREMENT_MANAGER.registerSource(
-                    Uri.parse(path),
-                    /* inputEvent */ null,
-                    CALLBACK_EXECUTOR,
-                    new android.os.OutcomeReceiver<Object, Exception>() {
-                        @Override
-                        public void onResult(@NonNull Object ignoredResult) {}
+        MEASUREMENT_MANAGER.registerSource(
+                Uri.parse(path),
+                /* inputEvent */ null,
+                CALLBACK_EXECUTOR,
+                new AdServicesOutcomeReceiver<>() {
+                    @Override
+                    public void onResult(@NonNull Object ignoredResult) {}
 
-                        @Override
-                        public void onError(@NonNull Exception error) {
-                            Assert.fail();
-                        }
-                    });
-        } else {
-            // TODO (b/298437332): Remove API access via reflection once APIs are unhidden.
-            Method registerSourceMethod =
-                    MeasurementManager.class.getMethod(
-                            "registerSource",
-                            Uri.class,
-                            InputEvent.class,
-                            Executor.class,
-                            AdServicesOutcomeReceiver.class);
-            registerSourceMethod.invoke(
-                    MEASUREMENT_MANAGER,
-                    Uri.parse(path),
-                    null,
-                    CALLBACK_EXECUTOR,
-                    constructAdServicesReceiver(null));
-        }
+                    @Override
+                    public void onError(@NonNull Exception error) {
+                        Assert.fail();
+                    }
+                });
     }
 
-    private static AdServicesOutcomeReceiver<Object, Exception> constructAdServicesReceiver(
-            @Nullable Stopwatch timer) {
-        return new AdServicesOutcomeReceiver<>() {
-            @Override
-            public void onResult(@NonNull Object ignoredResult) {
-                if (timer != null) {
-                    timer.stop();
-                }
-            }
-
-            @Override
-            public void onError(@NonNull Exception error) {
-                if (timer != null) {
-                    timer.stop();
-                }
-                Assert.fail();
-            }
-        };
-    }
-
-    private static UiDevice getUiDevice() {
-        if (sDevice == null) {
-            sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        }
-        return sDevice;
-    }
-
-    protected static void setFlagsForMeasurement() throws Exception {
-        if (SdkLevel.isAtLeastS()) {
-            // Only supported on Android S+
-            ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
-        } else {
+    protected void setFlagsForMeasurement() throws Exception {
+        if (!SdkLevel.isAtLeastS()) {
             // Enable airplane mode to disable flag sync as an alternative solution on Android R-.
             ShellUtils.runShellCommand("settings put global airplane_mode_on 1");
             ShellUtils.runShellCommand("am broadcast -a android.intent.action.AIRPLANE_MODE");
         }
 
         // Override consent manager behavior to give user consent.
-        getUiDevice()
-                .executeShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+        flags.setConsentManagerDebugMode(true);
+
+        // Override adid kill switch.
+        flags.setAdIdKillSwitchForTests(false);
 
         // Override the flag to allow current package to call APIs.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "ppapi_app_allow_list",
-                "*",
-                /* makeDefault */ false);
+        flags.setPpapiAppAllowList("*");
 
         // Override the flag to allow current package to call delete API.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "web_context_client_allow_list",
-                "*",
-                /* makeDefault */ false);
+        flags.setMsmtWebContextClientAllowList("*");
 
-        // Override global kill switch.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "global_kill_switch",
-                Boolean.toString(false),
-                /* makeDefault */ false);
+        // Override the flag for the global kill switch.
+        flags.setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false);
 
         // Override measurement kill switch.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_kill_switch",
-                Boolean.toString(false),
-                /* makeDefault */ false);
+        flags.setFlag(FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH, false);
 
         // Override measurement registration job kill switch.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_job_registration_job_queue_kill_switch",
-                Boolean.toString(false),
-                /* makeDefault */ false);
+        flags.setFlag(FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH, false);
 
         // Disable enrollment checks.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "disable_measurement_enrollment_check",
-                Boolean.toString(true),
-                /* makeDefault */ false);
+        flags.setFlag(FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK, true);
 
         // Disable foreground checks.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_foreground_status_register_source",
-                Boolean.toString(true),
-                /* makeDefault */ false);
+        flags.setFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE, true);
 
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_foreground_status_register_trigger",
-                Boolean.toString(true),
-                /* makeDefault */ false);
+        flags.setFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER, true);
 
         // Set flag to pre seed enrollment.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "enable_enrollment_test_seed",
-                Boolean.toString(true),
-                /* makeDefault */ false);
+        flags.setFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
 
         // Set flag not match origin.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_enrollment_origin_match",
-                Boolean.toString(false),
-                /* makeDefault */ false);
-
-        // Set flags for back-compat AdServices functionality for Android S-.
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
+        flags.setFlag(FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH, false);
     }
 }

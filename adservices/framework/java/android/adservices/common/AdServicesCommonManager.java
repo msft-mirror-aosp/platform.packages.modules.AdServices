@@ -127,6 +127,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
+    @FlaggedApi(FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
@@ -240,6 +241,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
+    @FlaggedApi(FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,

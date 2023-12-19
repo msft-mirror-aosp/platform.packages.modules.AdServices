@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.WebUtil;
@@ -65,7 +66,10 @@ import javax.net.ssl.HttpsURLConnection;
  */
 @SmallTest
 public final class AggregateEncryptionKeyFetcherTest {
-    @Spy AggregateEncryptionKeyFetcher mFetcher;
+    @Spy
+    AggregateEncryptionKeyFetcher mFetcher =
+            new AggregateEncryptionKeyFetcher(ApplicationProvider.getApplicationContext());
+
     @Mock HttpsURLConnection mUrlConnection;
 
     @Rule

@@ -18,12 +18,14 @@ package com.android.server.adservices;
 import android.annotation.NonNull;
 import android.provider.DeviceConfig;
 
+import com.android.adservices.service.CommonPhFlags;
+
 /**
  * Flags Implementation that delegates to DeviceConfig.
  *
  * @hide
  */
-public final class PhFlags implements Flags {
+public final class PhFlags extends CommonPhFlags implements Flags {
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -38,8 +40,6 @@ public final class PhFlags implements Flags {
      */
     // Adservices System Service enable status keys.
     static final String KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED = "adservice_system_service_enabled";
-    // Whether Adservices Shell Command interface is enabled
-    static final String KEY_ADSERVICES_SHELL_COMMAND_ENABLED = "adservices_shell_command_enabled";
 
     @Override
     public boolean getAdServicesSystemServiceEnabled() {
@@ -48,13 +48,5 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
                 /* defaultValue */ ADSERVICES_SYSTEM_SERVICE_ENABLED);
-    }
-
-    @Override
-    public boolean getAdServicesShellCommandEnabled() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ADSERVICES_SHELL_COMMAND_ENABLED,
-                /* defaultValue */ ADSERVICES_SHELL_COMMAND_ENABLED);
     }
 }

@@ -26,6 +26,7 @@ import static com.android.adservices.service.topics.BlockedTopicsManager.resetSh
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -196,6 +197,46 @@ public class BlockedTopicsManagerTest {
         // Clear all blocked topics.
         blockedTopicsManager.clearAllBlockedTopics();
         verify(mAppSearchConsentManager).clearAllBlockedTopics();
+    }
+
+    @Test
+    public void testBlockTopic_withPpapiAndAdExtDataServiceOnly_throwsException()
+            throws RemoteException {
+        BlockedTopicsManager blockedTopicsManager =
+                getSpiedBlockedTopicsManager(
+                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
+
+        assertThrows(RuntimeException.class, () -> blockedTopicsManager.blockTopic(TOPIC));
+    }
+
+    @Test
+    public void testUnblockTopic_withPpapiAndAdExtDataServiceOnly_throwsException()
+            throws RemoteException {
+        BlockedTopicsManager blockedTopicsManager =
+                getSpiedBlockedTopicsManager(
+                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
+
+        assertThrows(RuntimeException.class, () -> blockedTopicsManager.unblockTopic(TOPIC));
+    }
+
+    @Test
+    public void testRetrieveAllBlockedTopics_withPpapiAndAdExtDataServiceOnly_throwsException()
+            throws RemoteException {
+        BlockedTopicsManager blockedTopicsManager =
+                getSpiedBlockedTopicsManager(
+                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
+
+        assertThrows(RuntimeException.class, () -> blockedTopicsManager.retrieveAllBlockedTopics());
+    }
+
+    @Test
+    public void testClearAllBlockedTopics_withPpapiAndAdExtDataServiceOnly_throwsException()
+            throws RemoteException {
+        BlockedTopicsManager blockedTopicsManager =
+                getSpiedBlockedTopicsManager(
+                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
+
+        assertThrows(RuntimeException.class, () -> blockedTopicsManager.clearAllBlockedTopics());
     }
 
     @Test

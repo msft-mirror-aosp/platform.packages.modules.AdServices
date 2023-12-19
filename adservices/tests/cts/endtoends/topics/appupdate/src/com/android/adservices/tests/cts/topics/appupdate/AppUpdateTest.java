@@ -35,7 +35,9 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -72,14 +74,13 @@ import java.util.stream.Collectors;
  *   <li>2. Install test app at epoch T+1 and it'll be assigned with returned topics at T.
  *   <li>3. Forces Maintenance job to run to reconcile app installation mismatching, in case
  *       broadcast is missed due to system delay.
- *   <li>4. Test app itself calls Topics API and it'll return the topics at T. Then test app calls
- *       Topics API through sdk, the sdk will be assigned with returned topic for epoch T at the
- *       serving flow. Both calls will send broadcast to this CTS test suite app and this test suite
- *       app will verify the results are expected
+ *   <li>4. Then test app calls Topics API through sdk, the sdk will be assigned with returned topic
+ *       for epoch T at the serving flow. Both calls will send broadcast to this CTS test suite app
+ *       and this test suite app will verify the results are expected
  *   <li>5. Uninstall test app and wait for 3 epochs.
  *   <li>6. Install test app again and it won't be assigned with topics as no usage in the past 3
- *       epoch. Call topics API again via app only and sdk. Both calls should have empty response as
- *       all derived data been wiped off.
+ *       epoch. Call topics API again via sdk. It should have empty response as all derived data
+ *       been wiped off.
  *   <li>7. Finally verify the number of broadcast received is as expected. Then uninstall test app
  *       and unregister the listener.
  * </ul>
@@ -118,8 +119,6 @@ public class AppUpdateTest {
     // the test sample app will send back to the main test app. So the order is important.
     private static final String[] EXPECTED_TOPIC_RESPONSE_BROADCASTS = {
         NON_EMPTY_TOPIC_RESPONSE_BROADCAST,
-        NON_EMPTY_TOPIC_RESPONSE_BROADCAST,
-        EMPTY_TOPIC_RESPONSE_BROADCAST,
         EMPTY_TOPIC_RESPONSE_BROADCAST,
     };
 
@@ -162,12 +161,17 @@ public class AppUpdateTest {
         // We need to turn off random topic so that we can verify the returned topic.
         flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
+        flags.setTopicsDisableDirectAppCall(true);
+        flags.setTopicsEnforceForeground(false);
+
         registerTopicResponseReceiver();
     }
 
     @Test
     @FlakyTest(bugId = 298870452)
     public void testAppUpdate() throws Exception {
+        // Set this test as "Assumption Failure" if SDK is S-.
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Invoke Topics API once to compute top topics so that following installed test apps are
         // able to get top topics assigned when getting installed.
         AdvertisingTopicsClient advertisingTopicsClient =
@@ -241,15 +245,12 @@ public class AppUpdateTest {
         topicResponseIntentFilter.addAction(EMPTY_TOPIC_RESPONSE_BROADCAST);
 
         // Assert the result at each time the CTS test suite receives the broadcast. Specifically,
-        // First time: test app1 should get non-empty returned topics as it was assigned with topics
-        //             when it gets installed. This is to test the app installation behaviors.
-        // Second time: test app1 should get non-empty returned topics as it calls Topics API via
+        // First time: test app1 should get non-empty returned topics as it calls Topics API via
         //              sdk. This is to test sdk topics assignment for newly installed apps.
-        // Third time: test app1 should get empty returned topics as it wasn't assigned with topics
+        // Second time: test app1 should get empty returned topics as it wasn't assigned with topics
         //             when it gets installed due to zero usage in last 3 epochs, as well as it was
         //             uninstalled. This is to test the uninstallation behaviors.
-        // Fourth time: test app1 should also get empty returned topics when it calls Topics API
-        //              via sdk.
+
         mTopicsResponseReceiver =
                 new BroadcastReceiver() {
                     @Override

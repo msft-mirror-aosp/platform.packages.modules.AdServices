@@ -506,12 +506,8 @@ public class AdSelectionOverrider {
     }
 
     private AdServicesApiConsent getAdServicesApiConsent() {
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
+
         return userConsent;
     }
 

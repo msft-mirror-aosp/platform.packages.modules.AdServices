@@ -21,6 +21,7 @@ import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_N
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
@@ -32,6 +33,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.Before;
@@ -40,6 +42,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -106,5 +109,29 @@ public class UpdatesDownloaderTest {
                         mUpdatesDownloader
                                 .getUpdateJson(URI, CommonFixture.TEST_PACKAGE_NAME_1, DEV_CONTEXT)
                                 .get());
+    }
+
+    @Test
+    public void testPayloadSizeTooLargeThrowsIae() {
+        ImmutableMap<String, String> requestProperties =
+                ImmutableMap.of(PACKAGE_NAME_HEADER, CommonFixture.TEST_PACKAGE_NAME_1);
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(requestProperties)
+                        .setUri(URI)
+                        .setDevContext(DEV_CONTEXT)
+                        .build();
+        when(mMockAdServicesHttpsClient.fetchPayload(request))
+                .thenReturn(Futures.immediateFailedFuture(new IOException()));
+
+        Exception e =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mUpdatesDownloader
+                                        .getUpdateJson(
+                                                URI, CommonFixture.TEST_PACKAGE_NAME_1, DEV_CONTEXT)
+                                        .get());
+        assertTrue(e.getCause() instanceof IOException);
     }
 }
