@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
@@ -184,7 +186,7 @@ public class DebugReportingJobHandler {
                     .d(e, "Network error occurred when attempting to deliver debug report.");
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
             // TODO(b/298330312): Change to defined error codes
@@ -195,7 +197,7 @@ public class DebugReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
@@ -216,7 +218,7 @@ public class DebugReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
             if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
