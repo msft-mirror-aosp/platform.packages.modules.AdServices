@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_UNSPECIFIED;
+import static com.android.adservices.service.common.AppManifestConfigCall.INVALID_API_TEMPLATE;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
@@ -29,15 +34,115 @@ import static com.android.adservices.service.common.AppManifestConfigCall.RESULT
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_UNSPECIFIED;
 import static com.android.adservices.service.common.AppManifestConfigCall.isAllowed;
 import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
+import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
 
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 
 public final class AppManifestConfigCallTest extends AdServicesUnitTestCase {
+
+    private static final String PKG_NAME = "pkg.I.am";
+    private static final String PKG_NAME2 = "or.not";
+
+    @Test
+    public void testInvalidConstructor() {
+        assertThrows(
+                NullPointerException.class,
+                () -> new AppManifestConfigCall(/* packageName= */ null, API_TOPICS));
+
+        IllegalArgumentException e =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> new AppManifestConfigCall(PKG_NAME, API_UNSPECIFIED));
+        expect.withMessage("e.getMessage()")
+                .that(e)
+                .hasMessageThat()
+                .isEqualTo(String.format(INVALID_API_TEMPLATE, API_UNSPECIFIED));
+
+        e =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> new AppManifestConfigCall(PKG_NAME, -42));
+        expect.withMessage("e.getMessage()")
+                .that(e)
+                .hasMessageThat()
+                .isEqualTo(String.format(INVALID_API_TEMPLATE, -42));
+    }
+
+    @Test
+    public void testValidConstructors() {
+        AppManifestConfigCall topics = new AppManifestConfigCall(PKG_NAME, API_TOPICS);
+        expect.withMessage("pkg on %s", topics).that(topics.packageName).isEqualTo(PKG_NAME);
+        expect.withMessage("api on %s", topics).that(topics.api).isEqualTo(API_TOPICS);
+
+        AppManifestConfigCall customAudience =
+                new AppManifestConfigCall(PKG_NAME, API_CUSTOM_AUDIENCES);
+        expect.withMessage("pkg on %s", customAudience)
+                .that(customAudience.packageName)
+                .isEqualTo(PKG_NAME);
+        expect.withMessage("api on %s", customAudience)
+                .that(customAudience.api)
+                .isEqualTo(API_CUSTOM_AUDIENCES);
+
+        AppManifestConfigCall attribution = new AppManifestConfigCall(PKG_NAME, API_ATTRIBUTION);
+        expect.withMessage("pkg on %s", attribution)
+                .that(attribution.packageName)
+                .isEqualTo(PKG_NAME);
+        expect.withMessage("api on %s", attribution)
+                .that(attribution.api)
+                .isEqualTo(API_ATTRIBUTION);
+    }
+
+    @Test
+    public void testEqualsHashCode() {
+        AppManifestConfigCall pkg1api1 = new AppManifestConfigCall(PKG_NAME, API_TOPICS);
+        AppManifestConfigCall pkg1api2 = new AppManifestConfigCall(PKG_NAME, API_ATTRIBUTION);
+        AppManifestConfigCall pkg2api1 = new AppManifestConfigCall(PKG_NAME2, API_TOPICS);
+        AppManifestConfigCall pkg2api2 = new AppManifestConfigCall(PKG_NAME2, API_ATTRIBUTION);
+
+        AppManifestConfigCall otherPkg1api1 = new AppManifestConfigCall(PKG_NAME, API_TOPICS);
+        AppManifestConfigCall otherPkg1api2 = new AppManifestConfigCall(PKG_NAME, API_ATTRIBUTION);
+        AppManifestConfigCall otherPkg2api1 = new AppManifestConfigCall(PKG_NAME2, API_TOPICS);
+        AppManifestConfigCall otherPkg2api2 = new AppManifestConfigCall(PKG_NAME2, API_ATTRIBUTION);
+
+        expectEquals(pkg1api1, pkg1api1);
+        expectEquals(pkg1api1, otherPkg1api1);
+        expectEquals(pkg1api2, pkg1api2);
+        expectEquals(pkg1api2, otherPkg1api2);
+        expectEquals(pkg2api1, pkg2api1);
+        expectEquals(pkg2api1, otherPkg2api1);
+        expectEquals(pkg2api2, pkg2api2);
+        expectEquals(pkg2api2, otherPkg2api2);
+
+        expectNotEquals(pkg1api1, pkg1api2);
+        expectNotEquals(pkg1api1, pkg2api1);
+        expectNotEquals(pkg1api1, pkg2api2);
+
+        // Adds result
+        otherPkg1api1.result = RESULT_ALLOWED_APP_ALLOWS_ALL;
+        expectNotEquals(pkg1api1, otherPkg1api1);
+        pkg1api1.result = RESULT_ALLOWED_APP_ALLOWS_ALL;
+        expectEquals(pkg1api1, otherPkg1api1);
+    }
+
+    private void expectEquals(AppManifestConfigCall call1, AppManifestConfigCall call2) {
+        expect.withMessage("equals()").that(call1).isEqualTo(call2);
+        expect.withMessage("equals()").that(call2).isEqualTo(call1);
+        expect.withMessage("hashcode(%s, %s)", call1, call2)
+                .that(call1.hashCode())
+                .isEqualTo(call2.hashCode());
+    }
+
+    private void expectNotEquals(AppManifestConfigCall call1, AppManifestConfigCall call2) {
+        expect.withMessage("equals()").that(call1).isNotEqualTo(call2);
+        expect.withMessage("equals()").that(call2).isNotEqualTo(call1);
+        expect.withMessage("hashcode(%s, %s)", call1, call2)
+                .that(call1.hashCode())
+                .isNotEqualTo(call2.hashCode());
+    }
 
     @Test
     public void testResultToString() {
@@ -77,6 +182,24 @@ public final class AppManifestConfigCallTest extends AdServicesUnitTestCase {
         expect.withMessage("resultToString(%s)", RESULT_DISALLOWED_GENERIC_ERROR)
                 .that(resultToString(RESULT_DISALLOWED_GENERIC_ERROR))
                 .isEqualTo("DISALLOWED_GENERIC_ERROR");
+        expect.withMessage("resultToString(42)").that(resultToString(42)).isEqualTo("INVALID-42");
+    }
+
+    @Test
+    public void testApiToString() {
+        expect.withMessage("apiToString(%s)", API_UNSPECIFIED)
+                .that(apiToString(API_UNSPECIFIED))
+                .isEqualTo("UNSPECIFIED");
+        expect.withMessage("apiToString(%s)", API_TOPICS)
+                .that(apiToString(API_TOPICS))
+                .isEqualTo("TOPICS");
+        expect.withMessage("apiToString(%s)", API_CUSTOM_AUDIENCES)
+                .that(apiToString(API_CUSTOM_AUDIENCES))
+                .isEqualTo("CUSTOM_AUDIENCES");
+        expect.withMessage("apiToString(%s)", API_ATTRIBUTION)
+                .that(apiToString(API_ATTRIBUTION))
+                .isEqualTo("ATTRIBUTION");
+        expect.withMessage("apiToString(42)").that(apiToString(42)).isEqualTo("INVALID-42");
     }
 
     @Test
@@ -123,36 +246,5 @@ public final class AppManifestConfigCallTest extends AdServicesUnitTestCase {
         expect.withMessage("isAllowed(%s)", resultToString(RESULT_DISALLOWED_GENERIC_ERROR))
                 .that(isAllowed(RESULT_DISALLOWED_GENERIC_ERROR))
                 .isFalse();
-    }
-
-    /** Gets a custom Mockito matcher for a {@link AppManifestConfigCall}, without the result. */
-    static AppManifestConfigCall appManifestConfigCall(String packageName, int result) {
-        return argThat(new AppManifestConfigCallMatcher(packageName, result));
-    }
-
-    // TODO(b/306417555): remove it / implement equals() on AppManifestConfigCall instead (once that
-    // class is refactored to only have fields for API type and result)
-    private static final class AppManifestConfigCallMatcher
-            implements ArgumentMatcher<AppManifestConfigCall> {
-
-        private final String mPackageName;
-        private final int mResult;
-
-        private AppManifestConfigCallMatcher(String packageName, int result) {
-            mPackageName = packageName;
-            mResult = result;
-        }
-
-        @Override
-        public boolean matches(AppManifestConfigCall arg) {
-            return arg != null && arg.packageName.equals(mPackageName) && arg.result == mResult;
-        }
-
-        @Override
-        public String toString() {
-            AppManifestConfigCall call = new AppManifestConfigCall(mPackageName);
-            call.result = mResult;
-            return call.toString();
-        }
     }
 }

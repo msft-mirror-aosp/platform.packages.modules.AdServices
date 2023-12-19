@@ -19,6 +19,9 @@ package com.android.adservices.service.common;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
@@ -26,7 +29,6 @@ import static com.android.adservices.service.common.AppManifestConfigCall.RESULT
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
-import static com.android.adservices.service.common.AppManifestConfigCallTest.appManifestConfigCall;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -85,7 +87,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     // Constants for generic allowed / disallowed calls - the "type" doesn't matter
     private static final int RESULT_ALLOWED = RESULT_ALLOWED_APP_ALLOWS_ALL;
-    private static final int RESULT_DISALLOWED = RESULT_DISALLOWED_BY_APP;
 
     @Mock private AppManifestConfig mMockAppManifestConfig;
     @Mock private AppManifestIncludesSdkLibraryConfig mMockSdkLibraryConfig;
@@ -118,7 +119,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
-        verifyLogUsage(RESULT_ALLOWED);
+        verifyLogUsage(API_ATTRIBUTION, RESULT_ALLOWED);
     }
 
     @Test
@@ -133,7 +134,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
-        verifyLogUsage(RESULT_ALLOWED);
+        verifyLogUsage(API_ATTRIBUTION, RESULT_ALLOWED);
     }
 
     @Test
@@ -149,7 +150,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
-        verifyLogUsage(RESULT_ALLOWED);
+        verifyLogUsage(API_CUSTOM_AUDIENCES, RESULT_ALLOWED);
     }
 
     @Test
@@ -165,7 +166,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
 
-        verifyLogUsage(RESULT_ALLOWED);
+        verifyLogUsage(API_CUSTOM_AUDIENCES, RESULT_ALLOWED);
     }
 
     @Test
@@ -301,7 +302,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                                 ENROLLMENT_ID))
                 .isEqualTo(expectedAllowed);
 
-        verifyLogUsage(result);
+        verifyLogUsage(API_TOPICS, result);
     }
 
     @Test
@@ -313,7 +314,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         assertNoAccessAllowed();
 
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
-        verifyLogUsage(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR, times(4));
+        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR);
     }
 
     @Test
@@ -325,7 +326,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         assertNoAccessAllowed();
 
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
-        verifyLogUsage(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR, times(4));
+        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR);
     }
 
     @Test
@@ -339,7 +340,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         assertNoAccessAllowed();
 
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
-        verifyLogUsage(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR, times(4));
+        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR);
     }
 
     @Test
@@ -353,7 +354,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         assertNoAccessAllowed();
 
         verifyErrorLogUtilErrorLogged(e, times(4)); // Called once for each API
-        verifyLogUsage(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR, times(4));
+        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR);
     }
 
     @Test
@@ -362,7 +363,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertNoAccessAllowed();
 
-        verifyLogUsage(RESULT_DISALLOWED_APP_DOES_NOT_EXIST, times(4));
+        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_DOES_NOT_EXIST);
     }
 
     @Test
@@ -372,7 +373,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertNoAccessAllowed();
 
-        verifyLogUsage(RESULT_DISALLOWED_APP_DOES_NOT_EXIST, times(4));
+        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_DOES_NOT_EXIST);
     }
 
     @Test
@@ -383,7 +384,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertNoAccessAllowed();
 
-        verifyLogUsage(RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG, times(4));
+        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG);
     }
 
     @Test
@@ -394,7 +395,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertNoAccessAllowed();
 
-        verifyLogUsage(RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG, times(4));
+        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG);
     }
 
     @Test
@@ -407,7 +408,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertAllAccessAllowed();
 
-        verifyLogUsage(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG, times(4));
+        verifyLogUsageForAllApis(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG);
     }
 
     @Test
@@ -420,7 +421,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
         assertAllAccessAllowed();
 
-        verifyLogUsage(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG, times(4));
+        verifyLogUsageForAllApis(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG);
     }
 
     private void mockSdkLevelR() {
@@ -571,18 +572,23 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 mode);
     }
 
-    private void verifyLogUsage(int result) {
-        verifyLogUsage(result, times(1));
+    private void verifyLogUsage(int api, int result) {
+        verifyLogUsage(api, result, times(1));
     }
 
-    private void verifyLogUsage(int result, VerificationMode mode) {
-        verify(
-                () ->
-                        AppManifestConfigMetricsLogger.logUsage(
-                                appManifestConfigCall(
-                                        PACKAGE_NAME,
-                                        result)),
-                mode);
+    private void verifyLogUsage(int api, int result, VerificationMode mode) {
+        AppManifestConfigCall call = new AppManifestConfigCall(PACKAGE_NAME, api);
+        call.result = result;
+
+        verify(() -> AppManifestConfigMetricsLogger.logUsage(call), mode);
+    }
+
+    private void verifyLogUsageForAllApis(int result) {
+        // Cannot use anyInt() for the APIs as logUsage() uses a custom object / matcher - it would
+        // be too coplicate to create a generic one for it
+        verifyLogUsage(API_TOPICS, result, times(2));
+        verifyLogUsage(API_ATTRIBUTION, result);
+        verifyLogUsage(API_CUSTOM_AUDIENCES, result);
     }
 
     private void setEnabledByDefault(boolean value) {
