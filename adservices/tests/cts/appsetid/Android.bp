@@ -36,7 +36,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     javacflags: ["-parameters"],
     sdk_version: "module_current",
@@ -64,7 +64,7 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "31",
