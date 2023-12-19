@@ -746,8 +746,10 @@ public abstract class AdSelectionRunner {
             AdSelectionConfig adSelectionConfig) {
         Map<AdTechIdentifier, SignedContextualAds> filteredContextualAdsMap = new HashMap<>();
         sLogger.v("Filtering contextual ads in Ad Selection Config");
+        boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
         ProtectedAudienceSignatureManager signatureManager =
-                new ProtectedAudienceSignatureManager(mEnrollmentDao, mEncryptionKeyDao);
+                new ProtectedAudienceSignatureManager(
+                        mEnrollmentDao, mEncryptionKeyDao, isEnrollmentCheckEnabled);
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
                 adSelectionConfig.getBuyerSignedContextualAds().entrySet()) {
             if (!signatureManager.isVerified(entry.getKey(), entry.getValue())) {
