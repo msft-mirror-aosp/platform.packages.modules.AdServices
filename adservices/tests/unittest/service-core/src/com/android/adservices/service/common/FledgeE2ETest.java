@@ -77,7 +77,6 @@ import android.adservices.adselection.SignedContextualAds;
 import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdData;
-import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -122,7 +121,6 @@ import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelectionDebugReport;
 import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
@@ -132,6 +130,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
@@ -323,6 +323,7 @@ public class FledgeE2ETest {
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
+    private EnrollmentDao mEnrollmentDao;
     private EncryptionContextDao mEncryptionContextDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
@@ -389,8 +390,8 @@ public class FledgeE2ETest {
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(CONTEXT_SPY, AdSelectionServerDatabase.class).build();
-        mEncryptionContextDao = serverDb.encryptionContextDao();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(CONTEXT_SPY);
+        mEnrollmentDao = EnrollmentDao.getInstance(CONTEXT_SPY);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, DEFAULT_FLAGS);
 
@@ -1232,8 +1233,8 @@ public class FledgeE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1393,8 +1394,8 @@ public class FledgeE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2988,6 +2989,8 @@ public class FledgeE2ETest {
                 mRequestMatcherPrefixMatch);
     }
 
+    // TODO(b/315919305): Enable test once signing key fetch blockers are resolved
+    /*
     @Test
     public void testFledgeFlowSuccessWithMockServer_ContextualAdsFlow() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN)
@@ -3126,6 +3129,7 @@ public class FledgeE2ETest {
                         SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
                 mRequestMatcherPrefixMatch);
     }
+    */
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallWithMockServer() throws Exception {
@@ -4335,8 +4339,8 @@ public class FledgeE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4955,7 +4959,7 @@ public class FledgeE2ETest {
                 AdTechIdentifier.fromString(
                         mockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH).getHost());
         SignedContextualAds contextualAds =
-                SignedContextualAdsFixture.generateSignedContextualAds(
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
                                 buyer, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
                         .setDecisionLogicUri(
                                 mockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH))

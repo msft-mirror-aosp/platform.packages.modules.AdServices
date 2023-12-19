@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.adselection.signature;
 
+import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
@@ -28,6 +28,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -41,32 +42,59 @@ import java.util.stream.Collectors;
  */
 public class ProtectedAudienceSignatureManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Context mContext;
-
     private final EnrollmentDao mEnrollmentDao;
     private final EncryptionKeyDao mEncryptionKeyDao;
 
-    public ProtectedAudienceSignatureManager(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    private final SignatureVerifier mSignatureVerifier;
 
-        mContext = context;
+    public ProtectedAudienceSignatureManager(
+            @NonNull EnrollmentDao enrollmentDao, @NonNull EncryptionKeyDao encryptionKeyDao) {
+        Objects.requireNonNull(enrollmentDao);
+        Objects.requireNonNull(encryptionKeyDao);
 
-        mEnrollmentDao = EnrollmentDao.getInstance(mContext);
-        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
+        mEnrollmentDao = enrollmentDao;
+        mEncryptionKeyDao = encryptionKeyDao;
+
+        mSignatureVerifier = new ECDSASignatureVerifier();
     }
 
     @VisibleForTesting
     ProtectedAudienceSignatureManager(
-            @NonNull Context context,
             @NonNull EnrollmentDao enrollmentDao,
-            @NonNull EncryptionKeyDao encryptionKeyDao) {
-        mContext = context;
+            @NonNull EncryptionKeyDao encryptionKeyDao,
+            @NonNull SignatureVerifier signatureVerifier) {
         mEnrollmentDao = enrollmentDao;
         mEncryptionKeyDao = encryptionKeyDao;
+        mSignatureVerifier = signatureVerifier;
+    }
+
+    /**
+     * Returns whether is the given {@link SignedContextualAds} object is valid or not
+     *
+     * @param buyer Ad tech's identifier to resolve their public key
+     * @param signedContextualAds contextual ads object to verify
+     * @return true if the object is valid else false
+     */
+    public boolean isVerified(
+            @NonNull AdTechIdentifier buyer, @NonNull SignedContextualAds signedContextualAds) {
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(signedContextualAds);
+
+        List<byte[]> publicKeys = fetchPublicKeyForAdTech(buyer);
+        boolean isVerified = false;
+        SignedContextualAdsHashUtil contextualAdsHashUtil;
+        for (byte[] publicKey : publicKeys) {
+            contextualAdsHashUtil = new SignedContextualAdsHashUtil();
+            byte[] serialized = contextualAdsHashUtil.serialize(signedContextualAds);
+            isVerified =
+                    mSignatureVerifier.verify(
+                            publicKey, serialized, signedContextualAds.getSignature());
+        }
+        return isVerified;
     }
 
     @VisibleForTesting
-    List<String> fetchPublicKeyForAdTech(AdTechIdentifier adTech) {
+    List<byte[]> fetchPublicKeyForAdTech(AdTechIdentifier adTech) {
         sLogger.v("Fetching EnrollmentData for %s", adTech);
         EnrollmentData enrollmentData =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
@@ -81,10 +109,11 @@ public class ProtectedAudienceSignatureManager {
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         enrollmentData.getEnrollmentId(), EncryptionKey.KeyType.SIGNING);
 
-        sLogger.v("Received %s signing keys", encryptionKeys.size());
+        sLogger.v("Received %s signing key(s)", encryptionKeys.size());
+        Base64.Decoder decoder = Base64.getDecoder();
         return encryptionKeys.stream()
                 .sorted(Comparator.comparingLong(EncryptionKey::getExpiration))
-                .map(EncryptionKey::getBody)
+                .map(key -> decoder.decode(key.getBody()))
                 .collect(Collectors.toList());
     }
 }
