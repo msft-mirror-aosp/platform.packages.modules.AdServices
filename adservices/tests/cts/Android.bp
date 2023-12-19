@@ -128,6 +128,7 @@ android_test {
         "cts",
         "mts-extservices",
         "general-tests",
+        "mcts-extservices",
     ],
     plugins: [
         "auto_value_plugin",
@@ -219,6 +220,7 @@ android_test {
         "cts",
         "mts-extservices",
         "general-tests",
+        "mcts-extservices",
     ],
     plugins: [
         "auto_value_plugin",
