@@ -64,7 +64,8 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
+        "mcts-extservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "30",
