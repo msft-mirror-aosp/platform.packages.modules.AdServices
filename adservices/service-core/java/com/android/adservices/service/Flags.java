@@ -117,6 +117,18 @@ public interface Flags extends CommonFlags {
     }
 
     /**
+     * Flag to override base64 public key used for encryption testing.
+     *
+     * <p>Note: Default value for this flag should not be changed from empty.
+     */
+    String TOPICS_TEST_ENCRYPTION_PUBLIC_KEY = "";
+
+    /** Returns test public key used for encrypting topics for testing. */
+    default String getTopicsTestEncryptionPublicKey() {
+        return TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
+    }
+
+    /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
      */

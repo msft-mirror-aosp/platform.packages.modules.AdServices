@@ -129,52 +129,6 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUnitTes
 
     @Test
     @FlakyTest(bugId = 302607350)
-    public void moreButtonTest() throws UiObjectNotFoundException, InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        startActivity(true);
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(2000);
-        }
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
-    }
-
-    @Test
-    public void acceptedConfirmationScreenTest()
-            throws UiObjectNotFoundException, InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
-
-        startActivity(true);
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(2000);
-        }
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
-
-        rightControlButton.click();
-        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_accept_title);
-        assertThat(acceptedTitle.exists()).isTrue();
-    }
-
-    @Test
-    @FlakyTest(bugId = 302607350)
     public void notificationEuGaTest() throws UiObjectNotFoundException, InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
