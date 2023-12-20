@@ -16,6 +16,8 @@
 
 package android.adservices.adselection;
 
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PRIVATE_TEST_KEY_STRING;
+
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
@@ -42,14 +44,7 @@ import java.util.stream.Collectors;
  */
 public class SignedContextualAdsFixture {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private static final String PRIVATE_KEY_STRING =
-            "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgECetqRr9eE9DKKjILR+hP66Y1niEw/bqPD/MNx"
-                    + "PTMvmhRANCAAT4TKjRM6WVbxqzalNPPFrBDnulcmIfXpURGAepxXX9ikAO3eKrr29uHBbwqyLczQ"
-                    + "avFpw66B78DCIztSHr5Xc8";
     private static final byte[] PLACEHOLDER_EMPTY_SIGNATURE = new byte[] {};
-    public static final String PUBLIC_KEY_STRING =
-            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+Eyo0TOllW8as2pTTzxawQ57pXJiH16VERgHqcV1/YpADt3iq6"
-                    + "9vbhwW8Ksi3M0GrxacOuge/AwiM7Uh6+V3PA==";
     public static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     public static final AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
 
@@ -133,6 +128,17 @@ public class SignedContextualAdsFixture {
         return signContextualAds(aContextualAdsWithEmptySignatureBuilder(buyer));
     }
 
+    /**
+     * Returns a {@link SignedContextualAds} object that is signed with given buyer.
+     *
+     * <p>This object's signature can be verified using {@link SignedContextualAdsFixture
+     * #PUBLIC_KEY_STRING}.
+     */
+    public static SignedContextualAds aSignedContextualAds(
+            AdTechIdentifier buyer, List<Double> bids) {
+        return signContextualAds(aContextualAdsWithEmptySignatureBuilder(buyer, bids));
+    }
+
     public static ImmutableMap<AdTechIdentifier, SignedContextualAds>
             getBuyerSignedContextualAdsMap() {
         return ImmutableMap.of(
@@ -143,9 +149,13 @@ public class SignedContextualAdsFixture {
     }
 
     /**
-     * Signs contextual ads using {@link SignedContextualAdsFixture#PRIVATE_KEY_STRING}.
+     * Signs contextual ads using {@link
+     * com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager
+     * #PRIVATE_KEY_STRING}.
      *
-     * <p>Bundle can be verified using {@link SignedContextualAdsFixture#PUBLIC_KEY_STRING}
+     * <p>Bundle can be verified using {@link
+     * com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager
+     * #PUBLIC_KEY_STRING}
      */
     public static SignedContextualAds signContextualAds(
             SignedContextualAds.Builder notSignedContextualAdsBuilder) {
@@ -168,7 +178,7 @@ public class SignedContextualAdsFixture {
     }
 
     private static Signature getECDSASignatureInstance() throws Exception {
-        byte[] privateKeyBytes = Base64.getDecoder().decode(PRIVATE_KEY_STRING);
+        byte[] privateKeyBytes = Base64.getDecoder().decode(PRIVATE_TEST_KEY_STRING);
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("EC");
         PrivateKey privateKey = keyFactory.generatePrivate(spec);
