@@ -1166,8 +1166,6 @@ public final class FlagsConstants {
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_9 =
             "enable_database_schema_version_9";
 
-    public static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
-
     public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
             "notification_dmsmissed_on_click";
 

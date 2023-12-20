@@ -5154,11 +5154,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED
-                        + " = "
-                        + getEuNotifFlowChangeEnabled());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED
                         + " = "
                         + isUiFeatureTypeLoggingEnabled());
@@ -5667,14 +5662,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getEuNotifFlowChangeEnabled() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED,
-                /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
-    }
-
-    @Override
     public boolean getNotificationDismissedOnClick() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -5742,7 +5729,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 getConsentNotificationActivityDebugMode());
-        uxMap.put(FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, getEuNotifFlowChangeEnabled());
         uxMap.put(FlagsConstants.KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
