@@ -58,7 +58,8 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
+        "mcts-extservices",
     ],
     javacflags: ["-parameters"],
     sdk_version: "module_current",
