@@ -24,7 +24,7 @@ import androidx.room.Query;
 import java.time.Instant;
 import java.util.List;
 
-/** Dao to manage access to entities in the EncryptionKey table. */
+/** Dao to manage access to entities in the Auction Server Encryption Key table. */
 @Dao
 public abstract class EncryptionKeyDao {
     /**

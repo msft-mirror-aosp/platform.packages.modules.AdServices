@@ -41,18 +41,23 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.DecisionLogic;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -85,6 +90,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -104,8 +110,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -907,21 +915,21 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    /*
-    // TODO(b/267712947) Unhide Contextual Ad flow with App Install API changes
     @Test
     public void testFledgeSelectionFlow_WithContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
-
         CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         joinCustomAudience(customAudience1);
         joinCustomAudience(customAudience2);
 
@@ -938,10 +946,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 );
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS,
+                        AD_SELECTION_CONFIG,
+                        DEFAULT_DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS,
                         buyersDecisionLogic);
 
         mTestAdSelectionClient
@@ -964,7 +974,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -995,7 +1005,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                 "https://%s%s",
                                                 AdSelectionConfigFixture.SELLER,
                                                 SELLER_TRUSTED_SIGNAL_URI_PATH)))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createAuthenticatedContextualAds())
                         .build();
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
         AdSelectionOutcome outcome =
@@ -1022,6 +1032,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testFledgeSelectionFlow_OnlyContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+
         AdSelectionConfig adSelectionConfigOnlyContextualAds =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         // Adding no buyers in config
@@ -1038,7 +1051,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                 "https://%s%s",
                                                 AdSelectionConfigFixture.SELLER,
                                                 SELLER_TRUSTED_SIGNAL_URI_PATH)))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createAuthenticatedContextualAds())
                         .build();
 
         BuyersDecisionLogic buyersDecisionLogic =
@@ -1054,7 +1067,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 );
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         adSelectionConfigOnlyContextualAds, DEFAULT_DECISION_LOGIC_JS,
@@ -1093,7 +1106,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .reportImpression(reportImpressionRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
-    */
 
     @Test
     public void testFledgeAuctionSelectionFlow_overall_register_ad_beacon_Success()
@@ -4400,28 +4412,24 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .build();
     }
 
-    /*
-    // TODO(b/267712947) Unhisde Contextual Ad flow with App Install API changes
-    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+    private Map<AdTechIdentifier, SignedContextualAds> createAuthenticatedContextualAds() {
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
 
         AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
-        ContextualAds contextualAds1 =
-                ContextualAdsFixture.generateContextualAds(
-                                buyer1, ImmutableList.of(100.0, 200.0, 300.0))
-                        .build();
+        SignedContextualAds contextualAds1 =
+                SignedContextualAdsFixture.aSignedContextualAds(
+                        buyer1, ImmutableList.of(100.0, 200.0, 300.0));
 
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
-        ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
-                        .build();
+        SignedContextualAds contextualAds2 =
+                SignedContextualAdsFixture.aSignedContextualAds(
+                        buyer2, ImmutableList.of(400.0, 500.0));
 
         buyerContextualAds.put(buyer1, contextualAds1);
         buyerContextualAds.put(buyer2, contextualAds2);
 
         return buyerContextualAds;
     }
-    */
 
     private void joinCustomAudience(CustomAudience customAudience)
             throws ExecutionException, InterruptedException, TimeoutException {

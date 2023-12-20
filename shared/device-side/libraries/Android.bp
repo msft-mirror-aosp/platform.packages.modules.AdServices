@@ -70,7 +70,7 @@ java_library {
 
 // NOTE: currently there's just one library for everything (which for
 // now is just ApplicationContext), but it might be better to split
-// into multiple libraries in the feature (if it gets bigger and/or
+// into multiple libraries in the future (if it gets bigger and/or
 // if new classes adds external dependencies)
 java_library {
     name: "adservices-shared-common",
@@ -103,6 +103,26 @@ java_library {
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
         "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+}
+
+// NOTE: this util library only have one Preconditions class now. If we add more classes, we should
+// consider splitting this into a specific preconditions library. (if it gets bigger and/or if new
+// classes adds external dependencies)
+java_library {
+    name: "adservices-shared-util",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/util/*.java",
+    ],
+    libs: [
+        "framework-annotations-lib",
+    ],
+    static_libs: [
+        "modules-utils-build",
+        "error_prone_annotations", // For @FormatMethod
     ],
     apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
 }

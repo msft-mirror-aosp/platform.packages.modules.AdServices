@@ -57,18 +57,16 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
@@ -118,7 +116,6 @@ import java.util.concurrent.TimeUnit;
 
 @SpyStatic(FlagsFactory.class)
 public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
-
     private static final int CALLBACK_WAIT_MS = 500;
     private static final int SELECT_ADS_CALLBACK_WAIT_MS = 10_000;
     private static final long AD_SELECTION_ID_BUYER_1 = 20;
@@ -196,7 +193,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDaoSpy;
     private EncryptionKeyDao mEncryptionKeyDao;
-    private EncryptionContextDao mEncryptionContextDao;
+    private EnrollmentDao mEnrollmentDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -234,15 +231,15 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         Room.inMemoryDatabaseBuilder(mContextSpy, SharedStorageDatabase.class)
                                 .build()
                                 .frequencyCapDao());
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
-        mEncryptionContextDao = serverDb.encryptionContextDao();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+
+        Flags flagsEnablingAdFiltering = new FlagsOverridingAdFiltering(true);
+        doReturn(flagsEnablingAdFiltering).when(FlagsFactory::getFlags);
+
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
+        mEnrollmentDao = EnrollmentDao.getInstance(mContextSpy);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
-
-        Flags flagsEnablingAdFiltering = new FlagsOverridingAdFiltering(true);
 
         mFledgeAuthorizationFilterSpy =
                 ExtendedMockito.spy(
@@ -265,8 +262,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -425,8 +422,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -488,8 +485,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                             mCustomAudienceDao,
                             mEncodedPayloadDao,
                             mFrequencyCapDaoSpy,
-                            mEncryptionContextDao,
                             mEncryptionKeyDao,
+                            mEnrollmentDao,
                             mAdServicesHttpsClientMock,
                             mDevContextFilterMock,
                             mLightweightExecutorService,
@@ -746,8 +743,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -862,8 +859,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,

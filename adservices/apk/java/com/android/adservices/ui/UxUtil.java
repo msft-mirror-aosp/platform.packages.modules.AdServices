@@ -36,7 +36,11 @@ public class UxUtil {
     /** Returns whether the device is an EEA device. */
     public static boolean isEeaDevice(FragmentActivity fragmentActivity, Context context) {
         return FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
-                ? fragmentActivity.getIntent().getBooleanExtra("isEUDevice", /* default= */ true)
+                ? fragmentActivity
+                        .getIntent()
+                        .getBooleanExtra(
+                                "isEUDevice",
+                                /* default= */ UxStatesManager.getInstance(context).isEeaDevice())
                 : !ConsentManager.getInstance(context).isAdIdEnabled()
                         || UxStatesManager.getInstance(context).isEeaDevice();
     }
