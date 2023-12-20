@@ -27,7 +27,7 @@ import com.google.common.util.concurrent.FluentFuture;
 
 import org.json.JSONObject;
 
-import java.time.Instant;
+import java.time.Clock;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -38,20 +38,24 @@ public class UpdateSignalsOrchestrator {
     @NonNull private final UpdatesDownloader mUpdatesDownloader;
     @NonNull private final UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     @NonNull private final AdTechUriValidator mAdTechUriValidator;
+    @NonNull private final Clock mClock;
 
     public UpdateSignalsOrchestrator(
             @NonNull Executor backgroundExecutor,
             @NonNull UpdatesDownloader updatesDownloader,
             @NonNull UpdateProcessingOrchestrator updateProcessingOrchestrator,
-            @NonNull AdTechUriValidator adTechUriValidator) {
+            @NonNull AdTechUriValidator adTechUriValidator,
+            @NonNull Clock clock) {
         Objects.requireNonNull(backgroundExecutor);
         Objects.requireNonNull(updatesDownloader);
         Objects.requireNonNull(updateProcessingOrchestrator);
         Objects.requireNonNull(adTechUriValidator);
+        Objects.requireNonNull(clock);
         mBackgroundExecutor = backgroundExecutor;
         mUpdateProcessingOrchestrator = updateProcessingOrchestrator;
         mUpdatesDownloader = updatesDownloader;
         mAdTechUriValidator = adTechUriValidator;
+        mClock = clock;
     }
 
     /**
@@ -70,7 +74,7 @@ public class UpdateSignalsOrchestrator {
         return jsonFuture.transform(
                 x -> {
                     mUpdateProcessingOrchestrator.processUpdates(
-                            adtech, packageName, Instant.now(), x, devContext);
+                            adtech, packageName, mClock.instant(), x, devContext);
                     return null;
                 },
                 mBackgroundExecutor);
