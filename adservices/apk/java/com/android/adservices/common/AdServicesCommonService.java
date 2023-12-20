@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
@@ -51,6 +52,8 @@ public class AdServicesCommonService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Trace.beginSection("AdServicesCommonService#Initialization");
         if (mAdServicesCommonService == null) {
             mAdServicesCommonService =
                     new AdServicesCommonServiceImpl(
@@ -80,6 +83,7 @@ public class AdServicesCommonService extends Service {
                     "getting exception when register consumer in AdServicesSyncUtil of "
                             + e.getMessage());
         }
+        Trace.endSection();
     }
 
     @Override

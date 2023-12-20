@@ -45,6 +45,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_END_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_START_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
@@ -3976,7 +3977,7 @@ public class OnDeviceAdSelectionRunnerTest {
             doReturn(
                             Collections.singletonList(
                                     new EncryptionKey.Builder()
-                                            .setBody(SignedContextualAdsFixture.PUBLIC_KEY_STRING)
+                                            .setBody(PUBLIC_TEST_KEY_STRING)
                                             .build()))
                     .when(mEncryptionKeyDaoMock)
                     .getEncryptionKeyFromEnrollmentIdAndKeyType(

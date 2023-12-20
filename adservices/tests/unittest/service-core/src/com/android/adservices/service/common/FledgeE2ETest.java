@@ -77,6 +77,7 @@ import android.adservices.adselection.SignedContextualAds;
 import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdData;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -2989,10 +2990,37 @@ public class FledgeE2ETest {
                 mRequestMatcherPrefixMatch);
     }
 
-    // TODO(b/315919305): Enable test once signing key fetch blockers are resolved
-    /*
     @Test
     public void testFledgeFlowSuccessWithMockServer_ContextualAdsFlow() throws Exception {
+        // Reinitializing service so default flags are used
+        // Create an instance of AdSelection Service with real dependencies
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT_SPY,
+                        mAdServicesLogger,
+                        DEFAULT_FLAGS,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        false);
+
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -3129,7 +3157,6 @@ public class FledgeE2ETest {
                         SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
                 mRequestMatcherPrefixMatch);
     }
-    */
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallWithMockServer() throws Exception {
@@ -4959,11 +4986,12 @@ public class FledgeE2ETest {
                 AdTechIdentifier.fromString(
                         mockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH).getHost());
         SignedContextualAds contextualAds =
-                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
-                                buyer, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
-                        .setDecisionLogicUri(
-                                mockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH))
-                        .build();
+                SignedContextualAdsFixture.signContextualAds(
+                        SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
+                                        buyer, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
+                                .setDecisionLogicUri(
+                                        mockWebServerRule.uriForPath(
+                                                BUYER_BIDDING_LOGIC_URI_PATH)));
         buyerContextualAds.put(buyer, contextualAds);
         return buyerContextualAds;
     }

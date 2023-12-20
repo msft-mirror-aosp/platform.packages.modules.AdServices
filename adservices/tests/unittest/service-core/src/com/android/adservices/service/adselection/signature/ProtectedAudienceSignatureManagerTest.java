@@ -18,12 +18,13 @@ package com.android.adservices.service.adselection.signature;
 
 import static android.adservices.adselection.SignedContextualAdsFixture.aSignedContextualAds;
 
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.doReturn;
 
 import android.adservices.adselection.SignedContextualAds;
-import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdTechIdentifier;
 
 
@@ -57,8 +58,10 @@ public class ProtectedAudienceSignatureManagerTest {
                         return true;
                     }
                 };
+        boolean enrollmentEnabled = false;
         mSignatureManager =
-                new ProtectedAudienceSignatureManager(mEnrollmentDaoMock, mEncryptionKeyDaoMock);
+                new ProtectedAudienceSignatureManager(
+                        mEnrollmentDaoMock, mEncryptionKeyDaoMock, enrollmentEnabled);
         mNoOpSignatureManager =
                 new ProtectedAudienceSignatureManager(
                         mEnrollmentDaoMock, mEncryptionKeyDaoMock, noOpSignatureVerifier);
@@ -67,14 +70,17 @@ public class ProtectedAudienceSignatureManagerTest {
     @Test
     public void testVerifySignature_validSignature_returnTrue() {
         SignedContextualAds signedContextualAds = aSignedContextualAds();
-        String publicKey = SignedContextualAdsFixture.PUBLIC_KEY_STRING;
         String enrollmentId = "enrollment1";
         AdTechIdentifier buyer = signedContextualAds.getBuyer();
 
         doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
                 .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(buyer);
-        doReturn(Collections.singletonList(new EncryptionKey.Builder().setBody(publicKey).build()))
+        doReturn(
+                        Collections.singletonList(
+                                new EncryptionKey.Builder()
+                                        .setBody(PUBLIC_TEST_KEY_STRING)
+                                        .build()))
                 .when(mEncryptionKeyDaoMock)
                 .getEncryptionKeyFromEnrollmentIdAndKeyType(
                         enrollmentId, EncryptionKey.KeyType.SIGNING);
@@ -89,14 +95,17 @@ public class ProtectedAudienceSignatureManagerTest {
         byte[] invalidSignature = new byte[] {1, 2, 3};
         SignedContextualAds signedContextualAds =
                 aSignedContextualAds().cloneToBuilder().setSignature(invalidSignature).build();
-        String publicKey = SignedContextualAdsFixture.PUBLIC_KEY_STRING;
         String enrollmentId = "enrollment1";
         AdTechIdentifier buyer = signedContextualAds.getBuyer();
 
         doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
                 .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(buyer);
-        doReturn(Collections.singletonList(new EncryptionKey.Builder().setBody(publicKey).build()))
+        doReturn(
+                        Collections.singletonList(
+                                new EncryptionKey.Builder()
+                                        .setBody(PUBLIC_TEST_KEY_STRING)
+                                        .build()))
                 .when(mEncryptionKeyDaoMock)
                 .getEncryptionKeyFromEnrollmentIdAndKeyType(
                         enrollmentId, EncryptionKey.KeyType.SIGNING);
