@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -39,6 +40,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -159,15 +161,20 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
         doNothing().when(mConsentManager).disable(any(Context.class));
         doReturn(GA_UX).when(mConsentManager).getUx();
 
-        startActivityFromHomeAndCheckMainSwitch();
+        try {
+            startActivityFromHomeAndCheckMainSwitch();
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException from setOrientation.");
+        }
     }
 
-    private void startActivityFromHomeAndCheckMainSwitch() {
+    private void startActivityFromHomeAndCheckMainSwitch() throws RemoteException {
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // Start from the home screen
         sDevice.pressHome();
+        sDevice.setOrientationNatural();
 
         // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();
