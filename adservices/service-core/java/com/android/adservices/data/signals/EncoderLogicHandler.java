@@ -61,6 +61,7 @@ public class EncoderLogicHandler {
     @NonNull private final EncoderPersistenceDao mEncoderPersistenceDao;
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
     @NonNull private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    @NonNull private final ProtectedSignalsDao mProtectedSignalsDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
 
@@ -77,16 +78,19 @@ public class EncoderLogicHandler {
             @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncoderEndpointsDao encoderEndpointsDao,
             @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
+            @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull AdServicesHttpsClient httpsClient,
             @NonNull ListeningExecutorService backgroundExecutorService) {
         Objects.requireNonNull(encoderPersistenceDao);
         Objects.requireNonNull(encoderEndpointsDao);
         Objects.requireNonNull(encoderLogicMetadataDao);
+        Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(httpsClient);
         Objects.requireNonNull(backgroundExecutorService);
         mEncoderPersistenceDao = encoderPersistenceDao;
         mEncoderEndpointsDao = encoderEndpointsDao;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
+        mProtectedSignalsDao = protectedSignalsDao;
         mAdServicesHttpsClient = httpsClient;
         mBackgroundExecutorService = backgroundExecutorService;
     }
@@ -96,6 +100,7 @@ public class EncoderLogicHandler {
                 EncoderPersistenceDao.getInstance(context),
                 ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
                 ProtectedSignalsDatabase.getInstance(context).getEncoderLogicMetadataDao(),
+                ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBackgroundExecutor(),
                         CacheProviderFactory.createNoOpCache()),
@@ -265,6 +270,7 @@ public class EncoderLogicHandler {
             mEncoderLogicMetadataDao.deleteEncoder(buyer);
             mEncoderPersistenceDao.deleteEncoder(buyer);
             mEncoderEndpointsDao.deleteEncoderEndpoint(buyer);
+            mProtectedSignalsDao.deleteSignalsUpdateMetadata(buyer);
             buyerLock.unlock();
         }
     }
