@@ -117,7 +117,7 @@ public interface IConsentStorage {
      *
      * @return true if the AdId is enabled by default, false otherwise.
      */
-    boolean getDefaultAdIdState();
+    boolean getDefaultAdIdState() throws IOException;
 
     /**
      * Retrieves the default consent.
@@ -130,7 +130,7 @@ public interface IConsentStorage {
     /** Returns current enrollment channel. */
     @NonNull
     PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
-            @NonNull PrivacySandboxUxCollection ux);
+            @NonNull PrivacySandboxUxCollection ux) throws IOException;
 
     /**
      * @return an {@link ImmutableList} of all known apps in the database that have not had user
@@ -148,13 +148,13 @@ public interface IConsentStorage {
 
     /** Returns current UX. */
     @NonNull
-    PrivacySandboxUxCollection getUx();
+    PrivacySandboxUxCollection getUx() throws IOException;
 
     /** Returns whether the isAdIdEnabled bit is true. */
-    boolean isAdIdEnabled();
+    boolean isAdIdEnabled() throws IOException;
 
     /** Returns whether the isAdultAccount bit is true. */
-    boolean isAdultAccount();
+    boolean isAdultAccount() throws IOException;
 
     /**
      * Returns whether a given application (identified by package name) has had user consent
@@ -167,13 +167,14 @@ public interface IConsentStorage {
      *     application
      * @throws IOException if the operation fails
      */
-    boolean isConsentRevokedForApp(@NonNull String packageName) throws IllegalArgumentException;
+    boolean isConsentRevokedForApp(@NonNull String packageName)
+            throws IllegalArgumentException, IOException;
 
     /** Returns whether the isEntryPointEnabled bit is true. */
-    boolean isEntryPointEnabled();
+    boolean isEntryPointEnabled() throws IOException;
 
     /** Returns whether the isU18Account bit is true. */
-    boolean isU18Account();
+    boolean isU18Account() throws IOException;
 
     /** Saves the default AdId state bit to data stores based on source of truth. */
     void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException;
@@ -242,7 +243,8 @@ public interface IConsentStorage {
     /** Sets the current enrollment channel to storage. */
     void setEnrollmentChannel(
             @NonNull PrivacySandboxUxCollection ux,
-            @NonNull PrivacySandboxEnrollmentChannelCollection channel);
+            @NonNull PrivacySandboxEnrollmentChannelCollection channel)
+            throws IOException;
 
     /** Sets the EntryPointEnabled bit to storage . */
     void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException;
@@ -254,14 +256,14 @@ public interface IConsentStorage {
     void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) throws IOException;
 
     /** Sets the current UX to storage. */
-    void setUx(PrivacySandboxUxCollection ux);
+    void setUx(PrivacySandboxUxCollection ux) throws IOException;
 
     /**
      * Retrieves if GA UX notification has been displayed.
      *
      * @return true if GA UX Consent Notification was displayed, otherwise false.
      */
-    boolean wasGaUxNotificationDisplayed();
+    boolean wasGaUxNotificationDisplayed() throws IOException;
 
     /**
      * Retrieves if notification has been displayed.
@@ -271,5 +273,5 @@ public interface IConsentStorage {
     boolean wasNotificationDisplayed() throws IOException;
 
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
-    boolean wasU18NotificationDisplayed();
+    boolean wasU18NotificationDisplayed() throws IOException;
 }
