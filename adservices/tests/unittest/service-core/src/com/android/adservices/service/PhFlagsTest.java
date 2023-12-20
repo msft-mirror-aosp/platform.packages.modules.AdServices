@@ -441,6 +441,7 @@ import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.Flags.TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+import static com.android.adservices.service.Flags.TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
 import static com.android.adservices.service.Flags.UI_DIALOG_FRAGMENT;
 import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
@@ -844,6 +845,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_NUMBER_OF
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_EEA_COUNTRIES;
@@ -1119,6 +1121,23 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getTopicsDisablePlaintextResponse()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetTopicsTestEncryptionPublicKey() {
+        assertThat(mPhFlags.getTopicsTestEncryptionPublicKey())
+                .isEqualTo(TOPICS_TEST_ENCRYPTION_PUBLIC_KEY);
+        assertThat(mPhFlags.getTopicsTestEncryptionPublicKey()).isEmpty();
+
+        // Now overriding with the value from PH.
+        String phOverridingValue = "NewKey";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getTopicsTestEncryptionPublicKey()).isEqualTo(phOverridingValue);
     }
 
     @Test
