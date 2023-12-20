@@ -15,8 +15,13 @@
  */
 package com.android.adservices.service.common;
 
+import static java.lang.annotation.RetentionPolicy.SOURCE;
+
+import android.annotation.IntDef;
+
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.lang.annotation.Retention;
 import java.util.Objects;
 
 // TODO(b/310270746): make it package-protected when TopicsServiceImplTest is refactored
@@ -28,6 +33,10 @@ public final class AppManifestConfigCall {
     static final int API_TOPICS = 1;
     static final int API_CUSTOM_AUDIENCES = 2;
     static final int API_ATTRIBUTION = 3;
+
+    @IntDef({API_TOPICS, API_CUSTOM_AUDIENCES, API_ATTRIBUTION})
+    @Retention(SOURCE)
+    public @interface ApiType {}
 
     // TODO(b/306417555): use values from statsd atom for constants below
     static final int RESULT_UNSPECIFIED = 0;
@@ -42,13 +51,28 @@ public final class AppManifestConfigCall {
     static final int RESULT_DISALLOWED_BY_APP = 9;
     static final int RESULT_DISALLOWED_GENERIC_ERROR = 10;
 
+    @IntDef({
+        RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG,
+        RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION,
+        RESULT_ALLOWED_APP_ALLOWS_ALL,
+        RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID,
+        RESULT_DISALLOWED_APP_DOES_NOT_EXIST,
+        RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR,
+        RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG,
+        RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION,
+        RESULT_DISALLOWED_BY_APP,
+        RESULT_DISALLOWED_GENERIC_ERROR
+    })
+    @Retention(SOURCE)
+    public @interface Result {}
+
     @VisibleForTesting static final String INVALID_API_TEMPLATE = "Invalid API: %d";
 
     public final String packageName;
-    public final int api;
-    public int result;
+    public final @ApiType int api;
+    public @Result int result;
 
-    public AppManifestConfigCall(String packageName, int api) {
+    public AppManifestConfigCall(String packageName, @ApiType int api) {
         switch (api) {
             case API_TOPICS:
             case API_CUSTOM_AUDIENCES:
@@ -94,7 +118,7 @@ public final class AppManifestConfigCall {
                 + "]";
     }
 
-    static String resultToString(int result) {
+    static String resultToString(@Result int result) {
         switch (result) {
             case RESULT_UNSPECIFIED:
                 return "UNSPECIFIED";
@@ -123,7 +147,7 @@ public final class AppManifestConfigCall {
         }
     }
 
-    static String apiToString(int result) {
+    static String apiToString(@ApiType int result) {
         switch (result) {
             case API_UNSPECIFIED:
                 return "UNSPECIFIED";
@@ -138,7 +162,7 @@ public final class AppManifestConfigCall {
         }
     }
 
-    static boolean isAllowed(int result) {
+    static boolean isAllowed(@Result int result) {
         switch (result) {
             case RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG:
             case RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION:

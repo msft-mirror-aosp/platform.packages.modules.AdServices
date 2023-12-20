@@ -58,6 +58,8 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.ExtendedMockitoExpectations.ErrorLogUtilCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -84,7 +86,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private static final String PKG_NAME2 = "or.not";
 
     // Generic API - exact value doesn't matter
-    private static final int API = API_TOPICS;
+    private static final @ApiType int API = API_TOPICS;
 
     private static final String KEY_PKG_NAME_API =
             String.format(Locale.US, PREFS_KEY_TEMPLATE, PKG_NAME, API);
@@ -302,12 +304,13 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     }
 
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
-    private void logUsageAndWait(String appName, int callResult) throws InterruptedException {
+    private void logUsageAndWait(String appName, @Result int callResult)
+            throws InterruptedException {
         logUsageAndWait(appName, API, callResult);
     }
 
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
-    private void logUsageAndWait(String appName, int api, int callResult)
+    private void logUsageAndWait(String appName, @ApiType int api, @Result int callResult)
             throws InterruptedException {
         SyncOnSharedPreferenceChangeListener listener = new SyncOnSharedPreferenceChangeListener();
         mPrefs.registerOnSharedPreferenceChangeListener(listener);
@@ -326,7 +329,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     // Should only be used in cases where the call is expect to not change the shared preferences
     // (in which case a listener would not be called)
-    private void logUsageAndDontWait(String appName, int callResult) {
+    private void logUsageAndDontWait(String appName, @Result int callResult) {
         AppManifestConfigCall call = new AppManifestConfigCall(appName, API);
         call.result = callResult;
         Log.v(mTag, "logUsageAndDontWait(call=" + call + ")");

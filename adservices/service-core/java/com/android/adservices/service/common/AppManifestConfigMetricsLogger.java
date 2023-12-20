@@ -31,6 +31,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
@@ -73,7 +75,7 @@ public final class AppManifestConfigMetricsLogger {
     private static void handleLogUsage(AppManifestConfigCall call) {
         Context context = ApplicationContextSingleton.get();
         try {
-            int newValue = call.result;
+            @Result int newValue = call.result;
             LogUtil.d(
                     "AppManifestConfigMetricsLogger.logUsage(): call=%s, newValue=%d",
                     call, newValue);
@@ -81,7 +83,7 @@ public final class AppManifestConfigMetricsLogger {
             SharedPreferences prefs = getPrefs(context);
             String key = String.format(Locale.US, PREFS_KEY_TEMPLATE, call.packageName, call.api);
 
-            int currentValue = prefs.getInt(key, RESULT_UNSPECIFIED);
+            @Result int currentValue = prefs.getInt(key, RESULT_UNSPECIFIED);
             if (currentValue == RESULT_UNSPECIFIED) {
                 LogUtil.v("Logging for the first time (value=%d)", newValue);
             } else if (currentValue != newValue) {
@@ -142,14 +144,14 @@ public final class AppManifestConfigMetricsLogger {
             try {
                 String[] keyParts = key.split("-");
                 String app = keyParts[0];
-                int api = Integer.parseInt(keyParts[1]);
+                @ApiType int api = Integer.parseInt(keyParts[1]);
                 appAndApi = app + "-" + apiToString(api);
             } catch (Exception e) {
                 LogUtil.e(e, "failed to parse key %s", key);
             }
             Object value = pref.getValue();
             if (value instanceof Integer) {
-                int result = (Integer) value;
+                @Result int result = (Integer) value;
                 pw.printf("%s%s: %s\n", prefix2, appAndApi, resultToString(result));
             } else {
                 // Shouldn't happen
