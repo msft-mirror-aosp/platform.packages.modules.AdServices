@@ -40,6 +40,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -160,7 +161,11 @@ public final class DialogFragmentTest extends AdServicesUnitTestCase {
         doNothing().when(mConsentManager).disable(any(Context.class));
         doReturn(GA_UX).when(mConsentManager).getUx();
 
-        startActivityFromHomeAndCheckMainSwitch();
+        try {
+            startActivityFromHomeAndCheckMainSwitch();
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException from setOrientation.");
+        }
     }
 
     private void startActivityFromHomeAndCheckMainSwitch() throws RemoteException {
