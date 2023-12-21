@@ -2199,11 +2199,10 @@ public class SdkSandboxManagerServiceUnitTest {
         mockGrantedPermission(DUMP);
         mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ false);
 
-        String dump = dump();
+        String dump = mockAdServicesDumpAndDump("FakeAdServiceDump");
 
         assertThat(dump).contains(FAKE_DUMP_OUTPUT);
-        Mockito.verify(mAdServicesManager, Mockito.never())
-                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
+        assertThat(dump).contains("FakeAdServiceDump");
     }
 
     @Test
@@ -2253,22 +2252,9 @@ public class SdkSandboxManagerServiceUnitTest {
         mockGrantedPermission(DUMP);
         mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ false);
 
-        String dump;
-        try (StringWriter stringWriter = new StringWriter()) {
-            mService.dump(
-                    new FileDescriptor(),
-                    new PrintWriter(stringWriter),
-                    new String[] {"--AdServices"});
-            dump = stringWriter.toString();
-        }
+        String dump = mockAdServicesDumpAndDump("FakeAdServiceDump", "--AdServices");
 
-        assertThat(dump)
-                .isEqualTo(
-                        SdkSandboxManagerService.DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE
-                                + "\n");
-
-        Mockito.verify(mAdServicesManager, Mockito.never())
-                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
+        assertThat(dump).isEqualTo("AdServices:\n\nFakeAdServiceDump\n\n");
     }
 
     @Test
@@ -2277,23 +2263,13 @@ public class SdkSandboxManagerServiceUnitTest {
         mockGrantedPermission(DUMP);
         mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ true);
 
-        String dump;
-        try (StringWriter stringWriter = new StringWriter()) {
-            mService.dump(
-                    new FileDescriptor(),
-                    new PrintWriter(stringWriter),
-                    new String[] {"--AdServices"});
-            dump = stringWriter.toString();
-        }
+        String dump = mockAdServicesDumpAndDump("FakeAdServiceDump", "--AdServices");
 
         assertThat(dump)
                 .isEqualTo(
                         SdkSandboxManagerService
                                         .DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF
                                 + "\n");
-
-        Mockito.verify(mAdServicesManager, Mockito.never())
-                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
     }
 
     @Test(expected = SecurityException.class)
