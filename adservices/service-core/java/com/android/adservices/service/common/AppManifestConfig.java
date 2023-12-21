@@ -31,6 +31,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 
 import java.util.function.Supplier;
 
@@ -103,7 +104,7 @@ public final class AppManifestConfig {
      *
      * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public int isAllowedAttributionAccess(@NonNull String enrollmentId) {
+    public @Result int isAllowedAttributionAccess(@NonNull String enrollmentId) {
         return isAllowedAccess(TAG_ATTRIBUTION, mAttributionConfig, enrollmentId);
     }
 
@@ -126,7 +127,7 @@ public final class AppManifestConfig {
      *
      * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public int isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
+    public @Result int isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
         return isAllowedAccess(TAG_CUSTOM_AUDIENCES, mCustomAudiencesConfig, enrollmentId);
     }
 
@@ -147,7 +148,7 @@ public final class AppManifestConfig {
      *
      * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public int isAllowedTopicsAccess(@NonNull String enrollmentId) {
+    public @Result int isAllowedTopicsAccess(@NonNull String enrollmentId) {
         return isAllowedAccess(TAG_TOPICS, mTopicsConfig, enrollmentId);
     }
 
@@ -166,7 +167,7 @@ public final class AppManifestConfig {
      *
      * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public int isAllowedAdIdAccess(@NonNull String sdk) {
+    public @Result int isAllowedAdIdAccess(@NonNull String sdk) {
         return isAllowedAccess(TAG_ADID, mAdIdConfig, sdk);
     }
 
@@ -188,7 +189,7 @@ public final class AppManifestConfig {
      *
      * <p>See constants in {@link AppManifestConfigCall} for the returned value.
      */
-    public int isAllowedAppSetIdAccess(@NonNull String sdk) {
+    public @Result int isAllowedAppSetIdAccess(@NonNull String sdk) {
         return isAllowedAccess(TAG_APPSETID, mAppSetIdConfig, sdk);
     }
 
@@ -205,7 +206,7 @@ public final class AppManifestConfig {
         return null;
     }
 
-    private int isAllowedAccess(
+    private @Result int isAllowedAccess(
             String tag, @Nullable AppManifestApiConfig config, String partnerId) {
         if (config == null) {
             LogUtil.v(

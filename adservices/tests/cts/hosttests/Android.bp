@@ -51,6 +51,7 @@ java_test_host {
         "cts",
         "general-tests",
         "mts-extservices",
+        "mcts-extservices",
     ],
     libs: [
         "cts-tradefed",
