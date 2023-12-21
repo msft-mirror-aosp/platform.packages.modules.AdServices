@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR;
@@ -71,6 +74,7 @@ public class AppManifestConfigHelper {
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedAttributionAccess()",
+                API_ATTRIBUTION,
                 appPackageName,
                 enrollmentId,
                 config -> config.isAllowedAttributionAccess(enrollmentId));
@@ -89,6 +93,7 @@ public class AppManifestConfigHelper {
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedCustomAudiencesAccess()",
+                API_CUSTOM_AUDIENCES,
                 appPackageName,
                 enrollmentId,
                 config -> config.isAllowedCustomAudiencesAccess(enrollmentId));
@@ -110,6 +115,7 @@ public class AppManifestConfigHelper {
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedTopicsAccess()",
+                API_TOPICS,
                 appPackageName,
                 enrollmentId,
                 config -> {
@@ -174,12 +180,15 @@ public class AppManifestConfigHelper {
     }
 
     private static boolean isAllowedApiAccess(
-            String method, String appPackageName, String enrollmentId, ApiAccessChecker checker) {
+            String method,
+            int api,
+            String appPackageName,
+            String enrollmentId,
+            ApiAccessChecker checker) {
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(enrollmentId);
 
-        Context context = ApplicationContextSingleton.get();
-        AppManifestConfigCall call = new AppManifestConfigCall(appPackageName);
+        AppManifestConfigCall call = new AppManifestConfigCall(appPackageName, api);
         boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
 
         try {

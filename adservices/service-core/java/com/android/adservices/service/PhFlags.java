@@ -245,6 +245,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getTopicsTestEncryptionPublicKey() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY,
+                /* defaultValue */ TOPICS_TEST_ENCRYPTION_PUBLIC_KEY);
+    }
+
+    @Override
     public int getClassifierType() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.

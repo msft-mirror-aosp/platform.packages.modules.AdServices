@@ -37,6 +37,7 @@ android_test {
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
     data: [
         // Sample App will be installed and uninstalled in the test.
@@ -68,6 +69,7 @@ android_test {
         "cts",
         "general-tests",
         "mts-extservices",
+        "mcts-extservices",
     ],
     data: [
         // Sample App will be installed and uninstalled in the test.

@@ -16,6 +16,7 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_UNSPECIFIED;
+import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
 import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR;
@@ -30,12 +31,15 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -48,11 +52,16 @@ public final class AppManifestConfigMetricsLogger {
     static final String PREFS_NAME =
             FileCompatUtils.getAdservicesFilename("AppManifestConfigMetricsLogger");
 
+    @VisibleForTesting static final String PREFS_KEY_TEMPLATE = "%s-%d";
+
     // TODO(b/310270746): make it package-protected when TopicsServiceImplTest is refactored
     /** Represents a call to a public {@link AppManifestConfigHelper} method. */
     /** Logs the app usage. */
     public static void logUsage(AppManifestConfigCall call) {
         Objects.requireNonNull(call, "call cannot be null");
+
+        // Cannot be RESULT_UNSPECIFIED because that's used to check if the shared preferences value
+        // doesn't exist yet
         if (call.result == RESULT_UNSPECIFIED) {
             LogUtil.e("invalid call result: %s", call);
             ErrorLogUtil.e(
@@ -66,15 +75,15 @@ public final class AppManifestConfigMetricsLogger {
     private static void handleLogUsage(AppManifestConfigCall call) {
         Context context = ApplicationContextSingleton.get();
         try {
-            int newValue = call.result;
+            @Result int newValue = call.result;
             LogUtil.d(
                     "AppManifestConfigMetricsLogger.logUsage(): call=%s, newValue=%d",
                     call, newValue);
 
             SharedPreferences prefs = getPrefs(context);
-            String key = call.packageName;
+            String key = String.format(Locale.US, PREFS_KEY_TEMPLATE, call.packageName, call.api);
 
-            int currentValue = prefs.getInt(key, RESULT_UNSPECIFIED);
+            @Result int currentValue = prefs.getInt(key, RESULT_UNSPECIFIED);
             if (currentValue == RESULT_UNSPECIFIED) {
                 LogUtil.v("Logging for the first time (value=%d)", newValue);
             } else if (currentValue != newValue) {
@@ -130,14 +139,25 @@ public final class AppManifestConfigMetricsLogger {
 
         String prefix2 = prefix + "  ";
         for (Entry<String, ?> pref : appPrefs.entrySet()) {
-            String app = pref.getKey();
+            String key = pref.getKey();
+            String appAndApi = key;
+            try {
+                String[] keyParts = key.split("-");
+                String app = keyParts[0];
+                @ApiType int api = Integer.parseInt(keyParts[1]);
+                appAndApi = app + "-" + apiToString(api);
+            } catch (Exception e) {
+                LogUtil.e(e, "failed to parse key %s", key);
+            }
             Object value = pref.getValue();
             if (value instanceof Integer) {
-                int result = (Integer) value;
-                pw.printf("%s%s: %s\n", prefix2, app, resultToString(result));
+                @Result int result = (Integer) value;
+                pw.printf("%s%s: %s\n", prefix2, appAndApi, resultToString(result));
             } else {
                 // Shouldn't happen
-                pw.printf("  %s: unexpected value %s (class %s):\n", app, value, value.getClass());
+                pw.printf(
+                        "  %s: unexpected value %s (class %s):\n",
+                        appAndApi, value, value.getClass());
             }
         }
     }

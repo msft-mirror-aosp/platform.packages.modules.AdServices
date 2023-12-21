@@ -94,6 +94,8 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
     public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
             "topics_disable_plaintext_response";
+    public static final String KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY =
+            "topics_test_encryption_public_key";
 
     // Topics classifier keys
     public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
