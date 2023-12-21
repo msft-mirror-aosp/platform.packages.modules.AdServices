@@ -17,12 +17,12 @@ package {
 }
 
 genrule {
-  name: "statslog-sdksandbox-java-gen",
-  tools: ["stats-log-api-gen"],
-  cmd: "$(location stats-log-api-gen) --java $(out) --module sdksandbox" +
-       " --javaPackage com.android.sdksandbox.service.stats --javaClass SdkSandboxStatsLog" +
-       " --minApiLevel 33",
-  out: ["com/android/sdksandbox/service/stats/SdkSandboxStatsLog.java"],
+    name: "statslog-sdksandbox-java-gen",
+    tools: ["stats-log-api-gen"],
+    cmd: "$(location stats-log-api-gen) --java $(out) --module sdksandbox" +
+        " --javaPackage com.android.sdksandbox.service.stats --javaClass SdkSandboxStatsLog" +
+        " --minApiLevel 33",
+    out: ["com/android/sdksandbox/service/stats/SdkSandboxStatsLog.java"],
 }
 
 java_library {
@@ -38,6 +38,9 @@ java_library {
     apex_available: [
         "com.android.adservices",
     ],
+    lint: {
+        baseline_filename: "lint-baseline.xml",
+    },
 }
 
 filegroup {
@@ -58,7 +61,7 @@ java_sdk_library {
     ],
     aidl: {
         // TODO(b/161393989): Enable when TRACE_TAG_AIDL is exposed to mainline modules
-        generate_traces: false
+        generate_traces: false,
     },
     sdk_version: "system_server_current",
     permitted_packages: [
@@ -68,7 +71,7 @@ java_sdk_library {
     ],
     jarjar_rules: "jarjar_rules.txt",
     libs: [
-         "androidx.annotation_annotation",
+        "androidx.annotation_annotation",
         "framework-configinfrastructure",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
@@ -105,5 +108,8 @@ java_sdk_library {
             "android.app.sdksandbox.**",
             "com.android.sdksandbox.**",
         ],
+    },
+    lint: {
+        baseline_filename: "lint-baseline.xml",
     },
 }
