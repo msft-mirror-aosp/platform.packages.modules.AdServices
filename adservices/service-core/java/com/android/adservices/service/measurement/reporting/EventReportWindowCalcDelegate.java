@@ -120,6 +120,43 @@ public class EventReportWindowCalcDelegate {
     }
 
     /**
+     * Enum shows trigger time and source window time relationship. It is used to generate different
+     * verbose debug reports.
+     */
+    public enum MomentPlacement {
+        BEFORE,
+        AFTER,
+        WITHIN;
+    }
+
+    /**
+     * @param source source for which the window is calculated
+     * @param triggerTime time for the trigger
+     * @param destinationType trigger destination type
+     * @return how trigger time falls in source windows
+     */
+    public MomentPlacement fallsWithinWindow(
+            @NonNull Source source, long triggerTime, @EventSurfaceType int destinationType) {
+        boolean isAppInstalled = isAppInstalled(source, destinationType);
+        List<Pair<Long, Long>> earlyReportingWindows =
+                getEarlyReportingWindows(source, isAppInstalled);
+        if (earlyReportingWindows.size() > 0) {
+            Long firstWindowStartTime = earlyReportingWindows.get(0).first;
+            if (triggerTime < firstWindowStartTime) {
+                return MomentPlacement.BEFORE;
+            }
+        }
+        Pair<Long, Long> finalWindow = getFinalReportingWindow(source, earlyReportingWindows);
+        if (earlyReportingWindows.size() == 0 && triggerTime < finalWindow.first) {
+            return MomentPlacement.BEFORE;
+        }
+        if (triggerTime >= finalWindow.second) {
+            return MomentPlacement.AFTER;
+        }
+        return MomentPlacement.WITHIN;
+    }
+
+    /**
      * Return reporting time by index for noising based on the index
      *
      * @param windowIndex index of the reporting window for which
