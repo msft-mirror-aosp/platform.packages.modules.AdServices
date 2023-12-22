@@ -219,19 +219,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String WEBVIEW_SAFE_MODE_CONTENT_PROVIDER = "SafeModeContentProvider";
 
-    // On UDC, AdServicesManagerService.Lifecycle implements dumpable so it's dumped as part of
-    // SystemServer.
     // If AdServices register itself as binder service, dump() will ignore the --AdServices option
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF =
             "Don't need to dump AdServices as it's available as " + AD_SERVICES_SYSTEM_SERVICE;
-
-    // On UDC, if AdServices register itself as binder service, dump() will ignore the --AdServices
-    // option because AdServices could be dumped as part of SystemService
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE =
-            "Don't need to dump AdServices on UDC+ - use "
-                    + "'dumpsys system_server_dumper --name AdServices instead'";
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static final ArraySet<String> DEFAULT_ACTIVITY_ALLOWED_ACTIONS =
@@ -1120,17 +1111,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        if (SdkLevel.isAtLeastU()) {
-            // AdServices didn't register itself as binder service, but
-            // AdServicesManagerService.Lifecycle implements Dumpable so it's dumped as
-            // part of SystemServer
-            if (quiet) {
-                Log.d(TAG, DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE);
-            } else {
-                writer.println(DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE);
-            }
-            return;
-        }
         writer.print("AdServices:");
         IBinder adServicesManager = getAdServicesManager();
         if (adServicesManager == null) {

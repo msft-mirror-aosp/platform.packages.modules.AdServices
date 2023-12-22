@@ -41,7 +41,6 @@ android_test {
         "auto_value_plugin",
         "auto_annotation_plugin"
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
         "androidx.test.rules",
         "androidx.test.ext.junit",
@@ -88,7 +87,6 @@ android_test {
         "auto_value_plugin",
         "auto_annotation_plugin"
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
         "androidx.test.rules",
         "androidx.test.ext.junit",
@@ -104,8 +102,8 @@ android_test {
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     compile_multilib: "both",
-    test_config: "AndroidTest.Root.xml",
     manifest: "AndroidManifestRoot.xml",
+    test_config: "AndroidTest.Root.xml",
 }
 
 android_test {
@@ -134,7 +132,6 @@ android_test {
         "auto_value_plugin",
         "auto_annotation_plugin"
     ],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     static_libs: [
         "androidx.test.rules",
         "androidx.test.ext.junit",
@@ -179,7 +176,6 @@ android_test {
         "general-tests",
         "mcts-adservices",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
