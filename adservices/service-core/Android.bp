@@ -20,7 +20,7 @@ genrule {
     name: "statslog-adservices-java-gen",
     tools: ["stats-log-api-gen"],
     cmd: "$(location stats-log-api-gen) --java $(out) --module adservices" +
-         " --javaPackage com.android.adservices.service.stats --javaClass AdServicesStatsLog",
+        " --javaPackage com.android.adservices.service.stats --javaClass AdServicesStatsLog",
     out: ["com/android/adservices/service/stats/AdServicesStatsLog.java"],
 }
 
@@ -76,7 +76,7 @@ filegroup {
 filegroup {
     name: "adservices-service-core-jni-sources",
     srcs: [
-        "jni/java/**/*.java"
+        "jni/java/**/*.java",
     ],
     path: "jni",
     visibility: [
@@ -143,7 +143,7 @@ android_library {
         "androidx.room_room-compiler-plugin",
         "auto_oneof_plugin",
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     javacflags: [
         "-Aroom.schemaLocation=packages/modules/AdServices/adservices/service-core/schemas",
@@ -156,7 +156,7 @@ android_library {
         "framework-sdksandbox.impl",
         "framework-statsd.stubs.module_lib", // For WW logging
         "jsr305",
-        "auto_value_annotations"
+        "auto_value_annotations",
     ],
     static_libs: [
         "androidx.concurrent_concurrent-futures",
@@ -179,9 +179,13 @@ android_library {
         "modules-utils-build",
     ],
     jarjar_rules: "jarjar-rules.txt",
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     lint: {
         extra_check_modules: ["BackCompatLintChecker"],
+        baseline_filename: "lint-baseline.xml",
     },
 }
 
@@ -202,13 +206,19 @@ cc_library_shared {
     ],
     include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
     header_libs: ["jni_headers"],
-    shared_libs: ["liblog",],
-    static_libs: ["libact", "libcrypto_static"],
+    shared_libs: [
+        "liblog",
+    ],
+    static_libs: [
+        "libact",
+        "libcrypto_static",
+    ],
     version_script: "jni/version-script.lds",
     apex_available: [
         "//apex_available:platform",
         "com.android.adservices",
-        "com.android.extservices"],
+        "com.android.extservices",
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
@@ -229,4 +239,7 @@ android_library {
     // normal "AndroidManifest.xml", we may introduce potential error like redeclare permissions.
     // See b/228270294 for the error about duplicated permissions.
     manifest: "EmptyManifest.xml",
+    lint: {
+        baseline_filename: "lint-baseline.xml",
+    },
 }

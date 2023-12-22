@@ -811,7 +811,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @RequiresFlagsEnabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testSandboxActivityUseSdkBasedContextIfRequiredFlagAreEnabled()
             throws RemoteException {
-        assumeTrue(SdkLevel.isAtLeastU());
+        assumeTrue(SdkLevel.isAtLeastV());
         assumeTrue(mCustomizedSdkContextEnabled);
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -837,7 +837,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @RequiresFlagsEnabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testSandboxActivityUseAppBasedContextIfCustomizedSdkFlagIsDisabled()
             throws RemoteException {
-        assumeTrue(SdkLevel.isAtLeastU());
+        assumeTrue(SdkLevel.isAtLeastV());
         assumeFalse(mCustomizedSdkContextEnabled);
         ICtsSdkProviderApi sdk = loadSdk();
 
@@ -862,7 +862,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @RequiresFlagsDisabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testSandboxActivityUseAppBasedContextIfSdkBasedFlagIDisabled()
             throws RemoteException {
-        assumeTrue(SdkLevel.isAtLeastU());
+        assumeTrue(SdkLevel.isAtLeastV());
         assumeTrue(mCustomizedSdkContextEnabled);
 
         ICtsSdkProviderApi sdk = loadSdk();
