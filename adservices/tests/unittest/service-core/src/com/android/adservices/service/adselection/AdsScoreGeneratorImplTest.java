@@ -817,7 +817,7 @@ public class AdsScoreGeneratorImplTest {
 
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
@@ -938,7 +938,7 @@ public class AdsScoreGeneratorImplTest {
 
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
@@ -1086,7 +1086,7 @@ public class AdsScoreGeneratorImplTest {
 
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
@@ -1257,7 +1257,7 @@ public class AdsScoreGeneratorImplTest {
 
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
@@ -1904,13 +1904,13 @@ public class AdsScoreGeneratorImplTest {
 
         AdTechIdentifier buyer1 = BUYER_1;
         SignedContextualAds contextualAds1 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
                                 buyer1, ImmutableList.of(100.0, 200.0, 300.0))
                         .build();
 
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
         SignedContextualAds contextualAds2 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
                                 buyer2, ImmutableList.of(400.0, 500.0))
                         .build();
 

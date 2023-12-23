@@ -42,5 +42,6 @@ android_test_helper_app {
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
 }
