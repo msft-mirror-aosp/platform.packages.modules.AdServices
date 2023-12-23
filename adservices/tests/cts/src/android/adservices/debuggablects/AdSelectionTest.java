@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class AdSelectionTest extends FledgeScenarioTest {
 
@@ -354,6 +355,32 @@ public class AdSelectionTest extends FledgeScenarioTest {
         } finally {
             setDebugReportingEnabledForTesting(false);
             leaveCustomAudience(SHOES_CA);
+            leaveCustomAudience(SHIRTS_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    @Test
+    public void testAdSelection_withHighLatencyBackend_doesNotWinAuction() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-053.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig config = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(SHIRTS_CA);
+            Exception selectAdsException =
+                    assertThrows(
+                            ExecutionException.class,
+                            () ->
+                                    mAdSelectionClient
+                                            .selectAds(config)
+                                            .get(TIMEOUT, TimeUnit.SECONDS));
+            assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+        } finally {
             leaveCustomAudience(SHIRTS_CA);
         }
 

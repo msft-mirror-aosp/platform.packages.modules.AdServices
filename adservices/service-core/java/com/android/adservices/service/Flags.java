@@ -117,6 +117,18 @@ public interface Flags extends CommonFlags {
     }
 
     /**
+     * Flag to override base64 public key used for encryption testing.
+     *
+     * <p>Note: Default value for this flag should not be changed from empty.
+     */
+    String TOPICS_TEST_ENCRYPTION_PUBLIC_KEY = "";
+
+    /** Returns test public key used for encrypting topics for testing. */
+    default String getTopicsTestEncryptionPublicKey() {
+        return TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
+    }
+
+    /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
      */
@@ -3417,14 +3429,6 @@ public interface Flags extends CommonFlags {
     /** Get adservices version mappings */
     default String getAdservicesVersionMappings() {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
-    }
-
-    /** Default Determines whether EU notification flow change is enabled. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
-
-    /** Determines whether EU notification flow change is enabled. */
-    default boolean getEuNotifFlowChangeEnabled() {
-        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 
     /** Default value for Measurement flexible event reporting API */
