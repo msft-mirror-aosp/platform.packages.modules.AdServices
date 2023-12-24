@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.exception;
+package android.adservices.test.scenario.adservices.fledge;
 
-import java.io.IOException;
-
-/**
- * Exception class to indicate operation is not supported by current storage manager. This exception
- * will always be caught in {@link ConsentCompositeStorage}, and ConsentCompositeStorage will call
- * the next IConsentStorage instance to get/set the right value.
- */
-public final class ConsentStorageDeferException extends IOException {}
+public class GetAdSelectionDataLatencyMicroBenchmark extends GetAdSelectionDataLatency {}

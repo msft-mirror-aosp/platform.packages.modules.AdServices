@@ -3431,14 +3431,6 @@ public interface Flags extends CommonFlags {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
-    /** Default Determines whether EU notification flow change is enabled. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
-
-    /** Determines whether EU notification flow change is enabled. */
-    default boolean getEuNotifFlowChangeEnabled() {
-        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
-    }
-
     /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
