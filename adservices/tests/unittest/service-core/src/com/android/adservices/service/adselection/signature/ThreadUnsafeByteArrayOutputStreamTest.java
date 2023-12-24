@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SafeNoCopyByteArrayOutputStreamTest {
+public class ThreadUnsafeByteArrayOutputStreamTest {
     private ThreadUnsafeByteArrayOutputStream mOutputStream;
 
     @Before
