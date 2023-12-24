@@ -74,7 +74,7 @@ public class NotificationLandingPage {
 
         Trace.beginSection("NotificationTriggerEvent");
         AdservicesWorkflows.testNotificationActivityFlow(
-                sContext, sDevice, true, UiConstants.UX.GA_UX, false, false, true);
+                sContext, sDevice, true, UiConstants.UX.GA_UX, true, false, true);
         Trace.endSection();
 
         final long duration = System.currentTimeMillis() - start;

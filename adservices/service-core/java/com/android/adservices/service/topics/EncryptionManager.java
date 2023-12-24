@@ -116,8 +116,9 @@ public class EncryptionManager {
      * public key is missing.
      */
     private Optional<String> fetchPublicKeyFor(String sdkName) {
-        if (mFlags.isDisableTopicsEnrollmentCheck()) {
-            return Optional.of(TEST_PUBLIC_KEY_BASE64);
+        if (!mFlags.getTopicsTestEncryptionPublicKey().isEmpty()) {
+            // Use testing key for encryption if the test key is non-empty.
+            return Optional.of(mFlags.getTopicsTestEncryptionPublicKey());
         }
 
         sLogger.v("Fetching EnrollmentData for %s", sdkName);

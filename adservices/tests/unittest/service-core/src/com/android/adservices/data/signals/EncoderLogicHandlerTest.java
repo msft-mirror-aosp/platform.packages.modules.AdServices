@@ -76,6 +76,8 @@ public class EncoderLogicHandlerTest {
 
     @Mock private AdServicesHttpsClient mAdServicesHttpsClient;
 
+    @Mock private ProtectedSignalsDao mProtectedSignalsDao;
+
     @Captor ArgumentCaptor<DBEncoderLogicMetadata> mDBEncoderLogicArgumentCaptor;
 
     private ListeningExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
@@ -90,6 +92,7 @@ public class EncoderLogicHandlerTest {
                         mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicMetadataDao,
+                        mProtectedSignalsDao,
                         mAdServicesHttpsClient,
                         mExecutorService);
     }
@@ -273,6 +276,7 @@ public class EncoderLogicHandlerTest {
         verify(mEncoderLogicMetadataDao).deleteEncoder(buyer);
         verify(mEncoderPersistenceDao).deleteEncoder(buyer);
         verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer);
+        verify(mProtectedSignalsDao).deleteSignalsUpdateMetadata(buyer);
     }
 
     @Test
@@ -290,6 +294,9 @@ public class EncoderLogicHandlerTest {
 
         verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer1);
         verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer2);
+
+        verify(mProtectedSignalsDao).deleteSignalsUpdateMetadata(buyer1);
+        verify(mProtectedSignalsDao).deleteSignalsUpdateMetadata(buyer2);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
