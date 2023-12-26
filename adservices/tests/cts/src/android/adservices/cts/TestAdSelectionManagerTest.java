@@ -67,7 +67,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class TestAdSelectionManagerTest extends ForegroundCtsTest {
+public class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
