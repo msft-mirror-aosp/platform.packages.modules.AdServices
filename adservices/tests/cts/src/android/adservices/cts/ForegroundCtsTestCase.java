@@ -30,7 +30,7 @@ import org.junit.BeforeClass;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
-public class ForegroundCtsTest {
+abstract class ForegroundCtsTestCase {
     // If the context is initialized in the setup method the importance of our foreground
     // service will be IMPORTANCE_FOREGROUND_SERVICE (125) instead of
     // IMPORTANCE_FOREGROUND (100) on some platforms only.
