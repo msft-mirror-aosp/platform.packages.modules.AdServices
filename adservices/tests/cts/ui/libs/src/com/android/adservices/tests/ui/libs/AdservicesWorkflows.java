@@ -192,7 +192,7 @@ public class AdservicesWorkflows {
             boolean isEuDevice,
             UiConstants.UX ux)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, false);
+        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, true);
     }
 
     public static void verifyNotification(
