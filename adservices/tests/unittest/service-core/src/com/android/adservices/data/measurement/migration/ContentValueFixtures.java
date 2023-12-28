@@ -536,6 +536,15 @@ public class ContentValueFixtures {
         return asyncRegistration;
     }
 
+    /**
+     * Get content values for V31 migration
+     *
+     * @return ContentValues for AsyncRegistration table
+     */
+    public static ContentValues generateAsyncRegistrationContentValuesV31() {
+        return generateAsyncRegistrationContentValuesV24();
+    }
+
     public static ContentValues generateSourceContentValuesV1() {
         ContentValues source = new ContentValues();
 

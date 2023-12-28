@@ -3576,6 +3576,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableRedirectToWellKnownPath() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
+                /* defaultValue */ MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH);
+    }
+
+    @Override
     public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,

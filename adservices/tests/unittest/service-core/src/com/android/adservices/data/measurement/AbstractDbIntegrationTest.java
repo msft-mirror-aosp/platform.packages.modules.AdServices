@@ -666,6 +666,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
                 asyncRegistration.getPlatformAdId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
+                asyncRegistration.getRedirectBehavior().name());
         long rowId =
                 db.insert(
                         MeasurementTables.AsyncRegistrationContract.TABLE,

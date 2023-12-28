@@ -332,7 +332,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       },
       {
         "registrationId": "AR2",
@@ -349,7 +350,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       }
     ]
   },
@@ -420,7 +422,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       }
     ]
   },
