@@ -177,7 +177,11 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
 
     /** Sets consent by api type. */
     @Override
-    public void setConsent(AdServicesApiType apiType, boolean isGiven) {
+    public void setConsent(AdServicesApiType apiType, boolean isGiven) throws IOException {
+        if (apiType == AdServicesApiType.ALL_API) {
+            super.setConsent(apiType, isGiven);
+            return;
+        }
         // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
         // Measurement. There should never be a call to set consent for other PPAPIs.
         if (apiType != AdServicesApiType.MEASUREMENTS) {
@@ -209,6 +213,19 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
         throw new IllegalStateException(
                 getAdExtExceptionMessage(
                         /* illegalAction= */ "check if consent has been revoked for" + " app"));
+    }
+
+    @Override
+    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent)
+            throws IOException {
+        if (apiType == AdServicesApiType.MEASUREMENTS) {
+            super.recordDefaultConsent(apiType, defaultConsent);
+        } else {
+            throw new IllegalStateException(
+                    getAdExtExceptionMessage(
+                            /* illegalAction= */ "record default consent for "
+                                    + apiType.toString()));
+        }
     }
 
     /** Stores isU18Account bit in AdExtData. */

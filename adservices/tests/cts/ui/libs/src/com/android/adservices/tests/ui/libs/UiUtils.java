@@ -280,14 +280,17 @@ public class UiUtils {
         int notificationHeader = -1;
         switch (ux) {
             case GA_UX:
+                // Should match the contentTitle string in ConsentNotificationTrigger.java.
                 notificationTitle =
                         isEuTest
-                                ? R.string.notificationUI_notification_ga_title_eu
-                                : R.string.notificationUI_notification_ga_title;
+                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                : R.string.notificationUI_notification_ga_title_v2;
+                // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
+                // consent_notification_screen_1_ga_v2_row.xml, respectively.
                 notificationHeader =
                         isEuTest
-                                ? R.string.notificationUI_header_ga_title_eu
-                                : R.string.notificationUI_header_ga_title;
+                                ? R.string.notificationUI_fledge_measurement_title_v2
+                                : R.string.notificationUI_header_ga_title_v2;
                 break;
             case BETA_UX:
                 notificationTitle =

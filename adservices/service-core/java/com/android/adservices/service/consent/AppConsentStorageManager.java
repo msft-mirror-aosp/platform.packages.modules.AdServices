@@ -394,6 +394,7 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public boolean setConsentForAppIfNew(String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException {
+        // TODO(b/317595641) clean up setConsentForAppIfNew logic
         try {
             return mAppConsentDao.setConsentForAppIfNew(packageName, isConsentRevoked);
         } catch (IOException exception) {
@@ -445,5 +446,6 @@ public class AppConsentStorageManager implements IConsentStorage {
         return Objects.requireNonNullElse(
                 mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), false);
     }
+
 
 }

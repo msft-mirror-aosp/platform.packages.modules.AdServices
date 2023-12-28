@@ -73,7 +73,7 @@ public class AdSelectionDataE2ETest {
             "CustomAudienceServerAuctionFiveBuyersMultipleCa.json";
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
-    private static final String SFE_ADDRESS = "https://seller1-nmb.sfe-gcp.com/v1/selectAd";
+    private static final String SFE_ADDRESS = "https://seller1-patest.sfe.bas-gcp.pstest.dev/v1/selectAd";
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
