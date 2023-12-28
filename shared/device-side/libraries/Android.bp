@@ -81,6 +81,7 @@ java_library {
     ],
     exclude_srcs : ["java/com/android/adservices/shared/common/ServiceUnavailableException.java"],
     static_libs: [
+        "adservices-shared-proto-lite",
         "modules-utils-preconditions",
     ],
     libs: [
