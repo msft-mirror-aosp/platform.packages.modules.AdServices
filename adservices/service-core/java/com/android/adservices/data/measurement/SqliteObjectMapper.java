@@ -224,6 +224,9 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
                 builder::setSharedFilterDataKeys);
+        setTextColumn(cursor, MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
+                (enumValue) -> builder.setTriggerDataMatching(
+                        Source.TriggerDataMatching.valueOf(enumValue)));
         return builder.build();
     }
 

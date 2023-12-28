@@ -494,9 +494,9 @@ public class EventReport {
                 @NonNull AttributedTrigger attributedTrigger,
                 long reportTime,
                 @NonNull Pair<Long, Long> triggerSummaryBucket,
-                @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair,
-                @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-                @NonNull SourceNoiseHandler sourceNoiseHandler,
+                @Nullable UnsignedLong sourceDebugKey,
+                @NonNull List<UnsignedLong> debugKeys,
+                double flipProbability,
                 List<Uri> eventReportDestinations) {
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceEventId = source.getEventId();
@@ -504,17 +504,16 @@ public class EventReport {
             mBuilding.mStatus = Status.PENDING;
             mBuilding.mAttributionDestinations = eventReportDestinations;
             mBuilding.mSourceType = source.getSourceType();
-            mBuilding.mSourceDebugKey = debugKeyPair.first;
-            mBuilding.mTriggerDebugKey = debugKeyPair.second;
+            mBuilding.mSourceDebugKey = sourceDebugKey;
+            mBuilding.mTriggerDebugKeys = debugKeys;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
-            if (mBuilding.mSourceDebugKey != null && mBuilding.mTriggerDebugKey != null) {
+            if (mBuilding.mSourceDebugKey != null && debugKeys.size() > 0) {
                 mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
             mBuilding.mSourceId = source.getId();
             mBuilding.mTriggerId = trigger.getId();
             mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
-            mBuilding.mRandomizedTriggerRate =
-                    source.getTriggerSpecs().getFlipProbability();
+            mBuilding.mRandomizedTriggerRate = flipProbability;
             mBuilding.mTriggerData = attributedTrigger.getTriggerData();
             mBuilding.mReportTime = reportTime;
             mBuilding.mTriggerSummaryBucket = triggerSummaryBucket;

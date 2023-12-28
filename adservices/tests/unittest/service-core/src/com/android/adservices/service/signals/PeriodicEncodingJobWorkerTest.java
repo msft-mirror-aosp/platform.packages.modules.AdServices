@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -36,10 +37,12 @@ import android.adservices.common.CommonFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogicMetadata;
+import com.android.adservices.data.signals.DBSignalsUpdateMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -112,6 +115,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
     @Mock private EncodedPayloadDao mEncodedPayloadDao;
+    @Mock private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock private SignalsProviderImpl mSignalStorageManager;
     @Mock private AdSelectionScriptEngine mScriptEngine;
     @Mock private DevContextFilter mDevContextFilter;
@@ -137,9 +141,9 @@ public class PeriodicEncodingJobWorkerTest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mProtectedSignalsDao,
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightWeightExecutor,
@@ -171,9 +175,9 @@ public class PeriodicEncodingJobWorkerTest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mProtectedSignalsDao,
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightWeightExecutor,
@@ -242,7 +246,8 @@ public class PeriodicEncodingJobWorkerTest {
                                         .get(5, TimeUnit.SECONDS));
         assertEquals(IllegalStateException.class, e.getCause().getClass());
         assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
+        verifyNoMoreInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -266,7 +271,20 @@ public class PeriodicEncodingJobWorkerTest {
                         });
         assertEquals(IllegalStateException.class, e.getCause().getClass());
         assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
+        verifyNoMoreInteractions(mEncodedPayloadDao);
+    }
+
+    @Test
+    public void testEncodingPerBuyerNoSignalAvailable()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(ImmutableMap.of());
+        mJobWorker
+                .runEncodingPerBuyer(DB_ENCODER_LOGIC_BUYER_1, TIMEOUT_SECONDS)
+                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        verify(mEncoderLogicHandler).deleteEncoderForBuyer(BUYER);
+        verifyNoMoreInteractions(mEncoderLogicHandler);
+        verifyZeroInteractions(mScriptEngine);
     }
 
     @Test
@@ -315,7 +333,8 @@ public class PeriodicEncodingJobWorkerTest {
                 stallEncodingLatch.getCount());
         // e is TimeoutFuture$TimeoutFutureException which extends TimeoutException
         assertTrue(TimeoutException.class.isAssignableFrom(e.getCause().getClass()));
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
+        verifyNoMoreInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -348,6 +367,8 @@ public class PeriodicEncodingJobWorkerTest {
         verify(mEncoderLogicHandler).getAllRegisteredEncoders();
         verify(mEncoderLogicHandler).getEncoder(BUYER);
         verify(mSignalStorageManager).getSignals(BUYER);
+        verify(mEncodedPayloadDao, times(1)).getEncodedPayload(BUYER);
+        verify(mEncodedPayloadDao, times(1)).getEncodedPayload(BUYER_2);
         verify(mEncodedPayloadDao, times(1)).persistEncodedPayload(mEncodedPayloadCaptor.capture());
         verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER_2, 1);
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
@@ -355,12 +376,12 @@ public class PeriodicEncodingJobWorkerTest {
         assertEquals(
                 getSetFromBytes(validResponse),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
-        verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER_2, 1);
     }
 
     @Test
     public void testEncodeSignals_tooManyFailure_noJsExecution()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
         int maxFailure =
                 Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
         DBEncoderLogicMetadata metadata =
@@ -373,7 +394,9 @@ public class PeriodicEncodingJobWorkerTest {
 
         mJobWorker.runEncodingPerBuyer(metadata, 5).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        verifyZeroInteractions(mScriptEngine, mSignalStorageManager);
+        verify(mSignalStorageManager).getSignals(BUYER);
+        verifyNoMoreInteractions(mSignalStorageManager);
+        verifyZeroInteractions(mScriptEngine);
     }
 
     @Test
@@ -398,6 +421,39 @@ public class PeriodicEncodingJobWorkerTest {
         mJobWorker.runEncodingPerBuyer(metadata, 5).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER, 0);
+    }
+
+    @Test
+    public void testEncodeSignals_noUpdateToBuyer_skipEncoding()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
+        when(mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER))
+                .thenReturn(
+                        DBSignalsUpdateMetadata.builder()
+                                .setBuyer(BUYER)
+                                .setLastSignalsUpdatedTime(CommonFixture.FIXED_EARLIER_ONE_DAY)
+                                .build());
+        when(mEncodedPayloadDao.getEncodedPayload(BUYER))
+                .thenReturn(
+                        DBEncodedPayload.create(
+                                BUYER, 1, CommonFixture.FIXED_NOW, new byte[] {0x22, 0x33}));
+
+        mJobWorker
+                .runEncodingPerBuyer(
+                        DBEncoderLogicMetadata.builder()
+                                .setBuyer(BUYER)
+                                .setCreationTime(CommonFixture.FIXED_EARLIER_ONE_DAY)
+                                .setVersion(1)
+                                .setFailedEncodingCount(1)
+                                .build(),
+                        TIMEOUT_SECONDS)
+                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        verify(mSignalStorageManager).getSignals(BUYER);
+        verify(mProtectedSignalsDao).getSignalsUpdateMetadata(BUYER);
+        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
+        verifyNoMoreInteractions(mSignalStorageManager, mProtectedSignalsDao, mEncodedPayloadDao);
+        verifyZeroInteractions(mEncoderLogicHandler, mScriptEngine);
     }
 
     @Test

@@ -91,7 +91,11 @@ public final class FlagsConstants {
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
     public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
             "topics_disable_direct_app_calls";
-    public static final String KEY_TOPICS_ENABLE_ENCRYPTION = "topics_enable_encryption";
+    public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
+    public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
+            "topics_disable_plaintext_response";
+    public static final String KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY =
+            "topics_test_encryption_public_key";
 
     // Topics classifier keys
     public static final String KEY_CLASSIFIER_TYPE = "classifier_type";
@@ -887,12 +891,24 @@ public final class FlagsConstants {
     // Consent Manager debug mode keys.
     public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
 
+    // Consent Manager ota debug mode keys.
+    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
+            "consent_manager_ota_debug_mode";
+
+    // Rvc post ota notification age check keys.
+    public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
+            "rvc_post_ota_notification_age_check";
+
     // Consent notification activity debug mode keys.
     public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
             "consent_notification_activity_debug_mode";
 
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
+
+    public static final String KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE =
+            "consent_already_interacted_fix_enable";
+
     public static final String KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
             "blocked_topics_source_of_truth";
 
@@ -977,6 +993,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED =
             "fledge_data_version_header_enabled";
 
+    // New fledge beacon reporting metrics flag
+    public static final String KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED =
+            "fledge_beacon_reporting_metrics_enabled";
+
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
 
@@ -991,6 +1011,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
 
+    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING =
+            "measurement_enable_trigger_data_matching";
+
     public static final String KEY_MEASUREMENT_FLEX_LITE_API_ENABLED =
             "measurement_flex_lite_api_enabled";
 
@@ -999,6 +1022,12 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION =
             "measurement_flex_api_max_information_gain_navigation";
+
+    public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT =
+            "measurement_flex_api_max_information_gain_dual_destination_event";
+
+    public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
+            "measurement_flex_api_max_information_gain_dual_destination_navigation";
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS =
             "measurement_flex_api_max_event_reports";
@@ -1138,8 +1167,6 @@ public final class FlagsConstants {
             "enable_database_schema_version_8";
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_9 =
             "enable_database_schema_version_9";
-
-    public static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
 
     public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
             "notification_dmsmissed_on_click";

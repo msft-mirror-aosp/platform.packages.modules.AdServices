@@ -111,7 +111,9 @@ public abstract class CustomAudienceDao {
      * input parameters have already been validated and are correct.
      */
     public void insertOrOverwriteCustomAudience(
-            @NonNull DBCustomAudience customAudience, @NonNull Uri dailyUpdateUri) {
+            @NonNull DBCustomAudience customAudience,
+            @NonNull Uri dailyUpdateUri,
+            boolean debuggable) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(dailyUpdateUri);
 
@@ -135,6 +137,7 @@ public abstract class CustomAudienceDao {
                         .setName(customAudience.getName())
                         .setDailyUpdateUri(dailyUpdateUri)
                         .setEligibleUpdateTime(eligibleUpdateTime)
+                        .setIsDebuggable(debuggable)
                         .build();
 
         insertOrOverwriteCustomAudienceAndBackgroundFetchData(customAudience, fetchData);

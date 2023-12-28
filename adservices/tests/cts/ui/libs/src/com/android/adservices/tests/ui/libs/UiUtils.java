@@ -48,6 +48,7 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.common.FileHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.SettableFuture;
@@ -231,6 +232,17 @@ public class UiUtils {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
+    /** Set flag consent_manager_ota_debug_mode to true in tests */
+    public static void setConsentManagerOtaDebugMode() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_manager_ota_debug_mode true");
+    }
+
+    /** Set flag consent_manager_debug_mode to false in tests */
+    public static void resetConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode false");
+    }
+
     public static void enableNotificationPermission() {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
@@ -268,14 +280,17 @@ public class UiUtils {
         int notificationHeader = -1;
         switch (ux) {
             case GA_UX:
+                // Should match the contentTitle string in ConsentNotificationTrigger.java.
                 notificationTitle =
                         isEuTest
-                                ? R.string.notificationUI_notification_ga_title_eu
-                                : R.string.notificationUI_notification_ga_title;
+                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                : R.string.notificationUI_notification_ga_title_v2;
+                // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
+                // consent_notification_screen_1_ga_v2_row.xml, respectively.
                 notificationHeader =
                         isEuTest
-                                ? R.string.notificationUI_header_ga_title_eu
-                                : R.string.notificationUI_header_ga_title;
+                                ? R.string.notificationUI_fledge_measurement_title_v2
+                                : R.string.notificationUI_header_ga_title_v2;
                 break;
             case BETA_UX:
                 notificationTitle =
@@ -726,7 +741,10 @@ public class UiUtils {
                     new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                             .format(Date.from(Instant.now()));
 
-            File screenshotFile = new File("/sdcard/Pictures/" + methodName + timeStamp + ".png");
+            File screenshotFile =
+                    new File(
+                            FileHelper.getAdServicesTestsOutputDir(),
+                            methodName + timeStamp + ".png");
             device.takeScreenshot(screenshotFile);
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());

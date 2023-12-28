@@ -142,6 +142,9 @@ public class ContentValueFixtures {
 
         // Added in V22
         public static final String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
+
+        // Added in V30
+        public static final String TRIGGER_DATA_MATCHING = Source.TriggerDataMatching.EXACT.name();
     }
 
     public static class SourceDestinationValues {
@@ -733,6 +736,20 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
                 SourceValues.SHARED_FILTER_DATA_KEYS);
+        return values;
+    }
+
+    /** Returns content values for source version 29 */
+    public static ContentValues generateSourceContentValuesV29() {
+        return generateSourceContentValuesV22();
+    }
+
+    /** Returns content values for source version 30 */
+    public static ContentValues generateSourceContentValuesV30() {
+        ContentValues values = generateSourceContentValuesV29();
+        values.put(
+                MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
+                SourceValues.TRIGGER_DATA_MATCHING);
         return values;
     }
 

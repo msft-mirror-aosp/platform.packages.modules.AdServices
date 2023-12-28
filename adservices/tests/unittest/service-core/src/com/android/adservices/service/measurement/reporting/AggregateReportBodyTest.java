@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import android.net.Uri;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
@@ -33,13 +34,12 @@ import com.android.adservices.service.measurement.aggregation.AggregateCryptoFix
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.quality.Strictness;
 
@@ -71,8 +71,14 @@ public class AggregateReportBodyTest {
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
             + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
-    private StaticMockitoSession mMockitoSession;
     private Flags mMockFlags;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
@@ -138,19 +144,9 @@ public class AggregateReportBodyTest {
 
     @Before
     public void before() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         mMockFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
-    }
-
-    @After
-    public void after() {
-        mMockitoSession.finishMocking();
     }
 
     @Test

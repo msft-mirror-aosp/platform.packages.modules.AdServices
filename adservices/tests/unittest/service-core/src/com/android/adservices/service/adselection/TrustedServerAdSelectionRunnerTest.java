@@ -40,6 +40,7 @@ import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
@@ -49,6 +50,8 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionRunner.AdSelectionOrchestrationResult;
@@ -149,6 +152,8 @@ public class TrustedServerAdSelectionRunnerTest {
     @Mock private AdServicesLogger mAdServicesLoggerSpy;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private EncryptionKeyDao mEncryptionKeyDaoMock;
     @Mock private JsFetcher mJsFetcher;
     @Mock private CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
@@ -214,6 +219,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -275,6 +282,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -338,6 +347,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -407,6 +418,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -431,6 +444,7 @@ public class TrustedServerAdSelectionRunnerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void verifyNoRequestCompressionWhenFlagDisabled() {
         Flags flags =
                 new Flags() {
@@ -459,6 +473,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,

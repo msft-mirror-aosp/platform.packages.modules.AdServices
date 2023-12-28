@@ -35,6 +35,8 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
@@ -79,6 +81,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -99,6 +103,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 context,
                 customAudienceDao,
                 adSelectionEntryDao,
+                encryptionKeyDao,
+                enrollmentDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
@@ -172,6 +178,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -195,6 +203,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 context,
                 customAudienceDao,
                 adSelectionEntryDao,
+                encryptionKeyDao,
+                enrollmentDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
@@ -360,7 +370,10 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList()));
         }
-
+        sLogger.v(
+                "Invoking score generator with %s bids and %s contextual ads.",
+                validBiddingOutcomes.size(),
+                adSelectionConfig.getBuyerSignedContextualAds().size());
         return mAdsScoreGenerator
                 .runAdScoring(validBiddingOutcomes, adSelectionConfig)
                 .transform(

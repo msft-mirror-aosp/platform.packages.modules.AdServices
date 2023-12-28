@@ -259,7 +259,7 @@ public class EpochManager {
 
             // Encrypt and store encrypted topics if the feature is enabled and the version 9 db
             // is available.
-            if (mFlags.getTopicsEnableEncryption() && mFlags.getEnableDatabaseSchemaVersion9()) {
+            if (mFlags.getTopicsEncryptionEnabled() && mFlags.getEnableDatabaseSchemaVersion9()) {
                 // encryptedTopicMapTopics = Map<Pair<App, Sdk>, EncryptedTopic>
                 Map<Pair<String, String>, EncryptedTopic> encryptedTopicMapTopics =
                         encryptTopicsMap(returnedAppSdkTopics);

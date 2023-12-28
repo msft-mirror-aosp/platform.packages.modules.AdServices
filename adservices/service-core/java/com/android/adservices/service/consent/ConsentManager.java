@@ -500,18 +500,22 @@ public class ConsentManager {
     }
 
     /**
-     * Retrieves the measurement API consent from R.
+     * Returns whether the user is adult user who OTA from R.
      *
-     * @return {@link AdServicesApiConsent} providing information whether the consent was given or
-     *     revoked.
+     * @return true if user is adult user who OTA from R, otherwise false.
      */
-    public AdServicesApiConsent getConsentFromR() {
-        if (mFlags.getConsentManagerDebugMode()) {
-            return AdServicesApiConsent.GIVEN;
+    public boolean isOtaAdultUserFromRvc() {
+        if (mFlags.getConsentManagerOTADebugMode()) {
+            return true;
         }
 
-        return AdServicesApiConsent.getConsent(
-                mAdExtDataManager != null && mAdExtDataManager.getMsmtConsent());
+        // TODO(313672368) clean up getRvcPostOtaNotifAgeCheck flag after u18 is qualified on R/S
+        return mAdExtDataManager != null
+                && mAdExtDataManager.getNotificationDisplayed()
+                && (mFlags.getRvcPostOtaNotifAgeCheck()
+                        ? !mAdExtDataManager.getIsU18Account()
+                                && mAdExtDataManager.getIsAdultAccount()
+                        : true);
     }
 
     /**
@@ -1788,7 +1792,7 @@ public class ConsentManager {
                             ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
             // If we did not migrate notification data, we should not attempt to migrate anything.
             if (!appSearchConsentManager.migrateConsentDataIfNeeded(
-                    context, sharedPreferences, datastore, adServicesManager, appConsentDao)) {
+                    sharedPreferences, datastore, adServicesManager, appConsentDao)) {
                 LogUtil.d("Skipping consent migration from AppSearch");
                 return;
             }

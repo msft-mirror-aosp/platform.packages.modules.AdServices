@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.common;
 
-import static com.android.adservices.shared.testing.common.ShellHelper.invokeWithShellPermissions;
-
 import android.os.Environment;
 import android.util.Log;
 
@@ -30,8 +28,9 @@ public final class FileHelper {
 
     private static final String TAG = FileHelper.class.getSimpleName();
 
-    private static final String ADSERVICES_TEST_DIR = "adservices-tests";
     private static final String SD_CARD_DIR = "/sdcard";
+    private static final String ADSERVICES_TEST_DIR =
+            Environment.DIRECTORY_DOCUMENTS + "/adservices-tests";
 
     // TODO(b/313646338): add unit tests
     /** Writes a text file to {@link #getAdServicesTestsOutputDir()}. */
@@ -41,12 +40,12 @@ public final class FileHelper {
             File dir = getAdServicesTestsOutputDir();
             Path filePath = Paths.get(dir.getAbsolutePath(), filename);
             userFriendlyFilename = filePath.toString();
-            logI("Creating file %s", userFriendlyFilename);
+            Log.i(TAG, "Creating file " + userFriendlyFilename);
             Files.createFile(filePath);
             byte[] bytes = contents.getBytes();
-            logD("Writing %d bytes to %s", bytes.length, filePath);
+            Log.d(TAG, "Writing " + bytes.length + " bytes to " + filePath);
             Files.write(filePath, bytes);
-            logD("Saul Goodman!");
+            Log.d(TAG, "Saul Goodman!");
         } catch (Exception e) {
             Log.e(TAG, "Failed to save " + userFriendlyFilename, e);
         }
@@ -54,24 +53,11 @@ public final class FileHelper {
 
     // TODO(b/313646338): add unit tests
     /**
-     * Writes a file to {@value #SD_CARD_DIR} under {@value #ADSERVICES_TEST_DIR} (or a standard
-     * directory if it fails).
+     * Writes a file to {@value #SD_CARD_DIR} under {@value #ADSERVICES_TEST_DIR}
      *
-     * <p>In order to use this method, your test project should:
-     *
-     * <ol>
-     *   <li>Add {@code android:requestLegacyExternalStorage='true'>} to the {@code application} tag
-     *       in the Android manifest.
-     *   <li>Add the {@code android.permission.MANAGE_EXTERNAL_STORAGE} permission in the Android
-     *       manifest.
-     *   <li>Optionally, add a {@code com.android.tradefed.device.metric.FilePullerLogCollector} in
-     *       the test manifest, pointing to {@code /sdcard/adservices-tests}, so tests written to
-     *       this directory surface as artifacts when the test fails in the cloud.
-     * </ol>
-     *
-     * <p><b>NOTE: </b>If the Android manifest doesn't have the first 2 steps above, this method
-     * might invoke {@code Shell} permissions to create the output directory, which in turn could
-     * interfere with other tests.
+     * <p>NOTE: add a {@code com.android.tradefed.device.metric.FilePullerLogCollector} in the test
+     * manifest, pointing to {@code /sdcard/Documents/adservices-tests}, so tests written to this
+     * directory surface as artifacts when the test fails in the cloud.
      */
     public static File getAdServicesTestsOutputDir() {
         String path = SD_CARD_DIR + "/" + ADSERVICES_TEST_DIR;
@@ -79,43 +65,12 @@ public final class FileHelper {
         if (dir.exists()) {
             return dir;
         }
-        boolean created = false;
-        if (Environment.isExternalStorageManager()) {
-            logD(
-                    "Directory %s doesn't exist, trying to create it with test app's permission",
-                    path);
-            created = dir.mkdirs();
-        } else {
-            logD(
-                    "Directory %s doesn't exist and cannot be created with app's permission (most"
-                        + " likely test app is missing the"
-                        + " android.permission.MANAGE_EXTERNAL_STORAGE permission and the"
-                        + " android:requestLegacyExternalStorage='true' option in the Manifest's"
-                        + " application tag); trying to create it with Shell permission",
-                    path);
-            created = invokeWithShellPermissions(() -> dir.mkdirs());
-        }
-        if (created) {
+        Log.d(TAG, "Directory " + path + " doesn't exist, creating it");
+        if (dir.mkdirs()) {
+            Log.i(TAG, "Created directory " + path);
             return dir;
         }
-        String alternativePath = SD_CARD_DIR + "/" + Environment.DIRECTORY_DOCUMENTS;
-        logD(
-                "Failed to create directory %s; returning a standard directory (%s) instead",
-                path, alternativePath);
-        File alternativeDir = new File(alternativePath);
-        if (!alternativeDir.exists()) {
-            throw new IllegalStateException(
-                    "Alternative directory doesn't exist: " + alternativePath);
-        }
-        return alternativeDir;
-    }
-
-    private static void logI(String format, Object... args) {
-        Log.i(TAG, String.format(format, args));
-    }
-
-    private static void logD(String format, Object... args) {
-        Log.d(TAG, String.format(format, args));
+        throw new IllegalStateException("Could not create directory " + path);
     }
 
     private FileHelper() {

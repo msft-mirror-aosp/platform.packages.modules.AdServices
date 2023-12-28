@@ -26,6 +26,7 @@ java_library {
         "adservices-clients",
         "mockwebserver",
         "platform-test-annotations",
+        "adservices-test-fixtures",
         "adservices-test-utility",
         "adservices-ui-cts-root-test-lib",
         "adservices-profile-text-protos-genrule",

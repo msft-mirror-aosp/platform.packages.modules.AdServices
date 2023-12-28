@@ -36,8 +36,6 @@ import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -76,24 +74,20 @@ public class AsyncSourceFetcher {
     private final MeasurementHttpClient mNetworkConnection;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
-    private final AdServicesLogger mLogger;
     private final Context mContext;
 
     public AsyncSourceFetcher(Context context) {
         this(
                 context,
                 EnrollmentDao.getInstance(context),
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance());
+                FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
-    public AsyncSourceFetcher(
-            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncSourceFetcher(Context context, EnrollmentDao enrollmentDao, Flags flags) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
-        mLogger = logger;
         mNetworkConnection = new MeasurementHttpClient(context);
     }
 
@@ -209,7 +203,7 @@ public class AsyncSourceFetcher {
         if (!json.isNull(SourceHeaderContract.PRIORITY)) {
             if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                 Optional<Long> maybePriority =
-                        FetcherUtil.extractLong(json, SourceHeaderContract.PRIORITY);
+                        FetcherUtil.extractLongString(json, SourceHeaderContract.PRIORITY);
                 if (!maybePriority.isPresent()) {
                     return false;
                 }
@@ -394,16 +388,30 @@ public class AsyncSourceFetcher {
             return false;
         }
 
+        Source.TriggerDataMatching triggerDataMatching = Source.TriggerDataMatching.MODULUS;
+
+        if (mFlags.getMeasurementEnableTriggerDataMatching()
+                && !json.isNull(SourceHeaderContract.TRIGGER_DATA_MATCHING)) {
+            // If the token for trigger_data_matching is not in the predefined list, it will throw
+            // IllegalArgumentException that will be caught by the overall parser.
+            triggerDataMatching =
+                    Source.TriggerDataMatching.valueOf(
+                            json
+                                    .getString(SourceHeaderContract.TRIGGER_DATA_MATCHING)
+                                    .toUpperCase(Locale.ENGLISH));
+            builder.setTriggerDataMatching(triggerDataMatching);
+        }
+
         JSONObject eventReportWindows = null;
         Integer maxEventLevelReports = null;
-        if (mFlags.getMeasurementFlexLiteAPIEnabled()
+        if (mFlags.getMeasurementFlexLiteApiEnabled()
                 || mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
             if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
                 Object maxEventLevelReportsObj = json.get(
                         SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
                 maxEventLevelReports =
                         json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-                if (!is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
+                if (!FetcherUtil.is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
                         || maxEventLevelReports > mFlags.getMeasurementFlexApiMaxEventReports()) {
                     return false;
                 }
@@ -449,7 +457,8 @@ public class AsyncSourceFetcher {
                             eventReportWindows,
                             expiry,
                             asyncRegistration.getSourceType(),
-                            finalMaxEventLevelReports);
+                            finalMaxEventLevelReports,
+                            triggerDataMatching);
 
             if (!maybeTriggerSpecArray.isPresent()) {
                 LoggerFactory.getMeasurementLogger().d("Invalid Trigger Spec format");
@@ -481,7 +490,8 @@ public class AsyncSourceFetcher {
             JSONObject eventReportWindows,
             long expiry,
             Source.SourceType sourceType,
-            int maxEventLevelReports) {
+            int maxEventLevelReports,
+            Source.TriggerDataMatching triggerDataMatching) {
         List<Pair<Long, Long>> parsedEventReportWindows = Source.getOrDefaultEventReportWindows(
                 eventReportWindows, sourceType, expiry, mFlags);
         long defaultStart = parsedEventReportWindows.get(0).first;
@@ -508,6 +518,11 @@ public class AsyncSourceFetcher {
             if (triggerDataSet.size() > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
                 return Optional.empty();
             }
+            if (mFlags.getMeasurementEnableTriggerDataMatching()
+                    && triggerDataMatching == Source.TriggerDataMatching.MODULUS
+                    && !isContiguousStartingAtZero(triggerDataSet)) {
+                return Optional.empty();
+            }
             return Optional.of(validTriggerSpecs);
         } catch (JSONException | IllegalArgumentException ex) {
             LoggerFactory.getMeasurementLogger().d(ex, "Trigger Spec parsing failed");
@@ -522,17 +537,23 @@ public class AsyncSourceFetcher {
             List<Long> defaultEnds,
             Set<UnsignedLong> triggerDataSet,
             int maxEventLevelReports) throws JSONException {
+        Optional<JSONArray> maybeTriggerDataListJson = extractLongJsonArray(
+                triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
+        if (maybeTriggerDataListJson.isEmpty()) {
+            return Optional.empty();
+        }
         List<UnsignedLong> triggerDataList =
-                TriggerSpec.getTriggerDataArrayFromJSON(
-                        triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
+                TriggerSpec.getTriggerDataArrayFromJSON(maybeTriggerDataListJson.get());
         if (triggerDataList.isEmpty()
                 || triggerDataList.size()
                         > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
             return Optional.empty();
         }
-        // Check exclusivity of trigger_data across the whole trigger spec array
+        // Check exclusivity of trigger_data across the whole trigger spec array, and validate
+        // trigger data magnitude.
         for (UnsignedLong triggerData : triggerDataList) {
-            if (!triggerDataSet.add(triggerData)) {
+            if (!triggerDataSet.add(triggerData)
+                    || triggerData.compareTo(TriggerSpecs.MAX_TRIGGER_DATA_VALUE) > 0) {
                 return Optional.empty();
             }
         }
@@ -551,7 +572,7 @@ public class AsyncSourceFetcher {
         TriggerSpec.SummaryOperatorType summaryWindowOperator =
                 TriggerSpec.SummaryOperatorType.COUNT;
         if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
-            // If a summary window operator is not in the pre-defined list, it will throw
+            // If a summary window operator is not in the predefined list, it will throw
             // IllegalArgumentException that will be caught by the overall parser.
             summaryWindowOperator =
                     TriggerSpec.SummaryOperatorType.valueOf(
@@ -563,9 +584,18 @@ public class AsyncSourceFetcher {
         }
         List<Long> summaryBuckets = null;
         if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
-            summaryBuckets =
-                    TriggerSpec.getLongListFromJSON(
-                            triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+            Optional<JSONArray> maybeSummaryBucketsJson = extractLongJsonArray(
+                    triggerSpecJson, TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+
+            if (maybeSummaryBucketsJson.isEmpty()) {
+                return Optional.empty();
+            }
+
+            summaryBuckets = TriggerSpec.getLongListFromJSON(maybeSummaryBucketsJson.get());
+
+            if (summaryBuckets.size() > maxEventLevelReports) {
+                return Optional.empty();
+            }
         }
         if ((summaryBuckets == null || summaryBuckets.isEmpty())
                 && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
@@ -589,7 +619,7 @@ public class AsyncSourceFetcher {
         // Start time in seconds
         long startTime = 0;
         if (!jsonReportWindows.isNull(TriggerSpecs.FlexEventReportJsonKeys.START_TIME)) {
-            if (!is64BitInteger(jsonReportWindows.get(
+            if (!FetcherUtil.is64BitInteger(jsonReportWindows.get(
                     TriggerSpecs.FlexEventReportJsonKeys.START_TIME))) {
                 return Optional.empty();
             }
@@ -604,9 +634,14 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
 
-        List<Long> windowEnds =
-                TriggerSpec.getLongListFromJSON(
-                        jsonReportWindows, TriggerSpecs.FlexEventReportJsonKeys.END_TIMES);
+        Optional<JSONArray> maybeWindowEndsJson = extractLongJsonArray(
+                jsonReportWindows, TriggerSpecs.FlexEventReportJsonKeys.END_TIMES);
+
+        if (maybeWindowEndsJson.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Long> windowEnds = TriggerSpec.getLongListFromJSON(maybeWindowEndsJson.get());
 
         int windowEndsSize = windowEnds.size();
         if (windowEnds.isEmpty()
@@ -731,7 +766,11 @@ public class AsyncSourceFetcher {
                         json.getBoolean(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED));
             }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
-            return Optional.of(builder.build());
+            Source source = builder.build();
+            // Build privacy parameters, catching an arithmetic exception in case an inordinate
+            // number of report states is presented.
+            source.hasValidInformationGain(mFlags);
+            return Optional.of(source);
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: invalid JSON");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
@@ -825,7 +864,9 @@ public class AsyncSourceFetcher {
 
         Optional<String> enrollmentId =
                 mFlags.isDisableMeasurementEnrollmentCheck()
-                        ? Optional.of(Enrollment.FAKE_ENROLLMENT)
+                        ? WebAddresses.topPrivateDomainAndScheme(
+                                        asyncRegistration.getRegistrationUri())
+                                .map(Uri::toString)
                         : Enrollment.getValidEnrollmentId(
                                 asyncRegistration.getRegistrationUri(),
                                 asyncRegistration.getRegistrant().getAuthority(),
@@ -876,8 +917,25 @@ public class AsyncSourceFetcher {
         return true;
     }
 
-    private static boolean is64BitInteger(Object obj) {
-        return (obj instanceof Integer) || (obj instanceof Long);
+    private static boolean isContiguousStartingAtZero(Set<UnsignedLong> unsignedLongs) {
+        UnsignedLong upperBound = new UnsignedLong(((long) unsignedLongs.size()) - 1L);
+        for (UnsignedLong unsignedLong : unsignedLongs) {
+            if (unsignedLong.compareTo(upperBound) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Optional<JSONArray> extractLongJsonArray(JSONObject json, String key)
+            throws JSONException {
+        JSONArray jsonArray = json.getJSONArray(key);
+        for (int i = 0; i < jsonArray.length(); i++) {
+            if (!FetcherUtil.is64BitInteger(jsonArray.get(i))) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(jsonArray);
     }
 
     private static long roundSecondsToWholeDays(long seconds) {
@@ -912,6 +970,7 @@ public class AsyncSourceFetcher {
         String SHARED_DEBUG_KEY = "shared_debug_key";
         String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
         String DROP_SOURCE_IF_INSTALLED = "drop_source_if_installed";
+        String TRIGGER_DATA_MATCHING = "trigger_data_matching";
     }
 
     private interface SourceRequestContract {

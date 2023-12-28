@@ -139,6 +139,7 @@ public final class MeasurementTables {
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String MAX_EVENT_LEVEL_REPORTS = "max_event_level_reports";
         String SHARED_DEBUG_KEY = "shared_debug_key";
+        String TRIGGER_DATA_MATCHING = "trigger_data_matching";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -515,6 +516,8 @@ public final class MeasurementTables {
                     + SourceContract.SHARED_DEBUG_KEY
                     + " INTEGER, "
                     + SourceContract.SHARED_FILTER_DATA_KEYS
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_DATA_MATCHING
                     + " TEXT "
                     + ")";
 

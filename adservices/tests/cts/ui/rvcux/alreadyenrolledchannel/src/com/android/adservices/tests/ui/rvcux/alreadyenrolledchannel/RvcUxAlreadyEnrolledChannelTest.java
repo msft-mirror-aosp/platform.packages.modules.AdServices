@@ -29,6 +29,7 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
+import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
@@ -104,7 +105,7 @@ public class RvcUxAlreadyEnrolledChannelTest {
 
     /** Verify that the U18 ROW notification is displayed for RVC_UX. */
     @Test
-    public void testU18NotificationDisplayedForRvcUX() throws Exception {
+    public void testU18NotificationDisplayedForRvcUX_row() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         UiUtils.setAsRowDevice();
@@ -132,5 +133,55 @@ public class RvcUxAlreadyEnrolledChannelTest {
 
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.RVC_UX);
+        mDevice.pressHome();
+
+        // Verify msmt API should be opted-in
+        AdservicesWorkflows.testSettingsPageFlow(
+                sContext,
+                mDevice,
+                UiConstants.UX.RVC_UX,
+                /* isOptIn= */ false,
+                /* isFlipConsent= */ false,
+                /* assertOptIn= */ true);
+    }
+
+    @Test
+    public void testU18NotificationDisplayedForRvcUX_eu() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiUtils.setAsEuDevice();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setU18Account(false)
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .build();
+
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.RVC_UX);
+
+        // Notifications should not be shown twice.
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.RVC_UX);
+        mDevice.pressHome();
+
+        // Verify msmt API should be opted-in
+        AdservicesWorkflows.testSettingsPageFlow(
+                sContext,
+                mDevice,
+                UiConstants.UX.RVC_UX,
+                /* isOptIn= */ false,
+                /* isFlipConsent= */ false,
+                /* assertOptIn= */ true);
     }
 }

@@ -35,7 +35,9 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -168,6 +170,8 @@ public class AppUpdateTest {
     @Test
     @FlakyTest(bugId = 298870452)
     public void testAppUpdate() throws Exception {
+        // Set this test as "Assumption Failure" if SDK is S-.
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Invoke Topics API once to compute top topics so that following installed test apps are
         // able to get top topics assigned when getting installed.
         AdvertisingTopicsClient advertisingTopicsClient =

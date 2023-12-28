@@ -69,7 +69,7 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
-        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CA);
+        final int filterCATraceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FILTER_CA);
         try {
             List<DBCustomAudience> toReturn = new ArrayList<>();
             Instant currentTime = mClock.instant();
@@ -77,6 +77,8 @@ public final class AdFiltererImpl implements AdFilterer {
             int totalAds = 0;
             int remainingAds = 0;
             for (DBCustomAudience ca : cas) {
+                final int forEachCATraceCookie =
+                        Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_CA);
                 List<DBAdData> filteredAds = new ArrayList<>();
                 totalAds += ca.getAds().size();
                 for (DBAdData ad : ca.getAds()) {
@@ -89,6 +91,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     toReturn.add(new DBCustomAudience.Builder(ca).setAds(filteredAds).build());
                     remainingAds += filteredAds.size();
                 }
+                Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_CA, forEachCATraceCookie);
             }
             sLogger.v(
                     "Filtering finished. %d CAs of the original %d remain. "
@@ -96,7 +99,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     toReturn.size(), cas.size(), remainingAds, totalAds);
             return toReturn;
         } finally {
-            Tracing.endAsyncSection(Tracing.FILTER_CA, traceCookie);
+            Tracing.endAsyncSection(Tracing.FILTERER_FILTER_CA, filterCATraceCookie);
         }
     }
 
@@ -109,7 +112,7 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public SignedContextualAds filterContextualAds(SignedContextualAds contextualAds) {
-        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CONTEXTUAL);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FILTER_CONTEXTUAL);
         try {
             List<AdWithBid> adsList = new ArrayList<>();
             Instant currentTime = mClock.instant();
@@ -129,7 +132,7 @@ public final class AdFiltererImpl implements AdFilterer {
 
             return contextualAds.cloneToBuilder().setAdsWithBid(adsList).build();
         } finally {
-            Tracing.endAsyncSection(Tracing.FILTER_CONTEXTUAL, traceCookie);
+            Tracing.endAsyncSection(Tracing.FILTERER_FILTER_CONTEXTUAL, traceCookie);
         }
     }
 
@@ -142,9 +145,13 @@ public final class AdFiltererImpl implements AdFilterer {
         if (ad.getAdFilters() == null) {
             return true;
         }
-        return doesAdPassAppInstallFilters(ad, buyer)
-                && doesAdPassFrequencyCapFilters(
-                        ad, buyer, customAudienceOwner, customAudienceName, currentTime);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_AD);
+        boolean passes =
+                doesAdPassAppInstallFilters(ad, buyer)
+                        && doesAdPassFrequencyCapFilters(
+                                ad, buyer, customAudienceOwner, customAudienceName, currentTime);
+        Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_AD, traceCookie);
+        return passes;
     }
 
     private boolean doesAdPassAppInstallFilters(DBAdData ad, AdTechIdentifier buyer) {
@@ -172,54 +179,59 @@ public final class AdFiltererImpl implements AdFilterer {
         if (ad.getAdFilters().getFrequencyCapFilters() == null) {
             return true;
         }
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTERER_FOR_EACH_AD);
+        try {
 
-        FrequencyCapFilters filters = ad.getAdFilters().getFrequencyCapFilters();
+            FrequencyCapFilters filters = ad.getAdFilters().getFrequencyCapFilters();
 
-        // TODO(b/265205439): Compare the performance of loading the histograms once for each custom
-        //  audience and buyer versus querying for every filter
+            // TODO(b/265205439): Compare the performance of loading the histograms once for each
+            //  custom audience and buyer versus querying for every filter
 
-        // Contextual ads cannot filter on win-typed events
-        boolean adIsFromCustomAudience =
-                (customAudienceOwner != null) && (customAudienceName != null);
-        if (adIsFromCustomAudience
-                && !filters.getKeyedFrequencyCapsForWinEvents().isEmpty()
-                && !doesAdPassFrequencyCapFiltersForWinType(
-                        filters.getKeyedFrequencyCapsForWinEvents(),
-                        buyer,
-                        customAudienceOwner,
-                        customAudienceName,
-                        currentTime)) {
-            return false;
+            // Contextual ads cannot filter on win-typed events
+            boolean adIsFromCustomAudience =
+                    (customAudienceOwner != null) && (customAudienceName != null);
+            if (adIsFromCustomAudience
+                    && !filters.getKeyedFrequencyCapsForWinEvents().isEmpty()
+                    && !doesAdPassFrequencyCapFiltersForWinType(
+                            filters.getKeyedFrequencyCapsForWinEvents(),
+                            buyer,
+                            customAudienceOwner,
+                            customAudienceName,
+                            currentTime)) {
+                return false;
+            }
+
+            if (!filters.getKeyedFrequencyCapsForImpressionEvents().isEmpty()
+                    && !doesAdPassFrequencyCapFiltersForNonWinType(
+                            filters.getKeyedFrequencyCapsForImpressionEvents(),
+                            FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                            buyer,
+                            currentTime)) {
+                return false;
+            }
+
+            if (!filters.getKeyedFrequencyCapsForViewEvents().isEmpty()
+                    && !doesAdPassFrequencyCapFiltersForNonWinType(
+                            filters.getKeyedFrequencyCapsForViewEvents(),
+                            FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                            buyer,
+                            currentTime)) {
+                return false;
+            }
+
+            if (!filters.getKeyedFrequencyCapsForClickEvents().isEmpty()
+                    && !doesAdPassFrequencyCapFiltersForNonWinType(
+                            filters.getKeyedFrequencyCapsForClickEvents(),
+                            FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                            buyer,
+                            currentTime)) {
+                return false;
+            }
+
+            return true;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTERER_FOR_EACH_AD, traceCookie);
         }
-
-        if (!filters.getKeyedFrequencyCapsForImpressionEvents().isEmpty()
-                && !doesAdPassFrequencyCapFiltersForNonWinType(
-                        filters.getKeyedFrequencyCapsForImpressionEvents(),
-                        FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
-                        buyer,
-                        currentTime)) {
-            return false;
-        }
-
-        if (!filters.getKeyedFrequencyCapsForViewEvents().isEmpty()
-                && !doesAdPassFrequencyCapFiltersForNonWinType(
-                        filters.getKeyedFrequencyCapsForViewEvents(),
-                        FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
-                        buyer,
-                        currentTime)) {
-            return false;
-        }
-
-        if (!filters.getKeyedFrequencyCapsForClickEvents().isEmpty()
-                && !doesAdPassFrequencyCapFiltersForNonWinType(
-                        filters.getKeyedFrequencyCapsForClickEvents(),
-                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
-                        buyer,
-                        currentTime)) {
-            return false;
-        }
-
-        return true;
     }
 
     private boolean doesAdPassFrequencyCapFiltersForWinType(
@@ -228,24 +240,34 @@ public final class AdFiltererImpl implements AdFilterer {
             String customAudienceOwner,
             String customAudienceName,
             Instant currentTime) {
-        for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
-            Instant intervalStartTime =
-                    currentTime.minusMillis(frequencyCap.getInterval().toMillis());
-            int numEventsSinceStartTime =
-                    mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(
-                            frequencyCap.getAdCounterKey(),
-                            buyer,
-                            customAudienceOwner,
-                            customAudienceName,
-                            FrequencyCapFilters.AD_EVENT_TYPE_WIN,
-                            intervalStartTime);
+        final int adPassesFiltersTraceCookie =
+                Tracing.beginAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_WIN);
+        try {
+            for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
+                Instant intervalStartTime =
+                        currentTime.minusMillis(frequencyCap.getInterval().toMillis());
 
-            if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
-                return false;
+                final int numEventsForCATraceCookie =
+                        Tracing.beginAsyncSection(Tracing.FREQUENCY_CAP_GET_NUM_EVENTS_CA);
+                int numEventsSinceStartTime =
+                        mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(
+                                frequencyCap.getAdCounterKey(),
+                                buyer,
+                                customAudienceOwner,
+                                customAudienceName,
+                                FrequencyCapFilters.AD_EVENT_TYPE_WIN,
+                                intervalStartTime);
+                Tracing.endAsyncSection(
+                        Tracing.FREQUENCY_CAP_GET_NUM_EVENTS_CA, numEventsForCATraceCookie);
+
+                if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
+                    return false;
+                }
             }
+            return true;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_WIN, adPassesFiltersTraceCookie);
         }
-
-        return true;
     }
 
     private boolean doesAdPassFrequencyCapFiltersForNonWinType(
@@ -253,18 +275,32 @@ public final class AdFiltererImpl implements AdFilterer {
             int adEventType,
             AdTechIdentifier buyer,
             Instant currentTime) {
-        for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
-            Instant intervalStartTime =
-                    currentTime.minusMillis(frequencyCap.getInterval().toMillis());
-            int numEventsSinceStartTime =
-                    mFrequencyCapDao.getNumEventsForBuyerAfterTime(
-                            frequencyCap.getAdCounterKey(), buyer, adEventType, intervalStartTime);
+        final int adPassesFiltersTraceCookie =
+                Tracing.beginAsyncSection(Tracing.FILTERER_FREQUENCY_CAP_NON_WIN);
+        try {
+            for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
+                Instant intervalStartTime =
+                        currentTime.minusMillis(frequencyCap.getInterval().toMillis());
 
-            if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
-                return false;
+                final int numEventsForBuyerTraceCookie =
+                        Tracing.beginAsyncSection(Tracing.FREQUENCY_CAP_GET_NUM_EVENTS_BUYER);
+                int numEventsSinceStartTime =
+                        mFrequencyCapDao.getNumEventsForBuyerAfterTime(
+                                frequencyCap.getAdCounterKey(),
+                                buyer,
+                                adEventType,
+                                intervalStartTime);
+                Tracing.endAsyncSection(
+                        Tracing.FREQUENCY_CAP_GET_NUM_EVENTS_BUYER, numEventsForBuyerTraceCookie);
+
+                if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
+                    return false;
+                }
             }
+            return true;
+        } finally {
+            Tracing.endAsyncSection(
+                    Tracing.FILTERER_FREQUENCY_CAP_NON_WIN, adPassesFiltersTraceCookie);
         }
-
-        return true;
     }
 }

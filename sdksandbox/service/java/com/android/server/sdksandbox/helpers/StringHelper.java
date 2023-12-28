@@ -32,7 +32,7 @@ public class StringHelper {
      * characters in the input string.
      */
     public static boolean doesInputMatchAnyWildcardPattern(
-            @Nullable ArraySet<String> patterns, @Nullable String input) {
+            @NonNull ArraySet<String> patterns, @Nullable String input) {
         for (int i = 0; i < patterns.size(); ++i) {
             if (doesInputMatchWildcardPattern(
                     patterns.valueAt(i), input, /*matchOnNullInput=*/ false)) {
@@ -48,7 +48,7 @@ public class StringHelper {
      * input string.
      */
     public static boolean doesInputMatchWildcardPattern(
-            @Nullable String pattern, @Nullable String input, @NonNull boolean matchOnNullInput) {
+            @Nullable String pattern, @Nullable String input, boolean matchOnNullInput) {
         if (matchOnNullInput && (pattern != null && pattern.equals("*"))) {
             return true;
         }

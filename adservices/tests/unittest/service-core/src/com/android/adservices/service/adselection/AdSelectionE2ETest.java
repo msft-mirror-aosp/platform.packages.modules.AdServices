@@ -28,6 +28,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.data.encryptionkey.EncryptionKeyDaoTest.ENCRYPTION_KEY1;
+import static com.android.adservices.data.enrollment.EnrollmentDaoTest.ENROLLMENT_DATA1;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -51,6 +53,7 @@ import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.PREBUILT_FEATURE_IS_DISABLED;
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -106,10 +109,11 @@ import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -118,12 +122,9 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
@@ -132,6 +133,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
@@ -150,6 +152,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -159,6 +162,7 @@ import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -168,16 +172,13 @@ import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.time.Instant;
@@ -195,7 +196,12 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * This test the actual flow of Ad Selection internal flow without any mocking. The dependencies in
  * this test are invoked and used in real time.
  */
-public class AdSelectionE2ETest {
+// Test applications don't have the required permissions to read config P/H flags, and
+// injecting mocked flags everywhere is annoying and non-trivial for static methods
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(WebView.class)
+public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase {
+
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final int CALLER_UID = Process.myUid();
     private static final String ERROR_SCORE_AD_LOGIC_MISSING = "scoreAd is not defined";
@@ -238,15 +244,16 @@ public class AdSelectionE2ETest {
 
     public static final String READ_BID_FROM_AD_METADATA_JS_WITH_AD_COST =
             "function generateBid(ad, auction_signals, per_buyer_signals, trusted_bidding_signals,"
-                + " contextual_signals, custom_audience_signals) { \n"
-                + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result, 'adCost':"
-                + " ad.metadata.adCost };\n"
-                + "}\n"
-                + "\n"
-                + "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
-                + " contextual_signals, custom_audience_signals) { \n"
-                + " return {'status': 0, 'results': {'reporting_uri': '%s' } };\n"
-                + "}";
+                    + " contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result, 'adCost':"
+                    + " ad.metadata.adCost };\n"
+                    + "}\n"
+                    + "\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals, "
+                    + "signals_for_buyer,"
+                    + " contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '%s' } };\n"
+                    + "}";
 
     private static final String READ_BID_FROM_AD_METADATA_JS_V3 =
             "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
@@ -278,17 +285,18 @@ public class AdSelectionE2ETest {
 
     public static final String USE_BID_AS_SCORE_JS =
             "//From dispatcher USE_BID_AS_SCORE_JS\n"
-                + "function scoreAd(ad, bid, auction_config, seller_signals,"
-                + " trusted_scoring_signals, contextual_signal, user_signal,"
-                + " custom_audience_signal) { \n"
-                + "  return {'status': 0, 'score': bid };\n"
-                + "}\n"
-                + "\n"
-                + "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
-                + " { \n"
-                + " return {'status': 0, 'results': {'signals_for_buyer':"
-                + " '{\"signals_for_buyer\":1}', 'reporting_uri': '%s' } };\n"
-                + "}";
+                    + "function scoreAd(ad, bid, auction_config, seller_signals,"
+                    + " trusted_scoring_signals, contextual_signal, user_signal,"
+                    + " custom_audience_signal) { \n"
+                    + "  return {'status': 0, 'score': bid };\n"
+                    + "}\n"
+                    + "\n"
+                    + "function reportResult(ad_selection_config, render_uri, bid, "
+                    + "contextual_signals)"
+                    + " { \n"
+                    + " return {'status': 0, 'results': {'signals_for_buyer':"
+                    + " '{\"signals_for_buyer\":1}', 'reporting_uri': '%s' } };\n"
+                    + "}";
 
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH =
             "/selectionPickHighestLogicJS/";
@@ -598,22 +606,18 @@ public class AdSelectionE2ETest {
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
     // certain minimum version.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule deviceSupported =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
+    @Rule(order = 11)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             WebViewSupportUtil.createJSSandboxAvailableRule(
                     ApplicationProvider.getApplicationContext());
 
-    @Rule(order = 3)
-    public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    @Rule(order = 12)
+    public final MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     // Mocking DevContextFilter to test behavior with and without override api authorization
-    @Mock DevContextFilter mDevContextFilter;
-    @Mock CallerMetadata mMockCallerMetadata;
-    @Mock FledgeHttpCache.HttpCacheObserver mCacheObserver;
+    @Mock private DevContextFilter mDevContextFilter;
+    @Mock private CallerMetadata mMockCallerMetadata;
+    @Mock private FledgeHttpCache.HttpCacheObserver mCacheObserver;
 
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     @Mock private File mMockDBAdSelectionFile;
@@ -627,7 +631,6 @@ public class AdSelectionE2ETest {
                                     mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
                             mAdServicesLoggerMock));
 
-    private MockitoSession mStaticMockSession = null;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -635,8 +638,8 @@ public class AdSelectionE2ETest {
     private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
+    private EnrollmentDao mEnrollmentDao;
     private EncryptionKeyDao mEncryptionKeyDao;
-    private EncryptionContextDao mEncryptionContextDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
@@ -654,6 +657,8 @@ public class AdSelectionE2ETest {
 
     @Before
     public void setUp() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+
         mAdSelectionEntryDaoSpy =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
@@ -666,22 +671,10 @@ public class AdSelectionE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
                         .build()
                         .frequencyCapDao();
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
-        mEncryptionContextDao = serverDb.encryptionContextDao();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
+        mEnrollmentDao = EnrollmentDao.getInstance(mContext);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
-
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(WebView.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
 
         // Initialize dependencies for the AdSelectionService
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
@@ -720,8 +713,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -874,16 +867,8 @@ public class AdSelectionE2ETest {
         mMockAdIdWorker.setResult(AdId.ZERO_OUT, true);
     }
 
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @Test
     public void testRunAdSelectionSuccess_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -928,10 +913,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -957,6 +944,7 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingEnabled()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithCPCEnabled =
@@ -976,8 +964,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1042,10 +1030,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1100,8 +1090,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1164,10 +1154,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         // Instantiate new adSelectionConfig with data version header in trusted seller signals
         AdSelectionConfig adSelectionConfig =
@@ -1224,6 +1216,7 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithDataVersionHeaderFlagDisabled()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
@@ -1243,8 +1236,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1307,10 +1300,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         // Instantiate new adSelectionConfig with data version header in trusted seller signals
         AdSelectionConfig adSelectionConfig =
@@ -1363,6 +1358,7 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWinnerWithoutBuyerDataVersionHeader()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
@@ -1382,8 +1378,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1445,10 +1441,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1483,6 +1481,7 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingDisabled()
             throws Exception {
         AdSelectionE2ETestFlags flagsWithCPCDisabled =
@@ -1502,8 +1501,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1568,10 +1567,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1607,7 +1608,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionSuccess_prebuiltScoringLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1652,10 +1652,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         String paramKey = "reportingUrl";
         String paramValue = "https://www.test.com/reporting/seller";
@@ -1701,7 +1703,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionSuccess_prebuiltFeatureDisabled_failure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         Flags prebuiltDisabledFlags =
                 new AdSelectionE2ETestFlags() {
                     @Override
@@ -1717,8 +1718,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1767,10 +1768,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         String paramKey = "reportingUrl";
         String paramValue = "https://www.test.com/reporting/seller";
@@ -1806,7 +1809,7 @@ public class AdSelectionE2ETest {
     @Test
     public void testRunAdSelectionSuccess_flagToPreV3_preV3BiddingLogic() throws Exception {
         mFlags = new AdSelectionE2ETestFlags(2, false);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mFlags);
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
@@ -1814,8 +1817,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1877,10 +1880,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1907,7 +1912,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionSuccess_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1951,10 +1955,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1999,8 +2005,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2063,10 +2069,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2121,8 +2129,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2185,10 +2193,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         // Instantiate new adSelectionConfig with data version header in trusted seller signals
         AdSelectionConfig adSelectionConfig =
@@ -2264,8 +2274,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2328,10 +2338,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         // Instantiate new adSelectionConfig with data version header in trusted seller signals
         AdSelectionConfig adSelectionConfig =
@@ -2403,8 +2415,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2466,10 +2478,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2523,8 +2537,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2587,10 +2601,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2627,7 +2643,6 @@ public class AdSelectionE2ETest {
     @Test
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithV3Header_scriptFail()
             throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -2671,10 +2686,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2694,7 +2711,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelection_getTooHighHeader_failWithError() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -2738,10 +2754,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2761,7 +2779,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionWithOverride_getTooHighHeader_failWithError() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -2805,10 +2822,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
@@ -2855,7 +2874,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionContextualAds_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2881,7 +2899,7 @@ public class AdSelectionE2ETest {
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -2911,10 +2929,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2947,9 +2967,9 @@ public class AdSelectionE2ETest {
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
+    @FlakyTest(bugId = 304764127)
     @Test
     public void testRunAdSelectionContextualAds_UseOverrides_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2975,7 +2995,7 @@ public class AdSelectionE2ETest {
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3005,10 +3025,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         final String fakeDecisionLogicForBuyer = "\"reportWin() { completely fake }\"";
         // Set dev override for  ad selection
@@ -3062,8 +3084,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3123,7 +3145,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionContextualAds_Disabled_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3149,7 +3170,7 @@ public class AdSelectionE2ETest {
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3179,10 +3200,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         Flags flagsWithContextualAdsDisabled =
                 new AdSelectionE2ETestFlags() {
@@ -3199,8 +3222,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3246,7 +3269,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionOnlyContextualAds_NoBuyers_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -3265,7 +3287,7 @@ public class AdSelectionE2ETest {
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of())
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3307,8 +3329,45 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    public void testRunAdSelectionOnlyContextualAds_unauthenticatedContextualAdsRemoved_Success()
+            throws Exception {
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of())
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setBuyerSignedContextualAds(createUnauthenticatedContextualAds())
+                        .build();
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackFailed(resultsCallback);
+        assertTrue(
+                resultsCallback
+                        .mFledgeErrorResponse
+                        .getErrorMessage()
+                        .contains(ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE));
+        assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
+    }
+
+    @Test
     public void testRunAdSelectionOnlyContextualAds_NoCAs_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -3334,7 +3393,7 @@ public class AdSelectionE2ETest {
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3384,8 +3443,8 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionOnlyContextualAds_NoCAsNoNetworkCall_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -3425,7 +3484,7 @@ public class AdSelectionE2ETest {
                                 paramKey,
                                 paramValue));
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
                         .setSeller(mSeller)
                         .setDecisionLogicUri(prebuiltUri)
@@ -3474,8 +3533,8 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testRunAdSelectionNoContextualAds_NoCAs_Failure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -3501,7 +3560,7 @@ public class AdSelectionE2ETest {
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3544,8 +3603,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionWithRevokedUserConsentSuccess() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
@@ -3588,10 +3645,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3618,7 +3677,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMultipleCAsSuccess_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3663,10 +3721,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -3685,7 +3745,8 @@ public class AdSelectionE2ETest {
                             BUYER_TRUSTED_SIGNAL_URI_PATH);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyerX,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyerX));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyerX),
+                    /*debuggable=*/ false);
 
             participatingBuyers.add(buyerX);
         }
@@ -3729,7 +3790,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMultipleCAsSuccess_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3774,10 +3834,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -3796,7 +3858,8 @@ public class AdSelectionE2ETest {
                             BUYER_TRUSTED_SIGNAL_URI_PATH);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyerX,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyerX));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyerX),
+                    /*debuggable=*/ false);
 
             participatingBuyers.add(buyerX);
         }
@@ -3840,8 +3903,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMultipleCAsNoCachingSuccess_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -3862,10 +3923,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -3888,7 +3951,8 @@ public class AdSelectionE2ETest {
                             BUYER_TRUSTED_SIGNAL_URI_PATH);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                    /*debuggable=*/ false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -3918,8 +3982,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3956,9 +4020,8 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionMultipleCAsNoCachingSuccess_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -3979,10 +4042,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -4005,7 +4070,8 @@ public class AdSelectionE2ETest {
                             BUYER_TRUSTED_SIGNAL_URI_PATH);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                    /*debuggable=*/ false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -4035,8 +4101,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4074,8 +4140,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMultipleCAsJSCachedSuccess_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -4096,10 +4160,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -4123,7 +4189,8 @@ public class AdSelectionE2ETest {
                             BUYER_TRUSTED_SIGNAL_URI_PATH);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                    /*debuggable=*/ false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -4154,8 +4221,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4196,8 +4263,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMultipleCAsJSCachedSuccess_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -4218,10 +4283,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -4245,7 +4312,8 @@ public class AdSelectionE2ETest {
                             BUYER_TRUSTED_SIGNAL_URI_PATH);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                    /*debuggable=*/ false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -4276,8 +4344,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4317,8 +4385,8 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSucceedsWithOverride_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -4400,8 +4468,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4423,10 +4491,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4452,8 +4522,8 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSucceedsWithOverride_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -4537,8 +4607,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4560,10 +4630,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4590,7 +4662,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionActiveCAs() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -4648,13 +4719,16 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudienceActive,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceInactive,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceExpired,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3),
+                /*debuggable=*/ false);
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
@@ -4680,7 +4754,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionNoCAsActive() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -4737,13 +4810,16 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceInactive,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceExpired,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceOutdated,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4860,7 +4936,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionPartialAdsExcludedBidding() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -4906,10 +4981,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4966,7 +5043,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingBiddingLogicFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -5043,10 +5119,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5070,7 +5148,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingScoringLogicFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5154,10 +5231,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5182,7 +5261,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionErrorFetchingScoringLogicFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5266,10 +5344,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5293,7 +5373,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionPartialMissingBiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5378,10 +5457,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5409,7 +5490,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionPartialNonPositiveScoring() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5500,10 +5580,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5530,7 +5612,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionNonPositiveScoringFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5621,10 +5702,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5648,7 +5731,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionBiddingTimesOutForCA() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5706,8 +5788,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5796,10 +5878,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5825,7 +5909,6 @@ public class AdSelectionE2ETest {
     @Test
     public void testRunAdSelectionImposesPerBuyerBiddingTimeout_preV3BiddingLogic()
             throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(6);
         doAnswer(
@@ -5903,10 +5986,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -5929,7 +6014,8 @@ public class AdSelectionE2ETest {
                             BUYER_TRUSTED_SIGNAL_URI_PATH);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3),
+                    /*debuggable=*/ false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -5954,8 +6040,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6030,8 +6116,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6089,9 +6175,9 @@ public class AdSelectionE2ETest {
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
+    @FlakyTest(bugId = 304764127)
     @Test
     public void testRunAdSelectionImposesPerBuyerBiddingTimeout_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(6);
         doAnswer(
@@ -6169,10 +6255,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -6195,7 +6283,8 @@ public class AdSelectionE2ETest {
                             BUYER_TRUSTED_SIGNAL_URI_PATH);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3),
+                    /*debuggable=*/ false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -6220,8 +6309,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6296,8 +6385,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6357,7 +6446,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionScoringTimesOut() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -6415,8 +6503,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6502,10 +6590,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6586,7 +6676,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingBiddingSignalsFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -6649,10 +6738,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6675,8 +6766,8 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testRunAdSelectionMissingScoringSignalsFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -6748,10 +6839,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6776,7 +6869,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingPartialBiddingSignalsSuccess() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -6859,10 +6951,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6890,8 +6984,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionFailsWithInvalidPackageName() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         String invalidPackageName = CALLER_PACKAGE_NAME + "invalidPackageName";
 
         doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
@@ -6942,10 +7034,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, invalidPackageName);
@@ -6981,7 +7075,6 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionFailsWhenAppCannotUsePPApi() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doThrow(new FilterException(new FledgeAuthorizationFilter.AdTechNotAllowedException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
@@ -7024,10 +7117,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -7091,8 +7186,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -7141,10 +7236,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -7177,6 +7274,7 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionThrottledSubsequentCallFailure() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
@@ -7222,8 +7320,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -7272,10 +7370,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         // First call to Ad Selection should succeed
         AdSelectionTestCallback resultsCallbackFirstCall =
@@ -7355,8 +7455,8 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -7419,10 +7519,12 @@ public class AdSelectionE2ETest {
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                /*debuggable=*/ false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                /*debuggable=*/ false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -7452,8 +7554,6 @@ public class AdSelectionE2ETest {
         // A null package means WebView is not installed
         doReturn(null).when(WebView::getCurrentWebViewPackage);
 
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
         JSScriptEngine.getInstance(mContext, LoggerFactory.getFledgeLogger()).shutdown();
 
@@ -7466,8 +7566,8 @@ public class AdSelectionE2ETest {
                             mCustomAudienceDao,
                             mEncodedPayloadDao,
                             mFrequencyCapDao,
-                            mEncryptionContextDao,
                             mEncryptionKeyDao,
+                            mEnrollmentDao,
                             mAdServicesHttpsClient,
                             mDevContextFilter,
                             mLightweightExecutorService,
@@ -7506,10 +7606,12 @@ public class AdSelectionE2ETest {
             // Populating the Custom Audience DB
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyer1,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                    /*debuggable=*/ false);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyer2,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                    /*debuggable=*/ false);
 
             // Ad selection should fail gracefully and not crash
             AdSelectionTestCallback resultsCallback =
@@ -7692,6 +7794,21 @@ public class AdSelectionE2ETest {
                 adCost);
     }
 
+    private Map<AdTechIdentifier, SignedContextualAds> createUnauthenticatedContextualAds() {
+        Map<AdTechIdentifier, SignedContextualAds> authenticatedContextualAds =
+                createContextualAds();
+        Map<AdTechIdentifier, SignedContextualAds> unauthenticatedContextualAds = new HashMap<>();
+        byte[] invalidSignatures = new byte[] {1, 2, 3};
+        for (Map.Entry<AdTechIdentifier, SignedContextualAds> buyersBundle :
+                authenticatedContextualAds.entrySet()) {
+            AdTechIdentifier buyer = buyersBundle.getKey();
+            SignedContextualAds ads = buyersBundle.getValue();
+            unauthenticatedContextualAds.put(
+                    buyer, ads.cloneToBuilder().setSignature(invalidSignatures).build());
+        }
+        return unauthenticatedContextualAds;
+    }
+
     private Map<AdTechIdentifier, SignedContextualAds> createContextualAds() {
         Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
 
@@ -7702,15 +7819,48 @@ public class AdSelectionE2ETest {
                                 .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
                                 .getHost());
         SignedContextualAds contextualAds2 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
-                                buyer2, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(
-                                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2))
-                        .build();
+                SignedContextualAdsFixture.signContextualAds(
+                        SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
+                                        buyer2, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
+                                .setDecisionLogicUri(
+                                        mMockWebServerRule.uriForPath(
+                                                BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)));
         buyerContextualAds.put(buyer2, contextualAds2);
-
+        persistEncryptionKeyInDb(buyerContextualAds);
         return buyerContextualAds;
+    }
+
+    private void persistEncryptionKeyInDb(
+            Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds) {
+        for (AdTechIdentifier adTech : buyerContextualAds.keySet()) {
+            String enrollmentId = adTech + "-enrollment-id";
+            String sourceRegistration = CommonFixture.getUri(adTech, "/source").toString();
+            String triggerRegistration = CommonFixture.getUri(adTech, "/trigger").toString();
+            String attributionReporting = CommonFixture.getUri(adTech, "/attrReport").toString();
+            String responseBasedRegistration = CommonFixture.getUri(adTech, "/response").toString();
+            String encryptionKeyUrl = CommonFixture.getUri(adTech, "/keys").toString();
+            mEnrollmentDao.insert(
+                    ENROLLMENT_DATA1
+                            .cloneToBuilder()
+                            .setEnrollmentId(enrollmentId)
+                            .setAttributionSourceRegistrationUrl(sourceRegistration)
+                            .setAttributionTriggerRegistrationUrl(triggerRegistration)
+                            .setAttributionReportingUrl(attributionReporting)
+                            .setRemarketingResponseBasedRegistrationUrl(responseBasedRegistration)
+                            .setEncryptionKeyUrl(encryptionKeyUrl)
+                            .build());
+            Uri reportingOriginUrl = CommonFixture.getUri(adTech, "/reportingOriginUrl");
+            mEncryptionKeyDao.insert(
+                    ENCRYPTION_KEY1
+                            .cloneToBuilder()
+                            .setEnrollmentId(enrollmentId)
+                            .setKeyType(EncryptionKey.KeyType.SIGNING)
+                            .setEncryptionKeyUrl(encryptionKeyUrl)
+                            .setProtocolType(EncryptionKey.ProtocolType.ECDSA)
+                            .setBody(PUBLIC_TEST_KEY_STRING)
+                            .setReportingOrigin(reportingOriginUrl)
+                            .build());
+        }
     }
 
     private void verifyErrorMessageIsCorrect(

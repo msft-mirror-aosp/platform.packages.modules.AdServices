@@ -75,7 +75,8 @@ public class UiSettingsMainPage {
                 sDevice,
                 UiConstants.UX.GA_UX,
                 /* isOptIn= */ true,
-                /* isFlipConsent= */ true);
+                /* isFlipConsent= */ true,
+                /* assertOptIn= */ false);
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "(" + UI_SETTINGS_LATENCY_METRIC + ": " + duration + ")");
     }
