@@ -5651,12 +5651,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableRvcNotification() {
+    public boolean getEnableRvcPostOtaNotification() {
         return getEnableAdServicesSystemApi()
                 && DeviceConfig.getBoolean(
                         FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED,
-                        /* defaultValue */ DEFAULT_RVC_NOTIFICATION_ENABLED);
+                        /* flagName */ FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
+                        /* defaultValue */ DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
     }
 
     @Override
@@ -5679,7 +5679,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 getRecordManualInteractionEnabled());
         uxMap.put(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
         uxMap.put(FlagsConstants.KEY_RVC_UX_ENABLED, getEnableRvcUx());
-        uxMap.put(FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED, getEnableRvcNotification());
+        uxMap.put(
+                FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
+                getEnableRvcPostOtaNotification());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(
