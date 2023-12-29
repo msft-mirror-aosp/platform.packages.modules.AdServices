@@ -799,7 +799,7 @@ public class AsyncSourceFetcher {
     public Optional<Source> fetchSource(
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus,
-            AsyncRedirect asyncRedirect) {
+            AsyncRedirects asyncRedirects) {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
         if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
@@ -852,9 +852,7 @@ public class AsyncSourceFetcher {
             }
         }
 
-        if (asyncRegistration.shouldProcessRedirects()) {
-            FetcherUtil.parseRedirects(headers).forEach(asyncRedirect::addToRedirects);
-        }
+        asyncRedirects.configure(headers, mFlags, asyncRegistration);
 
         if (!isSourceHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
