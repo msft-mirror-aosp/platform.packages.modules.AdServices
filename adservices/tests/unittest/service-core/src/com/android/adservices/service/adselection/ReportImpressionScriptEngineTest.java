@@ -267,6 +267,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    @FlakyTest(bugId = 317817375)
     public void testReportResultSuccessfulCaseWithCallingRegisterAdBeacon() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
