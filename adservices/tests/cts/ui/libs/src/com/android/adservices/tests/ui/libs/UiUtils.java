@@ -670,7 +670,10 @@ public class UiUtils {
     public static void gentleSwipe(UiDevice device) {
         UiObject2 scrollView =
                 device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
-        scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
+        // Some devices on R is not scrollable
+        if (scrollView != null) {
+                scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
+        }
     }
 
     public static void setFlipFlow(boolean isFlip) {
@@ -703,10 +706,13 @@ public class UiUtils {
     public static UiObject2 scrollTo(Context context, UiDevice device, int resId) {
         UiObject2 scrollView =
                 device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
-        String targetStr = getString(context, resId);
-        scrollView.scrollUntil(
-                Direction.DOWN,
-                Until.findObject(By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        if (scrollView != null) {
+            String targetStr = getString(context, resId);
+            scrollView.scrollUntil(
+                    Direction.DOWN,
+                    Until.findObject(
+                            By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        }
         return getElement(context, device, resId);
     }
 
