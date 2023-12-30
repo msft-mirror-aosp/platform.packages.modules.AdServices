@@ -4285,6 +4285,16 @@ public interface Flags extends CommonFlags {
     }
 
     /**
+     * Flag to control whether redirect registration urls should be modified to prefix the path
+     * string with .well-known
+     */
+    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
+
+    default boolean getMeasurementEnableRedirectToWellKnownPath() {
+        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
+    }
+
+    /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
      */

@@ -151,7 +151,7 @@ public final class AppConsentForRStorageManagerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void testSetMeasurementConsent() {
+    public void testSetMeasurementConsent() throws IOException {
         mAppConsentForRStorageManager.setConsent(AdServicesApiType.MEASUREMENTS, true);
         verify(mAdExtDataManager).setMsmtConsent(eq(true));
     }
