@@ -135,6 +135,10 @@ public class AdservicesWorkflows {
                 UiUtils.enableGa();
                 UiUtils.enableU18();
                 break;
+            case RVC_UX:
+                UiUtils.enableGa();
+                UiUtils.enableRvc();
+                break;
         }
 
         UiUtils.setFlipFlow(isV2);
@@ -192,7 +196,7 @@ public class AdservicesWorkflows {
             boolean isEuDevice,
             UiConstants.UX ux)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, false);
+        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, true);
     }
 
     public static void verifyNotification(

@@ -238,10 +238,8 @@ public class ConsentCompositeStorage implements IConsentStorage {
      */
     @Override
     public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
-        LogUtil.d("tccyp 231");
         for (IConsentStorage storage : getConsentStorageList()) {
             try {
-                LogUtil.d("tccyp 233");
                 return storage.getCurrentPrivacySandboxFeature();
             } catch (ConsentStorageDeferException e) {
                 LogUtil.i(
@@ -358,7 +356,8 @@ public class ConsentCompositeStorage implements IConsentStorage {
                         storage.getClass().getSimpleName());
             } catch (IOException e) {
                 logDatastoreWhileRecordingDefaultConsent(e);
-                throw new RuntimeException(e);
+            } catch (IllegalStateException e) {
+                LogUtil.i("IllegalStateException" + e);
             }
         }
         return ImmutableList.of();
@@ -692,9 +691,7 @@ public class ConsentCompositeStorage implements IConsentStorage {
     private void setConsentToApiType(AdServicesApiType apiType, boolean isGiven) {
         for (IConsentStorage storage : getConsentStorageList()) {
             try {
-                LogUtil.i("tccyp 642");
                 storage.setConsent(apiType, isGiven);
-                LogUtil.i("tccyp 644");
             } catch (ConsentStorageDeferException e) {
                 LogUtil.i(
                         "Skip current storage manager %s. Defer to next one",
@@ -761,11 +758,14 @@ public class ConsentCompositeStorage implements IConsentStorage {
      */
     @Override
     public boolean setConsentForAppIfNew(String packageName, boolean isConsentRevoked) {
-        boolean ret = false;
-        for (IConsentStorage storage : getConsentStorageList()) {
+        for (IConsentStorage storage : getConsentStorageList().reverse()) {
             try {
-                // Same as original logic, only return the last one.
-                ret = storage.setConsentForAppIfNew(packageName, isConsentRevoked);
+                // Same as original logic, call the PPAPI first
+                // TODO(b/317595641): clean up the logic
+                boolean ret = storage.setConsentForAppIfNew(packageName, isConsentRevoked);
+                if (ret) {
+                    return true;
+                }
             } catch (ConsentStorageDeferException e) {
                 LogUtil.i(
                         "Skip current storage manager %s. Defer to next one",
@@ -773,10 +773,10 @@ public class ConsentCompositeStorage implements IConsentStorage {
             } catch (IOException e) {
                 LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 logDataStoreWhileRecordingException(e);
-                return ret;
+                return false;
             }
         }
-        return ret;
+        return false;
     }
 
     /** Sets the current enrollment channel to storage. */
