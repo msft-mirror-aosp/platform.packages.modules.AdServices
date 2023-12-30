@@ -52,6 +52,10 @@
         <option
             name="run-command"
             value="device_config put adservices consent_already_interacted_fix_enable false"/>
+        <option
+            name="run-command"
+            value="device_config put adservices ga_ux_enabled true"/>
+        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
         <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option
             name="run-command"
