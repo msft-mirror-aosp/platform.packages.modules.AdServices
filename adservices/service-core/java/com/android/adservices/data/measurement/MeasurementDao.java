@@ -2761,6 +2761,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
                 asyncRegistration.getPostBody());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
+                asyncRegistration.getRedirectBehavior().name());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

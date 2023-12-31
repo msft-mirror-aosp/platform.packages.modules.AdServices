@@ -18,46 +18,31 @@ package com.android.adservices.service.measurement.registration;
 
 import android.net.Uri;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/** Wrapper for a list of redirect Uris and a redirect type */
 public class AsyncRedirect {
-    private final List<Uri> mLocationRedirects;
-    private final List<Uri> mListRedirects;
-
-    public AsyncRedirect() {
-        mLocationRedirects = new ArrayList<>();
-        mListRedirects = new ArrayList<>();
+    public enum RedirectBehavior {
+        /** Do not modify redirect path */
+        AS_IS,
+        /** Prepend well known path prefix to path of redirect url for Location type redirects */
+        LOCATION_TO_WELL_KNOWN,
     }
 
-    public AsyncRedirect(List<Uri> locationRedirects, List<Uri> listRedirects) {
-        mLocationRedirects = locationRedirects;
-        mListRedirects = listRedirects;
+    private final Uri mUri;
+    private final RedirectBehavior mRedirectBehavior;
+
+    public AsyncRedirect(Uri uri, RedirectBehavior redirectBehavior) {
+        mUri = uri;
+        mRedirectBehavior = redirectBehavior;
     }
 
-    /** The list the redirect Uris */
-    public List<Uri> getRedirects() {
-        List<Uri> allRedirects = new ArrayList<>(mListRedirects);
-        allRedirects.addAll(mLocationRedirects);
-        return allRedirects;
+    public Uri getUri() {
+        return mUri;
     }
 
-    /** Get list by redirect type */
-    public List<Uri> getRedirectsByType(AsyncRegistration.RedirectType redirectType) {
-        if (redirectType == AsyncRegistration.RedirectType.LOCATION) {
-            return new ArrayList<>(mLocationRedirects);
-        } else {
-            return new ArrayList<>(mListRedirects);
-        }
+    public RedirectBehavior getRedirectBehavior() {
+        return mRedirectBehavior;
     }
 
-    /** Add to the list the redirect Uris based on type */
-    public void addToRedirects(AsyncRegistration.RedirectType redirectType, List<Uri> uris) {
-        if (redirectType == AsyncRegistration.RedirectType.LOCATION) {
-            mLocationRedirects.addAll(uris);
-        } else {
-            mListRedirects.addAll(uris);
-        }
-    }
+
+
+
 }

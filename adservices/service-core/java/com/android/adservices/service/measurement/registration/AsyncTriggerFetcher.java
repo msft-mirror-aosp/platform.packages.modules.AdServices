@@ -308,7 +308,7 @@ public class AsyncTriggerFetcher {
     public Optional<Trigger> fetchTrigger(
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus,
-            AsyncRedirect asyncRedirect) {
+            AsyncRedirects asyncRedirects) {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
         if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
@@ -347,9 +347,7 @@ public class AsyncTriggerFetcher {
             }
         }
 
-        if (asyncRegistration.shouldProcessRedirects()) {
-            FetcherUtil.parseRedirects(headers).forEach(asyncRedirect::addToRedirects);
-        }
+        asyncRedirects.configure(headers, mFlags, asyncRegistration);
 
         if (!isTriggerHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
