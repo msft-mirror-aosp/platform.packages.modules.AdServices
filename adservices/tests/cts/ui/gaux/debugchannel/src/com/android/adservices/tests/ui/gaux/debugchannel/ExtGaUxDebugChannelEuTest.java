@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.tests.ui.gaux.alreadyenrolledchannel;
+package com.android.adservices.tests.ui.gaux.debugchannel;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,10 +29,8 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
-import com.android.adservices.tests.ui.libs.UiConstants.UX;
+import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
-
-import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -47,7 +45,7 @@ import java.util.concurrent.Executors;
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class ExtGaUxAlreadyEnrolledChannelEuTest {
+public class ExtGaUxDebugChannelEuTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -64,22 +62,25 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest {
 
     @Before
     public void setUp() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         UiUtils.resetAdServicesConsentData(sContext);
 
-        UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
-
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        UiUtils.enableNotificationPermission();
 
         mCommonManager = AdServicesCommonManager.get(sContext);
 
-        // General purpose callback used for expected success calls.
+        // consent debug mode is turned on for this test class as we only care about the
+        // first trigger (API call).
+        UiUtils.enableConsentDebugMode();
+        UiUtils.disableNotificationFlowV2();
+        UiUtils.disableOtaStrings();
+
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -91,33 +92,6 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest {
                     }
                 };
 
-        // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
-
-        SettableFuture<Boolean> responseFuture = SettableFuture.create();
-
-        mCommonManager.enableAdServices(
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build(),
-                Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
-                    @Override
-                    public void onResult(Boolean result) {
-                        responseFuture.set(result);
-                    }
-
-                    @Override
-                    public void onError(Exception exception) {
-                        responseFuture.setException(exception);
-                    }
-                });
-
-        Boolean response = responseFuture.get();
-        assertThat(response).isTrue();
-
         mDevice.pressHome();
     }
 
@@ -126,6 +100,78 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
+        mDevice.pressHome();
+    }
+
+    /** Verify that entry point disabled can not trigger consent notification. */
+    @Test
+    public void testEntryPointDisabled() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        mCommonManager.enableAdServices(
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(false)
+                        .build(),
+                Executors.newCachedThreadPool(),
+                mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                false, /* isGa */
+                UiConstants.UX.GA_UX,
+                true);
+    }
+
+    /** Verify that when request sent from entry point, we won't trigger notification. */
+    @Test
+    public void testFromEntryPointRequest() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        mCommonManager.enableAdServices(
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(false)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .setPrivacySandboxUiRequest(true)
+                        .build(),
+                Executors.newCachedThreadPool(),
+                mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX,
+                true);
+    }
+
+    /** Verify that non-adult account can not trigger consent notification. */
+    @Test
+    public void testNonAdultAccount() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        mCommonManager.enableAdServices(
+                new AdServicesStates.Builder()
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(false)
+                        .setPrivacySandboxUiEnabled(true)
+                        .build(),
+                Executors.newCachedThreadPool(),
+                mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext,
+                mDevice, /* isDisplayed */
+                false, /* isEuTest */
+                false,
+                UiConstants.UX.GA_UX,
+                true);
     }
 
     /**
@@ -135,25 +181,22 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest {
     public void testGaEuAdIdEnabled() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        AdServicesStates adServicesStates =
+        mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
                         .setAdultAccount(true)
                         .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX, true);
-
-        // Notifications should not be shown twice.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+                        .build(),
+                Executors.newCachedThreadPool(),
+                mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX, true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX,
+                true);
     }
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
@@ -161,26 +204,21 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest {
     public void testGaEuAdIdDisabled() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        UiUtils.setAsEuDevice();
-
-        AdServicesStates adServicesStates =
+        mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)
                         .setAdultAccount(true)
                         .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
-
-        AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX, true);
-
-        // Notifications should not be shown twice.
-        mCommonManager.enableAdServices(
-                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+                        .build(),
+                Executors.newCachedThreadPool(),
+                mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX, true);
+                sContext,
+                mDevice, /* isDisplayed */
+                true, /* isEuTest */
+                true,
+                UiConstants.UX.GA_UX,
+                true);
     }
 }
