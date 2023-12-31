@@ -4887,44 +4887,6 @@ public class MeasurementDaoTest {
                         .getCount());
     }
 
-    private static AsyncRegistration buildAsyncRegistration(String id) {
-
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                .setRegistrant(INSTALLED_REGISTRANT)
-                .setTopOrigin(INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
-    }
-
-    private static AsyncRegistration buildAsyncRegistrationWithNotDestination(String id) {
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
-                .setRegistrant(INSTALLED_REGISTRANT)
-                .setTopOrigin(INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRequestTime(Long.MAX_VALUE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
-    }
-
-    private static AsyncRegistration buildAsyncRegistrationWithNotRegistrant(String id) {
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                .setRegistrant(NOT_INSTALLED_REGISTRANT)
-                .setTopOrigin(NOT_INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
-    }
-
     @Test
     public void testDeleteDebugReport() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
@@ -6163,6 +6125,9 @@ public class MeasurementDaoTest {
             assertEquals(
                     asyncRegistration.getPlatformAdId(), validAsyncRegistration.getPlatformAdId());
             assertEquals(asyncRegistration.getPostBody(), validAsyncRegistration.getPostBody());
+            assertEquals(
+                    asyncRegistration.getRedirectBehavior(),
+                    validAsyncRegistration.getRedirectBehavior());
         }
     }
 

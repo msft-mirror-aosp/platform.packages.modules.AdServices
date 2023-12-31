@@ -79,6 +79,9 @@ java_library {
     srcs: [
         "java/com/android/adservices/shared/common/*.java",
     ],
+    static_libs: [
+        "modules-utils-preconditions",
+    ],
     libs: [
         "framework-annotations-lib",
         "jsr305", // for @ThreadSafe",

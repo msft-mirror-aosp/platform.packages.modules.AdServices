@@ -27,6 +27,7 @@ android_test {
         "adservices-shared-error-logging",
         "adservices-shared-storage",
         "adservices-shared-testing",
+        "adservices-shared-util",
         "androidx.test.core",
         "androidx.test.runner",
         "auto_value_annotations",

@@ -255,6 +255,7 @@ public class EnqueueAsyncRegistration {
                         .setPlatformAdId(platformAdIdValue)
                         .setPostBody(postBody)
                         .setRegistrationId(registrationId)
+                        .setRedirectBehavior(AsyncRedirect.RedirectBehavior.AS_IS)
                         .build();
 
         dao.insertAsyncRegistration(asyncRegistration);
