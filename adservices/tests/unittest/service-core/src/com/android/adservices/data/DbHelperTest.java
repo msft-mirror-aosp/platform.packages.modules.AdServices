@@ -17,6 +17,7 @@
 package com.android.adservices.data;
 
 import static com.android.adservices.data.DbHelper.DATABASE_VERSION_7;
+import static com.android.adservices.data.DbTestUtil.assertMeasurementTablesDoNotExist;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
@@ -107,18 +108,6 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
         assertMeasurementTablesDoNotExist(db);
-    }
-
-    public static void assertMeasurementTablesDoNotExist(SQLiteDatabase db) {
-        assertFalse(doesTableExist(db, "msmt_source"));
-        assertFalse(doesTableExist(db, "msmt_trigger"));
-        assertFalse(doesTableExist(db, "msmt_async_registration_contract"));
-        assertFalse(doesTableExist(db, "msmt_event_report"));
-        assertFalse(doesTableExist(db, "msmt_attribution"));
-        assertFalse(doesTableExist(db, "msmt_aggregate_report"));
-        assertFalse(doesTableExist(db, "msmt_aggregate_encryption_key"));
-        assertFalse(doesTableExist(db, "msmt_debug_report"));
-        assertFalse(doesTableExist(db, "msmt_xna_ignored_sources"));
     }
 
     public static void assertEnrollmentTableDoesNotExist(SQLiteDatabase db) {

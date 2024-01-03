@@ -15,7 +15,6 @@
  */
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.service.FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -73,8 +72,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
-                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, true);
+                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true);
 
     @BeforeClass
     public static void classSetup() throws InterruptedException {
@@ -87,6 +85,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();

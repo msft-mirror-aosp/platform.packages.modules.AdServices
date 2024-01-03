@@ -16,7 +16,6 @@
 package com.android.adservices.ui.notifications;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
-import static com.android.adservices.service.FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 
@@ -75,8 +74,7 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
                     .setCompatModeFlags()
                     .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setFlag(KEY_U18_UX_ENABLED, true)
-                    .setFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, true);
+                    .setFlag(KEY_U18_UX_ENABLED, true);
 
     @BeforeClass
     public static void classSetup() throws InterruptedException {
@@ -89,6 +87,7 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
 
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         sDevice.pressHome();
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
@@ -104,7 +103,6 @@ public class NotificationActivityGAV2UxSelectorUiAutomatorTest {
 
     @Test
     public void euAcceptFlowTest() throws UiObjectNotFoundException, InterruptedException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         startActivity(true);

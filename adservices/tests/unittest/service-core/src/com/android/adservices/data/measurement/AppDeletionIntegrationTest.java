@@ -68,7 +68,7 @@ public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
         new MeasurementDataDeleter(
                         new SQLDatastoreManager(
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger),
-                        FlagsFactory.getFlagsForTest(),
+                        FlagsFactory.getFlags(),
                         mLogger)
                 .deleteAppUninstalledData(mUri);
     }

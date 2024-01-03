@@ -125,13 +125,20 @@ public final class AdServicesStorageManager implements IConsentStorage {
     @Override
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
         int consentApiType = apiType.toConsentApiType();
-        return AdServicesApiConsent.getConsent(
-                mAdServicesManager.getConsent(consentApiType).isIsGiven());
+        ConsentParcel consentParcel = mAdServicesManager.getConsent(consentApiType);
+        if (consentParcel == null) {
+            return AdServicesApiConsent.REVOKED;
+        }
+        return AdServicesApiConsent.getConsent(consentParcel.isIsGiven());
     }
 
     /** Returns the current privacy sandbox feature. */
     @Override
-    public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
+    public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() throws IOException {
+        if (mAdServicesManager == null
+                || mAdServicesManager.getCurrentPrivacySandboxFeature() == null) {
+            return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED;
+        }
         return PrivacySandboxFeatureType.valueOf(
                 mAdServicesManager.getCurrentPrivacySandboxFeature());
     }
@@ -434,7 +441,8 @@ public final class AdServicesStorageManager implements IConsentStorage {
         return mAdServicesManager.wasU18NotificationDisplayed();
     }
 
-    private PrivacySandboxUxCollection convertUxString(String uxString) {
+    private PrivacySandboxUxCollection convertUxString(@NonNull String uxString) {
+        Objects.requireNonNull(uxString);
         return Stream.of(PrivacySandboxUxCollection.values())
                 .filter(ux -> uxString.equals(ux.toString()))
                 .findFirst()

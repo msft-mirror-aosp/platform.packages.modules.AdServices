@@ -78,7 +78,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
+public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     private AdvertisingCustomAudienceClient mClient;
     private TestAdvertisingCustomAudienceClient mTestClient;
 

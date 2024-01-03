@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Contains a buyer supplied {@link ContextualAds} bundle and its signature.
+ * Contains a buyer supplied {@link AdWithBid} bundle and its signature.
  *
  * <p>Instances of this class are created by SDKs to be injected as part of {@link
  * AdSelectionConfig} and passed to {@link AdSelectionManager#selectAds}
@@ -45,7 +45,7 @@ import java.util.Objects;
  *   <li>{@code Objects} concatenate the serialized values of their fields with the {@code |} (pipe)
  *       in between each field
  *   <li>{@code All fields} are sorted by alphabetical order within the object
- *   <li>{@code Nullable fields} are serialized as ”null” if they are null
+ *   <li>{@code Nullable fields} are skipped if they are null/unset
  *   <li>{@code Doubles} are converted to String preserving precision
  *   <li>{@code Integers} are converted to string values
  *   <li>{@code Sets} are sorted alphabetically

@@ -15,10 +15,12 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.shared.util.Preconditions.checkState;
+import static com.android.internal.util.Preconditions.checkArgument;
+
 import androidx.annotation.Nullable;
 
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.util.Preconditions;
 
 // TODO(b/302757068): add unit tests (and/or convert tests from OutcomeReceiverForTestsTest)
 /**
@@ -100,9 +102,9 @@ public abstract class ExceptionFailureSyncCallback<T> extends SyncCallback<T, Ex
      */
     public <E extends Exception> E assertFailure(Class<E> expectedClass)
             throws InterruptedException {
-        Preconditions.checkArgument(expectedClass != null, "expectedClass cannot be null");
+        checkArgument(expectedClass != null, "expectedClass cannot be null");
         Exception error = assertErrorReceived();
-        Preconditions.checkState(
+        checkState(
                 expectedClass.isInstance(error),
                 ERROR_WRONG_EXCEPTION_RECEIVED,
                 expectedClass,

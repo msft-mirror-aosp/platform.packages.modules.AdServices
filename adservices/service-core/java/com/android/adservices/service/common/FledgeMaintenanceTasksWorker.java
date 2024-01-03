@@ -33,6 +33,9 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.InteractionReportingTableClearedStats;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -50,6 +53,8 @@ public class FledgeMaintenanceTasksWorker {
     @NonNull private final Flags mFlags;
     @NonNull private final Clock mClock;
 
+    @NonNull private final AdServicesLogger mAdServicesLogger;
+
     @VisibleForTesting
     public FledgeMaintenanceTasksWorker(
             @NonNull Flags flags,
@@ -58,7 +63,8 @@ public class FledgeMaintenanceTasksWorker {
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull EncryptionContextDao encryptionContextDao,
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
-            @NonNull Clock clock) {
+            @NonNull Clock clock,
+            @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(frequencyCapDao);
@@ -66,6 +72,7 @@ public class FledgeMaintenanceTasksWorker {
         Objects.requireNonNull(clock);
         Objects.requireNonNull(encryptionContextDao);
         Objects.requireNonNull(adSelectionDebugReportDao);
+        Objects.requireNonNull(adServicesLogger);
 
         mFlags = flags;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -74,6 +81,7 @@ public class FledgeMaintenanceTasksWorker {
         mEncryptionContextDao = encryptionContextDao;
         mClock = clock;
         mAdSelectionDebugReportDao = adSelectionDebugReportDao;
+        mAdServicesLogger = adServicesLogger;
     }
 
     private FledgeMaintenanceTasksWorker(@NonNull Context context) {
@@ -88,6 +96,7 @@ public class FledgeMaintenanceTasksWorker {
         mAdSelectionDebugReportDao =
                 AdSelectionDebugReportingDatabase.getInstance(context)
                         .getAdSelectionDebugReportDao();
+        mAdServicesLogger = StatsdAdServicesLogger.getInstance();
     }
 
     /** Creates a new instance of {@link FledgeMaintenanceTasksWorker}. */
@@ -113,8 +122,25 @@ public class FledgeMaintenanceTasksWorker {
         sLogger.v("Clearing expired Buyer Decision Logic data ");
         mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
 
-        sLogger.v("Clearing expired Registered Ad Interaction data ");
-        mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
+
+        if (mFlags.getFledgeBeaconReportingMetricsEnabled()) {
+            long numUrisBeforeClearing = mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions();
+
+            sLogger.v("Clearing expired Registered Ad Interaction data ");
+            mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
+
+            long numUrisAfterClearing = mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions();
+
+            mAdServicesLogger.logInteractionReportingTableClearedStats(
+                    InteractionReportingTableClearedStats.builder()
+                            .setNumUrisCleared(
+                                    (int) (numUrisAfterClearing - numUrisBeforeClearing))
+                            .build()
+            );
+        } else {
+            sLogger.v("Clearing expired Registered Ad Interaction data ");
+            mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
+        }
 
         if (mFlags.getFledgeAuctionServerEnabled()
                 || mFlags.getFledgeOnDeviceAuctionShouldUseUnifiedTables()) {

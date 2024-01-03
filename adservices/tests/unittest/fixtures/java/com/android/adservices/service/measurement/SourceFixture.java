@@ -20,6 +20,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -173,7 +174,15 @@ public final class SourceFixture {
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
-        return new TriggerSpecs(triggerSpecArrayFrom(triggerSpecsString), 3, getValidSource());
+        Source source =
+                getMinimalValidSourceBuilder()
+                        .setAttributedTriggers(new ArrayList<>())
+                        .build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(
+                triggerSpecArrayFrom(triggerSpecsString), 3, source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        return triggerSpecs;
     }
 
     /** Provides a count-based valid TriggerSpecs with smaller state space. */
@@ -185,15 +194,32 @@ public final class SourceFixture {
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
-        return new TriggerSpecs(triggerSpecArrayFrom(triggerSpecsString), 1, getValidSource());
+        Source source = getMinimalValidSourceBuilder().build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(
+                triggerSpecArrayFrom(triggerSpecsString), 1, source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        return triggerSpecs;
     }
 
     /** Provides a value-sum-based valid TriggerSpecs. */
     public static TriggerSpecs getValidTriggerSpecsValueSum() throws JSONException {
-        return new TriggerSpecs(
+        return getValidTriggerSpecsValueSum(3);
+    }
+
+    /** Provides a value-sum-based valid TriggerSpecs. */
+    public static TriggerSpecs getValidTriggerSpecsValueSum(int maxReports) throws JSONException {
+        Source source =
+                getMinimalValidSourceBuilder()
+                        .setAttributedTriggers(new ArrayList<>())
+                        .build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(
                 getTriggerSpecValueSumArrayValidBaseline(),
-                3,
-                getValidSource());
+                maxReports,
+                source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        return triggerSpecs;
     }
 
     public static Source getValidSourceWithFlexEventReport() {
@@ -210,7 +236,7 @@ public final class SourceFixture {
 
     public static Source getValidSourceWithFlexEventReportWithFewerState() {
         try {
-            return getValidSourceBuilder()
+            return getMinimalValidSourceBuilder()
                     .setAttributedTriggers(new ArrayList<>())
                     .setTriggerSpecs(getValidTriggerSpecsCountBasedWithFewerState())
                     .setMaxEventLevelReports(

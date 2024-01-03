@@ -61,7 +61,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void unloadSdk(
-            String callingPackageName, String sdkName, long timeAppCalledSystemServer) {}
+            String callingPackageName, String sdkName, SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
     public void requestSurfacePackage(
@@ -85,6 +85,11 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public List<SandboxedSdk> getSandboxedSdks(
             String callingPackageName, SandboxLatencyInfo sandboxLatencyInfo) {
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isSdkSandboxServiceRunning(String callingPackageName) throws RemoteException {
+        return false;
     }
 
     @Override
