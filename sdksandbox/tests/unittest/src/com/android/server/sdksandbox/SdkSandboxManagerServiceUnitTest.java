@@ -992,6 +992,8 @@ public class SdkSandboxManagerServiceUnitTest {
     /** Tests that only allowed activities may be started from the sdk sandbox. */
     @Test
     public void testEnforceAllowedToStartActivity_defaultAllowedValues() {
+        ExtendedMockito.doReturn(Process.myUid())
+                .when(() -> Process.getAppUidForSdkSandboxUid(Binder.getCallingUid()));
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
             Intent allowedIntent = new Intent(action);
@@ -1010,6 +1012,8 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testEnforceAllowedToStartActivity_restrictionsNotApplied() {
         setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
+        ExtendedMockito.doReturn(Process.myUid())
+                .when(() -> Process.getAppUidForSdkSandboxUid(Binder.getCallingUid()));
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         Intent intent = new Intent(Intent.ACTION_CALL);
         sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
@@ -1020,6 +1024,8 @@ public class SdkSandboxManagerServiceUnitTest {
         /** Allowlist: Intent.ACTION_CALL */
         String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
         setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+        ExtendedMockito.doReturn(Process.myUid())
+                .when(() -> Process.getAppUidForSdkSandboxUid(Binder.getCallingUid()));
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
         Intent intent = new Intent(Intent.ACTION_CALL);
@@ -1037,8 +1043,9 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testEnforceAllowedToStartActivity_restrictionEnforcedDeviceConfigAllowlistNotSet() {
         setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, null);
+        ExtendedMockito.doReturn(Process.myUid())
+                .when(() -> Process.getAppUidForSdkSandboxUid(Binder.getCallingUid()));
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
-
         for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
             sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(action));
         }
@@ -1053,6 +1060,8 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testEnforceAllowedToStartActivity_restrictionsNotEnforced() {
         setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
+        ExtendedMockito.doReturn(Process.myUid())
+                .when(() -> Process.getAppUidForSdkSandboxUid(Binder.getCallingUid()));
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent());
     }
@@ -1062,6 +1071,8 @@ public class SdkSandboxManagerServiceUnitTest {
         /** Allowlist: Intent.ACTION_CALL */
         String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
         setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+        ExtendedMockito.doReturn(Process.myUid())
+                .when(() -> Process.getAppUidForSdkSandboxUid(Binder.getCallingUid()));
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
         sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_CALL));
@@ -1088,6 +1099,8 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testEnforceAllowedToStartActivity_nextRestrictionsAppliedButAllowlistNotSet() {
         setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
         setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, "");
+        ExtendedMockito.doReturn(Process.myUid())
+                .when(() -> Process.getAppUidForSdkSandboxUid(Binder.getCallingUid()));
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
         Intent intent = new Intent(Intent.ACTION_CALL);
