@@ -25,13 +25,13 @@ import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURC
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStates;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
-import android.os.OutcomeReceiver;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -791,7 +791,7 @@ public class UiUtils {
                         .setPrivacySandboxUiRequest(false)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new AdServicesOutcomeReceiver<Boolean, Exception>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);
