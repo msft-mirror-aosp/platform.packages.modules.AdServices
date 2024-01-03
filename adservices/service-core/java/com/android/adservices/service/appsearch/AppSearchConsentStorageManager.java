@@ -412,8 +412,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
 
     /** Saves the default consent by apiType. */
     @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent)
-            throws IOException {
+    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent) {
         mAppSearchConsentWorker.setConsent(apiType.toDefaultConsentDatastoreKey(), defaultConsent);
     }
 
@@ -436,8 +435,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
     }
 
     /** Saves information to the storage that user interacted with consent manually. */
-    public void recordUserManualInteractionWithConsent(
-            @ConsentManager.UserManualInteraction int interaction) {
+    public void recordUserManualInteractionWithConsent(int interaction) {
         mAppSearchConsentWorker.recordUserManualInteractionWithConsent(interaction);
     }
 

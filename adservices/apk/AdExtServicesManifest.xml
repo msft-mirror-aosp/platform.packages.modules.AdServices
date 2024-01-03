@@ -109,6 +109,10 @@
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID_COMPAT"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_ADSERVICES_COBALT_UPLOAD_COMPAT" />
 
+    <!-- Permission to allow self calling Common Service. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_STATE_COMPAT"/>
+    <uses-permission android:name="android.permission.MODIFY_ADSERVICES_STATE_COMPAT"/>
+
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 

@@ -35,11 +35,10 @@ import android.content.pm.PackageManager;
 
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
@@ -47,43 +46,35 @@ import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AppConsentStorageManagerTest extends AdServicesUnitTestCase {
+@SpyStatic(PackageManagerCompatUtils.class)
+@SpyStatic(SdkLevel.class)
+@SpyStatic(FlagsFactory.class)
+public final class AppConsentStorageManagerTest extends AdServicesExtendedMockitoTestCase {
 
-    @Spy private Context mContextSpy;
+    private Context mContextSpy;
     private BooleanFileDatastore mAppDaoDatastore;
     private BooleanFileDatastore mConsentDatastore;
     private AppConsentDao mAppConsentDaoSpy;
     private AppConsentStorageManager mAppConsentStorageManager;
     @Mock private UxStatesDao mUxStatesDaoMock;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(PackageManagerCompatUtils.class)
-                    .spyStatic(SdkLevel.class)
-                    .spyStatic(FlagsFactory.class)
-                    .build();
-
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
         mContextSpy = Mockito.spy(appContext.get());
         mConsentDatastore =
                 new BooleanFileDatastore(
