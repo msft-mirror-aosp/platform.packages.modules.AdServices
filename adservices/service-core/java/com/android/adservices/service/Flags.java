@@ -709,7 +709,7 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.5F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
