@@ -1,5 +1,9 @@
 {
   "description": "One web source with both web and app destination. 2 triggers - 1 with app, 1 with web destination. Event report task within the expiry window sends two reports, one for each trigger.",
+  "phflags_override": {
+    "measurement_flex_api_max_information_gain_dual_destination_event": "9",
+    "measurement_flex_api_max_information_gain_dual_destination_navigation": "14"
+  },
   "input": {
     "web_sources": [{
       "registration_request": {

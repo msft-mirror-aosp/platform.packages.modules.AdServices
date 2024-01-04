@@ -29,13 +29,12 @@ import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.XNetworkData;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -64,24 +63,20 @@ public class AsyncTriggerFetcher {
     private final MeasurementHttpClient mNetworkConnection;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
-    private final AdServicesLogger mLogger;
     private final Context mContext;
 
     public AsyncTriggerFetcher(Context context) {
         this(
                 context,
                 EnrollmentDao.getInstance(context),
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance());
+                FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
-    public AsyncTriggerFetcher(
-            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncTriggerFetcher(Context context, EnrollmentDao enrollmentDao, Flags flags) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
-        mLogger = logger;
         mNetworkConnection = new MeasurementHttpClient(context);
     }
 
@@ -313,7 +308,7 @@ public class AsyncTriggerFetcher {
     public Optional<Trigger> fetchTrigger(
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus,
-            AsyncRedirect asyncRedirect) {
+            AsyncRedirects asyncRedirects) {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
         if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
@@ -352,9 +347,7 @@ public class AsyncTriggerFetcher {
             }
         }
 
-        if (asyncRegistration.shouldProcessRedirects()) {
-            FetcherUtil.parseRedirects(headers).forEach(asyncRedirect::addToRedirects);
-        }
+        asyncRedirects.configure(headers, mFlags, asyncRegistration);
 
         if (!isTriggerHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
@@ -364,7 +357,9 @@ public class AsyncTriggerFetcher {
 
         Optional<String> enrollmentId =
                 mFlags.isDisableMeasurementEnrollmentCheck()
-                        ? Optional.of(Enrollment.FAKE_ENROLLMENT)
+                        ? WebAddresses.topPrivateDomainAndScheme(
+                                        asyncRegistration.getRegistrationUri())
+                                .map(Uri::toString)
                         : Enrollment.getValidEnrollmentId(
                                 asyncRegistration.getRegistrationUri(),
                                 asyncRegistration.getRegistrant().getAuthority(),
@@ -417,7 +412,7 @@ public class AsyncTriggerFetcher {
                 if (!eventTriggerDatum.isNull("priority")) {
                     if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
                         Optional<Long> maybePriority =
-                                FetcherUtil.extractLong(eventTriggerDatum, "priority");
+                                FetcherUtil.extractLongString(eventTriggerDatum, "priority");
                         if (!maybePriority.isPresent()) {
                             return Optional.empty();
                         }
@@ -439,13 +434,18 @@ public class AsyncTriggerFetcher {
                         if (!maybeValue.isPresent()) {
                             return Optional.empty();
                         }
-                        validEventTriggerDatum.put("value", String.valueOf(maybeValue.get()));
+                        long value = maybeValue.get();
+                        if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                            return Optional.empty();
+                        }
+                        validEventTriggerDatum.put("value", value);
                     } else {
                         try {
-                            validEventTriggerDatum.put(
-                                    "value",
-                                    String.valueOf(
-                                            Long.parseLong(eventTriggerDatum.getString("value"))));
+                            long value = Long.parseLong(eventTriggerDatum.getString("value"));
+                            if (value < 1L || value > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                                return Optional.empty();
+                            }
+                            validEventTriggerDatum.put("value", value);
                         } catch (NumberFormatException e) {
                             LoggerFactory.getMeasurementLogger()
                                     .d(e, "getValidEventTriggerData: parsing value failed.");
@@ -627,8 +627,7 @@ public class AsyncTriggerFetcher {
             JSONArray aggregateDeduplicationKeys) throws JSONException {
         JSONArray validAggregateDeduplicationKeys = new JSONArray();
         if (aggregateDeduplicationKeys.length()
-                > FlagsFactory.getFlags()
-                        .getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
+                > mFlags.getMeasurementMaxAggregateDeduplicationKeysPerRegistration()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Aggregate deduplication keys have more keys than permitted. %s",

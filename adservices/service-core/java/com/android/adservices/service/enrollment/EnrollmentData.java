@@ -140,6 +140,21 @@ public class EnrollmentData {
         return Arrays.asList(input.trim().split(SEPARATOR));
     }
 
+    /** Returns the builder for the instance */
+    @NonNull
+    public EnrollmentData.Builder cloneToBuilder() {
+        return new EnrollmentData.Builder()
+                .setEnrollmentId(this.mEnrollmentId)
+                .setCompanyId(this.mCompanyId)
+                .setSdkNames(this.mSdkNames)
+                .setAttributionSourceRegistrationUrl(this.mAttributionSourceRegistrationUrl)
+                .setAttributionTriggerRegistrationUrl(this.mAttributionTriggerRegistrationUrl)
+                .setAttributionReportingUrl(this.mAttributionReportingUrl)
+                .setRemarketingResponseBasedRegistrationUrl(
+                        this.mRemarketingResponseBasedRegistrationUrl)
+                .setEncryptionKeyUrl(this.mEncryptionKeyUrl);
+    }
+
     /** Builder for {@link EnrollmentData}. */
     public static final class Builder {
         private final EnrollmentData mBuilding;

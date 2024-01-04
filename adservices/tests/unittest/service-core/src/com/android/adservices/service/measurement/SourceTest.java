@@ -100,6 +100,7 @@ public class SourceTest {
         assertEquals(Source.Status.ACTIVE, source.getStatus());
         assertEquals(Source.SourceType.EVENT, source.getSourceType());
         assertEquals(Source.AttributionMode.UNASSIGNED, source.getAttributionMode());
+        assertEquals(Source.TriggerDataMatching.MODULUS, source.getTriggerDataMatching());
         assertNull(source.getAttributedTriggers());
     }
 
@@ -173,6 +174,7 @@ public class SourceTest {
                         .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString())
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .setDropSourceIfInstalled(true)
                         .build(),
                 new Source.Builder()
@@ -220,6 +222,7 @@ public class SourceTest {
                         .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
                         .setTriggerSpecs(triggerSpecs)
                         .setTriggerSpecsString(triggerSpecs.encodeToJson())
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString())
@@ -451,18 +454,22 @@ public class SourceTest {
                         .setAttributedTriggers(new ArrayList<>())
                         .build());
 
-        TriggerSpecs triggerSpecsValueSumBased =
-                new TriggerSpecs(
-                        SourceFixture.getTriggerSpecValueSumArrayValidBaseline(),
-                        5,
-                        null);
+        TriggerSpecs triggerSpecsValueSumBased = SourceFixture.getValidTriggerSpecsValueSum(5);
         TriggerSpecs triggerSpecsCountBased = SourceFixture.getValidTriggerSpecsCountBased();
+
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecsString(triggerSpecsValueSumBased.encodeToJson())
                         .build(),
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setTriggerSpecsString(triggerSpecsCountBased.encodeToJson())
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerDataMatching(Source.TriggerDataMatching.MODULUS)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .build());
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1309,12 +1316,18 @@ public class SourceTest {
         Flags flags = mock(Flags.class);
         doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT)
+                .when(flags)
+                .getMeasurementFlexApiMaxInformationGainDualDestinationEvent();
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION)
+                .when(flags)
+                .getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
@@ -1350,10 +1363,10 @@ public class SourceTest {
         Flags flags = mock(Flags.class);
         doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
         // setup
@@ -1395,10 +1408,10 @@ public class SourceTest {
         Flags flags = mock(Flags.class);
         doReturn(2).when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
-        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION)
+        doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
         // setup
@@ -1419,8 +1432,6 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
-                        .setWebDestinations(
-                                List.of(WebUtil.validUri("https://web-destination1.test")))
                         .setRegistrant(Uri.parse("android-app://com.example"))
                         .setEventTime(new Random().nextLong())
                         .setExpiryTime(8640000010L)

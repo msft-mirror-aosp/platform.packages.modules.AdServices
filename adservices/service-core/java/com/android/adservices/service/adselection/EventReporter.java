@@ -89,6 +89,7 @@ public abstract class EventReporter {
     private int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final DevContext mDevContext;
+    private final boolean mShouldUseUnifiedTables;
 
     public EventReporter(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -100,7 +101,8 @@ public abstract class EventReporter {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull DevContext devContext) {
+            @NonNull DevContext devContext,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -121,6 +123,7 @@ public abstract class EventReporter {
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mDevContext = devContext;
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     /**
@@ -285,7 +288,7 @@ public abstract class EventReporter {
 
     private void validateAdSelectionIdAndCallerPackageNameExistence(
             long adSelectionId, String callerPackageName) {
-        if (mFlags.getFledgeAuctionServerEnabledForReportEvent()) {
+        if (mFlags.getFledgeAuctionServerEnabledForReportEvent() || mShouldUseUnifiedTables) {
             Preconditions.checkArgument(
                     mAdSelectionEntryDao.doesAdSelectionIdAndCallerPackageNameExists(
                             adSelectionId, callerPackageName),

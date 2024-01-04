@@ -17,8 +17,6 @@ package com.android.adservices.common;
 
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 
-import com.google.common.truth.Expect;
-
 import org.junit.Rule;
 
 /**
@@ -30,23 +28,10 @@ import org.junit.Rule;
  * start defining rules with {@code order = 11} (although for now they can use {@code order = 0} for
  * {@code SdkLevelSupportRule}, as that rule cannot be defined here yet.
  */
-public abstract class AdServicesUnitTestCase {
-
-    protected final String mTag = getClass().getSimpleName();
-
-    // TODO(b/285014040, 295269584: add rule with order 0 for SdkLevelSupportRule.forAtLeastS(),
-    // once that rule supports per-class annotation
-
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
+public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
 
     @Rule(order = 5)
-    public final ApplicationContextSingletonRule appContext = new ApplicationContextSingletonRule();
+    public final ApplicationContextSingletonRule appContext =
+            new ApplicationContextSingletonRule(/* restoreAfter= */ false);
 
-    @Rule(order = 6)
-    public final ProcessLifeguardRule processLifeguard = new ProcessLifeguardRule();
-
-    @Rule(order = 7)
-    public final Expect expect = Expect.create();
 }

@@ -25,27 +25,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
 
-import android.content.Context;
-
-import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.impl.FirstConsentNotificationChannel;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 
-public class FirstConsentNotificationChannelTest extends AdServicesUnitTestCase {
+@SpyStatic(ConsentNotificationJobService.class)
+public class FirstConsentNotificationChannelTest extends AdServicesExtendedMockitoTestCase {
     private final FirstConsentNotificationChannel mFirstConsentNotificationChannel =
             new FirstConsentNotificationChannel();
 
@@ -53,22 +49,14 @@ public class FirstConsentNotificationChannelTest extends AdServicesUnitTestCase 
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(ConsentNotificationJobService.class)
-                    .build();
-
     @Before
     public void setup() throws IOException {
-        MockitoAnnotations.initMocks(this);
-
         // Do not trigger real notifications.
         doNothing()
                 .when(
                         () ->
                                 ConsentNotificationJobService.schedule(
-                                        any(Context.class), anyBoolean(), anyBoolean()));
+                                        any(), anyBoolean(), anyBoolean()));
     }
 
     @Test
@@ -125,11 +113,7 @@ public class FirstConsentNotificationChannelTest extends AdServicesUnitTestCase 
     public void enrollTest_nonReconsentNotification() {
         mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), anyBoolean(), eq(false)),
-                times(1));
+        verify(() -> ConsentNotificationJobService.schedule(any(), anyBoolean(), eq(false)));
     }
 
     @Test
@@ -138,11 +122,7 @@ public class FirstConsentNotificationChannelTest extends AdServicesUnitTestCase 
 
         mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(true), eq(false)),
-                times(1));
+        verify(() -> ConsentNotificationJobService.schedule(any(), eq(true), eq(false)));
     }
 
     @Test
@@ -151,11 +131,7 @@ public class FirstConsentNotificationChannelTest extends AdServicesUnitTestCase 
 
         mFirstConsentNotificationChannel.enroll(appContext.get(), mConsentManager);
 
-        verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(false), eq(false)),
-                times(1));
+        verify(() -> ConsentNotificationJobService.schedule(any(), eq(false), eq(false)));
     }
 
 }

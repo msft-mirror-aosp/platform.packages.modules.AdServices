@@ -23,6 +23,7 @@ import android.app.ApplicationExitInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -37,6 +38,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.tests.sdkprovider.crashtest.ICrashTestSdkApi;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,17 +66,28 @@ public class SdkSandboxMetricsTestApp {
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private DropBoxManager mDropboxManager;
-    private Context mContext;
+    private final Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
+    private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
     private PackageManager mPackageManager;
     private String mCrashEntryText;
 
     @Before
     public void setup() {
-        mContext = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         mDropboxManager = mContext.getSystemService(DropBoxManager.class);
         mPackageManager = mContext.getPackageManager();
         assertThat(mSdkSandboxManager).isNotNull();
+
+        // Unload the SDK before running tests to ensure that the SDK is not loaded before running a
+        // test
+        mSdkLifecycleHelper.unloadSdk(SDK_PACKAGE);
+    }
+
+    @After
+    public void tearDown() {
+        if (mSdkSandboxManager != null) {
+            mSdkLifecycleHelper.unloadSdk(SDK_PACKAGE);
+        }
     }
 
     @Test

@@ -16,6 +16,7 @@
 package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
@@ -26,7 +27,6 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
-import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.os.SystemClock;
 
@@ -82,11 +82,22 @@ public class AdIdCompatibleManager {
     }
 
     @NonNull
-    private IAdIdService getService() {
-        IAdIdService service = mServiceBinder.getService();
-        if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
+    private IAdIdService getService(
+            @CallbackExecutor Executor executor,
+            AdServicesOutcomeReceiver<AdId, Exception> callback) {
+        IAdIdService service = null;
+        try {
+            service = mServiceBinder.getService();
+
+            // Throw ISE and set it to the callback when service is not available
+            if (service == null) {
+                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+            }
+        } catch (RuntimeException e) {
+            LogUtil.e(e, "Failed binding to AdId service");
+            executor.execute(() -> callback.onError(e));
         }
+
         return service;
     }
 
@@ -100,9 +111,6 @@ public class AdIdCompatibleManager {
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
-     * @throws SecurityException if caller is not authorized to call this API.
-     * @throws IllegalStateException if this API is not available.
-     * @throws LimitExceededException if rate limit was reached.
      * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
@@ -116,7 +124,7 @@ public class AdIdCompatibleManager {
                 new CallerMetadata.Builder()
                         .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                         .build();
-        final IAdIdService service = getService();
+
         String appPackageName = "";
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
@@ -131,6 +139,12 @@ public class AdIdCompatibleManager {
         }
 
         try {
+            IAdIdService service = getService(executor, callback);
+            if (service == null) {
+                LogUtil.d("Unable to find AdId service");
+                return;
+            }
+
             service.getAdId(
                     new GetAdIdParam.Builder()
                             .setAppPackageName(appPackageName)

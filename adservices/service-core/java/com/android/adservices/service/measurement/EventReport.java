@@ -496,8 +496,7 @@ public class EventReport {
                 @NonNull Pair<Long, Long> triggerSummaryBucket,
                 @Nullable UnsignedLong sourceDebugKey,
                 @NonNull List<UnsignedLong> debugKeys,
-                @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-                @NonNull SourceNoiseHandler sourceNoiseHandler,
+                double flipProbability,
                 List<Uri> eventReportDestinations) {
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceEventId = source.getEventId();
@@ -514,8 +513,7 @@ public class EventReport {
             mBuilding.mSourceId = source.getId();
             mBuilding.mTriggerId = trigger.getId();
             mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
-            mBuilding.mRandomizedTriggerRate =
-                    source.getTriggerSpecs().getFlipProbability();
+            mBuilding.mRandomizedTriggerRate = flipProbability;
             mBuilding.mTriggerData = attributedTrigger.getTriggerData();
             mBuilding.mReportTime = reportTime;
             mBuilding.mTriggerSummaryBucket = triggerSummaryBucket;

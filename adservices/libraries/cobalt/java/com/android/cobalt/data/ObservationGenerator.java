@@ -32,5 +32,6 @@ public interface ObservationGenerator {
      *     UnencryptedObservationBatches with their metadata
      */
     ImmutableList<UnencryptedObservationBatch> generateObservations(
-            int dayIndex, ImmutableListMultimap<SystemProfile, CountEvent> eventData);
+            int dayIndex,
+            ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> eventData);
 }

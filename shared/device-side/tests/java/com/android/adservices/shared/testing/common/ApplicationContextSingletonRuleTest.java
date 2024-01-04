@@ -40,6 +40,9 @@ public final class ApplicationContextSingletonRuleTest {
     // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";
 
+    private static final boolean RESTORE_PREVIOUS = true;
+    private static final boolean DONT_RESTORE_PREVIOUS = false;
+
     private Context mPreviousContext;
 
     public @Rule final Expect expect = Expect.create();
@@ -58,12 +61,15 @@ public final class ApplicationContextSingletonRuleTest {
 
     @Test
     public void testNullConstructor() {
-        assertThrows(NullPointerException.class, () -> new ApplicationContextSingletonRule(null));
+        assertThrows(
+                NullPointerException.class,
+                () -> new ApplicationContextSingletonRule(null, RESTORE_PREVIOUS));
     }
 
     @Test
     public void testDefaultConstructorSetsNonNullContext() throws Throwable {
-        ApplicationContextSingletonRule rule = new ApplicationContextSingletonRule();
+        ApplicationContextSingletonRule rule =
+                new ApplicationContextSingletonRule(RESTORE_PREVIOUS);
 
         runTestWithRule(
                 rule,
@@ -78,7 +84,8 @@ public final class ApplicationContextSingletonRuleTest {
         Context contextBefore = mock(Context.class, "contextBefore");
         Context ruleContext = mock(Context.class, "ruleContext");
         ApplicationContextSingleton.setForTests(contextBefore);
-        ApplicationContextSingletonRule rule = new ApplicationContextSingletonRule(ruleContext);
+        ApplicationContextSingletonRule rule =
+                new ApplicationContextSingletonRule(ruleContext, RESTORE_PREVIOUS);
 
         runTestWithRule(
                 rule,
@@ -102,7 +109,8 @@ public final class ApplicationContextSingletonRuleTest {
         Context contextBefore = mock(Context.class, "contextBefore");
         Context ruleContext = mock(Context.class, "ruleContext");
         ApplicationContextSingleton.setForTests(contextBefore);
-        ApplicationContextSingletonRule rule = new ApplicationContextSingletonRule(ruleContext);
+        ApplicationContextSingletonRule rule =
+                new ApplicationContextSingletonRule(ruleContext, RESTORE_PREVIOUS);
         RuntimeException testFailure = new RuntimeException("D'OH!");
 
         RuntimeException actualFailure =
@@ -130,10 +138,69 @@ public final class ApplicationContextSingletonRuleTest {
     }
 
     @Test
+    public void testApplicationContextSetDuringTestAndDontResetAtTheEnd() throws Throwable {
+        Context contextBefore = mock(Context.class, "contextBefore");
+        Context ruleContext = mock(Context.class, "ruleContext");
+        ApplicationContextSingleton.setForTests(contextBefore);
+        ApplicationContextSingletonRule rule =
+                new ApplicationContextSingletonRule(ruleContext, DONT_RESTORE_PREVIOUS);
+
+        runTestWithRule(
+                rule,
+                () -> {
+                    expect.withMessage("ApplicationContextSingleton.get() during test")
+                            .that(ApplicationContextSingleton.get())
+                            .isSameInstanceAs(ruleContext);
+                    expect.withMessage("rule.get() during test")
+                            .that(rule.get())
+                            .isSameInstanceAs(ruleContext);
+                });
+
+        expect.withMessage("ApplicationContextSingleton.get() after test")
+                .that(ApplicationContextSingleton.get())
+                .isSameInstanceAs(ruleContext);
+    }
+
+    @Test
+    public void testApplicationContextSetDuringTestAndDontResetAtTheEndEvenWhenTestFails()
+            throws Throwable {
+        Context contextBefore = mock(Context.class, "contextBefore");
+        Context ruleContext = mock(Context.class, "ruleContext");
+        ApplicationContextSingleton.setForTests(contextBefore);
+        ApplicationContextSingletonRule rule =
+                new ApplicationContextSingletonRule(ruleContext, DONT_RESTORE_PREVIOUS);
+        RuntimeException testFailure = new RuntimeException("D'OH!");
+
+        RuntimeException actualFailure =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                runTestWithRule(
+                                        rule,
+                                        () -> {
+                                            expect.withMessage(
+                                                            "ApplicationContextSingleton.get()"
+                                                                    + " during test")
+                                                    .that(ApplicationContextSingleton.get())
+                                                    .isSameInstanceAs(ruleContext);
+                                            expect.withMessage("rule.get() during test")
+                                                    .that(rule.get())
+                                                    .isSameInstanceAs(ruleContext);
+                                            throw testFailure;
+                                        }));
+
+        expect.withMessage("test exception").that(actualFailure).isSameInstanceAs(testFailure);
+        expect.withMessage("ApplicationContextSingleton.get() after test")
+                .that(ApplicationContextSingleton.get())
+                .isSameInstanceAs(ruleContext);
+    }
+
+    @Test
     public void testSet() throws Throwable {
         Context ruleContext = mock(Context.class, "ruleContext");
         Context setContext = mock(Context.class, "setContext");
-        ApplicationContextSingletonRule rule = new ApplicationContextSingletonRule(ruleContext);
+        ApplicationContextSingletonRule rule =
+                new ApplicationContextSingletonRule(ruleContext, RESTORE_PREVIOUS);
 
         runTestWithRule(
                 rule,

@@ -245,6 +245,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getTopicsTestEncryptionPublicKey() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY,
+                /* defaultValue */ TOPICS_TEST_ENCRYPTION_PUBLIC_KEY);
+    }
+
+    @Override
     public int getClassifierType() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
@@ -2951,6 +2960,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeBeaconReportingMetricsEnabled() {
+        return getFledgeRegisterAdBeaconEnabled() &&
+                DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED,
+                        /* defaultValue */ FLEDGE_BEACON_REPORTING_METRICS_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3287,7 +3305,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementFlexLiteAPIEnabled() {
+    public boolean getMeasurementEnableTriggerDataMatching() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING,
+                /* defaultValue */ MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING);
+    }
+
+    @Override
+    public boolean getMeasurementFlexLiteApiEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
@@ -3299,7 +3326,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return DeviceConfig.getFloat(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
-                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT);
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
     }
 
     @Override
@@ -3308,7 +3335,24 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
-                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION);
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+    }
+
+    @Override
+    public float getMeasurementFlexApiMaxInformationGainDualDestinationEvent() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+    }
+
+    @Override
+    public float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION,
+                /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
     }
 
     @Override
@@ -3529,6 +3573,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK,
                 /* defaultValue */ MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK);
+    }
+
+    @Override
+    public boolean getMeasurementEnableRedirectToWellKnownPath() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
+                /* defaultValue */ MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH);
     }
 
     @Override
@@ -4044,9 +4096,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementFlexibleEventReportingApiEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING
+                        + " = "
+                        + getMeasurementEnableTriggerDataMatching());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED
                         + " = "
-                        + getMeasurementFlexLiteAPIEnabled());
+                        + getMeasurementFlexLiteApiEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT
@@ -4057,6 +4114,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION
                         + " = "
                         + getMeasurementFlexApiMaxInformationGainNavigation());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT
+                        + " = "
+                        + getMeasurementFlexApiMaxInformationGainDualDestinationEvent());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
+                        + " = "
+                        + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS
@@ -5104,11 +5171,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED
-                        + " = "
-                        + getEuNotifFlowChangeEnabled());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED
                         + " = "
                         + isUiFeatureTypeLoggingEnabled());
@@ -5617,14 +5679,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getEuNotifFlowChangeEnabled() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED,
-                /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
-    }
-
-    @Override
     public boolean getNotificationDismissedOnClick() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -5692,7 +5746,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 getConsentNotificationActivityDebugMode());
-        uxMap.put(FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED, getEuNotifFlowChangeEnabled());
         uxMap.put(FlagsConstants.KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,

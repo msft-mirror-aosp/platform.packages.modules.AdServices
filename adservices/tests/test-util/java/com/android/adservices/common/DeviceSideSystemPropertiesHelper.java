@@ -16,10 +16,8 @@
 
 package com.android.adservices.common;
 
-import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
 
 import android.os.SystemProperties;
-import android.text.TextUtils;
 
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -39,30 +37,13 @@ final class DeviceSideSystemPropertiesHelper extends SystemPropertiesHelper.Inte
         return sInstance;
     }
 
-    private DeviceSideSystemPropertiesHelper() {}
+    private DeviceSideSystemPropertiesHelper() {
+        super(AndroidLogger.getInstance());
+    }
 
     @Override
     public String get(String name) {
         return SystemProperties.get(name);
-    }
-
-    @Override
-    public void set(String name, String value) {
-        sLogger.v("set(%s, %s)", name, value);
-
-        if (!TextUtils.isEmpty(value)) {
-            runShellCommand("setprop %s %s", name, value);
-            return;
-        }
-        // TODO(b/293132368): UIAutomation doesn't support passing a "" or '' - it will quote
-        // them, which would cause the property value to be "" or '', not the empty String.
-        // Another approach would be calling SystemProperties.set(), but that method is hidden
-        // (b/294414609)
-        sLogger.w(
-                "NOT resetting property %s to empty String as it's not supported by"
-                        + " runShellCommand(), but setting it as null",
-                name);
-        runShellCommand("setprop %s null", name);
     }
 
     @Override

@@ -48,15 +48,12 @@ import java.util.regex.Pattern;
  * @hide
  */
 class FetcherUtil {
-    static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
-    static final String REDIRECT_LOCATION_HEADER_KEY = "Location";
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
      * Determine all redirects.
      *
-     * <p>Generates a list of: (url, allows_regular_redirects) tuples. Returns true if all steps
-     * succeed. Returns false if there are any failures.
+     * <p>Generates a map of: (redirectType, List&lt;Uri&gt;)
      */
     static Map<AsyncRegistration.RedirectType, List<Uri>> parseRedirects(
             @NonNull Map<String, List<String>> headers) {
@@ -96,13 +93,33 @@ class FetcherUtil {
     }
 
     /** Validates both string type and long parsing */
-    public static Optional<Long> extractLong(JSONObject obj, String key) {
+    public static Optional<Long> extractLongString(JSONObject obj, String key) {
         try {
             Object maybeValue = obj.get(key);
             if (!(maybeValue instanceof String)) {
                 return Optional.empty();
             }
             return Optional.of(Long.parseLong((String) maybeValue));
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "extractLongString: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+    }
+
+    /** Validates an integral number */
+    public static boolean is64BitInteger(Object obj) {
+        return (obj instanceof Integer) || (obj instanceof Long);
+    }
+
+    /** Validates both number type and long parsing */
+    public static Optional<Long> extractLong(JSONObject obj, String key) {
+        try {
+            Object maybeValue = obj.get(key);
+            if (!is64BitInteger(maybeValue)) {
+                return Optional.empty();
+            }
+            return Optional.of(Long.parseLong(String.valueOf(maybeValue)));
         } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
                     .d(e, "extractLong: caught exception. Key: %s", key);
@@ -284,7 +301,7 @@ class FetcherUtil {
 
     private static List<Uri> parseListRedirects(Map<String, List<String>> headers) {
         List<Uri> redirects = new ArrayList<>();
-        List<String> field = headers.get(REDIRECT_LIST_HEADER_KEY);
+        List<String> field = headers.get(AsyncRedirects.REDIRECT_LIST_HEADER_KEY);
         int maxRedirects = FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
         if (field != null) {
             for (int i = 0; i < Math.min(field.size(), maxRedirects); i++) {
@@ -296,7 +313,7 @@ class FetcherUtil {
 
     private static List<Uri> parseLocationRedirects(Map<String, List<String>> headers) {
         List<Uri> redirects = new ArrayList<>();
-        List<String> field = headers.get(REDIRECT_LOCATION_HEADER_KEY);
+        List<String> field = headers.get(AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY);
         if (field != null && !field.isEmpty()) {
             redirects.add(Uri.parse(field.get(0)));
             if (field.size() > 1) {
