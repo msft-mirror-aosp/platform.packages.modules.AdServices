@@ -275,6 +275,15 @@
             </intent-filter>
         </service>
 
+        <service android:name="com.android.adservices.shell.AdServicesShellCommandService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false"
+        >
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.SHELL_COMMAND_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <!-- Daily maintenance Job. -->
         <service android:name="com.android.adservices.service.MaintenanceJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
@@ -436,3 +445,4 @@
         />
     </application>
 </manifest>
+

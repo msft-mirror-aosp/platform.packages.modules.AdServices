@@ -89,13 +89,20 @@ public final class AdServicesShellCommandHandler {
     private static final int RESULT_GENERIC_ERROR = -1;
 
     private final PrintWriter mOut;
+    private final PrintWriter mErr;
 
     private String[] mArgs;
     private int mArgPos;
     private String mCurArgData;
 
+    /** If PrintWriter {@code err} is not provided, we use {@code out} for the {@code err}. */
     public AdServicesShellCommandHandler(PrintWriter out) {
+        this(out, /* err= */ out);
+    }
+
+    public AdServicesShellCommandHandler(PrintWriter out, PrintWriter err) {
         mOut = Objects.requireNonNull(out, "out cannot be null");
+        mErr = Objects.requireNonNull(err, "err cannot be null");
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
@@ -117,13 +124,14 @@ public final class AdServicesShellCommandHandler {
             }
         } catch (Throwable e) {
             // TODO(b/308009734): need to test this
-            mOut.printf("Exception occurred while executing %s\n", Arrays.toString(mArgs));
+            mErr.printf("Exception occurred while executing %s\n", Arrays.toString(mArgs));
             e.printStackTrace(mOut);
         } finally {
             if (DEBUG) {
                 Log.d(TAG, "Flushing output");
             }
             mOut.flush();
+            mErr.flush();
         }
         if (DEBUG) {
             Log.d(TAG, "Sending command result: " + res);
@@ -173,7 +181,7 @@ public final class AdServicesShellCommandHandler {
     }
 
     private int invalidArgsError(String syntax) {
-        mOut.println(String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax));
+        mErr.println(String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax));
         return RESULT_GENERIC_ERROR;
     }
 
@@ -193,9 +201,9 @@ public final class AdServicesShellCommandHandler {
             case CMD_SHORT_HELP:
             case CMD_HELP:
                 onHelp();
-                return RESULT_GENERIC_ERROR;
+                return RESULT_OK;
             case "":
-                mOut.println(ERROR_EMPTY_COMMAND);
+                mErr.println(ERROR_EMPTY_COMMAND);
                 return RESULT_GENERIC_ERROR;
             case CMD_ECHO:
                 return runEcho();
@@ -204,7 +212,7 @@ public final class AdServicesShellCommandHandler {
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
             default:
-                mOut.printf("Unknown command: %s\n", cmd);
+                mErr.printf("Unknown command: %s\n", cmd);
                 return RESULT_GENERIC_ERROR;
         }
     }
