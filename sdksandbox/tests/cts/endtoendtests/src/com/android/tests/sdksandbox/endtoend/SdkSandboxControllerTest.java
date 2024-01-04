@@ -19,17 +19,23 @@ package com.android.tests.sdksandbox.endtoend;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.lifecycle.Lifecycle;
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -40,14 +46,18 @@ import org.junit.runners.JUnit4;
 
 /** End-to-end tests of {@link SdkSandboxController} APIs. */
 @RunWith(JUnit4.class)
-public class SdkSandboxControllerTest {
+public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
 
-    @Rule
-    public final ActivityScenarioRule<TestActivity> mRule =
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
     private static final String SDK_NAME = "com.android.ctssdkprovider";
 
+    private ActivityScenario<TestActivity> mScenario;
     private SdkSandboxManager mSdkSandboxManager;
     private ICtsSdkProviderApi mSdk;
     private final Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
@@ -55,6 +65,7 @@ public class SdkSandboxControllerTest {
     @Before
     public void setup() {
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
+        mScenario = activityScenarioRule.getScenario();
     }
 
     @After
@@ -69,6 +80,50 @@ public class SdkSandboxControllerTest {
     public void testGetClientPackageName() throws Exception {
         loadSdk();
         assertThat(mSdk.getClientPackageName()).isEqualTo(mContext.getPackageName());
+    }
+
+    @Test
+    public void testSdkDetectsAppForegroundState() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        loadSdk();
+
+        mSdk.waitForStateChangeDetection(
+                /*expectedForegroundValue=*/ 0, /*expectedBackgroundValue=*/ 0);
+
+        // Bring the app to the background by destroying the activity.
+        mScenario.moveToState(Lifecycle.State.DESTROYED);
+        mSdk.waitForStateChangeDetection(
+                /*expectedForegroundValue=*/ 0, /*expectedBackgroundValue=*/ 1);
+
+        // Bring the app to the foreground again by starting an activity.
+        Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        Intent intent = new Intent(context, TestActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+
+        mSdk.waitForStateChangeDetection(
+                /*expectedForegroundValue=*/ 1, /*expectedBackgroundValue=*/ 1);
+    }
+
+    @Test
+    public void testUnregisterSdkSandboxClientImportanceListener() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        loadSdk();
+
+        mSdk.waitForStateChangeDetection(
+                /*expectedForegroundValue=*/ 0, /*expectedBackgroundValue=*/ 0);
+
+        mSdk.unregisterSdkSandboxClientImportanceListener();
+
+        // Bring the app to the background by destroying the activity.
+        mScenario.moveToState(Lifecycle.State.DESTROYED);
+
+        // Wait a bit to ensure that the sandbox does not detect any change.
+        Thread.sleep(1000);
+        mSdk.waitForStateChangeDetection(
+                /*expectedForegroundValue=*/ 0, /*expectedBackgroundValue=*/ 0);
     }
 
     private void loadSdk() {

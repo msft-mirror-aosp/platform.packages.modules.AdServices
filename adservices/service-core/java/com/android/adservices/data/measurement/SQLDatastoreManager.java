@@ -21,8 +21,9 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.data.DbHelper;
+import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Datastore manager for SQLite database. */
@@ -42,12 +43,14 @@ public class SQLDatastoreManager extends DatastoreManager {
 
     @VisibleForTesting
     SQLDatastoreManager(Context context) {
+        super(AdServicesErrorLoggerImpl.getInstance());
         mDbHelper = MeasurementDbHelper.getInstance(context);
     }
 
-    /** Get {@link DatastoreManager} instance with a {@link DbHelper}. */
     @VisibleForTesting
-    public SQLDatastoreManager(@NonNull MeasurementDbHelper dbHelper) {
+    public SQLDatastoreManager(
+            @NonNull MeasurementDbHelper dbHelper, AdServicesErrorLogger errorLogger) {
+        super(errorLogger);
         mDbHelper = dbHelper;
     }
 
@@ -67,7 +70,9 @@ public class SQLDatastoreManager extends DatastoreManager {
         return new MeasurementDao(
                 () ->
                         mDbHelper.getDbFileSize()
-                                >= FlagsFactory.getFlags().getMeasurementDbSizeLimit());
+                                >= FlagsFactory.getFlags().getMeasurementDbSizeLimit(),
+                () -> FlagsFactory.getFlags().getMeasurementReportingRetryLimit(),
+                () -> FlagsFactory.getFlags().getMeasurementReportingRetryLimitEnabled());
     }
 
     @Override

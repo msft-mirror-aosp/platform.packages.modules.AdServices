@@ -24,7 +24,7 @@ android_test {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-clients",
         "adservices-test-utility",
     ],
@@ -36,7 +36,8 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
+        "mcts-adservices",
     ],
     data: [
         // Sample App will be installed and uninstalled in the test.
@@ -44,7 +45,6 @@ android_test {
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }
 
 android_test {
@@ -55,7 +55,7 @@ android_test {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
         "adservices-clients",
         "adservices-test-utility",
     ],
@@ -69,6 +69,7 @@ android_test {
         "cts",
         "general-tests",
         "mts-extservices",
+        "mcts-extservices",
     ],
     data: [
         // Sample App will be installed and uninstalled in the test.
@@ -77,7 +78,6 @@ android_test {
     sdk_version: "module_current",
     min_sdk_version: "31",
     max_sdk_version: "32",
-    test_mainline_modules: ["com.google.android.extservices_sminus.apex"],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
 }

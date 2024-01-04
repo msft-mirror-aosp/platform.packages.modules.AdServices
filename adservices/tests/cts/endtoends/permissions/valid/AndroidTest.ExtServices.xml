@@ -34,7 +34,7 @@
 
     <!-- For this test suite to get picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices_sminus.apex" />
+            value="com.google.android.extservices.apex" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -71,6 +71,12 @@
         <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE"/>
         <option name="run-command" value="setprop log.tag.adservices.measurement VERBOSE"/>
+
+        <!-- Ensure the ad filtering feature is disabled -->
+        <option name="run-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"

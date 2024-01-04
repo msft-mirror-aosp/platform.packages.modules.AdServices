@@ -64,11 +64,12 @@ public abstract class AbstractTopicsDbMigrator implements ITopicsDbMigrator {
             return;
         }
 
-        throw new IllegalArgumentException(
+        // TODO(b/295233784): Improve the test coverage for migrating multiple migrators
+        sLogger.e(
                 String.format(
-                        "Stop migration to db version %d for Topics API. oldVersion=%d, "
-                                + " newVersion=%d",
-                        mMigrationTargetVersion, oldVersion, newVersion));
+                        "Skip migration to db version %d for Topics API. oldVersion=%d, "
+                                + " newVersion=%d", mMigrationTargetVersion, oldVersion, newVersion)
+        );
     }
 
     /**

@@ -66,8 +66,13 @@ public class DBCustomAudienceFixture {
 
     public static DBCustomAudience.Builder getValidBuilderByBuyerWithAdRenderId(
             AdTechIdentifier buyer, String name) {
+        return getValidBuilderByBuyerWithAdRenderId(buyer, name, CustomAudienceFixture.VALID_OWNER);
+    }
+
+    public static DBCustomAudience.Builder getValidBuilderByBuyerWithAdRenderId(
+            AdTechIdentifier buyer, String name, String owner) {
         return new DBCustomAudience.Builder()
-                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setOwner(owner)
                 .setBuyer(buyer)
                 .setName(name)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)

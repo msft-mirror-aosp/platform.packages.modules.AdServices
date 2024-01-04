@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.aggregation;
 
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.common.WebUtil;
 
 import java.time.Instant;
 import java.util.Base64;

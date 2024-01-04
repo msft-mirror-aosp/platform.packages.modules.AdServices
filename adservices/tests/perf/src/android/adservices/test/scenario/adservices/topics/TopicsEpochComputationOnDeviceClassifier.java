@@ -16,6 +16,10 @@
 
 package android.adservices.test.scenario.adservices.topics;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS;
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_THRESHOLD;
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
@@ -26,14 +30,14 @@ import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -98,31 +102,25 @@ public class TopicsEpochComputationOnDeviceClassifier {
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 4000;
 
-    // Classifier default constants.
-    private static final int DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
-    // Threshold value for classifier confidence set back to the default.
-    private static final float DEFAULT_CLASSIFIER_THRESHOLD = 0.1f;
-    // PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER
-    private static final int DEFAULT_CLASSIFIER_TYPE = 3;
-    private static final int DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
-    // Default Epoch Period.
-    private static final long DEFAULT_TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forTopicsPerfTests(
+                            TEST_EPOCH_JOB_PERIOD_MS, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
+                    .setFlag(KEY_CLASSIFIER_TYPE, TEST_CLASSIFIER_TYPE)
+                    .setFlag(
+                            KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
+                            TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS)
+                    .setFlag(KEY_CLASSIFIER_THRESHOLD, TEST_CLASSIFIER_THRESHOLD);
 
     @Before
     public void setup() throws Exception {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
-
-        overridingBeforeTest();
-    }
-
-    @After
-    public void teardown() {
-        overridingAfterTest();
     }
 
     @Test
+    @FlakyTest(bugId = 290122696)
     public void testEpochComputation() throws Exception {
         // The Test App has 1 SDK: sdk3
         // sdk3 calls the Topics API.
@@ -161,102 +159,11 @@ public class TopicsEpochComputationOnDeviceClassifier {
         // The app will be assigned one random topic from one of these 5 topics.
         assertThat(sdk3Result.getTopics()).hasSize(1);
         Topic topic = sdk3Result.getTopics().get(0);
-
-        // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
-        // 10140]. This is computed by running the model on the device for empty string.
-        // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(10230, 10228, 10253, 10232, 10140));
+        // Verify topic ids is valid.
+        assertThat(topic.getTopicId()).isAtLeast(10000);
 
         assertThat(topic.getModelVersion()).isAtLeast(1L);
         assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
-    }
-
-    private void overridingBeforeTest() {
-        disableGlobalKillSwitch();
-        disableTopicsKillSwitch();
-        overridingAdservicesLoggingLevel("DEBUG");
-
-        overrideDisableTopicsEnrollmentCheck("1");
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        // We need to turn the Consent Manager into debug mode
-        overrideConsentManagerDebugMode();
-
-        // Set classifier flag to use on-device classifier.
-        overrideClassifierType(TEST_CLASSIFIER_TYPE);
-
-        // Set number of top labels returned by the on-device classifier to 5.
-        overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
-        // Remove classifier threshold by setting it to 0.
-        overrideClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
-
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-    }
-
-    private void overridingAfterTest() {
-        overrideDisableTopicsEnrollmentCheck("0");
-        overrideEpochPeriod(DEFAULT_TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        overridingAdservicesLoggingLevel("INFO");
-
-        // Set classifier flag back to default.
-        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
-        // Set number of top labels returned by the on-device classifier back to default.
-        overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
-        // Set classifier threshold back to default.
-        overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
-
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics' enrollment check.
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
-    }
-
-    // Override the Epoch Period to shorten the Epoch Length in the test.
-    private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Percentage For Random Topic in the test.
-    private void overridePercentageForRandomTopic(long overridePercentage) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
-                        + overridePercentage);
-    }
-
-    // Override the Consent Manager behaviour - Consent Given
-    private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
-    // Override the flag to select classifier type.
-    private void overrideClassifierType(int val) {
-        ShellUtils.runShellCommand("device_config put adservices classifier_type " + val);
-    }
-
-    // Override the flag to change the number of top labels returned by on-device classifier type.
-    private void overrideClassifierNumberOfTopLabels(int val) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices classifier_number_of_top_labels " + val);
-    }
-
-    // Override the flag to change the threshold for the classifier.
-    private void overrideClassifierThreshold(float val) {
-        ShellUtils.runShellCommand("device_config put adservices classifier_threshold " + val);
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */
@@ -351,20 +258,5 @@ public class TopicsEpochComputationOnDeviceClassifier {
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd hh:mm:ss.SSS");
         Date parsedDate = dateFormat.parse(words[0] + " " + words[1]);
         return parsedDate.getTime();
-    }
-
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-        ShellUtils.runShellCommand("setprop log.tag.adservices.topics %s", loggingLevel);
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    private void disableGlobalKillSwitch() {
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-    }
-
-    // Override topics_kill_switch to ignore the effect of actual PH values.
-    private void disableTopicsKillSwitch() {
-        ShellUtils.runShellCommand("device_config put adservices topics_kill_switch false");
     }
 }

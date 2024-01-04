@@ -3,7 +3,7 @@
   "input": {
     "sources": [
       {
-        "timestamp": "1643235573000",
+        "timestamp": "0",
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
@@ -16,8 +16,8 @@
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "1",
               "destination": "android-app://example.2d1.test",
-              // Clamped to one day (86400 seconds).
-              "aggregatable_report_window": "86390",
+              // Clamped to one hour (3600 seconds).
+              "aggregatable_report_window": 3590,
               "aggregation_keys": {
                 "a": "0x1"
               },
@@ -29,9 +29,9 @@
     ],
     "triggers": [
       // Should result in an event-level report and an aggregatable report
-      // as the aggregatable report window was clamped to one day.
+      // as the aggregatable report window was clamped to one hour.
       {
-        "timestamp": "1643321973000",
+        "timestamp": "2000000",
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test",
@@ -65,7 +65,7 @@
       // Should result in an event-level report, but not aggregatable report as
       // aggregatable report window has passed.
       {
-        "timestamp": "1643321973001",
+        "timestamp": "3600000",
         "registration_request": {
           "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test",
@@ -103,28 +103,28 @@
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "176400",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "1",
           "source_debug_key" : "347982378",
           "trigger_debug_key" : "8971346781"
         },
-        "report_time": "1643411973000",
+        "report_time": "176400000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution"
       },
       {
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "176400",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "2",
           "source_debug_key" : "347982378",
           "trigger_debug_key" : "8971346782"
         },
-        "report_time": "1643411973000",
+        "report_time": "176400000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution"
       }
     ],
@@ -133,28 +133,28 @@
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "176400",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "1",
           "source_debug_key" : "347982378",
           "trigger_debug_key" : "8971346781"
         },
-        "report_time": "1643321973000",
+        "report_time": "2000000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution"
       },
       {
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "176400",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "2",
           "source_debug_key" : "347982378",
           "trigger_debug_key" : "8971346782"
         },
-        "report_time": "1643321973001",
+        "report_time": "3600000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution"
       }
     ],
@@ -172,7 +172,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
-        "report_time": "1643323977992"
+        "report_time": "5600000"
       }
     ],
     "debug_aggregatable_results": [
@@ -189,7 +189,7 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
-        "report_time": "1643323977992"
+        "report_time": "2000000"
       }
     ],
     "verbose_debug_reports": [

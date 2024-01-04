@@ -149,6 +149,9 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initU18() {}
 
+    @Override
+    public void initRvc() {}
+
     private void configureSharedElements() {
         // recycler view (topics list)
         Function<Topic, OnClickListener> getOnclickListener =
@@ -184,6 +187,8 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
         configureElement(
                 R.id.reset_topics_button,
                 button -> mTopicsViewModel.resetTopicsButtonClickHandler());
+
+        configureNotifyAdapterDataChange(mTopicsViewModel.getTopics(), adapter);
     }
 
     private void listenToTopicsViewModelUiEvents() {
@@ -200,15 +205,23 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
                     try {
                         switch (event) {
                             case SWITCH_ON_TOPICS:
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptInTopicsDialog(mActivity);
+                                }
                                 mTopicsViewModel.setTopicsConsent(true);
                                 mTopicsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_TOPICS:
-                                mTopicsViewModel.setTopicsConsent(false);
-                                mTopicsViewModel.refresh();
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptOutTopicsDialog(
+                                            mActivity, mTopicsViewModel);
+                                } else {
+                                    mTopicsViewModel.setTopicsConsent(false);
+                                    mTopicsViewModel.refresh();
+                                }
                                 break;
                             case BLOCK_TOPIC:
-                                UiStatsLogger.logBlockTopicSelected(mActivity);
+                                UiStatsLogger.logBlockTopicSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockTopicDialog(
@@ -222,7 +235,7 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case RESET_TOPICS:
-                                UiStatsLogger.logResetTopicSelected(mActivity);
+                                UiStatsLogger.logResetTopicSelected();
                                 if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetTopicDialog(

@@ -34,7 +34,7 @@
 
     <!-- For this test suite to get picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
-            value="com.google.android.extservices_sminus.apex" />
+            value="com.google.android.extservices.apex" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -78,6 +78,12 @@
                 value="setprop debug.adservices.sdk_request_permits_per_second 1000"/>
         <option name="teardown-command"
                 value="setprop debug.adservices.sdk_request_permits_per_second 1"/>
+
+        <!-- Temporarily enable fetchAndJoinCustomAudience API -->
+        <option name="run-command"
+                value="device_config put adservices fledge_fetch_custom_audience_enabled true" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_fetch_custom_audience_enabled false" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>

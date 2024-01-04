@@ -24,13 +24,13 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical">
+        android:scrollbars="vertical"
+        android:focusableInTouchMode="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:focusableInTouchMode="true" >
+            android:orientation="vertical">
             <TextView
                 android:layout_marginTop="18dp"
                 android:paddingHorizontal="24dp"
@@ -63,8 +63,8 @@
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="24dp"
                 android:paddingBottom="48dp"
-                android:orientation="vertical"
-                android:focusableInTouchMode="true" >
+                android:focusable="false"
+                android:orientation="vertical">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -72,7 +72,6 @@
                     android:layout_marginBottom="18dp"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
-
                 <TextView
                     android:id="@+id/measurement_footer"
                     android:text="@string/settingsUI_measurement_view_footer_text"

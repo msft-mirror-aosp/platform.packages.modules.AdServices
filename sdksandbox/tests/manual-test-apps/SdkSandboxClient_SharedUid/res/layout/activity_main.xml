@@ -27,11 +27,11 @@
         android:layout_height="wrap_content">
 
         <Button
-            android:id="@+id/load_code_button"
+            android:id="@+id/load_sdk_button"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             style="?android:attr/buttonBarButtonStyle"
-            android:text="@string/load_code_provider"
+            android:text="@string/load_sdk_provider"
             android:textAllCaps="false" />
 
         <Button

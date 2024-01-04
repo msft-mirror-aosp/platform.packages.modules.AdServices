@@ -28,7 +28,8 @@ java_defaults {
         "androidx.test.runner",
         "compatibility-device-util-axt-minus-dexmaker",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
+        "adservices-test-utility",
         "SdkSandboxTestUtils",
         "SdkSandbox-java-lib",
     ],
@@ -73,7 +74,7 @@ android_test {
 android_test {
     name: "SdkSandboxManagerServiceUnitTests",
     srcs: [
-        "src/com/android/server/sdksandbox/*.java",
+        "src/com/android/server/sdksandbox/**/*.java",
         ":framework-sdksandbox-aidl-sources",
     ],
     defaults: ["SdkSandboxUnitTestsDefault"],

@@ -18,6 +18,10 @@ package com.android.tests.sdksandbox.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -31,6 +35,8 @@ public class ContentProviderRestrictionsHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APP_RESTRICTIONS_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_CONTENT_PROVIDER_RESTRICTIONS_APK =
             "ContentProviderRestrictionsTestApp.apk";
+
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -49,6 +55,7 @@ public class ContentProviderRestrictionsHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
         installPackage(TEST_APP_CONTENT_PROVIDER_RESTRICTIONS_APK);
     }
 
@@ -98,5 +105,28 @@ public class ContentProviderRestrictionsHostTest extends BaseHostJUnit4Test {
     @Test
     public void testRegisterContentObserver_defaultValueRestrictionsApplied() throws Exception {
         runPhase("testRegisterContentObserver_defaultValueRestrictionsApplied");
+    }
+
+    @Test
+    public void testGetContentProvider_defaultAllowlist() throws Exception {
+        runPhase("testGetContentProvider_defaultAllowlist");
+    }
+
+    @Test
+    public void
+            testGetContentProvider_nextAllowlistApplied_allAllowlistsAbsent_appliesDefaultAllowlist()
+                    throws Exception {
+        runPhase(
+                "testGetContentProvider_nextAllowlistApplied_allAllowlistsAbsent"
+                        + "_appliesDefaultAllowlist");
+    }
+
+    @Test
+    public void
+            testGetContentProvider_nextAllowlistApplied_currentAllowlistPresent_appliesCurrentAllowlist_allowlistForTargetSdkVersion()
+                    throws Exception {
+        runPhase(
+                "testGetContentProvider_nextAllowlistApplied_currentAllowlistPresent"
+                        + "_appliesCurrentAllowlist_allowlistForTargetSdkVersion");
     }
 }

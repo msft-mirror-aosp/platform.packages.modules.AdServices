@@ -49,6 +49,7 @@ import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
@@ -272,7 +273,7 @@ public class BackgroundKeyFetchWorkerTest {
                 return 30000;
             }
         }
-        when(mAdServicesHttpsClientMock.fetchPayload(any(Uri.class)))
+        when(mAdServicesHttpsClientMock.fetchPayload(any(Uri.class), any(DevContext.class)))
                 .thenReturn(
                         Futures.immediateFuture(
                                 JoinEncryptionKeyTestUtil.mockJoinKeyFetchResponse()));
@@ -323,7 +324,7 @@ public class BackgroundKeyFetchWorkerTest {
                 return 100;
             }
         }
-        when(mAdServicesHttpsClientMock.fetchPayload(any(Uri.class)))
+        when(mAdServicesHttpsClientMock.fetchPayload(any(Uri.class), any(DevContext.class)))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponse()));

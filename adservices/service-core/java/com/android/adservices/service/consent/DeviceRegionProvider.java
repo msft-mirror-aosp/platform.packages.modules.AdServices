@@ -49,6 +49,7 @@ public class DeviceRegionProvider {
 
             // we use PH to determine whether device is in the EEA region.
             if (FlagsFactory.getFlags().isEeaDeviceFeatureEnabled()) {
+                LogUtil.d("Server side region detection enabled.");
                 return FlagsFactory.getFlags().isEeaDevice();
             }
 

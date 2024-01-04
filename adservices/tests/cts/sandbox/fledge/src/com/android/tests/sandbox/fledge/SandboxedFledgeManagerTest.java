@@ -79,6 +79,9 @@ public class SandboxedFledgeManagerTest {
 
         makeTestProcessForeground();
         PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     /**

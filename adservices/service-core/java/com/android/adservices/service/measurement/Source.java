@@ -22,7 +22,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
@@ -31,6 +31,7 @@ import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMultiset;
 
@@ -43,10 +44,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * POJO for Source.
@@ -78,6 +83,7 @@ public class Source {
     private boolean mIsInstallAttributed;
     private boolean mIsDebugReporting;
     private String mFilterDataString;
+    @Nullable private String mSharedFilterDataKeys;
     private FilterMap mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
@@ -89,17 +95,22 @@ public class Source {
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
-    @Nullable private ReportSpec mFlexEventReportSpec;
+    @Nullable private List<AttributedTrigger> mAttributedTriggers;
+    @Nullable private TriggerSpecs mTriggerSpecs;
     @Nullable private String mTriggerSpecsString;
+    @Nullable private Long mNumStates;
+    @Nullable private Double mFlipProbability;
     @Nullable private Integer mMaxEventLevelReports;
     @Nullable private String mEventAttributionStatusString;
     @Nullable private String mPrivacyParametersString = null;
+    private TriggerDataMatching mTriggerDataMatching;
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
     private boolean mCoarseEventReportDestinations;
     @Nullable private UnsignedLong mSharedDebugKey;
     private List<Pair<Long, Long>> mParsedEventReportWindows;
+    private boolean mDropSourceIfInstalled;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -139,7 +150,7 @@ public class Source {
      */
     @Nullable
     public static List<Pair<Long, Long>> getOrDefaultEventReportWindows(
-            @Nullable String eventReportWindows,
+            @Nullable JSONObject eventReportWindows,
             @NonNull SourceType sourceType,
             long expiryDelta,
             @NonNull Flags flags) {
@@ -153,9 +164,22 @@ public class Source {
     @Nullable
     public static List<Pair<Long, Long>> parseEventReportWindows(
             @NonNull String eventReportWindows) {
-        List<Pair<Long, Long>> result = new ArrayList<>();
         try {
             JSONObject jsonObject = new JSONObject(eventReportWindows);
+            return parseEventReportWindows(jsonObject);
+        } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Invalid JSON encountered: event_report_windows");
+            return null;
+        }
+    }
+
+    /** Parses the provided eventReportWindows. Returns null if parsing fails */
+    @Nullable
+    public static List<Pair<Long, Long>> parseEventReportWindows(
+            @NonNull JSONObject jsonObject) {
+        List<Pair<Long, Long>> result = new ArrayList<>();
+        try {
             long startDuration = 0;
             if (!jsonObject.isNull("start_time")) {
                 startDuration = jsonObject.getLong("start_time");
@@ -169,7 +193,8 @@ public class Source {
                 startDuration = endDuration;
             }
         } catch (JSONException e) {
-            LogUtil.e(e, "Invalid JSON encountered: event_report_windows");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Invalid JSON encountered: event_report_windows");
             return null;
         }
         return result;
@@ -202,32 +227,70 @@ public class Source {
      * @param flags flag values
      */
     public boolean hasValidInformationGain(@NonNull Flags flags) {
-        return isFlexLiteApiValueValid(flags) && isFlexEventApiValueValid(flags);
+        if (mTriggerSpecs != null) {
+            return isFlexEventApiValueValid(flags);
+        }
+        return isFlexLiteApiValueValid(flags);
+    }
+
+    private double getInformationGainThreshold(Flags flags) {
+        int destinationMultiplier = getDestinationTypeMultiplier(flags);
+        if (destinationMultiplier == 2) {
+            return mSourceType == SourceType.EVENT
+                    ? flags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent()
+                    : flags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
+        }
+        return mSourceType == SourceType.EVENT
+                ? flags.getMeasurementFlexApiMaxInformationGainEvent()
+                : flags.getMeasurementFlexApiMaxInformationGainNavigation();
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexLiteAPIEnabled()
-                || (mEventReportWindows == null && mMaxEventLevelReports == null)) {
+        if (!flags.getMeasurementFlexLiteApiEnabled()) {
             return true;
         }
-        double informationGainThreshold =
-                mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexAPIMaxInformationGainEvent()
-                        : flags.getMeasurementFlexAPIMaxInformationGainNavigation();
+        return Combinatorics.getInformationGain(getNumStates(flags), getFlipProbability(flags))
+                <= getInformationGainThreshold(flags);
+    }
 
+    private void buildPrivacyParameters(Flags flags) {
+        if (mTriggerSpecs != null) {
+            // Flex source has num states set during registration but not during attribution; also
+            // num states is only needed for information gain calculation, which is handled during
+            // registration. We set flip probability here for use in noising during registration and
+            // availability for debug reporting during attribution.
+            setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
+            return;
+        }
+        boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
         EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
                 new EventReportWindowCalcDelegate(flags);
-        boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
-        int numStates =
-                Combinatorics.getNumStatesArithmetic(
-                        eventReportWindowCalcDelegate.getMaxReportCount(this, installCase),
-                        getTriggerDataCardinality(),
-                        eventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                                this, installCase));
-        double flipProbability = Combinatorics.getFlipProbability(numStates);
+        int reportingWindowCountForNoising =
+                eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this, installCase);
+        int maxReportCount =
+                eventReportWindowCalcDelegate.getMaxReportCount(this, installCase);
+        int destinationMultiplier = getDestinationTypeMultiplier(flags);
+        long numberOfStates =
+                Combinatorics.getNumberOfStarsAndBarsSequences(
+                        /*numStars=*/ maxReportCount,
+                        /*numBars=*/ getTriggerDataCardinality()
+                                * reportingWindowCountForNoising
+                                * destinationMultiplier);
+        setNumStates(numberOfStates);
+        setFlipProbability(Combinatorics.getFlipProbability(numberOfStates));
+    }
 
-        return Combinatorics.getInformationGain(numStates, flipProbability)
-                <= informationGainThreshold;
+    /**
+     * Returns the number of destination types to use in privacy computations.
+     */
+    public int getDestinationTypeMultiplier(Flags flags) {
+        boolean shouldReportCoarseDestinations =
+                flags.getMeasurementEnableCoarseEventReportDestinations()
+                        && hasCoarseEventReportDestinations();
+        return !shouldReportCoarseDestinations && hasAppDestinations()
+                        && hasWebDestinations()
+                ? SourceNoiseHandler.DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
+                : SourceNoiseHandler.SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
     }
 
     /** Returns true is manual event reporting windows are set otherwise false; */
@@ -257,6 +320,12 @@ public class Source {
         int FALSELY = 3;
     }
 
+    /** The choice of the summary operator with the reporting window */
+    public enum TriggerDataMatching {
+        MODULUS,
+        EXACT
+    }
+
     public enum SourceType {
         EVENT("event"),
         NAVIGATION("navigation");
@@ -270,6 +339,10 @@ public class Source {
         public String getValue() {
             return mValue;
         }
+
+        public int getIntValue() {
+            return this.equals(SourceType.NAVIGATION) ? 1 : 0;
+        }
     }
 
     private Source() {
@@ -280,6 +353,7 @@ public class Source {
         // Making this default explicit since it anyway would occur on an uninitialised int field.
         mPublisherType = EventSurfaceType.APP;
         mAttributionMode = AttributionMode.UNASSIGNED;
+        mTriggerDataMatching = TriggerDataMatching.MODULUS;
         mIsInstallAttributed = false;
         mIsDebugReporting = false;
     }
@@ -330,17 +404,63 @@ public class Source {
      * @return Cardinality of {@link Trigger} metadata
      */
     public int getTriggerDataCardinality() {
+        if (getTriggerSpecs() != null) {
+            return getTriggerSpecs().getTriggerDataCardinality();
+        }
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
                 : PrivacyParams.getNavigationTriggerDataCardinality();
     }
 
     /**
-     * @return the flex event report specifications
+     * @return the list of attributed triggers
      */
     @Nullable
-    public ReportSpec getFlexEventReportSpec() {
-        return mFlexEventReportSpec;
+    public List<AttributedTrigger> getAttributedTriggers() {
+        return mAttributedTriggers;
+    }
+
+    /**
+     * @return all the attributed trigger IDs
+     */
+    public List<String> getAttributedTriggerIds() {
+        List<String> result = new ArrayList<>();
+        for (AttributedTrigger attributedTrigger : mAttributedTriggers) {
+            result.add(attributedTrigger.getTriggerId());
+        }
+        return result;
+    }
+
+    /**
+     * @return the JSON encoded current trigger status
+     */
+    @NonNull
+    public String attributedTriggersToJson() {
+        JSONArray jsonArray = new JSONArray();
+        for (AttributedTrigger trigger : mAttributedTriggers) {
+            jsonArray.put(trigger.encodeToJson());
+        }
+        return jsonArray.toString();
+    }
+
+    /**
+     * @return the JSON encoded current trigger status
+     */
+    @NonNull
+    public String attributedTriggersToJsonFlexApi() {
+        JSONArray jsonArray = new JSONArray();
+        for (AttributedTrigger trigger : mAttributedTriggers) {
+            jsonArray.put(trigger.encodeToJsonFlexApi());
+        }
+        return jsonArray.toString();
+    }
+
+    /**
+     * @return the flex event trigger specification
+     */
+    @Nullable
+    public TriggerSpecs getTriggerSpecs() {
+        return mTriggerSpecs;
     }
 
     @Override
@@ -372,6 +492,7 @@ public class Source {
                 && mAttributionMode == source.mAttributionMode
                 && mIsDebugReporting == source.mIsDebugReporting
                 && Objects.equals(mFilterDataString, source.mFilterDataString)
+                && Objects.equals(mSharedFilterDataKeys, source.mSharedFilterDataKeys)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
@@ -385,8 +506,16 @@ public class Source {
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
-                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
-                && Objects.equals(mSharedDebugKey, source.mSharedDebugKey);
+                && Objects.equals(mAttributedTriggers, source.mAttributedTriggers)
+                && Objects.equals(mTriggerSpecs, source.mTriggerSpecs)
+                && Objects.equals(mTriggerSpecsString, source.mTriggerSpecsString)
+                && Objects.equals(mMaxEventLevelReports, source.mMaxEventLevelReports)
+                && Objects.equals(
+                        mEventAttributionStatusString, source.mEventAttributionStatusString)
+                && Objects.equals(mPrivacyParametersString, source.mPrivacyParametersString)
+                && Objects.equals(mTriggerDataMatching, source.mTriggerDataMatching)
+                && Objects.equals(mSharedDebugKey, source.mSharedDebugKey)
+                && mDropSourceIfInstalled == source.mDropSourceIfInstalled;
     }
 
     @Override
@@ -410,6 +539,7 @@ public class Source {
                 mEventReportDedupKeys,
                 mAggregateReportDedupKeys,
                 mFilterDataString,
+                mSharedFilterDataKeys,
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
@@ -424,9 +554,16 @@ public class Source {
                 mDebugAdId,
                 mRegistrationOrigin,
                 mDebugJoinKey,
-                mFlexEventReportSpec,
+                mAttributedTriggers,
+                mTriggerSpecs,
+                mTriggerSpecsString,
+                mTriggerDataMatching,
+                mMaxEventLevelReports,
+                mEventAttributionStatusString,
+                mPrivacyParametersString,
                 mCoarseEventReportDestinations,
-                mSharedDebugKey);
+                mSharedDebugKey,
+                mDropSourceIfInstalled);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -588,6 +725,11 @@ public class Source {
         return mAttributionMode;
     }
 
+    /** Specification for trigger matching behaviour. Values: Modulus, Exact. */
+    public TriggerDataMatching getTriggerDataMatching() {
+        return mTriggerDataMatching;
+    }
+
     /**
      * Attribution window for install events.
      */
@@ -621,20 +763,9 @@ public class Source {
      *
      * @return whether the parameters of flexible are valid
      */
+    @VisibleForTesting
     public boolean isFlexEventApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexibleEventReportingApiEnabled()
-                || mFlexEventReportSpec == null) {
-            return true;
-        }
-        double informationGainThreshold =
-                mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexAPIMaxInformationGainEvent()
-                        : flags.getMeasurementFlexAPIMaxInformationGainNavigation();
-
-        if (mFlexEventReportSpec.getInformationGain() > informationGainThreshold) {
-            return false;
-        }
-        return true;
+        return mTriggerSpecs.getInformationGain(this, flags) <= getInformationGainThreshold(flags);
     }
 
     /**
@@ -646,6 +777,15 @@ public class Source {
      */
     public String getFilterDataString() {
         return mFilterDataString;
+    }
+
+    /**
+     * Returns the shared filter data keys of the source as a unique list of strings. Example:
+     * ["click_duration", "campaign_type"]
+     */
+    @Nullable
+    public String getSharedFilterDataKeys() {
+        return mSharedFilterDataKeys;
     }
 
     /**
@@ -671,7 +811,14 @@ public class Source {
      * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
      * source string and aggregate filter data string in Source.
      */
-    public Optional<AggregatableAttributionSource> getAggregatableAttributionSource()
+    public Optional<AggregatableAttributionSource> getAggregatableAttributionSource(
+            @NonNull Trigger trigger, Flags flags) throws JSONException {
+        return flags.getMeasurementEnableLookbackWindowFilter()
+                ? getAggregatableAttributionSourceV2(trigger)
+                : getAggregatableAttributionSource();
+    }
+
+    private Optional<AggregatableAttributionSource> getAggregatableAttributionSource()
             throws JSONException {
         if (mAggregatableAttributionSource == null) {
             if (mAggregateSource == null) {
@@ -680,7 +827,9 @@ public class Source {
             }
             JSONObject jsonObject = new JSONObject(mAggregateSource);
             TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
-            for (String key : jsonObject.keySet()) {
+            Iterator<String> keys = jsonObject.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
                 // Remove "0x" prefix.
                 String hexString = jsonObject.getString(key).substring(2);
                 BigInteger bigInteger = new BigInteger(hexString, 16);
@@ -695,6 +844,26 @@ public class Source {
         }
 
         return mAggregatableAttributionSource;
+    }
+
+    private Optional<AggregatableAttributionSource> getAggregatableAttributionSourceV2(
+            @NonNull Trigger trigger) throws JSONException {
+        if (mAggregateSource == null) {
+            return Optional.empty();
+        }
+        JSONObject jsonObject = new JSONObject(mAggregateSource);
+        TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
+        for (String key : jsonObject.keySet()) {
+            // Remove "0x" prefix.
+            String hexString = jsonObject.getString(key).substring(2);
+            BigInteger bigInteger = new BigInteger(hexString, 16);
+            aggregateSourceMap.put(key, bigInteger);
+        }
+        return Optional.of(
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregateSourceMap)
+                        .setFilterMap(getFilterData(trigger))
+                        .build());
     }
 
     /** Returns the registration id. */
@@ -728,9 +897,8 @@ public class Source {
     }
 
     /**
-     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
-     * ID, to be matched with a web trigger's {@link Trigger#getDebugAdId()} value at the time of
-     * generating reports.
+     * Returns actual platform AdID from getAdId() on app source registration, to be matched with a
+     * web trigger's {@link Trigger#getDebugAdId()} value at the time of generating reports.
      */
     @Nullable
     public String getPlatformAdId() {
@@ -752,7 +920,7 @@ public class Source {
      * where the conversion occurred or merge app and web destinations. Set to true of both app and
      * web destination should be merged into the array of event report.
      */
-    public boolean getCoarseEventReportDestinations() {
+    public boolean hasCoarseEventReportDestinations() {
         return mCoarseEventReportDestinations;
     }
 
@@ -762,8 +930,27 @@ public class Source {
     }
 
     /** Returns trigger specs */
-    public String getTriggerSpecs() {
+    public String getTriggerSpecsString() {
         return mTriggerSpecsString;
+    }
+
+    /**
+     * Returns the number of report states for the source (used only for computation and not
+     * stored in the datastore)
+     */
+    private Long getNumStates(Flags flags) {
+        if (mNumStates == null) {
+            buildPrivacyParameters(flags);
+        }
+        return mNumStates;
+    }
+
+    /** Returns flip probability (used only for computation and not stored in the datastore) */
+    public Double getFlipProbability(Flags flags) {
+        if (mFlipProbability == null) {
+            buildPrivacyParameters(flags);
+        }
+        return mFlipProbability;
     }
 
     /** Returns max bucket increments */
@@ -817,6 +1004,16 @@ public class Source {
         mIsInstallAttributed = isInstallAttributed;
     }
 
+    /** Set the number of report states for the {@link Source}. */
+    private void setNumStates(long numStates) {
+        mNumStates = numStates;
+    }
+
+    /** Set flip probability for the {@link Source}. */
+    private void setFlipProbability(double flipProbability) {
+        mFlipProbability = flipProbability;
+    }
+
     /**
      * @return if it's a derived source, returns the ID of the source it was created from. If it is
      *     null, it is an original source.
@@ -841,10 +1038,16 @@ public class Source {
     }
 
     /**
-     * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
-     * for source type.
+     * Generates AggregatableFilterData from aggregate filter string in Source, including entries
+     * for source type and duration from source to trigger if lookback window filter is enabled.
      */
-    public FilterMap getFilterData() throws JSONException {
+    public FilterMap getFilterData(@NonNull Trigger trigger, Flags flags) throws JSONException {
+        return flags.getMeasurementEnableLookbackWindowFilter()
+                ? getFilterData(trigger)
+                : getFilterData();
+    }
+
+    private FilterMap getFilterData() throws JSONException {
         if (mFilterData != null) {
             return mFilterData;
         }
@@ -863,9 +1066,63 @@ public class Source {
         return mFilterData;
     }
 
+    private FilterMap getFilterData(@NonNull Trigger trigger) throws JSONException {
+        FilterMap.Builder builder = new FilterMap.Builder();
+        if (mFilterDataString != null && !mFilterDataString.isEmpty()) {
+            builder.buildFilterDataV2(new JSONObject(mFilterDataString));
+        }
+        builder.addStringListValue("source_type", Collections.singletonList(mSourceType.getValue()))
+                .addLongValue(
+                        FilterMap.LOOKBACK_WINDOW,
+                        TimeUnit.MILLISECONDS.toSeconds(trigger.getTriggerTime() - mEventTime));
+        return builder.build();
+    }
+
+    private <V> Map<String, V> extractSharedFilterMapFromJson(Map<String, V> attributionFilterMap)
+            throws JSONException {
+        Map<String, V> sharedAttributionFilterMap = new HashMap<>();
+        JSONArray sharedFilterDataKeysArray = new JSONArray(mSharedFilterDataKeys);
+        for (int i = 0; i < sharedFilterDataKeysArray.length(); ++i) {
+            String filterKey = sharedFilterDataKeysArray.getString(i);
+            if (attributionFilterMap.containsKey(filterKey)) {
+                sharedAttributionFilterMap.put(filterKey, attributionFilterMap.get(filterKey));
+            }
+        }
+        return sharedAttributionFilterMap;
+    }
+
+    /**
+     * Generates AggregatableFilterData from aggregate filter string in Source, including entries
+     * for source type and duration from source to trigger if lookback window filter is enabled.
+     */
+    public FilterMap getSharedFilterData(@NonNull Trigger trigger, Flags flags)
+            throws JSONException {
+        FilterMap filterMap = getFilterData(trigger, flags);
+        if (mSharedFilterDataKeys == null) {
+            return filterMap;
+        }
+        if (flags.getMeasurementEnableLookbackWindowFilter()) {
+            return new FilterMap.Builder()
+                    .setAttributionFilterMapWithLongValue(
+                            extractSharedFilterMapFromJson(
+                                    filterMap.getAttributionFilterMapWithLongValue()))
+                    .build();
+        } else {
+            return new FilterMap.Builder()
+                    .setAttributionFilterMap(
+                            extractSharedFilterMapFromJson(filterMap.getAttributionFilterMap()))
+                    .build();
+        }
+    }
+
     @Nullable
     public UnsignedLong getSharedDebugKey() {
         return mSharedDebugKey;
+    }
+
+    /** Returns true if the source should be dropped when the app is already installed. */
+    public boolean shouldDropSourceIfInstalled() {
+        return mDropSourceIfInstalled;
     }
 
     /** Returns true if the source has app destination(s), false otherwise. */
@@ -890,15 +1147,38 @@ public class Source {
         }
     }
 
-    /** Build the flexible event report API from the raw string */
-    public void buildFlexibleEventReportApi() throws JSONException {
-        mFlexEventReportSpec =
-                new ReportSpec(
-                        mTriggerSpecsString,
-                        getOrDefaultMaxEventLevelReports(
-                                mSourceType, mMaxEventLevelReports, FlagsFactory.getFlags()),
-                        mEventAttributionStatusString,
-                        mPrivacyParametersString);
+    /** Parses the event attribution status string. */
+    @VisibleForTesting
+    public void parseEventAttributionStatus() throws JSONException {
+        JSONArray eventAttributionStatus = new JSONArray(mEventAttributionStatusString);
+        for (int i = 0; i < eventAttributionStatus.length(); i++) {
+            JSONObject json = eventAttributionStatus.getJSONObject(i);
+            mAttributedTriggers.add(new AttributedTrigger(json));
+        }
+    }
+
+    /** Build the attributed triggers list from the raw string */
+    public void buildAttributedTriggers() throws JSONException {
+        if (mAttributedTriggers == null) {
+            mAttributedTriggers = new ArrayList<>();
+            if (mEventAttributionStatusString != null && !mEventAttributionStatusString.isEmpty()) {
+                parseEventAttributionStatus();
+            }
+        }
+    }
+
+    /** Build the trigger specs from the raw string */
+    public void buildTriggerSpecs() throws JSONException {
+        buildAttributedTriggers();
+        if (mTriggerSpecs == null) {
+            mTriggerSpecs =
+                    new TriggerSpecs(
+                            mTriggerSpecsString,
+                            getOrDefaultMaxEventLevelReports(
+                                    mSourceType, mMaxEventLevelReports, FlagsFactory.getFlags()),
+                            this,
+                            mPrivacyParametersString);
+        }
     }
 
     /**
@@ -948,6 +1228,7 @@ public class Source {
             builder.setAggregatableReportWindow(copyFrom.mAggregatableReportWindow);
             builder.setEnrollmentId(copyFrom.mEnrollmentId);
             builder.setFilterData(copyFrom.mFilterDataString);
+            builder.setSharedFilterDataKeys(copyFrom.mSharedFilterDataKeys);
             builder.setInstallTime(copyFrom.mInstallTime);
             builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
             builder.setPriority(copyFrom.mPriority);
@@ -956,9 +1237,12 @@ public class Source {
             builder.setPlatformAdId(copyFrom.mPlatformAdId);
             builder.setDebugAdId(copyFrom.mDebugAdId);
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
-            builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
+            builder.setAttributedTriggers(copyFrom.mAttributedTriggers);
+            builder.setTriggerSpecs(copyFrom.mTriggerSpecs);
+            builder.setTriggerDataMatching(copyFrom.mTriggerDataMatching);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
+            builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
             return builder;
         }
 
@@ -1132,6 +1416,13 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getTriggerDataMatching()} */
+        @NonNull
+        public Builder setTriggerDataMatching(TriggerDataMatching triggerDataMatching) {
+            mBuilding.mTriggerDataMatching = triggerDataMatching;
+            return this;
+        }
+
         /** See {@link Source#getInstallAttributionWindow()} */
         @NonNull
         public Builder setInstallAttributionWindow(long installAttributionWindow) {
@@ -1156,6 +1447,12 @@ public class Source {
         /** See {@link Source#getFilterDataString()}. */
         public Builder setFilterData(@Nullable String filterMap) {
             mBuilding.mFilterDataString = filterMap;
+            return this;
+        }
+
+        /** See {@link Source#getSharedFilterDataKeys()}. */
+        public Builder setSharedFilterDataKeys(@Nullable String sharedFilterDataKeys) {
+            mBuilding.mSharedFilterDataKeys = sharedFilterDataKeys;
             return this;
         }
 
@@ -1238,39 +1535,31 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getFlexEventReportSpec()} */
+        /** See {@link Source#getAttributedTriggers()} */
         @NonNull
-        public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
-            mBuilding.mFlexEventReportSpec = flexEventReportSpec;
+        public Builder setAttributedTriggers(@NonNull List<AttributedTrigger> attributedTriggers) {
+            mBuilding.mAttributedTriggers = attributedTriggers;
             return this;
         }
 
-        /** See {@link Source#getFlexEventReportSpec()} */
+        /** See {@link Source#getTriggerSpecs()} */
         @NonNull
-        public Builder buildInitialFlexEventReportSpec(@NonNull Flags flags) throws JSONException {
-            // TODO(b/290100712): Refactor to remove this method
-            if (mBuilding.mTriggerSpecsString == null || mBuilding.mTriggerSpecsString.isEmpty()) {
-                return this;
-            }
-            mBuilding.mFlexEventReportSpec =
-                    new ReportSpec(
-                            mBuilding.mTriggerSpecsString,
-                            getOrDefaultMaxEventLevelReports(
-                                    mBuilding.mSourceType, mBuilding.mMaxEventLevelReports, flags));
+        public Builder setTriggerSpecs(@Nullable TriggerSpecs triggerSpecs) {
+            mBuilding.mTriggerSpecs = triggerSpecs;
             return this;
         }
 
-        /** See {@link Source#getCoarseEventReportDestinations()} */
+        /** See {@link Source#hasCoarseEventReportDestinations()} */
         @NonNull
         public Builder setCoarseEventReportDestinations(boolean coarseEventReportDestinations) {
             mBuilding.mCoarseEventReportDestinations = coarseEventReportDestinations;
             return this;
         }
 
-        /** See {@link Source#getTriggerSpecs()} */
+        /** See {@link Source#getTriggerSpecsString()} */
         @NonNull
-        public Builder setTriggerSpecs(@Nullable String triggerSpecs) {
-            mBuilding.mTriggerSpecsString = triggerSpecs;
+        public Builder setTriggerSpecsString(@Nullable String triggerSpecsString) {
+            mBuilding.mTriggerSpecsString = triggerSpecsString;
             return this;
         }
 
@@ -1299,6 +1588,13 @@ public class Source {
         @NonNull
         public Builder setSharedDebugKey(@Nullable UnsignedLong sharedDebugKey) {
             mBuilding.mSharedDebugKey = sharedDebugKey;
+            return this;
+        }
+
+        /** See {@link Source#shouldDropSourceIfInstalled()}. */
+        @NonNull
+        public Builder setDropSourceIfInstalled(boolean dropSourceIfInstalled) {
+            mBuilding.mDropSourceIfInstalled = dropSourceIfInstalled;
             return this;
         }
 

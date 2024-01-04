@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -44,15 +45,14 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
@@ -68,22 +68,22 @@ public final class DebugReportApiTest {
     private static final String LIMIT = "100";
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private DebugReportApi mDebugReportApi;
-    private MockitoSession mStaticMockSession;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Flags mFlags;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(VerboseDebugReportingJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(DebugReportingJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
         ExtendedMockito.doNothing()
-                .when(() -> DebugReportingJobService.schedule(any(), any(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         mDebugReportApi = spy(new DebugReportApi(mContext, mFlags));
 
@@ -92,11 +92,6 @@ public final class DebugReportApiTest {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(true);
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(true);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -112,10 +107,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -142,10 +134,7 @@ public final class DebugReportApiTest {
                         .setArDebugPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -172,10 +161,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -204,10 +190,7 @@ public final class DebugReportApiTest {
                         .setArDebugPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -236,10 +219,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -276,10 +256,7 @@ public final class DebugReportApiTest {
                         .setArDebugPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -316,10 +293,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -339,10 +313,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -359,10 +330,7 @@ public final class DebugReportApiTest {
                         .setEnrollmentId("")
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -378,10 +346,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -400,10 +365,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(false)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -421,17 +383,14 @@ public final class DebugReportApiTest {
                         .setArDebugPermission(false)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
-    public void testScheduleSourceDestinationLimitDebugReport_success() throws Exception {
+    public void scheduleSourceDestinationLimitDebugReport_success() throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -444,10 +403,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -462,37 +418,86 @@ public final class DebugReportApiTest {
     }
 
     @Test
-    public void testScheduleSourceDestinationLimitDebugReport_debugFlagDisabled_dontSchedule()
+    public void scheduleSourceDestinationRateLimitDebugReport_success() throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(null)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        assertSourceDebugReportParameters(
+                report,
+                DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT,
+                SourceFixture.ValidSourceParams.PUBLISHER.toString(),
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
+                LIMIT);
+    }
+
+    @Test
+    public void scheduleSourceDestinationLimitDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
-    public void testScheduleSourceDestinationLimitDebugReport_sourceFlagDisabled_dontSchedule()
+    public void scheduleSourceDestinationRateLimitDebugReport_debugFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        Source source = SourceFixture.getValidSource();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void scheduleSourceDestinationLimitDebugReport_sourceFlagDisabled_dontSchedule()
             throws Exception {
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
-    public void testScheduleSourceDestinationLimitDebugReport_without_enrollmentId_dontSchedule()
+    public void scheduleSourceDestinationRateLimitDebugReport_sourceFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        Source source = SourceFixture.getValidSource();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void scheduleSourceDestinationLimitDebugReport_without_enrollmentId_dontSchedule()
             throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -502,17 +507,32 @@ public final class DebugReportApiTest {
                         .build();
 
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
-    public void testScheduleSourceDestinationLimitDebugReport_adTechNotOptIn_dontSchedule()
+    public void scheduleSourceDestinationRateLimitDebugReport_without_enrollmentId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setEnrollmentId("")
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void scheduleSourceDestinationLimitDebugReport_adTechNotOptIn_dontSchedule()
             throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -521,12 +541,26 @@ public final class DebugReportApiTest {
                         .build();
 
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void scheduleSourceDestinationRateLimitDebugReport_adTechNotOptIn_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(false)
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -539,10 +573,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -571,10 +602,7 @@ public final class DebugReportApiTest {
                         .setArDebugPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -607,10 +635,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -627,10 +652,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -647,10 +669,7 @@ public final class DebugReportApiTest {
                         .setEnrollmentId("")
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -666,10 +685,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(false)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -684,10 +700,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -702,10 +715,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -730,10 +740,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -750,10 +757,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -769,10 +773,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -789,10 +790,7 @@ public final class DebugReportApiTest {
                         .setEnrollmentId("")
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -810,10 +808,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -841,10 +836,7 @@ public final class DebugReportApiTest {
                         .setArDebugPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -880,10 +872,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -903,10 +892,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -923,10 +909,7 @@ public final class DebugReportApiTest {
                         .setEnrollmentId("")
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -942,10 +925,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -964,10 +944,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(false)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -986,10 +963,7 @@ public final class DebugReportApiTest {
                         .setArDebugPermission(false)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -1004,10 +978,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
@@ -1022,10 +993,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
@@ -1050,10 +1018,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
@@ -1070,10 +1035,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
@@ -1085,10 +1047,7 @@ public final class DebugReportApiTest {
             throws Exception {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
@@ -1104,10 +1063,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
@@ -1122,10 +1078,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
@@ -1142,10 +1095,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
@@ -1162,10 +1112,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
@@ -1177,10 +1124,7 @@ public final class DebugReportApiTest {
             throws Exception {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
@@ -1202,10 +1146,66 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerNoMatchingFilterDataDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerNoMatchingFilterDataDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1230,10 +1230,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1267,10 +1264,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1298,10 +1292,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1324,10 +1315,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1354,10 +1342,68 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void
+            testScheduleTriggerEventNoMatchingConfigurationDebugReport_sourceNoAdId_dontSchedule()
+                    throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void
+            testScheduleTriggerEventNoMatchingConfigurationDebugReport_srcNoArDebug_dontSchedule()
+                    throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1383,10 +1429,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1420,10 +1463,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1451,10 +1491,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1477,10 +1514,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1506,10 +1540,66 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventLowPriorityDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventLowPriorityDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1534,10 +1624,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1572,10 +1659,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1602,10 +1686,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1629,10 +1710,7 @@ public final class DebugReportApiTest {
         UnsignedLong triggerData = new UnsignedLong(1L);
 
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1658,10 +1736,66 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventExcessiveReportsDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventExcessiveReportsDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1686,10 +1820,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1723,10 +1854,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1754,10 +1882,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1782,10 +1907,7 @@ public final class DebugReportApiTest {
         UnsignedLong triggerData = new UnsignedLong(1L);
 
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source,
@@ -1811,15 +1933,71 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
                 LIMIT,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAttriPerSourceDesLimitDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAttriPerSourceDesLimitDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -1839,10 +2017,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1877,10 +2052,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1908,10 +2080,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1934,10 +2103,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1963,10 +2129,66 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventWindowPassedDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventWindowPassedDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -1991,10 +2213,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2028,10 +2247,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2058,10 +2274,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2083,10 +2296,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2112,15 +2322,71 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
                 LIMIT,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerReportingOriginLimitDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerReportingOriginLimitDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -2140,10 +2406,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2177,10 +2440,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2208,10 +2468,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2234,10 +2491,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2263,10 +2517,66 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_NOISE);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventNoiseDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_NOISE);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventNoiseDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2291,10 +2601,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2328,10 +2635,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2358,10 +2662,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2383,10 +2684,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2412,15 +2710,71 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
                 LIMIT,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventStorageLimitDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventStorageLimitDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -2440,10 +2794,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2477,10 +2828,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2507,10 +2855,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2532,10 +2877,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2561,10 +2903,66 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAggregateWindowPassedDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAggregateWindowPassedDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2589,10 +2987,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2627,10 +3022,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2658,10 +3050,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2684,10 +3073,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2713,15 +3099,71 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
                 LIMIT,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAggreInsufficientBudgetDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAggreInsufficientBudgetDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -2741,10 +3183,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2772,10 +3211,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2803,10 +3239,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2829,10 +3262,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2858,10 +3288,66 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAggregateNoContributionDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAggregateNoContributionDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2886,10 +3372,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2917,10 +3400,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2948,10 +3428,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -2974,10 +3451,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -3003,15 +3477,71 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
                 LIMIT,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAggregateStorageLimitDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerAggregateStorageLimitDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
@@ -3031,10 +3561,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -3061,10 +3588,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -3092,10 +3616,7 @@ public final class DebugReportApiTest {
                         .setAdIdPermission(true)
                         .build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -3118,10 +3639,7 @@ public final class DebugReportApiTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
         ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                DebugReportingJobService.scheduleIfNeeded(
-                                        any(), anyBoolean(), anyBoolean()));
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
@@ -3129,6 +3647,194 @@ public final class DebugReportApiTest {
                 LIMIT,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventWindowNotStartedDebugReport_triggerNotOpIn_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(false)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventWindowNotStartedDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventWindowNotStartedDebugReport_sourceNoArDebug_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setPublisher(SourceFixture.ValidSourceParams.WEB_PUBLISHER)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setArDebugPermission(false)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(
+                                SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0))
+                        .setArDebugPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventWindowNotStartedDebugReport_success() throws Exception {
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
+        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventWindowNotStartedDebugReport_debugFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void
+            testScheduleTriggerEventWindowNotStartedDebugReport_triggerFlagDisabled_dontSchedule()
+                    throws Exception {
+        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void
+            testScheduleTriggerEventWindowNotStartedDebugReport_noTriggerPermission_dontSchedule()
+                    throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder().setIsDebugReporting(true).build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source,
+                trigger,
+                /* limit =*/ null,
+                mMeasurementDao,
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 

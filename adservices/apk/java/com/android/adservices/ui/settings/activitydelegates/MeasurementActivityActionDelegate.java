@@ -42,6 +42,7 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
             MeasurementActivity measurementActivity, MeasurementViewModel measurementViewModel) {
         super(measurementActivity);
         this.mMeasurementViewModel = measurementViewModel;
+        initWithUx(measurementActivity, measurementActivity.getApplicationContext());
         listenToMeasurementViewModelUiEvents();
     }
 
@@ -58,7 +59,15 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initU18() {}
+    public void initU18() {
+        mActivity.setTitle(R.string.settingsUI_measurement_ga_title);
+        configureSharedElements();
+    }
+
+    @Override
+    public void initRvc() {
+        initU18();
+    }
 
     private void configureSharedElements() {
         // consent switch
@@ -99,7 +108,7 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case RESET_MEASUREMENT:
-                                UiStatsLogger.logResetMeasurementSelected(mActivity);
+                                UiStatsLogger.logResetMeasurementSelected();
                                 mMeasurementViewModel.resetMeasurement();
                                 Toast.makeText(
                                                 mActivity,

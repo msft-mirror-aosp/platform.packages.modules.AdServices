@@ -20,7 +20,7 @@ import static com.android.adservices.data.adselection.EncryptionKeyConstants.Enc
 
 import static com.google.common.truth.Truth.assertThat;
 
-
+import android.adservices.common.CommonFixture;
 import android.content.Context;
 
 import androidx.room.Room;
@@ -38,6 +38,7 @@ import org.mockito.junit.MockitoRule;
 
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
 
 public class EncryptionContextDaoTest {
     private static final long CONTEXT_ID_1 = 1L;
@@ -62,6 +63,7 @@ public class EncryptionContextDaoTest {
     @Rule public final MockitoRule mockito = MockitoJUnit.rule();
 
     private ObliviousHttpKeyConfig mObliviousHttpKeyConfig;
+    private static final Instant CREATION_TIME = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
 
     @Before
     public void setup() throws InvalidKeySpecException {
@@ -118,14 +120,42 @@ public class EncryptionContextDaoTest {
                 .isNotNull();
     }
 
-    private DBEncryptionContext getDbEncryptionContext(long contextId) throws Exception {
+    @Test
+    public void test_removeExpiredEncryptionContext_removesExpiredEntries() throws Exception {
+        DBEncryptionContext encryptionContext = getDbEncryptionContext(CONTEXT_ID_1);
+        DBEncryptionContext encryptionContext2 =
+                getDefaultDBEncryptionContextBuilder()
+                        .setContextId(CONTEXT_ID_2)
+                        .setCreationInstant(CREATION_TIME.plusSeconds(10))
+                        .build();
+        mEncryptionContextDao.insertEncryptionContext(encryptionContext);
+        mEncryptionContextDao.insertEncryptionContext(encryptionContext2);
+
+        Instant expirationTime = CREATION_TIME.plusSeconds(5);
+        mEncryptionContextDao.removeExpiredEncryptionContext(expirationTime);
+
+        assertThat(
+                        mEncryptionContextDao.getEncryptionContext(
+                                CONTEXT_ID_1, ENCRYPTION_KEY_TYPE_AUCTION))
+                .isNull();
+        assertThat(
+                        mEncryptionContextDao.getEncryptionContext(
+                                CONTEXT_ID_2, ENCRYPTION_KEY_TYPE_AUCTION))
+                .isNotNull();
+    }
+
+    private DBEncryptionContext.Builder getDefaultDBEncryptionContextBuilder() {
         return DBEncryptionContext.builder()
-                .setContextId(contextId)
+                .setContextId(CONTEXT_ID_1)
                 .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
+                .setCreationInstant(CREATION_TIME)
                 .setKeyConfig(KEY_CONFIG_BYTES)
                 .setSharedSecret(SHARED_SECRET_BYTES)
-                .setSeed(SEED_BYTES)
-                .build();
+                .setSeed(SEED_BYTES);
+    }
+
+    private DBEncryptionContext getDbEncryptionContext(long contextId) throws Exception {
+        return getDefaultDBEncryptionContextBuilder().setContextId(contextId).build();
     }
 
     private DBEncryptionContext getExpectedDbEncryptionContext(DBEncryptionContext insertedContext)
@@ -133,6 +163,7 @@ public class EncryptionContextDaoTest {
         return DBEncryptionContext.builder()
                 .setContextId(insertedContext.getContextId())
                 .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
+                .setCreationInstant(CREATION_TIME)
                 .setKeyConfig(KEY_CONFIG_BYTES)
                 .setSharedSecret(insertedContext.getSharedSecret())
                 .setSeed(insertedContext.getSeed())

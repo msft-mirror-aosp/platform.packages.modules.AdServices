@@ -19,22 +19,22 @@ package {
 android_library {
     name: "adservices-ui-cts-root-test-lib",
     srcs: [
-        "UiConstants.java",
-        "UiUtils.java",
+        "src/**/*.java",
     ],
     static_libs: [
         "adservices-assets",
+        "adservices-shared-testing",
         "adservices-service-core",
-        "compatibility-device-util-axt",
-        "truth-prebuilt",
-        "androidx.test.uiautomator_uiautomator",
         "adservices-test-utility",
+        "compatibility-device-util-axt",
+        "truth",
+        "androidx.test.uiautomator_uiautomator",
         "framework-adservices-lib",
     ],
     libs: [
         "android.test.base",
     ],
-    visibility: ["//packages/modules/AdServices/adservices/tests/cts/ui:__subpackages__"],
+    visibility: ["//packages/modules/AdServices/adservices:__subpackages__"],
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
+    min_sdk_version: "30",
 }

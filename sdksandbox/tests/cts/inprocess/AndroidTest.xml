@@ -16,7 +16,7 @@
   -->
 <configuration description="Config for cts tests instrumenting Sdk Sandbox process">
     <option name="test-suite-tag" value="cts" />
-    <option name="config-descriptor:metadata" key="component" value="framework" />
+    <option name="config-descriptor:metadata" key="component" value="adservices" />
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
@@ -28,8 +28,7 @@
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.sdksandbox.tests.cts.inprocesstests" />
-        <option name="instrumentation-arg"
-                key="thisisignored" value="thisisignored --instrument-sdk-sandbox" />
+        <option name="instrument-sdk-sandbox" value="true" />
     </test>
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >

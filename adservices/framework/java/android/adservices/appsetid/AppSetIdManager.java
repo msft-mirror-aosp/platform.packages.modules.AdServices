@@ -15,6 +15,8 @@
  */
 package android.adservices.appsetid;
 
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.SandboxedSdkContextUtils;
@@ -23,7 +25,6 @@ import android.annotation.NonNull;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -102,11 +103,21 @@ public class AppSetIdManager {
     }
 
     @NonNull
-    private IAppSetIdService getService() {
-        IAppSetIdService service = mServiceBinder.getService();
-        if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
+    private IAppSetIdService getService(
+            @CallbackExecutor Executor executor, OutcomeReceiver<AppSetId, Exception> callback) {
+        IAppSetIdService service = null;
+        try {
+            service = mServiceBinder.getService();
+
+            // Throw ISE and set it to the callback when service is not available
+            if (service == null) {
+                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+            }
+        } catch (RuntimeException e) {
+            LogUtil.e(e, "Failed binding to AppSetId service");
+            executor.execute(() -> callback.onError(e));
         }
+
         return service;
     }
 
@@ -120,9 +131,6 @@ public class AppSetIdManager {
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after appsetid are available or an error occurs.
-     * @throws SecurityException if caller is not authorized to call this API.
-     * @throws IllegalStateException if this API is not available.
-     * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
     public void getAppSetId(
@@ -134,7 +142,7 @@ public class AppSetIdManager {
                 new CallerMetadata.Builder()
                         .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                         .build();
-        final IAppSetIdService service = getService();
+
         String appPackageName = "";
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
@@ -148,6 +156,12 @@ public class AppSetIdManager {
             appPackageName = getAppSetIdRequestContext.getPackageName();
         }
         try {
+            IAppSetIdService service = getService(executor, callback);
+            if (service == null) {
+                LogUtil.d("Unable to find AppSetId service");
+                return;
+            }
+
             service.getAppSetId(
                     new GetAppSetIdParam.Builder()
                             .setAppPackageName(appPackageName)

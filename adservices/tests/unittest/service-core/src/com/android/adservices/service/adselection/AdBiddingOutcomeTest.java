@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS;
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -63,7 +63,7 @@ public class AdBiddingOutcomeTest {
                     BIDDING_LOGIC_URI,
                     BUYER_DECISION_LOGIC_JS,
                     CUSTOM_AUDIENCE_SIGNALS,
-                    BUYER_CONTEXTUAL_SIGNALS);
+                    BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST);
 
     @Test
     public void testAdSelectionBiddingOutcomeBuilder() {

@@ -95,7 +95,7 @@ class BackCompatAndroidProcessDetectorTest : LintDetectorTest() {
 
         <!-- Receiver with process -->
         <receiver android:name="com.android.adservices.service.common.AdExtBootCompletedReceiver"
-                  android:enabled="@bool/atLeastS"
+                  android:enabled="@bool/isAdExtBootCompletedReceiverEnabled"
                   android:exported="true"
                   android:process=".adservices">
             <intent-filter>
@@ -158,7 +158,7 @@ class BackCompatAndroidProcessDetectorTest : LintDetectorTest() {
 
         <!-- Receiver missing process -->
         <receiver android:name="com.android.adservices.service.common.AdExtBootCompletedReceiver"
-                  android:enabled="@bool/atLeastS"
+                  android:enabled="@bool/isAdExtBootCompletedReceiverEnabled"
                   android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>

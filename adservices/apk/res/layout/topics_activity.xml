@@ -24,12 +24,12 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical">
+        android:scrollbars="vertical"
+        android:focusableInTouchMode="true">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:focusableInTouchMode="true" >
+            android:orientation="vertical">
             <TextView
                 android:id="@+id/topics_introduction"
                 android:layout_marginTop="18dp"
@@ -59,6 +59,7 @@
                 android:layout_marginTop="48dp"
                 android:layout_marginBottom="16dp"
                 android:gravity="center"
+                android:focusable="false"
                 android:visibility="gone"
                 android:orientation="vertical">
                 <ImageView
@@ -91,31 +92,29 @@
                 android:clipToPadding="false"
                 android:paddingHorizontal="24dp"
                 android:scrollbars="none" />
-
-            <LinearLayout
-                android:id="@+id/blocked_topics_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="24dp"
-                android:background="?android:attr/selectableItemBackground" >
-                <TextView
-                    android:id="@+id/blocked_topics_button_child"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:key="blocked_topics"
-                    android:text="@string/settingsUI_blocked_topics_title"
-                    android:textAppearance="@style/TextAppearance.H5"
-                    android:drawableStart="@drawable/ic_chevron_right_24dp"
-                    android:drawablePadding="28dp"/>
-            </LinearLayout>
-
             <LinearLayout
                 android:id="@+id/empty_topics_hidden_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingBottom="24dp" >
+                <LinearLayout
+                    android:id="@+id/blocked_topics_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="24dp"
+                    android:background="?android:attr/selectableItemBackground" >
+                    <TextView
+                        android:id="@+id/blocked_topics_button_child"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:key="blocked_topics"
+                        android:text="@string/settingsUI_blocked_topics_title"
+                        android:textAppearance="@style/TextAppearance.H5"
+                        android:drawableStart="@drawable/ic_chevron_right_24dp"
+                        android:drawablePadding="28dp"/>
+                </LinearLayout>
                 <LinearLayout
                     android:id="@+id/reset_topics_button"
                     android:layout_width="match_parent"
@@ -140,8 +139,7 @@
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="24dp"
                     android:paddingBottom="48dp"
-                    android:orientation="vertical"
-                    android:focusableInTouchMode="true" >
+                    android:orientation="vertical">
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -165,7 +163,6 @@
                     android:paddingHorizontal="24dp"
                     android:paddingBottom="48dp"
                     android:orientation="vertical"
-                    android:focusableInTouchMode="true"
                     android:visibility="gone">
                     <ImageView
                         android:layout_width="wrap_content"

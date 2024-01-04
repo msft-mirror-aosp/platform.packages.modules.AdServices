@@ -24,6 +24,7 @@ java_test_host {
     ],
     static_libs: [
         "cts-install-lib-host",
+        "SdkSandboxHostTestUtils",
     ],
     test_suites: ["general-tests"],
     data: [
@@ -37,7 +38,6 @@ android_test_helper_app {
     manifest: "app/ContentProviderRestrictionsTestAppManifest.xml",
     srcs: [
             "app/src/**/ContentProviderRestrictionsTestApp.java",
-            "app/src/**/SdkSandboxEmptyActivity.java",
             ":framework-sdksandbox-sources",
             ":sdksandbox_aidl",
             ":sdksandbox-sources",

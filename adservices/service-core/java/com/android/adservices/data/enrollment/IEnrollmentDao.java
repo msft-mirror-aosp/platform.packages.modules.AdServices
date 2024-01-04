@@ -28,6 +28,9 @@ import java.util.Set;
 /** Interface for enrollment related data access operations. */
 public interface IEnrollmentDao {
 
+    /** Returns all enrollment data in enrollment table. */
+    List<EnrollmentData> getAllEnrollmentData();
+
     /**
      * Returns the {@link EnrollmentData}.
      *
@@ -85,6 +88,20 @@ public interface IEnrollmentDao {
      * @return the EnrollmentData; Null in case of SQL failure
      */
     EnrollmentData getEnrollmentDataFromSdkName(String sdkName);
+
+    /**
+     * Returns the number of enrollment records in the DB table.
+     *
+     * @return count of records in the enrollment table
+     */
+    Long getEnrollmentRecordsCount();
+
+    /**
+     * Returns the number of enrollment records in the DB table for logging purposes.
+     *
+     * @return count of records in the enrollment table
+     */
+    int getEnrollmentRecordCountForLogging();
 
     /**
      * Inserts {@link EnrollmentData} into DB table.

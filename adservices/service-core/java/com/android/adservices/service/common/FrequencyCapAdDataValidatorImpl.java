@@ -116,14 +116,14 @@ public class FrequencyCapAdDataValidatorImpl implements FrequencyCapAdDataValida
                 if (keyedFrequencyCap.getInterval() == null) {
                     violations.add(KeyedFrequencyCap.INTERVAL_NULL_ERROR_MESSAGE);
                 } else {
-                    long intervalSeconds = keyedFrequencyCap.getInterval().toSeconds();
+                    long intervalSeconds = keyedFrequencyCap.getInterval().getSeconds();
                     if (intervalSeconds <= 0) {
                         violations.add(
                                 String.format(
                                         Locale.ENGLISH,
                                         KeyedFrequencyCap.INTERVAL_NOT_POSITIVE_FORMAT,
                                         keyedFrequencyCap.getInterval()));
-                    } else if (intervalSeconds > KeyedFrequencyCap.MAX_INTERVAL.toSeconds()) {
+                    } else if (intervalSeconds > KeyedFrequencyCap.MAX_INTERVAL.getSeconds()) {
                         violations.add(
                                 String.format(
                                         Locale.ENGLISH,

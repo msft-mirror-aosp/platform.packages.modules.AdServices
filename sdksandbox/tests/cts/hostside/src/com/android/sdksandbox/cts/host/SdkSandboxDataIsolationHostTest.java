@@ -21,7 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
+import android.platform.test.annotations.LargeTest;
 
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -45,6 +47,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     private DeviceSdkLevel mDeviceSdkLevel;
 
@@ -71,6 +74,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
         mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
         // These tests run on system user
         uninstallPackage(APP_PACKAGE);
@@ -121,6 +125,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
      * app exists, when trying to access other user data.
      */
     @Test
+    @LargeTest // Creates user
     public void testSdkSandboxDataIsolation_CannotVerifyOtherUserAppExistence() throws Exception {
         // TODO(b/254608808,b/214241165): Remove once merged into QPR.
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
@@ -143,6 +148,7 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
      * isolation has occurred.
      */
     @Test
+    @LargeTest // Creates volume
     public void testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes() throws Exception {
         // TODO(b/254608808,b/214241165): Remove once merged into QPR.
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());

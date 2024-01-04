@@ -26,7 +26,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
@@ -254,8 +253,7 @@ public class OTAResourcesManagerTest {
      */
     @Test
     public void testRefreshOTAResources_nonUriClientFile() throws Exception {
-        ExtendedMockito.doNothing().when(
-                () -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ClientFile testCf = ClientFile.newBuilder().setFileId("resources.arsc").build();
 
         ClientFileGroup testCfg =
@@ -276,10 +274,8 @@ public class OTAResourcesManagerTest {
         ExtendedMockito.verify(
                 () ->
                         ErrorLogUtil.e(
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX),
-                                eq(OTAResourcesManager.class.getSimpleName()),
-                                eq("refreshOTAResources")));
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
     }
 
     /**

@@ -41,11 +41,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -72,6 +70,7 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -91,6 +90,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -100,12 +100,13 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 
-public class CustomAudienceServiceImplTest {
+@MockStatic(BackgroundFetchJobService.class)
+public final class CustomAudienceServiceImplTest extends AdServicesExtendedMockitoTestCase {
+
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
 
@@ -127,7 +128,6 @@ public class CustomAudienceServiceImplTest {
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Mock private Throttler mMockThrottler;
-    private Supplier<Throttler> mMockThrottlerSupplier = () -> mMockThrottler;
 
     private static final int MY_UID = Process.myUid();
 
@@ -139,16 +139,8 @@ public class CustomAudienceServiceImplTest {
 
     private CustomAudienceServiceImpl mService;
 
-    private MockitoSession mStaticMockitoSession;
-
     @Before
     public void setup() throws Exception {
-        mStaticMockitoSession =
-                mockitoSession()
-                        .initMocks(this)
-                        .mockStatic(BackgroundFetchJobService.class)
-                        .startMocking();
-
         mService =
                 new CustomAudienceServiceImpl(
                         CONTEXT,
@@ -168,7 +160,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -183,10 +175,17 @@ public class CustomAudienceServiceImplTest {
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(true);
+        Mockito.lenient()
+                .doReturn(DevContext.createForDevOptionsDisabled())
+                .when(mDevContextFilterMock)
+                .createDevContext();
     }
 
     @After
     public void teardown() {
+        // TODO(b/315812832): if a test method fails and call below also fails, the test failure
+        // will be the latter - not the former - which would make it harder to debug the real
+        // failure.
         verifyNoMoreInteractions(
                 mCustomAudienceImplMock,
                 mFledgeAuthorizationFilterMock,
@@ -195,11 +194,14 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock,
                 mCustomAudienceOverrideCallbackMock,
                 mCustomAudienceDaoMock,
-                mDevContextFilterMock,
                 mAppImportanceFilterMock,
                 mConsentManagerMock,
                 mAdServicesLoggerMock);
-        mStaticMockitoSession.finishMocking();
+    }
+
+    @Override
+    protected Strictness getStrictness() {
+        return Strictness.STRICT_STUBS;
     }
 
     @Test
@@ -210,10 +212,15 @@ public class CustomAudienceServiceImplTest {
                 CustomAudienceFixture.VALID_OWNER,
                 mICustomAudienceCallbackMock);
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mCustomAudienceImplMock)
-                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
+                .joinCustomAudience(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        DevContext.createForDevOptionsDisabled());
         verify(
                 () ->
                         BackgroundFetchJobService.scheduleIfNeeded(
@@ -253,8 +260,10 @@ public class CustomAudienceServiceImplTest {
                 CustomAudienceFixture.VALID_OWNER,
                 mICustomAudienceCallbackMock);
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        any(), eq(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE));
+                .assertAppDeclaredCustomAudiencePermission(
+                        any(),
+                        eq(CustomAudienceFixture.VALID_OWNER),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -302,7 +311,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -317,8 +326,10 @@ public class CustomAudienceServiceImplTest {
                                 mICustomAudienceCallbackMock));
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
     }
@@ -338,8 +349,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verifyErrorResponseICustomAudienceCallback(
                 STATUS_UNAUTHORIZED, SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
         verify(mFledgeAuthorizationFilterMock)
@@ -359,9 +372,6 @@ public class CustomAudienceServiceImplTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 mICustomAudienceCallbackMock));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
     }
@@ -374,9 +384,6 @@ public class CustomAudienceServiceImplTest {
                         mService.joinCustomAudience(
                                 VALID_CUSTOM_AUDIENCE, null, mICustomAudienceCallbackMock));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
     }
@@ -389,9 +396,6 @@ public class CustomAudienceServiceImplTest {
                         mService.joinCustomAudience(
                                 VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, null));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
     }
@@ -401,7 +405,10 @@ public class CustomAudienceServiceImplTest {
         String errorMessage = "Simulating Error creating Custom Audience";
         doThrow(new RuntimeException(errorMessage))
                 .when(mCustomAudienceImplMock)
-                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
+                .joinCustomAudience(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        DevContext.createForDevOptionsDisabled());
 
         mService.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE,
@@ -409,10 +416,15 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mCustomAudienceImplMock)
-                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
+                .joinCustomAudience(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        DevContext.createForDevOptionsDisabled());
         verifyErrorResponseICustomAudienceCallback(STATUS_INTERNAL_ERROR, errorMessage);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
@@ -452,10 +464,15 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mCustomAudienceImplMock)
-                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
+                .joinCustomAudience(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        DevContext.createForDevOptionsDisabled());
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
@@ -483,6 +500,55 @@ public class CustomAudienceServiceImplTest {
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
     }
 
+    @Test
+    public void testJoinCustomAudience_devOptionsEnabled() throws RemoteException {
+        DevContext devContextEnabled = DevContext.builder().setDevOptionsEnabled(true).build();
+        Mockito.lenient()
+                .doReturn(devContextEnabled)
+                .when(mDevContextFilterMock)
+                .createDevContext();
+
+        mService.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE,
+                CustomAudienceFixture.VALID_OWNER,
+                mICustomAudienceCallbackMock);
+        verify(mFledgeAuthorizationFilterMock)
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceImplMock)
+                .joinCustomAudience(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        devContextEnabled);
+        verify(
+                () ->
+                        BackgroundFetchJobService.scheduleIfNeeded(
+                                CONTEXT, mFlagsWithAllCheckEnabled, false));
+        verify(mICustomAudienceCallbackMock).onSuccess();
+        verify(mFledgeAuthorizationFilterMock)
+                .assertCallingPackageName(
+                        CustomAudienceFixture.VALID_OWNER,
+                        Process.myUid(),
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+        verify(mAppImportanceFilterMock)
+                .assertCallerIsInForeground(
+                        MY_UID, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, null);
+        verify(mFledgeAuthorizationFilterMock)
+                .assertAdTechAllowed(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER_1,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+        verify(mFledgeAllowListsFilterMock)
+                .assertAppCanUsePpapi(
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+
+        verifyLoggerMock(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_SUCCESS);
+    }
 
     @Test
     public void testFetchCustomAudience_nullCallback() {
@@ -497,9 +563,6 @@ public class CustomAudienceServiceImplTest {
                                         .build(),
                                 null));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
                 STATUS_INVALID_ARGUMENT);
@@ -513,9 +576,6 @@ public class CustomAudienceServiceImplTest {
                         mService.fetchAndJoinCustomAudience(
                                 null, mFetchAndJoinCustomAudienceCallbackMock));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
                 STATUS_INVALID_ARGUMENT);
@@ -542,7 +602,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -560,8 +620,10 @@ public class CustomAudienceServiceImplTest {
                                 mFetchAndJoinCustomAudienceCallbackMock));
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
                 STATUS_INTERNAL_ERROR);
@@ -576,8 +638,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        any(), eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
+                .assertAppDeclaredCustomAudiencePermission(
+                        any(),
+                        eq(CustomAudienceFixture.VALID_OWNER),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
@@ -618,8 +682,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        any(), eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
+                .assertAppDeclaredCustomAudiencePermission(
+                        any(),
+                        eq(CustomAudienceFixture.VALID_OWNER),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -667,7 +733,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -683,8 +749,10 @@ public class CustomAudienceServiceImplTest {
                                 mICustomAudienceCallbackMock));
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        any(), eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
+                .assertAppDeclaredCustomAudiencePermission(
+                        any(),
+                        eq(CustomAudienceFixture.VALID_OWNER),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
     }
@@ -705,8 +773,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        any(), eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
+                .assertAppDeclaredCustomAudiencePermission(
+                        any(),
+                        eq(CustomAudienceFixture.VALID_OWNER),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
         verifyErrorResponseICustomAudienceCallback(
                 STATUS_UNAUTHORIZED, SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
         verify(mFledgeAuthorizationFilterMock)
@@ -718,9 +788,6 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testLeaveCustomAudience_nullOwner() {
-        doNothing()
-                .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(any(), anyInt());
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -730,18 +797,12 @@ public class CustomAudienceServiceImplTest {
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallbackMock));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testLeaveCustomAudience_nullBuyer() {
-        doNothing()
-                .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(any(), anyInt());
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -751,18 +812,12 @@ public class CustomAudienceServiceImplTest {
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallbackMock));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testLeaveCustomAudience_nullName() {
-        doNothing()
-                .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(any(), anyInt());
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -772,18 +827,12 @@ public class CustomAudienceServiceImplTest {
                                 null,
                                 mICustomAudienceCallbackMock));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testLeaveCustomAudience_nullCallback() {
-        doNothing()
-                .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(any(), anyInt());
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -793,9 +842,6 @@ public class CustomAudienceServiceImplTest {
                                 CustomAudienceFixture.VALID_NAME,
                                 null));
 
-        verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
     }
@@ -816,8 +862,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        any(), eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
+                .assertAppDeclaredCustomAudiencePermission(
+                        any(),
+                        eq(CustomAudienceFixture.VALID_OWNER),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
@@ -862,8 +910,10 @@ public class CustomAudienceServiceImplTest {
                 .assertCallerIsInForeground(
                         MY_UID, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, null);
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        any(), eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
+                .assertAppDeclaredCustomAudiencePermission(
+                        any(),
+                        eq(CustomAudienceFixture.VALID_OWNER),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
@@ -904,8 +954,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -940,7 +992,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -951,8 +1003,10 @@ public class CustomAudienceServiceImplTest {
                 CustomAudienceFixture.VALID_OWNER,
                 mICustomAudienceCallbackMock);
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -972,7 +1026,10 @@ public class CustomAudienceServiceImplTest {
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                         CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceImplMock)
-                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
+                .joinCustomAudience(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        DevContext.createForDevOptionsDisabled());
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verifyLoggerMock(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_SUCCESS);
@@ -993,8 +1050,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1030,7 +1089,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1043,8 +1102,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1097,8 +1158,9 @@ public class CustomAudienceServiceImplTest {
                 mCustomAudienceOverrideCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
+                        "",
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
         verify(mDevContextFilterMock).createDevContext();
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
@@ -1144,7 +1206,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1160,8 +1222,9 @@ public class CustomAudienceServiceImplTest {
                 mCustomAudienceOverrideCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
         verify(mDevContextFilterMock).createDevContext();
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
@@ -1205,7 +1268,8 @@ public class CustomAudienceServiceImplTest {
                 CustomAudienceFixture.VALID_NAME,
                 mCustomAudienceOverrideCallbackMock);
 
-        verify(mFledgeAuthorizationFilterMock).assertAppDeclaredPermission(CONTEXT, apiName);
+        verify(mFledgeAuthorizationFilterMock)
+                .assertAppDeclaredCustomAudiencePermission(CONTEXT, "", apiName);
         verify(mDevContextFilterMock).createDevContext();
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
         verify(mAppImportanceFilterMock)
@@ -1245,7 +1309,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1257,7 +1321,9 @@ public class CustomAudienceServiceImplTest {
                 CustomAudienceFixture.VALID_NAME,
                 mCustomAudienceOverrideCallbackMock);
 
-        verify(mFledgeAuthorizationFilterMock).assertAppDeclaredPermission(CONTEXT, apiName);
+        verify(mFledgeAuthorizationFilterMock)
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT, CustomAudienceFixture.VALID_OWNER, apiName);
         verify(mDevContextFilterMock).createDevContext();
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
         verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
@@ -1285,7 +1351,9 @@ public class CustomAudienceServiceImplTest {
 
         mService.resetAllCustomAudienceOverrides(mCustomAudienceOverrideCallbackMock);
 
-        verify(mFledgeAuthorizationFilterMock).assertAppDeclaredPermission(CONTEXT, apiName);
+        verify(mFledgeAuthorizationFilterMock)
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT, CustomAudienceFixture.VALID_OWNER, apiName);
         verify(mDevContextFilterMock).createDevContext();
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
         verify(mAppImportanceFilterMock).assertCallerIsInForeground(Process.myUid(), apiName, null);
@@ -1323,7 +1391,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1332,8 +1400,9 @@ public class CustomAudienceServiceImplTest {
         mService.resetAllCustomAudienceOverrides(mCustomAudienceOverrideCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
         verify(mDevContextFilterMock).createDevContext();
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
@@ -1350,8 +1419,10 @@ public class CustomAudienceServiceImplTest {
     public void testAppManifestPermissionNotRequested_joinCustomAudience_fails() {
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
         assertThrows(
                 SecurityException.class,
@@ -1366,8 +1437,10 @@ public class CustomAudienceServiceImplTest {
     public void testAppManifestPermissionNotRequested_fetchCustomAudience_fails() {
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
 
         assertThrows(
                 SecurityException.class,
@@ -1385,8 +1458,10 @@ public class CustomAudienceServiceImplTest {
     public void testAppManifestPermissionNotRequested_leaveCustomAudience_fails() {
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
 
         assertThrows(
                 SecurityException.class,
@@ -1400,10 +1475,17 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testAppManifestPermissionNotRequested_overrideCustomAudienceRemoteInfo_fails() {
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                                .setDevOptionsEnabled(true)
+                                .build());
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
 
         assertThrows(
@@ -1422,10 +1504,17 @@ public class CustomAudienceServiceImplTest {
     @Test
     public void
             testAppManifestPermissionNotRequested_removeCustomAudienceRemoteInfoOverride_fails() {
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                                .setDevOptionsEnabled(true)
+                                .build());
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(CONTEXT, apiName);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT, CustomAudienceFixture.VALID_OWNER, apiName);
 
         assertThrows(
                 SecurityException.class,
@@ -1439,10 +1528,17 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testAppManifestPermissionNotRequested_resetAllCustomAudienceOverrides_fails() {
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                                .setDevOptionsEnabled(true)
+                                .build());
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredCustomAudiencePermission(
                         CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
 
         assertThrows(
@@ -1469,8 +1565,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1512,7 +1610,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1523,10 +1621,15 @@ public class CustomAudienceServiceImplTest {
                 CustomAudienceFixture.VALID_OWNER,
                 mICustomAudienceCallbackMock);
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mCustomAudienceImplMock)
-                .joinCustomAudience(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
+                .joinCustomAudience(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        DevContext.createForDevOptionsDisabled());
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
@@ -1564,8 +1667,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1607,7 +1712,7 @@ public class CustomAudienceServiceImplTest {
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottlerSupplier),
+                                mMockThrottler),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1620,8 +1725,10 @@ public class CustomAudienceServiceImplTest {
                 mICustomAudienceCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        any(), eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
+                .assertAppDeclaredCustomAudiencePermission(
+                        any(),
+                        eq(CustomAudienceFixture.VALID_OWNER),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE));
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1664,8 +1771,10 @@ public class CustomAudienceServiceImplTest {
                         CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1702,8 +1811,10 @@ public class CustomAudienceServiceImplTest {
                         CommonFixture.VALID_BUYER_1,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1739,8 +1850,10 @@ public class CustomAudienceServiceImplTest {
                 RATE_LIMIT_REACHED_ERROR_MESSAGE,
                 actualResponseCaptor.getValue().getErrorMessage());
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1768,8 +1881,10 @@ public class CustomAudienceServiceImplTest {
                 RATE_LIMIT_REACHED_ERROR_MESSAGE,
                 actualResponseCaptor.getValue().getErrorMessage());
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(
-                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                .assertAppDeclaredCustomAudiencePermission(
+                        CONTEXT,
+                        CustomAudienceFixture.VALID_OWNER,
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
                         CustomAudienceFixture.VALID_OWNER,
