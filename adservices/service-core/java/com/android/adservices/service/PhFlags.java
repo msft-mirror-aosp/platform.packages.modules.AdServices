@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
@@ -5500,6 +5502,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES
                         + " = "
                         + getMeasurementEnableSessionStableKillSwitches());
+        writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
+        writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
     }
 
     @VisibleForTesting
@@ -6525,5 +6529,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         }
 
         return loggingRatio;
+    }
+
+    @Override
+    public int getAppSearchWriteTimeout() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* name= */ FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS,
+                /* defaultValue= */ DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getAppSearchReadTimeout() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* name= */ FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS,
+                /* defaultValue= */ DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
     }
 }

@@ -50,6 +50,8 @@ import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MI
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
@@ -10109,6 +10111,37 @@ public class PhFlagsTest {
 
         overrideBackgroundJobSamplingLoggingRate(/* phOverridingValue= */ 101);
         assertThrows(IllegalArgumentException.class, mPhFlags::getBackgroundJobSamplingLoggingRate);
+    }
+
+    @Test
+    public void testGetAppSearchWriteTimeout() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAppSearchWriteTimeout())
+                .isEqualTo(DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS);
+
+        int phOverridingValue = DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS + 1000;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAppSearchWriteTimeout()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAppSearchReadTimeout() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAppSearchReadTimeout()).isEqualTo(DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
+
+        int phOverridingValue = DEFAULT_APPSEARCH_READ_TIMEOUT_MS + 500;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAppSearchReadTimeout()).isEqualTo(phOverridingValue);
     }
 
     private void overrideBackgroundJobSamplingLoggingRate(int phOverridingValue) {
