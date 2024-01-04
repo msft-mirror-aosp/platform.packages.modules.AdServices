@@ -2190,7 +2190,8 @@ public class ConsentManager {
             if (errorLogger != null) {
                 errorLogger.apply(e);
             }
-            throw new RuntimeException(getClass().getSimpleName() + " failed. " + e.getMessage());
+            throw new RuntimeException(
+                    getClass().getSimpleName() + " failed. " + e.getMessage(), e);
         } finally {
             mReadWriteLock.writeLock().unlock();
             Trace.endSection();
