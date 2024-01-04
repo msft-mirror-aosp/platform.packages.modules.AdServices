@@ -1,0 +1,8 @@
+package: "com.android.adservices.flags"
+
+flag {
+    name: "topics_encryption_enabled"
+    namespace: "adservices"
+    bug: "303727027"
+    description: "Enables encrypted Topics feature for Topics API."
+}
