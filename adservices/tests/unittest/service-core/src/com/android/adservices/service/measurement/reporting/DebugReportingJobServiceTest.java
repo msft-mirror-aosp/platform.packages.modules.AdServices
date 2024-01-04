@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
 import static com.android.adservices.service.measurement.reporting.DebugReportingJobService.DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
@@ -24,8 +25,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -47,6 +46,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -59,9 +59,9 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
@@ -84,6 +84,18 @@ public class DebugReportingJobServiceTest {
     private AdservicesJobServiceLogger mSpyLogger;
     private DebugReportingJobService mSpyService;
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AdServicesConfig.class)
+                    .spyStatic(DatastoreManagerFactory.class)
+                    .spyStatic(EnrollmentDao.class)
+                    .spyStatic(DebugReportingJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .mockStatic(ServiceCompatUtils.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setUp() {
@@ -229,7 +241,7 @@ public class DebugReportingJobServiceTest {
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -263,7 +275,7 @@ public class DebugReportingJobServiceTest {
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule = */ false);
+                            spyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -297,7 +309,7 @@ public class DebugReportingJobServiceTest {
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule = */ false);
+                            spyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(() -> DebugReportingJobService.schedule(any(), any()));
@@ -324,7 +336,7 @@ public class DebugReportingJobServiceTest {
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ true);
+                            mockContext, /* forceSchedule= */ true);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -345,13 +357,13 @@ public class DebugReportingJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo = */ null)
+                    doReturn(/* noJobInfo= */ null)
                             .when(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
 
                     // Execute
                     DebugReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -384,47 +396,24 @@ public class DebugReportingJobServiceTest {
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AdServicesConfig.class)
-                        .spyStatic(DatastoreManagerFactory.class)
-                        .spyStatic(EnrollmentDao.class)
-                        .spyStatic(DebugReportingJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
-            Context context = Mockito.mock(Context.class);
-            doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
-            doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
-            // Setup mock everything in job
-            mMockDatastoreManager = mock(DatastoreManager.class);
-            doReturn(Optional.empty())
-                    .when(mMockDatastoreManager)
-                    .runInTransactionWithResult(any());
-            doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-            doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(context).when(mSpyService).getApplicationContext();
-            ExtendedMockito.doReturn(mock(EnrollmentDao.class))
-                    .when(() -> EnrollmentDao.getInstance(any()));
-            ExtendedMockito.doReturn(mMockDatastoreManager)
-                    .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doNothing().when(() -> DebugReportingJobService.schedule(any(), any()));
+        Context context = Mockito.mock(Context.class);
+        doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
+        doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
+        // Setup mock everything in job
+        mMockDatastoreManager = mock(DatastoreManager.class);
+        doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
+        doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
+        doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
+        doReturn(context).when(mSpyService).getApplicationContext();
+        ExtendedMockito.doReturn(mock(EnrollmentDao.class))
+                .when(() -> EnrollmentDao.getInstance(any()));
+        ExtendedMockito.doReturn(mMockDatastoreManager)
+                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        ExtendedMockito.doNothing().when(() -> DebugReportingJobService.schedule(any(), any()));
+        mockGetAdservicesJobServiceLogger(mSpyLogger);
 
-            // Mock AdservicesJobServiceLogger to not actually log the stats to server
-            Mockito.doNothing()
-                    .when(mSpyLogger)
-                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-            ExtendedMockito.doReturn(mSpyLogger)
-                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
-
-            // Execute
-            execute.run();
-        } finally {
-            session.finishMocking();
-        }
+        // Execute
+        execute.run();
     }
 
     private void enableKillSwitch() {

@@ -26,6 +26,7 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.modules.utils.build.SdkLevel;
@@ -56,11 +57,15 @@ public class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest
     private String mAccessStatus;
     private String mPreviousAppAllowList;
 
+    // Ignore tests when device is not at least S
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
-    @Rule(order = 1)
+    @Rule(order = 2)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()

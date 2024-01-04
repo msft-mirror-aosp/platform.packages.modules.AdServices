@@ -172,6 +172,7 @@ public class SignalsIntakeE2ETest {
                         mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicMetadataDao,
+                        mSignalsDao,
                         mAdServicesHttpsClientMock,
                         mBackgroundExecutorService);
         mUpdateEncoderEventHandler =
@@ -235,7 +236,8 @@ public class SignalsIntakeE2ETest {
                         mBackgroundExecutorService,
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
-                        mAdtechUriValidator);
+                        mAdtechUriValidator,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
         mService =
                 new ProtectedSignalsServiceImpl(
                         mContextSpy,

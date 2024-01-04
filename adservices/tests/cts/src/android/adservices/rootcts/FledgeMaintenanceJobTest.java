@@ -25,6 +25,8 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 
+import androidx.test.filters.FlakyTest;
+
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -69,6 +71,7 @@ public class FledgeMaintenanceJobTest extends FledgeScenarioTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315327390)
     public void testAdSelection_afterOneDay_adInteractionsIsCleared() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(

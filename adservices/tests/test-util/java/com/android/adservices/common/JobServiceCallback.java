@@ -25,7 +25,7 @@ import android.app.job.JobService;
  * <p>Use a {@link Boolean} type as a place holder for received on success. This {@link Boolean} is
  * used for checking a method has been called when calling {@link #assertResultReceived()}
  */
-public final class JobServiceCallback extends SyncCallback<Boolean, Void> {
+public final class JobServiceCallback extends NoFailureSyncCallback<Boolean> {
 
     /**
      * Injects a boolean {@code true} as Result. This is used for checking a stub method is called.

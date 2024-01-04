@@ -32,13 +32,13 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
+        "mcts-adservices",
     ],
     // To fix Pre-submit warning, suggested by farivar@
     javacflags: ["-parameters"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }
 
 android_test {
@@ -58,13 +58,13 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
+        "mcts-extservices",
     ],
     javacflags: ["-parameters"],
     sdk_version: "module_current",
     min_sdk_version: "30",
     max_sdk_version: "32",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
 }

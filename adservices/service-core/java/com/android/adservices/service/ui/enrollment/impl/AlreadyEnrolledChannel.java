@@ -56,12 +56,9 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
 
     private static boolean isPreNotificationManualUser(
             ConsentManager consentManager, UxStatesManager uxStatesManager) {
-        if (uxStatesManager.getFlag(KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE)
+        return uxStatesManager.getFlag(KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE)
                 && consentManager.getUserManualInteractionWithConsent()
-                        == MANUAL_INTERACTIONS_RECORDED) {
-            return true;
-        }
-        return false;
+                        == MANUAL_INTERACTIONS_RECORDED;
     }
 
     /** No-Op if the user has already enrolled. */

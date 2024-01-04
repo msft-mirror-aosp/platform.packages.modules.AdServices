@@ -16,6 +16,10 @@
 
 package android.adservices.customaudience;
 
+import static android.adservices.common.AdDataFixture.getValidFilterAdDataWithAdRenderIdByBuyer;
+import static android.adservices.customaudience.TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer;
+
+import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -24,7 +28,9 @@ import android.net.Uri;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /** Utility class supporting custom audience API unit tests */
 public final class CustomAudienceFixture {
@@ -96,8 +102,7 @@ public final class CustomAudienceFixture {
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(
-                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
+                .setTrustedBiddingData(getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(AdDataFixture.getValidAdsByBuyer(buyer));
     }
@@ -134,9 +139,54 @@ public final class CustomAudienceFixture {
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(
-                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
+                .setTrustedBiddingData(getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(AdDataFixture.getValidFilterAdsByBuyer(buyer));
+    }
+
+    /** Build valid CA with filters and render id */
+    public static CustomAudience.Builder getValidBuilderForBuyerFiltersWithAdRenderId(
+            AdTechIdentifier buyer) {
+        return new CustomAudience.Builder()
+                .setBuyer(buyer)
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(getValidTrustedBiddingDataByBuyer(buyer))
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
+                .setAds(AdDataFixture.getValidFilterAdsWithAdRenderIdByBuyer(buyer));
+    }
+
+    /** Build N valid CAs with filters and render id */
+    public static List<CustomAudience> getNValidCustomAudiences(
+            int nBuyers, int nCAsPerBuyer, int nAdsPerCA) {
+        List<CustomAudience> customAudiences = new ArrayList<>();
+        for (int b = 0; b < nBuyers; b++) {
+            AdTechIdentifier buyer = AdTechIdentifier.fromString("buyer%d.com".formatted(b));
+            for (int c = 0; c < nCAsPerBuyer; c++) {
+                List<AdData> ads = new ArrayList<>();
+                for (int a = 0; a < nAdsPerCA; a++) {
+                    ads.add(
+                            getValidFilterAdDataWithAdRenderIdByBuyer(
+                                    buyer, /* sequenceNumber= */ a));
+                }
+                CustomAudience customAudience =
+                        new CustomAudience.Builder()
+                                .setBuyer(buyer)
+                                .setName(VALID_NAME)
+                                .setActivationTime(VALID_ACTIVATION_TIME)
+                                .setExpirationTime(VALID_EXPIRATION_TIME)
+                                .setDailyUpdateUri(getValidDailyUpdateUriByBuyer(buyer))
+                                .setBiddingLogicUri(getValidBiddingLogicUriByBuyer(buyer))
+                                .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                                .setTrustedBiddingData(getValidTrustedBiddingDataByBuyer(buyer))
+                                .setAds(ads)
+                                .build();
+                customAudiences.add(customAudience);
+            }
+        }
+        return customAudiences;
     }
 }
