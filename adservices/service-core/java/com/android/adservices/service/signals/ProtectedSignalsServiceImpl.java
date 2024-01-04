@@ -58,6 +58,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.time.Clock;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -104,7 +105,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 new UpdateProcessorSelector(),
                                 new UpdateEncoderEventHandler(context),
                                 new SignalEvictionController()),
-                        new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME)),
+                        new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME),
+                        Clock.systemUTC()),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(context),
                 DevContextFilter.create(context),

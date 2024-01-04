@@ -33,5 +33,5 @@ import java.lang.annotation.Target;
 @Repeatable(SetFlagsEnabled.class)
 public @interface SetFlagEnabled {
     /** Name of the flag. */
-    String name();
+    String value();
 }

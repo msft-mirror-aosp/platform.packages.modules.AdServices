@@ -174,12 +174,20 @@ public class SdkSandboxTest {
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mContext = Mockito.spy(context);
-        mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
-        mInjector = Mockito.spy(new InjectorForTest(mContext));
-        Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
-        mService = new SdkSandboxServiceImpl(mInjector);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
         mLoader = getClassLoader(mApplicationInfo);
+        if (sCustomizedSdkContextEnabled) {
+            Mockito.doReturn(mContext)
+                    .when(mContext)
+                    .createContextForSdkInSandbox(Mockito.any(), Mockito.anyInt());
+            Mockito.doReturn(mLoader).when(mContext).getClassLoader();
+        }
+
+        mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
+        Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
+
+        mInjector = Mockito.spy(new InjectorForTest(mContext));
+        mService = new SdkSandboxServiceImpl(mInjector);
     }
 
     @After
@@ -555,10 +563,11 @@ public class SdkSandboxTest {
                 SANDBOX_LATENCY_INFO);
         loadSdkCallback.assertLoadSdkIsSuccessful();
 
-        final UnloadSdkCallbackImpl unloadSdkCallback = new UnloadSdkCallbackImpl();
-        mService.unloadSdk(SDK_NAME, unloadSdkCallback, SANDBOX_LATENCY_INFO);
+        UnloadSdkInSandboxCallbackImpl unloadSdkInSandboxCallback =
+                new UnloadSdkInSandboxCallbackImpl();
+        mService.unloadSdk(SDK_NAME, unloadSdkInSandboxCallback, SANDBOX_LATENCY_INFO);
 
-        final SandboxLatencyInfo sandboxLatencyInfo = unloadSdkCallback.getSandboxLatencyInfo();
+        SandboxLatencyInfo sandboxLatencyInfo = unloadSdkInSandboxCallback.getSandboxLatencyInfo();
 
         assertThat(sandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
@@ -758,7 +767,7 @@ public class SdkSandboxTest {
         }
     }
 
-    private static class UnloadSdkCallbackImpl extends IUnloadSdkCallback.Stub {
+    private static class UnloadSdkInSandboxCallbackImpl extends IUnloadSdkInSandboxCallback.Stub {
         private SandboxLatencyInfo mSandboxLatencyInfo;
 
         @Override

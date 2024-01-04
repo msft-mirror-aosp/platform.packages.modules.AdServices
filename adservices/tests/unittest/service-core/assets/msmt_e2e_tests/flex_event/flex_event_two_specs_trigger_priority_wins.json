@@ -121,7 +121,9 @@
               "Attribution-Reporting-Register-Trigger": {
                 "event_trigger_data": [
                   {
-                    "trigger_data": "0",
+                    // Due to modulus trigger data matching,
+                    // 4 will match trigger data 0 in the trigger_specs.
+                    "trigger_data": "4",
                     "priority": "10000"
                   }
                 ]

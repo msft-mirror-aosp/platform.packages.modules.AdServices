@@ -40,12 +40,15 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
     private static final List<String> sTestsSinceLastUncaughtFailure = new ArrayList<>();
 
     protected final Logger mLog;
+    // TODO(b/303112789): set mode through annotations as well, so subclasses can override
+    protected final Mode mMode;
 
     @Nullable private String mTestName;
 
     /** Default constructor. */
-    AbstractProcessLifeguardRule(RealLogger logger) {
+    AbstractProcessLifeguardRule(RealLogger logger, Mode mode) {
         mLog = new Logger(Objects.requireNonNull(logger), getClass());
+        mMode = Objects.requireNonNull(mode);
     }
 
     /**
@@ -57,8 +60,23 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
     protected abstract boolean isMainThread();
 
     // TODO(b/303112789): add unit tests
+    protected void ignoreUncaughtBackgroundException(
+            String testName,
+            Thread thread,
+            List<String> allTests,
+            List<String> lastTests,
+            Throwable uncaughtThrowable) {
+        mLog.w(
+                "Caught an exception (%s) on background thread (%s), but ignoring it as set by"
+                        + " constructor (mode %s). NOTE: %d tests executed so far, and %d since the"
+                        + " last uncaught failure",
+                uncaughtThrowable, thread, mMode, allTests.size(), lastTests.size());
+    }
+
+    // TODO(b/303112789): add unit tests
     protected UncaughtBackgroundException newUncaughtBackgroundException(
             String testName,
+            Thread thread,
             List<String> allTests,
             List<String> lastTests,
             Throwable uncaughtThrowable) {
@@ -66,7 +84,9 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
                 uncaughtThrowable,
                 "Failing "
                         + testName
-                        + " because an exception was caught on background (NOTE: "
+                        + " because an exception was caught on background thread "
+                        + thread
+                        + " (NOTE: "
                         + allTests.size()
                         + " tests executed so far, "
                         + lastTests.size()
@@ -78,6 +98,7 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
     // TODO(b/303112789): add unit tests
     protected UncaughtBackgroundException newUncaughtBackgroundException(
             String testName,
+            Thread thread,
             List<String> allTests,
             List<String> lastTests,
             Throwable testFailure,
@@ -92,7 +113,9 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
         mLog.e("And %d tests executed so far: %s", allTests.size(), allTests);
         return new UncaughtBackgroundException(
                 uncaughtThrowable,
-                "Failing test because an exception was caught on background; test also"
+                "Failing test because an exception was caught on background (thread "
+                        + thread
+                        + "); test also"
                         + " threw an exception('"
                         + testFailure
                         + "'), "
@@ -169,17 +192,42 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
                 if (sMyHandler.uncaughtThrowable != null) {
                     // Need to clear exception once it's thrown
                     Throwable uncaughtThrowable = sMyHandler.uncaughtThrowable;
+                    Thread thread = sMyHandler.thread;
                     sMyHandler.uncaughtThrowable = null;
                     List<String> lastTests = new ArrayList<>(sTestsSinceLastUncaughtFailure);
                     sTestsSinceLastUncaughtFailure.clear();
 
                     if (testFailure == null) {
-                        throw newUncaughtBackgroundException(
-                                testName, sAllTestsSoFar, lastTests, uncaughtThrowable);
+                        switch (mMode) {
+                            case FAIL:
+                                throw newUncaughtBackgroundException(
+                                        testName,
+                                        thread,
+                                        sAllTestsSoFar,
+                                        lastTests,
+                                        uncaughtThrowable);
+                            case IGNORE:
+                                ignoreUncaughtBackgroundException(
+                                        testName,
+                                        thread,
+                                        sAllTestsSoFar,
+                                        lastTests,
+                                        uncaughtThrowable);
+                                break;
+                            case FORWARD:
+                                mLog.e("Forwarding uncaught exception to %s", sRealHandler);
+                                sRealHandler.uncaughtException(
+                                        sMyHandler.thread, uncaughtThrowable);
+                                return;
+                            default:
+                                // Shouldn't happen
+                                mLog.e("Invalid mode: %s", mMode);
+                        }
                     } else {
                         // TODO(b/303112789): add unit tests for this scenario
                         throw newUncaughtBackgroundException(
                                 testName,
+                                thread,
                                 sAllTestsSoFar,
                                 lastTests,
                                 testFailure,
@@ -261,5 +309,21 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
         public String toString() {
             return getClass().getSimpleName() + ": " + getMessage();
         }
+    }
+
+    /**
+     * Defines the behavior of the rule when it catches an uncaught exception thrown in the
+     * background.
+     */
+    public enum Mode {
+        /** Fails the current test. */
+        FAIL,
+        /** Ignores the exception (i.e., just log it, but don't fail the test). */
+        IGNORE,
+        /**
+         * Passes the exception to the {@link UncaughtExceptionHandler} set before the rule (which
+         * most like will crash the test process).
+         */
+        FORWARD
     }
 }

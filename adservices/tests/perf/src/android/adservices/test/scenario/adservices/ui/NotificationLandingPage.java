@@ -17,6 +17,7 @@
 package android.adservices.test.scenario.adservices.ui;
 
 import android.content.Context;
+import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
@@ -26,9 +27,11 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -49,7 +52,10 @@ public class NotificationLandingPage {
 
     @Rule
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setDebugUxFlagsForRvcUx()
+                    .setFlag(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY, "false");
 
     @Before
     public void setup() throws Exception {
@@ -70,8 +76,16 @@ public class NotificationLandingPage {
     @Test
     public void testNotificationLandingPage() throws Exception {
         final long start = System.currentTimeMillis();
+
+        Trace.beginSection("NotificationTriggerEvent");
+        UiConstants.UX ux = UiConstants.UX.GA_UX;
+        if( SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS() ) {
+            ux = UiConstants.UX.RVC_UX;
+        }
         AdservicesWorkflows.testNotificationActivityFlow(
-                sContext, sDevice, true, UiConstants.UX.GA_UX, false, false, true);
+                sContext, sDevice, true, ux, true, false, true);
+        Trace.endSection();
+
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "(" + UI_NOTIFICATION_LATENCY_METRIC + ": " + duration + ")");
     }

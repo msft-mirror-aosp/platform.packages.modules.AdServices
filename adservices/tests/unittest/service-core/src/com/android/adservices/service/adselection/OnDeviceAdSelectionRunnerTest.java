@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
+import static android.adservices.adselection.SignedContextualAdsFixture.signContextualAds;
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
@@ -44,6 +45,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_END_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.BIDDING_STAGE_START_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
@@ -128,6 +130,8 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -141,6 +145,8 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.encryptionkey.EncryptionKey;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -194,8 +200,6 @@ import java.util.stream.Collectors;
  * mocked and provide expected mock responses when invoked with desired input
  */
 public class OnDeviceAdSelectionRunnerTest {
-    private static final String TAG = OnDeviceAdSelectionRunnerTest.class.getName();
-
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
     private static final Long AD_SELECTION_ID = 1234L;
@@ -234,6 +238,8 @@ public class OnDeviceAdSelectionRunnerTest {
     @Mock private AdCounterHistogramUpdater mAdCounterHistogramUpdaterMock;
     @Mock private DebugReporting mDebugReportingMock;
     @Mock private DebugReportSenderStrategy mDebugReportSenderMock;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private EncryptionKeyDao mEncryptionKeyDaoMock;
 
     @Captor
     ArgumentCaptor<RunAdSelectionProcessReportedStats>
@@ -396,6 +402,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -501,6 +509,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -673,6 +683,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -798,6 +810,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -945,6 +959,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1145,6 +1161,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1245,6 +1263,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1359,6 +1379,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1434,6 +1456,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1500,6 +1524,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1563,6 +1589,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1617,6 +1645,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1767,6 +1797,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1886,6 +1918,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -1974,7 +2008,7 @@ public class OnDeviceAdSelectionRunnerTest {
         // Getting ScoringOutcome-ForBuyerX corresponding to each BiddingOutcome-forBuyerX
         // In this case assuming we get an empty result
         when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
-                .thenReturn((FluentFuture.from(Futures.immediateFuture(Collections.EMPTY_LIST))));
+                .thenReturn((FluentFuture.from(Futures.immediateFuture(Collections.emptyList()))));
 
         mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionDuringScoring();
 
@@ -1983,6 +2017,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2085,6 +2121,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2190,6 +2228,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2317,6 +2357,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2387,6 +2429,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2482,6 +2526,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2628,6 +2674,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2715,6 +2763,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2765,6 +2815,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2849,6 +2901,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2926,6 +2980,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -2981,6 +3037,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mMockHttpClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -3022,7 +3080,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionConfigBuilder
                         .build()
                         .cloneToBuilder()
-                        .setCustomAudienceBuyers(Collections.EMPTY_LIST)
+                        .setCustomAudienceBuyers(Collections.emptyList())
                         .setBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
 
@@ -3055,6 +3113,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -3093,7 +3153,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionConfigBuilder
                         .build()
                         .cloneToBuilder()
-                        .setCustomAudienceBuyers(Collections.EMPTY_LIST)
+                        .setCustomAudienceBuyers(Collections.emptyList())
                         // Despite populating Contextual Ads, they will be removed
                         .setBuyerSignedContextualAds(createContextualAds())
                         .build();
@@ -3121,6 +3181,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -3163,7 +3225,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionConfigBuilder
                         .build()
                         .cloneToBuilder()
-                        .setCustomAudienceBuyers(Collections.EMPTY_LIST)
+                        .setCustomAudienceBuyers(Collections.emptyList())
                         .setBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
@@ -3191,6 +3253,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -3215,14 +3279,14 @@ public class OnDeviceAdSelectionRunnerTest {
                 .thenReturn(contextualAdsMap.get(CommonFixture.VALID_BUYER_1));
         when(mMockAdFilterer.filterContextualAds(contextualAdsMap.get(CommonFixture.VALID_BUYER_2)))
                 .thenReturn(
-                        SignedContextualAdsFixture.aSignedContextualAdBuilder()
-                                .setBuyer(CommonFixture.VALID_BUYER_2)
-                                .setDecisionLogicUri(
-                                        contextualAdsMap
-                                                .get(CommonFixture.VALID_BUYER_2)
-                                                .getDecisionLogicUri())
-                                .setAdsWithBid(Collections.EMPTY_LIST)
-                                .build());
+                        signContextualAds(
+                                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder()
+                                        .setBuyer(CommonFixture.VALID_BUYER_2)
+                                        .setDecisionLogicUri(
+                                                contextualAdsMap
+                                                        .get(CommonFixture.VALID_BUYER_2)
+                                                        .getDecisionLogicUri())
+                                        .setAdsWithBid(Collections.emptyList())));
         invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
         verify(mMockAdsScoreGenerator)
                 .runAdScoring(
@@ -3237,7 +3301,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .getAdsWithBid());
         assertEquals(
                 "The contextual ads should have been filtered for Buyer 2",
-                Collections.EMPTY_LIST,
+                Collections.emptyList(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
                         .getBuyerSignedContextualAds()
@@ -3254,6 +3318,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -3343,6 +3409,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -3425,6 +3493,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mContextSpy,
                         mCustomAudienceDao,
                         mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -3881,22 +3951,38 @@ public class OnDeviceAdSelectionRunnerTest {
 
         AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
         SignedContextualAds contextualAds1 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
-                                buyer1, ImmutableList.of(100.0, 200.0, 300.0))
-                        .setDecisionLogicUri(
-                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
-                        .build();
+                signContextualAds(
+                        SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
+                                        buyer1, ImmutableList.of(100.0, 200.0, 300.0))
+                                .setDecisionLogicUri(
+                                        CommonFixture.getUri(
+                                                BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH)));
 
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
         SignedContextualAds contextualAds2 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
-                                buyer2, ImmutableList.of(400.0, 500.0))
-                        .setDecisionLogicUri(
-                                CommonFixture.getUri(BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH))
-                        .build();
+                signContextualAds(
+                        SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
+                                        buyer2, ImmutableList.of(400.0, 500.0))
+                                .setDecisionLogicUri(
+                                        CommonFixture.getUri(
+                                                BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH)));
 
         buyerContextualAds.put(buyer1, contextualAds1);
         buyerContextualAds.put(buyer2, contextualAds2);
+
+        for (AdTechIdentifier adTech : buyerContextualAds.keySet()) {
+            doReturn(new EnrollmentData.Builder().setEnrollmentId(adTech.toString()).build())
+                    .when(mEnrollmentDaoMock)
+                    .getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
+            doReturn(
+                            Collections.singletonList(
+                                    new EncryptionKey.Builder()
+                                            .setBody(PUBLIC_TEST_KEY_STRING)
+                                            .build()))
+                    .when(mEncryptionKeyDaoMock)
+                    .getEncryptionKeyFromEnrollmentIdAndKeyType(
+                            adTech.toString(), EncryptionKey.KeyType.SIGNING);
+        }
 
         return buyerContextualAds;
     }

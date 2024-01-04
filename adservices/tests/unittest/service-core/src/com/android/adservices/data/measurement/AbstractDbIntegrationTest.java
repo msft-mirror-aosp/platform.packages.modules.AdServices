@@ -526,6 +526,7 @@ public abstract class AbstractDbIntegrationTest {
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AttributionContract.ID, attribution.getId());
+        values.put(MeasurementTables.AttributionContract.SCOPE, attribution.getScope());
         values.put(MeasurementTables.AttributionContract.SOURCE_SITE, attribution.getSourceSite());
         values.put(
                 MeasurementTables.AttributionContract.SOURCE_ORIGIN, attribution.getSourceOrigin());
@@ -665,6 +666,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
                 asyncRegistration.getPlatformAdId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
+                asyncRegistration.getRedirectBehavior().name());
         long rowId =
                 db.insert(
                         MeasurementTables.AsyncRegistrationContract.TABLE,
