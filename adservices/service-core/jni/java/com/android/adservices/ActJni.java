@@ -28,6 +28,7 @@ import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters
 import private_join_and_compute.anonymous_counting_tokens.TokensRequest;
 import private_join_and_compute.anonymous_counting_tokens.TokensRequestPrivateState;
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
+import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 
 /** Contains JNI wrappers for the ACT(Anonymous counting tokens). */
 public class ActJni {
@@ -47,6 +48,16 @@ public class ActJni {
             byte[] serverPublicParameters);
 
     private static native boolean verifyTokensResponse(
+            byte[] messages,
+            byte[] tokensRequest,
+            byte[] tokensRequestPrivateState,
+            byte[] tokensResponse,
+            byte[] schemeParameters,
+            byte[] clientPublicParameters,
+            byte[] clientPrivateParameters,
+            byte[] serverPublicParameters);
+
+    private static native byte[] recoverTokens(
             byte[] messages,
             byte[] tokensRequest,
             byte[] tokensRequestPrivateState,
@@ -129,5 +140,39 @@ public class ActJni {
                 clientPublicParametersInBytes,
                 clientPrivateParametersInBytes,
                 serverPublicParametersInBytes);
+    }
+
+    /** Returns a vector of tokens corresponding to the supplied messages. */
+    public static TokensSet recoverTokens(
+            MessagesSet messagesProto,
+            TokensRequest tokensRequestProto,
+            TokensRequestPrivateState tokensRequestPrivateStateProto,
+            TokensResponse tokenResponseProto,
+            SchemeParameters schemeParametersProto,
+            ClientPublicParameters clientPublicParametersProto,
+            ClientPrivateParameters clientPrivateParametersProto,
+            ServerPublicParameters serverPublicParameters)
+            throws InvalidProtocolBufferException {
+        byte[] messagesInBytes = messagesProto.toByteArray();
+        byte[] tokensRequestInBytes = tokensRequestProto.toByteArray();
+        byte[] tokensRequestPrivateStateInBytes = tokensRequestPrivateStateProto.toByteArray();
+        byte[] tokenResponseInBytes = tokenResponseProto.toByteArray();
+        byte[] schemeParametersInBytes = schemeParametersProto.toByteArray();
+        byte[] clientPublicParametersInBytes = clientPublicParametersProto.toByteArray();
+        byte[] clientPrivateParametersInBytes = clientPrivateParametersProto.toByteArray();
+        byte[] serverPublicParametersInBytes = serverPublicParameters.toByteArray();
+
+        byte[] tokensSetInBytes =
+                recoverTokens(
+                        messagesInBytes,
+                        tokensRequestInBytes,
+                        tokensRequestPrivateStateInBytes,
+                        tokenResponseInBytes,
+                        schemeParametersInBytes,
+                        clientPublicParametersInBytes,
+                        clientPrivateParametersInBytes,
+                        serverPublicParametersInBytes);
+
+        return TokensSet.parseFrom(tokensSetInBytes);
     }
 }

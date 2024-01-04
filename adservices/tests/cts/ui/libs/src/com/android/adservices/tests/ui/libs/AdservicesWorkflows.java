@@ -135,6 +135,10 @@ public class AdservicesWorkflows {
                 UiUtils.enableGa();
                 UiUtils.enableU18();
                 break;
+            case RVC_UX:
+                UiUtils.enableGa();
+                UiUtils.enableRvc();
+                break;
         }
 
         UiUtils.setFlipFlow(isV2);
@@ -149,9 +153,11 @@ public class AdservicesWorkflows {
             UiDevice device,
             UiConstants.UX ux,
             boolean isOptin,
-            boolean flipConsent)
+            boolean flipConsent,
+            boolean assertOptIn)
             throws Exception {
-        testSettingsPageFlow(context, device, SETTINGS_PACKAGE, ux, isOptin, flipConsent);
+        testSettingsPageFlow(
+                context, device, SETTINGS_PACKAGE, ux, isOptin, flipConsent, assertOptIn);
     }
 
     public static void testSettingsPageFlow(
@@ -160,7 +166,8 @@ public class AdservicesWorkflows {
             String packageName,
             UiConstants.UX ux,
             boolean isOptin,
-            boolean flipConsent)
+            boolean flipConsent,
+            boolean assertOptIn)
             throws Exception {
         switch (ux) {
             case GA_UX:
@@ -172,9 +179,14 @@ public class AdservicesWorkflows {
             case U18_UX:
                 UiUtils.enableGa();
                 UiUtils.enableU18();
+                break;
+            case RVC_UX:
+                UiUtils.enableGa();
+                UiUtils.enableRvc();
         }
         startSettingsActivity(context, device, packageName);
-        SettingsPages.testSettingsPageConsents(context, device, ux, isOptin, flipConsent);
+        SettingsPages.testSettingsPageConsents(
+                context, device, ux, isOptin, flipConsent, assertOptIn);
     }
 
     public static void verifyNotification(
@@ -184,7 +196,7 @@ public class AdservicesWorkflows {
             boolean isEuDevice,
             UiConstants.UX ux)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, false);
+        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, true);
     }
 
     public static void verifyNotification(
@@ -260,7 +272,7 @@ public class AdservicesWorkflows {
 
         // if decide to go settings page, then we test settings page consent
         if (isGoSettings) {
-            SettingsPages.testSettingsPageConsents(context, device, ux, isOptin, false);
+            SettingsPages.testSettingsPageConsents(context, device, ux, isOptin, false, false);
         }
     }
 }

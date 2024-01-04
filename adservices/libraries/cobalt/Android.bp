@@ -42,3 +42,16 @@ android_library {
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
 }
+
+// Schemas needs to be bundled via this android_library since Cobalt unit tests for schema
+// migration will need this.
+android_library {
+    name: "adservices-cobalt-schema",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    asset_dirs: [
+        "schemas",
+    ],
+    manifest: "AndroidManifest.xml",
+}
+

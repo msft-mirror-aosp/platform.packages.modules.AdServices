@@ -286,9 +286,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
 
-    public static final String KEY_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS =
-            "measurement_enable_vtc_configurable_max_event_reports_count";
-
     public static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
 
@@ -993,6 +990,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED =
             "fledge_data_version_header_enabled";
 
+    // New fledge beacon reporting metrics flag
+    public static final String KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED =
+            "fledge_beacon_reporting_metrics_enabled";
+
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
 
@@ -1067,9 +1068,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
             "measurement_min_event_report_delay_millis";
 
-    public static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS =
-            "measurement_enable_configurable_event_reporting_windows";
-
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_vtc_early_reporting_windows";
 
@@ -1132,39 +1130,14 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
             "measurement_enable_api_status_allow_list_check";
 
-    public static final String
-            KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY =
-                    "measurement_install_attr_dual_destination_event_noise_probability";
-
-    public static final String KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
-            "measurement_dual_destination_navigation_noise_probability";
-
-    public static final String
-            KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
-                    "measurement_install_attr_dual_destination_navigation_noise_probability";
-
-    public static final String KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY =
-            "measurement_dual_destination_event_noise_probability";
-
-    public static final String KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY =
-            "measurement_install_attr_event_noise_probability";
-
-    public static final String KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
-            "measurement_install_attr_navigation_noise_probability";
-
-    public static final String KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY =
-            "measurement_event_noise_probability";
-
-    public static final String KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY =
-            "measurement_navigation_noise_probability";
+    public static final String KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH =
+            "measurement_enable_redirect_to_well_known_path";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_9 =
             "enable_database_schema_version_9";
-
-    public static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
 
     public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
             "notification_dmsmissed_on_click";

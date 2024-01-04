@@ -97,5 +97,10 @@ public class FlagsFactory {
         public boolean getAppConfigReturnsEnabledByDefault() {
             return false;
         }
+
+        @Override
+        public boolean getFledgeBeaconReportingMetricsEnabled() {
+            return true;
+        }
     }
 }

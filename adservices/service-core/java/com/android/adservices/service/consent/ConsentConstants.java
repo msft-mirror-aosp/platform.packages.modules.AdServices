@@ -17,7 +17,6 @@
 package com.android.adservices.service.consent;
 
 import com.android.adservices.service.common.compat.FileCompatUtils;
-import com.android.internal.annotations.VisibleForTesting;
 
 /** ConsentManager related Constants. */
 public class ConsentConstants {
@@ -37,8 +36,7 @@ public class ConsentConstants {
 
     public static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
 
-    @VisibleForTesting
-    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+    public static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
             "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
     public static final String CONSENT_KEY = "CONSENT";

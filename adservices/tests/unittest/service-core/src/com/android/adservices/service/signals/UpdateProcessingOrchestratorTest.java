@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -97,7 +98,7 @@ public class UpdateProcessingOrchestratorTest {
                 ADTECH, PACKAGE, NOW, new JSONObject(), DEV_CONTEXT);
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
         verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(Collections.emptyList(), Collections.emptyList());
+                .insertAndDelete(ADTECH, NOW, Collections.emptyList(), Collections.emptyList());
         verifyZeroInteractions(mUpdateProcessorSelectorMock);
         verify(mSignalEvictionControllerMock)
                 .evict(
@@ -136,7 +137,9 @@ public class UpdateProcessingOrchestratorTest {
                                 mUpdateProcessingOrchestrator.processUpdates(
                                         ADTECH, PACKAGE, NOW, commandToNumber, DEV_CONTEXT));
         assertEquals(exception, t.getCause());
+        verify(mProtectedSignalsDaoMock).getSignalsByBuyer(ADTECH);
         verifyZeroInteractions(mSignalEvictionControllerMock);
+        verifyNoMoreInteractions(mProtectedSignalsDaoMock);
     }
 
     @Test
@@ -156,8 +159,9 @@ public class UpdateProcessingOrchestratorTest {
 
         mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
 
-        List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
-        verify(mProtectedSignalsDaoMock).insertAndDelete(eq(expected), eq(Collections.emptyList()));
+        List<DBProtectedSignal> expected = List.of(createSignal(KEY_1, VALUE));
+        verify(mProtectedSignalsDaoMock)
+                .insertAndDelete(ADTECH, NOW, expected, Collections.emptyList());
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
         verify(mSignalEvictionControllerMock)
                 .evict(
@@ -185,7 +189,8 @@ public class UpdateProcessingOrchestratorTest {
         mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
 
         List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
-        verify(mProtectedSignalsDaoMock).insertAndDelete(eq(expected), eq(Collections.emptyList()));
+        verify(mProtectedSignalsDaoMock)
+                .insertAndDelete(ADTECH, NOW, expected, Collections.emptyList());
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
         verify(mSignalEvictionControllerMock)
                 .evict(
@@ -214,7 +219,7 @@ public class UpdateProcessingOrchestratorTest {
 
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
         verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(eq(Collections.emptyList()), eq(Arrays.asList(toRemove)));
+                .insertAndDelete(ADTECH, NOW, Collections.emptyList(), Arrays.asList(toRemove));
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
         verify(mSignalEvictionControllerMock)
                 .evict(eq(ADTECH), eq(List.of(toKeep)), mUpdateOutputArgumentCaptor.capture());
@@ -250,7 +255,8 @@ public class UpdateProcessingOrchestratorTest {
         DBProtectedSignal expected1 = createSignal(KEY_1, VALUE);
         DBProtectedSignal expected2 = createSignal(KEY_2, VALUE);
         verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(mInsertCaptor.capture(), eq(Collections.emptyList()));
+                .insertAndDelete(
+                        eq(ADTECH), eq(NOW), mInsertCaptor.capture(), eq(Collections.emptyList()));
         assertThat(mInsertCaptor.getValue())
                 .containsExactlyElementsIn(Arrays.asList(expected1, expected2));
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR + 1));
@@ -317,7 +323,7 @@ public class UpdateProcessingOrchestratorTest {
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
         verify(mProtectedSignalsDaoMock)
                 .insertAndDelete(
-                        eq(Collections.emptyList()), eq(Arrays.asList(toRemove1, toRemove2)));
+                        ADTECH, NOW, Collections.emptyList(), Arrays.asList(toRemove1, toRemove2));
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
         verify(mSignalEvictionControllerMock)
                 .evict(eq(ADTECH), eq(List.of()), mUpdateOutputArgumentCaptor.capture());
@@ -441,7 +447,7 @@ public class UpdateProcessingOrchestratorTest {
         mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
 
         List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
-        verify(mProtectedSignalsDaoMock).insertAndDelete(eq(expected), eq(expected));
+        verify(mProtectedSignalsDaoMock).insertAndDelete(ADTECH, NOW, expected, expected);
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
     }
 }

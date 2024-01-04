@@ -33,6 +33,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -111,7 +112,18 @@ class ReportEventImpl extends EventReporter {
         FluentFuture<List<Uri>> reportingUrisFuture = getReportingUris(input);
         reportingUrisFuture
                 .transformAsync(
-                        reportingUris -> reportUris(reportingUris, input),
+                        reportingUris -> {
+                            if (mFlags.getFledgeBeaconReportingMetricsEnabled()) {
+                                mAdServicesLogger.logReportInteractionApiCalledStats(
+                                        ReportInteractionApiCalledStats.builder()
+                                                .setBeaconReportingDestinationType(
+                                                        input.getReportingDestinations())
+                                                .setNumMatchingUris(reportingUris.size())
+                                                .build()
+                                );
+                            }
+                            return reportUris(reportingUris, input);
+                        },
                         mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<List<Void>>() {

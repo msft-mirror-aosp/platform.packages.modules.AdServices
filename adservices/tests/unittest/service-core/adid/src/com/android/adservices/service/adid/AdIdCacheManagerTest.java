@@ -19,7 +19,6 @@ package com.android.adservices.service.adid;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.adid.AdIdCacheManager.SHARED_PREFS_IAPC;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -42,33 +41,28 @@ import android.adservices.common.UpdateAdIdRequest;
 import android.content.Context;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.concurrent.CompletableFuture;
 
 /** Unit test for {@link AdIdCacheManager}. */
-public final class AdIdCacheManagerTest {
-    @Rule
-    public final AdServicesExtendedMockitoRule mExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(FlagsFactory.class).build();
-
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+@SpyStatic(FlagsFactory.class)
+public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final String PACKAGE_NAME = "package_name";
     // Use a non zeroed out AdId differentiate from the scenario without the provider service.
     private static final String AD_ID = "10000000-0000-0000-0000-000000000000";
     private static final String AD_ID_UPDATE = "20000000-0000-0000-0000-000000000000";
     private static final int DUMMY_CALLER_UID = 0;
 
+    private Context mContext;
     private IAdIdProviderService mAdIdProviderService;
     private AdIdCacheManager mAdIdCacheManager;
 
@@ -76,16 +70,18 @@ public final class AdIdCacheManagerTest {
 
     @Before
     public void setup() {
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
 
-        mAdIdCacheManager = spy(new AdIdCacheManager(sContext));
+        mContext = appContext.get();
+        deleteIapcSharedPreference();
+
+        mAdIdCacheManager = spy(new AdIdCacheManager(mContext));
     }
 
     // Clear the shared preference to isolate the test result from other tests.
-    @Before
     @After
     public void deleteIapcSharedPreference() {
-        sContext.deleteSharedPreferences(SHARED_PREFS_IAPC);
+        mContext.deleteSharedPreferences(SHARED_PREFS_IAPC);
     }
 
     @Test

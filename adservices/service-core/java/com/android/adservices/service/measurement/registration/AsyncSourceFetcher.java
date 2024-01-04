@@ -36,8 +36,6 @@ import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -76,24 +74,20 @@ public class AsyncSourceFetcher {
     private final MeasurementHttpClient mNetworkConnection;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
-    private final AdServicesLogger mLogger;
     private final Context mContext;
 
     public AsyncSourceFetcher(Context context) {
         this(
                 context,
                 EnrollmentDao.getInstance(context),
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance());
+                FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
-    public AsyncSourceFetcher(
-            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncSourceFetcher(Context context, EnrollmentDao enrollmentDao, Flags flags) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
-        mLogger = logger;
         mNetworkConnection = new MeasurementHttpClient(context);
     }
 
@@ -498,8 +492,9 @@ public class AsyncSourceFetcher {
             Source.SourceType sourceType,
             int maxEventLevelReports,
             Source.TriggerDataMatching triggerDataMatching) {
-        List<Pair<Long, Long>> parsedEventReportWindows = Source.getOrDefaultEventReportWindows(
-                eventReportWindows, sourceType, expiry, mFlags);
+        List<Pair<Long, Long>> parsedEventReportWindows =
+                Source.getOrDefaultEventReportWindowsForFlex(
+                        eventReportWindows, sourceType, expiry, mFlags);
         long defaultStart = parsedEventReportWindows.get(0).first;
         List<Long> defaultEnds =
                 parsedEventReportWindows.stream().map((x) -> x.second).collect(Collectors.toList());
@@ -805,7 +800,7 @@ public class AsyncSourceFetcher {
     public Optional<Source> fetchSource(
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus,
-            AsyncRedirect asyncRedirect) {
+            AsyncRedirects asyncRedirects) {
         HttpURLConnection urlConnection = null;
         Map<String, List<String>> headers;
         if (!asyncRegistration.getRegistrationUri().getScheme().equalsIgnoreCase("https")) {
@@ -858,9 +853,7 @@ public class AsyncSourceFetcher {
             }
         }
 
-        if (asyncRegistration.shouldProcessRedirects()) {
-            FetcherUtil.parseRedirects(headers).forEach(asyncRedirect::addToRedirects);
-        }
+        asyncRedirects.configure(headers, mFlags, asyncRegistration);
 
         if (!isSourceHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
@@ -870,7 +863,9 @@ public class AsyncSourceFetcher {
 
         Optional<String> enrollmentId =
                 mFlags.isDisableMeasurementEnrollmentCheck()
-                        ? Optional.of(Enrollment.FAKE_ENROLLMENT)
+                        ? WebAddresses.topPrivateDomainAndScheme(
+                                        asyncRegistration.getRegistrationUri())
+                                .map(Uri::toString)
                         : Enrollment.getValidEnrollmentId(
                                 asyncRegistration.getRegistrationUri(),
                                 asyncRegistration.getRegistrant().getAuthority(),

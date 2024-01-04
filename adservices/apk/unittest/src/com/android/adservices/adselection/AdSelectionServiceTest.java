@@ -34,6 +34,7 @@ import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.MaintenanceJobService;
@@ -43,15 +44,19 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
 /** Unit test for {@link AdSelectionService} */
-public class AdSelectionServiceTest {
+@SpyStatic(ConsentManager.class)
+@SpyStatic(AdSelectionServiceImpl.class)
+@SpyStatic(PackageChangedReceiver.class)
+@SpyStatic(MddJobService.class)
+@SpyStatic(MaintenanceJobService.class)
+public final class AdSelectionServiceTest extends AdServicesExtendedMockitoTestCase {
     private final Flags mFlagsWithAdSelectionSwitchOnGaUxEnabled =
             new FlagsWithKillSwitchOnGaUxEnabled();
     private final Flags mFlagsWithAdSelectionSwitchOffGaUxEnabled =
@@ -60,26 +65,6 @@ public class AdSelectionServiceTest {
     @Mock private AdSelectionServiceImpl mMockAdSelectionServiceImpl;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private PackageManager mPackageManagerMock;
-
-    private MockitoSession mStaticMockSession;
-
-    @Before
-    public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(ConsentManager.class)
-                        .spyStatic(AdSelectionServiceImpl.class)
-                        .spyStatic(PackageChangedReceiver.class)
-                        .mockStatic(MddJobService.class)
-                        .mockStatic(MaintenanceJobService.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
-    }
 
     /**
      * Test whether the service is not bindable when the kill switch is on with the GA UX flag on.

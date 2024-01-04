@@ -62,10 +62,11 @@ import java.util.stream.Collectors;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppSearchConsentManager {
-    private Context mContext;
-    private AppSearchConsentWorker mAppSearchConsentWorker;
+    private final Context mContext;
+    private final AppSearchConsentWorker mAppSearchConsentWorker;
 
-    private AppSearchConsentManager(
+    @VisibleForTesting
+    AppSearchConsentManager(
             @NonNull Context context, @NonNull AppSearchConsentWorker appSearchConsentWorker) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appSearchConsentWorker);
@@ -353,7 +354,6 @@ public class AppSearchConsentManager {
     // Suppress lint warning for context.getUser in R since this code is unused in R
     @SuppressWarnings("NewApi")
     boolean shouldInitConsentDataFromAppSearch(
-            Context context,
             SharedPreferences sharedPreferences,
             BooleanFileDatastore datastore,
             AdServicesManager adServicesManager) {
@@ -374,7 +374,7 @@ public class AppSearchConsentManager {
         if (shouldSkipMigration) {
             LogUtil.d(
                     "Consent migration from AppSearch is already done for user %d.",
-                    context.getUser().getIdentifier());
+                    mContext.getUser().getIdentifier());
             return false;
         }
 
@@ -410,13 +410,11 @@ public class AppSearchConsentManager {
      * @return whether or not we performed a migration
      */
     public boolean migrateConsentDataIfNeeded(
-            @NonNull Context context,
             @NonNull SharedPreferences sharedPreferences,
             @NonNull BooleanFileDatastore datastore,
             @Nullable AdServicesManager adServicesManager,
             @NonNull AppConsentDao appConsentDao)
             throws IOException {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(sharedPreferences);
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(appConsentDao);
@@ -425,7 +423,7 @@ public class AppSearchConsentManager {
         // System Server migration is a T+ feature. On T+, this function should only execute
         // if it's within the AdServices APK and not ExtServices. So check if it's within
         // ExtServices, and bail out if that's the case on any platform.
-        String packageName = context.getPackageName();
+        String packageName = mContext.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
             LogUtil.d(
                     "Aborting attempt to migrate Consent data to PPAPI and System Service in"
@@ -436,8 +434,7 @@ public class AppSearchConsentManager {
         // <p>a) The device is T+
         // <p>b) Data is not already migrated
         // <p>c) We showed the notification on S- (as recorded in AppSearch).
-        if (!shouldInitConsentDataFromAppSearch(
-                context, sharedPreferences, datastore, adServicesManager)) {
+        if (!shouldInitConsentDataFromAppSearch(sharedPreferences, datastore, adServicesManager)) {
             return false;
         }
 

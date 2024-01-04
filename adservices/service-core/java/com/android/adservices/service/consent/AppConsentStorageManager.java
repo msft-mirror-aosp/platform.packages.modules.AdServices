@@ -31,6 +31,7 @@ import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollectio
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -131,7 +132,8 @@ public class AppConsentStorageManager implements IConsentStorage {
      */
     @Override
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
-        return AdServicesApiConsent.getConsent(mDatastore.get(apiType.toPpApiDatastoreKey()));
+        return AdServicesApiConsent.getConsent(
+                Objects.requireNonNullElse(mDatastore.get(apiType.toPpApiDatastoreKey()), false));
     }
 
     /**
@@ -153,6 +155,15 @@ public class AppConsentStorageManager implements IConsentStorage {
         return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED;
     }
 
+    /** Set the current privacy sandbox feature. */
+    @Override
+    public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType featureType)
+            throws IOException {
+        for (PrivacySandboxFeatureType currentFeatureType : PrivacySandboxFeatureType.values()) {
+            mDatastore.put(currentFeatureType.name(), currentFeatureType == featureType);
+        }
+    }
+
     /**
      * Retrieves the default AdId state.
      *
@@ -160,7 +171,8 @@ public class AppConsentStorageManager implements IConsentStorage {
      */
     @Override
     public boolean getDefaultAdIdState() {
-        return mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE);
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE), false);
     }
 
     /**
@@ -170,7 +182,9 @@ public class AppConsentStorageManager implements IConsentStorage {
      */
     @Override
     public AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) {
-        return AdServicesApiConsent.getConsent(mDatastore.get(apiType.toPpApiDatastoreKey()));
+        return AdServicesApiConsent.getConsent(
+                Objects.requireNonNullElse(
+                        mDatastore.get(apiType.toDefaultConsentDatastoreKey()), false));
     }
 
     /** Returns current enrollment channel. */
@@ -215,16 +229,34 @@ public class AppConsentStorageManager implements IConsentStorage {
         return mUxStatesDao.getUx();
     }
 
+    /** Set the current UX to storage. */
+    @Override
+    public void setUx(PrivacySandboxUxCollection ux) {
+        mUxStatesDao.setUx(ux);
+    }
+
     /** Returns whether the isAdIdEnabled bit is true. */
     @Override
     public boolean isAdIdEnabled() {
-        return mDatastore.get(ConsentConstants.IS_AD_ID_ENABLED);
+        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.IS_AD_ID_ENABLED), false);
+    }
+
+    /** Set the AdIdEnabled bit to storage. */
+    @Override
+    public void setAdIdEnabled(boolean isAdIdEnabled) throws IOException {
+        mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled);
     }
 
     /** Returns whether the isAdultAccount bit is true. */
     @Override
     public boolean isAdultAccount() {
-        return mDatastore.get(ConsentConstants.IS_ADULT_ACCOUNT);
+        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.IS_ADULT_ACCOUNT), false);
+    }
+
+    /** Set the AdultAccount bit to storage. */
+    @Override
+    public void setAdultAccount(boolean isAdultAccount) throws IOException {
+        mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount);
     }
 
     /**
@@ -241,7 +273,8 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public boolean isConsentRevokedForApp(String packageName) throws IllegalArgumentException {
         try {
-            return mAppConsentDao.isConsentRevokedForApp(packageName);
+            return Objects.requireNonNullElse(
+                    mAppConsentDao.isConsentRevokedForApp(packageName), false);
         } catch (IOException exception) {
             LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
         }
@@ -251,13 +284,26 @@ public class AppConsentStorageManager implements IConsentStorage {
     /** Returns whether the isEntryPointEnabled bit is true. */
     @Override
     public boolean isEntryPointEnabled() {
-        return mDatastore.get(ConsentConstants.IS_ENTRY_POINT_ENABLED);
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.IS_ENTRY_POINT_ENABLED), false);
+    }
+
+    /** Set the EntryPointEnabled bit to storage . */
+    @Override
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException {
+        mDatastore.put(ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
     }
 
     /** Returns whether the isU18Account bit is true. */
     @Override
     public boolean isU18Account() {
-        return mDatastore.get(ConsentConstants.IS_U18_ACCOUNT);
+        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.IS_U18_ACCOUNT), false);
+    }
+
+    /** Set the U18Account bit to storage. */
+    @Override
+    public void setU18Account(boolean isU18Account) throws IOException {
+        mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
     }
 
     /** Saves the default AdId state bit to data stores based on source of truth. */
@@ -270,7 +316,7 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent)
             throws IOException {
-        mDatastore.put(apiType.toPpApiDatastoreKey(), defaultConsent);
+        mDatastore.put(apiType.toDefaultConsentDatastoreKey(), defaultConsent);
     }
 
     /**
@@ -311,22 +357,9 @@ public class AppConsentStorageManager implements IConsentStorage {
         }
     }
 
-    /** Set the AdIdEnabled bit to storage. */
-    @Override
-    public void setAdIdEnabled(boolean isAdIdEnabled) throws IOException {
-        // test
-        mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled);
-    }
-
-    /** Set the AdultAccount bit to storage. */
-    @Override
-    public void setAdultAccount(boolean isAdultAccount) throws IOException {
-        mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount);
-    }
-
     /**
      * Sets the consent for this user ID for this API type in AppSearch. If we do not get
-     * confirmation that the write was successful, then we throw an exception so that user does not
+     * confirmation that to write was successful, then we throw an exception so that user does not
      * incorrectly think that the consent is updated.
      *
      * @throws IOException if the operation fails
@@ -361,21 +394,12 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public boolean setConsentForAppIfNew(String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException {
-        // test
+        // TODO(b/317595641) clean up setConsentForAppIfNew logic
         try {
             return mAppConsentDao.setConsentForAppIfNew(packageName, isConsentRevoked);
         } catch (IOException exception) {
             LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
             return true;
-        }
-    }
-
-    /** Set the current privacy sandbox feature. */
-    @Override
-    public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType featureType)
-            throws IOException {
-        for (PrivacySandboxFeatureType currentFeatureType : PrivacySandboxFeatureType.values()) {
-            mDatastore.put(currentFeatureType.name(), currentFeatureType == featureType);
         }
     }
 
@@ -386,30 +410,12 @@ public class AppConsentStorageManager implements IConsentStorage {
         mUxStatesDao.setEnrollmentChannel(ux, channel);
     }
 
-    /** Set the EntryPointEnabled bit to storage . */
-    @Override
-    public void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException {
-        mDatastore.put(ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
-    }
-
-    /** Set the U18Account bit to storage. */
-    @Override
-    public void setU18Account(boolean isU18Account) throws IOException {
-        mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
-    }
-
     /** Set the U18NotificationDisplayed bit to storage. */
     @Override
     public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed)
             throws IOException {
         mDatastore.put(
                 ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, wasU18NotificationDisplayed);
-    }
-
-    /** Set the current UX to storage. */
-    @Override
-    public void setUx(PrivacySandboxUxCollection ux) {
-        mUxStatesDao.setUx(ux);
     }
 
     /**
@@ -419,7 +425,8 @@ public class AppConsentStorageManager implements IConsentStorage {
      */
     @Override
     public boolean wasGaUxNotificationDisplayed() {
-        return mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE);
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), false);
     }
 
     /**
@@ -429,12 +436,16 @@ public class AppConsentStorageManager implements IConsentStorage {
      */
     @Override
     public boolean wasNotificationDisplayed() {
-        return mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE);
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), false);
     }
 
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
     @Override
     public boolean wasU18NotificationDisplayed() {
-        return mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED);
+        return Objects.requireNonNullElse(
+                mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), false);
     }
+
+
 }

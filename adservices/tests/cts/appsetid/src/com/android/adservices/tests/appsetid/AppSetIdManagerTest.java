@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdManager;
-import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.SystemProperties;
@@ -30,24 +29,17 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
-import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -56,28 +48,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@RunWith(AndroidJUnit4.class)
-public class AppSetIdManagerTest {
-    private static final String TAG = AppSetIdManagerTest.class.getSimpleName();
+public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final float DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5f;
-
-    // Ignore tests when device is not at least S
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    // Ignore tests when device is not supported
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName())
-                    .setAppsetIdKillSwitch(false);
 
     @Before
     public void setup() throws Exception {
@@ -101,7 +75,7 @@ public class AppSetIdManagerTest {
 
                     @Override
                     public void onError(Exception error) {
-                        Log.e(TAG, "Failed to get AppSet Id!", error);
+                        Log.e(mTag, "Failed to get AppSet Id!", error);
                         Assert.fail();
                     }
                 };
