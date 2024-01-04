@@ -16,6 +16,12 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
+import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
@@ -82,10 +88,10 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         // Verify Attribution tags.
         expect.withMessage("getAttributionConfig().getAllowAdPartnersToAccess()")
                 .that(appManifestConfig.isAllowedAttributionAccess("1234"))
-                .isTrue();
+                .isEqualTo(RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID);
         expect.withMessage("isAllowedAttributionAccess()")
                 .that(appManifestConfig.isAllowedAttributionAccess("108"))
-                .isFalse();
+                .isEqualTo(RESULT_DISALLOWED_BY_APP);
         AppManifestAttributionConfig attributionConfig = appManifestConfig.getAttributionConfig();
         expect.withMessage("getAttributionConfig()").that(attributionConfig).isNotNull();
         if (attributionConfig != null) {
@@ -100,7 +106,7 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         // Verify Custom Audience tags.
         expect.withMessage("isAllowedCustomAudiencesAccess()")
                 .that(appManifestConfig.isAllowedCustomAudiencesAccess("108"))
-                .isFalse();
+                .isEqualTo(RESULT_DISALLOWED_BY_APP);
         AppManifestCustomAudiencesConfig customAudiencesConfig =
                 appManifestConfig.getCustomAudiencesConfig();
         expect.withMessage("getCustomAudiencesConfig()").that(customAudiencesConfig).isNotNull();
@@ -119,10 +125,10 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         // Verify Topics tags.
         expect.withMessage("1234567()")
                 .that(appManifestConfig.isAllowedTopicsAccess("1234567"))
-                .isTrue();
+                .isEqualTo(RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID);
         expect.withMessage("isAllowedTopicsAccess()")
                 .that(appManifestConfig.isAllowedTopicsAccess("108"))
-                .isFalse();
+                .isEqualTo(RESULT_DISALLOWED_BY_APP);
         AppManifestTopicsConfig topicsConfig = appManifestConfig.getTopicsConfig();
         expect.withMessage("getTopicsConfig()").that(topicsConfig).isNotNull();
         if (topicsConfig != null) {
@@ -137,10 +143,10 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         // Verify AppId tags.
         expect.withMessage("isAllowedAdIdAccess()")
                 .that(appManifestConfig.isAllowedAdIdAccess("42"))
-                .isTrue();
+                .isEqualTo(RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID);
         expect.withMessage("isAllowedAdIdAccess()")
                 .that(appManifestConfig.isAllowedAdIdAccess("108"))
-                .isFalse();
+                .isEqualTo(RESULT_DISALLOWED_BY_APP);
         AppManifestAdIdConfig adIdConfig = appManifestConfig.getAdIdConfig();
         expect.withMessage("getAdIdConfig()").that(adIdConfig).isNotNull();
         if (adIdConfig != null) {
@@ -155,10 +161,10 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         // Verify AppSetId tags.
         expect.withMessage("isAllowedAppSetIdAccess()")
                 .that(appManifestConfig.isAllowedAppSetIdAccess("42"))
-                .isTrue();
+                .isEqualTo(RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID);
         expect.withMessage("isAllowedAppSetIdAccess()")
                 .that(appManifestConfig.isAllowedAppSetIdAccess("108"))
-                .isFalse();
+                .isEqualTo(RESULT_DISALLOWED_BY_APP);
         AppManifestAppSetIdConfig appSetIdConfig = appManifestConfig.getAppSetIdConfig();
         expect.withMessage("getAppSetIdConfig()").that(appSetIdConfig).isNotNull();
         if (appSetIdConfig != null) {
@@ -216,34 +222,39 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
 
         AppManifestAttributionConfig attributionConfig = appManifestConfig.getAttributionConfig();
         expect.withMessage("getAttributionConfig()").that(attributionConfig).isNull();
-        expect.withMessage("isAllowedAttributionAccess()")
-                .that(appManifestConfig.isAllowedAttributionAccess("not actually there"))
-                .isFalse();
+        assertResult(
+                "isAllowedAttributionAccess()",
+                appManifestConfig.isAllowedAttributionAccess("not actually there"),
+                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
 
         AppManifestCustomAudiencesConfig customAudiencesConfig =
                 appManifestConfig.getCustomAudiencesConfig();
         expect.withMessage("getCustomAudiencesConfig()").that(attributionConfig).isNull();
-        expect.withMessage("isAllowedCustomAudiencesAccess()")
-                .that(appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"))
-                .isFalse();
+        assertResult(
+                "isAllowedCustomAudiencesAccess()",
+                appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"),
+                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
 
         AppManifestTopicsConfig topicsConfig = appManifestConfig.getTopicsConfig();
         expect.withMessage("getTopicsConfig()").that(topicsConfig).isNull();
-        expect.withMessage("isAllowedTopicsAccess()")
-                .that(appManifestConfig.isAllowedTopicsAccess("not actually there"))
-                .isFalse();
+        assertResult(
+                "isAllowedTopicsAccess()",
+                appManifestConfig.isAllowedTopicsAccess("not actually there"),
+                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
 
         AppManifestAdIdConfig adIdConfig = appManifestConfig.getAdIdConfig();
         expect.withMessage("getAdIdConfig()").that(adIdConfig).isNull();
-        expect.withMessage("isAllowedAdIdAccess()")
-                .that(appManifestConfig.isAllowedAdIdAccess("not actually there"))
-                .isFalse();
+        assertResult(
+                "isAllowedAdIdAccess()",
+                appManifestConfig.isAllowedTopicsAccess("not actually there"),
+                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
 
         AppManifestAppSetIdConfig appSetIdConfig = appManifestConfig.getAppSetIdConfig();
         expect.withMessage("getAppSetIdConfig()").that(appSetIdConfig).isNull();
-        expect.withMessage("isAllowedAppSetIdAccess()")
-                .that(appManifestConfig.isAllowedAppSetIdAccess("not actually there"))
-                .isFalse();
+        assertResult(
+                "isAllowedAppSetIdAccess()",
+                appManifestConfig.isAllowedAppSetIdAccess("not actually there"),
+                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
     }
 
     @Test
@@ -254,16 +265,21 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                         .getXml(R.xml.ad_services_config_missing_tags);
         AppManifestConfig appManifestConfig =
                 AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
-        assertWithMessage("manifest for ad_services_config_all_false_missing_attribution")
+        assertWithMessage("manifest for ad_services_config_missing_tags")
                 .that(appManifestConfig)
                 .isNotNull();
 
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
-        assertAttributionConfigIsDefault(appManifestConfig);
-        assertCustomAudiencesConfigIsDefault(appManifestConfig);
-        assertTopicsConfigIsDefault(appManifestConfig);
-        assertAdIdConfigIsDefault(appManifestConfig);
-        assertAppSetIdConfigIsDefault(appManifestConfig);
+        assertAttributionConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertCustomAudienceConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertTopicsConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAdIdConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAppSetIdConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
     }
 
     @Test
@@ -279,11 +295,12 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .isNotNull();
 
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
-        assertAttributionConfigIsDefault(appManifestConfig);
-        assertCustomAudiencesConfigIsFalse(appManifestConfig);
-        assertTopicsConfigIsFalse(appManifestConfig);
-        assertAdIdConfigIsFalse(appManifestConfig);
-        assertAppSetIdConfigIsFalse(appManifestConfig);
+        assertAttributionConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
     }
 
     @Test
@@ -299,11 +316,12 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .isNotNull();
 
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
-        assertAttributionConfigIsFalse(appManifestConfig);
-        assertCustomAudiencesConfigIsDefault(appManifestConfig);
-        assertTopicsConfigIsFalse(appManifestConfig);
-        assertAdIdConfigIsFalse(appManifestConfig);
-        assertAppSetIdConfigIsFalse(appManifestConfig);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
     }
 
     @Test
@@ -319,11 +337,12 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .isNotNull();
 
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
-        assertAttributionConfigIsFalse(appManifestConfig);
-        assertCustomAudiencesConfigIsFalse(appManifestConfig);
-        assertTopicsConfigIsDefault(appManifestConfig);
-        assertAdIdConfigIsFalse(appManifestConfig);
-        assertAppSetIdConfigIsFalse(appManifestConfig);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
     }
 
     @Test
@@ -339,11 +358,13 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .isNotNull();
 
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
-        assertAttributionConfigIsFalse(appManifestConfig);
-        assertCustomAudiencesConfigIsFalse(appManifestConfig);
-        assertTopicsConfigIsFalse(appManifestConfig);
-        assertAdIdConfigIsDefault(appManifestConfig);
-        assertAppSetIdConfigIsFalse(appManifestConfig);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
     }
 
     @Test
@@ -359,11 +380,12 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .isNotNull();
 
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
-        assertAttributionConfigIsFalse(appManifestConfig);
-        assertCustomAudiencesConfigIsFalse(appManifestConfig);
-        assertTopicsConfigIsFalse(appManifestConfig);
-        assertAdIdConfigIsFalse(appManifestConfig);
-        assertAppSetIdConfigIsDefault(appManifestConfig);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
     }
 
     @Test
@@ -379,11 +401,11 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .isNotNull();
 
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
-        assertAttributionConfigIsFalse(appManifestConfig);
-        assertCustomAudiencesConfigIsFalse(appManifestConfig);
-        assertTopicsConfigIsFalse(appManifestConfig);
-        assertAdIdConfigIsFalse(appManifestConfig);
-        assertAppSetIdConfigIsFalse(appManifestConfig);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
     }
 
     @Test
@@ -415,11 +437,11 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .that(sdkLibrary.contains("4815162342"))
                 .isFalse();
 
-        assertAttributionConfigIsFalse(appManifestConfig);
-        assertCustomAudiencesConfigIsFalse(appManifestConfig);
-        assertTopicsConfigIsFalse(appManifestConfig);
-        assertAdIdConfigIsFalse(appManifestConfig);
-        assertAppSetIdConfigIsFalse(appManifestConfig);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
     }
 
     @Test
@@ -434,11 +456,11 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 .isNotNull();
 
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ false);
-        assertAttributionConfigIsFalse(appManifestConfig);
-        assertCustomAudiencesConfigIsFalse(appManifestConfig);
-        assertTopicsConfigIsFalse(appManifestConfig);
-        assertAdIdConfigIsFalse(appManifestConfig);
-        assertAppSetIdConfigIsFalse(appManifestConfig);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
     }
 
     @Test
@@ -517,86 +539,46 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         }
     }
 
-    private void assertAttributionConfigIsDefault(AppManifestConfig appManifestConfig) {
-        AppManifestAttributionConfig attributionConfig = appManifestConfig.getAttributionConfig();
-        assertApiConfigIsDefault("getAttributionConfig()", attributionConfig);
-        expect.withMessage("isAllowedAttributionAccess()")
-                .that(appManifestConfig.isAllowedAttributionAccess("not actually there"))
-                .isTrue();
+    private void assertResult(String method, int actualResult, int expectedResult) {
+        expect.withMessage(
+                        "%s (where %s=%s and %s=%s)",
+                        method,
+                        actualResult,
+                        resultToString(actualResult),
+                        expectedResult,
+                        resultToString(expectedResult))
+                .that(actualResult)
+                .isEqualTo(expectedResult);
     }
 
-    private void assertAttributionConfigIsFalse(AppManifestConfig appManifestConfig) {
-        AppManifestAttributionConfig attributionConfig = appManifestConfig.getAttributionConfig();
-        assertApiConfigIsFalse("getAttributionConfig()", attributionConfig);
-        expect.withMessage("isAllowedAttributionAccess()")
-                .that(appManifestConfig.isAllowedAttributionAccess("not actually there"))
-                .isFalse();
+    private void assertAttributionConfigIsAllowed(
+            AppManifestConfig appManifestConfig, int expectedResult) {
+        int actualResult = appManifestConfig.isAllowedAttributionAccess("not actually there");
+        assertResult("getAttributionConfig()", actualResult, expectedResult);
     }
 
-    private void assertCustomAudiencesConfigIsDefault(AppManifestConfig appManifestConfig) {
-        AppManifestCustomAudiencesConfig customAudiencesConfig =
-                appManifestConfig.getCustomAudiencesConfig();
-        assertApiConfigIsDefault("getCustomAudiencesConfig()", customAudiencesConfig);
-        expect.withMessage("isAllowedCustomAudiencesAccess()")
-                .that(appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"))
-                .isTrue();
+    private void assertCustomAudienceConfigIsAllowed(
+            AppManifestConfig appManifestConfig, int expectedResult) {
+        int actualResult = appManifestConfig.isAllowedCustomAudiencesAccess("not actually there");
+        assertResult("getCustomAudiencesConfig()", actualResult, expectedResult);
     }
 
-    private void assertCustomAudiencesConfigIsFalse(AppManifestConfig appManifestConfig) {
-        AppManifestCustomAudiencesConfig customAudiencesConfig =
-                appManifestConfig.getCustomAudiencesConfig();
-        assertApiConfigIsFalse("getCustomAudiencesConfig()", customAudiencesConfig);
-        expect.withMessage("isAllowedCustomAudiencesAccess()")
-                .that(appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"))
-                .isFalse();
+    private void assertTopicsConfigIsAllowed(
+            AppManifestConfig appManifestConfig, int expectedResult) {
+        int actualResult = appManifestConfig.isAllowedTopicsAccess("not actually there");
+        assertResult("getTopicsConfig()", actualResult, expectedResult);
     }
 
-    private void assertTopicsConfigIsDefault(AppManifestConfig appManifestConfig) {
-        AppManifestTopicsConfig topicsConfig = appManifestConfig.getTopicsConfig();
-        assertApiConfigIsDefault("getTopicsConfig()", topicsConfig);
-        expect.withMessage("isAllowedTopicsAccess()")
-                .that(appManifestConfig.isAllowedTopicsAccess("not actually there"))
-                .isTrue();
+    private void assertAdIdConfigIsAllowed(
+            AppManifestConfig appManifestConfig, int expectedResult) {
+        int actualResult = appManifestConfig.isAllowedAdIdAccess("not actually there");
+        assertResult("getAdIdConfig()", actualResult, expectedResult);
     }
 
-    private void assertTopicsConfigIsFalse(AppManifestConfig appManifestConfig) {
-        AppManifestTopicsConfig topicsConfig = appManifestConfig.getTopicsConfig();
-        assertApiConfigIsFalse("getTopicsConfig()", topicsConfig);
-        expect.withMessage("isAllowedTopicsAccess()")
-                .that(appManifestConfig.isAllowedTopicsAccess("not actually there"))
-                .isFalse();
-    }
-
-    private void assertAdIdConfigIsDefault(AppManifestConfig appManifestConfig) {
-        AppManifestAdIdConfig adIdConfig = appManifestConfig.getAdIdConfig();
-        assertApiConfigIsDefault("getAdIdConfig()", adIdConfig);
-        expect.withMessage("isAllowedAdIdAccess()")
-                .that(appManifestConfig.isAllowedAdIdAccess("not actually there"))
-                .isTrue();
-    }
-
-    private void assertAdIdConfigIsFalse(AppManifestConfig appManifestConfig) {
-        AppManifestAdIdConfig adIdConfig = appManifestConfig.getAdIdConfig();
-        assertApiConfigIsFalse("getAdIdConfig()", adIdConfig);
-        expect.withMessage("isAllowedAdIdAccess()")
-                .that(appManifestConfig.isAllowedAdIdAccess("not actually there"))
-                .isFalse();
-    }
-
-    private void assertAppSetIdConfigIsDefault(AppManifestConfig appManifestConfig) {
-        AppManifestAppSetIdConfig appSetIdConfig = appManifestConfig.getAppSetIdConfig();
-        assertApiConfigIsDefault("getAppSetIdConfig()", appSetIdConfig);
-        expect.withMessage("isAllowedAppSetIdAccess()")
-                .that(appManifestConfig.isAllowedAppSetIdAccess("not actually there"))
-                .isTrue();
-    }
-
-    private void assertAppSetIdConfigIsFalse(AppManifestConfig appManifestConfig) {
-        AppManifestAppSetIdConfig appSetIdConfig = appManifestConfig.getAppSetIdConfig();
-        assertApiConfigIsFalse("getAppSetIdConfig()", appSetIdConfig);
-        expect.withMessage("isAllowedAppSetIdAccess()")
-                .that(appManifestConfig.isAllowedAppSetIdAccess("not actually there"))
-                .isFalse();
+    private void assertAppSetIdConfigIsAllowed(
+            AppManifestConfig appManifestConfig, int expectedResult) {
+        int actualResult = appManifestConfig.isAllowedAppSetIdAccess("not actually there");
+        assertResult("getAppSetIdConfig()", actualResult, expectedResult);
     }
 
     private void assertApiConfigIsDefault(String name, AppManifestApiConfig config) {

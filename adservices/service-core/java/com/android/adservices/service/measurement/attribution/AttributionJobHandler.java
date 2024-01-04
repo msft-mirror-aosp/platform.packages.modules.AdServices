@@ -57,6 +57,7 @@ import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate.MomentPlacement;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -813,12 +814,8 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (mEventReportWindowCalcDelegate.getReportingTime(
-                source, trigger.getTriggerTime(), trigger.getDestinationType()) == -1
-                && (source.getTriggerSpecsString() == null
-                      || source.getTriggerSpecsString().isEmpty())) {
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
+        if (source.getTriggerSpecs() == null
+                && !isTriggerFallsWithinWindow(source, trigger, measurementDao)) {
             return TriggeringStatus.DROPPED;
         }
 
@@ -1332,14 +1329,8 @@ class AttributionJobHandler {
 
     private boolean isWithinReportLimit(
             Source source, int existingReportCount, @EventSurfaceType int destinationType) {
-        return mEventReportWindowCalcDelegate.getMaxReportCount(
-                        source, hasAppInstallAttributionOccurred(source, destinationType))
+        return mEventReportWindowCalcDelegate.getMaxReportCount(source, destinationType)
                 > existingReportCount;
-    }
-
-    private static boolean hasAppInstallAttributionOccurred(
-            Source source, @EventSurfaceType int destinationType) {
-        return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
     }
 
     private static boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
@@ -1753,5 +1744,28 @@ class AttributionJobHandler {
             AttributionStatus attributionStatus, int count) {
         attributionStatus.setAggregateDebugReportCount(
                 attributionStatus.getAggregateDebugReportCount() + count);
+    }
+
+    private boolean isTriggerFallsWithinWindow(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
+        MomentPlacement momentPlacement =
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger.getTriggerTime(), trigger.getDestinationType());
+        if (momentPlacement == MomentPlacement.BEFORE) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
+            return false;
+        }
+        if (momentPlacement == MomentPlacement.AFTER) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
+            return false;
+        }
+        return true;
     }
 }

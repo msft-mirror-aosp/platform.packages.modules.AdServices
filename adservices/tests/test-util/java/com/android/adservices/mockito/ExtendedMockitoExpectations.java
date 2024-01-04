@@ -206,7 +206,20 @@ public final class ExtendedMockitoExpectations {
      * int)}.
      */
     public static void verifyErrorLogUtilErrorWithAnyException(int errorCode, int ppapiName) {
-        verify(() -> ErrorLogUtil.e(any(), eq(errorCode), eq(ppapiName)));
+        verifyErrorLogUtilErrorWithAnyException(errorCode, ppapiName, times(1));
+    }
+
+    /**
+     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
+     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
+     *
+     * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
+     * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
+     * int)}.
+     */
+    public static void verifyErrorLogUtilErrorWithAnyException(
+            int errorCode, int ppapiName, VerificationMode mode) {
+        verify(() -> ErrorLogUtil.e(any(), eq(errorCode), eq(ppapiName)), mode);
     }
 
     /**
