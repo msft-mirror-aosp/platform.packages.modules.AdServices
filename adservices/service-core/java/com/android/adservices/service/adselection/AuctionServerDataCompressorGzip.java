@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.profiling.Tracing;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,7 +41,9 @@ public class AuctionServerDataCompressorGzip implements AuctionServerDataCompres
     public CompressedData compress(@NonNull UncompressedData uncompressedData) {
         Objects.requireNonNull(uncompressedData);
 
+        int traceCookie = Tracing.beginAsyncSection(Tracing.AUCTION_SERVER_GZIP_COMPRESS);
         sLogger.v("Compression request for each BuyerInput with version " + VERSION);
+
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
@@ -50,8 +53,9 @@ public class AuctionServerDataCompressorGzip implements AuctionServerDataCompres
             sLogger.e(IO_ERROR_DURING_COMPRESSION);
             throw new UncheckedIOException(e);
         }
-
-        return CompressedData.create(byteArrayOutputStream.toByteArray());
+        CompressedData compressedData = CompressedData.create(byteArrayOutputStream.toByteArray());
+        Tracing.endAsyncSection(Tracing.AUCTION_SERVER_GZIP_COMPRESS, traceCookie);
+        return compressedData;
     }
 
     /** Decompresses data compressed by GZIP */

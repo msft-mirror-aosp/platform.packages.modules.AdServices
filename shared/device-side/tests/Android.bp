@@ -20,14 +20,21 @@ android_test {
     srcs: [
         "java/**/*.java",
     ],
+    // TODO(b/306522832): should not depend on adservices-extended-mockito-defaults
     defaults: ["adservices-extended-mockito-defaults"],
     static_libs: [
+        "adservices-shared-common",
+        "adservices-shared-error-logging",
         "adservices-shared-storage",
-        "adservices-test-utility",
+        "adservices-shared-testing",
+        "adservices-shared-util",
         "androidx.test.core",
         "androidx.test.runner",
+        "auto_value_annotations",
         "truth",
+        "adservices-test-utility",
     ],
+    plugins: ["auto_annotation_plugin"],
     min_sdk_version: "30",
     test_suites: [
         "general-tests",

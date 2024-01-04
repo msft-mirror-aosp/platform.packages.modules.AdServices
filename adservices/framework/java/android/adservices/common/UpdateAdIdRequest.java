@@ -72,6 +72,7 @@ public final class UpdateAdIdRequest implements Parcelable {
 
     /** @hide */
     @Override
+    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
 

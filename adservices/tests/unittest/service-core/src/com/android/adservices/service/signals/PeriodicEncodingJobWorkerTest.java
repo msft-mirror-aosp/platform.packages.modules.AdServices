@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -36,10 +37,12 @@ import android.adservices.common.CommonFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogicMetadata;
+import com.android.adservices.data.signals.DBSignalsUpdateMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -112,6 +115,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
     @Mock private EncodedPayloadDao mEncodedPayloadDao;
+    @Mock private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock private SignalsProviderImpl mSignalStorageManager;
     @Mock private AdSelectionScriptEngine mScriptEngine;
     @Mock private DevContextFilter mDevContextFilter;
@@ -137,9 +141,9 @@ public class PeriodicEncodingJobWorkerTest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mProtectedSignalsDao,
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightWeightExecutor,
@@ -149,29 +153,17 @@ public class PeriodicEncodingJobWorkerTest {
 
     @Test
     public void testValidateAndPersistPayloadSuccess() {
-        String encodedPayload = getBase64String("Valid payload");
+        byte[] payload = new byte[] {0x0A, 0x01};
         int version = 1;
-        mJobWorker.validateAndPersistPayload(DB_ENCODER_LOGIC_BUYER_1, encodedPayload, version);
+        mJobWorker.validateAndPersistPayload(DB_ENCODER_LOGIC_BUYER_1, payload, version);
 
         verify(mEncodedPayloadDao).persistEncodedPayload(mEncodedPayloadCaptor.capture());
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
         assertEquals(version, mEncodedPayloadCaptor.getValue().getVersion());
 
         assertEquals(
-                getSetFromBytes(getBytesFromBase64(encodedPayload)),
+                getSetFromBytes(payload),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
-    }
-
-    @Test
-    public void testValidateAndPersistPayloadInvalidBase64() {
-        String encodedPayload = "Invalid, non base64 payload";
-        int version = 1;
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mJobWorker.validateAndPersistPayload(
-                                DB_ENCODER_LOGIC_BUYER_1, encodedPayload, version));
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -183,21 +175,22 @@ public class PeriodicEncodingJobWorkerTest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mProtectedSignalsDao,
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightWeightExecutor,
                         mDevContextFilter,
                         mFlags);
-        String encodedPayload = getBase64String("Valid, but really large payload");
         int version = 1;
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         mJobWorker.validateAndPersistPayload(
-                                DB_ENCODER_LOGIC_BUYER_1, encodedPayload, version));
+                                DB_ENCODER_LOGIC_BUYER_1,
+                                new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
+                                version));
 
         Mockito.verifyZeroInteractions(mEncodedPayloadDao);
     }
@@ -210,8 +203,8 @@ public class PeriodicEncodingJobWorkerTest {
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
 
-        String validBase64Response = getBase64String("Valid payload");
-        ListenableFuture<String> jsScriptResponse = Futures.immediateFuture(validBase64Response);
+        byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
+        ListenableFuture<byte[]> jsScriptResponse = Futures.immediateFuture(validResponse);
         when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(jsScriptResponse);
         when((mEncodedPayloadDao.persistEncodedPayload(any()))).thenReturn(10L);
 
@@ -225,21 +218,22 @@ public class PeriodicEncodingJobWorkerTest {
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
         assertEquals(VERSION_1, mEncodedPayloadCaptor.getValue().getVersion());
         assertEquals(
-                getSetFromBytes(getBytesFromBase64(validBase64Response)),
+                getSetFromBytes(validResponse),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
     }
 
     @Test
-    public void testEncodingPerBuyerMalformedJsOutput()
+    public void testEncodingPerBuyerScriptFailureCausesIllegalStateException()
             throws ExecutionException, InterruptedException, TimeoutException {
         String encoderLogic = "function fakeEncodeJs() {}";
 
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
 
-        String invalidBase64Response = "Invalid payload";
-        ListenableFuture<String> jsScriptResponse = Futures.immediateFuture(invalidBase64Response);
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(jsScriptResponse);
+        when(mScriptEngine.encodeSignals(any(), any(), anyInt()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new IllegalStateException("Simulating illegal response from JS")));
 
         // Run encoding for the buyer where jsEngine returns invalid payload
         Exception e =
@@ -252,19 +246,19 @@ public class PeriodicEncodingJobWorkerTest {
                                         .get(5, TimeUnit.SECONDS));
         assertEquals(IllegalStateException.class, e.getCause().getClass());
         assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
+        verifyNoMoreInteractions(mEncodedPayloadDao);
     }
 
     @Test
     public void testEncodingPerBuyerFailedFuture() {
         String encoderLogic = "function fakeEncodeJs() {}";
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
 
-        ListenableFuture<String> jsScriptResponse =
-                Futures.immediateFailedFuture(new RuntimeException("Random exception"));
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(jsScriptResponse);
+        when(mScriptEngine.encodeSignals(any(), any(), anyInt()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(new RuntimeException("Random exception")));
 
         // Run encoding for the buyer where jsEngine encounters Runtime Exception
         Exception e =
@@ -277,7 +271,20 @@ public class PeriodicEncodingJobWorkerTest {
                         });
         assertEquals(IllegalStateException.class, e.getCause().getClass());
         assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
+        verifyNoMoreInteractions(mEncodedPayloadDao);
+    }
+
+    @Test
+    public void testEncodingPerBuyerNoSignalAvailable()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(ImmutableMap.of());
+        mJobWorker
+                .runEncodingPerBuyer(DB_ENCODER_LOGIC_BUYER_1, TIMEOUT_SECONDS)
+                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        verify(mEncoderLogicHandler).deleteEncoderForBuyer(BUYER);
+        verifyNoMoreInteractions(mEncoderLogicHandler);
+        verifyZeroInteractions(mScriptEngine);
     }
 
     @Test
@@ -326,7 +333,8 @@ public class PeriodicEncodingJobWorkerTest {
                 stallEncodingLatch.getCount());
         // e is TimeoutFuture$TimeoutFutureException which extends TimeoutException
         assertTrue(TimeoutException.class.isAssignableFrom(e.getCause().getClass()));
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
+        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
+        verifyNoMoreInteractions(mEncodedPayloadDao);
     }
 
     @Test
@@ -337,8 +345,8 @@ public class PeriodicEncodingJobWorkerTest {
         String encoderLogic1 = "function buyer1_EncodeJs() {\" correct result \"}";
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic1);
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-        String validBase64Response = getBase64String("Valid payload");
-        ListenableFuture<String> successResponse = Futures.immediateFuture(validBase64Response);
+        byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
+        ListenableFuture<byte[]> successResponse = Futures.immediateFuture(validResponse);
         when(mScriptEngine.encodeSignals(eq(encoderLogic1), any(), anyInt()))
                 .thenReturn(successResponse);
 
@@ -346,7 +354,7 @@ public class PeriodicEncodingJobWorkerTest {
         String encoderLogic2 = "function buyer2_EncodeJs() {\" throws exception \"}";
         when(mEncoderLogicHandler.getEncoder(BUYER_2)).thenReturn(encoderLogic2);
         when(mSignalStorageManager.getSignals(BUYER_2)).thenReturn(FAKE_SIGNALS);
-        ListenableFuture<String> failureResponse =
+        ListenableFuture<byte[]> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));
         when(mScriptEngine.encodeSignals(eq(encoderLogic2), any(), anyInt()))
                 .thenReturn(failureResponse);
@@ -359,19 +367,21 @@ public class PeriodicEncodingJobWorkerTest {
         verify(mEncoderLogicHandler).getAllRegisteredEncoders();
         verify(mEncoderLogicHandler).getEncoder(BUYER);
         verify(mSignalStorageManager).getSignals(BUYER);
+        verify(mEncodedPayloadDao, times(1)).getEncodedPayload(BUYER);
+        verify(mEncodedPayloadDao, times(1)).getEncodedPayload(BUYER_2);
         verify(mEncodedPayloadDao, times(1)).persistEncodedPayload(mEncodedPayloadCaptor.capture());
         verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER_2, 1);
         assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
         assertEquals(VERSION_1, mEncodedPayloadCaptor.getValue().getVersion());
         assertEquals(
-                getSetFromBytes(getBytesFromBase64(validBase64Response)),
+                getSetFromBytes(validResponse),
                 getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
-        verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER_2, 1);
     }
 
     @Test
     public void testEncodeSignals_tooManyFailure_noJsExecution()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
         int maxFailure =
                 Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
         DBEncoderLogicMetadata metadata =
@@ -384,7 +394,9 @@ public class PeriodicEncodingJobWorkerTest {
 
         mJobWorker.runEncodingPerBuyer(metadata, 5).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        verifyZeroInteractions(mScriptEngine, mSignalStorageManager);
+        verify(mSignalStorageManager).getSignals(BUYER);
+        verifyNoMoreInteractions(mSignalStorageManager);
+        verifyZeroInteractions(mScriptEngine);
     }
 
     @Test
@@ -401,14 +413,47 @@ public class PeriodicEncodingJobWorkerTest {
 
         String encoderLogic = "function buyer1_EncodeJs() {\" correct result \"}";
         when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-        String validBase64Response = getBase64String("Valid payload");
-        ListenableFuture<String> successResponse = Futures.immediateFuture(validBase64Response);
+        byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
+        ListenableFuture<byte[]> successResponse = Futures.immediateFuture(validResponse);
         when(mScriptEngine.encodeSignals(eq(encoderLogic), any(), anyInt()))
                 .thenReturn(successResponse);
 
         mJobWorker.runEncodingPerBuyer(metadata, 5).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER, 0);
+    }
+
+    @Test
+    public void testEncodeSignals_noUpdateToBuyer_skipEncoding()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
+        when(mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER))
+                .thenReturn(
+                        DBSignalsUpdateMetadata.builder()
+                                .setBuyer(BUYER)
+                                .setLastSignalsUpdatedTime(CommonFixture.FIXED_EARLIER_ONE_DAY)
+                                .build());
+        when(mEncodedPayloadDao.getEncodedPayload(BUYER))
+                .thenReturn(
+                        DBEncodedPayload.create(
+                                BUYER, 1, CommonFixture.FIXED_NOW, new byte[] {0x22, 0x33}));
+
+        mJobWorker
+                .runEncodingPerBuyer(
+                        DBEncoderLogicMetadata.builder()
+                                .setBuyer(BUYER)
+                                .setCreationTime(CommonFixture.FIXED_EARLIER_ONE_DAY)
+                                .setVersion(1)
+                                .setFailedEncodingCount(1)
+                                .build(),
+                        TIMEOUT_SECONDS)
+                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        verify(mSignalStorageManager).getSignals(BUYER);
+        verify(mProtectedSignalsDao).getSignalsUpdateMetadata(BUYER);
+        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
+        verifyNoMoreInteractions(mSignalStorageManager, mProtectedSignalsDao, mEncodedPayloadDao);
+        verifyZeroInteractions(mEncoderLogicHandler, mScriptEngine);
     }
 
     @Test
@@ -453,7 +498,7 @@ public class PeriodicEncodingJobWorkerTest {
         when(mSignalStorageManager.getSignals(any())).thenReturn(fakeSignals);
 
         // All the encodings are wired to fail with exceptions
-        ListenableFuture<String> failureResponse =
+        ListenableFuture<byte[]> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));
         when(mScriptEngine.encodeSignals(any(), any(), anyInt())).thenReturn(failureResponse);
 

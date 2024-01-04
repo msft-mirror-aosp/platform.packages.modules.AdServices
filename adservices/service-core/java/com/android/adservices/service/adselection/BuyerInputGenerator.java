@@ -139,6 +139,8 @@ public class BuyerInputGenerator {
             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
                     @NonNull final List<DBCustomAudience> dbCustomAudiences,
                     @NonNull final Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
+
         final Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
         for (DBCustomAudience customAudience : dbCustomAudiences) {
             final AdTechIdentifier buyerName = customAudience.getBuyer();
@@ -167,14 +169,20 @@ public class BuyerInputGenerator {
         }
 
         sLogger.v(String.format("Created BuyerInput proto for %s buyers", buyerInputs.size()));
-        return buyerInputs.entrySet().stream()
-                .collect(
-                        Collectors.toMap(
-                                e -> e.getKey(),
-                                e ->
-                                        mDataCompressor.compress(
-                                                AuctionServerDataCompressor.UncompressedData.create(
-                                                        e.getValue().build().toByteArray()))));
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedInputs =
+                buyerInputs.entrySet().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        e -> e.getKey(),
+                                        e ->
+                                                mDataCompressor.compress(
+                                                        AuctionServerDataCompressor.UncompressedData
+                                                                .create(
+                                                                        e.getValue()
+                                                                                .build()
+                                                                                .toByteArray()))));
+        Tracing.endAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS, traceCookie);
+        return compressedInputs;
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience() {

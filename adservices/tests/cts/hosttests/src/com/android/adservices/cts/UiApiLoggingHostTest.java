@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNotNull;
 
-import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
 import android.cts.statsdatom.lib.ReportUtils;
 
@@ -65,6 +64,7 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String LOGCAT_COMMAND = "logcat -s adservices";
     private static final String LOG_FROM_BOOTCOMPLETE_RECEIVER =
             "AdExtBootCompletedReceiver onReceive invoked";
+    public static final int WAIT_TIME_LONG = 2000;
 
     private String mTargetPackage;
 
@@ -161,7 +161,7 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
         ConfigUtils.uploadConfig(device, config);
         // Start the ui main activity, it will make a ui log call
         startUiMainActivity(device);
-        Thread.sleep(AtomTestUtils.WAIT_TIME_LONG);
+        Thread.sleep(WAIT_TIME_LONG);
     }
 
     public void startUiMainActivity(ITestDevice device) throws DeviceNotAvailableException {

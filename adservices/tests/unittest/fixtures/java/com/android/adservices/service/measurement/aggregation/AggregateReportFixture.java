@@ -53,7 +53,8 @@ public final class AggregateReportFixture {
                 .setDedupKey(ValidAggregateReportParams.DEDUP_KEY)
                 .setRegistrationOrigin(ValidAggregateReportParams.REGISTRATION_ORIGIN)
                 .setAggregationCoordinatorOrigin(
-                        ValidAggregateReportParams.AGGREGATION_COORDINATOR_ORIGIN);
+                        ValidAggregateReportParams.AGGREGATION_COORDINATOR_ORIGIN)
+                .setIsFakeReport(false);
     }
 
     public static AggregateReport getValidAggregateReport() {

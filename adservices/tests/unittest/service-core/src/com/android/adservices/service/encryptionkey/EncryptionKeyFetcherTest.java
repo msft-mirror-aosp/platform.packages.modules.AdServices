@@ -22,8 +22,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +38,10 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKeyFetcher.JSONResponseContract;
 import com.android.adservices.service.encryptionkey.EncryptionKeyFetcher.KeyResponseContract;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
@@ -47,7 +53,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
-import org.mockito.Spy;
+import org.mockito.quality.Strictness;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -64,6 +70,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class EncryptionKeyFetcherTest {
 
     private static final String ENROLLMENT_ID = "1";
+    private static final String COMPANY_ID = "1001";
     private static final String SITE = "https://test1.com";
     private static final String EMPTY_SITE = "";
     private static final String SINGLE_WHITESPACE_SITE = " ";
@@ -75,11 +82,13 @@ public class EncryptionKeyFetcherTest {
     private static final String BODY2 = "VZBTFVFW";
     private static final long EXPIRATION1 = 100000L;
     private static final long EXPIRATION2 = 100001L;
-
-    @Spy EncryptionKeyFetcher mFetcher;
-    @Mock HttpsURLConnection mURLConnection;
-    @Mock Flags mMockFlags;
+    @Mock private HttpsURLConnection mURLConnection;
+    @Mock private Flags mMockFlags;
+    @Mock private AdServicesLogger mAdServicesLogger;
     private MockitoSession mStaticMockSession;
+
+    EncryptionKeyFetcher mFetcher;
+    EncryptionKeyFetcher mSpyFetcher;
 
     /** Unit test set up. */
     @Before
@@ -88,13 +97,18 @@ public class EncryptionKeyFetcherTest {
 
         // Start a mockitoSession to mock static method.
         mStaticMockSession =
-                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
         doReturn(Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS)
                 .when(mMockFlags)
                 .getEncryptionKeyNetworkConnectTimeoutMs();
         doReturn(Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS)
                 .when(mMockFlags)
                 .getEncryptionKeyNetworkReadTimeoutMs();
+        mFetcher = new EncryptionKeyFetcher(mAdServicesLogger);
+        mSpyFetcher = spy(mFetcher);
     }
 
     @After
@@ -133,7 +147,7 @@ public class EncryptionKeyFetcherTest {
     private static EnrollmentData.Builder constructEnrollmentData() {
         return new EnrollmentData.Builder()
                 .setEnrollmentId(ENROLLMENT_ID)
-                .setCompanyId("1001")
+                .setCompanyId(COMPANY_ID)
                 .setSdkNames("1sdk")
                 .setAttributionSourceRegistrationUrl(List.of(SITE))
                 .setAttributionTriggerRegistrationUrl(List.of(SITE))
@@ -182,14 +196,24 @@ public class EncryptionKeyFetcherTest {
     @Test
     public void testFirstTimeFetchEncryptionKeysSucceed() throws JSONException, IOException {
         prepareMockFetchEncryptionKeyResult(
-                mFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+                mSpyFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+        EnrollmentData enrollmentData = constructEnrollmentData().setEncryptionKeyUrl(SITE).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        null, constructEnrollmentData().setEncryptionKeyUrl(SITE).build(), true);
+                mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
+
         assertTrue(encryptionKeyList.isPresent());
         assertEncryptionKeyListResult(encryptionKeyList.get());
-
         verify(mURLConnection).setRequestMethod("GET");
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.SUCCESS)
+                        .setIsFirstTimeFetch(true)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     /** Unit test for fetch encryption key with bad encryption key url. */
@@ -197,11 +221,22 @@ public class EncryptionKeyFetcherTest {
     public void testFirstTimeFetchEncryptionKeysNullEncryptionKeyUrl()
             throws JSONException, IOException {
         prepareMockFetchEncryptionKeyResult(
-                mFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+                mSpyFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+        EnrollmentData enrollmentData = constructEnrollmentData().setEncryptionKeyUrl(null).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        null, constructEnrollmentData().setEncryptionKeyUrl(null).build(), true);
+                mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
+
         assertFalse(encryptionKeyList.isPresent());
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.NULL_ENDPOINT)
+                        .setIsFirstTimeFetch(true)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(null)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     /** Unit test for fetch encryption key with empty encryption key url. */
@@ -209,13 +244,23 @@ public class EncryptionKeyFetcherTest {
     public void testFirstTimeFetchEncryptionKeysEmptyEncryptionKeyUrl()
             throws JSONException, IOException {
         prepareMockFetchEncryptionKeyResult(
-                mFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+                mSpyFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+        EnrollmentData enrollmentData =
+                constructEnrollmentData().setEncryptionKeyUrl(EMPTY_SITE).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        null,
-                        constructEnrollmentData().setEncryptionKeyUrl(EMPTY_SITE).build(),
-                        true);
+                mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
+
         assertFalse(encryptionKeyList.isPresent());
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.NULL_ENDPOINT)
+                        .setIsFirstTimeFetch(true)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(null)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     /** Unit test for fetch encryption key with single white space encryption key url. */
@@ -223,46 +268,70 @@ public class EncryptionKeyFetcherTest {
     public void testFirstTimeFetchEncryptionKeysSingleWhiteSpaceEncryptionKeyUrl()
             throws JSONException, IOException {
         prepareMockFetchEncryptionKeyResult(
-                mFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+                mSpyFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+        EnrollmentData enrollmentData =
+                constructEnrollmentData().setEncryptionKeyUrl(SINGLE_WHITESPACE_SITE).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        null,
-                        constructEnrollmentData()
-                                .setEncryptionKeyUrl(SINGLE_WHITESPACE_SITE)
-                                .build(),
-                        true);
+                mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
+
         assertFalse(encryptionKeyList.isPresent());
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.NULL_ENDPOINT)
+                        .setIsFirstTimeFetch(true)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(null)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     /** Unit test for fetch encryption key with bad internet connection. */
     @Test
     public void testFirstTimeFetchEncryptionKeysBadConnection() throws Exception {
         doThrow(new IOException("Bad connection"))
-                .when(mFetcher)
-                .setUpURLConnection(
-                        new URL(
-                                EncryptionKeyFetcherTest.SITE
-                                        + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT));
+                .when(mSpyFetcher)
+                .setUpURLConnection(new URL(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT));
+        EnrollmentData enrollmentData = constructEnrollmentData().setEncryptionKeyUrl(SITE).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        null, constructEnrollmentData().setEncryptionKeyUrl(SITE).build(), true);
+                mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
+
         assertFalse(encryptionKeyList.isPresent());
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.IO_EXCEPTION)
+                        .setIsFirstTimeFetch(true)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     /** Unit test for fetch encryption key when server timeout. */
     @Test
     public void testFirstTimeFetchEncryptionKeysServerTimeOut() throws Exception {
         doReturn(mURLConnection)
-                .when(mFetcher)
-                .setUpURLConnection(
-                        new URL(
-                                EncryptionKeyFetcherTest.SITE
-                                        + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT));
+                .when(mSpyFetcher)
+                .setUpURLConnection(new URL(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT));
         doThrow(new IOException("Server timeout")).when(mURLConnection).getResponseCode();
+        EnrollmentData enrollmentData = constructEnrollmentData().setEncryptionKeyUrl(SITE).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        null, constructEnrollmentData().setEncryptionKeyUrl(SITE).build(), true);
+                mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
+
         assertFalse(encryptionKeyList.isPresent());
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.IO_EXCEPTION)
+                        .setIsFirstTimeFetch(true)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     /** Unit test for fetch encryption key when JSON response is invalid. */
@@ -271,17 +340,25 @@ public class EncryptionKeyFetcherTest {
         String response = "{" + buildEncryptionKeyJSONResponse();
         InputStream inputStream = new ByteArrayInputStream(response.getBytes());
         doReturn(mURLConnection)
-                .when(mFetcher)
-                .setUpURLConnection(
-                        new URL(
-                                EncryptionKeyFetcherTest.SITE
-                                        + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT));
+                .when(mSpyFetcher)
+                .setUpURLConnection(new URL(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT));
         when(mURLConnection.getResponseCode()).thenReturn(200);
         when(mURLConnection.getInputStream()).thenReturn(inputStream);
+        EnrollmentData enrollmentData = constructEnrollmentData().setEncryptionKeyUrl(SITE).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        null, constructEnrollmentData().setEncryptionKeyUrl(SITE).build(), true);
+                mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
+
         assertFalse(encryptionKeyList.isPresent());
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.BAD_REQUEST_EXCEPTION)
+                        .setIsFirstTimeFetch(true)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     /**
@@ -289,31 +366,48 @@ public class EncryptionKeyFetcherTest {
      */
     @Test
     public void testRefetchEncryptionKeysNoChangeMadeToKeys() throws IOException {
-        prepareMockRefetchEncryptionKeyNoChange(mFetcher, mURLConnection);
+        prepareMockRefetchEncryptionKeyNoChange(mSpyFetcher, mURLConnection);
+        EnrollmentData enrollmentData = constructEnrollmentData().setEncryptionKeyUrl(SITE).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        constructEncryptionKey(),
-                        constructEnrollmentData().setEncryptionKeyUrl(SITE).build(),
-                        false);
+                mSpyFetcher.fetchEncryptionKeys(constructEncryptionKey(), enrollmentData, false);
+
         assertTrue(encryptionKeyList.isEmpty());
         verify(mURLConnection).setRequestMethod("GET");
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.KEY_NOT_MODIFIED)
+                        .setIsFirstTimeFetch(false)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     /** Unit test for re-fetch encryption key (previously fetched before), return new keys. */
     @Test
     public void testRefetchEncryptionKeysReturnNewKeys() throws JSONException, IOException {
         prepareMockFetchEncryptionKeyResult(
-                mFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+                mSpyFetcher, mURLConnection, buildEncryptionKeyJSONResponse().toString());
+        EnrollmentData enrollmentData = constructEnrollmentData().setEncryptionKeyUrl(SITE).build();
         Optional<List<EncryptionKey>> encryptionKeyList =
-                mFetcher.fetchEncryptionKeys(
-                        constructEncryptionKey(),
-                        constructEnrollmentData().setEncryptionKeyUrl(SITE).build(),
-                        false);
+                mSpyFetcher.fetchEncryptionKeys(constructEncryptionKey(), enrollmentData, false);
         assertTrue(encryptionKeyList.isPresent());
         assertEncryptionKeyListResult(encryptionKeyList.get());
 
         verify(mURLConnection).setRequestMethod("GET");
         verify(mURLConnection).setRequestProperty(any(), any());
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
+                        .setFetchStatus(FetchStatus.SUCCESS)
+                        .setIsFirstTimeFetch(false)
+                        .setAdtechEnrollmentId(ENROLLMENT_ID)
+                        .setCompanyId(COMPANY_ID)
+                        .setEncryptionKeyUrl(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyFetchedStats(eq(stats));
     }
 
     private void assertEncryptionKeyListResult(List<EncryptionKey> encryptionKeys) {

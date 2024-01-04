@@ -46,6 +46,7 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -55,25 +56,23 @@ import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assume;
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.net.URL;
@@ -90,9 +89,12 @@ import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(Enrollment.class)
 /** Unit tests for {@link AsyncTriggerFetcher} */
 @RunWith(Parameterized.class)
-public final class AsyncTriggerFetcherTest {
+public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTestCase {
+
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
@@ -143,6 +145,15 @@ public final class AsyncTriggerFetcherTest {
             WebUtil.validUrl("https://subdomain.bar.test");
     private static final String LOCATION_TYPE_REDIRECT_URI =
             WebUtil.validUrl("https://example.test");
+    private static final String LOCATION_TYPE_REDIRECT_WELLKNOWN_URI =
+            WebUtil.validUrl(
+                    LOCATION_TYPE_REDIRECT_URI
+                            + "/"
+                            + AsyncRedirects.WELL_KNOWN_PATH_SEGMENT
+                            + "?"
+                            + AsyncRedirects.WELL_KNOWN_QUERY_PARAM
+                            + "="
+                            + Uri.encode(LOCATION_TYPE_REDIRECT_URI));
     private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://subdomain.foo.test");
     private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
             new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
@@ -161,15 +172,13 @@ public final class AsyncTriggerFetcherTest {
     private static final int mMaxAggregateDeduplicationKeysPerRegistration =
             Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 
-    AsyncTriggerFetcher mFetcher;
+    private AsyncTriggerFetcher mFetcher;
 
-    @Mock HttpsURLConnection mUrlConnection;
-    @Mock HttpsURLConnection mUrlConnection1;
-    @Mock EnrollmentDao mEnrollmentDao;
-    @Mock Flags mFlags;
-    @Mock AdServicesLogger mLogger;
-
-    private MockitoSession mStaticMockSession;
+    @Mock private HttpsURLConnection mUrlConnection;
+    @Mock private HttpsURLConnection mUrlConnection1;
+    @Mock private EnrollmentDao mEnrollmentDao;
+    @Mock private Flags mFlags;
+    @Mock private AdServicesLogger mLogger;
 
     // Parameterised setup to run all the tests once with ARA parsing V1 flag on, and once with the
     // flag off.
@@ -186,31 +195,10 @@ public final class AsyncTriggerFetcherTest {
         mAraParsingAlignmentV1Enabled = araParsingAlignmentV1Enabled;
     }
 
-    @Rule
-    public ExternalResource externalResource =
-            new ExternalResource() {
-                protected void before() throws Throwable {
-                    setup();
-                }
-
-                protected void after() {
-                    try {
-                        cleanup();
-                    } catch (InterruptedException ignored) {
-                    }
-                }
-            };
-
+    @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(Enrollment.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        mFetcher = spy(new AsyncTriggerFetcher(CONTEXT, mEnrollmentDao, mFlags, mLogger));
+        extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
+        mFetcher = spy(new AsyncTriggerFetcher(CONTEXT, mEnrollmentDao, mFlags));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         ExtendedMockito.doReturn(Optional.of(ENROLLMENT_ID))
@@ -242,10 +230,6 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn(MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
     }
 
-    public void cleanup() throws InterruptedException {
-        mStaticMockSession.finishMocking();
-    }
-
     @Test
     public void testBasicTriggerRequest() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -273,13 +257,13 @@ public final class AsyncTriggerFetcherTest {
                                 List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         asyncFetchStatus.setRegistrationDelay(0L);
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -350,13 +334,13 @@ public final class AsyncTriggerFetcherTest {
                                                 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         asyncFetchStatus.setRegistrationDelay(0L);
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -410,12 +394,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
@@ -464,12 +448,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -513,12 +497,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
@@ -566,12 +550,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -615,12 +599,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
@@ -668,12 +652,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -717,12 +701,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
@@ -770,12 +754,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -817,12 +801,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregateDedupKeys
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -841,34 +825,37 @@ public final class AsyncTriggerFetcherTest {
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate both 'list' and 'location' type headers
-        headers.put("Attribution-Reporting-Redirect", List.of(LIST_TYPE_REDIRECT_URI));
-        headers.put("Location", List.of(LOCATION_TYPE_REDIRECT_URI));
+        headers.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
+        headers.put(
+                AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY, List.of(LOCATION_TYPE_REDIRECT_URI));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headers);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertTriggerRegistration(asyncRegistration, result);
 
-        assertEquals(2, asyncRedirect.getRedirects().size());
+        assertEquals(2, asyncRedirects.getRedirects().size());
         assertEquals(
                 LIST_TYPE_REDIRECT_URI,
-                asyncRedirect
+                asyncRedirects
                         .getRedirectsByType(AsyncRegistration.RedirectType.LIST)
                         .get(0)
+                        .getUri()
                         .toString());
         assertEquals(
                 LOCATION_TYPE_REDIRECT_URI,
-                asyncRedirect
+                asyncRedirects
                         .getRedirectsByType(AsyncRegistration.RedirectType.LOCATION)
                         .get(0)
+                        .getUri()
                         .toString());
 
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -882,64 +869,291 @@ public final class AsyncTriggerFetcherTest {
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only 'location' type header
-        headers.put("Location", List.of(LOCATION_TYPE_REDIRECT_URI));
+        headers.put(
+                AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY, List.of(LOCATION_TYPE_REDIRECT_URI));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headers);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertTriggerRegistration(asyncRegistration, result);
 
-        assertEquals(1, asyncRedirect.getRedirects().size());
-        assertEquals(LOCATION_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(
+                LOCATION_TYPE_REDIRECT_URI,
+                asyncRedirects.getRedirects().get(0).getUri().toString());
 
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
 
     @Test
-    public void testRedirectType_locationRedirectType_ignoresListType() throws Exception {
+    public void testRedirectType_locationRedirectType_acceptsListType() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate both 'list' and 'location' type headers
-        headers.put("Attribution-Reporting-Redirect", List.of(LIST_TYPE_REDIRECT_URI));
-        headers.put("Location", List.of(LOCATION_TYPE_REDIRECT_URI));
+        headers.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
+        headers.put(
+                AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY, List.of(LOCATION_TYPE_REDIRECT_URI));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headers);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertTriggerRegistration(asyncRegistration, result);
 
-        assertEquals(2, asyncRedirect.getRedirects().size());
+        assertEquals(2, asyncRedirects.getRedirects().size());
         assertEquals(
                 LOCATION_TYPE_REDIRECT_URI,
-                asyncRedirect
+                asyncRedirects
                         .getRedirectsByType(AsyncRegistration.RedirectType.LOCATION)
                         .get(0)
+                        .getUri()
                         .toString());
         assertEquals(
                 LIST_TYPE_REDIRECT_URI,
-                asyncRedirect
+                asyncRedirects
                         .getRedirectsByType(AsyncRegistration.RedirectType.LIST)
                         .get(0)
+                        .getUri()
                         .toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testRedirectType_locationRedirectHeaderType_wellKnownPath() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        // Populate only 'location' type header
+        headers.put(
+                AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY, List.of(LOCATION_TYPE_REDIRECT_URI));
+        headers.put(
+                AsyncRedirects.HEADER_ATTRIBUTION_REPORTING_REDIRECT_CONFIG,
+                List.of(AsyncRedirects.REDIRECT_302_TO_WELL_KNOWN));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertTriggerRegistration(asyncRegistration, result);
+
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(
+                LOCATION_TYPE_REDIRECT_WELLKNOWN_URI,
+                asyncRedirects.getRedirects().get(0).getUri().toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testRedirectType_locationRedirectType_wellKnownPath_acceptsList() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        headers.put(
+                AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY, List.of(LOCATION_TYPE_REDIRECT_URI));
+        headers.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
+        headers.put(
+                AsyncRedirects.HEADER_ATTRIBUTION_REPORTING_REDIRECT_CONFIG,
+                List.of(AsyncRedirects.REDIRECT_302_TO_WELL_KNOWN));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertTriggerRegistration(asyncRegistration, result);
+
+        assertEquals(2, asyncRedirects.getRedirects().size());
+        assertEquals(
+                LOCATION_TYPE_REDIRECT_WELLKNOWN_URI,
+                asyncRedirects
+                        .getRedirectsByType(AsyncRegistration.RedirectType.LOCATION)
+                        .get(0)
+                        .getUri()
+                        .toString());
+        assertEquals(
+                LIST_TYPE_REDIRECT_URI,
+                asyncRedirects
+                        .getRedirectsByType(AsyncRegistration.RedirectType.LIST)
+                        .get(0)
+                        .getUri()
+                        .toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testWellKnownPathHeader_noop() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        // Populate behavior config header, but no redirects.
+        headers.put(
+                AsyncRedirects.HEADER_ATTRIBUTION_REPORTING_REDIRECT_CONFIG,
+                List.of(AsyncRedirects.REDIRECT_302_TO_WELL_KNOWN));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertTriggerRegistration(asyncRegistration, result);
+
+        assertEquals(0, asyncRedirects.getRedirects().size());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testWellKnownPathHeader_acceptsListTypeWithNoLocationType() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        // Populate behavior config header, but no Location type redirect.
+        headers.put(
+                AsyncRedirects.HEADER_ATTRIBUTION_REPORTING_REDIRECT_CONFIG,
+                List.of(AsyncRedirects.REDIRECT_302_TO_WELL_KNOWN));
+        headers.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertTriggerRegistration(asyncRegistration, result);
+
+        assertEquals(1, asyncRedirects.getRedirects().size());
+
+        assertEquals(
+                LIST_TYPE_REDIRECT_URI,
+                asyncRedirects
+                        .getRedirectsByType(AsyncRegistration.RedirectType.LIST)
+                        .get(0)
+                        .getUri()
+                        .toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testRedirectType_locationRedirectHeaderType_wellKnownHeaderMisconfigured()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        headers.put(
+                AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY, List.of(LOCATION_TYPE_REDIRECT_URI));
+        headers.put(AsyncRedirects.HEADER_ATTRIBUTION_REPORTING_REDIRECT_CONFIG, List.of("BAD"));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertTriggerRegistration(asyncRegistration, result);
+
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(
+                LOCATION_TYPE_REDIRECT_URI,
+                asyncRedirects.getRedirects().get(0).getUri().toString());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testRedirectType_locationRedirectHeaderType_wellKnownHeaderNull() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
+        Map<String, List<String>> headers = getDefaultHeaders();
+
+        headers.put(
+                AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY, List.of(LOCATION_TYPE_REDIRECT_URI));
+        headers.put(AsyncRedirects.HEADER_ATTRIBUTION_REPORTING_REDIRECT_CONFIG, null);
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertTriggerRegistration(asyncRegistration, result);
+
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(
+                LOCATION_TYPE_REDIRECT_URI,
+                asyncRedirects.getRedirects().get(0).getUri().toString());
 
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
@@ -960,12 +1174,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -991,12 +1205,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggers + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1016,12 +1230,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"debug_key\": \"" + DEBUG_KEY + "\"}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1046,12 +1260,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1080,12 +1294,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggers + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1105,15 +1319,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1132,15 +1346,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1160,12 +1374,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1190,15 +1404,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1219,12 +1433,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1248,15 +1462,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1276,12 +1490,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1305,17 +1519,161 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(eventTriggerData, result.getEventTriggers());
+        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValue_success() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":156}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(eventTriggerData, result.getEventTriggers());
+        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValueTooSmall_fail() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":0}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValueTooLarge_fail() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        long tooLarge = TriggerSpecs.MAX_BUCKET_THRESHOLD + 1L;
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":" + tooLarge + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValueAsString_fail() throws Exception {
+        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":\"123\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerDataWithValueAsString_success() throws Exception {
+        Assume.assumeFalse(mAraParsingAlignmentV1Enabled);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":\"123\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        String expectedEventTriggerData =
+                "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":123}]";
+        assertEquals(expectedEventTriggerData, result.getEventTriggers());
         assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1333,12 +1691,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1363,15 +1721,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1391,15 +1749,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1420,12 +1778,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1449,15 +1807,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1477,12 +1835,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1509,15 +1867,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1539,15 +1897,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1570,12 +1928,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1602,15 +1960,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1633,12 +1991,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1665,15 +2023,15 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR,
-                asyncFetchStatus.getEntityStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -1696,12 +2054,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1726,12 +2084,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1756,12 +2114,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1786,12 +2144,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1816,12 +2174,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1842,12 +2200,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1876,12 +2234,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1902,12 +2260,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1928,12 +2286,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -1961,12 +2319,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -1994,12 +2352,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2023,12 +2381,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2060,12 +2418,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2089,12 +2447,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + eventTriggerData + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2115,12 +2473,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -2146,12 +2504,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2170,12 +2528,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2206,12 +2564,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_deduplication_keys\":"
                                                 + tooManyEntries
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2243,12 +2601,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_deduplication_keys\":"
                                                 + deduplicationKeys
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2302,12 +2660,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + ",\"aggregatable_deduplication_keys\":"
                                                 + deduplicationKeys
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2362,12 +2720,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_deduplication_keys\":"
                                                 + deduplicationKeys
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2390,12 +2748,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + ","
                                                 + "\"aggregatable_deduplication_keys\":{}"
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2418,12 +2776,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + ","
                                                 + "\"aggregatable_deduplication_keys\":"
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2446,12 +2804,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2470,12 +2828,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2502,12 +2860,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2526,12 +2884,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2550,12 +2908,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2574,12 +2932,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2598,12 +2956,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2622,12 +2980,12 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\":" + filters + "}")));
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2648,12 +3006,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"not_filters\":" + notFilters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -2679,12 +3037,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"not_filters\":" + notFilters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2703,12 +3061,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"not_filters\":" + notFilters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2731,12 +3089,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"not_filters\":" + notFilters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2755,12 +3113,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"not_filters\":" + notFilters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2787,12 +3145,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"not_filters\":" + notFilters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2811,12 +3169,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"not_filters\":" + notFilters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
@@ -2837,21 +3195,21 @@ public final class AsyncTriggerFetcherTest {
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
-                                "Attribution-Reporting-Redirect",
+                                AsyncRedirects.REDIRECT_LIST_HEADER_KEY,
                                 List.of(DEFAULT_REDIRECT),
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         verify(mFetcher, times(1)).openUrl(any());
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertEquals(1, asyncRedirect.getRedirects().size());
-        assertEquals(DEFAULT_REDIRECT, asyncRedirect.getRedirects().get(0).toString());
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(DEFAULT_REDIRECT, asyncRedirects.getRedirects().get(0).getUri().toString());
         assertEquals(
                 AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT,
                 asyncFetchStatus.getEntityStatus());
@@ -2875,12 +3233,12 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -2911,12 +3269,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -2943,12 +3301,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -2975,12 +3333,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -3007,12 +3365,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -3030,12 +3388,12 @@ public final class AsyncTriggerFetcherTest {
                         WebUtil.validUri("http://foo.test"),
                         CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.ResponseStatus.INVALID_URL, asyncFetchStatus.getResponseStatus());
@@ -3059,11 +3417,11 @@ public final class AsyncTriggerFetcherTest {
                 false,
                 false,
                 null);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(registration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(registration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.ResponseStatus.INVALID_URL, asyncFetchStatus.getResponseStatus());
@@ -3076,12 +3434,12 @@ public final class AsyncTriggerFetcherTest {
         doThrow(new IOException("Bad internet things"))
                 .when(mFetcher)
                 .openUrl(new URL(TRIGGER_URI));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.ResponseStatus.NETWORK_ERROR,
@@ -3100,12 +3458,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE,
@@ -3124,12 +3482,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\": [{}]}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3152,14 +3510,14 @@ public final class AsyncTriggerFetcherTest {
         headersFirstRequest.put(
                 "Attribution-Reporting-Register-Trigger",
                 List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}"));
-        headersFirstRequest.put("Attribution-Reporting-Redirect", List.of(DEFAULT_REDIRECT));
+        headersFirstRequest.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(DEFAULT_REDIRECT));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3179,21 +3537,22 @@ public final class AsyncTriggerFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Redirect", List.of(DEFAULT_REDIRECT)))
+                .thenReturn(
+                        Map.of(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(DEFAULT_REDIRECT)))
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertEquals(1, asyncRedirect.getRedirects().size());
-        assertEquals(DEFAULT_REDIRECT, asyncRedirect.getRedirects().get(0).toString());
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(DEFAULT_REDIRECT, asyncRedirects.getRedirects().get(0).getUri().toString());
 
         assertEquals(
                 AsyncFetchStatus.EntityStatus.HEADER_MISSING, asyncFetchStatus.getEntityStatus());
@@ -3223,12 +3582,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregateTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3264,12 +3623,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregateTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
@@ -3299,12 +3658,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregateTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3341,12 +3700,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregateTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3385,12 +3744,12 @@ public final class AsyncTriggerFetcherTest {
                                         "{\"aggregatable_trigger_data\":"
                                                 + aggregateTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
@@ -3424,12 +3783,12 @@ public final class AsyncTriggerFetcherTest {
                                         "{\"aggregatable_trigger_data\":"
                                                 + aggregateTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
@@ -3453,12 +3812,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3484,12 +3843,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"aggregatable_values\": " + tooManyKeys + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
@@ -3513,12 +3872,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"filters\": " + filters + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3549,14 +3908,14 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         webTriggerRegistrationRequest(request, true),
                         asyncFetchStatus,
-                        asyncRedirect);
+                        asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3603,14 +3962,14 @@ public final class AsyncTriggerFetcherTest {
                                                 + aggregatableTriggerData
                                                 + "}")));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         webTriggerRegistrationRequest(request, true),
                         asyncFetchStatus,
-                        asyncRedirect);
+                        asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -3639,24 +3998,24 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\": " + EVENT_TRIGGERS_1 + "}"),
-                                "Attribution-Reporting-Redirect",
+                                AsyncRedirects.REDIRECT_LIST_HEADER_KEY,
                                 List.of(LIST_TYPE_REDIRECT_URI),
-                                "Location",
+                                AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY,
                                 List.of(LOCATION_TYPE_REDIRECT_URI)));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         webTriggerRegistrationRequest(request, true),
                         asyncFetchStatus,
-                        asyncRedirect);
+                        asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
-        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(0, asyncRedirects.getRedirects().size());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -3683,11 +4042,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Trigger> fetch = mFetcher.fetchTrigger(
-                appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -3714,12 +4074,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -3748,12 +4108,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -3788,12 +4148,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -3823,12 +4183,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -3855,12 +4215,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -3897,12 +4257,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -3930,12 +4290,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -3963,12 +4323,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -3999,12 +4359,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4038,12 +4398,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4072,12 +4432,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4115,12 +4475,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4149,12 +4509,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4188,12 +4548,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4223,12 +4583,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4266,12 +4626,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4301,12 +4661,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_trigger_data\": "
                                                 + aggregatableTriggerData
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4328,12 +4688,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -4360,12 +4720,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -4392,12 +4752,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -4424,12 +4784,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -4453,12 +4813,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -4484,12 +4844,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
@@ -4514,12 +4874,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
@@ -4543,12 +4903,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
@@ -4573,12 +4933,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
@@ -4602,12 +4962,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
@@ -4634,12 +4994,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
@@ -4665,12 +5025,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
@@ -4697,12 +5057,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
@@ -4728,12 +5088,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
@@ -4757,12 +5117,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4786,12 +5146,12 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"aggregatable_values\": " + tooManyKeys + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4813,12 +5173,12 @@ public final class AsyncTriggerFetcherTest {
                                                 + "\"aggregatable_values\": "
                                                 + aggregatableValues
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
@@ -4851,14 +5211,14 @@ public final class AsyncTriggerFetcherTest {
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
         doReturn(5L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         asyncFetchStatus.setRegistrationDelay(0L);
         asyncFetchStatus.setRetryCount(0);
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
@@ -4954,7 +5314,7 @@ public final class AsyncTriggerFetcherTest {
                                 attributionConfig1.serializeAsJson(mFlags),
                                 attributionConfig2.serializeAsJson(mFlags)));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
 
@@ -4962,7 +5322,7 @@ public final class AsyncTriggerFetcherTest {
 
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
@@ -5061,7 +5421,7 @@ public final class AsyncTriggerFetcherTest {
                                 attributionConfig1.serializeAsJson(mFlags),
                                 attributionConfig2.serializeAsJson(mFlags)));
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = webTriggerRegistrationRequest(request, true);
 
@@ -5069,7 +5429,7 @@ public final class AsyncTriggerFetcherTest {
 
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
@@ -5126,7 +5486,7 @@ public final class AsyncTriggerFetcherTest {
                                                 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = webTriggerRegistrationRequest(request, true);
 
@@ -5134,7 +5494,7 @@ public final class AsyncTriggerFetcherTest {
 
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
@@ -5170,7 +5530,7 @@ public final class AsyncTriggerFetcherTest {
 
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, new AsyncRedirect());
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, new AsyncRedirects());
 
         // Assertion
         assertEquals(
@@ -5199,7 +5559,7 @@ public final class AsyncTriggerFetcherTest {
                                                 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
 
@@ -5207,7 +5567,7 @@ public final class AsyncTriggerFetcherTest {
 
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
@@ -5242,7 +5602,7 @@ public final class AsyncTriggerFetcherTest {
                                                 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
 
@@ -5250,7 +5610,7 @@ public final class AsyncTriggerFetcherTest {
 
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
@@ -5307,7 +5667,7 @@ public final class AsyncTriggerFetcherTest {
                                                 + "}")));
         doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
 
@@ -5315,7 +5675,7 @@ public final class AsyncTriggerFetcherTest {
 
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
@@ -5350,14 +5710,14 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         webTriggerRegistrationRequest(request, true),
                         asyncFetchStatus,
-                        asyncRedirect);
+                        asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -5395,14 +5755,14 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         webTriggerRegistrationRequest(request, true),
                         asyncFetchStatus,
-                        asyncRedirect);
+                        asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -5433,12 +5793,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -5472,12 +5832,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -5508,12 +5868,12 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -5546,12 +5906,12 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -5583,12 +5943,12 @@ public final class AsyncTriggerFetcherTest {
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequestWithAdId(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
@@ -5623,14 +5983,14 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         webTriggerRegistrationRequest(request, true),
                         asyncFetchStatus,
-                        asyncRedirect);
+                        asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -5667,14 +6027,14 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         webTriggerRegistrationRequest(request, true),
                         asyncFetchStatus,
-                        asyncRedirect);
+                        asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -5710,14 +6070,14 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         webTriggerRegistrationRequest(request, true),
                         asyncFetchStatus,
-                        asyncRedirect);
+                        asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -5728,7 +6088,7 @@ public final class AsyncTriggerFetcherTest {
     }
 
     @Test
-    public void fetchTrigger_setsFakeEnrollmentId_whenDisableEnrollmentFlagIsTrue()
+    public void fetchTrigger_setsSiteEnrollmentId_whenDisableEnrollmentFlagIsTrue()
             throws Exception {
         String uri = WebUtil.validUrl("https://test1.example.test:8081");
         RegistrationRequest request = buildRequest(uri);
@@ -5747,12 +6107,12 @@ public final class AsyncTriggerFetcherTest {
                                 + "\""
                                 + "}"));
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
@@ -5760,7 +6120,85 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(
                 WebUtil.validUrl("https://test1.example.test:8081"),
                 result.getRegistrationOrigin().toString());
-        assertEquals(Enrollment.FAKE_ENROLLMENT, result.getEnrollmentId());
+        assertEquals("https://example.com", result.getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_setsSiteEnrollmentId_whenDisableEnrollmentFlagIsTrueForLocalhost()
+            throws Exception {
+        String uri = WebUtil.validUrl("https://localhost:8081");
+        RegistrationRequest request = buildRequest(uri);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).isDisableMeasurementEnrollmentCheck();
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"debug_key\": \""
+                                + DEBUG_KEY
+                                + "\""
+                                + "}"));
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(
+                WebUtil.validUrl("https://localhost:8081"),
+                result.getRegistrationOrigin().toString());
+        assertEquals("https://localhost", result.getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_setsSiteEnrollmentId_whenDisableEnrollmentFlagIsTrueForIP()
+            throws Exception {
+        String uri = WebUtil.validUrl("https://127.0.0.1:8081");
+        RegistrationRequest request = buildRequest(uri);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).isDisableMeasurementEnrollmentCheck();
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"debug_key\": \""
+                                + DEBUG_KEY
+                                + "\""
+                                + "}"));
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(
+                WebUtil.validUrl("https://127.0.0.1:8081"),
+                result.getRegistrationOrigin().toString());
+        assertEquals("https://127.0.0.1", result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         verify(mUrlConnection).setRequestMethod("POST");
@@ -5781,7 +6219,7 @@ public final class AsyncTriggerFetcherTest {
                                                 + "'aggregation_coordinator_origin': "
                                                 + "'https://cloud.coordination.test'"
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         when(mFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
@@ -5789,7 +6227,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn("https://cloud.coordination.test");
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
@@ -5822,7 +6260,7 @@ public final class AsyncTriggerFetcherTest {
                                                 + "'aggregation_coordinator_origin': "
                                                 + "'https://invalid.cloud.coordination.test'"
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         when(mFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
@@ -5830,7 +6268,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn("https://cloud.coordination.test");
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertEquals(
@@ -5849,13 +6287,13 @@ public final class AsyncTriggerFetcherTest {
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of("{" + "\"event_trigger_data\": " + "[{}]" + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         when(mFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
@@ -5886,7 +6324,7 @@ public final class AsyncTriggerFetcherTest {
                                                 + "'aggregation_coordinator_origin': "
                                                 + "'https://invalid.cloud.coordination.test'"
                                                 + "}")));
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         when(mFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
@@ -5894,7 +6332,7 @@ public final class AsyncTriggerFetcherTest {
                 .thenReturn("https://cloud.coordination.test");
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertEquals(
@@ -5931,26 +6369,6 @@ public final class AsyncTriggerFetcherTest {
 
     private static AsyncRegistration appTriggerRegistrationRequest(
             RegistrationRequest registrationRequest) {
-        // Necessary for testing
-        String enrollmentId = "";
-        if (EnrollmentDao.getInstance(CONTEXT)
-                        .getEnrollmentDataFromMeasurementUrl(
-                                registrationRequest
-                                        .getRegistrationUri()
-                                        .buildUpon()
-                                        .clearQuery()
-                                        .build())
-                != null) {
-            enrollmentId =
-                    EnrollmentDao.getInstance(CONTEXT)
-                            .getEnrollmentDataFromMeasurementUrl(
-                                    registrationRequest
-                                            .getRegistrationUri()
-                                            .buildUpon()
-                                            .clearQuery()
-                                            .build())
-                            .getEnrollmentId();
-        }
         return createAsyncRegistration(
                 UUID.randomUUID().toString(),
                 registrationRequest.getRegistrationUri(),
@@ -5972,26 +6390,6 @@ public final class AsyncTriggerFetcherTest {
 
     private static AsyncRegistration appTriggerRegistrationRequestWithAdId(
             RegistrationRequest registrationRequest) {
-        // Necessary for testing
-        String enrollmentId = "";
-        if (EnrollmentDao.getInstance(CONTEXT)
-                        .getEnrollmentDataFromMeasurementUrl(
-                                registrationRequest
-                                        .getRegistrationUri()
-                                        .buildUpon()
-                                        .clearQuery()
-                                        .build())
-                != null) {
-            enrollmentId =
-                    EnrollmentDao.getInstance(CONTEXT)
-                            .getEnrollmentDataFromMeasurementUrl(
-                                    registrationRequest
-                                            .getRegistrationUri()
-                                            .buildUpon()
-                                            .clearQuery()
-                                            .build())
-                            .getEnrollmentId();
-        }
         return createAsyncRegistration(
                 UUID.randomUUID().toString(),
                 registrationRequest.getRegistrationUri(),
@@ -6017,28 +6415,6 @@ public final class AsyncTriggerFetcherTest {
         if (webTriggerRegistrationRequest.getTriggerParams().size() > 0) {
             WebTriggerParams webTriggerParams =
                     webTriggerRegistrationRequest.getTriggerParams().get(0);
-            // Necessary for testing
-            String enrollmentId = "";
-            if (EnrollmentDao.getInstance(CONTEXT)
-                            .getEnrollmentDataFromMeasurementUrl(
-                                    webTriggerRegistrationRequest
-                                            .getTriggerParams()
-                                            .get(0)
-                                            .getRegistrationUri()
-                                            .buildUpon()
-                                            .clearQuery()
-                                            .build())
-                    != null) {
-                enrollmentId =
-                        EnrollmentDao.getInstance(CONTEXT)
-                                .getEnrollmentDataFromMeasurementUrl(
-                                        webTriggerParams
-                                                .getRegistrationUri()
-                                                .buildUpon()
-                                                .clearQuery()
-                                                .build())
-                                .getEnrollmentId();
-            }
             return createAsyncRegistration(
                     UUID.randomUUID().toString(),
                     webTriggerParams.getRegistrationUri(),

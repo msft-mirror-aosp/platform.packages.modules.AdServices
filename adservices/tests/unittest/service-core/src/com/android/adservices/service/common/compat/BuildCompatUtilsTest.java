@@ -42,6 +42,9 @@ public class BuildCompatUtilsTest {
     public void testComputeIsDebuggable_SPlus_debuggable() {
         Assume.assumeTrue(SdkLevel.isAtLeastS());
 
+        // Call Build.isDebuggable() prior to tracking usages so that the class is pre-initialized.
+        Build.isDebuggable();
+
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(Build.class)
@@ -63,6 +66,9 @@ public class BuildCompatUtilsTest {
     @Test
     public void testComputeIsDebuggable_SPlus_notDebuggable() {
         Assume.assumeTrue(SdkLevel.isAtLeastS());
+
+        // Call Build.isDebuggable() prior to tracking usages so that the class is pre-initialized.
+        Build.isDebuggable();
 
         MockitoSession session =
                 ExtendedMockito.mockitoSession()

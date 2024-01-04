@@ -16,9 +16,9 @@
 
 package com.android.adservices.shared.storage;
 
-import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
-import static com.android.adservices.common.DumpHelper.dump;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -236,7 +236,6 @@ public final class BooleanFileDatastoreTest {
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
-        Set<String> keys = mDatastore.keySet();
         assertWithMessage("keys").that(mDatastore.keySet()).containsExactly(TEST_KEY);
 
         // Delete
@@ -516,5 +515,10 @@ public final class BooleanFileDatastoreTest {
         expect.withMessage("contents of dump() (TEST_VERSION_KEY)")
                 .that(dump)
                 .contains(TEST_VERSION_KEY);
+    }
+
+    private static void mockIsAtLeastS(boolean isIt) {
+        Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
+        doReturn(isIt).when(SdkLevel::isAtLeastS);
     }
 }

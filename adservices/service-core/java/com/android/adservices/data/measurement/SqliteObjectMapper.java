@@ -27,6 +27,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRedirect;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -85,6 +86,11 @@ public class SqliteObjectMapper {
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
                 builder::setTriggerDebugKey);
         setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEYS,
+                (concatArray) ->
+                        builder.setTriggerDebugKeys(unsignedLongsStringToList(concatArray)));
+        setTextColumn(
                 cursor, MeasurementTables.EventReportContract.SOURCE_ID, builder::setSourceId);
         setTextColumn(
                 cursor, MeasurementTables.EventReportContract.TRIGGER_ID, builder::setTriggerId);
@@ -129,12 +135,13 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS,
                 (concatArray) ->
-                        builder.setEventReportDedupKeys(dedupKeysStringToList(concatArray)));
+                        builder.setEventReportDedupKeys(unsignedLongsStringToList(concatArray)));
         setTextColumn(
                 cursor,
                 MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
                 (concatArray) ->
-                        builder.setAggregateReportDedupKeys(dedupKeysStringToList(concatArray)));
+                        builder.setAggregateReportDedupKeys(
+                                unsignedLongsStringToList(concatArray)));
         setIntColumn(cursor, MeasurementTables.SourceContract.STATUS,
                 builder::setStatus);
         setUriColumn(cursor, MeasurementTables.SourceContract.REGISTRANT,
@@ -191,7 +198,9 @@ public class SqliteObjectMapper {
                 MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
                 builder::setCoarseEventReportDestinations);
         setTextColumn(
-                cursor, MeasurementTables.SourceContract.TRIGGER_SPECS, builder::setTriggerSpecs);
+                cursor,
+                MeasurementTables.SourceContract.TRIGGER_SPECS,
+                builder::setTriggerSpecsString);
         setIntColumn(
                 cursor,
                 MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
@@ -216,6 +225,9 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
                 builder::setSharedFilterDataKeys);
+        setTextColumn(cursor, MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
+                (enumValue) -> builder.setTriggerDataMatching(
+                        Source.TriggerDataMatching.valueOf(enumValue)));
         return builder.build();
     }
 
@@ -338,6 +350,8 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
                 builder::setAggregationCoordinatorOrigin);
+        setBooleanColumn(
+                cursor, MeasurementTables.AggregateReport.IS_FAKE_REPORT, builder::setIsFakeReport);
         return builder.build();
     }
 
@@ -458,6 +472,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
                 builder::setPostBody);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
+                (enumValue) ->
+                        builder.setRedirectBehavior(
+                                enumValue == null
+                                        ? null
+                                        : AsyncRedirect.RedirectBehavior.valueOf(enumValue)));
         return builder.build();
     }
 
@@ -514,7 +536,7 @@ public class SqliteObjectMapper {
         }
     }
 
-    private static List<UnsignedLong> dedupKeysStringToList(String concatArray) {
+    private static List<UnsignedLong> unsignedLongsStringToList(String concatArray) {
         return Arrays.stream(concatArray.split(","))
                 .map(String::trim)
                 .filter(not(String::isEmpty))

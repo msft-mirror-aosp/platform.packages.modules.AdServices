@@ -19,8 +19,8 @@ package android.adservices.rootcts;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
-import com.android.adservices.LoggerFactory;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Assume;
@@ -29,12 +29,11 @@ import java.util.Objects;
 
 class BackgroundJobHelper {
 
+    private static final String TAG = "BackgroundJobHelper";
     private static final String PACKAGE = "com.google.android.adservices.api";
     private static final long MAX_TIMEOUT_MS = 16000;
 
     private final JobScheduler mJobScheduler;
-
-    private final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     BackgroundJobHelper(Context context) {
         mJobScheduler = context.getSystemService(JobScheduler.class);
@@ -52,7 +51,7 @@ class BackgroundJobHelper {
         runScheduleJobCommand(jobId);
         if (isJobPending(jobId)) {
             // If the job wasn't immediately scheduled then something has gone wrong.
-            sLogger.e("rootcts: Job with id %s did not schedule!", jobId);
+            Log.d(TAG, String.format("rootcts: Job with id %s did not schedule!", jobId));
             return false;
         }
 
@@ -61,13 +60,13 @@ class BackgroundJobHelper {
         while (timeout < MAX_TIMEOUT_MS) {
             Thread.sleep(timeout);
             if (!isJobPending(jobId)) {
-                sLogger.v("rootcts: Job with id %s did schedule.", jobId);
+                Log.d(TAG, String.format("rootcts: Job with id %s did schedule.", jobId));
                 return true;
             }
             timeout *= 2;
         }
 
-        sLogger.e("rootcts: Job with id %s scheduled but timed out!", jobId);
+        Log.d(TAG, String.format("rootcts: Job with id %s scheduled but timed out!", jobId));
         return false;
     }
 

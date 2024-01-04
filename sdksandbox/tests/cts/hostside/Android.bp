@@ -31,6 +31,7 @@ java_test_host {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
     data: [
         ":CtsSdkSandboxHostTestApp",

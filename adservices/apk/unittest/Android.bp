@@ -23,12 +23,13 @@ android_test {
     ],
     certificate: "platform",
     privileged: true,
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     static_libs: [
         "adservices-service-core",
         "adservices-assets",
+        "adservices-test-utility",
         "androidx.fragment_fragment",
         "androidx.test.espresso.contrib",
         "androidx.test.ext.junit",
@@ -48,7 +49,6 @@ android_test {
         "general-tests",
         "mts-adservices",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }
 
@@ -60,13 +60,14 @@ android_test {
     ],
     certificate: "platform",
     privileged: true,
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
     min_sdk_version: "30",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
         "adservices-service-core",
+        "adservices-test-utility",
         "androidx.fragment_fragment",
         "androidx.room_room-runtime",
         "androidx.test.espresso.contrib",
@@ -86,7 +87,6 @@ android_test {
         "general-tests",
         "mts-extservices",
     ],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "ExtServices-sminus",
     test_config: "AndroidTest.ExtServices.xml",
 }

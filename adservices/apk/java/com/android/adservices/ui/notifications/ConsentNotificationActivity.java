@@ -107,16 +107,17 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
 
     @Override
     public void initGA() {
-        if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
-            setContentView(R.layout.consent_notification_ga_v2_activity);
-        } else {
-            setContentView(R.layout.consent_notification_ga_activity);
-        }
+        setContentView(R.layout.consent_notification_ga_v2_activity);
     }
 
     @Override
     public void initU18() {
         setContentView(R.layout.consent_notification_u18_activity);
+    }
+
+    @Override
+    public void initRvc() {
+        initU18();
     }
 
     @Override
@@ -126,11 +127,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
 
     private void initFragment() {
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
-                setContentView(R.layout.consent_notification_ga_v2_activity);
-            } else {
-                setContentView(R.layout.consent_notification_ga_activity);
-            }
+            setContentView(R.layout.consent_notification_ga_v2_activity);
         } else {
             setContentView(R.layout.consent_notification_activity);
         }
@@ -149,7 +146,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 LogUtil.v("LANDING_PAGE_DISPLAYED logged!");
                 sLandingPageDisplayed = true;
-                UiStatsLogger.logLandingPageDisplayed(context);
+                UiStatsLogger.logLandingPageDisplayed();
                 break;
             case LANDING_PAGE_DISMISSED:
                 if (sLandingPageDismissed
@@ -158,7 +155,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageDismissed = true;
                 LogUtil.v("LANDING_PAGE_DISMISSED logged!");
-                UiStatsLogger.logLandingPageDismissed(context);
+                UiStatsLogger.logLandingPageDismissed();
                 break;
             case LANDING_PAGE_SCROLLED:
                 if (sLandingPageScrolled) {
@@ -166,7 +163,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageScrolled = true;
                 LogUtil.v("LANDING_PAGE_SCROLLED logged!");
-                UiStatsLogger.logLandingPageScrolled(context);
+                UiStatsLogger.logLandingPageScrolled();
                 break;
             case LANDING_PAGE_SCROLLED_TO_BOTTOM:
                 if (sLandingPageScrolledToBottom) {
@@ -174,7 +171,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageScrolledToBottom = true;
                 LogUtil.v("LANDING_PAGE_SCROLLED_TO_BOTTOM logged!");
-                UiStatsLogger.logLandingPageScrolledToBottom(context);
+                UiStatsLogger.logLandingPageScrolledToBottom();
                 break;
             case LANDING_PAGE_ADDITIONAL_INFO_CLICKED:
                 if (sLandingPageAdditionalInfoClicked) {
@@ -182,7 +179,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageAdditionalInfoClicked = true;
                 LogUtil.v("LANDING_PAGE_ADDITIONAL_INFO_CLICKED logged!");
-                UiStatsLogger.logLandingPageAdditionalInfoClicked(context);
+                UiStatsLogger.logLandingPageAdditionalInfoClicked();
                 break;
             case LANDING_PAGE_MORE_BUTTON_CLICKED:
                 if (sLandingPageMoreButtonClicked) {
@@ -190,7 +187,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageMoreButtonClicked = true;
                 LogUtil.v("LANDING_PAGE_MORE_BUTTON_CLICKED logged!");
-                UiStatsLogger.logLandingPageMoreButtonClicked(context);
+                UiStatsLogger.logLandingPageMoreButtonClicked();
                 break;
             case LANDING_PAGE_SETTINGS_BUTTON_CLICKED:
                 if (sLandingPageSettingsButtonClicked) {
@@ -198,7 +195,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageSettingsButtonClicked = true;
                 LogUtil.v("LANDING_PAGE_SETTINGS_BUTTON_CLICKED logged!");
-                UiStatsLogger.logLandingPageSettingsButtonClicked(context);
+                UiStatsLogger.logLandingPageSettingsButtonClicked();
                 break;
             case LANDING_PAGE_OPT_IN_CLICKED:
                 if (sLandingPageOptInClicked) {
@@ -206,7 +203,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageOptInClicked = true;
                 LogUtil.v("LANDING_PAGE_OPT_IN_CLICKED logged!");
-                UiStatsLogger.logLandingPageOptIn(context);
+                UiStatsLogger.logLandingPageOptIn();
                 break;
             case LANDING_PAGE_OPT_OUT_CLICKED:
                 if (sLandingPageOptOutClicked) {
@@ -214,7 +211,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageOptOutClicked = true;
                 LogUtil.v("LANDING_PAGE_OPT_OUT_CLICKED logged!");
-                UiStatsLogger.logLandingPageOptOut(context);
+                UiStatsLogger.logLandingPageOptOut();
                 break;
             case LANDING_PAGE_GOT_IT_CLICKED:
                 if (sLandingPageGotItClicked) {
@@ -222,7 +219,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sLandingPageGotItClicked = true;
                 LogUtil.v("LANDING_PAGE_GOT_IT_CLICKED logged!");
-                UiStatsLogger.logLandingPageGotItButtonClicked(context);
+                UiStatsLogger.logLandingPageGotItButtonClicked();
                 break;
             case CONFIRMATION_PAGE_DISPLAYED:
                 sCurrentFragment = fragmentAction;
@@ -231,7 +228,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 LogUtil.v("CONFIRMATION_PAGE_DISPLAYED logged!");
                 sConfirmationPageDisplayed = true;
-                UiStatsLogger.logConfirmationPageDisplayed(context);
+                UiStatsLogger.logConfirmationPageDisplayed();
                 break;
             case CONFIRMATION_PAGE_DISMISSED:
                 if (sConfirmationPageDismissed
@@ -241,7 +238,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sConfirmationPageDismissed = true;
                 LogUtil.v("CONFIRMATION_PAGE_DISMISSED logged!");
-                UiStatsLogger.logConfirmationPageDismissed(context);
+                UiStatsLogger.logConfirmationPageDismissed();
                 break;
             case CONFIRMATION_PAGE_OPT_IN_MORE_INFO_CLICKED:
                 if (sConfirmationPageOptInMoreInfoClicked) {
@@ -249,7 +246,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sConfirmationPageOptInMoreInfoClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_IN_MORE_INFO_CLICKED logged!");
-                UiStatsLogger.logOptInConfirmationPageMoreInfoClicked(context);
+                UiStatsLogger.logOptInConfirmationPageMoreInfoClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED:
                 if (sConfirmationPageOptOutMoreInfoClicked) {
@@ -257,7 +254,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sConfirmationPageOptOutMoreInfoClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED logged!");
-                UiStatsLogger.logOptOutConfirmationPageMoreInfoClicked(context);
+                UiStatsLogger.logOptOutConfirmationPageMoreInfoClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED:
                 if (sConfirmationPageOptInSettingsClicked) {
@@ -265,7 +262,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sConfirmationPageOptInSettingsClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED logged!");
-                UiStatsLogger.logOptInConfirmationPageSettingsClicked(context);
+                UiStatsLogger.logOptInConfirmationPageSettingsClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED:
                 if (sConfirmationPageOptOutSettingsClicked) {
@@ -273,7 +270,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sConfirmationPageOptOutSettingsClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED logged!");
-                UiStatsLogger.logOptOutConfirmationPageSettingsClicked(context);
+                UiStatsLogger.logOptOutConfirmationPageSettingsClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED:
                 if (sConfirmationPageOptInGotItClicked) {
@@ -281,7 +278,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sConfirmationPageOptInGotItClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED logged!");
-                UiStatsLogger.logOptInConfirmationPageGotItClicked(context);
+                UiStatsLogger.logOptInConfirmationPageGotItClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED:
                 if (sConfirmationPageOptOutGotItClicked) {
@@ -289,7 +286,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 }
                 sConfirmationPageOptOutGotItClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED logged!");
-                UiStatsLogger.logOptOutConfirmationPageGotItClicked(context);
+                UiStatsLogger.logOptOutConfirmationPageGotItClicked();
                 break;
         }
     }

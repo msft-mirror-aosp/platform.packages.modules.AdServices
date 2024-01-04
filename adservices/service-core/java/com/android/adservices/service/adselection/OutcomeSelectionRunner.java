@@ -109,6 +109,7 @@ public class OutcomeSelectionRunner {
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final DevContext mDevContext;
+    private final boolean mShouldUseUnifiedTables;
 
     /**
      * @param adSelectionEntryDao DAO to access ad selection storage
@@ -133,7 +134,8 @@ public class OutcomeSelectionRunner {
             @NonNull final Flags flags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
-            final int callerUid) {
+            final int callerUid,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
@@ -175,6 +177,7 @@ public class OutcomeSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     @VisibleForTesting
@@ -189,7 +192,8 @@ public class OutcomeSelectionRunner {
             @NonNull final Context context,
             @NonNull final Flags flags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull final DevContext devContext) {
+            @NonNull final DevContext devContext,
+            boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(adOutcomeSelector);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -218,6 +222,7 @@ public class OutcomeSelectionRunner {
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDevContext = devContext;
+        mShouldUseUnifiedTables = shouldUseUnifiedTables;
     }
 
     /**
@@ -413,7 +418,11 @@ public class OutcomeSelectionRunner {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (mFlags.getFledgeAuctionServerEnabledForSelectAdsMediation()) {
+                            if (mShouldUseUnifiedTables) {
+                                return mAdSelectionEntryDao.getWinningBidAndUriForIdsUnifiedTables(
+                                        adOutcomeIds);
+                            } else if (mFlags
+                                    .getFledgeAuctionServerEnabledForSelectAdsMediation()) {
                                 return mAdSelectionEntryDao.getWinningBidAndUriForIds(adOutcomeIds);
                             } else {
                                 return mAdSelectionEntryDao
@@ -439,21 +448,23 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(config.getAdSelectionIds());
 
         ImmutableList.Builder<Long> notExistingIds = new ImmutableList.Builder<>();
-        if (mFlags.getFledgeAuctionServerEnabledForSelectAdsMediation()) {
-            List<Long> existingIds =
+        List<Long> existingIds;
+        if (mShouldUseUnifiedTables) {
+            existingIds =
+                    mAdSelectionEntryDao.getAdSelectionIdsWithCallerPackageNameFromUnifiedTable(
+                            config.getAdSelectionIds(), callerPackageName);
+        } else if (mFlags.getFledgeAuctionServerEnabledForSelectAdsMediation()) {
+            existingIds =
                     mAdSelectionEntryDao.getAdSelectionIdsWithCallerPackageName(
                             config.getAdSelectionIds(), callerPackageName);
-            config.getAdSelectionIds().stream()
-                    .filter(e -> !existingIds.contains(e))
-                    .forEach(notExistingIds::add);
         } else {
-            List<Long> existingIds =
+            existingIds =
                     mAdSelectionEntryDao.getAdSelectionIdsWithCallerPackageNameInOnDeviceTable(
                             config.getAdSelectionIds(), callerPackageName);
-            config.getAdSelectionIds().stream()
-                    .filter(e -> !existingIds.contains(e))
-                    .forEach(notExistingIds::add);
         }
+        config.getAdSelectionIds().stream()
+                .filter(e -> !existingIds.contains(e))
+                .forEach(notExistingIds::add);
 
         // TODO(b/258912806): Current behavior is to fail if any ad selection ids are absent in the
         //  db or owned by another caller package. Investigate if this behavior needs changing due

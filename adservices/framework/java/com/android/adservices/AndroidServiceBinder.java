@@ -19,6 +19,7 @@ import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCE
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_AD_EXT_DATA_STORAGE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SELECTION_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COMMON_SERVICE;
@@ -219,7 +220,8 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                 && !mServiceIntentAction.equals(ACTION_APPSETID_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_APPSETID_PROVIDER_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE)
-                && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)) {
+                && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_AD_EXT_DATA_STORAGE_SERVICE)) {
             LogUtil.e("Bad service intent action: " + mServiceIntentAction);
             return null;
         }

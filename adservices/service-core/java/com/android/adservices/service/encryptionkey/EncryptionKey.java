@@ -135,6 +135,21 @@ public class EncryptionKey {
         return mLastFetchTime;
     }
 
+    /** Returns the builder for the instance */
+    public EncryptionKey.Builder cloneToBuilder() {
+        return new EncryptionKey.Builder()
+                .setId(this.mId)
+                .setKeyType(this.mKeyType)
+                .setEnrollmentId(this.mEnrollmentId)
+                .setReportingOrigin(this.mReportingOrigin)
+                .setEncryptionKeyUrl(this.mEncryptionKeyUrl)
+                .setProtocolType(this.mProtocolType)
+                .setKeyCommitmentId(this.mKeyCommitmentId)
+                .setBody(this.mBody)
+                .setExpiration(this.mExpiration)
+                .setLastFetchTime(this.mLastFetchTime);
+    }
+
     /** Builder for {@link EncryptionKey}. */
     public static final class Builder {
         private final EncryptionKey mBuilding;
@@ -226,14 +241,13 @@ public class EncryptionKey {
     }
 
     /**
-     * ProtocolType enumerates the encryption algorithm used with this key. Set as HPKE for now, can
-     * support more algorithm if we need in the future.
+     * ProtocolType enumerates the algorithm used with the key. Set as HPKE by default, more
+     * algorithms can be supported in the future.
      */
     public enum ProtocolType {
-        // TODO(b/300707076): check which algo PA will use for signing key, update fetching default
-        //  value.
-        WebPKI("webpki"),
+        // Algorithm used by signing key.
         ECDSA("ecdsa"),
+        // Algorithm used by Topics encryption key.
         HPKE("hpke");
         private final String mValue;
 

@@ -16,6 +16,18 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
+import static com.android.adservices.service.common.AppManifestConfigCall.isAllowed;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
@@ -32,6 +44,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -52,20 +65,16 @@ public class AppManifestConfigHelper {
      * Attribution API.
      *
      * <p>If there is a parse error, it returns false.
-     *
-     * @param context the context for the API call. This needs to be the context where the calling
-     *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read.
      * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
      *     manifest config.
      */
     public static boolean isAllowedAttributionAccess(
-            @NonNull Context context,
             @NonNull String appPackageName,
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedAttributionAccess()",
-                context,
+                API_ATTRIBUTION,
                 appPackageName,
                 enrollmentId,
                 config -> config.isAllowedAttributionAccess(enrollmentId));
@@ -76,19 +85,15 @@ public class AppManifestConfigHelper {
      * associated with an ad tech is permitted to use the Custom Audience API.
      *
      * <p>If there is a parse error, it returns {@code false}.
-     *
-     * @param context the context for the API call. This needs to be the context where the calling
-     *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read
      * @param enrollmentId the enrollment ID associate with the ad tech
      */
     public static boolean isAllowedCustomAudiencesAccess(
-            @NonNull Context context,
             @NonNull String appPackageName,
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedCustomAudiencesAccess()",
-                context,
+                API_CUSTOM_AUDIENCES,
                 appPackageName,
                 enrollmentId,
                 config -> config.isAllowedCustomAudiencesAccess(enrollmentId));
@@ -99,30 +104,28 @@ public class AppManifestConfigHelper {
      * API.
      *
      * <p>If there is a parse error, it returns false.
-     *
-     * @param context the context for the API call. This needs to be the context where the calling
-     *     UID is that of the API caller.
      * @param useSandboxCheck whether to use the sandbox check.
      * @param appPackageName the package name of the app whose manifest config will be read.
      * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
      *     manifest config.
      */
     public static boolean isAllowedTopicsAccess(
-            @NonNull Context context,
             @NonNull boolean useSandboxCheck,
             @NonNull String appPackageName,
             @NonNull String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedTopicsAccess()",
-                context,
+                API_TOPICS,
                 appPackageName,
                 enrollmentId,
                 config -> {
                     // If the request comes directly from the app, check that the app has declared
                     // that it includes this Sdk library.
                     if (!useSandboxCheck) {
-                        return config.getIncludesSdkLibraryConfig().contains(enrollmentId)
-                                && config.isAllowedTopicsAccess(enrollmentId);
+                        return (config.getIncludesSdkLibraryConfig().contains(enrollmentId)
+                                        && isAllowed(config.isAllowedTopicsAccess(enrollmentId)))
+                                ? RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID
+                                : RESULT_DISALLOWED_BY_APP;
                     }
 
                     // If the request comes from the SdkRuntime, then the app had to have declared
@@ -132,12 +135,13 @@ public class AppManifestConfigHelper {
     }
 
     @Nullable
-    private static XmlResourceParser getXmlParser(
-            @NonNull Context context, @NonNull String appPackageName)
-            throws PackageManager.NameNotFoundException, XmlParseException, XmlPullParserException,
-                    IOException {
-        // NOTE: resources is only used pre-S, but it must be called regardless to make sure the
-        // app exists
+    private static XmlResourceParser getXmlParser(String appPackageName)
+            throws NameNotFoundException, XmlParseException, XmlPullParserException, IOException {
+        Context context = ApplicationContextSingleton.get();
+        LogUtil.v("getXmlParser(%s): context=%s", appPackageName, context);
+
+        // NOTE: resources is only used pre-S, but it must be called regardless to make sure the app
+        // exists
         Resources resources =
                 context.getPackageManager().getResourcesForApplication(appPackageName);
         Integer resId =
@@ -146,7 +150,7 @@ public class AppManifestConfigHelper {
                                 context, appPackageName)
                         : getAdServicesConfigResourceIdOnRMinus(context, resources, appPackageName);
 
-        return resId == null ? null : resources.getXml(resId);
+        return resId != null ? resources.getXml(resId) : null;
     }
 
     @Nullable
@@ -166,7 +170,7 @@ public class AppManifestConfigHelper {
     @Nullable
     private static Integer getAdServicesConfigResourceIdOnRMinus(
             @NonNull Context context, @NonNull Resources resources, @NonNull String appPackageName)
-            throws PackageManager.NameNotFoundException, XmlPullParserException, IOException {
+            throws NameNotFoundException, XmlPullParserException, IOException {
         // PackageManager::getProperty(..) API is only available on S+. For R-, we will need to load
         // app's manifest and parse. See go/rbp-manifest.
         AssetManager assetManager =
@@ -177,16 +181,23 @@ public class AppManifestConfigHelper {
 
     private static boolean isAllowedApiAccess(
             String method,
-            Context context,
+            int api,
             String appPackageName,
             String enrollmentId,
             ApiAccessChecker checker) {
         Objects.requireNonNull(appPackageName);
         Objects.requireNonNull(enrollmentId);
+
+        AppManifestConfigCall call = new AppManifestConfigCall(appPackageName, api);
         boolean enabledByDefault = FlagsFactory.getFlags().getAppConfigReturnsEnabledByDefault();
+
         try {
-            XmlResourceParser in = getXmlParser(context, appPackageName);
+            XmlResourceParser in = getXmlParser(appPackageName);
             if (in == null) {
+                call.result =
+                        enabledByDefault
+                                ? RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG
+                                : RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
                 LogUtil.v(
                         "%s: returning %b for app (%s) that doesn't have the AdServices XML config",
                         method, enabledByDefault, appPackageName);
@@ -194,21 +205,25 @@ public class AppManifestConfigHelper {
             }
             AppManifestConfig appManifestConfig =
                     AppManifestConfigParser.getConfig(in, enabledByDefault);
-            return checker.isAllowedAccess(appManifestConfig);
-        } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.v("Name not found while looking for manifest for app \"%s\"", appPackageName);
-            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
+            call.result = checker.isAllowedAccess(appManifestConfig);
+        } catch (NameNotFoundException e) {
+            call.result = RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
+            LogUtil.v(
+                    "Name not found while looking for manifest for app %s: %s", appPackageName, e);
         } catch (Exception e) {
+            call.result = RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR;
             LogUtil.e(e, "App manifest parse failed.");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        } finally {
+            AppManifestConfigMetricsLogger.logUsage(call);
         }
-        return false;
+        return isAllowed(call.result);
     }
 
     private interface ApiAccessChecker {
-        boolean isAllowedAccess(AppManifestConfig config);
+        int isAllowedAccess(AppManifestConfig config);
     }
 }

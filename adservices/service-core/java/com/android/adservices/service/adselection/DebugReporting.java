@@ -22,6 +22,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -59,6 +60,7 @@ import java.util.concurrent.ExecutorService;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class DebugReporting {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     /**
      * @return an instance of debug reporting after checking for is limited ad tracking is enabled
@@ -77,7 +79,10 @@ public abstract class DebugReporting {
         if (!getEnablementStatus(flags)) {
             return Futures.immediateFuture(new DebugReportingDisabled());
         }
-        return FluentFuture.from(adIdFetcher.isLimitedAdTrackingEnabled(packageName, callingUid))
+        long adIdFetchTimeoutMs = flags.getAdIdFetcherTimeoutMs();
+        return FluentFuture.from(
+                        adIdFetcher.isLimitedAdTrackingEnabled(
+                                packageName, callingUid, adIdFetchTimeoutMs))
                 .transform(
                         isLatEnabled -> {
                             if (isLatEnabled) {
@@ -112,6 +117,10 @@ public abstract class DebugReporting {
     public abstract boolean isEnabled();
 
     private static boolean getEnablementStatus(Flags flags) {
+        if (flags.getAdIdKillSwitch()) {
+            sLogger.v("AdIdService kill switch is enabled, disabling event level debug reporting");
+            return false;
+        }
         return flags.getFledgeEventLevelDebugReportingEnabled();
     }
 }

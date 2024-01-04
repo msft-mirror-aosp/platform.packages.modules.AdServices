@@ -17,7 +17,6 @@
 package com.android.adservices.service.consent;
 
 import com.android.adservices.service.common.compat.FileCompatUtils;
-import com.android.internal.annotations.VisibleForTesting;
 
 /** ConsentManager related Constants. */
 public class ConsentConstants {
@@ -37,8 +36,7 @@ public class ConsentConstants {
 
     public static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
 
-    @VisibleForTesting
-    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+    public static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
             "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
     public static final String CONSENT_KEY = "CONSENT";
@@ -50,8 +48,8 @@ public class ConsentConstants {
     // Internal datastore version
     static final int STORAGE_VERSION = 1;
 
-    // Internal datastore filename. The name should be unique to avoid multiple threads or processes
-    // to update the same file.
+    // Internal datastore filename. The name should be unique to avoid multiple threads or
+    // processes to update the same file.
     static final String STORAGE_XML_IDENTIFIER =
             FileCompatUtils.getAdservicesFilename("ConsentManagerStorageIdentifier.xml");
 
@@ -59,6 +57,9 @@ public class ConsentConstants {
     // Once a migration has happened, it marks corresponding shared preferences to prevent it
     // happens again.
     static final String SHARED_PREFS_CONSENT = "PPAPI_Consent";
+
+    public static final String SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH =
+            "CONSENT_HAS_MIGRATED_TO_APP_SEARCH";
 
     // Shared preferences to mark whether consent data from AppSearch has migrated to AdServices.
     public static final String SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED =

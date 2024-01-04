@@ -24,10 +24,11 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogicMetadata;
+import com.android.adservices.data.signals.DBSignalsUpdateMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
-import com.android.adservices.data.signals.EncoderPersistenceDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -45,7 +46,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,9 +76,9 @@ public class PeriodicEncodingJobWorker {
 
     private final EncoderLogicHandler mEncoderLogicHandler;
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
-    private final EncoderPersistenceDao mEncoderPersistenceDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final SignalsProvider mSignalsProvider;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
     private final AdSelectionScriptEngine mScriptEngine;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
@@ -93,9 +93,9 @@ public class PeriodicEncodingJobWorker {
     protected PeriodicEncodingJobWorker(
             @NonNull EncoderLogicHandler encoderLogicHandler,
             @NonNull EncoderLogicMetadataDao encoderLogicMetadataDao,
-            @NonNull EncoderPersistenceDao encoderPersistenceDao,
             @NonNull EncodedPayloadDao encodedPayloadDao,
             @NonNull SignalsProviderImpl signalStorageManager,
+            @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull AdSelectionScriptEngine scriptEngine,
             @NonNull ListeningExecutorService backgroundExecutor,
             @NonNull ListeningExecutorService lightWeightExecutor,
@@ -103,9 +103,9 @@ public class PeriodicEncodingJobWorker {
             @NonNull Flags flags) {
         mEncoderLogicHandler = encoderLogicHandler;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
-        mEncoderPersistenceDao = encoderPersistenceDao;
         mEncodedPayloadDao = encodedPayloadDao;
         mSignalsProvider = signalStorageManager;
+        mProtectedSignalsDao = protectedSignalsDao;
         mScriptEngine = scriptEngine;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
@@ -136,9 +136,9 @@ public class PeriodicEncodingJobWorker {
                         new PeriodicEncodingJobWorker(
                                 new EncoderLogicHandler(context),
                                 signalsDatabase.getEncoderLogicMetadataDao(),
-                                EncoderPersistenceDao.getInstance(context),
                                 signalsDatabase.getEncodedPayloadDao(),
                                 new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
+                                signalsDatabase.protectedSignalsDao(),
                                 new AdSelectionScriptEngine(
                                         context,
                                         () ->
@@ -243,13 +243,36 @@ public class PeriodicEncodingJobWorker {
     FluentFuture<Void> runEncodingPerBuyer(
             DBEncoderLogicMetadata encoderLogicMetadata, int timeout) {
         AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
+
+        Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
+        if (signals.isEmpty()) {
+            mEncoderLogicHandler.deleteEncoderForBuyer(buyer);
+            return FluentFuture.from(Futures.immediateFuture(null));
+        }
+
+        DBSignalsUpdateMetadata signalsUpdateMetadata =
+                mProtectedSignalsDao.getSignalsUpdateMetadata(buyer);
+        DBEncodedPayload existingPayload = mEncodedPayloadDao.getEncodedPayload(buyer);
+        if (signalsUpdateMetadata != null && existingPayload != null) {
+            boolean isNoNewSignalUpdateAfterLastEncoding =
+                    signalsUpdateMetadata
+                            .getLastSignalsUpdatedTime()
+                            .isBefore(existingPayload.getCreationTime());
+            boolean isEncoderLogicNotUpdatedAfterLastEncoding =
+                    encoderLogicMetadata
+                            .getCreationTime()
+                            .isBefore(existingPayload.getCreationTime());
+            if (isNoNewSignalUpdateAfterLastEncoding && isEncoderLogicNotUpdatedAfterLastEncoding) {
+                return FluentFuture.from(Futures.immediateFuture(null));
+            }
+        }
+
         int failedCount = encoderLogicMetadata.getFailedEncodingCount();
         if (failedCount >= mEncoderLogicMaximumFailure) {
             return FluentFuture.from(Futures.immediateFuture(null));
         }
         String encodingLogic = mEncoderLogicHandler.getEncoder(buyer);
         int version = encoderLogicMetadata.getVersion();
-        Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
 
         return FluentFuture.from(
                         mScriptEngine.encodeSignals(
@@ -265,6 +288,7 @@ public class PeriodicEncodingJobWorker {
                         Exception.class,
                         e -> {
                             sLogger.e(
+                                    e,
                                     "Exception trying to validate and persist encoded payload for"
                                             + " buyer: %s",
                                     buyer);
@@ -281,17 +305,8 @@ public class PeriodicEncodingJobWorker {
 
     @VisibleForTesting
     void validateAndPersistPayload(
-            DBEncoderLogicMetadata encoderLogicMetadata, String encodedPayload, int version) {
+            DBEncoderLogicMetadata encoderLogicMetadata, byte[] encodedBytes, int version) {
         AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
-        byte[] encodedBytes;
-        try {
-            encodedBytes = Base64.getDecoder().decode(encodedPayload);
-        } catch (IllegalArgumentException e) {
-            sLogger.e(
-                    "Malformed encoded payload returned by buyer: %s, encoded payload: %s",
-                    buyer, encodedPayload);
-            throw new IllegalArgumentException("Malformed encoded payload.");
-        }
         if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {
             // Do not persist encoded payload if the encoding logic violates the size constraints
             sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);

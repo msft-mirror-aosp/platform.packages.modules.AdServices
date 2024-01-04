@@ -203,10 +203,7 @@ public final class TopicsManager {
                             executor.execute(
                                     () -> {
                                         if (resultParcel.isSuccess()) {
-                                            callback.onResult(
-                                                    new GetTopicsResponse.Builder(
-                                                                    getTopicList(resultParcel))
-                                                            .build());
+                                            callback.onResult(buildGetTopicsResponse(resultParcel));
                                         } else {
                                             // TODO: Errors should be returned in onFailure method.
                                             callback.onError(
@@ -230,6 +227,12 @@ public final class TopicsManager {
         }
     }
 
+    private GetTopicsResponse buildGetTopicsResponse(GetTopicsResult resultParcel) {
+        return new GetTopicsResponse.Builder(
+                        getTopicList(resultParcel), getEncryptedTopicList(resultParcel))
+                .build();
+    }
+
     private List<Topic> getTopicList(GetTopicsResult resultParcel) {
         List<Long> taxonomyVersionsList = resultParcel.getTaxonomyVersions();
         List<Long> modelVersionsList = resultParcel.getModelVersions();
@@ -246,6 +249,22 @@ public final class TopicsManager {
         }
 
         return topicList;
+    }
+
+    private List<EncryptedTopic> getEncryptedTopicList(GetTopicsResult resultParcel) {
+        List<EncryptedTopic> encryptedTopicList = new ArrayList<>();
+        List<byte[]> encryptedTopics = resultParcel.getEncryptedTopics();
+        List<String> encryptionKeys = resultParcel.getEncryptionKeys();
+        List<byte[]> encapsulatedKeys = resultParcel.getEncapsulatedKeys();
+        int size = encryptedTopics.size();
+        for (int i = 0; i < size; i++) {
+            EncryptedTopic encryptedTopic =
+                    new EncryptedTopic(
+                            encryptedTopics.get(i), encryptionKeys.get(i), encapsulatedKeys.get(i));
+            encryptedTopicList.add(encryptedTopic);
+        }
+
+        return encryptedTopicList;
     }
 
     /**

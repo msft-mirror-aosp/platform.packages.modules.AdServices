@@ -42,8 +42,6 @@ import android.util.Pair;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -74,7 +72,6 @@ public class TopicsDao {
     private static final int TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE =
             AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE;
 
-    // TODO(b/227393493): Should support a test to notify if new table is added.
     private static final String[] ALL_TOPICS_TABLES = {
         TopicsTables.TaxonomyContract.TABLE,
         TopicsTables.AppClassificationTopicsContract.TABLE,
@@ -82,6 +79,7 @@ public class TopicsDao {
         TopicsTables.UsageHistoryContract.TABLE,
         TopicsTables.CallerCanLearnTopicsContract.TABLE,
         TopicsTables.ReturnedTopicContract.TABLE,
+        TopicsTables.ReturnedEncryptedTopicContract.TABLE,
         TopicsTables.TopTopicsContract.TABLE,
         TopicsTables.BlockedTopicsContract.TABLE,
         TopicsTables.EpochOriginContract.TABLE,
@@ -739,6 +737,48 @@ public class TopicsDao {
     }
 
     /**
+     * Persist the Apps, Sdks returned topics to DB.
+     *
+     * @param epochId the epoch ID
+     * @param returnedAppSdkEncryptedTopics {@link Map} a Map< Pair< app, sdk>, EncryptedTopic>
+     */
+    public void persistReturnedAppEncryptedTopicsMap(
+            long epochId,
+            @NonNull Map<Pair<String, String>, EncryptedTopic> returnedAppSdkEncryptedTopics) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        for (Map.Entry<Pair<String, String>, EncryptedTopic> app :
+                returnedAppSdkEncryptedTopics.entrySet()) {
+            // Entry: Key = <Pair<App, Sdk>, Value = Topic.
+            ContentValues values = new ContentValues();
+            values.put(TopicsTables.ReturnedEncryptedTopicContract.EPOCH_ID, epochId);
+            values.put(TopicsTables.ReturnedEncryptedTopicContract.APP, app.getKey().first);
+            values.put(TopicsTables.ReturnedEncryptedTopicContract.SDK, app.getKey().second);
+            values.put(
+                    TopicsTables.ReturnedEncryptedTopicContract.ENCRYPTED_TOPIC,
+                    app.getValue().getEncryptedTopic());
+            values.put(
+                    TopicsTables.ReturnedEncryptedTopicContract.KEY_IDENTIFIER,
+                    app.getValue().getKeyIdentifier());
+            values.put(
+                    TopicsTables.ReturnedEncryptedTopicContract.ENCAPSULATED_KEY,
+                    app.getValue().getEncapsulatedKey());
+            try {
+                db.insert(
+                        TopicsTables.ReturnedEncryptedTopicContract.TABLE,
+                        /* nullColumnHack */ null,
+                        values);
+            } catch (SQLException e) {
+                sLogger.e(e, "Failed to record encrypted returned topic.");
+                // TODO(b/307816452): Add client error log util here.
+            }
+        }
+    }
+
+    /**
      * Retrieve from the Topics ReturnedTopics Table and populate into the map. Will return topics
      * for epoch with epochId in [epochId - numberOfLookBackEpochs + 1, epochId]
      *
@@ -849,6 +889,102 @@ public class TopicsDao {
         }
 
         return topicsMap;
+    }
+
+    /**
+     * Retrieve from the ReturnedEncryptedTopic Table and populate into the map. Will return
+     * encrypted topics for epoch with epochId in [epochId - numberOfLookBackEpochs + 1, epochId]
+     *
+     * @param epochId the current epochId
+     * @param numberOfLookBackEpochs How many epoch to look back. The current explainer uses 3
+     *     epochs
+     * @return a {@link Map} in type {@code Map<EpochId, Map < Pair < App, Sdk>, EncryptedTopic>}
+     */
+    @NonNull
+    public Map<Long, Map<Pair<String, String>, EncryptedTopic>> retrieveReturnedEncryptedTopics(
+            long epochId, int numberOfLookBackEpochs) {
+        Map<Long, Map<Pair<String, String>, EncryptedTopic>> encryptedTopicsMap = new HashMap<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return encryptedTopicsMap;
+        }
+
+        String[] projection = {
+            TopicsTables.ReturnedEncryptedTopicContract.EPOCH_ID,
+            TopicsTables.ReturnedEncryptedTopicContract.APP,
+            TopicsTables.ReturnedEncryptedTopicContract.SDK,
+            TopicsTables.ReturnedEncryptedTopicContract.ENCRYPTED_TOPIC,
+            TopicsTables.ReturnedEncryptedTopicContract.KEY_IDENTIFIER,
+            TopicsTables.ReturnedEncryptedTopicContract.ENCAPSULATED_KEY,
+        };
+
+        // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
+        String selection =
+                " ? <= "
+                        + TopicsTables.ReturnedEncryptedTopicContract.EPOCH_ID
+                        + " AND "
+                        + TopicsTables.ReturnedEncryptedTopicContract.EPOCH_ID
+                        + " <= ?";
+        String[] selectionArgs = {
+            String.valueOf(epochId - numberOfLookBackEpochs + 1), String.valueOf(epochId)
+        };
+
+        try (Cursor cursor =
+                db.query(
+                        TopicsTables.ReturnedEncryptedTopicContract.TABLE, // The table to query
+                        projection, // The array of columns to return (pass null to get all)
+                        selection, // The columns for the WHERE clause
+                        selectionArgs, // The values for the WHERE clause
+                        null, // don't group the rows
+                        null, // don't filter by row groups
+                        null // The sort order
+                        )) {
+            if (cursor == null) {
+                return encryptedTopicsMap;
+            }
+
+            while (cursor.moveToNext()) {
+                long cursorEpochId =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedEncryptedTopicContract.EPOCH_ID));
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedEncryptedTopicContract.APP));
+                String sdk =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedEncryptedTopicContract.SDK));
+                byte[] encryptedTopic =
+                        cursor.getBlob(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedEncryptedTopicContract
+                                                .ENCRYPTED_TOPIC));
+                String keyIdentifier =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedEncryptedTopicContract
+                                                .KEY_IDENTIFIER));
+                byte[] encapsulatedKey =
+                        cursor.getBlob(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedEncryptedTopicContract
+                                                .ENCAPSULATED_KEY));
+
+                // Building Map<EpochId, Map<Pair<AppId, AdTechId>, Topic>
+                if (!encryptedTopicsMap.containsKey(cursorEpochId)) {
+                    encryptedTopicsMap.put(cursorEpochId, new HashMap<>());
+                }
+
+                EncryptedTopic topic =
+                        EncryptedTopic.create(encryptedTopic, keyIdentifier, encapsulatedKey);
+
+                encryptedTopicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
+            }
+        }
+
+        return encryptedTopicsMap;
     }
 
     /**

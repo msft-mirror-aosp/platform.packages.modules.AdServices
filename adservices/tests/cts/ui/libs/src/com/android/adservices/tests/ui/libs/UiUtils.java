@@ -40,12 +40,15 @@ import androidx.test.uiautomator.BySelector;
 import androidx.test.uiautomator.Direction;
 import androidx.test.uiautomator.SearchCondition;
 import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObject2;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.common.FileHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.SettableFuture;
@@ -58,6 +61,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class UiUtils {
@@ -167,6 +171,11 @@ public class UiUtils {
         forceSetFlag("rvc_ux_enabled", true);
     }
 
+    /** Override flag rvc_notification_enabled in tests to true */
+    public static void enableRvcNotification() throws Exception {
+        forceSetFlag("rvc_notification_enabled", true);
+    }
+
     /** Override flag rvc_ux_enabled in tests to false */
     public static void disableRvc() throws Exception {
         forceSetFlag("rvc_ux_enabled", false);
@@ -223,6 +232,17 @@ public class UiUtils {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
     }
 
+    /** Set flag consent_manager_ota_debug_mode to true in tests */
+    public static void setConsentManagerOtaDebugMode() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_manager_ota_debug_mode true");
+    }
+
+    /** Set flag consent_manager_debug_mode to false in tests */
+    public static void resetConsentManagerDebugMode() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode false");
+    }
+
     public static void enableNotificationPermission() {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
@@ -260,14 +280,17 @@ public class UiUtils {
         int notificationHeader = -1;
         switch (ux) {
             case GA_UX:
+                // Should match the contentTitle string in ConsentNotificationTrigger.java.
                 notificationTitle =
                         isEuTest
-                                ? R.string.notificationUI_notification_ga_title_eu
-                                : R.string.notificationUI_notification_ga_title;
+                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                : R.string.notificationUI_notification_ga_title_v2;
+                // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
+                // consent_notification_screen_1_ga_v2_row.xml, respectively.
                 notificationHeader =
                         isEuTest
-                                ? R.string.notificationUI_header_ga_title_eu
-                                : R.string.notificationUI_header_ga_title;
+                                ? R.string.notificationUI_fledge_measurement_title_v2
+                                : R.string.notificationUI_header_ga_title_v2;
                 break;
             case BETA_UX:
                 notificationTitle =
@@ -605,23 +628,6 @@ public class UiUtils {
         scrollView.swipe(Direction.DOWN, 0.7f, 500);
     }
 
-    public static UiObject2 getConsentSwitch(UiDevice device) {
-        UiObject2 consentSwitch =
-                device.wait(
-                        Until.findObject(By.clazz("android.widget.Switch")),
-                        PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
-        // devices.
-        device.swipe(
-                consentSwitch.getVisibleBounds().centerX(),
-                500,
-                consentSwitch.getVisibleBounds().centerX(),
-                0,
-                100);
-
-        return consentSwitch;
-    }
-
     public static void performSwitchClick(
             UiDevice device, Context context, boolean dialogsOn, UiObject2 mainSwitch) {
         if (dialogsOn && mainSwitch.isChecked()) {
@@ -647,7 +653,10 @@ public class UiUtils {
     public static void gentleSwipe(UiDevice device) {
         UiObject2 scrollView =
                 device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
-        scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
+        // Some devices on R is not scrollable
+        if (scrollView != null) {
+                scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
+        }
     }
 
     public static void setFlipFlow(boolean isFlip) {
@@ -680,10 +689,13 @@ public class UiUtils {
     public static UiObject2 scrollTo(Context context, UiDevice device, int resId) {
         UiObject2 scrollView =
                 device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
-        String targetStr = getString(context, resId);
-        scrollView.scrollUntil(
-                Direction.DOWN,
-                Until.findObject(By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        if (scrollView != null) {
+            String targetStr = getString(context, resId);
+            scrollView.scrollUntil(
+                    Direction.DOWN,
+                    Until.findObject(
+                            By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        }
         return getElement(context, device, resId);
     }
 
@@ -718,7 +730,10 @@ public class UiUtils {
                     new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                             .format(Date.from(Instant.now()));
 
-            File screenshotFile = new File("/sdcard/Pictures/" + methodName + timeStamp + ".png");
+            File screenshotFile =
+                    new File(
+                            FileHelper.getAdServicesTestsOutputDir(),
+                            methodName + timeStamp + ".png");
             device.takeScreenshot(screenshotFile);
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());
@@ -773,5 +788,26 @@ public class UiUtils {
 
         Boolean response = responseFuture.get();
         assertThat(response).isTrue();
+    }
+
+    /***
+     * Click on the More button on the notification page.
+     * @param moreButton moreButton
+     * @throws UiObjectNotFoundException uiObjectNotFoundException
+     * @throws InterruptedException interruptedException
+     */
+    public static void clickMoreToBottom(UiObject moreButton)
+            throws UiObjectNotFoundException, InterruptedException {
+        if (!moreButton.exists()) {
+            LogUtil.e("More Button not Found");
+            return;
+        }
+
+        int clickCount = 10;
+        while (moreButton.exists() && clickCount-- > 0) {
+            moreButton.click();
+            TimeUnit.MILLISECONDS.sleep(SCROLL_WAIT_TIME);
+        }
+        assertThat(moreButton.exists()).isFalse();
     }
 }

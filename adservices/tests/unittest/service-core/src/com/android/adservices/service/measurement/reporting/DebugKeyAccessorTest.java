@@ -176,7 +176,8 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppWithSourceAdId_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_appToAppWithSourceAdId_sourceDebugKeyPresent()
+            throws DatastoreException {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -197,13 +198,14 @@ public class DebugKeyAccessorTest {
                         null);
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
-        assertNull(debugKeyPair.first);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertNull(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
-    public void getDebugKeys_appToAppWithTriggerAdId_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_appToAppWithTriggerAdId_triggerDebugKeyPresent()
+            throws DatastoreException {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -225,7 +227,7 @@ public class DebugKeyAccessorTest {
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
         assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
@@ -418,7 +420,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_debugKeysAbsent()
+    public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_sourceDebugKeysPresent()
             throws DatastoreException {
         Trigger trigger =
                 createTrigger(
@@ -440,7 +442,7 @@ public class DebugKeyAccessorTest {
                         null);
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
-        assertNull(debugKeyPair.first);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
         assertNull(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }

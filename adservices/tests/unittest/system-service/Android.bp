@@ -27,6 +27,7 @@ android_test {
     test_config: "AndroidTest.xml",
     static_libs: [
         "adservices-shared-storage",
+        "adservices-shared-testing",
         "androidx.test.runner",
         "androidx.test.core",
         "truth",
@@ -51,5 +52,4 @@ android_test {
         "general-tests",
         "mts-adservices"
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }

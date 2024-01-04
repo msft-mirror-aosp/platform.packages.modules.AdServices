@@ -25,6 +25,11 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -54,6 +59,23 @@ public final class EncryptionKeyFetcher {
     public static final String ENCRYPTION_KEY_ENDPOINT = "/.well-known/encryption-keys";
     public static final String IF_MODIFIED_SINCE_HEADER = "If-Modified-Since";
     private static final String DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss 'GMT'";
+
+    @NonNull private final AdServicesLogger mAdServicesLogger;
+    @NonNull private final FetchJobType mFetchJobType;
+    private boolean mIsFirstTimeFetch;
+
+    public EncryptionKeyFetcher(@NonNull FetchJobType fetchJobType) {
+        mAdServicesLogger = AdServicesLoggerImpl.getInstance();
+        mFetchJobType = fetchJobType;
+        mIsFirstTimeFetch = false;
+    }
+
+    @VisibleForTesting
+    EncryptionKeyFetcher(@NonNull AdServicesLogger adServicesLogger) {
+        mFetchJobType = FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB;
+        mAdServicesLogger = adServicesLogger;
+        mIsFirstTimeFetch = false;
+    }
 
     /** Define encryption key endpoint JSON response parameters. */
     @VisibleForTesting
@@ -85,11 +107,16 @@ public final class EncryptionKeyFetcher {
             @Nullable EncryptionKey encryptionKey,
             @NonNull EnrollmentData enrollmentData,
             boolean isFirstTimeFetch) {
+        mIsFirstTimeFetch = isFirstTimeFetch;
+
         String encryptionKeyUrl = constructEncryptionKeyUrl(enrollmentData);
         if (encryptionKeyUrl == null) {
+            logEncryptionKeyFetchedStats(FetchStatus.NULL_ENDPOINT, enrollmentData, null);
             return Optional.empty();
         }
         if (!isEncryptionKeyUrlValid(encryptionKeyUrl)) {
+            logEncryptionKeyFetchedStats(
+                    FetchStatus.INVALID_ENDPOINT, enrollmentData, encryptionKeyUrl);
             return Optional.empty();
         }
 
@@ -98,6 +125,8 @@ public final class EncryptionKeyFetcher {
             url = new URL(encryptionKeyUrl);
         } catch (MalformedURLException e) {
             LoggerFactory.getLogger().d(e, "Malformed encryption key URL.");
+            logEncryptionKeyFetchedStats(
+                    FetchStatus.INVALID_ENDPOINT, enrollmentData, encryptionKeyUrl);
             return Optional.empty();
         }
         HttpURLConnection urlConnection;
@@ -105,6 +134,8 @@ public final class EncryptionKeyFetcher {
             urlConnection = (HttpURLConnection) setUpURLConnection(url);
         } catch (IOException e) {
             LoggerFactory.getLogger().e(e, "Failed to open encryption key URL");
+            logEncryptionKeyFetchedStats(
+                    FetchStatus.IO_EXCEPTION, enrollmentData, encryptionKeyUrl);
             return Optional.empty();
         }
         try {
@@ -125,16 +156,26 @@ public final class EncryptionKeyFetcher {
                                 "Re-fetch encryption key response code = "
                                         + responseCode
                                         + "no change made to previous keys.");
+                logEncryptionKeyFetchedStats(
+                        FetchStatus.KEY_NOT_MODIFIED, enrollmentData, encryptionKeyUrl);
                 return Optional.empty();
             }
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 LoggerFactory.getLogger().v("Fetch encryption key response code = " + responseCode);
+                logEncryptionKeyFetchedStats(
+                        FetchStatus.BAD_REQUEST_EXCEPTION, enrollmentData, encryptionKeyUrl);
                 return Optional.empty();
             }
-            JSONObject jsonResponse = getJsonResponse(urlConnection);
-            return parseEncryptionKeyJSONResponse(enrollmentData, jsonResponse);
-        } catch (IOException | JSONException e) {
+            JSONObject jsonResponse =
+                    getJsonResponse(urlConnection, enrollmentData, encryptionKeyUrl);
+            if (jsonResponse == null) {
+                return Optional.empty();
+            }
+            return parseEncryptionKeyJSONResponse(enrollmentData, encryptionKeyUrl, jsonResponse);
+        } catch (IOException e) {
             LoggerFactory.getLogger().e(e, "Failed to get encryption key response.");
+            logEncryptionKeyFetchedStats(
+                    FetchStatus.IO_EXCEPTION, enrollmentData, encryptionKeyUrl);
             return Optional.empty();
         } finally {
             urlConnection.disconnect();
@@ -163,17 +204,26 @@ public final class EncryptionKeyFetcher {
         return true;
     }
 
-    private JSONObject getJsonResponse(HttpURLConnection urlConnection)
-            throws IOException, JSONException {
-        BufferedReader bufferedReader =
-                new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
-        while ((inputLine = bufferedReader.readLine()) != null) {
-            response.append(inputLine);
+    @Nullable
+    private JSONObject getJsonResponse(
+            HttpURLConnection urlConnection,
+            EnrollmentData enrollmentData,
+            String encryptionKeyUrl) {
+        try {
+            BufferedReader bufferedReader =
+                    new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+            while ((inputLine = bufferedReader.readLine()) != null) {
+                response.append(inputLine);
+            }
+            bufferedReader.close();
+            return new JSONObject(response.toString());
+        } catch (IOException | JSONException e) {
+            logEncryptionKeyFetchedStats(
+                    FetchStatus.BAD_REQUEST_EXCEPTION, enrollmentData, encryptionKeyUrl);
+            return null;
         }
-        bufferedReader.close();
-        return new JSONObject(response.toString());
     }
 
     /**
@@ -183,8 +233,10 @@ public final class EncryptionKeyFetcher {
      * @param jsonObject JSONResponse received by calling encryption key endpoint.
      * @return a list of encryption keys.
      */
-    private static Optional<List<EncryptionKey>> parseEncryptionKeyJSONResponse(
-            @NonNull EnrollmentData enrollmentData, @NonNull JSONObject jsonObject) {
+    private Optional<List<EncryptionKey>> parseEncryptionKeyJSONResponse(
+            @NonNull EnrollmentData enrollmentData,
+            String encryptionKeyUrl,
+            @NonNull JSONObject jsonObject) {
         try {
             List<EncryptionKey> encryptionKeys = new ArrayList<>();
             if (jsonObject.has(JSONResponseContract.ENCRYPTION_KEY)) {
@@ -203,14 +255,17 @@ public final class EncryptionKeyFetcher {
                         buildEncryptionKeys(
                                 enrollmentData, signingObject, EncryptionKey.KeyType.SIGNING));
             }
+            logEncryptionKeyFetchedStats(FetchStatus.SUCCESS, enrollmentData, encryptionKeyUrl);
             return Optional.of(encryptionKeys);
         } catch (JSONException e) {
             LoggerFactory.getLogger().e(e, "Parse json response to encryption key exception.");
+            logEncryptionKeyFetchedStats(
+                    FetchStatus.BAD_REQUEST_EXCEPTION, enrollmentData, encryptionKeyUrl);
             return Optional.empty();
         }
     }
 
-    private static List<EncryptionKey> buildEncryptionKeys(
+    private List<EncryptionKey> buildEncryptionKeys(
             EnrollmentData enrollmentData, JSONObject jsonObject, EncryptionKey.KeyType keyType) {
         List<EncryptionKey> encryptionKeyList = new ArrayList<>();
         String encryptionKeyUrl = null;
@@ -262,6 +317,8 @@ public final class EncryptionKeyFetcher {
                             e,
                             "Failed to build encryption key from json object exception."
                                     + jsonObject);
+            logEncryptionKeyFetchedStats(
+                    FetchStatus.BAD_REQUEST_EXCEPTION, enrollmentData, encryptionKeyUrl);
         }
         return encryptionKeyList;
     }
@@ -284,5 +341,21 @@ public final class EncryptionKeyFetcher {
         dateFormat.setLenient(false);
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         return dateFormat.format(new Date(lastFetchTime));
+    }
+
+    private void logEncryptionKeyFetchedStats(
+            FetchStatus fetchStatus,
+            EnrollmentData enrollmentData,
+            @Nullable String encryptionKeyUrl) {
+        AdServicesEncryptionKeyFetchedStats stats =
+                AdServicesEncryptionKeyFetchedStats.builder()
+                        .setFetchJobType(mFetchJobType)
+                        .setFetchStatus(fetchStatus)
+                        .setIsFirstTimeFetch(mIsFirstTimeFetch)
+                        .setAdtechEnrollmentId(enrollmentData.getEnrollmentId())
+                        .setCompanyId(enrollmentData.getCompanyId())
+                        .setEncryptionKeyUrl(encryptionKeyUrl)
+                        .build();
+        mAdServicesLogger.logEncryptionKeyFetchedStats(stats);
     }
 }

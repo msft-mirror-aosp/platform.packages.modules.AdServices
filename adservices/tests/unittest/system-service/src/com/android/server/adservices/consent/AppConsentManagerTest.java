@@ -16,8 +16,8 @@
 
 package com.android.server.adservices.consent;
 
-import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
-import static com.android.adservices.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.server.adservices.consent.AppConsentManager.DUMP_PREFIX;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
 

@@ -22,6 +22,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_DB_TRANSACTION_ENDED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_FETCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_DATA_STORED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
@@ -33,6 +35,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
@@ -464,6 +469,69 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 mEnrollmentRecordCountInTable,
                 mQueryParameter,
                 mErrorCause);
+    }
+
+    /** Logs encryption key fetch stats. */
+    @Override
+    public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENCRYPTION_KEY_FETCHED,
+                stats.getFetchJobType().getValue(),
+                stats.getFetchStatus().getValue(),
+                stats.getIsFirstTimeFetch(),
+                stats.getAdtechEnrollmentId(),
+                stats.getCompanyId(),
+                stats.getEncryptionKeyUrl());
+    }
+
+    /** Logs encryption key datastore transaction ended stats. */
+    @Override
+    public void logEncryptionKeyDbTransactionEndedStats(
+            AdServicesEncryptionKeyDbTransactionEndedStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENCRYPTION_KEY_DB_TRANSACTION_ENDED,
+                stats.getDbTransactionType().getValue(),
+                stats.getDbTransactionStatus().getValue(),
+                stats.getMethodName().getValue());
+    }
+
+    /** Logs destinationRegisteredBeacon reported stats. */
+    @Override
+    public void logDestinationRegisteredBeaconsReportedStats(
+            DestinationRegisteredBeaconsReportedStats stats) {
+        int[] attemptedKeySizesRangeType = new int[] {};
+        if (stats.getAttemptedKeySizesRangeType() != null) {
+            attemptedKeySizesRangeType = stats.getAttemptedKeySizesRangeType().stream()
+                    .mapToInt(DestinationRegisteredBeaconsReportedStats
+                            .InteractionKeySizeRangeType::getValue)
+                    .toArray();
+        }
+        AdServicesStatsLog.write(
+                DESTINATION_REGISTERED_BEACONS,
+                stats.getBeaconReportingDestinationType(),
+                stats.getAttemptedRegisteredBeacons(),
+                attemptedKeySizesRangeType,
+                stats.getTableNumRows(),
+                stats.getAdServicesStatusCode());
+    }
+
+    /** Logs beacon level reporting for ReportInteraction API called stats. */
+    @Override
+    public void logReportInteractionApiCalledStats(ReportInteractionApiCalledStats stats) {
+        AdServicesStatsLog.write(
+                REPORT_INTERACTION_API_CALLED,
+                stats.getBeaconReportingDestinationType(),
+                stats.getNumMatchingUris());
+    }
+
+    /** Logs beacon level reporting for clearing interaction reporting table stats. */
+    @Override
+    public void logInteractionReportingTableClearedStats(
+            InteractionReportingTableClearedStats stats) {
+        AdServicesStatsLog.write(
+                INTERACTION_REPORTING_TABLE_CLEARED,
+                stats.getNumUrisCleared(),
+                stats.getNumUnreportedUris());
     }
 
     @NonNull

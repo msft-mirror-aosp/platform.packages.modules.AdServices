@@ -20,14 +20,11 @@ import static android.adservices.adid.AdId.ZERO_OUT;
 
 import static androidx.concurrent.futures.CallbackToFutureAdapter.Resolver;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.adid.AdIdWorker;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -51,7 +48,6 @@ public class AdIdFetcher {
     @NonNull private final AdIdWorker mAdIdWorker;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
-    @NonNull private final Flags mFlags;
 
     /**
      * Default constructor
@@ -63,17 +59,14 @@ public class AdIdFetcher {
     public AdIdFetcher(
             @NonNull AdIdWorker adIdWorker,
             @NonNull final ExecutorService lightweightExecutorService,
-            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull final Flags flags) {
+            @NonNull final ScheduledThreadPoolExecutor scheduledExecutor) {
         Objects.requireNonNull(adIdWorker);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(scheduledExecutor);
-        Objects.requireNonNull(flags);
 
         mAdIdWorker = adIdWorker;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mScheduledExecutor = scheduledExecutor;
-        mFlags = flags;
     }
 
     /**
@@ -86,20 +79,11 @@ public class AdIdFetcher {
      * @return a future of boolean indicating if limited ad tracking is enabled or disabled.
      */
     public ListenableFuture<Boolean> isLimitedAdTrackingEnabled(
-            @NonNull String packageName, int callingUid) {
-        long adIdTimeoutInMs = mFlags.getAdIdFetcherTimeoutMs();
-        if (mFlags.getAdIdKillSwitch()) {
-            sLogger.v(
-                    "AdIdService kill switch is enabled, returning isLimitedAdTrackingEnabled as"
-                            + " %b",
-                    DEFAULT_IS_LAT_ENABLED);
-            return Futures.immediateFuture(DEFAULT_IS_LAT_ENABLED);
-        }
+            @NonNull String packageName, int callingUid, long adIdFetcherTimeoutMs) {
         return FluentFuture.from(
                         getFutureWithTimeout(
                                 convertToCallback(packageName, callingUid),
-                                adIdTimeoutInMs,
-                                MILLISECONDS,
+                                adIdFetcherTimeoutMs,
                                 mScheduledExecutor))
                 .catching(
                         TimeoutException.class,
@@ -107,7 +91,7 @@ public class AdIdFetcher {
                             sLogger.v(
                                     "Timeout after %d ms while calling getAdId api. Returning"
                                             + " isLimitedAdTrackingEnabled %b",
-                                    adIdTimeoutInMs, DEFAULT_IS_LAT_ENABLED);
+                                    adIdFetcherTimeoutMs, DEFAULT_IS_LAT_ENABLED);
                             return DEFAULT_IS_LAT_ENABLED;
                         },
                         mLightweightExecutorService)
@@ -128,13 +112,13 @@ public class AdIdFetcher {
      */
     private <T> ListenableFuture<T> getFutureWithTimeout(
             Resolver<T> resolver,
-            long timeoutDuration,
-            TimeUnit timeoutUnit,
+            long timeoutInMs,
             ScheduledExecutorService scheduledExecutorService) {
         SettableFuture<T> out = SettableFuture.create();
         // Start timeout before invoking the callback
         ListenableFuture<T> result =
-                Futures.withTimeout(out, timeoutDuration, timeoutUnit, scheduledExecutorService);
+                Futures.withTimeout(
+                        out, timeoutInMs, TimeUnit.MILLISECONDS, scheduledExecutorService);
         out.setFuture(androidx.concurrent.futures.CallbackToFutureAdapter.getFuture(resolver));
         return result;
     }

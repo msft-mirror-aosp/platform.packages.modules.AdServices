@@ -29,6 +29,12 @@ import androidx.annotation.Nullable;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -42,10 +48,18 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
 
     private static EncryptionKeyDao sSingleton;
     private final SharedDbHelper mDbHelper;
+    private final AdServicesLogger mAdServicesLogger;
 
     @VisibleForTesting
     public EncryptionKeyDao(SharedDbHelper dbHelper) {
         mDbHelper = dbHelper;
+        mAdServicesLogger = AdServicesLoggerImpl.getInstance();
+    }
+
+    @VisibleForTesting
+    public EncryptionKeyDao(SharedDbHelper dbHelper, AdServicesLogger logger) {
+        mDbHelper = dbHelper;
+        mAdServicesLogger = logger;
     }
 
     /** Returns an instance of the EncryptionKeyDao given a context. */
@@ -84,9 +98,17 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
             while (cursor.moveToNext()) {
                 encryptionKeyList.add(SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor));
             }
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SUCCESS,
+                    MethodName.GET_KEY_FROM_ENROLLMENT_ID);
             return encryptionKeyList;
         } catch (SQLException e) {
             sLogger.e(e, "Failed to find EncryptionKey in DB with enrollment id: " + enrollmentId);
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SEARCH_EXCEPTION,
+                    MethodName.GET_KEY_FROM_ENROLLMENT_ID);
         }
         return encryptionKeyList;
     }
@@ -121,9 +143,17 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
             while (cursor.moveToNext()) {
                 encryptionKeyList.add(SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor));
             }
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SUCCESS,
+                    MethodName.GET_KEY_FROM_ENROLLMENT_ID_AND_KEY_TYPE);
             return encryptionKeyList;
         } catch (SQLException e) {
             sLogger.e(e, "Failed to find EncryptionKey in DB with enrollment id:" + enrollmentId);
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SEARCH_EXCEPTION,
+                    MethodName.GET_KEY_FROM_ENROLLMENT_ID_AND_KEY_TYPE);
         }
         return encryptionKeyList;
     }
@@ -154,11 +184,19 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                 return null;
             }
             cursor.moveToNext();
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SUCCESS,
+                    MethodName.GET_KEY_FROM_ENROLLMENT_ID_AND_KEY_ID);
             return SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor);
         } catch (SQLException e) {
             sLogger.e(
                     e,
                     "Failed to find EncryptionKey in DB with keyCommitmentId: " + keyCommitmentId);
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SEARCH_EXCEPTION,
+                    MethodName.GET_KEY_FROM_ENROLLMENT_ID_AND_KEY_ID);
         }
         return null;
     }
@@ -195,11 +233,19 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
             while (cursor.moveToNext()) {
                 encryptionKeyList.add(SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor));
             }
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SUCCESS,
+                    MethodName.GET_KEY_FROM_REPORTING_ORIGIN);
             return encryptionKeyList;
         } catch (SQLException e) {
             sLogger.e(
                     e,
                     "Failed to find EncryptionKey in DB with reportingOrigin: " + reportingOrigin);
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SEARCH_EXCEPTION,
+                    MethodName.GET_KEY_FROM_REPORTING_ORIGIN);
         }
         return encryptionKeyList;
     }
@@ -225,9 +271,17 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
             while (cursor.moveToNext()) {
                 encryptionKeys.add(SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor));
             }
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SUCCESS,
+                    MethodName.GET_ALL_KEYS);
             return encryptionKeys;
         } catch (SQLException e) {
             sLogger.e(e, "Failed to get all encryption keys from DB.");
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.READ_TRANSACTION_TYPE,
+                    DbTransactionStatus.SEARCH_EXCEPTION,
+                    MethodName.GET_ALL_KEYS);
         }
         return encryptionKeys;
     }
@@ -240,6 +294,10 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
         }
         if (!isEncryptionKeyValid(encryptionKey)) {
             sLogger.e("Encryption key is invalid, can't insert into DB.");
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.WRITE_TRANSACTION_TYPE,
+                    DbTransactionStatus.INVALID_KEY,
+                    MethodName.INSERT_KEY);
             return false;
         }
         EncryptionKey existKey =
@@ -250,8 +308,16 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
         }
         try {
             insertToDb(encryptionKey, db);
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.WRITE_TRANSACTION_TYPE,
+                    DbTransactionStatus.SUCCESS,
+                    MethodName.INSERT_KEY);
         } catch (SQLException e) {
             sLogger.e(e, "Failed to insert EncryptionKey into DB.");
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.WRITE_TRANSACTION_TYPE,
+                    DbTransactionStatus.INSERT_EXCEPTION,
+                    MethodName.INSERT_KEY);
             return false;
         }
         return true;
@@ -266,6 +332,10 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
         for (EncryptionKey encryptionKey : encryptionKeys) {
             if (!isEncryptionKeyValid(encryptionKey)) {
                 sLogger.e("Encryption key is invalid, can't insert into DB.");
+                logEncryptionKeyDbTransactionEndedStats(
+                        DbTransactionType.WRITE_TRANSACTION_TYPE,
+                        DbTransactionStatus.INVALID_KEY,
+                        MethodName.INSERT_KEYS);
                 return false;
             }
             EncryptionKey existKey =
@@ -278,8 +348,16 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
             }
             try {
                 insertToDb(encryptionKey, db);
+                logEncryptionKeyDbTransactionEndedStats(
+                        DbTransactionType.WRITE_TRANSACTION_TYPE,
+                        DbTransactionStatus.SUCCESS,
+                        MethodName.INSERT_KEYS);
             } catch (SQLException e) {
                 sLogger.e(e, "Failed to insert EncryptionKey into DB.");
+                logEncryptionKeyDbTransactionEndedStats(
+                        DbTransactionType.WRITE_TRANSACTION_TYPE,
+                        DbTransactionStatus.INSERT_EXCEPTION,
+                        MethodName.INSERT_KEYS);
                 return false;
             }
         }
@@ -296,8 +374,7 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                 && encryptionKey.getLastFetchTime() != 0L;
     }
 
-    private static void insertToDb(EncryptionKey encryptionKey, SQLiteDatabase db)
-            throws SQLException {
+    private void insertToDb(EncryptionKey encryptionKey, SQLiteDatabase db) throws SQLException {
         ContentValues values = new ContentValues();
         values.put(EncryptionKeyTables.EncryptionKeyContract.ID, encryptionKey.getId());
         values.put(
@@ -333,6 +410,10 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                     SQLiteDatabase.CONFLICT_REPLACE);
         } catch (SQLException e) {
             sLogger.e("Failed to insert EncryptionKey into DB. Exception : " + e.getMessage());
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.WRITE_TRANSACTION_TYPE,
+                    DbTransactionStatus.INSERT_EXCEPTION,
+                    MethodName.INSERT_KEY);
         }
     }
 
@@ -348,12 +429,33 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                     EncryptionKeyTables.EncryptionKeyContract.TABLE,
                     EncryptionKeyTables.EncryptionKeyContract.ID + " = ?",
                     new String[] {id});
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.WRITE_TRANSACTION_TYPE,
+                    DbTransactionStatus.SUCCESS,
+                    MethodName.DELETE_KEY);
         } catch (SQLException e) {
             sLogger.e(
                     "Failed to delete EncryptionKey in DB with id %s, error : ",
                     id, e.getMessage());
+            logEncryptionKeyDbTransactionEndedStats(
+                    DbTransactionType.WRITE_TRANSACTION_TYPE,
+                    DbTransactionStatus.DELETE_EXCEPTION,
+                    MethodName.DELETE_KEY);
             return false;
         }
         return true;
+    }
+
+    private void logEncryptionKeyDbTransactionEndedStats(
+            DbTransactionType dbTransactionType,
+            DbTransactionStatus dbTransactionStatus,
+            MethodName methodName) {
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(dbTransactionType)
+                        .setDbTransactionStatus(dbTransactionStatus)
+                        .setMethodName(methodName)
+                        .build();
+        mAdServicesLogger.logEncryptionKeyDbTransactionEndedStats(stats);
     }
 }

@@ -64,6 +64,11 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
         configureSharedElements();
     }
 
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
     private void configureSharedElements() {
         // consent switch
         configureElement(
@@ -103,7 +108,7 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case RESET_MEASUREMENT:
-                                UiStatsLogger.logResetMeasurementSelected(mActivity);
+                                UiStatsLogger.logResetMeasurementSelected();
                                 mMeasurementViewModel.resetMeasurement();
                                 Toast.makeText(
                                                 mActivity,

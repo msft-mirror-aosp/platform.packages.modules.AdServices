@@ -131,6 +131,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
     }
 
+    /** Overrides the system property used to set ConsentManager notification debug mode keys. */
+    public T setConsentNotifiedDebugMode(boolean value) {
+        return setSystemProperty(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE, value);
+    }
+
     /** Overrides the system property used to set ConsentManager debug mode keys. */
     public T setConsentManagerDebugMode(boolean value) {
         return setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
@@ -196,22 +201,28 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
-    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
-    public T setAdserviceEnableStatus(boolean value) {
-        return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
-    }
-
-    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
-    public T setUpdateAdIdCacheEnabled(boolean value) {
-        return setFlag(FlagsConstants.KEY_AD_ID_CACHE_ENABLED, value);
-    }
-
     /**
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
      */
     public T setMddBackgroundTaskKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
+    }
+
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getEnforceForegroundStatusForTopics()}.
+     */
+    public T setTopicsEnforceForeground(boolean value) {
+        return setFlag(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, value);
+    }
+
+    /**
+     * Overrides flag used by {@link
+     * com.android.adservices.service.PhFlags#getTopicsDisableDirectAppCalls()}.
+     */
+    public T setTopicsDisableDirectAppCall(boolean value) {
+        return setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,15 +263,19 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                     }
                     mLog.d("setCompatModeFlags(): setting flags for R+");
                     setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, true);
-                    // TODO (b/285208753): Update flags once AppSearch is supported on R.
-                    setFlag(
-                            FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
-                            FlagsConstants.PPAPI_ONLY);
-                    setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, FlagsConstants.PPAPI_ONLY);
-                    setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, false);
-                    setFlag(
-                            FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
-                            true);
+                    setFlag(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY, true);
+                });
+    }
+
+    public T setDebugUxFlagsForRvcUx() {
+        return runOrCache(
+                "setDebugUxFlagsForRvcUx()",
+                () -> {
+                    if (!isAtLeastS() && isAtLeastR()) {
+                        setFlag(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
+                        setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
+                        return;
+                    }
                 });
     }
 
@@ -295,6 +310,17 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADID, LOGCAT_LEVEL_VERBOSE);
         setLogcatTag(LOGCAT_TAG_APPSETID, LOGCAT_LEVEL_VERBOSE);
+        return getThis();
+    }
+
+    /**
+     * Sets Measurement {@code logcat} tags.
+     *
+     * <p>This method is usually set automatically by the factory methods, but should be set again
+     * (on host-side tests) after reboot.
+     */
+    public T setMeasurementTags() {
+        setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE);
         return getThis();
     }
 

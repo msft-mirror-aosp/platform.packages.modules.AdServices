@@ -19,26 +19,45 @@ package com.android.adservices.data.encryptionkey;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import android.database.Cursor;
+import android.content.Context;
 import android.net.Uri;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType;
+import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class EncryptionKeyDaoTest {
 
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
+
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private SharedDbHelper mDbHelper;
     private EncryptionKeyDao mEncryptionKeyDao;
+    @Mock private AdServicesLogger mAdServicesLogger;
 
     public static final EncryptionKey ENCRYPTION_KEY1 =
             new EncryptionKey.Builder()
@@ -138,8 +157,17 @@ public class EncryptionKeyDaoTest {
     /** Unit test set up. */
     @Before
     public void setup() {
+        MockitoAnnotations.initMocks(this);
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
-        mEncryptionKeyDao = new EncryptionKeyDao(mDbHelper);
+        mEncryptionKeyDao = new EncryptionKeyDao(mDbHelper, mAdServicesLogger);
+    }
+
+    /** Unit test cleanup. */
+    @After
+    public void cleanup() {
+        for (String table : EncryptionKeyTables.ENCRYPTION_KEY_TABLES) {
+            mDbHelper.safeGetWritableDatabase().delete(table, null, null);
+        }
     }
 
     /** Unit test for EncryptionKeyDao insert() method. */
@@ -147,33 +175,17 @@ public class EncryptionKeyDaoTest {
     public void testInsertNewEncryptionKey() {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
 
-        try (Cursor cursor =
-                mDbHelper
-                        .getReadableDatabase()
-                        .query(
-                                EncryptionKeyTables.EncryptionKeyContract.TABLE,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null)) {
-            Assert.assertTrue(cursor.moveToNext());
-            EncryptionKey encryptionKey =
-                    SqliteObjectMapper.constructEncryptionKeyFromCursor(cursor);
-            Assert.assertNotNull(encryptionKey);
-            assertEquals(encryptionKey.getId(), ENCRYPTION_KEY1.getId());
-            assertEquals(encryptionKey.getKeyType(), ENCRYPTION_KEY1.getKeyType());
-            assertEquals(encryptionKey.getEnrollmentId(), ENCRYPTION_KEY1.getEnrollmentId());
-            assertEquals(encryptionKey.getReportingOrigin(), ENCRYPTION_KEY1.getReportingOrigin());
-            assertEquals(
-                    encryptionKey.getEncryptionKeyUrl(), ENCRYPTION_KEY1.getEncryptionKeyUrl());
-            assertEquals(encryptionKey.getProtocolType(), ENCRYPTION_KEY1.getProtocolType());
-            assertEquals(encryptionKey.getKeyCommitmentId(), ENCRYPTION_KEY1.getKeyCommitmentId());
-            assertEquals(encryptionKey.getBody(), ENCRYPTION_KEY1.getBody());
-            assertEquals(encryptionKey.getExpiration(), ENCRYPTION_KEY1.getExpiration());
-            assertEquals(encryptionKey.getLastFetchTime(), ENCRYPTION_KEY1.getLastFetchTime());
-        }
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.WRITE_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.INSERT_KEY)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyDbTransactionEndedStats(eq(stats));
+
+        List<EncryptionKey> encryptionKeys = mEncryptionKeyDao.getAllEncryptionKeys();
+        assertEquals(1, encryptionKeys.size());
+        assertEquals(ENCRYPTION_KEY1, encryptionKeys.get(0));
     }
 
     @Test
@@ -187,6 +199,24 @@ public class EncryptionKeyDaoTest {
                         DUPLICATE_ENCRYPTION_KEY1.getKeyCommitmentId());
         assertNotNull(encryptionKey);
         assertEquals("1111", encryptionKey.getId());
+
+        AdServicesEncryptionKeyDbTransactionEndedStats insertStats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.WRITE_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.INSERT_KEY)
+                        .build();
+        verify(mAdServicesLogger, times(2))
+                .logEncryptionKeyDbTransactionEndedStats(eq(insertStats));
+
+        AdServicesEncryptionKeyDbTransactionEndedStats deleteStats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.WRITE_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.DELETE_KEY)
+                        .build();
+        verify(mAdServicesLogger, times(1))
+                .logEncryptionKeyDbTransactionEndedStats(eq(deleteStats));
     }
 
     @Test
@@ -194,6 +224,14 @@ public class EncryptionKeyDaoTest {
         mEncryptionKeyDao.insert(INVALID_KEY);
         List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
         assertEquals(0, encryptionKeyList.size());
+
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.WRITE_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.INVALID_KEY)
+                        .setMethodName(MethodName.INSERT_KEY)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyDbTransactionEndedStats(eq(stats));
     }
 
     @Test
@@ -202,6 +240,13 @@ public class EncryptionKeyDaoTest {
         mEncryptionKeyDao.insert(encryptionKeyList);
 
         assertEquals(2, mEncryptionKeyDao.getAllEncryptionKeys().size());
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.WRITE_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.INSERT_KEYS)
+                        .build();
+        verify(mAdServicesLogger, times(2)).logEncryptionKeyDbTransactionEndedStats(eq(stats));
     }
 
     /** Unit test for EncryptionKeyDao getAllEncryptionKeys() method. */
@@ -213,6 +258,14 @@ public class EncryptionKeyDaoTest {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY2);
         List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
         assertEquals(4, encryptionKeyList.size());
+
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.READ_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.GET_ALL_KEYS)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyDbTransactionEndedStats(eq(stats));
     }
 
     /** Unit test for EncryptionKeyDao delete() method. */
@@ -226,6 +279,14 @@ public class EncryptionKeyDaoTest {
         mEncryptionKeyDao.delete(id);
         List<EncryptionKey> emptyList = mEncryptionKeyDao.getAllEncryptionKeys();
         assertEquals(0, emptyList.size());
+
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.WRITE_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.DELETE_KEY)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyDbTransactionEndedStats(eq(stats));
     }
 
     /** Unit test for EncryptionKeyDao getEncryptionKeyFromEnrollmentId() method. */
@@ -239,6 +300,14 @@ public class EncryptionKeyDaoTest {
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId("100");
         assertNotNull(encryptionKeyList);
         assertEquals(3, encryptionKeyList.size());
+
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.READ_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.GET_KEY_FROM_ENROLLMENT_ID)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyDbTransactionEndedStats(eq(stats));
     }
 
     /** Unit test for EncryptionKeyDao getEncryptionKeyFromEnrollmentIdAndKeyType() method. */
@@ -266,11 +335,19 @@ public class EncryptionKeyDaoTest {
                         "100", EncryptionKey.KeyType.SIGNING);
         assertNotNull(signingKeyList);
         assertSigningKeyListResult(signingKeyList);
+
+        AdServicesEncryptionKeyDbTransactionEndedStats stats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.READ_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.GET_KEY_FROM_ENROLLMENT_ID_AND_KEY_TYPE)
+                        .build();
+        verify(mAdServicesLogger, times(2)).logEncryptionKeyDbTransactionEndedStats(eq(stats));
     }
 
     /** Unit test for EncryptionKeyDao getEncryptionKeyFromKeyCommitmentId() method. */
     @Test
-    public void testGetEncryptionKeyFromKeyCommitmentId() {
+    public void testGetEncryptionKeyFromEnrollmentIdAndKeyCommitmentId() {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1_SAME_KEY_COMMITMENT_ID_FOR_DIFFERENT_ADTECH);
         EncryptionKey encryptionKey =
@@ -284,6 +361,14 @@ public class EncryptionKeyDaoTest {
         assertEquals("AVZBTFVF", encryptionKey.getBody());
         assertEquals(100001L, encryptionKey.getExpiration());
         assertEquals(100001L, encryptionKey.getLastFetchTime());
+
+        AdServicesEncryptionKeyDbTransactionEndedStats signingKeyStats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.READ_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.GET_KEY_FROM_ENROLLMENT_ID_AND_KEY_ID)
+                        .build();
+        verify(mAdServicesLogger).logEncryptionKeyDbTransactionEndedStats(eq(signingKeyStats));
     }
 
     /** Unit test for EncryptionKeyDao getEncryptionKeyFromReportingOrigin() method. */
@@ -311,12 +396,15 @@ public class EncryptionKeyDaoTest {
         assertEquals("DVZBTFVF", encryptionKey.getBody());
         assertEquals(100004L, encryptionKey.getExpiration());
         assertEquals(100004L, encryptionKey.getLastFetchTime());
-    }
 
-    /** Unit test cleanup. */
-    @After
-    public void cleanup() {
-        clearAllTables();
+        AdServicesEncryptionKeyDbTransactionEndedStats signingKeyStats =
+                AdServicesEncryptionKeyDbTransactionEndedStats.builder()
+                        .setDbTransactionType(DbTransactionType.READ_TRANSACTION_TYPE)
+                        .setDbTransactionStatus(DbTransactionStatus.SUCCESS)
+                        .setMethodName(MethodName.GET_KEY_FROM_REPORTING_ORIGIN)
+                        .build();
+        verify(mAdServicesLogger, times(2))
+                .logEncryptionKeyDbTransactionEndedStats(eq(signingKeyStats));
     }
 
     private void assertSigningKeyListResult(List<EncryptionKey> signingKeyList) {
@@ -334,11 +422,5 @@ public class EncryptionKeyDaoTest {
         assertEquals("CVZBTFVF", signingKey2.getBody());
         assertEquals(100003L, signingKey2.getExpiration());
         assertEquals(100003L, signingKey2.getLastFetchTime());
-    }
-
-    private void clearAllTables() {
-        for (String table : EncryptionKeyTables.ENCRYPTION_KEY_TABLES) {
-            mDbHelper.safeGetWritableDatabase().delete(table, null, null);
-        }
     }
 }

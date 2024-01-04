@@ -16,8 +16,8 @@
 
 package com.android.server.adservices.data.topics;
 
-import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
-import static com.android.adservices.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.server.adservices.data.topics.TopicsDbTestUtil.doesTableExistAndColumnCountMatch;
 
 import static org.junit.Assert.assertNotNull;

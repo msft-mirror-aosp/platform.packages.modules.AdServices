@@ -170,7 +170,8 @@ public class ProtectedSignalsServiceImplTest {
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(eq(CONTEXT), eq(PACKAGE), eq(API_NAME));
+                .assertAppDeclaredProtectedSignalsPermission(
+                        eq(CONTEXT), eq(PACKAGE), eq(API_NAME));
         verify(mCallingAppUidSupplierMock).getCallingAppUid();
         verify(mDevContextFilterMock).createDevContext();
         verify(mFlagsMock).getDisableFledgeEnrollmentCheck();

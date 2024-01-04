@@ -18,6 +18,7 @@ package com.android.adservices.data;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -65,7 +66,7 @@ public final class DbTestUtil {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
                 sSingleton =
-                        new DbHelper(sContext, DATABASE_NAME_FOR_TEST, DbHelper.DATABASE_VERSION);
+                        new DbHelper(sContext, DATABASE_NAME_FOR_TEST, DbHelper.DATABASE_VERSION_7);
             }
             return sSingleton;
         }
@@ -153,6 +154,18 @@ public final class DbTestUtil {
         assertArrayEquals(expectedTables.toArray(), actualTables.toArray());
         assertTableSchemaEqual(expectedDb, actualDb, expectedTables);
         assertIndexesEqual(expectedDb, actualDb, expectedTables);
+    }
+
+    public static void assertMeasurementTablesDoNotExist(SQLiteDatabase db) {
+        assertFalse(doesTableExist(db, "msmt_source"));
+        assertFalse(doesTableExist(db, "msmt_trigger"));
+        assertFalse(doesTableExist(db, "msmt_async_registration_contract"));
+        assertFalse(doesTableExist(db, "msmt_event_report"));
+        assertFalse(doesTableExist(db, "msmt_attribution"));
+        assertFalse(doesTableExist(db, "msmt_aggregate_report"));
+        assertFalse(doesTableExist(db, "msmt_aggregate_encryption_key"));
+        assertFalse(doesTableExist(db, "msmt_debug_report"));
+        assertFalse(doesTableExist(db, "msmt_xna_ignored_sources"));
     }
 
     private static void assertTableSchemaEqual(

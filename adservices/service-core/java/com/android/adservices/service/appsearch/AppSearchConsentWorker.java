@@ -43,6 +43,7 @@ import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -153,9 +154,8 @@ class AppSearchConsentWorker {
     }
 
     /** Get an instance of AppSearchConsentWorker. */
-    static AppSearchConsentWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-        return new AppSearchConsentWorker(context);
+    static AppSearchConsentWorker getInstance() {
+        return new AppSearchConsentWorker(ApplicationContextSingleton.get());
     }
 
     /**

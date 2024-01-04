@@ -18,6 +18,7 @@ package com.android.adservices;
 import android.adservices.adid.AdIdProviderService;
 import android.adservices.appsetid.AppSetIdProviderService;
 import android.adservices.cobalt.AdServicesCobaltUploadService;
+import android.adservices.extdata.AdServicesExtDataStorageService;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
@@ -68,6 +69,10 @@ public class AdServicesCommon {
     /** Intent action to discover the AppSetId Provider service. */
     public static final String ACTION_APPSETID_PROVIDER_SERVICE =
             AppSetIdProviderService.SERVICE_INTERFACE;
+
+    /** Intent action to discover the AdServicesExtDataStorageService. */
+    public static final String ACTION_AD_EXT_DATA_STORAGE_SERVICE =
+            AdServicesExtDataStorageService.SERVICE_INTERFACE;
 
     /** Intent action to discover the AdServicesCommon service in the APK. */
     public static final String ACTION_AD_SERVICES_COMMON_SERVICE =

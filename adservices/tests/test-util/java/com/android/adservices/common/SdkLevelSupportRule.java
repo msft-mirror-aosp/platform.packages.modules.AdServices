@@ -16,8 +16,14 @@
 
 package com.android.adservices.common;
 
+import android.os.Build;
+
+import com.android.adservices.common.AndroidSdk.Level;
+import com.android.adservices.common.AndroidSdk.Range;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.build.SdkLevel;
+
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Device-side version of {@link AbstractSdkLevelSupportedRule}.
@@ -26,9 +32,15 @@ import com.android.modules.utils.build.SdkLevel;
  */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
+    @Nullable private Supplier<Level> mDeviceLevelSupplier;
+
+    SdkLevelSupportRule(Level atLeast) {
+        super(AndroidLogger.getInstance(), Range.forAtLeast(atLeast.getLevel()));
+    }
+
     @VisibleForTesting
-    SdkLevelSupportRule(AndroidSdkLevel level) {
-        super(AndroidLogger.getInstance(), level);
+    void setDeviceLevelSupplier(Supplier<Level> levelSupplier) {
+        mDeviceLevelSupplier = Objects.requireNonNull(levelSupplier);
     }
 
     /**
@@ -44,7 +56,7 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
      * </ul>
      */
     public static SdkLevelSupportRule forAnyLevel() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.ANY);
+        return new SdkLevelSupportRule(Level.ANY);
     }
 
     /**
@@ -53,7 +65,7 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
      * {@code &#064;RequiresSdkLevel...} annotations)
      */
     public static SdkLevelSupportRule forAtLeastS() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.S);
+        return new SdkLevelSupportRule(Level.S);
     }
 
     /**
@@ -62,7 +74,7 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
      * {@code &#064;RequiresSdkLevel...} annotations)
      */
     public static SdkLevelSupportRule forAtLeastT() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.T);
+        return new SdkLevelSupportRule(Level.T);
     }
 
     /**
@@ -71,26 +83,16 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
      * {@code &#064;RequiresSdkLevel...} annotations)
      */
     public static SdkLevelSupportRule forAtLeastU() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.U);
+        return new SdkLevelSupportRule(Level.U);
     }
 
     @Override
-    public boolean isAtLeastR() {
-        return SdkLevel.isAtLeastR();
-    }
-
-    @Override
-    public boolean isAtLeastS() {
-        return SdkLevel.isAtLeastS();
-    }
-
-    @Override
-    public boolean isAtLeastT() {
-        return SdkLevel.isAtLeastT();
-    }
-
-    @Override
-    public boolean isAtLeastU() {
-        return SdkLevel.isAtLeastU();
+    public Level getDeviceApiLevel() {
+        if (mDeviceLevelSupplier != null) {
+            Level level = mDeviceLevelSupplier.get();
+            mLog.d("getDeviceApiLevel(): returning %s as set by supplier", level);
+            return level;
+        }
+        return Level.forLevel(Build.VERSION.SDK_INT);
     }
 }

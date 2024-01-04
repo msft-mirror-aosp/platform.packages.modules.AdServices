@@ -17,7 +17,6 @@
 package android.app.sdksandbox.sandboxactivity;
 
 import android.annotation.NonNull;
-import android.annotation.SystemApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -27,7 +26,6 @@ import android.content.pm.ApplicationInfo;
  *
  * @hide
  */
-@SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public interface ActivityContextInfo {
     /**
      * Returns the {@link ApplicationInfo} of the SDK which initially requested the {@link Activity}

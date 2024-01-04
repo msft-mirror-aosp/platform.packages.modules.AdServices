@@ -16,8 +16,8 @@
 
 package com.android.server.adservices;
 
-import static com.android.adservices.common.DumpHelper.dump;
-import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;

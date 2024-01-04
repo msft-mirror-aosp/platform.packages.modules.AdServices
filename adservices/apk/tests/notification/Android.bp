@@ -46,6 +46,7 @@ android_test {
         "SettingsLibMainSwitchPreference",
         "androidx.test.uiautomator_uiautomator",
         "adservices-clients",
+        "adservices-ui-cts-root-test-lib",
     ],
     libs: [
         "android.test.base",
@@ -57,7 +58,6 @@ android_test {
         "general-tests",
         "mts-adservices",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     data: [":com.example.adservices.samples.ui.consenttestapp"],
     instrumentation_for: "AdServicesApk",
 }
@@ -94,6 +94,7 @@ android_test {
         "SettingsLibMainSwitchPreference",
         "androidx.test.uiautomator_uiautomator",
         "adservices-clients",
+        "adservices-ui-cts-root-test-lib",
     ],
     libs: [
         "android.test.base",

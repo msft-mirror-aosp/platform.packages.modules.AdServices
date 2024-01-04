@@ -107,11 +107,7 @@ public class TopicsService extends Service {
     }
 
     private boolean hasUserConsent() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.TOPICS).isGiven();
-        } else {
-            return ConsentManager.getInstance(this).getConsent().isGiven();
-        }
+        return ConsentManager.getInstance(this).getConsent(AdServicesApiType.TOPICS).isGiven();
     }
 
     @Override

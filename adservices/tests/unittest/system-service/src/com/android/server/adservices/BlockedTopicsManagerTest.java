@@ -16,8 +16,8 @@
 
 package com.android.server.adservices;
 
-import static com.android.adservices.common.DumpHelper.assertDumpHasPrefix;
-import static com.android.adservices.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;

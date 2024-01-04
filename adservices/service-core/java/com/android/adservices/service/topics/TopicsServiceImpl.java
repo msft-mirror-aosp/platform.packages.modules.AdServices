@@ -31,6 +31,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -147,7 +148,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                             // Check if the request is valid.
                             if (!validateRequest(topicsParam, callback)) {
                                 // Return early if the request is invalid.
-                                sLogger.d("Invalid request %s", topicsParam);
+                                sLogger.e("Invalid request %s", topicsParam);
                                 return;
                             }
                         }
@@ -202,6 +203,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             GetTopicsParam topicsParam, IGetTopicsCallback callback) {
         // Return false if sdkName is empty or null.
         if (TextUtils.isEmpty(topicsParam.getSdkName())) {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             invokeCallbackWithStatus(
                     callback,
                     STATUS_INVALID_ARGUMENT,
@@ -321,12 +325,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             return resultCode;
         }
 
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
 
         if (!userConsent.isGiven()) {
             sLogger.v("STATUS_USER_CONSENT_REVOKED: User consent revoked");
@@ -351,7 +350,6 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment ID invalid";
                 permitted = false;
             } else if (!AppManifestConfigHelper.isAllowedTopicsAccess(
-                    mContext,
                     ProcessCompatUtils.isSdkSandboxUid(callingUid),
                     topicsParam.getAppPackageName(),
                     enrollmentData.getEnrollmentId())) {

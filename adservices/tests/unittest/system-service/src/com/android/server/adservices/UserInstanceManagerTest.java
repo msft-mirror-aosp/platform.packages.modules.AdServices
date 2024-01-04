@@ -16,7 +16,7 @@
 
 package com.android.server.adservices;
 
-import static com.android.adservices.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL_VERSION;
 
 import static com.google.common.truth.Truth.assertThat;

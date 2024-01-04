@@ -41,18 +41,23 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.DecisionLogic;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -64,6 +69,7 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.net.Uri;
 import android.os.Process;
 import android.util.Log;
@@ -74,15 +80,17 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -102,8 +110,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -361,11 +371,22 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
     private static final AtomicInteger sFrequencyCapKeyToFilter = new AtomicInteger(0);
 
+    // Ignore tests when device is not at least S
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
 
-    @Rule(order = 1)
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 2)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
+
+    @Rule(order = 3)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
@@ -373,8 +394,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @Before
     public void setup() throws InterruptedException {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
             flags.setFlag(
@@ -446,7 +465,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+        if (!CtsWebViewSupportUtil.isJSSandboxAvailable(sContext)) {
             return;
         }
 
@@ -896,21 +915,21 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    /*
-    // TODO(b/267712947) Unhide Contextual Ad flow with App Install API changes
     @Test
     public void testFledgeSelectionFlow_WithContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
-
         CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         joinCustomAudience(customAudience1);
         joinCustomAudience(customAudience2);
 
@@ -927,10 +946,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 );
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS,
+                        AD_SELECTION_CONFIG,
+                        DEFAULT_DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS,
                         buyersDecisionLogic);
 
         mTestAdSelectionClient
@@ -953,7 +974,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -984,7 +1005,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                 "https://%s%s",
                                                 AdSelectionConfigFixture.SELLER,
                                                 SELLER_TRUSTED_SIGNAL_URI_PATH)))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createAuthenticatedContextualAds())
                         .build();
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
         AdSelectionOutcome outcome =
@@ -1011,6 +1032,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testFledgeSelectionFlow_OnlyContextualAds_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+        PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+
         AdSelectionConfig adSelectionConfigOnlyContextualAds =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         // Adding no buyers in config
@@ -1027,7 +1051,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                 "https://%s%s",
                                                 AdSelectionConfigFixture.SELLER,
                                                 SELLER_TRUSTED_SIGNAL_URI_PATH)))
-                        .setBuyerContextualAds(createContextualAds())
+                        .setBuyerSignedContextualAds(createAuthenticatedContextualAds())
                         .build();
 
         BuyersDecisionLogic buyersDecisionLogic =
@@ -1043,7 +1067,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 );
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         adSelectionConfigOnlyContextualAds, DEFAULT_DECISION_LOGIC_JS,
@@ -1082,13 +1106,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .reportImpression(reportImpressionRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
-    */
 
     @Test
     public void testFledgeAuctionSelectionFlow_overall_register_ad_beacon_Success()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Enable registerAdBeacon feature
         PhFlagsFixture.overrideFledgeRegisterAdBeaconEnabled(true);
@@ -2062,7 +2084,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Perform ad selection to persist two results
         double bid1 = 10.0, bid2 = 15.0;
@@ -2110,7 +2131,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testAdSelectionFromOutcomesFlow_waterfallWithPrebuilt_returnsOutcomeSuccess()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Enable prebuilt uri feature
         PhFlagsFixture.overrideFledgeAdSelectionPrebuiltUriEnabled(true);
@@ -2157,7 +2177,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testAdSelectionFromOutcomesFlow_waterfallWithPrebuilt_returnsNoOutcomeSuccess()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Enable prebuilt uri feature
         PhFlagsFixture.overrideFledgeAdSelectionPrebuiltUriEnabled(true);
@@ -2202,7 +2221,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_returnsNull_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Perform ad selection to persist two results
         double bid1 = 10.0, bid2 = 15.0;
@@ -2248,7 +2266,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_overallTimeout_failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Perform ad selection to persist two results
         double bid1 = 10.0, bid2 = 15.0;
@@ -2300,7 +2317,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_emptyAdSelectionIds_Failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Inputs for outcome selection
         AdSelectionSignals selectionSignals = AdSelectionSignals.EMPTY;
@@ -2338,7 +2354,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testAdSelectionFromOutcomesFlow_nonExistingAdSelectionId_Failure()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Inputs for outcome selection
         long nonExistingAdSelectionId = 12345;
@@ -2378,7 +2393,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFromOutcomesFlow_malformedJs_failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Perform ad selection to persist two results
         double bid1 = 10.0, bid2 = 15.0;
@@ -4398,28 +4412,24 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .build();
     }
 
-    /*
-    // TODO(b/267712947) Unhisde Contextual Ad flow with App Install API changes
-    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+    private Map<AdTechIdentifier, SignedContextualAds> createAuthenticatedContextualAds() {
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
 
         AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
-        ContextualAds contextualAds1 =
-                ContextualAdsFixture.generateContextualAds(
-                                buyer1, ImmutableList.of(100.0, 200.0, 300.0))
-                        .build();
+        SignedContextualAds contextualAds1 =
+                SignedContextualAdsFixture.aSignedContextualAds(
+                        buyer1, ImmutableList.of(100.0, 200.0, 300.0));
 
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
-        ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
-                        .build();
+        SignedContextualAds contextualAds2 =
+                SignedContextualAdsFixture.aSignedContextualAds(
+                        buyer2, ImmutableList.of(400.0, 500.0));
 
         buyerContextualAds.put(buyer1, contextualAds1);
         buyerContextualAds.put(buyer2, contextualAds2);
 
         return buyerContextualAds;
     }
-    */
 
     private void joinCustomAudience(CustomAudience customAudience)
             throws ExecutionException, InterruptedException, TimeoutException {
