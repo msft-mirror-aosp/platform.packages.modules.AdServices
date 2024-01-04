@@ -19,6 +19,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,11 +50,7 @@ public final class ApplicationContextSingleton {
      */
     public static Context get() {
         Context context = sContext.get();
-        // TODO(b/303886367): use Preconditions.checkState()
-        if (context == null) {
-            // TODO(b/309169907): log to CEL
-            throw new IllegalStateException(ERROR_MESSAGE_SET_NOT_CALLED);
-        }
+        Preconditions.checkState(context != null, ERROR_MESSAGE_SET_NOT_CALLED);
         return context;
     }
 
@@ -68,11 +65,9 @@ public final class ApplicationContextSingleton {
     public static void set(Context context) {
         Context appContext =
                 Objects.requireNonNull(context, "context cannot be null").getApplicationContext();
-        // TODO(b/303886367): use Preconditions.checkIllegalArgument()
-        if (appContext == null) {
-            throw new IllegalArgumentException(
-                    "Context (" + context + ") does not have an application context");
-        }
+
+        Preconditions.checkArgument(
+                appContext != null, "Context (%s) does not have an application context", context);
 
         // Set if it's not set yet
         if (sContext.compareAndSet(null, appContext)) {

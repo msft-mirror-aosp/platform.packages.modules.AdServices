@@ -887,6 +887,96 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_SOURCE_V30 =
+            "CREATE TABLE "
+                    + SourceContract.TABLE
+                    + " ("
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.AGGREGATABLE_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.REGISTRATION_ID
+                    + " TEXT, "
+                    + SourceContract.SHARED_AGGREGATION_KEYS
+                    + " TEXT, "
+                    + SourceContract.INSTALL_TIME
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_SPECS
+                    + " TEXT, "
+                    + SourceContract.MAX_EVENT_LEVEL_REPORTS
+                    + " INTEGER, "
+                    + SourceContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + SourceContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + SourceContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + SourceContract.COARSE_EVENT_REPORT_DESTINATIONS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_ATTRIBUTION_STATUS
+                    + " TEXT, "
+                    + SourceContract.PRIVACY_PARAMETERS
+                    + " TEXT, "
+                    + SourceContract.EVENT_REPORT_WINDOWS
+                    + " TEXT, "
+                    + SourceContract.SHARED_DEBUG_KEY
+                    + " INTEGER, "
+                    + SourceContract.SHARED_FILTER_DATA_KEYS
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_DATA_MATCHING
+                    + " TEXT "
+                    + ")";
+
     public static final String CREATE_TABLE_SOURCE_DESTINATION_V9 =
             "CREATE TABLE "
                     + SourceDestination.TABLE
@@ -1946,6 +2036,46 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_ASYNC_REGISTRATION_V31 =
+            "CREATE TABLE "
+                    + AsyncRegistrationContract.TABLE
+                    + " ("
+                    + AsyncRegistrationContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AsyncRegistrationContract.REGISTRATION_URI
+                    + " TEXT, "
+                    + AsyncRegistrationContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.OS_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.TOP_ORIGIN
+                    + " TEXT, "
+                    + AsyncRegistrationContract.SOURCE_TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REGISTRANT
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REQUEST_TIME
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.RETRY_COUNT
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.DEBUG_KEY_ALLOWED
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REGISTRATION_ID
+                    + " TEXT NOT NULL,"
+                    + AsyncRegistrationContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REQUEST_POST_BODY
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REDIRECT_BEHAVIOR
+                    + " TEXT "
+                    + ")";
+
     private static final String CREATE_TABLE_DEBUG_REPORT_V6 =
             "CREATE TABLE IF NOT EXISTS "
                     + DebugReportContract.TABLE
@@ -2393,6 +2523,18 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV30() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV29());
+        createStatements.put(SourceContract.TABLE, CREATE_TABLE_SOURCE_V30);
+        return createStatements;
+    }
+
+    private static Map<String, String> getCreateStatementByTableV31() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV30());
+        createStatements.put(AsyncRegistrationContract.TABLE, CREATE_TABLE_ASYNC_REGISTRATION_V31);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -2495,6 +2637,14 @@ public class MeasurementDbSchemaTrail {
         return createIndexes;
     }
 
+    private static Map<String, String> getCreateIndexesV30() {
+        return getCreateIndexesV29();
+    }
+
+    private static Map<String, String> getCreateIndexesV31() {
+        return getCreateIndexesV30();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -2521,6 +2671,8 @@ public class MeasurementDbSchemaTrail {
                     .put(27, getCreateStatementByTableV27().values())
                     .put(28, getCreateStatementByTableV28().values())
                     .put(29, getCreateStatementByTableV29().values())
+                    .put(30, getCreateStatementByTableV30().values())
+                    .put(31, getCreateStatementByTableV31().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -2549,6 +2701,8 @@ public class MeasurementDbSchemaTrail {
                     .put(27, getCreateIndexesV27().values())
                     .put(28, getCreateIndexesV28().values())
                     .put(29, getCreateIndexesV29().values())
+                    .put(30, getCreateIndexesV30().values())
+                    .put(31, getCreateIndexesV31().values())
                     .build();
 
     /**

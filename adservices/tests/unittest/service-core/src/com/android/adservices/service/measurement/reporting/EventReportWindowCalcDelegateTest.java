@@ -61,6 +61,9 @@ public class EventReportWindowCalcDelegateTest {
     private static final String EVENT_REPORT_WINDOWS_2_WINDOWS_NO_START =
             "{'end_times': [172800000, 432000000]}";
 
+    private static final String EVENT_REPORT_WINDOWS_2_WINDOWS_WITH_START =
+            "{ 'start_time': 3600000, 'end_times': [86400000, 1728000000]}";
+
     private static final String EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START =
             "{'start_time': 86400000, 'end_times': [172800000, 432000000, 604800000, 864000000,"
                     + " 1728000000]}";
@@ -1683,7 +1686,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTimeForNoising_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1760,7 +1763,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1862,7 +1865,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getMaxReportCount_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         long sourceTime = System.currentTimeMillis();
         Source source10Reports =
@@ -1907,7 +1910,7 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingWindowCountForNoising_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteAPIEnabled();
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         long sourceTime = System.currentTimeMillis();
         Source defaultSourceEvent =
@@ -2003,5 +2006,59 @@ public class EventReportWindowCalcDelegateTest {
                 5,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
                         fiveWindowsWithStart, false));
+    }
+
+    @Test
+    public void fallsWithinWindow_windowNotStarted() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
+        long sourceTime = System.currentTimeMillis();
+        long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1) - 1;
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(sourceTime)
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(25))
+                        .build();
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.BEFORE,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, triggerTime, EventSurfaceType.APP));
+    }
+
+    @Test
+    public void fallsWithinWindow_windowWithin() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
+        long sourceTime = System.currentTimeMillis();
+        long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1);
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(sourceTime)
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(25))
+                        .build();
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.WITHIN,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, triggerTime, EventSurfaceType.APP));
+    }
+
+    @Test
+    public void fallsWithinWindow_windowPassed() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
+        long sourceTime = System.currentTimeMillis();
+        long triggerTime = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(20);
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(sourceTime)
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(25))
+                        .build();
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.AFTER,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, triggerTime, EventSurfaceType.APP));
     }
 }

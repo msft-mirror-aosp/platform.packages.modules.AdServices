@@ -353,7 +353,8 @@ public class MddJobService extends JobService {
     }
 
     /** Schedule MDD background tasks. */
-    private static void schedule(
+    @VisibleForTesting
+    static void schedule(
             Context context,
             @NonNull JobScheduler jobScheduler,
             long jobPeriodMs,

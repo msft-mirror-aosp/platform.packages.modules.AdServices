@@ -117,6 +117,18 @@ public interface Flags extends CommonFlags {
     }
 
     /**
+     * Flag to override base64 public key used for encryption testing.
+     *
+     * <p>Note: Default value for this flag should not be changed from empty.
+     */
+    String TOPICS_TEST_ENCRYPTION_PUBLIC_KEY = "";
+
+    /** Returns test public key used for encrypting topics for testing. */
+    default String getTopicsTestEncryptionPublicKey() {
+        return TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
+    }
+
+    /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
      */
@@ -379,8 +391,8 @@ public interface Flags extends CommonFlags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2483"
-                    + "/99f68a201189da021b1f3dd4ebdef7b0fbe75892";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2867"
+                    + "/799a2e308daf8ccaa2fe9c9ef71b115a7f4a41c8";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -686,22 +698,36 @@ public interface Flags extends CommonFlags {
     boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
 
     /** Returns true if flex lite api is enabled else false. */
-    default boolean getMeasurementFlexLiteAPIEnabled() {
+    default boolean getMeasurementFlexLiteApiEnabled() {
         return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 6.5F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT = 6.5F;
 
     /** Returns max information gain in Flexible Event API for Event sources */
     default float getMeasurementFlexApiMaxInformationGainEvent() {
-        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT;
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.5F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
-        return MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION;
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT = 6.5F;
+
+    /** Returns max information gain for Flexible Event, dual destination Event sources */
+    default float getMeasurementFlexApiMaxInformationGainDualDestinationEvent() {
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT;
+    }
+
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION = 11.46173F;
+
+    /** Returns max information gain for Flexible Event, dual destination Navigation sources */
+    default float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
+        return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
     int MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS = 20;
@@ -1031,6 +1057,8 @@ public interface Flags extends CommonFlags {
     int PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES = (int) (10 * 1024);
     int PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP = 3;
     long PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS = 24L * 60L * 60L; // 1 day
+    int PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES = 10 * 1024;
+    int PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES = 15 * 1024;
 
     /** Returns {@code true} feature flag if Periodic encoding of Protected Signals is enabled. */
     default boolean getProtectedSignalsPeriodicEncodingEnabled() {
@@ -1065,6 +1093,19 @@ public interface Flags extends CommonFlags {
     /** Returns the maximum time window beyond which encoder logic should be refreshed */
     default long getProtectedSignalsEncoderRefreshWindowSeconds() {
         return PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
+    }
+
+    /** Returns the maximum size of signals in storage per buyer. */
+    default int getProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+    }
+
+    /**
+     * Returns the maximum size of signals in the storage per buyer with a graceful oversubscription
+     * policy.
+     */
+    default int getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -3322,6 +3363,14 @@ public interface Flags extends CommonFlags {
         return FLEDGE_DATA_VERSION_HEADER_ENABLED;
     }
 
+    // New fledge beacon reporting metrics flag.
+    boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge beacon reporting metrics is enabled. */
+    default boolean getFledgeBeaconReportingMetricsEnabled() {
+        return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.
@@ -3382,20 +3431,20 @@ public interface Flags extends CommonFlags {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
-    /** Default Determines whether EU notification flow change is enabled. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
-
-    /** Determines whether EU notification flow change is enabled. */
-    default boolean getEuNotifFlowChangeEnabled() {
-        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
-    }
-
-    /** Default value for flexible event reporting API */
+    /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
-    /** Returns whether to enable flexible event reporting API */
+    /** Returns whether to enable Measurement flexible event reporting API */
     default boolean getMeasurementFlexibleEventReportingApiEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default value for Measurement trigger data matching */
+    boolean MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING = true;
+
+    /** Returns whether to enable Measurement trigger data matching */
+    default boolean getMeasurementEnableTriggerDataMatching() {
+        return MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
     }
 
     /** Default maximum sources per publisher */
@@ -4233,6 +4282,16 @@ public interface Flags extends CommonFlags {
     /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
     default boolean getMsmtEnableApiStatusAllowListCheck() {
         return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
+    }
+
+    /**
+     * Flag to control whether redirect registration urls should be modified to prefix the path
+     * string with .well-known
+     */
+    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
+
+    default boolean getMeasurementEnableRedirectToWellKnownPath() {
+        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
     /**

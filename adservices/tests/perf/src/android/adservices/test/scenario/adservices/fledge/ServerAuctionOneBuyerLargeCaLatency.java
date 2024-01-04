@@ -66,7 +66,7 @@ public class ServerAuctionOneBuyerLargeCaLatency {
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
-    private static final String SFE_ADDRESS = "https://seller1-paprod.sfe-gcp.com/v1/selectAd";
+    private static final String SFE_ADDRESS = "https://seller1-paprod.sfe.bas-gcp.pstest.dev/v1/selectAd";
 
     private static final String CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD =
             "CustomAudienceOneBuyerOneCaOneAd.json";

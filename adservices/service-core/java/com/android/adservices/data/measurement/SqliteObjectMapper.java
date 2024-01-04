@@ -27,6 +27,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRedirect;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -224,6 +225,9 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.SHARED_FILTER_DATA_KEYS,
                 builder::setSharedFilterDataKeys);
+        setTextColumn(cursor, MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
+                (enumValue) -> builder.setTriggerDataMatching(
+                        Source.TriggerDataMatching.valueOf(enumValue)));
         return builder.build();
     }
 
@@ -468,6 +472,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
                 builder::setPostBody);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
+                (enumValue) ->
+                        builder.setRedirectBehavior(
+                                enumValue == null
+                                        ? null
+                                        : AsyncRedirect.RedirectBehavior.valueOf(enumValue)));
         return builder.build();
     }
 

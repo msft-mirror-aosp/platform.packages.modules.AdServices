@@ -22,6 +22,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -43,10 +44,10 @@ import android.os.Binder;
 import android.os.Process;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -55,25 +56,20 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
-public final class AppSetIdServiceImplTest extends AdServicesUnitTestCase {
+@MockStatic(Binder.class)
+public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String TEST_APP_PACKAGE_NAME =
             "com.android.adservices.servicecoreappsetidtest";
@@ -84,15 +80,13 @@ public final class AppSetIdServiceImplTest extends AdServicesUnitTestCase {
     private static final String APPSETID_API_ALLOW_LIST =
             "com.android.adservices.servicecoreappsetidtest";
     private static final int SANDBOX_UID = 25000;
-
-    private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
+    private Context mContext;
     private CallerMetadata mCallerMetadata;
     private AppSetIdWorker mAppSetIdWorker;
     private GetAppSetIdParam mRequest;
-    private MockitoSession mStaticMockitoSession;
 
     @Mock private PackageManager mPackageManager;
     @Mock private Flags mMockFlags;
@@ -104,10 +98,10 @@ public final class AppSetIdServiceImplTest extends AdServicesUnitTestCase {
 
     @Before
     public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        mContext = appContext.get();
 
         mAppSetIdWorker = Mockito.spy(AppSetIdWorker.getInstance());
-        Mockito.doReturn(null).when(mAppSetIdWorker).getService();
+        doReturn(null).when(mAppSetIdWorker).getService();
 
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
@@ -127,15 +121,6 @@ public final class AppSetIdServiceImplTest extends AdServicesUnitTestCase {
         when(mMockThrottler.tryAcquire(
                         eq(Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
-
-        // Initialize mock static.
-        mStaticMockitoSession =
-                ExtendedMockito.mockitoSession().mockStatic(Binder.class).startMocking();
-    }
-
-    @After
-    public void tearDown() {
-        mStaticMockitoSession.finishMocking();
     }
 
     @Test
@@ -166,9 +151,8 @@ public final class AppSetIdServiceImplTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = "Sandbox caller is only applicable on T+")
     public void testEnforceForeground_sandboxCaller() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sandbox caller is only applicable on T+
-
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getAppSetId()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
