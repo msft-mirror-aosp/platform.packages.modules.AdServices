@@ -16,7 +16,6 @@
 package com.android.adservices.tests.adid;
 
 import static com.google.common.truth.Truth.assertWithMessage;
-import static org.junit.Assert.fail;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
@@ -162,19 +161,14 @@ public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
 
     @Test
     @RequiresLowRamDevice
-    public void testAdIdManager_whenDeviceNotSupported_R() {
+    public void testAdIdManager_whenDeviceNotSupported_R() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         assertWithMessage("adIdManager").that(adIdManager).isNotNull();
         AdServicesOutcomeReceiverForTests<AdId> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
-        // NOTE: cannot use assertThrows() as it would cause a NoSuchClassException on R (as
-        // JUnit somehow scans the whole class)
-        try {
-            adIdManager.getAdId(sCallbackExecutor, receiver);
-            fail("getAdId() should have thrown IllegalStateException");
-        } catch (IllegalStateException e) {
-            // expected
-        }
+
+        adIdManager.getAdId(sCallbackExecutor, receiver);
+        receiver.assertFailure(IllegalStateException.class);
     }
 
     private static String toString(AdId adId) {
