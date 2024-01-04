@@ -21,6 +21,7 @@ import android.cts.install.lib.host.InstallUtilsHost;
 import com.android.tradefed.config.Option;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
+import com.android.tradefed.util.FileUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,6 +71,9 @@ public class RoomDatabaseVersionBumpGuardrailTest extends BaseHostJUnit4Test {
     @Option(name = "new-schema-lib")
     protected String mNewSchemaLib;
 
+    @Option(name = "schema-apk-name")
+    protected String mSchemaApkName = AD_SERVICES_SERVICE_CORE_UNIT_TESTS_APK_FILE_NAME;
+
     @Test
     public void roomDatabaseVersionBumpGuardrailTest() throws Exception {
 
@@ -79,15 +83,14 @@ public class RoomDatabaseVersionBumpGuardrailTest extends BaseHostJUnit4Test {
         Map<String, ZipEntry> baseVersions = extractVersionMap(baseSchemas);
         Map<String, ZipEntry> newVersions = extractVersionMap(newSchemas);
 
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder errors = new StringBuilder();
         for (Map.Entry<String, ZipEntry> e : baseVersions.entrySet()) {
             String name = e.getKey();
             ZipEntry baseFile = e.getValue();
             ZipEntry newFile = newVersions.get(name);
 
             if (newFile == null) {
-                stringBuilder.append(
-                        String.format("Database file '%s' missing in new version!\n", name));
+                errors.append(String.format("Database file '%s' missing in new version!\n", name));
                 continue;
             }
 
@@ -98,7 +101,7 @@ public class RoomDatabaseVersionBumpGuardrailTest extends BaseHostJUnit4Test {
                 if (!Arrays.equals(
                         baseSchemas.getInputStream(baseFile).readAllBytes(),
                         newSchemas.getInputStream(newFile).readAllBytes())) {
-                    stringBuilder.append(
+                    errors.append(
                             String.format(
                                     "Database file '%s' changed between major build. Please bump up"
                                             + " DB version.\n",
@@ -107,29 +110,33 @@ public class RoomDatabaseVersionBumpGuardrailTest extends BaseHostJUnit4Test {
             }
 
             if (getVersionFromFile(baseFile) > getVersionFromFile(newFile)) {
-                stringBuilder.append(
+                errors.append(
                         String.format(
                                 "Database %s version was turned down from %d to %d\n",
                                 name, baseFileVersion, newFileVersion));
             }
         }
 
-        if (stringBuilder.length() != 0) {
-            throw new IllegalStateException(stringBuilder.toString());
+        if (errors.length() != 0) {
+            throw new IllegalStateException(errors.toString());
         }
     }
 
     private ZipFile getTestPackageFromFile(String lib) throws IOException {
         byte[] bytes;
-        try (ZipFile zipFile = new ZipFile(mHostUtils.getTestFile(lib))) {
-            ZipEntry entry =
-                    getZipEntry(zipFile, AD_SERVICES_SERVICE_CORE_UNIT_TESTS_APK_FILE_NAME);
-            bytes = zipFile.getInputStream(entry).readAllBytes();
+        File testPackage = mHostUtils.getTestFile(lib);
+        if (testPackage.isFile()) {
+            try (ZipFile zipFile = new ZipFile(testPackage)) {
+                ZipEntry entry = getZipEntry(zipFile, mSchemaApkName);
+                bytes = zipFile.getInputStream(entry).readAllBytes();
+            }
+            File tempFile = File.createTempFile("schemaFiles", ".zip");
+            tempFile.setWritable(true);
+            new FileOutputStream(tempFile).write(bytes);
+            return new ZipFile(tempFile);
+        } else {
+            return new ZipFile(FileUtil.findFile(testPackage, mSchemaApkName));
         }
-        File tempFile = File.createTempFile("schemaFiles", ".zip");
-        tempFile.setWritable(true);
-        new FileOutputStream(tempFile).write(bytes);
-        return new ZipFile(tempFile);
     }
 
     private static ZipEntry getZipEntry(ZipFile zipFile, String fileName) {
