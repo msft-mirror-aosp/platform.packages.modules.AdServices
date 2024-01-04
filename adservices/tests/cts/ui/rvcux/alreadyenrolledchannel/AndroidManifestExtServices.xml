@@ -19,11 +19,12 @@
           package="com.android.adservices.tests.ui.rvcux.alredyenrolledchannel">
 
     <application>
+      <!-- Used and present only on S- -->
+      <uses-library android:name="com.google.android.ext.services" android:required="false"/>
     </application>
 
-    <!-- instrument into the system server for permission -->
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="android">
+        android:targetPackage="com.google.android.ext.services">
     </instrumentation>
 </manifest>
