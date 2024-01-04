@@ -20,6 +20,11 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+
+    <!-- For this test suite to get picked up in mainline presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+        value="com.google.android.adservices.apex" />
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="CtsAdServicesRootTestCases.apk" />
@@ -43,6 +48,12 @@
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
+
+        <!-- Override MDD background job to avoid race condition. -->
+        <option name="run-command"
+                value="setprop debug.adservices.mdd_background_task_kill_switch true"/>
+        <option name="teardown-command"
+                value="setprop debug.adservices.mdd_background_task_kill_switch false"/>
 
         <!-- Force enable enrollment checks for FLEDGE when testing enrollment -->
         <option name="run-command" value="setprop debug.adservices.disable_fledge_enrollment_check false" />

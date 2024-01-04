@@ -117,6 +117,18 @@ public interface Flags extends CommonFlags {
     }
 
     /**
+     * Flag to override base64 public key used for encryption testing.
+     *
+     * <p>Note: Default value for this flag should not be changed from empty.
+     */
+    String TOPICS_TEST_ENCRYPTION_PUBLIC_KEY = "";
+
+    /** Returns test public key used for encrypting topics for testing. */
+    default String getTopicsTestEncryptionPublicKey() {
+        return TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
+    }
+
+    /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
      */
@@ -697,7 +709,7 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.5F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
@@ -3419,14 +3431,6 @@ public interface Flags extends CommonFlags {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
-    /** Default Determines whether EU notification flow change is enabled. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
-
-    /** Determines whether EU notification flow change is enabled. */
-    default boolean getEuNotifFlowChangeEnabled() {
-        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
-    }
-
     /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
@@ -4278,6 +4282,16 @@ public interface Flags extends CommonFlags {
     /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
     default boolean getMsmtEnableApiStatusAllowListCheck() {
         return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
+    }
+
+    /**
+     * Flag to control whether redirect registration urls should be modified to prefix the path
+     * string with .well-known
+     */
+    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
+
+    default boolean getMeasurementEnableRedirectToWellKnownPath() {
+        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
     /**

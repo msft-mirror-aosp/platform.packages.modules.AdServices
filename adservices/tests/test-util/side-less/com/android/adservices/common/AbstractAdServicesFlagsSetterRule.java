@@ -267,6 +267,18 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 });
     }
 
+    public T setDebugUxFlagsForRvcUx() {
+        return runOrCache(
+                "setDebugUxFlagsForRvcUx()",
+                () -> {
+                    if (!isAtLeastS() && isAtLeastR()) {
+                        setFlag(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
+                        setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
+                        return;
+                    }
+                });
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //

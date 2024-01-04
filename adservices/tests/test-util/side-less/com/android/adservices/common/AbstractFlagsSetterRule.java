@@ -369,8 +369,12 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
     /** Gets the device's SDK level. */
     protected abstract int getDeviceSdk();
 
+    protected boolean isAtLeastR() {
+        return getDeviceSdk() >= 30;
+    }
+
     protected boolean isAtLeastS() {
-        return getDeviceSdk() > 31;
+        return getDeviceSdk() >= 31;
     }
 
     protected boolean isAtLeastT() {

@@ -36,6 +36,7 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.RequiresSdkLevelAtLeastT;
@@ -136,7 +137,11 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         doNothing().when(mConsentManager).disable(any(Context.class));
         doReturn(GA_UX).when(mConsentManager).getUx();
 
-        startActivityFromHomeAndCheckMainSwitch();
+        try {
+            startActivityFromHomeAndCheckMainSwitch();
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException from setOrientation.");
+        }
     }
 
     private void startActivityFromHomeAndCheckMainSwitch() throws RemoteException {

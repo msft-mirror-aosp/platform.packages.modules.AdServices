@@ -21,6 +21,7 @@ import android.util.Log;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -45,24 +46,30 @@ public final class AdServicesShellCommandHandler {
 
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_ATTRIBUTION_ACCESS = "is-allowed-attribution-access";
+
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
             "is-allowed-custom-audiences-access";
+
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
+
     @VisibleForTesting
     static final String HELP_ECHO =
             CMD_ECHO + " <message> - prints the given message (useful to check cmd is working).";
+
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_ATTRIBUTION_ACCESS =
             CMD_IS_ALLOWED_ATTRIBUTION_ACCESS
                     + " <package_name> <enrollment_id> - checks if the given enrollment id is"
                     + " allowed to use the Attribution APIs in the given app.";
+
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
             CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS
                     + " <package_name> <enrollment_id> - checks if the given enrollment id is"
                     + " allowed to use the Custom Audience APIs in the given app.";
+
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
             CMD_IS_ALLOWED_TOPICS_ACCESS
@@ -74,6 +81,7 @@ public final class AdServicesShellCommandHandler {
 
     @VisibleForTesting
     static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s). Syntax: %s";
+
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
     private static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
@@ -93,11 +101,8 @@ public final class AdServicesShellCommandHandler {
     /** Runs the given command ({@code args[0]}) and optional arguments */
     public int run(String... args) {
         Objects.requireNonNull(args, "args cannot be null");
-        // TODO(b/303886367): use Preconditions
-        if (args.length < 1) {
-            throw new IllegalArgumentException(
-                    "must have at least one argument (the command itself)");
-        }
+        Preconditions.checkArgument(
+                args.length >= 1, "must have at least one argument (the command itself)");
         if (DEBUG) {
             Log.d(TAG, "run(): " + Arrays.toString(args));
         }
