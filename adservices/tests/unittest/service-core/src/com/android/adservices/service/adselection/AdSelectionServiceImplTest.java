@@ -106,6 +106,7 @@ import android.webkit.WebView;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
@@ -113,7 +114,6 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
@@ -121,17 +121,18 @@ import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.adselection.DBReportingComputationInfo;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -299,7 +300,7 @@ public class AdSelectionServiceImplTest {
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
-    private EncryptionContextDao mEncryptionContextDao;
+    private EnrollmentDao mEnrollmentDao;
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
     private Uri mBiddingLogicUri;
     private CustomAudienceSignals mCustomAudienceSignals;
@@ -322,13 +323,14 @@ public class AdSelectionServiceImplTest {
                         .spyStatic(JSScriptEngine.class)
                         .spyStatic(WebView.class)
                         .mockStatic(ConsentManager.class)
+                        .mockStatic(FlagsFactory.class)
                         .mockStatic(MeasurementImpl.class)
                         .mockStatic(AppImportanceFilter.class)
                         // mAdServicesLoggerMock is not referenced in many tests
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
-
+        doReturn(mFlags).when(FlagsFactory::getFlags);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
@@ -353,13 +355,8 @@ public class AdSelectionServiceImplTest {
 
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(
-                                ApplicationProvider.getApplicationContext(),
-                                AdSelectionServerDatabase.class)
-                        .build();
-        mEncryptionContextDao = serverDb.encryptionContextDao();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(CONTEXT);
+        mEnrollmentDao = EnrollmentDao.getInstance(CONTEXT);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
@@ -497,8 +494,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -618,8 +615,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -670,6 +667,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessfullyReportsDataVersionHeader() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -748,8 +746,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -808,6 +806,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessfullyReportsSellerDataVersionHeader() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -879,8 +878,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -933,6 +932,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -998,8 +998,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1121,8 +1121,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1236,8 +1236,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1337,8 +1337,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1445,8 +1445,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1568,8 +1568,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1613,6 +1613,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -1688,8 +1689,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1814,8 +1815,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -1988,8 +1989,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2132,8 +2133,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2294,8 +2295,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2462,8 +2463,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2621,8 +2622,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2769,8 +2770,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2921,8 +2922,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -2986,6 +2987,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
@@ -3088,8 +3090,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3263,8 +3265,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3407,8 +3409,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3514,8 +3516,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3620,8 +3622,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3732,8 +3734,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3839,8 +3841,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -3941,8 +3943,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4042,8 +4044,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4144,8 +4146,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4266,8 +4268,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4413,8 +4415,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4510,8 +4512,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4572,8 +4574,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4629,8 +4631,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4691,8 +4693,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4764,8 +4766,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4833,8 +4835,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4906,8 +4908,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -4980,8 +4982,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5095,8 +5097,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5212,8 +5214,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5325,8 +5327,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5433,8 +5435,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5470,8 +5472,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5521,8 +5523,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5588,8 +5590,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5656,8 +5658,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5715,8 +5717,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5776,8 +5778,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5831,8 +5833,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5890,8 +5892,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -5990,8 +5992,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6106,8 +6108,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6224,8 +6226,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6268,6 +6270,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
@@ -6347,8 +6350,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6452,8 +6455,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6494,6 +6497,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
@@ -6557,8 +6561,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6626,6 +6630,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Instantiate a server with different domain from buyer and seller for reporting
@@ -6690,8 +6695,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6804,8 +6809,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6920,8 +6925,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -6967,6 +6972,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testReportImpressionSuccessWithValidImpressionReportingSubdomains()
             throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
@@ -7057,8 +7063,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7188,8 +7194,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7304,8 +7310,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7433,8 +7439,8 @@ public class AdSelectionServiceImplTest {
                             mCustomAudienceDao,
                             mEncodedPayloadDao,
                             mFrequencyCapDao,
-                            mEncryptionContextDao,
                             mEncryptionKeyDao,
+                            mEnrollmentDao,
                             mClientSpy,
                             mDevContextFilterMock,
                             mLightweightExecutorService,
@@ -7500,8 +7506,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7565,8 +7571,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7624,8 +7630,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7689,8 +7695,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7766,8 +7772,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7837,8 +7843,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7912,8 +7918,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -7986,8 +7992,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -8109,8 +8115,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -8226,8 +8232,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -8348,8 +8354,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -8488,8 +8494,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -9162,8 +9168,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -9224,8 +9230,8 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mClientSpy,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -9267,8 +9273,8 @@ public class AdSelectionServiceImplTest {
                 mCustomAudienceDao,
                 mEncodedPayloadDao,
                 mFrequencyCapDao,
-                mEncryptionContextDao,
                 mEncryptionKeyDao,
+                mEnrollmentDao,
                 mClientSpy,
                 mDevContextFilterMock,
                 mLightweightExecutorService,

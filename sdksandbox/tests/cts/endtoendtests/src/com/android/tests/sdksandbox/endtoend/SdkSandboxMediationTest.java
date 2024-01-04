@@ -34,6 +34,7 @@ import android.os.RemoteException;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
+import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.sdksandbox.cts.provider.mediationtest.IMediationTestSdkApi;
 
 import org.junit.After;
@@ -69,7 +70,6 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
-    private IMediationTestSdkApi mSdk;
 
     @Before
     public void setup() {
@@ -102,7 +102,7 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testGetAppOwnedSdkSandboxInterfaces() throws Exception {
-        loadMediatorSdkAndPopulateInterface();
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
         IBinder iBinder = new Binder();
         mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
                 new AppOwnedSdkSandboxInterface(
@@ -111,7 +111,7 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
                         /*interfaceIBinder=*/ iBinder));
 
         final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaceList =
-                mSdk.getAppOwnedSdkSandboxInterfaces();
+                mediatorSdk.getAppOwnedSdkSandboxInterfaces();
 
         assertThat(appOwnedSdkSandboxInterfaceList).hasSize(1);
 
@@ -123,13 +123,13 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testGetAppOwnedSdkSandboxInterfaces_NoInterface() throws Exception {
-        loadMediatorSdkAndPopulateInterface();
-        assertThat(mSdk.getAppOwnedSdkSandboxInterfaces()).hasSize(0);
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
+        assertThat(mediatorSdk.getAppOwnedSdkSandboxInterfaces()).hasSize(0);
     }
 
     @Test
     public void testGetAppOwnedSdkSandboxInterfaces_MultipleInterfaces() throws Exception {
-        loadMediatorSdkAndPopulateInterface();
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
         IBinder iBinder = new Binder();
         mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
                 new AppOwnedSdkSandboxInterface(
@@ -144,7 +144,7 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
                         /*version=*/ 1,
                         /*interfaceIBinder=*/ iBinder2));
         final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaceList =
-                mSdk.getAppOwnedSdkSandboxInterfaces();
+                mediatorSdk.getAppOwnedSdkSandboxInterfaces();
 
         assertThat(appOwnedSdkSandboxInterfaceList).hasSize(2);
 
@@ -169,9 +169,9 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testGetSandboxedSdk_GetsAllSdksLoadedInTheSandbox() throws Exception {
-        loadMediatorSdkAndPopulateInterface();
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
 
-        final List<SandboxedSdk> sandboxedSdks = mSdk.getSandboxedSdks();
+        final List<SandboxedSdk> sandboxedSdks = mediatorSdk.getSandboxedSdks();
         assertThat(sandboxedSdks).hasSize(1);
         assertThat(sandboxedSdks.get(0).getInterface().getInterfaceDescriptor())
                 .isEqualTo(
@@ -181,10 +181,10 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testGetSandboxedSdk_MultipleSdks() throws Exception {
-        loadMediatorSdkAndPopulateInterface();
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
         loadMediateeSdk();
 
-        final List<SandboxedSdk> sandboxedSdks = mSdk.getSandboxedSdks();
+        final List<SandboxedSdk> sandboxedSdks = mediatorSdk.getSandboxedSdks();
         assertThat(sandboxedSdks).hasSize(2);
         Set<String> interfaceDescriptors =
                 sandboxedSdks.stream()
@@ -207,10 +207,10 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testLoadSdkByOtherSdk() throws Exception {
-        loadMediatorSdkAndPopulateInterface();
-        mSdk.loadSdkBySdk(MEDIATEE_SDK_NAME);
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
+        mediatorSdk.loadSdkBySdk(MEDIATEE_SDK_NAME);
 
-        final List<SandboxedSdk> sandboxedSdks = mSdk.getSandboxedSdks();
+        final List<SandboxedSdk> sandboxedSdks = mediatorSdk.getSandboxedSdks();
         assertThat(sandboxedSdks).hasSize(2);
         Set<String> loadedSdks =
                 sandboxedSdks.stream()
@@ -225,10 +225,11 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testLoadSdkBySameSdk() throws Exception {
-        loadMediatorSdkAndPopulateInterface();
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
         IllegalStateException exception =
                 assertThrows(
-                        IllegalStateException.class, () -> mSdk.loadSdkBySdk(MEDIATOR_SDK_NAME));
+                        IllegalStateException.class,
+                        () -> mediatorSdk.loadSdkBySdk(MEDIATOR_SDK_NAME));
         assertThat(exception.getMessage())
                 .isEqualTo(
                         "java.lang.AssertionError: Load SDK was not successful. errorCode: 101,"
@@ -239,10 +240,12 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testLoadSdkThatDoesNotExist() throws Exception {
-        loadMediatorSdkAndPopulateInterface();
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
         final String nonExistingSdk = "non-existing-sdk";
         IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> mSdk.loadSdkBySdk(nonExistingSdk));
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> mediatorSdk.loadSdkBySdk(nonExistingSdk));
         assertThat(exception.getMessage())
                 .isEqualTo(
                         "java.lang.AssertionError: "
@@ -253,18 +256,36 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
                                 + " not found for loading");
     }
 
-    private void loadMediatorSdkAndPopulateInterface() {
+    @Test
+    public void testSandboxedSdkCanCallAppSdk() throws Exception {
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
+        // we load the mediatee SDK to get a handle to its IBinder, which will be registered as an
+        // app owned interface. This is done to avoid re-implementing an ICtsSdkProviderApi.
+        ICtsSdkProviderApi mediateeSdk = loadMediateeSdk();
+        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                new AppOwnedSdkSandboxInterface("mediatee", 1, mediateeSdk.asBinder()));
+        mediatorSdk.checkCanCallMediateeInterface(/*inSandbox=*/ false, mContext.getPackageName());
+    }
+
+    @Test
+    public void testSandboxedSdkCanCallSandboxedSdk() throws Exception {
+        IMediationTestSdkApi mediatorSdk = loadMediatorSdk();
+        loadMediateeSdk();
+        mediatorSdk.checkCanCallMediateeInterface(/*inSandbox=*/ true, mContext.getPackageName());
+    }
+
+    private IMediationTestSdkApi loadMediatorSdk() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(MEDIATOR_SDK_NAME, new Bundle(), Runnable::run, callback);
         callback.assertLoadSdkIsSuccessful();
 
-        // Store the returned SDK interface so that we can interact with it later.
-        mSdk = IMediationTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+        return IMediationTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
     }
 
-    private void loadMediateeSdk() {
+    private ICtsSdkProviderApi loadMediateeSdk() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(MEDIATEE_SDK_NAME, new Bundle(), Runnable::run, callback);
         callback.assertLoadSdkIsSuccessful();
+        return ICtsSdkProviderApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
     }
 }

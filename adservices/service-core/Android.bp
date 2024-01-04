@@ -201,7 +201,10 @@ cc_library_shared {
     shared_libs: ["liblog",],
     static_libs: ["libact", "libcrypto_static"],
     version_script: "jni/version-script.lds",
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "//apex_available:platform",
+        "com.android.adservices",
+        "com.android.extservices"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",

@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
@@ -43,13 +44,15 @@ import java.util.Objects;
 public class TriggerSpecs {
     private final TriggerSpec[] mTriggerSpecs;
     private int mMaxEventLevelReports;
-    private final PrivacyComputationParams mPrivacyParams;
+    private PrivacyComputationParams mPrivacyParams;
     private final Map<UnsignedLong, Integer> mTriggerDataToTriggerSpecIndexMap = new HashMap<>();
     // Reference to a list that is a property of the Source object.
     private List<AttributedTrigger> mAttributedTriggersRef;
 
     // Trigger data magnitude is restricted to 32 bits.
     public static final UnsignedLong MAX_TRIGGER_DATA_VALUE = new UnsignedLong((1L << 32) - 1L);
+    // Max bucket threshold is 32 bits.
+    public static final long MAX_BUCKET_THRESHOLD = (1L << 32) - 1L;
 
     /** The JSON keys for flexible event report API input */
     public interface FlexEventReportJsonKeys {
@@ -126,7 +129,6 @@ public class TriggerSpecs {
             Source source) {
         mTriggerSpecs = triggerSpecs;
         mMaxEventLevelReports = maxEventLevelReports;
-        mPrivacyParams = new PrivacyComputationParams();
         if (source != null) {
             mAttributedTriggersRef = source.getAttributedTriggers();
         }
@@ -140,12 +142,18 @@ public class TriggerSpecs {
     /**
      * @return the information gain
      */
-    public double getInformationGain() {
+    public double getInformationGain(Source source, Flags flags) {
+        if (mPrivacyParams == null) {
+            buildPrivacyParameters(source, flags);
+        }
         return mPrivacyParams.getInformationGain();
     }
 
     /** @return the probability to use fake report */
-    public double getFlipProbability() {
+    public double getFlipProbability(Source source, Flags flags) {
+        if (mPrivacyParams == null) {
+            buildPrivacyParameters(source, flags);
+        }
         return mPrivacyParams.getFlipProbability();
     }
 
@@ -157,6 +165,7 @@ public class TriggerSpecs {
      * @return the parameters to computer number of states and fake report
      */
     public int[][] getPrivacyParamsForComputation() {
+        // TODO (b/313920181): build privacy params in case null.
         int[][] params = new int[3][];
         params[0] = new int[] {mMaxEventLevelReports};
         params[1] = mPrivacyParams.getPerTypeNumWindowList();
@@ -210,7 +219,7 @@ public class TriggerSpecs {
                 summaryBuckets.get(index),
                 index < summaryBuckets.size() - 1
                         ? summaryBuckets.get(index + 1) - 1
-                        : Integer.MAX_VALUE - 1);
+                        : MAX_BUCKET_THRESHOLD);
     }
 
    /**
@@ -335,6 +344,10 @@ public class TriggerSpecs {
         return 0L;
     }
 
+    private void buildPrivacyParameters(Source source, Flags flags) {
+        mPrivacyParams = new PrivacyComputationParams(source, flags);
+    }
+
     private int[] computePerTypeNumWindowList() {
         List<Integer> list = new ArrayList<>();
         for (TriggerSpec triggerSpec : mTriggerSpecs) {
@@ -452,14 +465,22 @@ public class TriggerSpecs {
         private final double mFlipProbability;
         private final double mInformationGain;
 
-        PrivacyComputationParams() {
+        PrivacyComputationParams(Source source, Flags flags) {
             mPerTypeNumWindowList = computePerTypeNumWindowList();
             mPerTypeCapList = computePerTypeCapList();
+
+            // Doubling the window cap for each trigger data type correlates with counting report
+            // states that treat having a web destination as different from an app destination.
+            int destinationMultiplier = source.getDestinationTypeMultiplier(flags);
+            int[] updatedPerTypeNumWindowList = new int[mPerTypeNumWindowList.length];
+            for (int i = 0; i < mPerTypeNumWindowList.length; i++) {
+                updatedPerTypeNumWindowList[i] = mPerTypeNumWindowList[i] * destinationMultiplier;
+            }
 
             // compute number of state and other privacy parameters
             mNumStates =
                     Combinatorics.getNumStatesFlexApi(
-                            mMaxEventLevelReports, mPerTypeNumWindowList, mPerTypeCapList);
+                            mMaxEventLevelReports, updatedPerTypeNumWindowList, mPerTypeCapList);
             mFlipProbability = Combinatorics.getFlipProbability(mNumStates);
             mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);
         }

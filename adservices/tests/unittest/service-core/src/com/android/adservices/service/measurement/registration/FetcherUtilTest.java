@@ -30,6 +30,7 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -42,12 +43,11 @@ import com.google.common.collect.ImmutableMap;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
@@ -68,31 +68,25 @@ public final class FetcherUtilTest {
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
     private static final Uri REGISTRANT_URI = WebUtil.validUri("https://bar.test");
     private static final String KEY = "key";
-
-    @Mock Flags mFlags;
-    @Mock AdServicesLogger mLogger;
-
-    private MockitoSession mStaticMockSession;
-
     public static final int UNKNOWN_SOURCE_TYPE = 0;
     public static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
     public static final int APP_REGISTRATION_SURFACE_TYPE = 2;
     public static final int UNKNOWN_STATUS = 0;
     public static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
 
+    @Mock Flags mFlags;
+    @Mock AdServicesLogger mLogger;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
+
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void cleanup() throws InterruptedException {
-        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -206,34 +200,75 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void extractLong_maxValue_success() throws JSONException {
+    public void is64BitInteger_various() {
+        assertTrue(FetcherUtil.is64BitInteger(Integer.valueOf(64)));
+        assertTrue(FetcherUtil.is64BitInteger(Integer.valueOf(-664)));
+        assertTrue(FetcherUtil.is64BitInteger(Integer.MAX_VALUE));
+        assertTrue(FetcherUtil.is64BitInteger(Long.valueOf(-140737488355328L)));
+        assertTrue(FetcherUtil.is64BitInteger(Long.MAX_VALUE));
+        assertFalse(FetcherUtil.is64BitInteger(Double.valueOf(45.33D)));
+        assertFalse(FetcherUtil.is64BitInteger(Float.valueOf(-456.335F)));
+        assertFalse(FetcherUtil.is64BitInteger("4567"));
+        assertFalse(FetcherUtil.is64BitInteger(new JSONObject()));
+    }
+
+    @Test
+    public void extractLongString_maxValue_success() throws JSONException {
         String longString = "9223372036854775807";
         JSONObject obj = new JSONObject().put(KEY, longString);
-        assertEquals(Optional.of(Long.parseLong(longString)), FetcherUtil.extractLong(obj, KEY));
+        assertEquals(
+                Optional.of(Long.parseLong(longString)),
+                FetcherUtil.extractLongString(obj, KEY));
     }
 
     @Test
-    public void extractLong_negative_success() throws JSONException {
+    public void extractLongString_negative_success() throws JSONException {
         String longString = "-935";
         JSONObject obj = new JSONObject().put(KEY, longString);
-        assertEquals(Optional.of(Long.parseLong(longString)), FetcherUtil.extractLong(obj, KEY));
+        assertEquals(
+                Optional.of(Long.parseLong(longString)),
+                FetcherUtil.extractLongString(obj, KEY));
     }
 
     @Test
-    public void extractLong_notAString_returnsEmpty() throws JSONException {
+    public void extractLongString_notAString_returnsEmpty() throws JSONException {
         JSONObject obj = new JSONObject().put(KEY, 123);
-        assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
+        assertEquals(Optional.empty(), FetcherUtil.extractLongString(obj, KEY));
     }
 
     @Test
-    public void extractLong_tooLarge_returnsEmpty() throws JSONException {
+    public void extractLongString_tooLarge_returnsEmpty() throws JSONException {
         JSONObject obj = new JSONObject().put(KEY, "9223372036854775808");
-        assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
+        assertEquals(Optional.empty(), FetcherUtil.extractLongString(obj, KEY));
     }
 
     @Test
-    public void extractLong_notAnInt_returnsEmpty() throws JSONException {
+    public void extractLongString_notAnInt_returnsEmpty() throws JSONException {
         JSONObject obj = new JSONObject().put(KEY, "123p");
+        assertEquals(Optional.empty(), FetcherUtil.extractLongString(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_numericMaxValue_success() throws JSONException {
+        long longMax = 9223372036854775807L;
+        JSONObject obj = new JSONObject().put(KEY, longMax);
+        assertEquals(
+                Optional.of(Long.valueOf(longMax)),
+                FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_numericNegative_success() throws JSONException {
+        long longNegative = -935L;
+        JSONObject obj = new JSONObject().put(KEY, longNegative);
+        assertEquals(
+                Optional.of(Long.valueOf(longNegative)),
+                FetcherUtil.extractLong(obj, KEY));
+    }
+
+    @Test
+    public void extractLong_numericNotANumber_returnsEmpty() throws JSONException {
+        JSONObject obj = new JSONObject().put(KEY, "123");
         assertEquals(Optional.empty(), FetcherUtil.extractLong(obj, KEY));
     }
 

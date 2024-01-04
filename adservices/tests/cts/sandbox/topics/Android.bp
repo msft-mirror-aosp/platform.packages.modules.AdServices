@@ -43,6 +43,6 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }

@@ -65,7 +65,7 @@
                     "trigger_data": "0",
                     "priority": "100",
                     "deduplication_key": "10",
-                    "value": "11"
+                    "value": 11
                   }
                 ]
               },
@@ -91,7 +91,7 @@
                     "trigger_data": "3",
                     "priority": "101",
                     "deduplication_key": "11",
-                    "value": "1000"
+                    "value": 1000
                   }
                 ]
               },
@@ -117,7 +117,7 @@
                     "trigger_data": "4",
                     "priority": "200",
                     "deduplication_key": "9",
-                    "value": "1"
+                    "value": 1
                   }
                 ]
               },
@@ -141,7 +141,7 @@
           "source_event_id": "2",
           "trigger_data": "0",
           "source_type": "event",
-          "trigger_summary_bucket": [10, 2147483646],
+          "trigger_summary_bucket": [10, 4294967295],
           "randomized_trigger_rate": 0.000002494582008677539
         }
       }

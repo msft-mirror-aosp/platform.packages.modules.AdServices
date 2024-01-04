@@ -260,7 +260,8 @@
               "key": "0x12",
               "value": 444
             }
-          ]
+          ],
+          "trigger_debug_key": "555"
         },
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239177000"
@@ -273,7 +274,8 @@
               "key": "0x13",
               "value": 555
             }
-          ]
+          ],
+          "trigger_debug_key": "666"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239178000"

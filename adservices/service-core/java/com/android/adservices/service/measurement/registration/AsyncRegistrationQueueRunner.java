@@ -126,6 +126,12 @@ public class AsyncRegistrationQueueRunner {
         mLogger = logger;
     }
 
+    enum ProcessingResult {
+        THREAD_INTERRUPTED,
+        SUCCESS_WITH_PENDING_RECORDS,
+        SUCCESS_ALL_RECORDS_PROCESSED
+    }
+
     /**
      * Returns an instance of AsyncRegistrationQueueRunner.
      *
@@ -140,7 +146,7 @@ public class AsyncRegistrationQueueRunner {
     }
 
     /** Processes records in the AsyncRegistration Queue table. */
-    public void runAsyncRegistrationQueueWorker() {
+    public ProcessingResult runAsyncRegistrationQueueWorker() {
         int recordServiceLimit = mFlags.getMeasurementMaxRegistrationsPerJobInvocation();
         int retryLimit = mFlags.getMeasurementMaxRetriesPerRegistrationRequest();
 
@@ -154,33 +160,49 @@ public class AsyncRegistrationQueueRunner {
                         .d(
                                 "AsyncRegistrationQueueRunner runAsyncRegistrationQueueWorker "
                                         + "thread interrupted, exiting early.");
-                return;
+                return ProcessingResult.THREAD_INTERRUPTED;
             }
 
-            Optional<AsyncRegistration> optAsyncRegistration =
-                    mDatastoreManager.runInTransactionWithResult(
-                            (dao) ->
-                                    dao.fetchNextQueuedAsyncRegistration(
-                                            retryLimit, failedOrigins));
-
-            AsyncRegistration asyncRegistration;
-            if (optAsyncRegistration.isPresent()) {
-                asyncRegistration = optAsyncRegistration.get();
-            } else {
+            AsyncRegistration asyncRegistration = fetchNext(retryLimit, failedOrigins);
+            if (null == asyncRegistration) {
                 LoggerFactory.getMeasurementLogger()
                         .d("AsyncRegistrationQueueRunner: no async registration fetched.");
-                return;
+                return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
             }
 
-            if (asyncRegistration.isSourceRequest()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d("AsyncRegistrationQueueRunner:" + " processing source");
-                processSourceRegistration(asyncRegistration, failedOrigins);
-            } else {
-                LoggerFactory.getMeasurementLogger()
-                        .d("AsyncRegistrationQueueRunner:" + " processing trigger");
-                processTriggerRegistration(asyncRegistration, failedOrigins);
-            }
+            processAsyncRecord(asyncRegistration, failedOrigins);
+        }
+
+        return hasPendingRecords(retryLimit, failedOrigins);
+    }
+
+    private AsyncRegistration fetchNext(int retryLimit, Set<Uri> failedOrigins) {
+        return mDatastoreManager
+                .runInTransactionWithResult(
+                        (dao) -> dao.fetchNextQueuedAsyncRegistration(retryLimit, failedOrigins))
+                .orElse(null);
+    }
+
+    private void processAsyncRecord(AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
+        if (asyncRegistration.isSourceRequest()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner:" + " processing source");
+            processSourceRegistration(asyncRegistration, failedOrigins);
+        } else {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner:" + " processing trigger");
+            processTriggerRegistration(asyncRegistration, failedOrigins);
+        }
+    }
+
+    private ProcessingResult hasPendingRecords(int retryLimit, Set<Uri> failedOrigins) {
+        AsyncRegistration asyncRegistration = fetchNext(retryLimit, failedOrigins);
+        if (null == asyncRegistration) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner: no more pending async records.");
+            return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
+        } else {
+            return ProcessingResult.SUCCESS_WITH_PENDING_RECORDS;
         }
     }
 
@@ -188,10 +210,11 @@ public class AsyncRegistrationQueueRunner {
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         long startTime = asyncRegistration.getRequestTime();
         Optional<Source> resultSource =
-                mAsyncSourceFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mAsyncSourceFetcher.fetchSource(
+                        asyncRegistration, asyncFetchStatus, asyncRedirects);
         long endTime = System.currentTimeMillis();
         asyncFetchStatus.setRegistrationDelay(endTime - startTime);
 
@@ -203,7 +226,7 @@ public class AsyncRegistrationQueueRunner {
                                     storeSource(resultSource.get(), asyncRegistration, dao);
                                 }
                                 handleSuccess(
-                                        asyncRegistration, asyncFetchStatus, asyncRedirect, dao);
+                                        asyncRegistration, asyncFetchStatus, asyncRedirects, dao);
                             } else {
                                 handleFailure(
                                         asyncRegistration, asyncFetchStatus, failedOrigins, dao);
@@ -251,10 +274,11 @@ public class AsyncRegistrationQueueRunner {
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         long startTime = asyncRegistration.getRequestTime();
-        Optional<Trigger> resultTrigger = mAsyncTriggerFetcher.fetchTrigger(
-                asyncRegistration, asyncFetchStatus, asyncRedirect);
+        Optional<Trigger> resultTrigger =
+                mAsyncTriggerFetcher.fetchTrigger(
+                        asyncRegistration, asyncFetchStatus, asyncRedirects);
         long endTime = System.currentTimeMillis();
         asyncFetchStatus.setRegistrationDelay(endTime - startTime);
 
@@ -266,7 +290,7 @@ public class AsyncRegistrationQueueRunner {
                                     storeTrigger(resultTrigger.get(), dao);
                                 }
                                 handleSuccess(
-                                        asyncRegistration, asyncFetchStatus, asyncRedirect, dao);
+                                        asyncRegistration, asyncFetchStatus, asyncRedirects, dao);
                             } else {
                                 handleFailure(
                                         asyncRegistration, asyncFetchStatus, failedOrigins, dao);
@@ -561,11 +585,11 @@ public class AsyncRegistrationQueueRunner {
                 < FlagsFactory.getFlags().getMeasurementMaxTriggersPerDestination();
     }
 
-    private static AsyncRegistration createAsyncRegistrationFromRedirect(
-            AsyncRegistration asyncRegistration, Uri redirectUri) {
+    private AsyncRegistration createAsyncRegistrationFromRedirect(
+            AsyncRegistration asyncRegistration, AsyncRedirect asyncRedirect) {
         return new AsyncRegistration.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setRegistrationUri(redirectUri)
+                .setRegistrationUri(asyncRedirect.getUri())
                 .setWebDestination(asyncRegistration.getWebDestination())
                 .setOsDestination(asyncRegistration.getOsDestination())
                 .setRegistrant(asyncRegistration.getRegistrant())
@@ -578,6 +602,7 @@ public class AsyncRegistrationQueueRunner {
                 .setDebugKeyAllowed(asyncRegistration.getDebugKeyAllowed())
                 .setAdIdPermission(asyncRegistration.hasAdIdPermission())
                 .setRegistrationId(asyncRegistration.getRegistrationId())
+                .setRedirectBehavior(asyncRedirect.getRedirectBehavior())
                 .build();
     }
 
@@ -668,14 +693,14 @@ public class AsyncRegistrationQueueRunner {
     private void handleSuccess(
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus,
-            AsyncRedirect asyncRedirect,
+            AsyncRedirects asyncRedirects,
             IMeasurementDao dao)
             throws DatastoreException {
         // deleteAsyncRegistration will throw an exception & rollback the transaction if the record
         // is already deleted. This can happen if both fallback & regular job are running at the
         // same time or if deletion job deletes the records.
         dao.deleteAsyncRegistration(asyncRegistration.getId());
-        if (asyncRedirect.getRedirects().isEmpty()) {
+        if (asyncRedirects.getRedirects().isEmpty()) {
             return;
         }
         int maxRedirects = FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
@@ -684,16 +709,17 @@ public class AsyncRegistrationQueueRunner {
                         asyncRegistration.getRegistrationId(),
                         DataType.REGISTRATION_REDIRECT_COUNT);
         int currentCount = keyValueData.getRegistrationRedirectCount();
-        if (currentCount == maxRedirects) {
+        if (currentCount >= maxRedirects) {
             asyncFetchStatus.setRedirectError(true);
             return;
         }
-        for (Uri uri : asyncRedirect.getRedirects()) {
+
+        for (AsyncRedirect asyncRedirect : asyncRedirects.getRedirects()) {
             if (currentCount >= maxRedirects) {
                 break;
             }
             dao.insertAsyncRegistration(
-                    createAsyncRegistrationFromRedirect(asyncRegistration, uri));
+                    createAsyncRegistrationFromRedirect(asyncRegistration, asyncRedirect));
             currentCount++;
         }
         keyValueData.setRegistrationRedirectCount(currentCount);

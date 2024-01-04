@@ -47,6 +47,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -77,6 +78,7 @@ import android.test.mock.MockContext;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
@@ -96,11 +98,11 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.time.Instant;
@@ -133,6 +135,15 @@ public final class MeasurementServiceImplTest {
     @Mock private Throttler mMockThrottler;
     @Mock private MockContext mMockContext;
     @Mock private DevContextFilter mDevContextFilter;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .mockStatic(Binder.class)
+                    .mockStatic(FlagsFactory.class)
+                    .mockStatic(PermissionHelper.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     private MeasurementServiceImpl mMeasurementServiceImpl;
     private Map<Integer, Boolean> mKillSwitchSnapshot;
@@ -1916,12 +1927,9 @@ public final class MeasurementServiceImplTest {
         return new StatusParam.Builder(APP_PACKAGE_NAME, SDK_PACKAGE_NAME).build();
     }
 
-    private void assertPackageNameLogged() throws InterruptedException {
-        // Sleep just a tiny fraction
-        // Logging happens in a separate thread and happens after the result code is returned
-        TimeUnit.MILLISECONDS.sleep(20);
+    private void assertPackageNameLogged() {
         ArgumentCaptor<ApiCallStats> captorStatus = ArgumentCaptor.forClass(ApiCallStats.class);
-        verify(mMockAdServicesLogger).logApiCallStats(captorStatus.capture());
+        verify(mMockAdServicesLogger, timeout(TIMEOUT)).logApiCallStats(captorStatus.capture());
         assertEquals(APP_PACKAGE_NAME, captorStatus.getValue().getAppPackageName());
         assertEquals(SDK_PACKAGE_NAME, captorStatus.getValue().getSdkPackageName());
     }
@@ -1954,16 +1962,6 @@ public final class MeasurementServiceImplTest {
             final AccessDenier accessDenier,
             final TestUtils.RunnableWithThrow execute)
             throws Exception {
-
-        final MockitoSession mockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(Binder.class)
-                        .mockStatic(FlagsFactory.class)
-                        .mockStatic(PermissionHelper.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
-        try {
             // Flags
             ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
@@ -1997,10 +1995,6 @@ public final class MeasurementServiceImplTest {
 
             mMeasurementServiceImpl = createServiceWithMocks();
             execute.run();
-
-        } finally {
-            mockitoSession.finishMocking();
-        }
     }
 
     /**
