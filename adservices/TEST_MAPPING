@@ -208,6 +208,26 @@
       ]
     },
     {
+      // Install com.google.android.adservices.apex and run
+      // AdServicesServiceCoreMeasurementUnitTests.
+      "name": "AdServicesServiceCoreMeasurementUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run
+      // AdExtServicesServiceCoreMeasurementUnitTests.
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
       "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]",
       "options": [
@@ -545,30 +565,6 @@
       ]
     },
     {
-      "name": "AdServicesBetaUxCtsRootTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "LegacyAdServicesGaUxCtsRootTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesGaUxDebugChannelCtsRootTest[com.google.android.adservices.apex]",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
       "name": "AdServicesUIUnitTests[com.google.android.adservices.apex]",
       "options": [
         {
@@ -579,6 +575,22 @@
     {
       // Install com.google.android.extservices.apex and run AdExtServicesEndToEndTests.
       "name": "AdExtServicesUIUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesManagerServiceTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesExtDataStorageServiceTest[com.google.android.adservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -632,6 +644,22 @@
     },
     {
       "name": "AdServicesServiceCoreAppsetIdUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesServiceCoreMeasurementUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -805,46 +833,6 @@
     },
     {
       "name": "CtsAdServicesHostTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesBetaUxCtsRootTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "LegacyAdServicesGaUxCtsRootTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesGaUxDebugChannelCtsRootTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesGaUxAlreadyEnrolledChannelTest",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesGaUxGraduationChannelTest",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

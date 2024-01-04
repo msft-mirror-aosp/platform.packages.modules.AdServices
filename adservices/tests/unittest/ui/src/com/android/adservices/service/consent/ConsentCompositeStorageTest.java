@@ -50,14 +50,14 @@ public class ConsentCompositeStorageTest {
     }
 
     @Test
-    public void testAllReadMethodsAppStorage() {
+    public void testAllReadMethodsAppStorage() throws IOException {
         ConsentCompositeStorage consentCompositeStorage =
                 new ConsentCompositeStorage(ImmutableList.of(mAppConsentStorageManager));
         testAllReadMethods(consentCompositeStorage);
     }
 
     @Test
-    public void testAllReadMethodsPPAPIAndSystem() {
+    public void testAllReadMethodsPPAPIAndSystem() throws IOException {
         ConsentCompositeStorage consentCompositeStorage =
                 new ConsentCompositeStorage(
                         ImmutableList.of(mAppConsentStorageManager, mAdServicesStorageManager));
@@ -79,14 +79,15 @@ public class ConsentCompositeStorageTest {
         testAllWriteMethods(consentCompositeStorage);
     }
 
-    private void testAllReadMethods(ConsentCompositeStorage consentCompositeStorage) {
+    private void testAllReadMethods(ConsentCompositeStorage consentCompositeStorage)
+            throws IOException {
         consentCompositeStorage.isAdIdEnabled();
         consentCompositeStorage.isAdultAccount();
         consentCompositeStorage.isConsentRevokedForApp(MOCK_PACKAGE_NAME);
         consentCompositeStorage.isEntryPointEnabled();
         consentCompositeStorage.isU18Account();
 
-        verifyReadMethods(consentCompositeStorage.getPrimaryStorage());
+        verifyReadMethods(consentCompositeStorage.getConsentStorageList().get(0));
     }
 
     private void testAllWriteMethods(ConsentCompositeStorage consentCompositeStorage)
@@ -122,7 +123,7 @@ public class ConsentCompositeStorageTest {
         }
     }
 
-    private void verifyReadMethods(IConsentStorage consentStorage) {
+    private void verifyReadMethods(IConsentStorage consentStorage) throws IOException {
         Mockito.verify(consentStorage).isAdIdEnabled();
         Mockito.verify(consentStorage).isAdultAccount();
         Mockito.verify(consentStorage).isConsentRevokedForApp(eq(MOCK_PACKAGE_NAME));

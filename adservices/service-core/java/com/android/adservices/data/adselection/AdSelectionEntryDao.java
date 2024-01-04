@@ -612,6 +612,17 @@ public abstract class AdSelectionEntryDao {
                     + "WHERE ad_selection_id is NOT NULL)")
     public abstract void removeExpiredRegisteredAdInteractions();
 
+    /**
+     * Clean up registered_ad_interaction entries in batch if the {@code adSelectionId} no longer
+     * exists in the table ad_selection_initialization.
+     */
+    @Query(
+            "DELETE FROM registered_ad_interactions WHERE ad_selection_id NOT IN "
+                    + "( SELECT DISTINCT ad_selection_id "
+                    + "FROM ad_selection_initialization "
+                    + "WHERE ad_selection_id is NOT NULL)")
+    public abstract void removeExpiredRegisteredAdInteractionsFromUnifiedTable();
+
     /** Returns total size of the {@code registered_ad_interaction} table. */
     @Query("SELECT COUNT(*) FROM registered_ad_interactions")
     public abstract long getTotalNumRegisteredAdInteractions();

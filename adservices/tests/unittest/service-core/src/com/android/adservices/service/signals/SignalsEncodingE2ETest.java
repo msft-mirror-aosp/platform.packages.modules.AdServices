@@ -25,7 +25,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
@@ -73,12 +72,14 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.IsolateSettings;
+import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.mockwebserver.Dispatcher;
@@ -146,6 +147,7 @@ public class SignalsEncodingE2ETest {
     private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     private UpdateProcessorSelector mUpdateProcessorSelector;
     private UpdateEncoderEventHandler mUpdateEncoderEventHandler;
+    private SignalEvictionController mSignalEvictionController;
     private EncodedPayloadDao mEncodedPayloadDao;
     private SignalsProviderImpl mSignalStorageManager;
     private PeriodicEncodingJobWorker mPeriodicEncodingJobWorker;
@@ -196,13 +198,18 @@ public class SignalsEncodingE2ETest {
                         mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicMetadataDao,
+                        mSignalsDao,
                         mAdServicesHttpsClient,
                         mBackgroundExecutorService);
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
+        mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
-                        mSignalsDao, mUpdateProcessorSelector, mUpdateEncoderEventHandler);
+                        mSignalsDao,
+                        mUpdateProcessorSelector,
+                        mUpdateEncoderEventHandler,
+                        mSignalEvictionController);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
@@ -237,7 +244,8 @@ public class SignalsEncodingE2ETest {
                         mBackgroundExecutorService,
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
-                        mAdtechUriValidator);
+                        mAdtechUriValidator,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
         mService =
                 new ProtectedSignalsServiceImpl(
                         mContextSpy,
@@ -270,9 +278,9 @@ public class SignalsEncodingE2ETest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mSignalsDao,
                         mAdSelectionScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -643,9 +651,9 @@ public class SignalsEncodingE2ETest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mSignalsDao,
                         mAdSelectionScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -679,9 +687,9 @@ public class SignalsEncodingE2ETest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mSignalsDao,
                         mAdSelectionScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -698,7 +706,9 @@ public class SignalsEncodingE2ETest {
                 "Encoding JS should have returned size of signals as result",
                 new byte[] {(byte) expected.size()},
                 payload2);
-        assertTrue(secondEncodingRun.getCreationTime().isAfter(firstEncodingRun.getCreationTime()));
+        // The second run should skip based on the logic that we will skip encoding for unchanged
+        // buyer.
+        assertEquals(secondEncodingRun.getCreationTime(), firstEncodingRun.getCreationTime());
 
         encoderLogicDownloadedLatch.await(5, TimeUnit.SECONDS);
         assertEquals(

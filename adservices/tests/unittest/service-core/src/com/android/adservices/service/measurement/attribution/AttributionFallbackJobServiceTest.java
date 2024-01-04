@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -30,8 +31,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -54,6 +53,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -65,10 +65,10 @@ import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.quality.Strictness;
@@ -93,6 +93,18 @@ public class AttributionFallbackJobServiceTest {
     private AttributionFallbackJobService mSpyService;
     private Flags mMockFlags;
     private AdservicesJobServiceLogger mSpyLogger;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(AdServicesConfig.class)
+                    .spyStatic(DatastoreManagerFactory.class)
+                    .spyStatic(AttributionFallbackJobService.class)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .mockStatic(ServiceCompatUtils.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     @Before
     public void setUp() {
@@ -517,51 +529,29 @@ public class AttributionFallbackJobServiceTest {
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AdServicesConfig.class)
-                        .spyStatic(DatastoreManagerFactory.class)
-                        .spyStatic(AttributionFallbackJobService.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
-            // Setup mock everything in job
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-            mMockDatastoreManager = mock(DatastoreManager.class);
-            doReturn(Optional.empty())
-                    .when(mMockDatastoreManager)
-                    .runInTransactionWithResult(any());
-            doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-            doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-            doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
-            ExtendedMockito.doReturn(mMockDatastoreManager)
-                    .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doNothing()
-                    .when(() -> AttributionFallbackJobService.schedule(any(), any()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
-            ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(1))
-                    .when(mMockFlags)
-                    .getMeasurementAttributionFallbackJobPeriodMs();
+        // Setup mock everything in job
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mMockDatastoreManager = mock(DatastoreManager.class);
+        doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
+        doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
+        doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
+        doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
+        ExtendedMockito.doReturn(mMockDatastoreManager)
+                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        ExtendedMockito.doNothing()
+                .when(() -> AttributionFallbackJobService.schedule(any(), any()));
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+        ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(1))
+                .when(mMockFlags)
+                .getMeasurementAttributionFallbackJobPeriodMs();
+        mockGetAdservicesJobServiceLogger(mSpyLogger);
 
-            // Mock AdservicesJobServiceLogger to not actually log the stats to server
-            Mockito.doNothing()
-                    .when(mSpyLogger)
-                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-            ExtendedMockito.doReturn(mSpyLogger)
-                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
-
-            // Execute
-            execute.run();
-        } finally {
-            session.finishMocking();
-        }
+        // Execute
+        execute.run();
     }
 
     private void enableKillSwitch() {

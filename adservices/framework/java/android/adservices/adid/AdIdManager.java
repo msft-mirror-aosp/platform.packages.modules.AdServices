@@ -103,7 +103,6 @@ public class AdIdManager {
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
-     * @throws IllegalStateException if this API is not available.
      */
     @RequiresApi(Build.VERSION_CODES.S)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
@@ -119,7 +118,6 @@ public class AdIdManager {
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
-     * @throws IllegalStateException if this API is not available.
      */
     @FlaggedApi(FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)

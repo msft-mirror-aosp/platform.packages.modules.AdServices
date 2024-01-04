@@ -66,7 +66,8 @@ public class UpdateSignalsOrchestratorTest {
                         AdServicesExecutors.getBackgroundExecutor(),
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
-                        mAdTechUriValidator);
+                        mAdTechUriValidator,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
     }
 
     @Test

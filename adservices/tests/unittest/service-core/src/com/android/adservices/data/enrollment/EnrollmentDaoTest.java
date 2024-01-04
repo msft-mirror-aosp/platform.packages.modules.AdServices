@@ -79,7 +79,7 @@ public class EnrollmentDaoTest {
     @Mock private EnrollmentUtil mEnrollmentUtil;
     @Mock private SharedDbHelper mMockDbHelper;
 
-    private static final EnrollmentData ENROLLMENT_DATA1 =
+    public static final EnrollmentData ENROLLMENT_DATA1 =
             new EnrollmentData.Builder()
                     .setEnrollmentId("1")
                     .setCompanyId("1001")

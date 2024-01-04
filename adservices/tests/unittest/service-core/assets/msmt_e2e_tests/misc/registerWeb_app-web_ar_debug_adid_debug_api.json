@@ -1,5 +1,9 @@
 {
   "description": "One app source and one web trigger that match. AdId and Ar debug enabled, debug keys not attached",
+  "phflags_override": {
+    "measurement_flex_api_max_information_gain_dual_destination_event": "9",
+    "measurement_flex_api_max_information_gain_dual_destination_navigation": "14"
+  },
   "input": {
     "sources": [{
       "registration_request": {

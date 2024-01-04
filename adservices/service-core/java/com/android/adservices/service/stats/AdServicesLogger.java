@@ -129,4 +129,14 @@ public interface AdServicesLogger {
     /** Logs encryption key datastore transaction ended stats. */
     void logEncryptionKeyDbTransactionEndedStats(
             AdServicesEncryptionKeyDbTransactionEndedStats stats);
+
+    /** Logs destinationRegisteredBeacon reported stats. */
+    void logDestinationRegisteredBeaconsReportedStats(
+            DestinationRegisteredBeaconsReportedStats stats);
+
+    /** Logs beacon level reporting for ReportInteraction API called stats. */
+    void logReportInteractionApiCalledStats(ReportInteractionApiCalledStats stats);
+
+    /** Logs beacon level reporting for clearing interaction reporting table stats. */
+    void logInteractionReportingTableClearedStats(InteractionReportingTableClearedStats stats);
 }

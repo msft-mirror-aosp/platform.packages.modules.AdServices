@@ -236,7 +236,6 @@ public final class BooleanFileDatastoreTest {
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
-        Set<String> keys = mDatastore.keySet();
         assertWithMessage("keys").that(mDatastore.keySet()).containsExactly(TEST_KEY);
 
         // Delete
