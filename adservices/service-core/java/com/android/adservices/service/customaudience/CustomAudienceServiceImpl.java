@@ -203,8 +203,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
-                mContext, ownerPackageName, apiName);
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, ownerPackageName, apiName);
 
         final int callerUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
@@ -301,7 +300,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, input.getCallerPackageName(), apiName);
 
         final int callerUid = getCallingUid(apiName);
@@ -386,8 +385,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
-                mContext, ownerPackageName, apiName);
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, ownerPackageName, apiName);
 
         final int callerUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
@@ -506,7 +504,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
@@ -567,7 +565,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
@@ -616,7 +614,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredCustomAudiencePermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, devContext.getCallingAppPackageName(), apiName);
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
