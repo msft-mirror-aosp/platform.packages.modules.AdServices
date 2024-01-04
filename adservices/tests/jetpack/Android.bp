@@ -437,7 +437,8 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+        "framework-sdkextensions",
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -468,7 +469,8 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+        "framework-sdkextensions",
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -499,7 +501,8 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+        "framework-sdkextensions",
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -530,7 +533,8 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+        "framework-sdkextensions",
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -561,7 +565,8 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+        "framework-sdkextensions",
+    ],
     test_suites: [
         "general-tests",
     ],
