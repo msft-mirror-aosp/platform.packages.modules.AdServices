@@ -1329,14 +1329,8 @@ class AttributionJobHandler {
 
     private boolean isWithinReportLimit(
             Source source, int existingReportCount, @EventSurfaceType int destinationType) {
-        return mEventReportWindowCalcDelegate.getMaxReportCount(
-                        source, hasAppInstallAttributionOccurred(source, destinationType))
+        return mEventReportWindowCalcDelegate.getMaxReportCount(source, destinationType)
                 > existingReportCount;
-    }
-
-    private static boolean hasAppInstallAttributionOccurred(
-            Source source, @EventSurfaceType int destinationType) {
-        return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
     }
 
     private static boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
