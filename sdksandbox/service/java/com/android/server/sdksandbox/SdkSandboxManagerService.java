@@ -217,19 +217,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String WEBVIEW_SAFE_MODE_CONTENT_PROVIDER = "SafeModeContentProvider";
 
-    // On UDC, AdServicesManagerService.Lifecycle implements dumpable so it's dumped as part of
-    // SystemServer.
     // If AdServices register itself as binder service, dump() will ignore the --AdServices option
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF =
             "Don't need to dump AdServices as it's available as " + AD_SERVICES_SYSTEM_SERVICE;
-
-    // On UDC, if AdServices register itself as binder service, dump() will ignore the --AdServices
-    // option because AdServices could be dumped as part of SystemService
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE =
-            "Don't need to dump AdServices on UDC+ - use "
-                    + "'dumpsys system_server_dumper --name AdServices instead'";
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static final ArraySet<String> DEFAULT_ACTIVITY_ALLOWED_ACTIONS =
@@ -1164,17 +1155,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        if (SdkLevel.isAtLeastU()) {
-            // AdServices didn't register itself as binder service, but
-            // AdServicesManagerService.Lifecycle implements Dumpable so it's dumped as
-            // part of SystemServer
-            if (quiet) {
-                Log.d(TAG, DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE);
-            } else {
-                writer.println(DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE);
-            }
-            return;
-        }
         writer.print("AdServices:");
         IBinder adServicesManager = getAdServicesManager();
         if (adServicesManager == null) {
@@ -2078,16 +2058,28 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private class UidImportanceListener implements ActivityManager.OnUidImportanceListener {
 
-        private static final int IMPORTANCE_CUTPOINT = IMPORTANCE_VISIBLE;
+        private final int mImportanceCutpoint;
 
         public boolean isListening = false;
+
+        UidImportanceListener() {
+            if (SdkLevel.isAtLeastU()) {
+                // On U+, we inform the SDK when the app has transitioned to and from foreground
+                // importance.
+                mImportanceCutpoint = IMPORTANCE_FOREGROUND;
+            } else {
+                // On T, we unbind the sandbox when the app stops being visible to the user in some
+                // way.
+                mImportanceCutpoint = IMPORTANCE_VISIBLE;
+            }
+        }
 
         public void startListening() {
             synchronized (mLock) {
                 if (isListening) {
                     return;
                 }
-                mActivityManager.addOnUidImportanceListener(this, IMPORTANCE_CUTPOINT);
+                mActivityManager.addOnUidImportanceListener(this, mImportanceCutpoint);
                 isListening = true;
             }
         }
@@ -2104,30 +2096,52 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onUidImportance(int uid, int importance) {
-            if (importance <= IMPORTANCE_CUTPOINT) {
-                // The lower the importance value, the more "important" the process is. We
-                // are only interested when the process is no longer in the foreground.
-                return;
-            }
-            if (SdkLevel.isAtLeastU()) {
-                // On U+, the priority of the sandbox is matched with the calling app, no need to
-                // unbind.
-                return;
-            }
             synchronized (mLock) {
                 for (int i = 0; i < mCallingInfosWithDeathRecipients.size(); i++) {
                     final CallingInfo callingInfo = mCallingInfosWithDeathRecipients.keyAt(i);
                     if (callingInfo.getUid() == uid) {
-                        LogUtil.d(
-                                TAG,
-                                "App with uid "
-                                        + uid
-                                        + " has gone to the background, unbinding sandbox");
-                        // Unbind the sandbox when the app goes to the background to lower its
-                        // priority.
-                        mServiceProvider.unbindService(callingInfo);
+                        if (SdkLevel.isAtLeastU()) {
+                            informSdksAboutAppTransition(importance, callingInfo);
+                        } else {
+                            unbindSandbox(importance, callingInfo);
+                        }
                     }
                 }
+            }
+        }
+
+        private void unbindSandbox(int importance, CallingInfo callingInfo) {
+            if (importance <= mImportanceCutpoint) {
+                // The lower the importance value, the more "important" the process is. We
+                // are only interested when the process is no longer visible.
+                return;
+            }
+            LogUtil.d(
+                    TAG,
+                    "App with uid "
+                            + callingInfo.getUid()
+                            + " is no longer visible, unbinding sandbox");
+            // Unbind the sandbox when the app is no longer visible to lower its priority.
+            mServiceProvider.unbindService(callingInfo);
+        }
+
+        private void informSdksAboutAppTransition(int importance, CallingInfo callingInfo) {
+            ISdkSandboxService sandbox = mServiceProvider.getSdkSandboxServiceForApp(callingInfo);
+            if (sandbox == null) {
+                return;
+            }
+
+            try {
+                // Inform the sandbox when the client app uid has changed from foreground to
+                // background importance or vice versa.
+                sandbox.notifySdkSandboxClientImportanceChange(importance <= mImportanceCutpoint);
+            } catch (RemoteException e) {
+                Log.e(
+                        TAG,
+                        "Could not inform sandbox about state change of "
+                                + callingInfo
+                                + " : "
+                                + e.getMessage());
             }
         }
     }

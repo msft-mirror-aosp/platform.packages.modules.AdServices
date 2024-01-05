@@ -19,7 +19,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICA
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -71,7 +71,7 @@ public class SettingsRvcUxSelectorUiAutomatorTest {
                     .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
                     .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_RVC_UX_ENABLED, true)
-                    .setFlag(KEY_RVC_NOTIFICATION_ENABLED, true)
+                    .setFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "RVC_UX")
                     .setCompatModeFlags();

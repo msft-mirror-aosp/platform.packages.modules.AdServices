@@ -42,5 +42,6 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
 }

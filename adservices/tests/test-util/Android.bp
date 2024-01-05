@@ -64,6 +64,7 @@ android_library {
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "modules-utils-preconditions",
+        "adservices-shared-util", // For checkState method uses varargs.
         // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
         "modules-utils-testable-device-config",
     ],

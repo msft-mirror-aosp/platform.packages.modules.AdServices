@@ -117,6 +117,18 @@ public interface Flags extends CommonFlags {
     }
 
     /**
+     * Flag to override base64 public key used for encryption testing.
+     *
+     * <p>Note: Default value for this flag should not be changed from empty.
+     */
+    String TOPICS_TEST_ENCRYPTION_PUBLIC_KEY = "";
+
+    /** Returns test public key used for encrypting topics for testing. */
+    default String getTopicsTestEncryptionPublicKey() {
+        return TOPICS_TEST_ENCRYPTION_PUBLIC_KEY;
+    }
+
+    /**
      * Returns the number of epochs to look back when deciding if a caller has observed a topic
      * before.
      */
@@ -379,8 +391,8 @@ public interface Flags extends CommonFlags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2483"
-                    + "/99f68a201189da021b1f3dd4ebdef7b0fbe75892";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2867"
+                    + "/799a2e308daf8ccaa2fe9c9ef71b115a7f4a41c8";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -697,7 +709,7 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.5F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
@@ -3351,6 +3363,14 @@ public interface Flags extends CommonFlags {
         return FLEDGE_DATA_VERSION_HEADER_ENABLED;
     }
 
+    // New fledge beacon reporting metrics flag.
+    boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge beacon reporting metrics is enabled. */
+    default boolean getFledgeBeaconReportingMetricsEnabled() {
+        return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.
@@ -3409,14 +3429,6 @@ public interface Flags extends CommonFlags {
     /** Get adservices version mappings */
     default String getAdservicesVersionMappings() {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
-    }
-
-    /** Default Determines whether EU notification flow change is enabled. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
-
-    /** Determines whether EU notification flow change is enabled. */
-    default boolean getEuNotifFlowChangeEnabled() {
-        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 
     /** Default value for Measurement flexible event reporting API */
@@ -3510,14 +3522,6 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
     }
 
-    /** Disable early reporting windows configurability by default. */
-    boolean MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS = false;
-
-    /** Returns true if event reporting windows configurability is enabled, false otherwise. */
-    default boolean getMeasurementEnableConfigurableEventReportingWindows() {
-        return MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
-    }
-
     /**
      * Default early reporting windows for VTC type source. Derived from {@link
      * com.android.adservices.service.measurement.PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
@@ -3577,18 +3581,8 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
     }
 
-    /** Disable conversions configurability by default. */
-    boolean DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS = false;
-
-    /**
-     * Returns true, if event reports max conversions configurability is enabled, false otherwise.
-     */
-    default boolean getMeasurementEnableVtcConfigurableMaxEventReports() {
-        return DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS;
-    }
-
-    /** Disable conversions configurability by default. */
-    int DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT = 2;
+    /** Default max allowed number of event reports. */
+    int DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT = 1;
 
     /** Returns the default max allowed number of event reports. */
     default int getMeasurementVtcConfigurableMaxEventReportsCount() {
@@ -3971,11 +3965,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default RVC NOTIFICATION feature flag.. */
-    boolean DEFAULT_RVC_NOTIFICATION_ENABLED = false;
+    boolean DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED = false;
 
     /** RVC Notification feature flag.. */
-    default boolean getEnableRvcNotification() {
-        return DEFAULT_RVC_NOTIFICATION_ENABLED;
+    default boolean getEnableRvcPostOtaNotification() {
+        return DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
     }
 
     /** Default enableAdServices system API feature flag.. */
@@ -4092,76 +4086,6 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
     }
 
-    float MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000208f;
-
-    /**
-     * {@link Source} Noise probability for 'Event' when both destinations (app and web) are
-     * available on the source and supports install attribution.
-     */
-    default float getMeasurementInstallAttrDualDestinationEventNoiseProbability() {
-        return MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218f;
-
-    /**
-     * {@link Source} Noise probability for 'Navigation' when both destinations (app and web) are
-     * available on the source.
-     */
-    default float getMeasurementDualDestinationNavigationNoiseProbability() {
-        return MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
-            MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-
-    /**
-     * {@link Source} Noise probability for 'Navigation' when both destinations (app and web) are
-     * available on the source and supports install attribution.
-     */
-    default float getMeasurementInstallAttrDualDestinationNavigationNoiseProbability() {
-        return MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000042f;
-
-    /**
-     * {@link Source} Noise probability for 'Event' when both destinations (app and web) are
-     * available on the source.
-     */
-    default float getMeasurementDualDestinationEventNoiseProbability() {
-        return MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY = 0.0000125f;
-
-    /** {@link Source} Noise probability for 'Event' which supports install attribution. */
-    default float getMeasurementInstallAttrEventNoiseProbability() {
-        return MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_EVENT_NOISE_PROBABILITY = 0.0000025f;
-
-    /** {@link Source} Noise probability for 'Event'. */
-    default float getMeasurementEventNoiseProbability() {
-        return MEASUREMENT_EVENT_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_NAVIGATION_NOISE_PROBABILITY = 0.0024263f;
-
-    /** {@link Source} Noise probability for 'Navigation'. */
-    default float getMeasurementNavigationNoiseProbability() {
-        return MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
-            MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
-
-    /** {@link Source} Noise probability for 'Navigation' which supports install attribution. */
-    default float getMeasurementInstallAttrNavigationNoiseProbability() {
-        return MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
-    }
-
     boolean MEASUREMENT_ENABLE_PREINSTALL_CHECK = false;
 
     /** Returns true when pre-install check is enabled. */
@@ -4270,6 +4194,16 @@ public interface Flags extends CommonFlags {
     /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
     default boolean getMsmtEnableApiStatusAllowListCheck() {
         return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
+    }
+
+    /**
+     * Flag to control whether redirect registration urls should be modified to prefix the path
+     * string with .well-known
+     */
+    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
+
+    default boolean getMeasurementEnableRedirectToWellKnownPath() {
+        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
     /**

@@ -218,6 +218,12 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(0f);
         when(mFlags.getMeasurementMinEventReportDelayMillis())
                 .thenReturn(Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS);
+        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+        when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
     }
 
     @Test
@@ -659,7 +665,6 @@ public class AttributionJobHandlerTest {
     public void performPendingAttributions_vtcWithConfiguredReportsCount_attributeUptoConfigLimit()
             throws DatastoreException {
         // Setup
-        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1385,6 +1390,9 @@ public class AttributionJobHandlerTest {
         doReturn(5L)
                 .when(mEventReportWindowCalcDelegate)
                 .getReportingTime(any(Source.class), anyLong(), anyInt());
+        doReturn(EventReportWindowCalcDelegate.MomentPlacement.WITHIN)
+                .when(mEventReportWindowCalcDelegate)
+                .fallsWithinWindow(any(Source.class), anyLong(), anyInt());
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -1658,6 +1666,7 @@ public class AttributionJobHandlerTest {
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setInstallAttributed(true)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(10))
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(28))
                         .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
@@ -1737,6 +1746,7 @@ public class AttributionJobHandlerTest {
                         .setInstallAttributed(true)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(3))
                         .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -1747,6 +1757,7 @@ public class AttributionJobHandlerTest {
                         .setPriority(200L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(eventTime)
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -3341,6 +3352,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3436,6 +3448,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3533,6 +3546,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3628,6 +3642,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3726,6 +3741,7 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setId("sourceId")
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3961,6 +3977,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -4039,6 +4056,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -4116,6 +4134,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -4338,6 +4357,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -6129,6 +6149,7 @@ public class AttributionJobHandlerTest {
                         .setId("sourceId")
                         .setEventTime(TRIGGER_TIME - TimeUnit.SECONDS.toMillis(LOOKBACK_WINDOW - 1))
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(TRIGGER_TIME + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(TRIGGER_TIME + 1)
                         .setAggregatableReportWindow(TRIGGER_TIME + 1)
                         .build();
