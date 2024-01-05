@@ -103,7 +103,7 @@ public final class AdServicesExtDataStorageServiceDebugProxy {
                             KEY_FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS,
                             params.getManualInteractionWithConsentStatus());
                     case FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION -> editor.putLong(
-                            KEY_MEASUREMENT_ROLLBACK_APEX_VERSION,
+                            KEY_FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS,
                             params.getMeasurementRollbackApexVersion());
                     default -> throw new IllegalArgumentException("Invalid field " + field);
                 }

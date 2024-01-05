@@ -162,56 +162,6 @@ public class AdservicesWorkflows {
 
     public static void testSettingsPageFlow(
             Context context,
-            Context targetContext,
-            UiDevice device,
-            UiConstants.UX ux,
-            boolean isOptin,
-            boolean flipConsent,
-            boolean assertOptIn)
-            throws Exception {
-        testSettingsPageFlow(
-                context,
-                targetContext,
-                device,
-                SETTINGS_PACKAGE,
-                ux,
-                isOptin,
-                flipConsent,
-                assertOptIn);
-    }
-
-    public static void testSettingsPageFlow(
-            Context context,
-            Context targetContext,
-            UiDevice device,
-            String packageName,
-            UiConstants.UX ux,
-            boolean isOptin,
-            boolean flipConsent,
-            boolean assertOptIn)
-            throws Exception {
-        switch (ux) {
-            case GA_UX:
-                UiUtils.enableGa();
-                break;
-            case BETA_UX:
-                UiUtils.enableBeta();
-                break;
-            case U18_UX:
-                UiUtils.enableGa();
-                UiUtils.enableU18();
-                break;
-            case RVC_UX:
-                UiUtils.enableGa();
-                UiUtils.enableRvc();
-        }
-        startSettingsActivity(targetContext, device, packageName);
-        SettingsPages.testSettingsPageConsents(
-                context, device, ux, isOptin, flipConsent, assertOptIn);
-    }
-
-    public static void testSettingsPageFlow(
-            Context context,
             UiDevice device,
             String packageName,
             UiConstants.UX ux,
