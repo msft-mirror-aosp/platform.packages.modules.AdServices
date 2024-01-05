@@ -182,7 +182,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_AUTO_CANCEL);
 
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
@@ -292,7 +296,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         assertThat(notification.actions).isNull();
 
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
@@ -372,7 +380,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
         // verify that notification was displayed
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
         UiObject scroller =
                 sDevice.findObject(
                         new UiSelector()
@@ -511,7 +523,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_AUTO_CANCEL);
 
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
@@ -632,7 +648,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_AUTO_CANCEL);
 
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
