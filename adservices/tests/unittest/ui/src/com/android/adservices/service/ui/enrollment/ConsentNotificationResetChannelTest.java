@@ -33,7 +33,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationResetChannel;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -153,10 +152,9 @@ public class ConsentNotificationResetChannelTest {
     @Test
     public void enrollTest() {
         mConsentNotificationResetChannel.enroll(null, mConsentManager);
-        if (SdkLevel.isAtLeastS()) {
-                verify(mConsentManager).recordNotificationDisplayed(false);
-                verify(mConsentManager).recordGaUxNotificationDisplayed(false);
-        }
+
+        verify(mConsentManager).recordNotificationDisplayed(false);
+        verify(mConsentManager).recordGaUxNotificationDisplayed(false);
         verify(mConsentManager).setU18NotificationDisplayed(false);
         verify(mConsentManager).setU18Account(false);
     }

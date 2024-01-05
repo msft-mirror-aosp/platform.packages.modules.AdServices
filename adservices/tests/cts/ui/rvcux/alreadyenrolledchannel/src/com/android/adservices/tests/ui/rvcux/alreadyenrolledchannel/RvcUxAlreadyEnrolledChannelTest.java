@@ -18,9 +18,9 @@ package com.android.adservices.tests.ui.rvcux.alreadyenrolledchannel;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
-import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStates;
 import android.content.Context;
+import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -46,7 +46,7 @@ import java.util.concurrent.Executors;
 /** Test for verifying user consent notification trigger behaviors. */
 @RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class RvcUxAlreadyEnrolledChannelRowTest {
+public class RvcUxAlreadyEnrolledChannelTest {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -54,13 +54,10 @@ public class RvcUxAlreadyEnrolledChannelRowTest {
 
     private String mTestName;
 
-    private AdServicesOutcomeReceiver<Boolean, Exception> mCallback;
+    private OutcomeReceiver<Boolean, Exception> mCallback;
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
-
-    private static final Context sTargetContext =
-            InstrumentationRegistry.getInstrumentation().getTargetContext();
 
     @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
@@ -82,7 +79,7 @@ public class RvcUxAlreadyEnrolledChannelRowTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new AdServicesOutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<Boolean, Exception>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -102,6 +99,8 @@ public class RvcUxAlreadyEnrolledChannelRowTest {
         if (!AdservicesTestHelper.isDeviceSupported()) return;
 
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     /** Verify that the U18 ROW notification is displayed for RVC_UX. */
@@ -110,6 +109,8 @@ public class RvcUxAlreadyEnrolledChannelRowTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         UiUtils.setAsRowDevice();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -125,7 +126,6 @@ public class RvcUxAlreadyEnrolledChannelRowTest {
         // isEuTest does not matter for RVC_UX
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.RVC_UX);
-        mDevice.pressHome();
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
@@ -138,7 +138,46 @@ public class RvcUxAlreadyEnrolledChannelRowTest {
         // Verify msmt API should be opted-in
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
-                sTargetContext,
+                mDevice,
+                UiConstants.UX.RVC_UX,
+                /* isOptIn= */ false,
+                /* isFlipConsent= */ false,
+                /* assertOptIn= */ true);
+    }
+
+    @Test
+    public void testU18NotificationDisplayedForRvcUX_eu() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        UiUtils.setAsEuDevice();
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        AdServicesStates adServicesStates =
+                new AdServicesStates.Builder()
+                        .setU18Account(false)
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .build();
+
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.RVC_UX);
+
+        // Notifications should not be shown twice.
+        mCommonManager.enableAdServices(
+                adServicesStates, Executors.newCachedThreadPool(), mCallback);
+
+        AdservicesWorkflows.verifyNotification(
+                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.RVC_UX);
+        mDevice.pressHome();
+
+        // Verify msmt API should be opted-in
+        AdservicesWorkflows.testSettingsPageFlow(
+                sContext,
                 mDevice,
                 UiConstants.UX.RVC_UX,
                 /* isOptIn= */ false,
