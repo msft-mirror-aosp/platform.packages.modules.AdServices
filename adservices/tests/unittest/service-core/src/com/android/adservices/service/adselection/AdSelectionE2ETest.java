@@ -7001,7 +7001,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredCustomAudiencePermission(
+                .assertAppDeclaredPermission(
                         mContext, invalidPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
 
         // Logger calls come after the callback is returned
@@ -7069,7 +7069,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         geq(0));
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredCustomAudiencePermission(
+                .assertAppDeclaredPermission(
                         mContext, invalidPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
     }
 
