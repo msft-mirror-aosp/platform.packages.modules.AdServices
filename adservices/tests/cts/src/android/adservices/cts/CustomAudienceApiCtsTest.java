@@ -54,14 +54,11 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -70,7 +67,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -78,7 +74,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
+@RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
+
     private AdvertisingCustomAudienceClient mClient;
     private TestAdvertisingCustomAudienceClient mTestClient;
 
@@ -93,24 +91,9 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
 
-    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
-
     @Before
-    public void setup() throws InterruptedException {
-        if (SdkLevel.isAtLeastT()) {
+    public void setup() throws Exception {
+        if (sdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         }
 
@@ -138,7 +121,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @After
-    public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+    public void tearDown() throws Exception {
         leaveJoinedCustomAudiences();
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
