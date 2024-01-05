@@ -16,6 +16,7 @@
 package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
@@ -87,6 +88,11 @@ public class AdIdCompatibleManager {
         IAdIdService service = null;
         try {
             service = mServiceBinder.getService();
+
+            // Throw ISE and set it to the callback when service is not available
+            if (service == null) {
+                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+            }
         } catch (RuntimeException e) {
             LogUtil.e(e, "Failed binding to AdId service");
             executor.execute(() -> callback.onError(e));

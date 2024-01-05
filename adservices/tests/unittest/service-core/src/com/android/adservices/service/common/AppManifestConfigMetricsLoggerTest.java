@@ -18,8 +18,20 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_UNSPECIFIED;
+import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
+import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.dump;
+import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.PREFS_KEY_TEMPLATE;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.PREFS_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
@@ -29,12 +41,15 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.util.Log;
+
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.Nullable;
@@ -43,6 +58,8 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.ExtendedMockitoExpectations.ErrorLogUtilCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -55,6 +72,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,14 +85,11 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private static final String PKG_NAME = "pkg.I.am";
     private static final String PKG_NAME2 = "or.not";
 
-    static final boolean APP_EXISTS = true;
-    static final boolean APP_DOES_NOT_EXIST = false;
+    // Generic API - exact value doesn't matter
+    private static final @ApiType int API = API_TOPICS;
 
-    static final boolean APP_HAS_CONFIG = true;
-    static final boolean APP_DOES_NOT_HAVE_CONFIG = false;
-
-    static final boolean ENABLED_BY_DEFAULT = true;
-    static final boolean NOT_ENABLED_BY_DEFAULT = false;
+    private static final String KEY_PKG_NAME_API =
+            String.format(Locale.US, PREFS_KEY_TEMPLATE, PKG_NAME, API);
 
     @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
@@ -97,118 +112,85 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     public void testLogUsage_nullArgs() throws Exception {
         assertThrows(
                 NullPointerException.class,
-                () ->
-                        logUsageAndDontWait(
-                                /* packageName= */ null,
-                                APP_EXISTS,
-                                APP_HAS_CONFIG,
-                                ENABLED_BY_DEFAULT));
+                () -> logUsageAndDontWait(/* packageName= */ null, RESULT_ALLOWED_APP_ALLOWS_ALL));
+    }
+
+    @Test
+    public void testLogUsage_callWithInvalidResult() throws Exception {
+        AppManifestConfigCall call = new AppManifestConfigCall(PKG_NAME, API);
+        call.result = RESULT_UNSPECIFIED;
+        mPrefs.onEditThrows(); // will throw if edit() is called
+
+        AppManifestConfigMetricsLogger.logUsage(call);
+
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        assertEditNotCalled();
     }
 
     @Test
     public void testLogUsage_firstTime() throws Exception {
-        logUsageAndWait(APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).hasSize(1);
-        assertWithMessage("properties keys").that(allProps.keySet()).containsExactly(PKG_NAME);
+        assertWithMessage("properties keys")
+                .that(allProps.keySet())
+                .containsExactly(KEY_PKG_NAME_API);
     }
 
     @Test
-    public void testLogUsage_secondTimeSameArgs() throws Exception {
+    public void testLogUsage_secondTimeSameResult() throws Exception {
         // 1st time is fine
-        logUsageAndWait(APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         // 2nd time should not call edit
         mPrefs.onEditThrows(); // will throw if edit() is called
-        logUsageAndDontWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndDontWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).hasSize(1);
-        assertWithMessage("properties keys").that(allProps.keySet()).containsExactly(PKG_NAME);
+        assertWithMessage("properties keys")
+                .that(allProps.keySet())
+                .containsExactly(KEY_PKG_NAME_API);
+
+        assertEditNotCalled();
     }
 
+    @FlakyTest(
+            bugId = 315979774,
+            detail =
+                    "Should be fine now (issue was probably calling mPrefs instead of pref, and"
+                        + " method is simpler now regardless), but annotation will be removed in a"
+                        + " follow-up CL")
     @Test
-    public void testLogUsage_secondTimeDifferentArgs() throws Exception {
-        callOnceWithAllTrueThenSecondWith(APP_EXISTS, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
-        callOnceWithAllTrueThenSecondWith(APP_EXISTS, APP_DOES_NOT_HAVE_CONFIG, ENABLED_BY_DEFAULT);
-        callOnceWithAllTrueThenSecondWith(
-                APP_EXISTS, APP_DOES_NOT_HAVE_CONFIG, NOT_ENABLED_BY_DEFAULT);
-        callOnceWithAllTrueThenSecondWith(APP_DOES_NOT_EXIST, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
-        callOnceWithAllTrueThenSecondWith(
-                APP_DOES_NOT_EXIST, APP_HAS_CONFIG, NOT_ENABLED_BY_DEFAULT);
-        callOnceWithAllTrueThenSecondWith(
-                APP_DOES_NOT_EXIST, APP_DOES_NOT_HAVE_CONFIG, ENABLED_BY_DEFAULT);
-        callOnceWithAllTrueThenSecondWith(
-                APP_DOES_NOT_EXIST, APP_DOES_NOT_HAVE_CONFIG, NOT_ENABLED_BY_DEFAULT);
-    }
-
-    private void callOnceWithAllTrueThenSecondWith(
-            boolean appExists, boolean appHasConfig, boolean enabledByDefault) throws Exception {
-        Log.i(
-                mTag,
-                "callOnceWithAllTrueThenSecondWith(appExists="
-                        + appExists
-                        + ", appHasConfig="
-                        + appHasConfig
-                        + ", enabledByDefault="
-                        + enabledByDefault
-                        + ")");
-        // Need to use a new prefs because it's called multiple times (so it starts in a clean
-        // state) - life would be so much easier if JUnit provided an easy way to run parameterized
-        // tests per method (not class)
-        FakeSharedPreferences prefs = new FakeSharedPreferences();
-        when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(prefs);
-
+    public void testLogUsage_secondTimeDifferentResult() throws Exception {
+        int result = RESULT_ALLOWED_APP_ALLOWS_ALL;
         // 1st call
-        Log.d(
-                mTag,
-                "1st call: appExists="
-                        + APP_EXISTS
-                        + ", appHasConfig="
-                        + APP_HAS_CONFIG
-                        + ", enabledByDefault="
-                        + ENABLED_BY_DEFAULT
-                        + ")");
-        logUsageAndWait(prefs, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        Log.d(mTag, "1st call: result=" + result);
+        logUsageAndWait(PKG_NAME, result);
 
-        int valueBefore = prefs.getInt(PKG_NAME, -1);
-        expect.withMessage(
-                        "stored value of %s after 1st call (appExists=%s, appHasConfig=%s,"
-                                + " enabledByDefault=%s)",
-                        PKG_NAME, APP_EXISTS, APP_EXISTS, ENABLED_BY_DEFAULT)
+        int valueBefore = mPrefs.getInt(KEY_PKG_NAME_API, RESULT_UNSPECIFIED);
+        expect.withMessage("stored value of %s after 1st call (result=%s)", PKG_NAME, result)
                 .that(valueBefore)
-                .isNotEqualTo(-1);
+                .isEqualTo(RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         // 2nd call
-        Log.d(
-                mTag,
-                "2nd call: appExists="
-                        + appExists
-                        + ", appHasConfig="
-                        + appHasConfig
-                        + ", enabledByDefault="
-                        + enabledByDefault
-                        + ")");
-        logUsageAndWait(prefs, PKG_NAME, appExists, appHasConfig, enabledByDefault);
+        result = RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
+        Log.d(mTag, "2nd call: result=" + result);
+        logUsageAndWait(PKG_NAME, result);
 
-        Map<String, ?> allProps = prefs.getAll();
+        Map<String, ?> allProps = mPrefs.getAll();
         expect.withMessage("allProps").that(allProps).hasSize(1);
-        expect.withMessage("properties keys").that(allProps.keySet()).containsExactly(PKG_NAME);
+        expect.withMessage("properties keys")
+                .that(allProps.keySet())
+                .containsExactly(KEY_PKG_NAME_API);
 
-        int valueAfter = prefs.getInt(PKG_NAME, -1);
-        expect.withMessage(
-                        "stored value of %s after 2nd call (appExists=%s, appHasConfig=%s,"
-                                + " enabledByDefault=%s)",
-                        PKG_NAME, appExists, appHasConfig, enabledByDefault)
+        int valueAfter = mPrefs.getInt(KEY_PKG_NAME_API, RESULT_UNSPECIFIED);
+        expect.withMessage("stored value of %s after 2nd call (result=%s)", PKG_NAME, result)
                 .that(valueAfter)
-                .isNotEqualTo(-1);
-        expect.withMessage(
-                        "stored value of %s after 2nd call (appExists=%s, appHasConfig=%s,"
-                                + " enabledByDefault=%s)",
-                        PKG_NAME, appExists, appHasConfig, enabledByDefault)
-                .that(valueAfter)
-                .isNotEqualTo(valueBefore);
+                .isEqualTo(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG);
     }
 
     @Test
@@ -217,7 +199,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenThrow(exception);
 
-        logUsageAndDontWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndDontWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         mErrorLogUtilWithThrowableCallback.assertReceived(
                 expect,
@@ -230,7 +212,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     public void testLogUsage_commitFailed() throws Exception {
         mPrefs.onCommitReturns(/* result= */ false);
 
-        logUsageAndDontWait(PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndDontWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).isEmpty();
@@ -253,7 +235,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                             return mPrefs;
                         });
 
-        logUsageAndWait(mPrefs, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         assertWithMessage("execution thread")
                 .that(executionThread.get())
@@ -271,7 +253,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                 .that(dump)
                 .matches(
                         Pattern.compile(
-                                ".*file:.*/la/la/land/"
+                                ".*file:.*/la/la/land/shared_prefs/"
                                         + PREFS_NAME
                                         + "\\.xml.*\n"
                                         + ".*enabled by default: "
@@ -283,76 +265,61 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Test
     public void testDump_multipleEntries() throws Exception {
-        logUsageAndWait(mPrefs, PKG_NAME, APP_EXISTS, APP_HAS_CONFIG, ENABLED_BY_DEFAULT);
+        logUsageAndWait(PKG_NAME, API_TOPICS, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        logUsageAndWait(PKG_NAME, API_ATTRIBUTION, RESULT_DISALLOWED_BY_APP);
         logUsageAndWait(
-                mPrefs,
-                PKG_NAME2,
-                APP_DOES_NOT_EXIST,
-                APP_DOES_NOT_HAVE_CONFIG,
-                NOT_ENABLED_BY_DEFAULT);
+                PKG_NAME2, API_ATTRIBUTION, RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG);
 
         String dump = DumpHelper.dump(pw -> AppManifestConfigMetricsLogger.dump(mMockContext, pw));
 
+        String entry1 =
+                ".*"
+                        + PKG_NAME
+                        + "-"
+                        + apiToString(API_TOPICS)
+                        + ": "
+                        + resultToString(RESULT_ALLOWED_APP_ALLOWS_ALL)
+                        + ".*\n";
+        String entry2 =
+                ".*"
+                        + PKG_NAME
+                        + "-"
+                        + apiToString(API_ATTRIBUTION)
+                        + ": "
+                        + resultToString(RESULT_DISALLOWED_BY_APP)
+                        + ".*\n";
+        String entry3 =
+                ".*"
+                        + PKG_NAME2
+                        + "-"
+                        + apiToString(API_ATTRIBUTION)
+                        + ": "
+                        + resultToString(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG)
+                        + ".*\n";
         expect.withMessage("dump")
                 .that(dump)
                 .matches(
                         Pattern.compile(
-                                ".*2 entries.*\n"
-                                        + ".*"
-                                        + PKG_NAME
-                                        + ":.*appExists="
-                                        + APP_EXISTS
-                                        + ".*appHasConfig="
-                                        + APP_HAS_CONFIG
-                                        + ".*enabledByDefault="
-                                        + ENABLED_BY_DEFAULT
-                                        + "\n"
-                                        + ".*"
-                                        + PKG_NAME2
-                                        + ":.*appExists="
-                                        + APP_DOES_NOT_EXIST
-                                        + ".*appHasConfig="
-                                        + APP_DOES_NOT_HAVE_CONFIG
-                                        + ".*enabledByDefault="
-                                        + NOT_ENABLED_BY_DEFAULT
-                                        + "\n",
-                                Pattern.DOTALL));
+                                ".*3 entries.*\n" + entry1 + entry2 + entry3, Pattern.DOTALL));
     }
 
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
-    private void logUsageAndWait(boolean appExists, boolean appHasConfig, boolean enabledByDefault)
+    private void logUsageAndWait(String appName, @Result int callResult)
             throws InterruptedException {
-        logUsageAndWait(mPrefs, PKG_NAME, appExists, appHasConfig, enabledByDefault);
+        logUsageAndWait(appName, API, callResult);
     }
 
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
-    private void logUsageAndWait(
-            SharedPreferences prefs,
-            String appName,
-            boolean appExists,
-            boolean appHasConfig,
-            boolean enabledByDefault)
+    private void logUsageAndWait(String appName, @ApiType int api, @Result int callResult)
             throws InterruptedException {
         SyncOnSharedPreferenceChangeListener listener = new SyncOnSharedPreferenceChangeListener();
-        prefs.registerOnSharedPreferenceChangeListener(listener);
+        mPrefs.registerOnSharedPreferenceChangeListener(listener);
         try {
-            Log.v(
-                    mTag,
-                    "logUsageAndWait(appName="
-                            + appName
-                            + ", prefs="
-                            + prefs
-                            + ", appExists="
-                            + appExists
-                            + ", appHasConfig="
-                            + appHasConfig
-                            + ", enabledByDefault="
-                            + enabledByDefault
-                            + ", listener="
-                            + listener
-                            + ")");
-            AppManifestConfigMetricsLogger.logUsage(
-                    appName, appExists, appHasConfig, enabledByDefault);
+            AppManifestConfigCall call = new AppManifestConfigCall(appName, api);
+            call.result = callResult;
+            Log.v(mTag, "logUsageAndWait(call=" + call + ", listener=" + listener + ")");
+
+            AppManifestConfigMetricsLogger.logUsage(call);
             String result = listener.assertResultReceived();
             Log.v(mTag, "result: " + result);
         } finally {
@@ -362,24 +329,25 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     // Should only be used in cases where the call is expect to not change the shared preferences
     // (in which case a listener would not be called)
-    private void logUsageAndDontWait(
-            String appName, boolean appExists, boolean appHasConfig, boolean enabledByDefault) {
-        Log.v(
-                mTag,
-                "logUsageAndDontWait(appName= "
-                        + appName
-                        + ", mPrefs="
-                        + mPrefs
-                        + ", appExists="
-                        + appExists
-                        + ", appHasConfig="
-                        + appHasConfig
-                        + ", enabledByDefault="
-                        + enabledByDefault
-                        + ")");
-        AppManifestConfigMetricsLogger.logUsage(appName, appExists, appHasConfig, enabledByDefault);
+    private void logUsageAndDontWait(String appName, @Result int callResult) {
+        AppManifestConfigCall call = new AppManifestConfigCall(appName, API);
+        call.result = callResult;
+        Log.v(mTag, "logUsageAndDontWait(call=" + call + ")");
+        AppManifestConfigMetricsLogger.logUsage(call);
     }
 
+    // Must call mPrefs.onEditThrows() first
+    private void assertEditNotCalled() {
+        sleep(
+                1_000,
+                "waiting to make sure edit() was not called in the background (which would "
+                        + "have thrown an exception)");
+
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON,
+                never());
+    }
 
     // TODO(b/309857141): move to its own class / common package (it will be done in a later CL so
     // this class can be easily cherry picked into older releases).

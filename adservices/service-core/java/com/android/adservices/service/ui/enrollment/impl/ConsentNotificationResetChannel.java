@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.ui.enrollment.impl;
 
+import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -72,6 +74,7 @@ public class ConsentNotificationResetChannel implements PrivacySandboxEnrollment
 
     /** Perform enrollment logic for the reset channel. */
     public void enroll(Context context, ConsentManager consentManager) {
+        consentManager.recordUserManualInteractionWithConsent(NO_MANUAL_INTERACTIONS_RECORDED);
         consentManager.recordNotificationDisplayed(false);
         consentManager.recordGaUxNotificationDisplayed(false);
         consentManager.setU18NotificationDisplayed(false);

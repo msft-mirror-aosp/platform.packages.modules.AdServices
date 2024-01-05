@@ -64,6 +64,7 @@ android_library {
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "modules-utils-preconditions",
+        "adservices-shared-util", // For checkState method uses varargs.
         // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
         "modules-utils-testable-device-config",
     ],
@@ -109,6 +110,7 @@ filegroup {
     name: "adservices-extended-mockito-rule-sources",
     srcs: [
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
+        "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
     ],
     path: "java",
     visibility: [

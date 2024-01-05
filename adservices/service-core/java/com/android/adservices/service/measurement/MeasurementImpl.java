@@ -411,7 +411,7 @@ public final class MeasurementImpl {
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> dao.getUninstalledAppNamesHavingMeasurementData(installedAppList));
 
-        if (uninstalledAppsOpt.isPresent() && !uninstalledAppsOpt.get().isEmpty()) {
+        if (uninstalledAppsOpt.isPresent()) {
             for (Uri uninstalledAppName : uninstalledAppsOpt.get()) {
                 deletePackageRecords(uninstalledAppName);
             }

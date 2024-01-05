@@ -25,6 +25,7 @@ import androidx.room.TypeConverter;
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.UnencryptedObservationBatch;
+import com.google.common.hash.HashCode;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Optional;
@@ -89,6 +90,28 @@ final class Converters {
         }
         return EventVector.create(
                 stream(eventCodes.split(",")).map(Integer::parseInt).collect(toList()));
+    }
+
+    /**
+     * Converts a {@link HashCode} to a byte array.
+     *
+     * @param hashCode the {@link HashCode} to serialize
+     * @return the serialized {@link HashCode}
+     */
+    @TypeConverter
+    public static byte[] fromHashCode(HashCode hashCode) {
+        return hashCode.asBytes();
+    }
+
+    /**
+     * Converts a byte array to a {@link HashCode}.
+     *
+     * @param bytes a serialized {@link HashCode}
+     * @return the deserialized {@link HashCode}
+     */
+    @TypeConverter
+    public static HashCode bytesToHashCode(byte[] bytes) {
+        return HashCode.fromBytes(bytes);
     }
 
     /**

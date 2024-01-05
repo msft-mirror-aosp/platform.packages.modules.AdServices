@@ -23,5 +23,20 @@ message AggregateValue {
   oneof aggregate_value {
     // Used by COUNT.
     int64 integer_value = 1;
+    // Used by STRING_COUNTS.
+    LocalIndexHistogram index_histogram = 2;
   }
+}
+
+// Histogram with buckets that indexes into a list of string hashes or integer
+// buckets from the registry.
+message LocalIndexHistogram {
+  message Bucket {
+    // Index into the list the histogram refers to.
+    int32 index = 1;
+
+    // The occurrence count of the list item.
+    int64 count = 2;
+  }
+  repeated Bucket buckets = 1;
 }

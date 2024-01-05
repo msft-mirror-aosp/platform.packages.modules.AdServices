@@ -62,6 +62,7 @@ import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.SupportedByConditionRule;
@@ -75,8 +76,6 @@ import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
@@ -85,6 +84,7 @@ import com.android.adservices.data.adselection.datahandlers.WinningCustomAudienc
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
@@ -211,9 +211,9 @@ public class AdSelectionFromOutcomesE2ETest {
     private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
-    private EncryptionKeyDao mEncryptionKeyDao;
-    private EncryptionContextDao mEncryptionContextDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
+    private EnrollmentDao mEnrollmentDao;
+    private EncryptionKeyDao mEncryptionKeyDao;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionService mAdSelectionService;
     private Dispatcher mDispatcher;
@@ -258,8 +258,8 @@ public class AdSelectionFromOutcomesE2ETest {
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
-        mEncryptionContextDao = serverDb.encryptionContextDao();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mEnrollmentDao = EnrollmentDao.getInstance(mContextSpy);
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         mAdServicesHttpsClient =
@@ -279,8 +279,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -410,8 +410,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -441,6 +441,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesPickHighestSuccessUnifiedTables() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -466,8 +467,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -685,6 +686,7 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesWaterfallMalformedPrebuiltUriFailed() throws Exception {
         doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);

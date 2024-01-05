@@ -202,7 +202,9 @@ public class SdkSandboxServiceImpl extends Service {
 
     /** Unloads SDK. */
     public void unloadSdk(
-            String sdkName, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
+            String sdkName,
+            IUnloadSdkInSandboxCallback callback,
+            SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
 
         sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.elapsedRealtime());
@@ -214,6 +216,19 @@ public class SdkSandboxServiceImpl extends Service {
             callback.onUnloadSdk(sandboxLatencyInfo);
         } catch (RemoteException ignore) {
             Log.e(TAG, "Could not send onUnloadSdk");
+        }
+    }
+
+    /** Invoked when the client app changes foreground importance */
+    public void notifySdkSandboxClientImportanceChange(boolean isForeground) {
+        enforceCallerIsSystemServer();
+
+        final long token = Binder.clearCallingIdentity();
+        try {
+            SdkSandboxLocalSingleton.getExistingInstance()
+                    .notifySdkSandboxClientImportanceChange(isForeground);
+        } finally {
+            Binder.restoreCallingIdentity(token);
         }
     }
 
@@ -516,7 +531,7 @@ public class SdkSandboxServiceImpl extends Service {
         @Override
         public void unloadSdk(
                 @NonNull String sdkName,
-                @NonNull IUnloadSdkCallback callback,
+                @NonNull IUnloadSdkInSandboxCallback callback,
                 @NonNull SandboxLatencyInfo sandboxLatencyInfo) {
             Objects.requireNonNull(sandboxLatencyInfo, "sandboxLatencyInfo should not be null");
             sandboxLatencyInfo.setTimeSandboxReceivedCallFromSystemServer(
@@ -530,6 +545,11 @@ public class SdkSandboxServiceImpl extends Service {
         public void syncDataFromClient(@NonNull SharedPreferencesUpdate update) {
             Objects.requireNonNull(update, "update should not be null");
             SdkSandboxServiceImpl.this.syncDataFromClient(update);
+        }
+
+        @Override
+        public void notifySdkSandboxClientImportanceChange(boolean isForeground) {
+            SdkSandboxServiceImpl.this.notifySdkSandboxClientImportanceChange(isForeground);
         }
     }
 

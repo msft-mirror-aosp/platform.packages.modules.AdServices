@@ -16,7 +16,6 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.TestDeviceHelper.getProperty;
-import static com.android.adservices.common.TestDeviceHelper.setProperty;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -34,17 +33,13 @@ final class HostSideSystemPropertiesHelper extends SystemPropertiesHelper.Interf
         return sInstance;
     }
 
-    private HostSideSystemPropertiesHelper() {}
+    private HostSideSystemPropertiesHelper() {
+        super(ConsoleLogger.getInstance());
+    }
 
     @Override
     public String get(String name) {
         return getProperty(name);
-    }
-
-    @Override
-    public void set(String name, String value) {
-        sLogger.v("set(%s, %s)", name, value);
-        setProperty(name, value);
     }
 
     // cmdFmt must be final because it's being passed to a method taking @FormatString

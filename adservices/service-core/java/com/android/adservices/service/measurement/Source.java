@@ -98,6 +98,8 @@ public class Source {
     @Nullable private List<AttributedTrigger> mAttributedTriggers;
     @Nullable private TriggerSpecs mTriggerSpecs;
     @Nullable private String mTriggerSpecsString;
+    @Nullable private Long mNumStates;
+    @Nullable private Double mFlipProbability;
     @Nullable private Integer mMaxEventLevelReports;
     @Nullable private String mEventAttributionStatusString;
     @Nullable private String mPrivacyParametersString = null;
@@ -119,6 +121,7 @@ public class Source {
         if (mParsedEventReportWindows != null) {
             return mParsedEventReportWindows;
         }
+
         if (mEventReportWindows == null) {
             return null;
         }
@@ -138,7 +141,8 @@ public class Source {
     }
 
     /**
-     * Returns parsed or default value of event report windows.
+     * Returns parsed or default value of event report windows (can be used during {@code Source}
+     * construction since the method does not require a {@code Source} object).
      *
      * @param eventReportWindows string to be parsed
      * @param sourceType Source's Type
@@ -147,13 +151,13 @@ public class Source {
      * @return parsed or default value
      */
     @Nullable
-    public static List<Pair<Long, Long>> getOrDefaultEventReportWindows(
+    public static List<Pair<Long, Long>> getOrDefaultEventReportWindowsForFlex(
             @Nullable JSONObject eventReportWindows,
             @NonNull SourceType sourceType,
             long expiryDelta,
             @NonNull Flags flags) {
         if (eventReportWindows == null) {
-            return getDefaultEventReportWindows(expiryDelta, sourceType, flags);
+            return getDefaultEventReportWindowsForFlex(expiryDelta, sourceType, flags);
         }
         return parseEventReportWindows(eventReportWindows);
     }
@@ -178,17 +182,17 @@ public class Source {
             @NonNull JSONObject jsonObject) {
         List<Pair<Long, Long>> result = new ArrayList<>();
         try {
-            long startDuration = 0;
+            long startTime = 0L;
             if (!jsonObject.isNull("start_time")) {
-                startDuration = jsonObject.getLong("start_time");
+                startTime = jsonObject.getLong("start_time");
             }
             JSONArray endTimesJSON = jsonObject.getJSONArray("end_times");
 
             for (int i = 0; i < endTimesJSON.length(); i++) {
-                long endDuration = endTimesJSON.getLong(i);
-                Pair<Long, Long> window = new Pair<>(startDuration, endDuration);
+                long endTime = endTimesJSON.getLong(i);
+                Pair<Long, Long> window = Pair.create(startTime, endTime);
                 result.add(window);
-                startDuration = endDuration;
+                startTime = endTime;
             }
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
@@ -198,24 +202,25 @@ public class Source {
         return result;
     }
 
-    private static List<Pair<Long, Long>> getDefaultEventReportWindows(
+    private static List<Pair<Long, Long>> getDefaultEventReportWindowsForFlex(
             long expiryDelta, SourceType sourceType, Flags flags) {
         List<Pair<Long, Long>> result = new ArrayList<>();
-        List<Long> defaultEarlyWindows =
-                EventReportWindowCalcDelegate.getDefaultEarlyReportingWindows(sourceType, false);
-        List<Long> earlyWindows =
+        // Obtain default early report windows without regard to install-related behaviour.
+        List<Long> defaultEarlyWindowEnds =
+                EventReportWindowCalcDelegate.getDefaultEarlyReportingWindowEnds(sourceType, false);
+        List<Long> earlyWindowEnds =
                 new EventReportWindowCalcDelegate(flags)
-                        .getConfiguredOrDefaultEarlyReportingWindows(
-                                sourceType, defaultEarlyWindows, false);
+                        .getConfiguredOrDefaultEarlyReportingWindowEnds(
+                                sourceType, defaultEarlyWindowEnds);
         long windowStart = 0;
-        for (long earlyWindow : earlyWindows) {
-            if (earlyWindow >= expiryDelta) {
-                continue;
+        for (long earlyWindowEnd : earlyWindowEnds) {
+            if (earlyWindowEnd >= expiryDelta) {
+                break;
             }
-            result.add(new Pair<>(windowStart, earlyWindow));
-            windowStart = earlyWindow;
+            result.add(Pair.create(windowStart, earlyWindowEnd));
+            windowStart = earlyWindowEnd;
         }
-        result.add(new Pair<>(windowStart, expiryDelta));
+        result.add(Pair.create(windowStart, expiryDelta));
         return result;
     }
 
@@ -225,32 +230,68 @@ public class Source {
      * @param flags flag values
      */
     public boolean hasValidInformationGain(@NonNull Flags flags) {
-        return isFlexLiteApiValueValid(flags) && isFlexEventApiValueValid(flags);
+        if (mTriggerSpecs != null) {
+            return isFlexEventApiValueValid(flags);
+        }
+        return isFlexLiteApiValueValid(flags);
+    }
+
+    private double getInformationGainThreshold(Flags flags) {
+        if (getDestinationTypeMultiplier(flags) == 2) {
+            return mSourceType == SourceType.EVENT
+                    ? flags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent()
+                    : flags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
+        }
+        return mSourceType == SourceType.EVENT
+                ? flags.getMeasurementFlexApiMaxInformationGainEvent()
+                : flags.getMeasurementFlexApiMaxInformationGainNavigation();
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexLiteApiEnabled()
-                || (mEventReportWindows == null && mMaxEventLevelReports == null)) {
+        if (!flags.getMeasurementFlexLiteApiEnabled()) {
             return true;
         }
-        double informationGainThreshold =
-                mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexApiMaxInformationGainEvent()
-                        : flags.getMeasurementFlexApiMaxInformationGainNavigation();
+        return Combinatorics.getInformationGain(getNumStates(flags), getFlipProbability(flags))
+                <= getInformationGainThreshold(flags);
+    }
 
+    private void buildPrivacyParameters(Flags flags) {
+        if (mTriggerSpecs != null) {
+            // Flex source has num states set during registration but not during attribution; also
+            // num states is only needed for information gain calculation, which is handled during
+            // registration. We set flip probability here for use in noising during registration and
+            // availability for debug reporting during attribution.
+            setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
+            return;
+        }
         EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
                 new EventReportWindowCalcDelegate(flags);
-        boolean installCase = SourceNoiseHandler.isInstallDetectionEnabled(this);
-        long numStates =
-                Combinatorics.getNumStatesArithmetic(
-                        eventReportWindowCalcDelegate.getMaxReportCount(this, installCase),
-                        getTriggerDataCardinality(),
-                        eventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                                this, installCase));
-        double flipProbability = Combinatorics.getFlipProbability(numStates);
+        int reportingWindowCountForNoising =
+                eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this);
+        long numberOfStates =
+                Combinatorics.getNumberOfStarsAndBarsSequences(
+                        /*numStars=*/ eventReportWindowCalcDelegate.getMaxReportCount(this),
+                        /*numBars=*/ getTriggerDataCardinality()
+                                * reportingWindowCountForNoising
+                                * getDestinationTypeMultiplier(flags));
+        setNumStates(numberOfStates);
+        setFlipProbability(Combinatorics.getFlipProbability(numberOfStates));
+    }
 
-        return Combinatorics.getInformationGain(numStates, flipProbability)
-                <= informationGainThreshold;
+    /** Should source report coarse destinations */
+    public boolean shouldReportCoarseDestinations(Flags flags) {
+        return flags.getMeasurementEnableCoarseEventReportDestinations()
+                && hasCoarseEventReportDestinations();
+    }
+
+    /**
+     * Returns the number of destination types to use in privacy computations.
+     */
+    public int getDestinationTypeMultiplier(Flags flags) {
+        return !shouldReportCoarseDestinations(flags) && hasAppDestinations()
+                        && hasWebDestinations()
+                ? SourceNoiseHandler.DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
+                : SourceNoiseHandler.SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
     }
 
     /** Returns true is manual event reporting windows are set otherwise false; */
@@ -610,9 +651,9 @@ public class Source {
     /**
      * Time when {@link Source} event report window will expire. (Appends the Event Time to window)
      */
-    public Long getProcessedEventReportWindow() {
+    public long getEffectiveEventReportWindow() {
         if (mEventReportWindow == null) {
-            return null;
+            return getExpiryTime();
         }
         // TODO(b/290098169): Cleanup after a few releases
         // Handling cases where ReportWindow is already stored as mEventTime + mEventReportWindow
@@ -704,6 +745,11 @@ public class Source {
         return mInstallCooldownWindow;
     }
 
+    /** Check if install detection is enabled for the source. */
+    public boolean isInstallDetectionEnabled() {
+        return getInstallCooldownWindow() > 0 && hasAppDestinations();
+    }
+
     /**
      * Is an App-install attributed to the {@link Source}.
      */
@@ -723,20 +769,9 @@ public class Source {
      *
      * @return whether the parameters of flexible are valid
      */
+    @VisibleForTesting
     public boolean isFlexEventApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexibleEventReportingApiEnabled()
-                || mTriggerSpecs == null) {
-            return true;
-        }
-        double informationGainThreshold =
-                mSourceType == SourceType.EVENT
-                        ? flags.getMeasurementFlexApiMaxInformationGainEvent()
-                        : flags.getMeasurementFlexApiMaxInformationGainNavigation();
-
-        if (mTriggerSpecs.getInformationGain() > informationGainThreshold) {
-            return false;
-        }
-        return true;
+        return mTriggerSpecs.getInformationGain(this, flags) <= getInformationGainThreshold(flags);
     }
 
     /**
@@ -891,7 +926,7 @@ public class Source {
      * where the conversion occurred or merge app and web destinations. Set to true of both app and
      * web destination should be merged into the array of event report.
      */
-    public boolean getCoarseEventReportDestinations() {
+    public boolean hasCoarseEventReportDestinations() {
         return mCoarseEventReportDestinations;
     }
 
@@ -903,6 +938,25 @@ public class Source {
     /** Returns trigger specs */
     public String getTriggerSpecsString() {
         return mTriggerSpecsString;
+    }
+
+    /**
+     * Returns the number of report states for the source (used only for computation and not
+     * stored in the datastore)
+     */
+    private Long getNumStates(Flags flags) {
+        if (mNumStates == null) {
+            buildPrivacyParameters(flags);
+        }
+        return mNumStates;
+    }
+
+    /** Returns flip probability (used only for computation and not stored in the datastore) */
+    public Double getFlipProbability(Flags flags) {
+        if (mFlipProbability == null) {
+            buildPrivacyParameters(flags);
+        }
+        return mFlipProbability;
     }
 
     /** Returns max bucket increments */
@@ -923,10 +977,9 @@ public class Source {
             @Nullable Integer maxEventLevelReports,
             @NonNull Flags flags) {
         if (maxEventLevelReports == null) {
-            maxEventLevelReports =
-                    sourceType == Source.SourceType.NAVIGATION
-                            ? PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS
-                            : flags.getMeasurementVtcConfigurableMaxEventReportsCount();
+            return sourceType == Source.SourceType.NAVIGATION
+                    ? PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS
+                    : flags.getMeasurementVtcConfigurableMaxEventReportsCount();
         }
         return maxEventLevelReports;
     }
@@ -954,6 +1007,16 @@ public class Source {
     /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
+    }
+
+    /** Set the number of report states for the {@link Source}. */
+    private void setNumStates(long numStates) {
+        mNumStates = numStates;
+    }
+
+    /** Set flip probability for the {@link Source}. */
+    private void setFlipProbability(double flipProbability) {
+        mFlipProbability = flipProbability;
     }
 
     /**
@@ -1491,7 +1554,7 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getCoarseEventReportDestinations()} */
+        /** See {@link Source#hasCoarseEventReportDestinations()} */
         @NonNull
         public Builder setCoarseEventReportDestinations(boolean coarseEventReportDestinations) {
             mBuilding.mCoarseEventReportDestinations = coarseEventReportDestinations;

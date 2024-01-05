@@ -19,7 +19,6 @@ package com.android.adservices.service.common;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -67,8 +66,7 @@ public class PermissionHelperTest {
                     ACCESS_ADSERVICES_TOPICS,
                     ACCESS_ADSERVICES_AD_ID,
                     ACCESS_ADSERVICES_ATTRIBUTION,
-                    ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
-                    ACCESS_ADSERVICES_PROTECTED_SIGNALS
+                    ACCESS_ADSERVICES_CUSTOM_AUDIENCE
                 };
         doReturn(packageInfoGrant)
                 .when(mMockPackageManagerGrant)
@@ -170,10 +168,6 @@ public class PermissionHelperTest {
                 getMockContext(ACCESS_ADSERVICES_CUSTOM_AUDIENCE, mMockPackageManagerGrant);
         assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext3, APP_PACKAGE_NAME))
                 .isTrue();
-        Context mockContext4 =
-                getMockContext(ACCESS_ADSERVICES_PROTECTED_SIGNALS, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasProtectedSignalsPermission(mockContext4, APP_PACKAGE_NAME))
-                .isTrue();
     }
 
     @Test
@@ -190,8 +184,6 @@ public class PermissionHelperTest {
         assertThat(PermissionHelper.hasAttributionPermission(mockContext, APP_PACKAGE_NAME))
                 .isFalse();
         assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext, APP_PACKAGE_NAME))
-                .isFalse();
-        assertThat(PermissionHelper.hasProtectedSignalsPermission(mockContext, APP_PACKAGE_NAME))
                 .isFalse();
         assertThat(PermissionHelper.hasAccessAdServicesStatePermission(mockContext)).isFalse();
         assertThat(PermissionHelper.hasModifyAdServicesStatePermission(mockContext)).isFalse();

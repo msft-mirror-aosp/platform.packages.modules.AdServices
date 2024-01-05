@@ -119,7 +119,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "0",
-                    "value": "9",
+                    "value": 9,
                     "priority": "200"
                   }
                 ],
@@ -146,7 +146,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "1",
-                    "value": "10",
+                    "value": 10,
                     "priority": "150"
                   }
                 ]
@@ -172,7 +172,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "0",
-                    "value": "30",
+                    "value": 30,
                     "priority": "100"
                   }
                 ],
@@ -199,7 +199,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "2",
-                    "value": "18",
+                    "value": 18,
                     "priority": "150"
                   }
                 ],
@@ -226,7 +226,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "2",
-                    "value": "1",
+                    "value": 1,
                     "priority": "150"
                   }
                 ],
@@ -252,7 +252,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "3",
-                    "value": "19",
+                    "value": 19,
                     "priority": "130"
                   }
                 ]
@@ -278,7 +278,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "2",
-                    "value": "40",
+                    "value": 40,
                     "priority": "400"
                   }
                 ],
@@ -304,7 +304,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "0",
-                    "value": "5",
+                    "value": 5,
                     "priority": "90"
                   }
                 ]
@@ -330,7 +330,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "2",
-                    "value": "20",
+                    "value": 20,
                     "priority": "50"
                   }
                 ],
@@ -357,7 +357,7 @@
                 "event_trigger_data": [
                   {
                     "trigger_data": "0",
-                    "value": "20",
+                    "value": 20,
                     "priority": "50"
                   }
                 ],
@@ -383,6 +383,7 @@
           "source_event_id": "123",
           "trigger_data": "1",
           "source_type": "navigation",
+          "source_debug_key": "111",
           "trigger_summary_bucket": [10, 49],
           "randomized_trigger_rate": 0.00030175409301020603
         }
@@ -428,7 +429,7 @@
           "source_type": "navigation",
           "source_debug_key": "111",
           "trigger_debug_keys": ["7", "4", "5", "9"],
-          "trigger_summary_bucket": [70, 2147483646],
+          "trigger_summary_bucket": [70, 4294967295],
           "randomized_trigger_rate": 0.00030175409301020603
         }
       }
@@ -490,7 +491,7 @@
           "source_type": "navigation",
           "source_debug_key": "111",
           "trigger_debug_keys": ["7", "4", "5", "9"],
-          "trigger_summary_bucket": [70, 2147483646],
+          "trigger_summary_bucket": [70, 4294967295],
           "randomized_trigger_rate": 0.00030175409301020603
         }
       },
@@ -505,7 +506,7 @@
           "source_type": "navigation",
           "source_debug_key": "111",
           "trigger_debug_keys": ["7", "4", "5", "9"],
-          "trigger_summary_bucket": [70, 2147483646],
+          "trigger_summary_bucket": [70, 4294967295],
           "randomized_trigger_rate": 0.00030175409301020603
         }
       }

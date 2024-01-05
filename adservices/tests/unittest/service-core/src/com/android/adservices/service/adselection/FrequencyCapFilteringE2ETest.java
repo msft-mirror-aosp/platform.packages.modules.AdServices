@@ -49,7 +49,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -57,18 +57,16 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
@@ -94,20 +92,18 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.time.Duration;
@@ -118,8 +114,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
-
+@SpyStatic(FlagsFactory.class)
+public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
     private static final int SELECT_ADS_CALLBACK_WAIT_MS = 10_000;
     private static final long AD_SELECTION_ID_BUYER_1 = 20;
@@ -179,7 +175,6 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                                                     .build())
                                     .build())
                     .build();
-    private MockitoSession mStaticMockSession;
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private HttpCache mHttpCacheMock;
@@ -198,7 +193,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDaoSpy;
     private EncryptionKeyDao mEncryptionKeyDao;
-    private EncryptionContextDao mEncryptionContextDao;
+    private EnrollmentDao mEnrollmentDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -214,13 +209,6 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
 
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
                         .build()
@@ -243,15 +231,15 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                         Room.inMemoryDatabaseBuilder(mContextSpy, SharedStorageDatabase.class)
                                 .build()
                                 .frequencyCapDao());
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
-        mEncryptionContextDao = serverDb.encryptionContextDao();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+
+        Flags flagsEnablingAdFiltering = new FlagsOverridingAdFiltering(true);
+        doReturn(flagsEnablingAdFiltering).when(FlagsFactory::getFlags);
+
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
+        mEnrollmentDao = EnrollmentDao.getInstance(mContextSpy);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
-
-        Flags flagsEnablingAdFiltering = new FlagsOverridingAdFiltering(true);
 
         mFledgeAuthorizationFilterSpy =
                 ExtendedMockito.spy(
@@ -274,8 +262,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -303,7 +291,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                         .build();
 
         // Required stub for Custom Audience DB persistence
-        doReturn(flagsEnablingAdFiltering).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(flagsEnablingAdFiltering);
 
         // Required stub for Ad Selection call
         doReturn(DevContext.createForDevOptionsDisabled())
@@ -352,13 +340,6 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                 .fetchPayload(any(AdServicesHttpClientRequest.class));
     }
 
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @Test
     public void testUpdateHistogramMissingAdSelectionDoesNothing() throws InterruptedException {
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
@@ -396,7 +377,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredCustomAudiencePermission(
+                .assertAppDeclaredPermission(
                         mContextSpy,
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
@@ -420,7 +401,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
         verifyNoMoreInteractions(mFrequencyCapDaoSpy);
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredCustomAudiencePermission(
+                .assertAppDeclaredPermission(
                         mContextSpy,
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
@@ -441,8 +422,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -504,8 +485,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                             mCustomAudienceDao,
                             mEncodedPayloadDao,
                             mFrequencyCapDaoSpy,
-                            mEncryptionContextDao,
                             mEncryptionKeyDao,
+                            mEnrollmentDao,
                             mAdServicesHttpsClientMock,
                             mDevContextFilterMock,
                             mLightweightExecutorService,
@@ -762,8 +743,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,
@@ -878,8 +859,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesUnitTestCase {
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDaoSpy,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClientMock,
                         mDevContextFilterMock,
                         mLightweightExecutorService,

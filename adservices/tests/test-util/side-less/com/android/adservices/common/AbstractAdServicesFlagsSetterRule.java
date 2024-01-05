@@ -201,16 +201,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
     }
 
-    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
-    public T setAdserviceEnableStatus(boolean value) {
-        return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
-    }
-
-    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
-    public T setUpdateAdIdCacheEnabled(boolean value) {
-        return setFlag(FlagsConstants.KEY_AD_ID_CACHE_ENABLED, value);
-    }
-
     /**
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
@@ -274,6 +264,18 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                     mLog.d("setCompatModeFlags(): setting flags for R+");
                     setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, true);
                     setFlag(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY, true);
+                });
+    }
+
+    public T setDebugUxFlagsForRvcUx() {
+        return runOrCache(
+                "setDebugUxFlagsForRvcUx()",
+                () -> {
+                    if (!isAtLeastS() && isAtLeastR()) {
+                        setFlag(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
+                        setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
+                        return;
+                    }
                 });
     }
 

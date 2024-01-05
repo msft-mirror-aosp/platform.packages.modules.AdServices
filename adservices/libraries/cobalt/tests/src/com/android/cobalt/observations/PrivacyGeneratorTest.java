@@ -24,6 +24,7 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.cobalt.observations.testing.FakeSecureRandom;
 
+import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.PrivacyLevel;
 import com.google.common.collect.ImmutableList;
@@ -46,78 +47,70 @@ public final class PrivacyGeneratorTest {
         mPrivacyGenerator = new PrivacyGenerator(new FakeSecureRandom());
     }
 
+    private static PrivateIndexObservation makeObservation(int i) {
+        return PrivateIndexObservation.newBuilder().setIndex(i).build();
+    }
+
     @Test
-    public void testAddNoise_noEventsNoNoise_empty() throws Exception {
-        ImmutableList<Integer> result = mPrivacyGenerator.addNoise(ImmutableList.of(), 0, sReport);
+    public void testAddNoise_noNoise_empty() throws Exception {
+        ImmutableList<PrivateIndexObservation> result = mPrivacyGenerator.generateNoise(0, sReport);
         // The report's lambda is too small to trigger a fabricated observation.
         assertThat(result).isEmpty();
     }
 
     @Test
-    public void testAddNoise_noEventsButFabricatedObservation_oneIndex() throws Exception {
+    public void testAddNoise_fabricatedObservation_oneIndex() throws Exception {
         // Use a larger Poisson mean that is guaranteed to cause a fabricated observation to be
         // created, due to the FakeSecureRandom implementation.
-        ImmutableList<Integer> result =
-                mPrivacyGenerator.addNoise(
-                        ImmutableList.of(), 0, sReport.toBuilder().setPoissonMean(0.1).build());
+        ImmutableList<PrivateIndexObservation> result =
+                mPrivacyGenerator.generateNoise(0, sReport.toBuilder().setPoissonMean(0.1).build());
         // A fabricated observation.
-        assertThat(result).containsExactly(0);
+        assertThat(result).containsExactly(makeObservation(0));
     }
 
     @Test
-    public void testAddNoise_noEventsButTwoFabricatedObservations_oneIndex() throws Exception {
+    public void testAddNoise_twoFabricatedObservations_oneIndex() throws Exception {
         // Use an even larger Poisson mean that is guaranteed to cause two fabricated observations
         // to be created, due to the FakeSecureRandom implementation.
-        ImmutableList<Integer> result =
-                mPrivacyGenerator.addNoise(
-                        ImmutableList.of(), 0, sReport.toBuilder().setPoissonMean(0.52).build());
+        ImmutableList<PrivateIndexObservation> result =
+                mPrivacyGenerator.generateNoise(
+                        0, sReport.toBuilder().setPoissonMean(0.52).build());
         // Two fabricated observations.
-        assertThat(result).containsExactly(0, 0);
+        assertThat(result).containsExactly(makeObservation(0), makeObservation(0));
     }
 
     @Test
-    public void testAddNoise_oneEventNoNoise_oneIndex() throws Exception {
-        ImmutableList<Integer> result = mPrivacyGenerator.addNoise(ImmutableList.of(0), 0, sReport);
-        // Real index returned, as the report's lambda is too small to trigger a fabricated
-        // observation.
-        assertThat(result).containsExactly(0);
-    }
-
-    @Test
-    public void testAddNoise_oneEventAndFabricatedObservation_twoIndices() throws Exception {
+    public void testAddNoise_oneFabricatedObservation_twoIndices() throws Exception {
         // Use a larger Poisson mean that is guaranteed to cause a fabricated observation to be
         // created, due to the FakeSecureRandom implementation.
-        ImmutableList<Integer> result =
-                mPrivacyGenerator.addNoise(
-                        ImmutableList.of(0), 0, sReport.toBuilder().setPoissonMean(0.1).build());
-        // Real index returned, and a fabricated index are expected.
-        assertThat(result).containsExactly(0, 0);
+        ImmutableList<PrivateIndexObservation> result =
+                mPrivacyGenerator.generateNoise(0, sReport.toBuilder().setPoissonMean(0.1).build());
+        // A fabricated index is expected.
+        assertThat(result).containsExactly(makeObservation(0));
     }
 
     @Test
-    public void testAddNoise_oneEventAndTwoFabricatedObservations_threeIndices() throws Exception {
+    public void testAddNoise_twoFabricatedObservations_threeIndices() throws Exception {
         // Use an even larger Poisson mean that is guaranteed to cause two fabricated observations
         // to be created, due to the FakeSecureRandom implementation.
-        ImmutableList<Integer> result =
-                mPrivacyGenerator.addNoise(
-                        ImmutableList.of(0), 0, sReport.toBuilder().setPoissonMean(0.52).build());
-        // Real index returned, and two fabricated indices are expected.
-        assertThat(result).containsExactly(0, 0, 0);
+        ImmutableList<PrivateIndexObservation> result =
+                mPrivacyGenerator.generateNoise(
+                        0, sReport.toBuilder().setPoissonMean(0.52).build());
+        // Two fabricated indices are expected.
+        assertThat(result).containsExactly(makeObservation(0), makeObservation(0));
     }
 
     @Test
-    public void testAddNoise_oneEventForMetricWithDimensions_threeObservations() throws Exception {
+    public void testAddNoise_metricWithDimensions_threeObservations() throws Exception {
         // Use a larger Poisson mean that is guaranteed to cause a single fabricated observation to
         // be created, due to the FakeSecureRandom implementation. This is smaller than other tests,
         // because the poisson mean is multiplied by the number of indices, which is larger here due
         // the metric dimensions.
-        ImmutableList<Integer> result =
-                mPrivacyGenerator.addNoise(
-                        ImmutableList.of(2, 3),
-                        5,
-                        sReport.toBuilder().setPoissonMean(0.02).build());
-        // Real indices returned, and a fabricated index are expected.
-        assertThat(result).containsExactly(2, 3, 5);
+        ImmutableList<PrivateIndexObservation> result =
+                mPrivacyGenerator.generateNoise(
+                        5, sReport.toBuilder().setPoissonMean(0.02).build());
+        // A fabricated index is expected.
+        assertThat(result).containsExactly(makeObservation(5));
     }
 
     @Test
@@ -125,7 +118,7 @@ public final class PrivacyGeneratorTest {
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> mPrivacyGenerator.addNoise(ImmutableList.of(), -1, sReport));
+                        () -> mPrivacyGenerator.generateNoise(-1, sReport));
         assertThat(thrown).hasMessageThat().contains("maxIndex value cannot be negative");
     }
 
@@ -135,10 +128,8 @@ public final class PrivacyGeneratorTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () ->
-                                mPrivacyGenerator.addNoise(
-                                        ImmutableList.of(),
-                                        0,
-                                        sReport.toBuilder().setPoissonMean(-0.1).build()));
+                                mPrivacyGenerator.generateNoise(
+                                        0, sReport.toBuilder().setPoissonMean(-0.1).build()));
         assertThat(thrown).hasMessageThat().contains("poisson_mean must be positive");
     }
 }
