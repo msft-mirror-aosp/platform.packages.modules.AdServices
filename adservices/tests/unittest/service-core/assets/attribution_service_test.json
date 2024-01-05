@@ -102,7 +102,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -244,7 +244,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -423,7 +423,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T1"
           },
@@ -438,7 +438,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           }
@@ -805,7 +805,7 @@
           "triggerPriority": 101,
           "status": 0,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S2",
           "triggerId": "T1"
         }],
@@ -965,7 +965,7 @@
           "triggerPriority": 101,
           "status": 0,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S2",
           "triggerId": "T1"
         }],
@@ -1883,7 +1883,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -2580,7 +2580,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 102,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           },
@@ -2595,7 +2595,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 103,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T3"
           },
@@ -2610,7 +2610,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 104,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T4"
           }
@@ -2875,7 +2875,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T1"
           },
@@ -2890,7 +2890,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           },
@@ -2905,7 +2905,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 102,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T4"
           }
@@ -3765,7 +3765,7 @@
             "reportTime": 8643600030,
             "triggerPriority": 0,
             "sourceType": "navigation",
-            "randomizedTriggerRate": 0.0024263,
+            "randomizedTriggerRate": 0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           }
@@ -3928,7 +3928,7 @@
             "reportTime": 8643600030,
             "triggerPriority": 0,
             "sourceType": "navigation",
-            "randomizedTriggerRate": 0.0024263,
+            "randomizedTriggerRate": 0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           }
@@ -5052,7 +5052,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0170218,
+          "randomizedTriggerRate": 0.0008051,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -5401,7 +5401,7 @@
           "reportTime": 8730000002,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0170218,
+          "randomizedTriggerRate": 0.0008051,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
