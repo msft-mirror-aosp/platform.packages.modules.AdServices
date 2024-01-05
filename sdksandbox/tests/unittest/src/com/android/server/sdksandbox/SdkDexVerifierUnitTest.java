@@ -19,6 +19,8 @@ package com.android.server.sdksandbox.verifier;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.os.OutcomeReceiver;
 
 import com.android.server.sdksandbox.proto.Verifier.AllowedApi;
@@ -29,6 +31,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class SdkDexVerifierUnitTest {
+
+    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     private final SdkDexVerifier mVerifier = SdkDexVerifier.getInstance();
 
@@ -141,9 +145,13 @@ public class SdkDexVerifierUnitTest {
                 new ApiAllowlistProvider("allowlist_doesn't_exist");
         TestOutcomeReceiver callback = new TestOutcomeReceiver();
         SdkDexVerifier verifier =
-                new SdkDexVerifier(new SdkDexVerifier.Injector(failAllowlistProvider));
+                new SdkDexVerifier(
+                        new SdkDexVerifier.Injector(
+                                failAllowlistProvider,
+                                new SerialDexLoader(new DexParserImpl(), MAIN_HANDLER)));
 
-        verifier.startDexVerification("apk_that_doesn't_get_verified", 33, callback);
+        verifier.startDexVerification(
+                "apk_that_doesn't_get_verified", "com.test.unverified_test_app", 33, callback);
 
         assertThat(callback.getLastError()).isNotNull();
         assertThat(callback.getLastError().getMessage())
@@ -154,7 +162,7 @@ public class SdkDexVerifierUnitTest {
     public void startDexVerification_apkNotFound() throws Exception {
         TestOutcomeReceiver callback = new TestOutcomeReceiver();
 
-        mVerifier.startDexVerification("bogusPath", 33, callback);
+        mVerifier.startDexVerification("bogusPath", "com.test.nonexistent_test_app", 33, callback);
 
         assertThat(callback.getLastError()).isNotNull();
         assertThat(callback.getLastError().getMessage())

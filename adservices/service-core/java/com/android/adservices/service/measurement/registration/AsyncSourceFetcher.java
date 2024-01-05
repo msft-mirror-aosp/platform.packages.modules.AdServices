@@ -492,8 +492,9 @@ public class AsyncSourceFetcher {
             Source.SourceType sourceType,
             int maxEventLevelReports,
             Source.TriggerDataMatching triggerDataMatching) {
-        List<Pair<Long, Long>> parsedEventReportWindows = Source.getOrDefaultEventReportWindows(
-                eventReportWindows, sourceType, expiry, mFlags);
+        List<Pair<Long, Long>> parsedEventReportWindows =
+                Source.getOrDefaultEventReportWindowsForFlex(
+                        eventReportWindows, sourceType, expiry, mFlags);
         long defaultStart = parsedEventReportWindows.get(0).first;
         List<Long> defaultEnds =
                 parsedEventReportWindows.stream().map((x) -> x.second).collect(Collectors.toList());

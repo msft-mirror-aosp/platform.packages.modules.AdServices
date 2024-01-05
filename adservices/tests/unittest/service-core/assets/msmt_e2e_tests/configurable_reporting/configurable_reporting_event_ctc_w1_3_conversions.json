@@ -1,7 +1,6 @@
 {
   "description": "Three reporting windows configured for CTC - 2h (w1), 2d (w2) and expiry (w3). Source (app) has T1 (web), T2(web) and T3(web) in W1, where T4 gets ignored due to equal priority",
   "phflags_override": {
-    "measurement_enable_configurable_event_reporting_windows": "true",
     "measurement_event_reports_ctc_early_reporting_windows": "7200,172800",
     "measurement_flex_api_max_information_gain_dual_destination_event": "9",
     "measurement_flex_api_max_information_gain_dual_destination_navigation": "14"

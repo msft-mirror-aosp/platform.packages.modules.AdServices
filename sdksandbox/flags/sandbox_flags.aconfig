@@ -20,3 +20,10 @@ flag {
     bug: "295861450"
     description: "Enables the SELinux domain sdk_sandbox_audit"
 }
+
+flag {
+    name: "first_and_last_sdk_sandbox_uid_public"
+    namespace: "sdk_sandbox"
+    description: "Make Process#FIRST_SDK_SANDBOX_UID and Process#LAST_SDK_SANDBOX_UID public"
+    bug: "314270319"
+}

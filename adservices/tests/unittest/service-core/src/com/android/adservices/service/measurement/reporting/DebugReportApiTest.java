@@ -92,6 +92,12 @@ public final class DebugReportApiTest {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(true);
         when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+        when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
     }
 
     @Test
