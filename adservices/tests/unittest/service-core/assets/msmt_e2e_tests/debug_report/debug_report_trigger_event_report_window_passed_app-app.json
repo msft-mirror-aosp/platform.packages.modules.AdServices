@@ -79,7 +79,7 @@
       {
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "randomized_trigger_rate": 0.0024263,
+          "randomized_trigger_rate": 0.0001372,
           "scheduled_report_time": "1643325573",
           "source_event_id": "1",
           "source_type": "navigation",
@@ -95,7 +95,7 @@
       {
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "randomized_trigger_rate": 0.0024263,
+          "randomized_trigger_rate": 0.0001372,
           "scheduled_report_time": "1643325573",
           "source_event_id": "1",
           "source_type": "navigation",
