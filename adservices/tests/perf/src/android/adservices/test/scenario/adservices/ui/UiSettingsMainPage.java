@@ -19,6 +19,7 @@ package android.adservices.test.scenario.adservices.ui;
 import android.content.Context;
 import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
+import android.os.Trace;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -39,7 +40,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Crystalball test for Topics API to collect System Heath metrics. */
 @Scenario
 @RunWith(JUnit4.class)
 public class UiSettingsMainPage {
