@@ -1146,7 +1146,8 @@ public final class FlagsConstants {
 
     public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
 
-    public static final String KEY_RVC_NOTIFICATION_ENABLED = "rvc_notification_enabled";
+    public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
+            "rvc_post_ota_notification_enabled";
 
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 

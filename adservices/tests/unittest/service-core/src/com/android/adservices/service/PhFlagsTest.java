@@ -82,7 +82,7 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
-import static com.android.adservices.service.Flags.DEFAULT_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
@@ -809,7 +809,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
@@ -7641,7 +7641,8 @@ public class PhFlagsTest {
             boolean adServicesSystemApi, boolean phOverridingValue, boolean expected) {
 
         // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableRvcNotification()).isEqualTo(DEFAULT_RVC_NOTIFICATION_ENABLED);
+        assertThat(mPhFlags.getEnableRvcPostOtaNotification())
+                .isEqualTo(DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -7650,11 +7651,11 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_RVC_NOTIFICATION_ENABLED,
+                KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getEnableRvcNotification()).isEqualTo(expected);
+        assertThat(mPhFlags.getEnableRvcPostOtaNotification()).isEqualTo(expected);
     }
 
     @Test
