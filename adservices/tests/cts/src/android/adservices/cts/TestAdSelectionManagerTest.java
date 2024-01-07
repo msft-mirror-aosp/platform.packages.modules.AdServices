@@ -46,19 +46,16 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -67,7 +64,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
+@RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
+
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -100,27 +99,20 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
 
-    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName())
-                    .setFlag(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE, false)
-                    .setFlag(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, false)
-                    .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
+    // TODO(b/317411225): remove this method and annotate the class with
+    // @SetFlagEnabled / @SetFlagDisabled instead
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return super.getAdServicesFlagsSetterRule()
+                .setFlag(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE, false)
+                .setFlag(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, false)
+                .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
+    }
 
     @Before
     public void setup() {
-        if (SdkLevel.isAtLeastT()) {
+
+        if (sdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         }
 

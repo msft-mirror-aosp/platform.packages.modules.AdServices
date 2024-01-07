@@ -295,6 +295,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     void consentOnPackageFullyRemoved(
             @NonNull Context context, @NonNull Uri packageUri, int packageUid) {
+        if (!SdkLevel.isAtLeastS()) {
+            LogUtil.d("consentOnPackageFullyRemoved is not needed on Android R, returning...");
+            return;
+        }
         Objects.requireNonNull(context);
         Objects.requireNonNull(packageUri);
 

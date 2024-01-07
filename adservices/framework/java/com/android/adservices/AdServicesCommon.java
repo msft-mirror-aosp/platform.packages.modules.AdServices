@@ -26,6 +26,7 @@ import java.util.List;
 
 // TODO(b/295321663): need to split constants into AdServicesCommonConstants so they can be used by
 // host-side test artifacts.
+
 /**
  * Common constants for AdServices
  *
@@ -81,6 +82,10 @@ public class AdServicesCommon {
     /** Intent action to discover the AdServices Cobalt upload service. */
     public static final String ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE =
             AdServicesCobaltUploadService.SERVICE_INTERFACE;
+
+    /** Intent action to discover the Shell Command service in the APK. */
+    public static final String ACTION_SHELL_COMMAND_SERVICE =
+            "android.adservices.SHELL_COMMAND_SERVICE";
 
     // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
     // The AdExtServices APK package name suffix is android.ext.services.
