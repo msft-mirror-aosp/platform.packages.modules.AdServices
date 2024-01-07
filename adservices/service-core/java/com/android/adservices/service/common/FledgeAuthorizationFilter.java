@@ -123,45 +123,20 @@ public class FledgeAuthorizationFilter {
      * @param apiNameLoggingId the id of the api being called
      * @throws SecurityException if the package did not declare custom audience permission
      */
-    public void assertAppDeclaredCustomAudiencePermission(
+    public void assertAppDeclaredPermission(
             @NonNull Context context, @NonNull String appPackageName, int apiNameLoggingId)
             throws SecurityException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appPackageName);
 
         if (!PermissionHelper.hasCustomAudiencesPermission(context, appPackageName)) {
-            logAndThrowPermissionFailure(apiNameLoggingId);
+            sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
+            throw new SecurityException(
+                    AdServicesStatusUtils
+                            .SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
         }
-    }
-
-    /**
-     * Check if the app had declared the protected signals permission.
-     *
-     * @param context api service context
-     * @param apiNameLoggingId the id of the api being called
-     * @throws SecurityException if the package did not declare custom audience permission
-     */
-    public void assertAppDeclaredProtectedSignalsPermission(
-            @NonNull Context context, @NonNull String appPackageName, int apiNameLoggingId)
-            throws SecurityException {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(appPackageName);
-
-        if (!PermissionHelper.hasProtectedSignalsPermission(context, appPackageName)) {
-            /*
-             * Using the same message for both since getAdSelectionData can be called with either
-             * permission and we don't want the error message to depend on which is checked first.
-             */
-            logAndThrowPermissionFailure(apiNameLoggingId);
-        }
-    }
-
-    private void logAndThrowPermissionFailure(int apiNameLoggingId) {
-        sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
-        mAdServicesLogger.logFledgeApiCallStats(
-                apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
-        throw new SecurityException(
-                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
     }
 
     /**
