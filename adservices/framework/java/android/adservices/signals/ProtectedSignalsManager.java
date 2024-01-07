@@ -16,7 +16,7 @@
 
 package android.adservices.signals;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -181,7 +181,7 @@ public class ProtectedSignalsManager {
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_PROTECTED_SIGNALS)
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void updateSignals(
             @NonNull UpdateSignalsRequest updateSignalsRequest,
             @NonNull @CallbackExecutor Executor executor,

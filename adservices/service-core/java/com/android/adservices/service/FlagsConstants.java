@@ -286,9 +286,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
 
-    public static final String KEY_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS =
-            "measurement_enable_vtc_configurable_max_event_reports_count";
-
     public static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
 
@@ -1071,9 +1068,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
             "measurement_min_event_report_delay_millis";
 
-    public static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS =
-            "measurement_enable_configurable_event_reporting_windows";
-
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_vtc_early_reporting_windows";
 
@@ -1139,32 +1133,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH =
             "measurement_enable_redirect_to_well_known_path";
 
-    public static final String
-            KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY =
-                    "measurement_install_attr_dual_destination_event_noise_probability";
-
-    public static final String KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
-            "measurement_dual_destination_navigation_noise_probability";
-
-    public static final String
-            KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
-                    "measurement_install_attr_dual_destination_navigation_noise_probability";
-
-    public static final String KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY =
-            "measurement_dual_destination_event_noise_probability";
-
-    public static final String KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY =
-            "measurement_install_attr_event_noise_probability";
-
-    public static final String KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
-            "measurement_install_attr_navigation_noise_probability";
-
-    public static final String KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY =
-            "measurement_event_noise_probability";
-
-    public static final String KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY =
-            "measurement_navigation_noise_probability";
-
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
@@ -1178,7 +1146,8 @@ public final class FlagsConstants {
 
     public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
 
-    public static final String KEY_RVC_NOTIFICATION_ENABLED = "rvc_notification_enabled";
+    public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
+            "rvc_post_ota_notification_enabled";
 
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 

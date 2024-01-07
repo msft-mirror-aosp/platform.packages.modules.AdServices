@@ -17,7 +17,6 @@
 package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -165,7 +164,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testAssertAppHasCaPermission_appHasPermission()
+    public void testAssertAppHasPermission_appHasPermission()
             throws PackageManager.NameNotFoundException {
         PackageInfo packageInfoGrant = new PackageInfo();
         packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_CUSTOM_AUDIENCE};
@@ -177,26 +176,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT, CONTEXT.getPackageName()))
                 .thenReturn(true);
 
-        mChecker.assertAppDeclaredCustomAudiencePermission(
-                CONTEXT, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID);
-
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
-    }
-
-    @Test
-    public void testAssertAppHasPasPermission_appHasPermission()
-            throws PackageManager.NameNotFoundException {
-        PackageInfo packageInfoGrant = new PackageInfo();
-        packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_PROTECTED_SIGNALS};
-        doReturn(packageInfoGrant)
-                .when(mPackageManagerMock)
-                .getPackageInfo(
-                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
-
-        when(PermissionHelper.hasProtectedSignalsPermission(CONTEXT, CONTEXT.getPackageName()))
-                .thenReturn(true);
-
-        mChecker.assertAppDeclaredProtectedSignalsPermission(
+        mChecker.assertAppDeclaredPermission(
                 CONTEXT, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID);
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
@@ -216,7 +196,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 assertThrows(
                         SecurityException.class,
                         () ->
-                                mChecker.assertAppDeclaredCustomAudiencePermission(
+                                mChecker.assertAppDeclaredPermission(
                                         CONTEXT,
                                         CustomAudienceFixture.VALID_OWNER,
                                         API_NAME_LOGGING_ID));
@@ -232,7 +212,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testAssertAppHasCaPermission_mismatchedAppPackageName_throwSecurityException()
+    public void testAssertAppHasPermission_mismatchedAppPackageName_throwSecurityException()
             throws PackageManager.NameNotFoundException {
         doReturn(new PackageInfo())
                 .when(mPackageManagerMock)
@@ -245,7 +225,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 assertThrows(
                         SecurityException.class,
                         () ->
-                                mChecker.assertAppDeclaredCustomAudiencePermission(
+                                mChecker.assertAppDeclaredPermission(
                                         CONTEXT, "mismatchedAppPackageName", API_NAME_LOGGING_ID));
 
         assertEquals(
@@ -259,49 +239,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testAssertAppHasPasPermission_mismatchedAppPackageName_throwSecurityException()
-            throws PackageManager.NameNotFoundException {
-        doReturn(new PackageInfo())
-                .when(mPackageManagerMock)
-                .getPackageInfo(
-                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
-        when(PermissionHelper.hasProtectedSignalsPermission(CONTEXT, CONTEXT.getPackageName()))
-                .thenReturn(false);
-
-        SecurityException exception =
-                assertThrows(
-                        SecurityException.class,
-                        () ->
-                                mChecker.assertAppDeclaredProtectedSignalsPermission(
-                                        CONTEXT, "mismatchedAppPackageName", API_NAME_LOGGING_ID));
-
-        assertEquals(
-                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
-                exception.getMessage());
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
-        verifyNoMoreInteractions(mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
-    }
-
-    @Test
-    public void testAssertAppHasCaPermission_nullContext_throwNpe() {
+    public void testAssertAppHasPermission_nullContext_throwNpe() {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        mChecker.assertAppDeclaredCustomAudiencePermission(
-                                null, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID));
-
-        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
-    }
-
-    @Test
-    public void testAssertAppHasPasPermission_nullContext_throwNpe() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        mChecker.assertAppDeclaredProtectedSignalsPermission(
+                        mChecker.assertAppDeclaredPermission(
                                 null, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);

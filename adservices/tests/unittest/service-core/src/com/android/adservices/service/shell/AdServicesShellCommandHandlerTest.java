@@ -70,14 +70,14 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
 
     @Test
     public void testRunHelp() throws Exception {
-        String result = mCmd.runInvalid(CMD_HELP);
+        String result = mCmd.runValid(CMD_HELP);
 
         assertHelpContents(result);
     }
 
     @Test
     public void testRunHelpShort() throws Exception {
-        String result = mCmd.runInvalid(CMD_SHORT_HELP);
+        String result = mCmd.runValid(CMD_SHORT_HELP);
 
         assertHelpContents(result);
     }
@@ -283,7 +283,10 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
 
         private final StringWriter mOutStringWriter = new StringWriter();
         private final PrintWriter mOut = new PrintWriter(mOutStringWriter);
-        public final AdServicesShellCommandHandler cmd = new AdServicesShellCommandHandler(mOut);
+        private final StringWriter mErrStringWriter = new StringWriter();
+        private final PrintWriter mErr = new PrintWriter(mErrStringWriter);
+        public final AdServicesShellCommandHandler cmd =
+                new AdServicesShellCommandHandler(mOut, mErr);
 
         private boolean mOutCalled;
 
@@ -302,7 +305,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                     .that(result)
                     .isAtLeast(0);
 
-            return getOut();
+            return getResult(mOut, mOutStringWriter);
         }
 
         /**
@@ -316,7 +319,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                     .that(result)
                     .isLessThan(0);
 
-            return getOut();
+            return getResult(mErr, mErrStringWriter);
         }
 
         /**
@@ -334,13 +337,13 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
          * <p>Can only be called once per test, as there is no way to reset it, which could cause
          * confusion for the test developer.
          */
-        String getOut() throws IOException {
+        String getResult(PrintWriter pw, StringWriter sw) throws IOException {
             if (mOutCalled) {
                 throw new IllegalStateException("getOut() already called");
             }
-            mOut.flush();
-            String out = mOutStringWriter.toString();
-            mOut.close();
+            pw.flush();
+            String out = sw.toString();
+            pw.close();
             mOutCalled = true;
             return out;
         }

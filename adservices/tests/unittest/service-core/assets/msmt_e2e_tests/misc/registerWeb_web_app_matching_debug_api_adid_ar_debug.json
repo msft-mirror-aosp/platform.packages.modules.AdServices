@@ -68,7 +68,7 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0170218
+        "randomized_trigger_rate": 0.0054129
       }
     }],
     "aggregatable_results": []
