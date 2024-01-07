@@ -269,6 +269,12 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
                 .thenReturn(Flags
                         .MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
+        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+        when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
         when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
         mContext = spy(sDefaultContext);
         when(mContext.getPackageManager()).thenReturn(mPackageManager);
@@ -3641,7 +3647,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
                                         new EventReportWindowCalcDelegate(mFlags)
-                                                .getReportingTimeForNoising(source, 0, false),
+                                                .getReportingTimeForNoising(source, 0),
                                         destinations))
                 .collect(Collectors.toList());
     }
