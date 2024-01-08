@@ -100,6 +100,14 @@ public class AuctionEncryptionKeyFixture {
                 .build();
     }
 
+    public static AdServicesHttpClientResponse mockAuctionKeyFetchResponseWithOneKey()
+            throws JSONException {
+        return AdServicesHttpClientResponse.builder()
+                .setResponseBody(getDefaultAuctionResponseBodyWithOneKey())
+                .setResponseHeaders(DEFAULT_RESPONSE_HEADERS)
+                .build();
+    }
+
     private static JSONObject getAuctionKeyJson(AuctionKey key) throws JSONException {
         return new JSONObject()
                 .put(KEY_ID_LABEL, key.keyId())
@@ -116,6 +124,12 @@ public class AuctionEncryptionKeyFixture {
                         .put(getAuctionKeyJson(AUCTION_KEY_3))
                         .put(getAuctionKeyJson(AUCTION_KEY_4))
                         .put(getAuctionKeyJson(AUCTION_KEY_5)));
+        return json.toString();
+    }
+
+    private static String getDefaultAuctionResponseBodyWithOneKey() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("keys", new JSONArray().put(getAuctionKeyJson(AUCTION_KEY_1)));
         return json.toString();
     }
 

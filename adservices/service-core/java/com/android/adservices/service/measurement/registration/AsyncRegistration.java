@@ -31,6 +31,7 @@ public class AsyncRegistration {
 
     public enum RegistrationType {
         APP_SOURCE,
+        APP_SOURCES,
         APP_TRIGGER,
         WEB_SOURCE,
         WEB_TRIGGER
@@ -50,8 +51,9 @@ public class AsyncRegistration {
     private final boolean mDebugKeyAllowed;
     private final boolean mAdIdPermission;
     @Nullable private String mRegistrationId;
-
     @Nullable private final String mPlatformAdId;
+    @Nullable private String mPostBody;
+    private final AsyncRedirect.RedirectBehavior mRedirectBehavior;
 
     public enum RedirectType {
         LOCATION,
@@ -74,6 +76,8 @@ public class AsyncRegistration {
         mAdIdPermission = builder.mAdIdPermission;
         mRegistrationId = builder.mRegistrationId;
         mPlatformAdId = builder.mPlatformAdId;
+        mPostBody = builder.mPostBody;
+        mRedirectBehavior = builder.mRedirectBehavior;
     }
 
     @Override
@@ -95,7 +99,9 @@ public class AsyncRegistration {
                 && mSourceType == that.mSourceType
                 && mType == that.mType
                 && Objects.equals(mRegistrationId, that.mRegistrationId)
-                && mPlatformAdId.equals(that.mPlatformAdId);
+                && mPlatformAdId.equals(that.mPlatformAdId)
+                && Objects.equals(mPostBody, that.mPostBody)
+                && Objects.equals(mRedirectBehavior, that.mRedirectBehavior);
     }
 
     @Override
@@ -115,7 +121,9 @@ public class AsyncRegistration {
                 mDebugKeyAllowed,
                 mAdIdPermission,
                 mRegistrationId,
-                mPlatformAdId);
+                mPlatformAdId,
+                mPostBody,
+                mRedirectBehavior);
     }
 
     /** Unique identifier for the {@link AsyncRegistration}. */
@@ -203,6 +211,17 @@ public class AsyncRegistration {
         return mPlatformAdId;
     }
 
+    /** Returns the post body. */
+    @Nullable
+    public String getPostBody() {
+        return mPostBody;
+    }
+
+    /** Return the configuration for redirect behavior. */
+    public AsyncRedirect.RedirectBehavior getRedirectBehavior() {
+        return mRedirectBehavior;
+    }
+
     /** Increments the retry count of the current record. */
     public void incrementRetryCount() {
         ++mRetryCount;
@@ -210,7 +229,7 @@ public class AsyncRegistration {
 
     /** Indicates whether the registration runner should process redirects for this registration. */
     public boolean shouldProcessRedirects() {
-        return isAppRequest();
+        return mType == RegistrationType.APP_SOURCE || mType == RegistrationType.APP_TRIGGER;
     }
 
     public boolean isWebRequest() {
@@ -218,15 +237,19 @@ public class AsyncRegistration {
     }
 
     public boolean isAppRequest() {
-        return !isWebRequest();
+        return mType == RegistrationType.APP_SOURCE
+                || mType == RegistrationType.APP_TRIGGER
+                || mType == RegistrationType.APP_SOURCES;
     }
 
     public boolean isSourceRequest() {
-        return mType == RegistrationType.APP_SOURCE || mType == RegistrationType.WEB_SOURCE;
+        return mType == RegistrationType.APP_SOURCE
+                || mType == RegistrationType.WEB_SOURCE
+                || mType == RegistrationType.APP_SOURCES;
     }
 
     public boolean isTriggerRequest() {
-        return !isSourceRequest();
+        return mType == RegistrationType.APP_TRIGGER || mType == RegistrationType.WEB_TRIGGER;
     }
 
     /** Builder for {@link AsyncRegistration}. */
@@ -245,8 +268,9 @@ public class AsyncRegistration {
         private boolean mDebugKeyAllowed;
         private boolean mAdIdPermission;
         @Nullable private String mRegistrationId;
-
         @Nullable private String mPlatformAdId;
+        @Nullable private String mPostBody;
+        private AsyncRedirect.RedirectBehavior mRedirectBehavior;
 
         /** See {@link AsyncRegistration#getId()}. */
         @NonNull
@@ -359,6 +383,19 @@ public class AsyncRegistration {
         @NonNull
         public Builder setPlatformAdId(@Nullable String platformAdId) {
             mPlatformAdId = platformAdId;
+            return this;
+        }
+
+        /** See {@link AsyncRegistration#getPlatformAdId()} */
+        @NonNull
+        public Builder setPostBody(@Nullable String postBody) {
+            mPostBody = postBody;
+            return this;
+        }
+
+        /** See {@link AsyncRegistration#getRedirectBehavior()}. */
+        public Builder setRedirectBehavior(AsyncRedirect.RedirectBehavior redirectBehavior) {
+            mRedirectBehavior = redirectBehavior;
             return this;
         }
 

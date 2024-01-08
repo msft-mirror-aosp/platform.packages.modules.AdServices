@@ -193,6 +193,33 @@ public final class DBAdSelectionEntry {
         return mSellerContextualSignals;
     }
 
+    @Override
+    public String toString() {
+        return "DBAdSelectionEntry{"
+                + "mAdSelectionId="
+                + mAdSelectionId
+                + ", mCustomAudienceSignals="
+                + mCustomAudienceSignals
+                + ", mBuyerContextualSignals='"
+                + mBuyerContextualSignals
+                + '\''
+                + ", mWinningAdRenderUri="
+                + mWinningAdRenderUri
+                + ", mWinningAdBid="
+                + mWinningAdBid
+                + ", mCreationTimestamp="
+                + mCreationTimestamp
+                + ", mBuyerDecisionLogicJs='"
+                + mBuyerDecisionLogicJs
+                + '\''
+                + ", mBiddingLogicUri="
+                + mBiddingLogicUri
+                + ", mSellerContextualSignals='"
+                + mSellerContextualSignals
+                + '\''
+                + '}';
+    }
+
     /** Builder for {@link DBAdSelectionEntry} object. */
     public static final class Builder {
         private long mAdSelectionId = UNSET;

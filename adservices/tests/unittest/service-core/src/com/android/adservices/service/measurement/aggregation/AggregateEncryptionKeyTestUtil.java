@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.common.WebUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,6 +36,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 class AggregateEncryptionKeyTestUtil {
     static final Uri DEFAULT_TARGET = WebUtil.validUri("https://foo.test");
+    static final Uri DEFAULT_COORDINATOR_ORIGIN = WebUtil.validUri("https://foo.test");
     static final String DEFAULT_MAX_AGE = "max-age=604800";
     static final String DEFAULT_CACHED_AGE = "800";
     static final long DEFAULT_EVENT_TIME = 1653681612892L;
@@ -76,6 +77,10 @@ class AggregateEncryptionKeyTestUtil {
             result.append(String.format("keyId: %s\n", key.getKeyId()));
             result.append(String.format("publicKey: %s\n", key.getPublicKey()));
             result.append(String.format("expiry: %s\n", key.getExpiry()));
+            result.append(
+                    String.format(
+                            "aggregationCoordinatorOrigin: %s\n",
+                            key.getAggregationCoordinatorOrigin()));
             result.append("----------\n\n");
         }
         return result.toString();

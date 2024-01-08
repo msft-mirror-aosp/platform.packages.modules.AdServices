@@ -29,7 +29,7 @@ public class EnrollmentFixture {
                 .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
                 .setAttributionReportingUrl(Arrays.asList("https://test.com"))
                 .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
-                .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                .setEncryptionKeyUrl("https://test.com/keys")
                 .build();
     }
 }

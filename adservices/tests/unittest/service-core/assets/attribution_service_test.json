@@ -102,7 +102,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -244,7 +244,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -423,7 +423,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T1"
           },
@@ -438,7 +438,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           }
@@ -805,7 +805,7 @@
           "triggerPriority": 101,
           "status": 0,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S2",
           "triggerId": "T1"
         }],
@@ -965,7 +965,7 @@
           "triggerPriority": 101,
           "status": 0,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S2",
           "triggerId": "T1"
         }],
@@ -1883,7 +1883,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0024263,
+          "randomizedTriggerRate":  0.0001372,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -2580,7 +2580,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 102,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           },
@@ -2595,7 +2595,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 103,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T3"
           },
@@ -2610,7 +2610,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 104,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T4"
           }
@@ -2875,7 +2875,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T1"
           },
@@ -2890,7 +2890,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 101,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           },
@@ -2905,7 +2905,7 @@
             "reportTime": 8730000001,
             "triggerPriority": 102,
             "sourceType": "navigation",
-            "randomizedTriggerRate":  0.0024263,
+            "randomizedTriggerRate":  0.0001372,
             "sourceId": "S1",
             "triggerId": "T4"
           }
@@ -2964,26 +2964,11 @@
     },
     {
       "name": "Should match but no report generated - AttributionMode = Never",
-      "description": "2 sources, 1 trigger. Ignore 1st source, match with 2nd source but it has attribution mode = Never. Hence, no reports generated",
+      "description": "2 sources, 1 trigger. Match with first source, ignore second source; but the first source has attribution mode = Never. Hence, no reports generated",
       "input": {
         "sources": [
           {
             "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.test",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "eventReportWindow": 8640000030,
-            "aggregatableReportWindow": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.abc",
-            "attribution_mode": 1
-          },
-          {
-            "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
@@ -2996,6 +2981,21 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 2
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "https://www.example1.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc",
+            "attribution_mode": 1
           }
         ],
         "source_destinations": [
@@ -3036,21 +3036,6 @@
         "sources": [
           {
             "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.test",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "eventReportWindow": 8640000030,
-            "aggregatableReportWindow": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.abc",
-            "attribution_mode": 1
-          },
-          {
-            "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
@@ -3063,6 +3048,21 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 2
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "https://www.example1.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc",
+            "attribution_mode": 1
           }
         ],
         "source_destinations": [
@@ -3102,26 +3102,11 @@
     },
     {
       "name": "Should match but no report generated - AttributionMode = Falsely",
-      "description": "2 sources, 1 trigger. Ignore 1st source, match with 2nd source but it has attribution mode = Falsely. Hence, no report generation",
+      "description": "2 sources, 1 trigger. Match with first source, ignore second source; but the first source has attribution mode = Falsely. Hence, no report generation",
       "input": {
         "sources": [
           {
             "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.test",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "eventReportWindow": 8640000030,
-            "aggregatableReportWindow": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.abc",
-            "attribution_mode": 1
-          },
-          {
-            "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
@@ -3134,6 +3119,21 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 3
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "https://www.example1.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc",
+            "attribution_mode": 1
           }
         ],
         "source_destinations": [
@@ -3174,21 +3174,6 @@
         "sources": [
           {
             "id": "S1",
-            "eventId": 1,
-            "sourceType": "navigation",
-            "publisher": "https://www.example1.test",
-            "enrollmentId": "enrollment-id-3",
-            "eventTime": 8640000001,
-            "expiryTime": 8640000030,
-            "eventReportWindow": 8640000030,
-            "aggregatableReportWindow": 8640000030,
-            "priority": 100,
-            "status": 0,
-            "registrant": "android-app://com.example.abc",
-            "attribution_mode": 1
-          },
-          {
-            "id": "S2",
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
@@ -3201,6 +3186,21 @@
             "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 3
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "https://www.example1.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc",
+            "attribution_mode": 1
           }
         ],
         "source_destinations": [
@@ -3765,7 +3765,7 @@
             "reportTime": 8643600030,
             "triggerPriority": 0,
             "sourceType": "navigation",
-            "randomizedTriggerRate": 0.0024263,
+            "randomizedTriggerRate": 0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           }
@@ -3928,7 +3928,7 @@
             "reportTime": 8643600030,
             "triggerPriority": 0,
             "sourceType": "navigation",
-            "randomizedTriggerRate": 0.0024263,
+            "randomizedTriggerRate": 0.0001372,
             "sourceId": "S1",
             "triggerId": "T2"
           }
@@ -5052,7 +5052,7 @@
           "reportTime": 8730000001,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0170218,
+          "randomizedTriggerRate": 0.0008051,
           "sourceId": "S1",
           "triggerId": "T1"
         }],
@@ -5074,6 +5074,20 @@
         "attributions": [
           {
             "id": "unused",
+            "scope": 0,
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
+            "destinationSite": "https://example2.test",
+            "destinationOrigin": "https://subdomain.example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "triggerTime": 8640000001,
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
+          },
+          {
+            "id": "unused",
+            "scope": 1,
             "sourceSite": "android-app://com.example.abc",
             "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "https://example2.test",
@@ -5146,7 +5160,7 @@
             "aggregatableValues": {
               "campaignCounts": 32678
             },
-            "triggerTime": 8726400002,
+            "triggerTime": 8726400001,
             "registrant": "android-app://com.example.xyz"
           }
         ],
@@ -5211,7 +5225,7 @@
             "aggregatableValues": {
               "campaignCounts": 32678
             },
-            "triggerTime": 8726400002,
+            "triggerTime": 8726400001,
             "registrant": "android-app://com.example.xyz"
           }
         ],
@@ -5234,6 +5248,7 @@
         "attributions": [
           {
             "id": "unused",
+            "scope": 1,
             "sourceSite": "android-app://com.example.abc",
             "sourceOrigin": "android-app://com.example.abc",
             "destinationSite": "https://example2.test",
@@ -5306,7 +5321,7 @@
             "aggregatableValues": {
               "campaignCounts": 32678
             },
-            "triggerTime": 8726400002,
+            "triggerTime": 8726400001,
             "registrant": "android-app://com.example.xyz"
           }
         ],
@@ -5371,7 +5386,7 @@
             "aggregatableValues": {
               "campaignCounts": 32678
             },
-            "triggerTime": 8726400002,
+            "triggerTime": 8726400001,
             "registrant": "android-app://com.example.xyz"
           }
         ],
@@ -5381,12 +5396,12 @@
           "attributionDestination": "https://example2.test",
           "enrollmentId": "enrollment-id-3",
           "triggerData": 2,
-          "triggerTime": 8726400002,
+          "triggerTime": 8726400001,
           "status": 0,
           "reportTime": 8730000002,
           "triggerPriority": 101,
           "sourceType": "navigation",
-          "randomizedTriggerRate":  0.0170218,
+          "randomizedTriggerRate": 0.0008051,
           "sourceId": "S1",
           "triggerId": "T1"
         }],

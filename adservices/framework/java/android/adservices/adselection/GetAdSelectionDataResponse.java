@@ -20,11 +20,13 @@ import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTI
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
 import android.annotation.Nullable;
+import android.content.res.AssetFileDescriptor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.AdServicesParcelableUtil;
 import com.android.internal.util.Preconditions;
 
 import java.util.Arrays;
@@ -38,6 +40,7 @@ import java.util.Objects;
 public final class GetAdSelectionDataResponse implements Parcelable {
     private final long mAdSelectionId;
     @Nullable private final byte[] mAdSelectionData;
+    @Nullable private final AssetFileDescriptor mAssetFileDescriptor;
 
     public static final Creator<GetAdSelectionDataResponse> CREATOR =
             new Creator<>() {
@@ -54,9 +57,11 @@ public final class GetAdSelectionDataResponse implements Parcelable {
                 }
             };
 
-    private GetAdSelectionDataResponse(long adSelectionId, byte[] adSelectionData) {
+    private GetAdSelectionDataResponse(
+            long adSelectionId, byte[] adSelectionData, AssetFileDescriptor assetFileDescriptor) {
         this.mAdSelectionId = adSelectionId;
         this.mAdSelectionData = adSelectionData;
+        this.mAssetFileDescriptor = assetFileDescriptor;
     }
 
     private GetAdSelectionDataResponse(@NonNull Parcel in) {
@@ -64,6 +69,26 @@ public final class GetAdSelectionDataResponse implements Parcelable {
 
         this.mAdSelectionId = in.readLong();
         this.mAdSelectionData = in.createByteArray();
+        this.mAssetFileDescriptor =
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, AssetFileDescriptor.CREATOR::createFromParcel);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof GetAdSelectionDataResponse) {
+            GetAdSelectionDataResponse response = (GetAdSelectionDataResponse) o;
+            return mAdSelectionId == response.mAdSelectionId
+                    && Arrays.equals(mAdSelectionData, response.mAdSelectionData)
+                    && Objects.equals(mAssetFileDescriptor, response.mAssetFileDescriptor);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                mAdSelectionId, Arrays.hashCode(mAdSelectionData), mAssetFileDescriptor);
     }
 
     @Override
@@ -86,13 +111,25 @@ public final class GetAdSelectionDataResponse implements Parcelable {
         }
     }
 
+    /**
+     * Returns the {@link AssetFileDescriptor} that points to a piece of memory where the
+     * adSelectionData is stored
+     */
+    @Nullable
+    public AssetFileDescriptor getAssetFileDescriptor() {
+        return mAssetFileDescriptor;
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         Objects.requireNonNull(dest);
-        Objects.requireNonNull(mAdSelectionData);
 
         dest.writeLong(mAdSelectionId);
         dest.writeByteArray(mAdSelectionData);
+        AdServicesParcelableUtil.writeNullableToParcel(
+                dest,
+                mAssetFileDescriptor,
+                (targetParcel, sourceSignals) -> sourceSignals.writeToParcel(targetParcel, flags));
     }
 
     /**
@@ -103,6 +140,7 @@ public final class GetAdSelectionDataResponse implements Parcelable {
     public static final class Builder {
         private long mAdSelectionId;
         @Nullable private byte[] mAdSelectionData;
+        @Nullable private AssetFileDescriptor mAssetFileDescriptor;
 
         public Builder() {}
 
@@ -125,18 +163,26 @@ public final class GetAdSelectionDataResponse implements Parcelable {
             return this;
         }
 
+        /** Sets the assetFileDescriptor */
+        @NonNull
+        public GetAdSelectionDataResponse.Builder setAssetFileDescriptor(
+                @Nullable AssetFileDescriptor assetFileDescriptor) {
+            this.mAssetFileDescriptor = assetFileDescriptor;
+            return this;
+        }
+
         /**
          * Builds a {@link GetAdSelectionDataResponse} instance.
          *
-         * @throws IllegalArgumentException if the adSelectionIid is not set
-         * @throws NullPointerException if the RenderUri is null
+         * @throws IllegalArgumentException if the adSelectionId is not set
          */
         @NonNull
         public GetAdSelectionDataResponse build() {
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
-            return new GetAdSelectionDataResponse(mAdSelectionId, mAdSelectionData);
+            return new GetAdSelectionDataResponse(
+                    mAdSelectionId, mAdSelectionData, mAssetFileDescriptor);
         }
     }
 }

@@ -26,8 +26,8 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.ContextualAds;
-import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
@@ -346,17 +346,18 @@ public class AdSelectionConfigValidatorTest {
 
     @Test
     public void testContextualAdsDecisionLogicEtldMismatch() {
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
-        ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(100.0, 200.0))
+        SignedContextualAds contextualAds2 =
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
+                                buyer2, ImmutableList.of(100.0, 200.0))
                         .setDecisionLogicUri(
                                 CommonFixture.getUri(
                                         CommonFixture.VALID_BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
                         .build();
         buyerContextualAds.put(buyer2, contextualAds2);
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(
                         mPrebuiltLogicGenerator, new FrequencyCapAdDataValidatorImpl());
@@ -373,11 +374,11 @@ public class AdSelectionConfigValidatorTest {
 
     @Test
     public void testContextualAdsRenderUriEtldMismatch() {
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
         ImmutableList<Double> bids = ImmutableList.of(100.0, 200.0);
-        ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(buyer2, bids)
+        SignedContextualAds contextualAds2 =
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(buyer2, bids)
                         .setDecisionLogicUri(
                                 CommonFixture.getUri(buyer2, BUYER_BIDDING_LOGIC_URI_PATH))
                         .setAdsWithBid(
@@ -394,7 +395,7 @@ public class AdSelectionConfigValidatorTest {
         // Creating ads which have a render Uri with a different buyer
         buyerContextualAds.put(buyer2, contextualAds2);
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(
                         mPrebuiltLogicGenerator, new FrequencyCapAdDataValidatorImpl());
@@ -440,20 +441,16 @@ public class AdSelectionConfigValidatorTest {
         List<AdWithBid> adsWithBids =
                 List.of(new AdWithBid(adDataWithExceededFrequencyCapLimits, 100.0));
 
-        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+        Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
         buyerContextualAds.put(
                 CommonFixture.VALID_BUYER_1,
-                new ContextualAds.Builder()
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setDecisionLogicUri(
-                                CommonFixture.getUri(
-                                        CommonFixture.VALID_BUYER_1,
-                                        ContextualAdsFixture.DECISION_LOGIC_FRAGMENT))
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
+                                CommonFixture.VALID_BUYER_1)
                         .setAdsWithBid(adsWithBids)
                         .build());
 
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
 
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(

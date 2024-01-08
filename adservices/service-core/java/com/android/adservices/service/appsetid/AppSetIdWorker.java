@@ -37,6 +37,7 @@ import com.android.adservices.ServiceBinder;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -79,11 +80,13 @@ public class AppSetIdWorker {
      * existing instance will be returned.
      */
     @NonNull
-    public static AppSetIdWorker getInstance(Context context) {
+    public static AppSetIdWorker getInstance() {
         if (sAppSetIdWorker == null) {
             synchronized (AppSetIdWorker.class) {
                 if (sAppSetIdWorker == null) {
-                    sAppSetIdWorker = new AppSetIdWorker(context, FlagsFactory.getFlags());
+                    sAppSetIdWorker =
+                            new AppSetIdWorker(
+                                    ApplicationContextSingleton.get(), FlagsFactory.getFlags());
                 }
             }
         }
@@ -169,9 +172,14 @@ public class AppSetIdWorker {
                             }
                         }
 
+                        // TODO(b/296928283): Handle the Security Exception thrown from Provider
+                        // properly.
                         @Override
                         public void onError(String errorMessage) {
                             try {
+                                LogUtil.e(
+                                        "Get AppSetId Error Message from Provider: %s",
+                                        errorMessage);
                                 callback.onError(STATUS_INTERNAL_ERROR);
                             } catch (RemoteException e) {
                                 LogUtil.e("RemoteException");

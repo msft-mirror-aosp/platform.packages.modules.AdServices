@@ -18,6 +18,8 @@ package com.android.adservices.adid;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.os.ext.SdkExtensions;
+
 import androidx.privacysandbox.ads.adservices.adid.AdId;
 import androidx.privacysandbox.ads.adservices.java.adid.AdIdManagerFutures;
 import androidx.test.core.app.ApplicationProvider;
@@ -26,6 +28,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.TestUtil;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,6 +38,8 @@ public class AdIdManagerJetpackTest {
 
     @Before
     public void setup() throws Exception {
+        Assume.assumeTrue(SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 4);
+
         mTestUtil.overrideAdIdKillSwitch(true);
         mTestUtil.overrideKillSwitches(true);
         mTestUtil.overrideConsentManagerDebugMode(true);

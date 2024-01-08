@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
@@ -193,5 +195,18 @@ public class AdSelectionConfigTest {
                         Uri.parse("https://different.uri.com"));
 
         CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
+    }
+
+    @Test
+    public void testEmptyConfigHasProperValuesSuccess() {
+        AdSelectionConfig config = AdSelectionConfig.EMPTY;
+
+        assertEquals(config.getSeller(), AdTechIdentifier.fromString(""));
+        assertEquals(config.getDecisionLogicUri(), Uri.EMPTY);
+        assertEquals(0, config.getCustomAudienceBuyers().size());
+        assertEquals(config.getAdSelectionSignals(), AdSelectionSignals.EMPTY);
+        assertEquals(config.getSellerSignals(), AdSelectionSignals.EMPTY);
+        assertEquals(0, config.getPerBuyerSignals().size());
+        assertEquals(config.getTrustedScoringSignalsUri(), Uri.EMPTY);
     }
 }

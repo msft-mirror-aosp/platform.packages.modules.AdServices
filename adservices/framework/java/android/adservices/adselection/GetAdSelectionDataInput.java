@@ -16,10 +16,13 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.AdServicesParcelableUtil;
 
 import java.util.Objects;
 
@@ -29,8 +32,8 @@ import java.util.Objects;
  * @hide
  */
 public final class GetAdSelectionDataInput implements Parcelable {
-    @Nullable private final GetAdSelectionDataRequest mGetAdSelectionDataRequest;
-    @Nullable private final String mCallerPackageName;
+    @Nullable private final AdTechIdentifier mSeller;
+    @NonNull private final String mCallerPackageName;
 
     @NonNull
     public static final Creator<GetAdSelectionDataInput> CREATOR =
@@ -45,19 +48,35 @@ public final class GetAdSelectionDataInput implements Parcelable {
             };
 
     private GetAdSelectionDataInput(
-            @NonNull GetAdSelectionDataRequest getAdSelectionDataRequest,
-            @NonNull String callerPackageName) {
-        Objects.requireNonNull(getAdSelectionDataRequest);
+            @Nullable AdTechIdentifier seller, @NonNull String callerPackageName) {
+        Objects.requireNonNull(callerPackageName);
 
-        this.mGetAdSelectionDataRequest = getAdSelectionDataRequest;
+        this.mSeller = seller;
         this.mCallerPackageName = callerPackageName;
     }
 
     private GetAdSelectionDataInput(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        this.mGetAdSelectionDataRequest = GetAdSelectionDataRequest.CREATOR.createFromParcel(in);
+        this.mSeller =
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, AdTechIdentifier.CREATOR::createFromParcel);
         this.mCallerPackageName = in.readString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof GetAdSelectionDataInput) {
+            GetAdSelectionDataInput obj = (GetAdSelectionDataInput) o;
+            return Objects.equals(mSeller, obj.mSeller)
+                    && Objects.equals(mCallerPackageName, obj.mCallerPackageName);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mSeller, mCallerPackageName);
     }
 
     @Override
@@ -69,17 +88,19 @@ public final class GetAdSelectionDataInput implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        mGetAdSelectionDataRequest.writeToParcel(dest, flags);
+        AdServicesParcelableUtil.writeNullableToParcel(
+                dest,
+                mSeller,
+                (targetParcel, sourceSignals) -> sourceSignals.writeToParcel(targetParcel, flags));
         dest.writeString(mCallerPackageName);
     }
 
     /**
-     * Returns the {@code AdSelectionDataRequest}, one of the inputs to {@link
-     * GetAdSelectionDataInput} as noted in {@code AdSelectionService}.
+     * @return a AdTechIdentifier of the seller, for example "www.example-ssp.com"
      */
-    @NonNull
-    public GetAdSelectionDataRequest getAdSelectionDataRequest() {
-        return mGetAdSelectionDataRequest;
+    @Nullable
+    public AdTechIdentifier getSeller() {
+        return mSeller;
     }
 
     /**
@@ -96,18 +117,15 @@ public final class GetAdSelectionDataInput implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        @Nullable private GetAdSelectionDataRequest mGetAdSelectionDataRequest;
+        @Nullable private AdTechIdentifier mSeller;
         @Nullable private String mCallerPackageName;
 
         public Builder() {}
 
-        /** Set the adSelectionDataRequest. */
+        /** Sets the seller {@link AdTechIdentifier}. */
         @NonNull
-        public GetAdSelectionDataInput.Builder setAdSelectionDataRequest(
-                @NonNull GetAdSelectionDataRequest getAdSelectionDataRequest) {
-            Objects.requireNonNull(getAdSelectionDataRequest);
-
-            this.mGetAdSelectionDataRequest = getAdSelectionDataRequest;
+        public GetAdSelectionDataInput.Builder setSeller(@Nullable AdTechIdentifier seller) {
+            this.mSeller = seller;
             return this;
         }
 
@@ -121,13 +139,16 @@ public final class GetAdSelectionDataInput implements Parcelable {
             return this;
         }
 
-        /** Builds a {@link GetAdSelectionDataInput} instance. */
+        /**
+         * Builds a {@link GetAdSelectionDataInput} instance.
+         *
+         * @throws NullPointerException if the CallerPackageName is null
+         */
         @NonNull
         public GetAdSelectionDataInput build() {
-            Objects.requireNonNull(mGetAdSelectionDataRequest);
             Objects.requireNonNull(mCallerPackageName);
 
-            return new GetAdSelectionDataInput(mGetAdSelectionDataRequest, mCallerPackageName);
+            return new GetAdSelectionDataInput(mSeller, mCallerPackageName);
         }
     }
 }

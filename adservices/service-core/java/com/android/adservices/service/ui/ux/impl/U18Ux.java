@@ -15,7 +15,7 @@
  */
 package com.android.adservices.service.ui.ux.impl;
 
-import static com.android.adservices.service.PhFlags.KEY_U18_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -45,11 +45,5 @@ public class U18Ux implements PrivacySandboxUx {
             Context context,
             ConsentManager consentManager) {
         enrollmentChannel.enroll(context, consentManager);
-    }
-
-    /** Select one of the available U18 UX modes for the user. */
-    public void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {
-        // TO-DO(b/284175944): Add mode logic.
     }
 }

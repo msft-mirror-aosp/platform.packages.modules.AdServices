@@ -37,7 +37,7 @@ public interface UxSelector {
      * @param context Current context
      */
     default void initWithUx(FragmentActivity fragmentActivity, Context context) {
-        switch (NotificationUtil.getUx(fragmentActivity, context)) {
+        switch (UxUtil.getUx(context)) {
             case U18_UX:
                 initU18();
                 break;
@@ -46,6 +46,9 @@ public interface UxSelector {
                 break;
             case BETA_UX:
                 initBeta();
+                break;
+            case RVC_UX:
+                initRvc();
                 break;
             default:
                 // TODO: log some warning or error
@@ -70,4 +73,10 @@ public interface UxSelector {
      * PrivacySandboxUxCollection#U18_UX} mode.
      */
     void initU18();
+
+    /**
+     * This method will be called in {@link #initWithUx} if app is in {@link
+     * PrivacySandboxUxCollection#RVC_UX} mode.
+     */
+    void initRvc();
 }

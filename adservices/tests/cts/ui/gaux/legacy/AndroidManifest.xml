@@ -18,6 +18,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.android.adservices.tests.ui.gaux">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application>
     </application>
 

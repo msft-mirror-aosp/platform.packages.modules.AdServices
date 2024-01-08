@@ -15,13 +15,12 @@
  */
 package com.android.adservices.measurement;
 
-import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
+import android.os.ext.SdkExtensions;
 
 import androidx.privacysandbox.ads.adservices.java.measurement.MeasurementManagerFutures;
 import androidx.privacysandbox.ads.adservices.measurement.DeletionRequest;
@@ -35,6 +34,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.TestUtil;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,6 +58,7 @@ public class MeasurementManagerJetpackTest {
 
     @Before
     public void setup() throws Exception {
+        Assume.assumeTrue(SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 5);
         // To grant access to all pp api app
         mTestUtil.overrideAllowlists(true);
         // We need to turn the Consent Manager into debug mode
@@ -130,9 +131,6 @@ public class MeasurementManagerJetpackTest {
     @Test
     public void testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors()
             throws Exception {
-        final String flags = runShellCommand("device_config list adservices");
-        System.out.println("RMARCUS:");
-        System.out.println(flags);
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder(
                                 DeletionRequest.DELETION_MODE_ALL,

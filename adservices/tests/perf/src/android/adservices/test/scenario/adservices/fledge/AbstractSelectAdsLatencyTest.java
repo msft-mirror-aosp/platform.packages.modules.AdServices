@@ -36,8 +36,8 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -49,7 +49,6 @@ import com.google.common.io.CharStreams;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -113,17 +112,14 @@ public class AbstractSelectAdsLatencyTest {
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT)))
                     .around(new SelectAdsFlagRule());
 
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @BeforeClass
     public static void setupBeforeClass() {
         StaticAdTechServerUtils.warmupServers();
         sCustomAudiences = new ArrayList<>();
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     protected void runSelectAds(
@@ -174,7 +170,6 @@ public class AbstractSelectAdsLatencyTest {
                 .selectAds(readAdSelectionConfig("AdSelectionConfigFiveBuyersOneCAFiveAds.json"))
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
-
 
     private ImmutableList<CustomAudience> readCustomAudiences(String fileName) throws Exception {
         ImmutableList.Builder<CustomAudience> customAudienceBuilder = ImmutableList.builder();

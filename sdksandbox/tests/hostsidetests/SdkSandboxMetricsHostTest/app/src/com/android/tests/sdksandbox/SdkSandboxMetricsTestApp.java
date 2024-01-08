@@ -23,6 +23,7 @@ import android.app.ApplicationExitInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -37,10 +38,12 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.tests.sdkprovider.crashtest.ICrashTestSdkApi;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -63,17 +66,28 @@ public class SdkSandboxMetricsTestApp {
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private DropBoxManager mDropboxManager;
-    private Context mContext;
+    private final Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
+    private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
     private PackageManager mPackageManager;
     private String mCrashEntryText;
 
     @Before
     public void setup() {
-        mContext = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         mDropboxManager = mContext.getSystemService(DropBoxManager.class);
         mPackageManager = mContext.getPackageManager();
         assertThat(mSdkSandboxManager).isNotNull();
+
+        // Unload the SDK before running tests to ensure that the SDK is not loaded before running a
+        // test
+        mSdkLifecycleHelper.unloadSdk(SDK_PACKAGE);
+    }
+
+    @After
+    public void tearDown() {
+        if (mSdkSandboxManager != null) {
+            mSdkLifecycleHelper.unloadSdk(SDK_PACKAGE);
+        }
     }
 
     @Test
@@ -89,11 +103,13 @@ public class SdkSandboxMetricsTestApp {
 
         final ICrashTestSdkApi sdk =
                 ICrashTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
-        final ApplicationExitInfo info = sdk.getLastApplicationExitInfo();
-        assertThat(info).isNotNull();
-        assertThat(info.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
-        assertThat(info.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
-        assertThat(info.getTimestamp()).isGreaterThan(timeStampBeforeCrash);
+        final List<ApplicationExitInfo> exitInfos = sdk.getSdkSandboxExitReasons();
+        ApplicationExitInfo mostRecentExitInfo = exitInfos.get(0);
+        assertThat(mostRecentExitInfo).isNotNull();
+        assertThat(mostRecentExitInfo.getRealUid())
+                .isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
+        assertThat(mostRecentExitInfo.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
+        assertThat(mostRecentExitInfo.getTimestamp()).isGreaterThan(timeStampBeforeCrash);
     }
 
     @Test
@@ -113,6 +129,26 @@ public class SdkSandboxMetricsTestApp {
         assertThat(info.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
         assertThat(info.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
         assertThat(info.getTimestamp()).isGreaterThan(timeStampBeforeCrash);
+    }
+
+    // Should only be tested after another app has started and crashed their own sandbox.
+    @Test
+    public void testSdkCannotAccessExitReasonsFromOtherSdkSandboxUids() throws Exception {
+        mRule.getScenario();
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+
+        final ICrashTestSdkApi sdk =
+                ICrashTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+        final List<ApplicationExitInfo> exitInfos = sdk.getSdkSandboxExitReasons();
+
+        // Test that all exit infos (if any) are only for its own process
+        for (int i = 0; i < exitInfos.size(); i++) {
+            final ApplicationExitInfo exitInfo = exitInfos.get(i);
+            assertThat(exitInfo.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
+        }
     }
 
     @Test

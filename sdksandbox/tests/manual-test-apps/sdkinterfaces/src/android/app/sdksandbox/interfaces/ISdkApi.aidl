@@ -21,11 +21,13 @@ interface ISdkApi {
     ParcelFileDescriptor getFileDescriptor(String inputValue);
     String parseFileDescriptor(in ParcelFileDescriptor pFd);
     String createFile(int sizeInMb);
+    void loadSdkBySdk(String sdkName);
     String getSyncedSharedPreferencesString(String key);
-    // Representative method for SDK-SDK communication. This can be any method called by other
-    // sdks for example, to loadAd for a given adDetail
-    String getMessage();
     void startActivity(IActivityStarter callback, in Bundle params);
     String getSandboxDump();
     boolean isCustomizedSdkContextEnabled();
+
+    //For pausing playback when app is not active
+    oneway void notifyMainActivityStarted();
+    oneway void notifyMainActivityStopped();
 }

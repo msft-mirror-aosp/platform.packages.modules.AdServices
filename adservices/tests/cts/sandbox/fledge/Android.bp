@@ -29,7 +29,7 @@ android_test {
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "SdkSandboxTestUtils",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
@@ -45,5 +45,6 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
 }

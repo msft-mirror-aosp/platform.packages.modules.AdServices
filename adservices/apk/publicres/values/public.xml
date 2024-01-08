@@ -746,4 +746,6 @@
     <public type="string" name="settingsUI_dialog_measurement_opt_in_message" id="0x7f017d27" />
     <public type="string" name="settingsUI_dialog_measurement_opt_out_message" id="0x7f017d26" />
     <public type="string" name="settingsUI_dialog_acknowledge" id="0x7f017d25" />
+    <public type="string" name="permlab_adServicesAccessAdServicesCobaltUpload" id="0x7f017d23" />
+    <public type="string" name="permdesc_adServicesAccessAdServicesCobaltUpload" id="0x7f017d22" />
 </resources>

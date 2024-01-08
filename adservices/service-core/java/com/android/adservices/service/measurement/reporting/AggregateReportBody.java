@@ -17,9 +17,11 @@
 package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
+import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -42,6 +44,9 @@ public class AggregateReportBody {
     private String mDebugCleartextPayload;
     @Nullable private UnsignedLong mSourceDebugKey;
     @Nullable private UnsignedLong mTriggerDebugKey;
+    private String mDebugMode;
+
+    private Uri mAggregationCoordinatorOrigin;
 
     private static final String API_NAME = "attribution-reporting";
 
@@ -50,6 +55,7 @@ public class AggregateReportBody {
         String AGGREGATION_SERVICE_PAYLOADS = "aggregation_service_payloads";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
     }
 
     private interface AggregationServicePayloadKeys {
@@ -66,9 +72,10 @@ public class AggregateReportBody {
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String API_VERSION = "version";
+        String DEBUG_MODE = "debug_mode";
     }
 
-    private AggregateReportBody() { };
+    private AggregateReportBody() {}
 
     private AggregateReportBody(AggregateReportBody other) {
         mAttributionDestination = other.mAttributionDestination;
@@ -80,6 +87,8 @@ public class AggregateReportBody {
         mDebugCleartextPayload = other.mDebugCleartextPayload;
         mSourceDebugKey = other.mSourceDebugKey;
         mTriggerDebugKey = other.mTriggerDebugKey;
+        mDebugMode = other.mDebugMode;
+        mAggregationCoordinatorOrigin = other.mAggregationCoordinatorOrigin;
     }
 
     /** Generate the JSON serialization of the aggregate report. */
@@ -97,6 +106,11 @@ public class AggregateReportBody {
         }
         if (mTriggerDebugKey != null) {
             aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey.toString());
+        }
+        if (FlagsFactory.getFlags().getMeasurementAggregationCoordinatorOriginEnabled()) {
+            aggregateBodyJson.put(
+                    PayloadBodyKeys.AGGREGATION_COORDINATOR_ORIGIN,
+                    mAggregationCoordinatorOrigin.toString());
         }
 
         return aggregateBodyJson;
@@ -117,6 +131,10 @@ public class AggregateReportBody {
         sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, mSourceRegistrationTime);
         sharedInfoJson.put(SharedInfoKeys.API_VERSION, mApiVersion);
 
+        if (mDebugMode != null) {
+            sharedInfoJson.put(SharedInfoKeys.DEBUG_MODE, mDebugMode);
+        }
+
         return sharedInfoJson;
     }
 
@@ -134,7 +152,7 @@ public class AggregateReportBody {
         aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
         aggregationServicePayload.put(AggregationServicePayloadKeys.KEY_ID, key.getKeyId());
 
-        if (mSourceDebugKey != null || mTriggerDebugKey != null) {
+        if (mSourceDebugKey != null && mTriggerDebugKey != null) {
             aggregationServicePayload.put(
                     AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
                     AggregateCryptoConverter.encode(mDebugCleartextPayload));
@@ -222,6 +240,18 @@ public class AggregateReportBody {
             return this;
         }
 
+        /** Debug mode */
+        public Builder setDebugMode(String debugMode) {
+            mBuilding.mDebugMode = debugMode;
+            return this;
+        }
+
+        /** Origin of aggregation coordinator used for this report. */
+        public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
+            mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
+            return this;
+        }
+
         /**
          * Build the AggregateReportBody.
          */
@@ -229,5 +259,4 @@ public class AggregateReportBody {
             return new AggregateReportBody(mBuilding);
         }
     }
-
 }

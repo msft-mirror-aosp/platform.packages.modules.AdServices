@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -36,28 +37,37 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
-public class FledgeAuthorizationFilterTest {
+@MockStatic(PermissionHelper.class)
+@MockStatic(AppManifestConfigHelper.class)
+@MockStatic(PhFlags.class)
+public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMockitoTestCase {
+
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int UID = 111;
     private static final int API_NAME_LOGGING_ID =
@@ -72,6 +82,7 @@ public class FledgeAuthorizationFilterTest {
 
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private EnrollmentUtil mEnrollmentUtilMock;
     @Mock private PhFlags mPhFlagsMock;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -82,21 +93,12 @@ public class FledgeAuthorizationFilterTest {
 
     @Before
     public void setup() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PermissionHelper.class)
-                        .mockStatic(AppManifestConfigHelper.class)
-                        .mockStatic(PhFlags.class)
-                        .initMocks(this)
-                        .startMocking();
         mChecker =
                 new FledgeAuthorizationFilter(
-                        mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
-    }
-
-    @After
-    public void teardown() {
-        mMockitoSession.finishMocking();
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        mAdServicesLoggerMock,
+                        mEnrollmentUtilMock);
     }
 
     @Test
@@ -162,22 +164,69 @@ public class FledgeAuthorizationFilterTest {
     }
 
     @Test
-    public void testAssertAppHasPermission_appHasPermission() {
-        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT)).thenReturn(true);
+    public void testAssertAppHasPermission_appHasPermission()
+            throws PackageManager.NameNotFoundException {
+        PackageInfo packageInfoGrant = new PackageInfo();
+        packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_CUSTOM_AUDIENCE};
+        doReturn(packageInfoGrant)
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
 
-        mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID);
+        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT, CONTEXT.getPackageName()))
+                .thenReturn(true);
+
+        mChecker.assertAppDeclaredPermission(
+                CONTEXT, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID);
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
-    public void testAssertAppHasPermission_appDoesNotHavePermission_throwSecurityException() {
-        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT)).thenReturn(false);
+    public void testAssertAppHasPermission_appDoesNotHavePermission_throwSecurityException()
+            throws PackageManager.NameNotFoundException {
+        doReturn(new PackageInfo())
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT, CONTEXT.getPackageName()))
+                .thenReturn(false);
 
         SecurityException exception =
                 assertThrows(
                         SecurityException.class,
-                        () -> mChecker.assertAppDeclaredPermission(CONTEXT, API_NAME_LOGGING_ID));
+                        () ->
+                                mChecker.assertAppDeclaredPermission(
+                                        CONTEXT,
+                                        CustomAudienceFixture.VALID_OWNER,
+                                        API_NAME_LOGGING_ID));
+
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
+                exception.getMessage());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAppHasPermission_mismatchedAppPackageName_throwSecurityException()
+            throws PackageManager.NameNotFoundException {
+        doReturn(new PackageInfo())
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+        when(PermissionHelper.hasCustomAudiencesPermission(CONTEXT, CONTEXT.getPackageName()))
+                .thenReturn(false);
+
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mChecker.assertAppDeclaredPermission(
+                                        CONTEXT, "mismatchedAppPackageName", API_NAME_LOGGING_ID));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
@@ -193,24 +242,29 @@ public class FledgeAuthorizationFilterTest {
     public void testAssertAppHasPermission_nullContext_throwNpe() {
         assertThrows(
                 NullPointerException.class,
-                () -> mChecker.assertAppDeclaredPermission(null, API_NAME_LOGGING_ID));
+                () ->
+                        mChecker.assertAppDeclaredPermission(
+                                null, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
     public void testAssertAdTechHasPermission_hasPermission() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(-1);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(0);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(0);
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
-        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
+        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(true);
         when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
         when(mPhFlagsMock.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
 
         mChecker.assertAdTechAllowed(
                 CONTEXT, PACKAGE_NAME, CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID);
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDaoMock);
@@ -219,9 +273,13 @@ public class FledgeAuthorizationFilterTest {
 
     @Test
     public void testAssertAdTechHasPermission_noEnrollmentForAdTech_throwSecurityException() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(null);
+        when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
 
         SecurityException exception =
                 assertThrows(
@@ -236,23 +294,39 @@ public class FledgeAuthorizationFilterTest {
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
                 exception.getMessage());
+        verify(mEnrollmentUtilMock).getBuildId();
+        verify(mEnrollmentUtilMock).getFileGroupStatus();
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(2),
+                        eq(1),
+                        eq(3),
+                        eq(CommonFixture.VALID_BUYER_1.toString()),
+                        eq(
+                                EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE
+                                        .getValue()));
         verifyNoMoreInteractions(mEnrollmentDaoMock, mAdServicesLoggerMock);
         verifyZeroInteractions(mPackageManagerMock);
     }
 
     @Test
     public void testAssertAdTechHasPermission_appManifestNoPermission_throwSecurityException() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
-        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
+        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(false);
+        when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
 
         SecurityException exception =
                 assertThrows(
@@ -267,22 +341,35 @@ public class FledgeAuthorizationFilterTest {
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
                 exception.getMessage());
+        verify(mEnrollmentUtilMock).getBuildId();
+        verify(mEnrollmentUtilMock).getFileGroupStatus();
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(2),
+                        eq(1),
+                        eq(3),
+                        eq(CommonFixture.VALID_BUYER_1.toString()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
         verifyNoMoreInteractions(mEnrollmentDaoMock, mAdServicesLoggerMock);
         verifyZeroInteractions(mPackageManagerMock);
     }
 
     @Test
     public void testAdTechInBlocklist_throwSecurityException() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
-        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        CONTEXT, PACKAGE_NAME, ENROLLMENT_ID))
+        when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(true);
         // Add ENROLLMENT_ID to blocklist.
         when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
@@ -296,6 +383,27 @@ public class FledgeAuthorizationFilterTest {
                                 PACKAGE_NAME,
                                 CommonFixture.VALID_BUYER_1,
                                 API_NAME_LOGGING_ID));
+
+        verify(mEnrollmentUtilMock).getBuildId();
+        verify(mEnrollmentUtilMock).getFileGroupStatus();
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(2),
+                        eq(1),
+                        eq(3),
+                        eq(CommonFixture.VALID_BUYER_1.toString()),
+                        eq(
+                                EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE
+                                        .getValue()));
+        verifyNoMoreInteractions(mEnrollmentDaoMock, mAdServicesLoggerMock);
+        verifyZeroInteractions(mPackageManagerMock);
     }
 
     @Test
@@ -336,6 +444,9 @@ public class FledgeAuthorizationFilterTest {
 
     @Test
     public void testAdTechNotEnrolled_throwSecurityException() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(-1);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(0);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(null);
@@ -345,6 +456,18 @@ public class FledgeAuthorizationFilterTest {
                 () ->
                         mChecker.assertAdTechEnrolled(
                                 CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID));
+
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(-1),
+                        eq(0),
+                        eq(3),
+                        eq(CommonFixture.VALID_BUYER_1.toString()),
+                        eq(
+                                EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE
+                                        .getValue()));
     }
 
     @Test
@@ -405,9 +528,13 @@ public class FledgeAuthorizationFilterTest {
 
     @Test
     public void testGetAndAssertAdTechFromUriAllowed_notEnrolled_throwsNotAllowedException() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
         doReturn(null)
                 .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
+        when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -415,16 +542,32 @@ public class FledgeAuthorizationFilterTest {
                         mChecker.getAndAssertAdTechFromUriAllowed(
                                 CONTEXT, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
 
+        verify(mEnrollmentUtilMock).getBuildId();
+        verify(mEnrollmentUtilMock).getFileGroupStatus();
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(2),
+                        eq(1),
+                        eq(3),
+                        eq(URI_FOR_AD_TECH.toString()),
+                        eq(
+                                EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE
+                                        .getValue()));
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
     public void testGetAndAssertAdTechFromUriAllowed_notAllowedByApp_throwsNotAllowedException() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
         doReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA))
                 .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
@@ -432,7 +575,9 @@ public class FledgeAuthorizationFilterTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        PACKAGE_NAME, ENROLLMENT_ID));
+        when(PhFlags.getInstance()).thenReturn(mPhFlagsMock);
+        when(mPhFlagsMock.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -440,20 +585,34 @@ public class FledgeAuthorizationFilterTest {
                         mChecker.getAndAssertAdTechFromUriAllowed(
                                 CONTEXT, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
 
+        verify(mEnrollmentUtilMock).getBuildId();
+        verify(mEnrollmentUtilMock).getFileGroupStatus();
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
         verify(
                 () ->
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                PACKAGE_NAME, ENROLLMENT_ID));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(2),
+                        eq(1),
+                        eq(3),
+                        eq(URI_FOR_AD_TECH.toString()),
+                        eq(EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue()));
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
     public void testGetAndAssertAdTechFromUriAllowed_adTechBlocklisted_throwsNotAllowedException() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
         doReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA))
                 .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
@@ -461,7 +620,7 @@ public class FledgeAuthorizationFilterTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        PACKAGE_NAME, ENROLLMENT_ID));
         doReturn(mPhFlagsMock).when(PhFlags::getInstance);
         doReturn(true).when(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
 
@@ -471,21 +630,37 @@ public class FledgeAuthorizationFilterTest {
                         mChecker.getAndAssertAdTechFromUriAllowed(
                                 CONTEXT, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
 
+        verify(mEnrollmentUtilMock).getBuildId();
+        verify(mEnrollmentUtilMock).getFileGroupStatus();
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
         verify(
                 () ->
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                PACKAGE_NAME, ENROLLMENT_ID));
         verify(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(2),
+                        eq(1),
+                        eq(3),
+                        eq(URI_FOR_AD_TECH.toString()),
+                        eq(
+                                EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE
+                                        .getValue()));
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
     public void testGetAndAssertAdTechFromUriAllowed_enrolled_returnsAdTechIdentifier() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(-1);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(0);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(0);
         doReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA))
                 .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
@@ -493,7 +668,7 @@ public class FledgeAuthorizationFilterTest {
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                        PACKAGE_NAME, ENROLLMENT_ID));
         doReturn(mPhFlagsMock).when(PhFlags::getInstance);
         doReturn(false).when(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
 
@@ -505,12 +680,13 @@ public class FledgeAuthorizationFilterTest {
                 .that(returnedAdTechIdentifier)
                 .isEqualTo(CommonFixture.VALID_BUYER_1);
 
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(eq(URI_FOR_AD_TECH));
         verify(
                 () ->
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                eq(CONTEXT), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+                                PACKAGE_NAME, ENROLLMENT_ID));
         verify(mPhFlagsMock).isEnrollmentBlocklisted(eq(ENROLLMENT_ID));
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }

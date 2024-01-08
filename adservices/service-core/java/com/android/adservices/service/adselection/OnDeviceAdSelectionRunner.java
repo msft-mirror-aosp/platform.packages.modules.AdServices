@@ -35,6 +35,8 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
@@ -79,6 +81,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -90,13 +94,17 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdFilterer adFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
-            final int callerUid) {
+            final int callerUid,
+            boolean shouldUseUnifiedTables) {
         super(
                 context,
                 customAudienceDao,
                 adSelectionEntryDao,
+                encryptionKeyDao,
+                enrollmentDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
@@ -106,8 +114,10 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
                 debugReporting,
-                callerUid);
+                callerUid,
+                shouldUseUnifiedTables);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
@@ -116,6 +126,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
         boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
+        boolean dataVersionHeaderEnabled =
+                BinderFlagReader.readFlag(mFlags::getFledgeDataVersionHeaderEnabled);
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
@@ -133,7 +145,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         mAdSelectionEntryDao,
                         flags,
                         adSelectionExecutionLogger,
-                        mDebugReporting);
+                        mDebugReporting,
+                        dataVersionHeaderEnabled);
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
                         new AdBidGeneratorImpl(
@@ -147,12 +160,14 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mAdCounterKeyCopier,
                                 flags,
                                 mDebugReporting,
-                                cpcBillingEnabled),
+                                cpcBillingEnabled,
+                                dataVersionHeaderEnabled),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
                                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao),
-                                lightweightExecutorService),
+                                lightweightExecutorService,
+                                dataVersionHeaderEnabled),
                         mScheduledExecutor,
                         mBackgroundExecutorService,
                         flags);
@@ -163,6 +178,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -178,12 +195,16 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner,
             @NonNull final AdFilterer adFilterer,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
+            @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
-            @NonNull final DebugReporting debugReporting) {
+            @NonNull final DebugReporting debugReporting,
+            boolean shouldUseUnifiedTables) {
         super(
                 context,
                 customAudienceDao,
                 adSelectionEntryDao,
+                encryptionKeyDao,
+                enrollmentDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
@@ -195,8 +216,10 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adSelectionServiceFilter,
                 adFilterer,
                 frequencyCapAdDataValidator,
+                adCounterHistogramUpdater,
                 adSelectionExecutionLogger,
-                debugReporting);
+                debugReporting,
+                shouldUseUnifiedTables);
 
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -334,7 +357,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
         sLogger.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
 
-        if (validBiddingOutcomes.isEmpty() && adSelectionConfig.getBuyerContextualAds().isEmpty()) {
+        if (validBiddingOutcomes.isEmpty()
+                && adSelectionConfig.getBuyerSignedContextualAds().isEmpty()) {
             sLogger.w("Received empty list of successful bidding outcomes and contextual ads");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING);
         }
@@ -346,7 +370,10 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList()));
         }
-
+        sLogger.v(
+                "Invoking score generator with %s bids and %s contextual ads.",
+                validBiddingOutcomes.size(),
+                adSelectionConfig.getBuyerSignedContextualAds().size());
         return mAdsScoreGenerator
                 .runAdScoring(validBiddingOutcomes, adSelectionConfig)
                 .transform(
@@ -418,6 +445,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
         sLogger.v("Creating Ad Selection result from scoring winner");
         String buyerContextualSignalsString;
+        String sellerContextualSignalsString;
         // There should always be a winner.
         AdScoringOutcome scoringWinner = winningAdScoringOutcomeAndContext.first;
         if (Objects.isNull(scoringWinner.getBuyerContextualSignals())) {
@@ -426,13 +454,20 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             buyerContextualSignalsString = scoringWinner.getBuyerContextualSignals().toString();
         }
 
+        if (Objects.isNull(scoringWinner.getSellerContextualSignals())) {
+            sellerContextualSignalsString = "{}";
+        } else {
+            sellerContextualSignalsString = scoringWinner.getSellerContextualSignals().toString();
+        }
+
         dbAdSelectionBuilder
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(scoringWinner.getCustomAudienceSignals())
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
                 .setBiddingLogicUri(scoringWinner.getBiddingLogicUri())
-                .setBuyerContextualSignals(buyerContextualSignalsString);
+                .setBuyerContextualSignals(buyerContextualSignalsString)
+                .setSellerContextualSignals(sellerContextualSignalsString);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
 
         final DBAdSelection.Builder copiedDBAdSelectionBuilder =

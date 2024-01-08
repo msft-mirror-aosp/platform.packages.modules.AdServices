@@ -115,7 +115,9 @@ public class CustomAudienceManager {
     @NonNull
     ICustomAudienceService getService() {
         ICustomAudienceService service = mServiceBinder.getService();
-        Objects.requireNonNull(service);
+        if (service == null) {
+            throw new IllegalStateException("custom audience service is not available.");
+        }
         return service;
     }
 
@@ -216,10 +218,7 @@ public class CustomAudienceManager {
      *
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
-     *
-     * @hide
      */
-    // TODO(b/278016822): Unhide for fetchAndJoinCustomAudience API review.
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void fetchAndJoinCustomAudience(
             @NonNull FetchAndJoinCustomAudienceRequest fetchAndJoinCustomAudienceRequest,

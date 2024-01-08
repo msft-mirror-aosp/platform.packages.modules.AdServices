@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.CommonFixture.doSleep;
+
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
@@ -54,6 +56,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
@@ -62,6 +65,8 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -100,10 +105,19 @@ public class PackageChangedReceiverTest {
     @Mock Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
+    private MockitoSession mStaticMockSession;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
+
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(AdServicesLoggerImpl.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+        ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
+                .when(AdServicesLoggerImpl::getInstance);
 
         // Mock TopicsWorker to test app update flow in topics API.
         mSpyTopicsWorker =
@@ -116,6 +130,11 @@ public class PackageChangedReceiverTest {
                                 FlagsFactory.getFlagsForTest()));
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+    }
+
+    @After
+    public void cleanup() {
+        mStaticMockSession.finishMocking();
     }
 
     private PackageChangedReceiver createSpyPackageReceiverForMeasurement() {
@@ -310,6 +329,7 @@ public class PackageChangedReceiverTest {
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid()
             throws InterruptedException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -326,6 +346,7 @@ public class PackageChangedReceiverTest {
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
             throws InterruptedException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -338,6 +359,7 @@ public class PackageChangedReceiverTest {
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat()
             throws InterruptedException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.removeExtra(Intent.EXTRA_UID);
 
@@ -348,6 +370,7 @@ public class PackageChangedReceiverTest {
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
             throws InterruptedException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
 
@@ -695,6 +718,7 @@ public class PackageChangedReceiverTest {
     }
 
     private void runPackageFullyRemovedForConsent(Intent intent) throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         // Start a mockitoSession to mock static method
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
@@ -1017,6 +1041,7 @@ public class PackageChangedReceiverTest {
             // Verify method inside background thread executes
             assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
             verify(mAppInstallDaoMock).deleteByPackageName(any());
             verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
@@ -1138,6 +1163,37 @@ public class PackageChangedReceiverTest {
             verify(receiver).measurementOnPackageFullyRemoved(any(), any());
             verify(receiver).topicsOnPackageFullyRemoved(any(), any());
             verify(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        } finally {
+            mMockitoSession.finishMocking();
+        }
+    }
+
+    @Test
+    public void testAppConsentDeletion_onR() throws Exception {
+        MockitoSession mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkLevel.class)
+                        .mockStatic(ConsentManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastS);
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+            Intent intent =
+                    createIntentSentByAdServiceSystemService(
+                            PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+            doReturn(false).when(spyReceiver).isPackageStillInstalled(any(), anyString());
+
+            // Invoke the onReceive method to test the behavior
+            spyReceiver.onReceive(sContext, intent);
+
+            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+            doSleep(BACKGROUND_THREAD_TIMEOUT_MS);
+
+            // On R App consent clear should not be called as it is not supported
+            verify(mConsentManager, never()).clearConsentForUninstalledApp(any(), anyInt());
         } finally {
             mMockitoSession.finishMocking();
         }

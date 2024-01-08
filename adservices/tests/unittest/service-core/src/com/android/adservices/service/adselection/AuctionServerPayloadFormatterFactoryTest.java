@@ -18,28 +18,72 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterFactory.NO_IMPLEMENTATION_FOUND;
 
-import org.junit.Assert;
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
+import com.android.adservices.service.Flags;
+
+
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 
 public class AuctionServerPayloadFormatterFactoryTest {
-    private static final int VALID_VERSION = AuctionServerPayloadFormatterV0.VERSION;
+    private static final int V0_VERSION = AuctionServerPayloadFormatterV0.VERSION;
+    private static final int V1_VERSION = AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
 
     @Test
-    public void testFactory_validVersion_returnImplementationSuccess() {
+    public void testCreateFormatter_validVersion_returnImplementationSuccess() {
         AuctionServerPayloadFormatter formatter =
-                AuctionServerPayloadFormatterFactory.getPayloadFormatter(VALID_VERSION);
-        Assert.assertTrue(formatter instanceof AuctionServerPayloadFormatterV0);
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        V0_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+        assertTrue(formatter instanceof AuctionServerPayloadFormatterV0);
     }
 
     @Test
-    public void testFactory_invalidVersion_throwsExceptionFailure() {
-        ThrowingRunnable runnable =
-                () -> AuctionServerPayloadFormatterFactory.getPayloadFormatter(INVALID_VERSION);
-        Assert.assertThrows(
-                String.format(NO_IMPLEMENTATION_FOUND, INVALID_VERSION),
+    public void testCreateExtractor_validVersion_returnImplementationSuccess() {
+        AuctionServerPayloadExtractor extractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(V0_VERSION);
+        assertTrue(extractor instanceof AuctionServerPayloadFormatterV0);
+    }
+
+    @Test
+    public void testCreateFormatter_excessiveMaxSizeVersion_returnImplementationSuccess() {
+        AuctionServerPayloadFormatter formatter =
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        V1_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+        assertThat(formatter instanceof AuctionServerPayloadFormatterExcessiveMaxSize).isTrue();
+    }
+
+    @Test
+    public void testCreateExtractor_excessiveMaxSizeVersion_returnImplementationSuccess() {
+        AuctionServerPayloadExtractor extractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(V1_VERSION);
+        assertTrue(extractor instanceof AuctionServerPayloadFormatterExcessiveMaxSize);
+    }
+
+    @Test
+    public void testCreateFormatter_invalidVersion_throwsExceptionFailure() {
+        assertThrows(
+                String.format(
+                        NO_IMPLEMENTATION_FOUND,
+                        AuctionServerPayloadFormatter.class.getName(),
+                        INVALID_VERSION),
                 IllegalArgumentException.class,
-                runnable);
+                () ->
+                        AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                                INVALID_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES));
+    }
+
+    @Test
+    public void testCreateExtractor_invalidVersion_throwsExceptionFailure() {
+        assertThrows(
+                String.format(
+                        NO_IMPLEMENTATION_FOUND,
+                        AuctionServerPayloadExtractor.class.getName(),
+                        INVALID_VERSION),
+                IllegalArgumentException.class,
+                () -> AuctionServerPayloadFormatterFactory.createPayloadExtractor(INVALID_VERSION));
     }
 }

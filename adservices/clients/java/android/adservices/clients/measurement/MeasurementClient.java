@@ -25,7 +25,6 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
-import android.os.OutcomeReceiver;
 import android.view.InputEvent;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -58,20 +57,82 @@ public class MeasurementClient {
     @NonNull
     public ListenableFuture<Void> registerSource(
             @NonNull Uri attributionSource, @Nullable InputEvent inputEvent) {
+        Objects.requireNonNull(attributionSource);
+
+        return Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                ? registerSourceForSPlus(attributionSource, inputEvent)
+                : registerSourceForR(attributionSource, inputEvent);
+    }
+
+    /**
+     * Invokes the {@code registerTrigger} method of {@link MeasurementManager}, and returns a Void
+     * future.
+     */
+    @NonNull
+    public ListenableFuture<Void> registerTrigger(@NonNull Uri trigger) {
+        Objects.requireNonNull(trigger);
+
+        return Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                ? registerTriggerForSPlus(trigger)
+                : registerTriggerForR(trigger);
+    }
+
+    /**
+     * Invokes the {@code registerWebSource} method of {@link MeasurementManager}, and returns a
+     * Void future.
+     */
+    @NonNull
+    public ListenableFuture<Void> registerWebSource(@NonNull WebSourceRegistrationRequest request) {
+        Objects.requireNonNull(request);
+
+        return Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                ? registerWebSourceForSPlus(request)
+                : registerWebSourceForR(request);
+    }
+
+    /**
+     * Invokes the {@code registerWebTrigger} method of {@link MeasurementManager}, and returns a
+     * Void future.
+     */
+    @NonNull
+    public ListenableFuture<Void> registerWebTrigger(
+            @NonNull WebTriggerRegistrationRequest request) {
+        Objects.requireNonNull(request);
+
+        return Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                ? registerWebTriggerForSPlus(request)
+                : registerWebTriggerForR(request);
+    }
+
+    /**
+     * Invokes the {@code registerWebTrigger} method of {@link MeasurementManager} with a null
+     * callback, and returns a Void future if successful, or an {@link Exception} if unsuccessful.
+     */
+    @NonNull
+    public ListenableFuture<Void> deleteRegistrations(@NonNull DeletionRequest request) {
+        Objects.requireNonNull(request);
+
+        return Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                ? deleteRegistrationsForSPlus(request)
+                : deleteRegistrationsForR(request);
+    }
+
+    private ListenableFuture<Void> registerSourceForSPlus(
+            Uri attributionSource, InputEvent inputEvent) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mMeasurementManager.registerSource(
                             attributionSource,
                             inputEvent,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new android.os.OutcomeReceiver<>() {
                                 @Override
-                                public void onResult(@NonNull Object ignoredResult) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(@NonNull Exception error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -81,18 +142,61 @@ public class MeasurementClient {
                 });
     }
 
-    /**
-     * Invokes the {@code registerTrigger} method of {@link MeasurementManager}, and returns a Void
-     * future.
-     */
-    @NonNull
-    public ListenableFuture<Void> registerTrigger(@NonNull Uri trigger) {
+    private ListenableFuture<Void> registerSourceForR(
+            Uri attributionSource, InputEvent inputEvent) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mMeasurementManager.registerSource(
+                            attributionSource,
+                            inputEvent,
+                            mExecutor,
+                            new android.adservices.common.AdServicesOutcomeReceiver<>() {
+                                @Override
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "registerSource";
+                });
+    }
+
+    private ListenableFuture<Void> registerTriggerForSPlus(Uri trigger) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mMeasurementManager.registerTrigger(
                             trigger,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new android.os.OutcomeReceiver<>() {
+                                @Override
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "registerTrigger";
+                });
+    }
+
+    private ListenableFuture<Void> registerTriggerForR(Uri trigger) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mMeasurementManager.registerTrigger(
+                            trigger,
+                            mExecutor,
+                            new android.adservices.common.AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(@NonNull Object ignoredResult) {
                                     completer.set(null);
@@ -108,25 +212,21 @@ public class MeasurementClient {
                     return "registerTrigger";
                 });
     }
-    /**
-     * Invokes the {@code registerWebSource} method of {@link MeasurementManager}, and returns a
-     * Void future.
-     */
-    @NonNull
-    public ListenableFuture<Void> registerWebSource(@NonNull WebSourceRegistrationRequest request) {
+
+    private ListenableFuture<Void> registerWebSourceForSPlus(WebSourceRegistrationRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mMeasurementManager.registerWebSource(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new android.os.OutcomeReceiver<>() {
                                 @Override
-                                public void onResult(@NonNull Object ignoredResult) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(@NonNull Exception error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -136,26 +236,44 @@ public class MeasurementClient {
                 });
     }
 
-    /**
-     * Invokes the {@code registerWebTrigger} method of {@link MeasurementManager}, and returns a
-     * Void future.
-     */
-    @NonNull
-    public ListenableFuture<Void> registerWebTrigger(
-            @NonNull WebTriggerRegistrationRequest request) {
+    private ListenableFuture<Void> registerWebSourceForR(WebSourceRegistrationRequest request) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mMeasurementManager.registerWebSource(
+                            request,
+                            mExecutor,
+                            new android.adservices.common.AdServicesOutcomeReceiver<>() {
+                                @Override
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "registerWebSource";
+                });
+    }
+
+    private ListenableFuture<Void> registerWebTriggerForSPlus(
+            WebTriggerRegistrationRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mMeasurementManager.registerWebTrigger(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new android.os.OutcomeReceiver<>() {
                                 @Override
-                                public void onResult(@NonNull Object ignoredResult) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(@NonNull Exception error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -165,25 +283,66 @@ public class MeasurementClient {
                 });
     }
 
-    /**
-     * Invokes the {@code registerWebTrigger} method of {@link MeasurementManager} with a null
-     * callback, and returns a Void future if successful, or an {@link Exception} if unsuccessful.
-     */
-    @NonNull
-    public ListenableFuture<Void> deleteRegistrations(@NonNull DeletionRequest request) {
+    private ListenableFuture<Void> registerWebTriggerForR(WebTriggerRegistrationRequest request) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mMeasurementManager.registerWebTrigger(
+                            request,
+                            mExecutor,
+                            new android.adservices.common.AdServicesOutcomeReceiver<>() {
+                                @Override
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "registerWebTrigger";
+                });
+    }
+
+    private ListenableFuture<Void> deleteRegistrationsForSPlus(DeletionRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mMeasurementManager.deleteRegistrations(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
+                            new android.os.OutcomeReceiver<>() {
                                 @Override
-                                public void onResult(@NonNull Object ignoredResult) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(@NonNull Exception error) {
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "deleteRegistrations";
+                });
+    }
+
+    private ListenableFuture<Void> deleteRegistrationsForR(DeletionRequest request) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mMeasurementManager.deleteRegistrations(
+                            request,
+                            mExecutor,
+                            new android.adservices.common.AdServicesOutcomeReceiver<>() {
+                                @Override
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });

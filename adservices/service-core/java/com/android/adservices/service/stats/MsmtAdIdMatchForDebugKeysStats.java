@@ -47,6 +47,11 @@ public abstract class MsmtAdIdMatchForDebugKeysStats {
     public abstract long getNumUniqueAdIdsLimit();
 
     /**
+     * @return source registrant.
+     */
+    public abstract String getSourceRegistrant();
+
+    /**
      * @return generic builder.
      */
     public static MsmtAdIdMatchForDebugKeysStats.Builder builder() {
@@ -73,6 +78,9 @@ public abstract class MsmtAdIdMatchForDebugKeysStats {
 
         /** Set limit on number of unique AdIDs an Ad-tech is allowed. */
         public abstract Builder setNumUniqueAdIdsLimit(long value);
+
+        /** Set source registrant. */
+        public abstract Builder setSourceRegistrant(String value);
 
         /** build for {@link MsmtAdIdMatchForDebugKeysStats} */
         public abstract MsmtAdIdMatchForDebugKeysStats build();
