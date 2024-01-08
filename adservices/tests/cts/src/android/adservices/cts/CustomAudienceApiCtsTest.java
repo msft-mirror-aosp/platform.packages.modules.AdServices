@@ -26,8 +26,14 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
-import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
-import static com.android.adservices.service.Flags.FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -54,14 +60,12 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.common.annotations.SetIntegerFlag;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -70,7 +74,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -78,7 +81,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
+@RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
+
     private AdvertisingCustomAudienceClient mClient;
     private TestAdvertisingCustomAudienceClient mTestClient;
 
@@ -93,24 +98,15 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
 
-    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
+    // TODO(b/317411225): remove this method and annotate the class with @SetFlagEnabled instead
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return super.getAdServicesFlagsSetterRule().setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
+    }
 
     @Before
-    public void setup() throws InterruptedException {
-        if (SdkLevel.isAtLeastT()) {
+    public void setup() throws Exception {
+        if (sdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         }
 
@@ -131,16 +127,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
 
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
-    public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+    public void tearDown() throws Exception {
         leaveJoinedCustomAudiences();
-        PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
 
     @Test
@@ -274,27 +268,23 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS, value = 2)
     public void testJoinCustomAudience_invalidNumberOfAds_fail() {
-        PhFlagsFixture.overrideFledgeCustomAudienceMaxNumAds(2);
-        try {
-            CustomAudience customAudienceWithInvalidNumberOfAds =
-                    CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
-                            .setAds(
-                                    ImmutableList.of(
-                                            AdDataFixture.getValidAdDataByBuyer(VALID_BUYER_1, 1),
-                                            AdDataFixture.getValidAdDataByBuyer(VALID_BUYER_1, 2),
-                                            AdDataFixture.getValidAdDataByBuyer(VALID_BUYER_1, 3)))
-                            .build();
+        CustomAudience customAudienceWithInvalidNumberOfAds =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
+                        .setAds(
+                                ImmutableList.of(
+                                        AdDataFixture.getValidAdDataByBuyer(VALID_BUYER_1, 1),
+                                        AdDataFixture.getValidAdDataByBuyer(VALID_BUYER_1, 2),
+                                        AdDataFixture.getValidAdDataByBuyer(VALID_BUYER_1, 3)))
+                        .build();
 
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> joinCustomAudience(customAudienceWithInvalidNumberOfAds));
-            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-            assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
-        } finally {
-            PhFlagsFixture.overrideFledgeCustomAudienceMaxNumAds(100);
-        }
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> joinCustomAudience(customAudienceWithInvalidNumberOfAds));
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -327,94 +317,71 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT, value = 2)
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT, value = 1000)
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT, value = 1000)
     public void testJoinCustomAudience_maxTotalCustomAudiences_fail() {
-        PhFlagsFixture.overrideFledgeCustomAudienceMaxCount(2);
-        PhFlagsFixture.overrideFledgeCustomAudiencePerAppMaxCount(1000);
-        PhFlagsFixture.overrideFledgeCustomAudienceMaxOwnerCount(1000);
-        try {
-            CustomAudience customAudience1 =
-                    CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
-                            .setName("CA1")
-                            .build();
-            CustomAudience customAudience2 =
-                    CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
-                            .setName("CA2")
-                            .build();
-            CustomAudience customAudience3 =
-                    CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
-                            .setName("CA3")
-                            .build();
+        CustomAudience customAudience1 =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1).setName("CA1").build();
+        CustomAudience customAudience2 =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1).setName("CA2").build();
+        CustomAudience customAudience3 =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1).setName("CA3").build();
 
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> {
-                                joinCustomAudience(customAudience1);
-                                joinCustomAudience(customAudience2);
-                                joinCustomAudience(customAudience3);
-                            });
-            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-            assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
-        } finally {
-            PhFlagsFixture.overrideFledgeCustomAudienceMaxCount(4000);
-        }
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            joinCustomAudience(customAudience1);
+                            joinCustomAudience(customAudience2);
+                            joinCustomAudience(customAudience3);
+                        });
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT, value = 4000)
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT, value = 2)
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT, value = 1000)
     public void testJoinCustomAudience_maxCustomAudiencesPerApp_fail() {
-        PhFlagsFixture.overrideFledgeCustomAudienceMaxCount(4000);
-        PhFlagsFixture.overrideFledgeCustomAudiencePerAppMaxCount(2);
-        PhFlagsFixture.overrideFledgeCustomAudienceMaxOwnerCount(1000);
-        try {
-            CustomAudience customAudience1 =
-                    CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
-                            .setName("CA1")
-                            .build();
-            CustomAudience customAudience2 =
-                    CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
-                            .setName("CA2")
-                            .build();
-            CustomAudience customAudience3 =
-                    CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
-                            .setName("CA3")
-                            .build();
+        CustomAudience customAudience1 =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1).setName("CA1").build();
+        CustomAudience customAudience2 =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1).setName("CA2").build();
+        CustomAudience customAudience3 =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1).setName("CA3").build();
 
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> {
-                                joinCustomAudience(customAudience1);
-                                joinCustomAudience(customAudience2);
-                                joinCustomAudience(customAudience3);
-                            });
-            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-            assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
-        } finally {
-            PhFlagsFixture.overrideFledgeCustomAudiencePerAppMaxCount(1000);
-        }
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            joinCustomAudience(customAudience1);
+                            joinCustomAudience(customAudience2);
+                            joinCustomAudience(customAudience3);
+                        });
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
     public void testFetchAndJoinCustomAudience_validFetchUri_validRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .build();
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .build();
 
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-        }
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -425,31 +392,26 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(Uri.parse("invalid-uri.com")).build();
 
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(Uri.parse("invalid-uri.com"))
-                            .build();
-
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            // A valid buyer will not be extracted from an invalid uri, thus failing due to lack of
-            // authorization.
-            assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
-            assertThat(exception)
-                    .hasCauseThat()
-                    .hasMessageThat()
-                    .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-        }
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        // A valid buyer will not be extracted from an invalid uri, thus failing due to lack of
+        // authorization.
+        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        assertThat(exception)
+                .hasCauseThat()
+                .hasMessageThat()
+                .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
     }
 
     @Test
@@ -460,27 +422,23 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_validName_validRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .setName(VALID_NAME)
+                        .build();
 
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .setName(VALID_NAME)
-                            .build();
-
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-        }
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -491,31 +449,26 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
-            // Use a clearly small size limit.
-            PhFlagsFixture.overrideFledgeCustomAudienceMaxNameSizeB(1);
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .setName(VALID_NAME)
-                            .build();
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        // Use a clearly small size limit.
+        flags.setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B, 1);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .setName(VALID_NAME)
+                        .build();
 
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            // The name exceeds size limit.
-            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-            PhFlagsFixture.overrideFledgeCustomAudienceMaxNameSizeB(
-                    FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B);
-        }
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        // The name exceeds size limit.
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -526,26 +479,24 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_validActivationTime_validRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .setActivationTime(VALID_ACTIVATION_TIME)
-                            .build();
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
 
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-        }
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .setActivationTime(VALID_ACTIVATION_TIME)
+                        .build();
+
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -556,27 +507,24 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .setActivationTime(INVALID_DELAYED_ACTIVATION_TIME)
-                            .build();
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .setActivationTime(INVALID_DELAYED_ACTIVATION_TIME)
+                        .build();
 
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            // The activation time exceeds delay limit.
-            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-        }
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        // The activation time exceeds delay limit.
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -587,26 +535,23 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .setExpirationTime(VALID_EXPIRATION_TIME)
-                            .build();
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .build();
 
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-        }
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -617,28 +562,24 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .setExpirationTime(INVALID_BEYOND_MAX_EXPIRATION_TIME)
+                        .build();
 
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .setExpirationTime(INVALID_BEYOND_MAX_EXPIRATION_TIME)
-                            .build();
-
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            // The expiration time exceeds max limit.
-            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-        }
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        // The expiration time exceeds max limit.
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -649,26 +590,23 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
-                            .build();
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
 
-            // Without an actual server to respond to this request, the service will fail while
-            // executing the HTTP request and throw an IllegalStateException. If a request field was
-            // invalid, the service will fail before executing the HTTP request and throw an
-            // IllegalArgumentException.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-        }
+        // Without an actual server to respond to this request, the service will fail while
+        // executing the HTTP request and throw an IllegalStateException. If a request field was
+        // invalid, the service will fail before executing the HTTP request and throw an
+        // IllegalArgumentException.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -679,29 +617,24 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     @Test
     public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest() {
-        try {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
-            // Use a clearly small size limit.
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceMaxUserBiddingSignalsSizeB(1);
-            FetchAndJoinCustomAudienceRequest request =
-                    new FetchAndJoinCustomAudienceRequest.Builder(
-                                    getValidFetchUriByBuyer(VALID_BUYER_1))
-                            .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
-                            .build();
+        // NOTE: not using flag annotations because it's called by other test
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
+        // Use a clearly small size limit.
+        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B, 1);
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                getValidFetchUriByBuyer(VALID_BUYER_1))
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
 
-            // Without an actual server response, we expect an IllegalStateException if the request
-            // was well-formed and valid.
-            Exception exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-            // The user bidding signals exceeds size limit.
-            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        } finally {
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(false);
-            PhFlagsFixture.overrideFledgeFetchCustomAudienceMaxUserBiddingSignalsSizeB(
-                    FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B);
-        }
+        // Without an actual server response, we expect an IllegalStateException if the request
+        // was well-formed and valid.
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
+        // The user bidding signals exceeds size limit.
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

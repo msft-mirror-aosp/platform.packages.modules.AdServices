@@ -18,10 +18,19 @@ package com.android.server.adservices;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import android.adservices.shell.IShellCommand;
+import android.adservices.shell.IShellCommandCallback;
+import android.adservices.shell.ShellCommandResult;
+import android.content.Context;
 import android.os.Process;
+import android.os.RemoteException;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.server.adservices.AdServicesShellCommand.Injector;
 
 import com.google.common.truth.Expect;
@@ -31,18 +40,15 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public final class AdServicesShellCommandTest {
+public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase {
 
     private static final String[] ALL_COMMANDS = new String[] {"help", "is-system-service-enabled"};
 
-    @Rule public final MockitoRule rule = MockitoJUnit.rule();
     @Rule public final Expect expect = Expect.create();
 
     private final StringWriter mOutStringWriter = new StringWriter();
@@ -52,20 +58,30 @@ public final class AdServicesShellCommandTest {
     private final PrintWriter mErr = new PrintWriter(mErrStringWriter);
 
     @Mock private Flags mFlags;
+    @Mock private Context mContext;
+
+    @Mock private IShellCommand mIShellCommand;
 
     private AdServicesShellCommand mShellCmd;
 
+    private Injector mInjector;
+
     @Before
     public void setFixtures() {
+        mInjector =
+                new Injector() {
+                    @Override
+                    int getCallingUid() {
+                        return Process.SHELL_UID;
+                    }
+
+                    @Override
+                    IShellCommand getShellCommandService(Context context) {
+                        return mIShellCommand;
+                    }
+                };
         mShellCmd =
-                new AdServicesShellCommand(
-                        new Injector() {
-                            @Override
-                            int getCallingUid() {
-                                return Process.SHELL_UID;
-                            }
-                        },
-                        mFlags) {
+                new AdServicesShellCommand(mInjector, mFlags, mContext) {
                     @Override
                     public PrintWriter getOutPrintWriter() {
                         return mOut;
@@ -108,7 +124,8 @@ public final class AdServicesShellCommandTest {
                                                         return 42;
                                                     }
                                                 },
-                                                mFlags)
+                                                mFlags,
+                                                mContext)
                                         .onCommand("D'OH"));
         assertThat(e)
                 .hasMessageThat()
@@ -152,14 +169,60 @@ public final class AdServicesShellCommandTest {
     }
 
     @Test
-    public void testExec_invalidCommand() {
-        int result = runCmd("D'OH!");
-        expect.withMessage("result").that(result).isEqualTo(-1);
+    public void testExec_invalidCommand() throws Exception {
+        String cmd = "D'OH!";
+        ShellCommandResult responseInvalidShellCommand =
+                new ShellCommandResult.Builder()
+                        .setErr(String.format("Unsupported command: %s", cmd))
+                        .setResultCode(-1)
+                        .build();
+        mockRunShellCommand(responseInvalidShellCommand);
 
+        int result = runCmd(cmd);
+
+        expect.withMessage("result").that(result).isEqualTo(-1);
         expect.withMessage("out").that(getOut()).isEmpty();
         String err = getErr();
         expectHelpOutputHasAllCommands(err);
-        expectHelpOutputHasMessages(err, "D'OH!");
+        expectHelpOutputHasMessages(err, cmd);
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommand() throws Exception {
+        String cmd = "echo";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(cmd).setResultCode(0).build();
+        mockRunShellCommand(response);
+
+        int result = runCmd(cmd);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(cmd);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_adServicesCommand_throwsRemoteException() throws Exception {
+        String cmd = "echo";
+
+        doThrow(new RemoteException()).when(mIShellCommand).runShellCommand(any(), any());
+
+        int result = runCmd(cmd);
+
+        expect.withMessage("result").that(result).isEqualTo(-1);
+        expect.withMessage("out").that(getOut()).isEmpty();
+        expect.withMessage("err").that(getErr()).contains("Remote exception occurred");
+    }
+
+    @Test
+    public void testExec_adServicesCommand_timeoutHappens() throws Exception {
+        String cmd = "xxx";
+
+        int result = runCmd(cmd);
+
+        expect.withMessage("result").that(result).isEqualTo(-1);
+        expect.withMessage("out").that(getOut()).isEmpty();
+        expect.withMessage("err").that(getErr()).contains("Timeout occurred");
     }
 
     @Test
@@ -306,5 +369,15 @@ public final class AdServicesShellCommandTest {
     // TODO(b/294423183): use AdServicesFlagSetter (if / when it supports mocking unit tests)
     private void mockAdServicesSystemServiceEnabled(boolean value) {
         when(mFlags.getAdServicesSystemServiceEnabled()).thenReturn(value);
+    }
+
+    private void mockRunShellCommand(ShellCommandResult response) throws Exception {
+        doAnswer(
+                        invocation -> {
+                            ((IShellCommandCallback) invocation.getArgument(1)).onResult(response);
+                            return null;
+                        })
+                .when(mIShellCommand)
+                .runShellCommand(any(), any());
     }
 }

@@ -171,9 +171,9 @@ public class UiUtils {
         forceSetFlag("rvc_ux_enabled", true);
     }
 
-    /** Override flag rvc_notification_enabled in tests to true */
+    /** Override flag rvc_post_ota_notification_enabled in tests to true */
     public static void enableRvcNotification() throws Exception {
-        forceSetFlag("rvc_notification_enabled", true);
+        forceSetFlag("rvc_post_ota_notification_enabled", true);
     }
 
     /** Override flag rvc_ux_enabled in tests to false */
@@ -626,6 +626,23 @@ public class UiUtils {
         UiObject2 scrollView =
                 device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
         scrollView.swipe(Direction.DOWN, 0.7f, 500);
+    }
+
+    public static UiObject2 getConsentSwitch(UiDevice device) {
+        UiObject2 consentSwitch =
+                device.wait(
+                        Until.findObject(By.clazz("android.widget.Switch")),
+                        PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
+        // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
+        // devices.
+        device.swipe(
+                consentSwitch.getVisibleBounds().centerX(),
+                500,
+                consentSwitch.getVisibleBounds().centerX(),
+                0,
+                100);
+
+        return consentSwitch;
     }
 
     public static void performSwitchClick(

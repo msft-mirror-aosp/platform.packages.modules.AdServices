@@ -37,11 +37,6 @@ public final class PrivacyParams {
     public static final int EVENT_SOURCE_MAX_REPORTS = 1;
 
     /**
-     * Max reports for Install Attributed 'Navigation' {@link Source}.
-     */
-    public static final int INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS = 3;
-
-    /**
      * Max reports for Install Attributed 'Event' {@link Source}.
      */
     public static final int INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS = 2;

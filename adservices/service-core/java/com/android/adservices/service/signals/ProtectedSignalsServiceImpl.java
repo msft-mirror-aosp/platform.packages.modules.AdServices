@@ -189,7 +189,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredProtectedSignalsPermission(
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, updateSignalsInput.getCallerPackageName(), apiName);
 
         final int callerUid = getCallingUid(apiName);
