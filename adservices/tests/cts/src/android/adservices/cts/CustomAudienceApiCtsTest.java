@@ -60,9 +60,9 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.adservices.common.annotations.SetIntegerFlag;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -82,6 +82,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private AdvertisingCustomAudienceClient mClient;
@@ -97,12 +98,6 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
-
-    // TODO(b/317411225): remove this method and annotate the class with @SetFlagEnabled instead
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return super.getAdServicesFlagsSetterRule().setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
-    }
 
     @Before
     public void setup() throws Exception {
