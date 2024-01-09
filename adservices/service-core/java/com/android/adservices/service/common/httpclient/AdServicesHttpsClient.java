@@ -175,7 +175,7 @@ public class AdServicesHttpsClient {
         // Setting true explicitly to follow redirects
         Uri uri = Uri.parse(url.toString());
         if (WebAddresses.isLocalhost(uri) && devContext.getDevOptionsEnabled()) {
-            LogUtil.v("Using unsafe HTTPS for url ", url.toString());
+            LogUtil.v("Using unsafe HTTPS for url %s", url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
         } else if (WebAddresses.isLocalhost(uri)) {
             LogUtil.v(
