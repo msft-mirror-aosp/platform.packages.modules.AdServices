@@ -47,10 +47,8 @@ public class MeasurementDbMigratorV30 extends AbstractMeasurementDbMigrator {
                         values,
                         null,
                         new String[0]);
-        if (rows != 1) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("Failed to update trigger_data_matching for all source records.");
-        }
+        LoggerFactory.getMeasurementLogger()
+                .d("Updated trigger_data_matching for " + rows + " source records.");
     }
 
     public MeasurementDbMigratorV30() {

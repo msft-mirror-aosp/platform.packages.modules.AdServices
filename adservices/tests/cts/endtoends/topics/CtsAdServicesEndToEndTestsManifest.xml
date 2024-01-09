@@ -22,10 +22,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
-    <application>
-        <property android:name="android.adservices.AD_SERVICES_CONFIG"
-                  android:resource="@xml/ad_services_config" />
-    </application>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
         android:targetPackage="com.android.adservices.tests.cts.endtoendtest" >

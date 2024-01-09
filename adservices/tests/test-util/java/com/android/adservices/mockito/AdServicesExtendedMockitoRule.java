@@ -17,13 +17,19 @@
 package com.android.adservices.mockito;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
+import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
 
+import android.os.Binder;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.common.TestHelper;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
@@ -99,7 +105,7 @@ public class AdServicesExtendedMockitoRule
      *     equivalent annotations) on {@link FlagsFactory}.
      */
     public final void mockGetFlags(Flags mockedFlags) {
-        logD("mockGetFlags(%s)", mockedFlags);
+        logV("mockGetFlags(%s)", mockedFlags);
         assertSpiedOrMocked(FlagsFactory.class);
         doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
@@ -115,6 +121,37 @@ public class AdServicesExtendedMockitoRule
         mockGetFlags(FlagsFactory.getFlagsForTest());
     }
 
+    /**
+     * Mocks a call to {@link Binder#getCallingUidOrThrow()}, returning {@code uid}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Binder}.
+     */
+    public final void mockGetCallingUidOrThrow(int uid) {
+        logV("mockGetCallingUidOrThrow(%d)", uid);
+        mockBinderGetCallingUidOrThrow(uid);
+    }
+
+    /**
+     * Same as {@link #mockGetCallingUidOrThrow(int)}, but using the {@code uid} of the calling
+     * process.
+     *
+     * <p>Typically used when code under test calls {@link Binder#getCallingUidOrThrow()} and the
+     * test doesn't care about the result, but it needs to be mocked otherwise the real call would
+     * fail (as the test is not running inside a binder transaction).
+     */
+    public final void mockGetCallingUidOrThrow() {
+        int uid = Process.myUid();
+        logV("mockGetCallingUidOrThrow(Process.myUid=%d)", uid);
+        mockBinderGetCallingUidOrThrow(uid);
+    }
+
+    // mock only, don't log
+    private void mockBinderGetCallingUidOrThrow(int uid) {
+        assertSpiedOrMocked(Binder.class);
+        doReturn(uid).when(Binder::getCallingUidOrThrow);
+    }
+
     // Overridden to get test name
     @Override
     public final Statement apply(Statement base, Description description) {
@@ -123,10 +160,7 @@ public class AdServicesExtendedMockitoRule
 
             @Override
             public void evaluate() throws Throwable {
-                mTestName =
-                        description.getTestClass().getSimpleName()
-                                + "#"
-                                + description.getMethodName();
+                mTestName = TestHelper.getTestName(description);
                 try {
                     realStatement.evaluate();
                 } finally {
@@ -150,8 +184,24 @@ public class AdServicesExtendedMockitoRule
         return mockedStaticClasses;
     }
 
+    @Override
+    protected boolean getClearInlineMethodsAtTheEnd(Description description) {
+        ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
+        if (annotation != null) {
+            boolean shouldClear = shouldClearInlineMocksAfterTest(description, annotation.value());
+            Log.d(
+                    TAG,
+                    "getClearInlineMethodsAtTheEnd(): returning value based on annotation ("
+                            + shouldClear
+                            + ") for "
+                            + TestHelper.getTestName(description));
+            return shouldClear;
+        }
+        return super.getClearInlineMethodsAtTheEnd(description);
+    }
+
     // TODO(b/312802824): add unit tests (for rule itself)
-    private void assertSpiedOrMocked(Class<FlagsFactory> clazz) {
+    private void assertSpiedOrMocked(Class<?> clazz) {
         if (!mSpiedOrMockedStaticClasses.contains(clazz)) {
             throw new IllegalStateException(
                     "Test doesn't static spy or mock "
@@ -162,8 +212,8 @@ public class AdServicesExtendedMockitoRule
     }
 
     @FormatMethod
-    private void logD(@FormatString String fmt, Object... args) {
-        Log.d(TAG, "on " + getTestName() + ": " + String.format(fmt, args));
+    private void logV(@FormatString String fmt, Object... args) {
+        Log.v(TAG, "on " + getTestName() + ": " + String.format(fmt, args));
     }
 
     public static final class Builder

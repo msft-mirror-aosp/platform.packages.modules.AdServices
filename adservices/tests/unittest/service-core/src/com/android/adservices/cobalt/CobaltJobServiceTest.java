@@ -19,7 +19,6 @@ package com.android.adservices.cobalt;
 import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_API_KEY;
 import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_RELEASE_STAGE;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -50,20 +49,20 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.cobalt.CobaltPeriodicJob;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -71,7 +70,13 @@ import org.mockito.Spy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public final class CobaltJobServiceTest extends AdServicesUnitTestCase {
+@SpyStatic(CobaltJobService.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(CobaltFactory.class)
+@SpyStatic(AdservicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCase {
+
     private static final int JOB_SCHEDULED_WAIT_TIME_MS = 5_000;
     private static final long JOB_INTERVAL_MS = 21_600_000L;
     private static final long JOB_FLEX_MS = 2_000_000L;
@@ -87,16 +92,6 @@ public final class CobaltJobServiceTest extends AdServicesUnitTestCase {
 
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdservicesJobServiceLogger mLogger;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(CobaltJobService.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(CobaltFactory.class)
-                    .spyStatic(AdservicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .build();
 
     @Before
     public void setup() {
@@ -408,8 +403,7 @@ public final class CobaltJobServiceTest extends AdServicesUnitTestCase {
     }
 
     private void mockCobaltLoggingFlags() {
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
 
         when(mMockFlags.getAdservicesReleaseStageForCobalt()).thenReturn(DEFAULT_RELEASE_STAGE);
         when(mMockFlags.getCobaltAdservicesApiKeyHex()).thenReturn(DEFAULT_API_KEY);

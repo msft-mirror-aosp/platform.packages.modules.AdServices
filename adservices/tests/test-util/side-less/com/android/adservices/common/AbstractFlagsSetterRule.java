@@ -358,13 +358,23 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
         return getThis();
     }
 
+    /** Gets the value of the given flag. */
+    @Nullable
+    public final String getFlag(String flag) {
+        return mDeviceConfig.get(flag);
+    }
+
     // TODO(295007931): abstract SDK-related methods in a new SdkLevelHelper and reuse them on
     // SdkLevelSupportRule
     /** Gets the device's SDK level. */
     protected abstract int getDeviceSdk();
 
+    protected boolean isAtLeastR() {
+        return getDeviceSdk() >= 30;
+    }
+
     protected boolean isAtLeastS() {
-        return getDeviceSdk() > 31;
+        return getDeviceSdk() >= 31;
     }
 
     protected boolean isAtLeastT() {
@@ -379,7 +389,13 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
 
     // Set the annotated flags with the specified value for a particular test method.
     protected void setAnnotatedFlags(Description description) {
-        for (Annotation annotation : description.getAnnotations()) {
+        List<Annotation> annotations = getAllFlagAnnotations(description);
+
+        // Apply the annotations in the reverse order. First apply from the super classes, test
+        // class and then test method. If same annotated flag is present in class and test
+        // method, test method takes higher priority.
+        for (int i = annotations.size() - 1; i >= 0; i--) {
+            Annotation annotation = annotations.get(i);
             if (annotation instanceof SetFlagEnabled) {
                 setAnnotatedFlag((SetFlagEnabled) annotation);
             } else if (annotation instanceof SetFlagsEnabled) {
@@ -410,7 +426,6 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
                 setAnnotatedFlag((SetStringFlags) annotation);
             }
         }
-        // TODO(b/300146214) Add code to scan class / superclasses flag annotations.
     }
 
     private T setOrCacheFlag(String name, String value) {
@@ -536,9 +551,53 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
         }
     }
 
+    private boolean isFlagAnnotationPresent(Annotation annotation) {
+        return (annotation instanceof SetFlagEnabled)
+                || (annotation instanceof SetFlagsEnabled)
+                || (annotation instanceof SetFlagDisabled)
+                || (annotation instanceof SetFlagsDisabled)
+                || (annotation instanceof SetIntegerFlag)
+                || (annotation instanceof SetIntegerFlags)
+                || (annotation instanceof SetLongFlag)
+                || (annotation instanceof SetLongFlags)
+                || (annotation instanceof SetFloatFlag)
+                || (annotation instanceof SetFloatFlags)
+                || (annotation instanceof SetDoubleFlag)
+                || (annotation instanceof SetDoubleFlags)
+                || (annotation instanceof SetStringFlag)
+                || (annotation instanceof SetStringFlags);
+    }
+
+    private List<Annotation> getAllFlagAnnotations(Description description) {
+        // TODO(b/318893752): Move this to a helper function to scan test method, class and
+        //  superclasses for annotations.
+        List<Annotation> result = new ArrayList<>();
+        for (Annotation testMethodAnnotation : description.getAnnotations()) {
+            if (isFlagAnnotationPresent(testMethodAnnotation)) {
+                result.add(testMethodAnnotation);
+            }
+        }
+
+        // Get all the flag based annotations from test class and super classes
+        Class<?> clazz = description.getTestClass();
+        do {
+            Annotation[] classAnnotations = clazz.getAnnotations();
+            if (classAnnotations != null) {
+                for (Annotation annotation : classAnnotations) {
+                    if (isFlagAnnotationPresent(annotation)) {
+                        result.add(annotation);
+                    }
+                }
+            }
+            clazz = clazz.getSuperclass();
+        } while (clazz != null);
+
+        return result;
+    }
+
     // Single SetFlagEnabled annotations present
     private void setAnnotatedFlag(SetFlagEnabled annotation) {
-        setFlag(annotation.name(), true);
+        setFlag(annotation.value(), true);
     }
 
     // Multiple SetFlagEnabled annotations present
@@ -550,7 +609,7 @@ abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>> imp
 
     // Single SetFlagDisabled annotations present
     private void setAnnotatedFlag(SetFlagDisabled annotation) {
-        setFlag(annotation.name(), false);
+        setFlag(annotation.value(), false);
     }
 
     // Multiple SetFlagDisabled annotations present

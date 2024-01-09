@@ -27,17 +27,13 @@ import static org.mockito.Mockito.verify;
 
 import android.database.sqlite.SQLiteException;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
+
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
-public final class AbstractAdServicesErrorLoggerTest {
-
-    @Rule public final MockitoRule mRule = MockitoJUnit.rule();
+public final class AbstractAdServicesErrorLoggerTest extends AdServicesMockitoTestCase {
 
     @Mock private StatsdAdServicesErrorLogger mStatsdLoggerMock;
 
@@ -53,7 +49,6 @@ public final class AbstractAdServicesErrorLoggerTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
         mErrorLoggerEnabled =
                 new AbstractAdServicesErrorLogger(mStatsdLoggerMock) {
                     @Override

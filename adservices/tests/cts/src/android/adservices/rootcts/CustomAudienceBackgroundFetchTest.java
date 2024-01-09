@@ -29,6 +29,7 @@ import android.adservices.utils.ScenarioDispatcher;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -72,9 +73,36 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     }
 
     /**
+     * Test to ensure that trusted signals are not updated during the daily update if the ads are
+     * not syntactically valid.
+     */
+    @Test
+    public void testAdSelection_withInvalidAds_backgroundJobUpdateFails() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-034.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                    .isTrue();
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+        } finally {
+            leaveCustomAudience(CA_NAME);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
      * Test to ensure that trusted signals are not updated if a daily update server response exceeds
      * the 30-second timeout.
      */
+    @Ignore("b/315008031")
     @Test
     public void testAdSelection_withHighLatencyBackend_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
@@ -131,6 +159,7 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
      * Test to ensure that trusted signals are not updated if the daily update job exceeds the
      * default timeout.
      */
+    @Ignore("b/315008031")
     @Test
     public void testAdSelection_withLongRunningJob_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =

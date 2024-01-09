@@ -39,6 +39,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
@@ -58,14 +59,13 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
@@ -157,7 +157,13 @@ public class MeasurementDataDeleterTest {
     @Mock private AdServicesLogger mLogger;
 
     private MeasurementDataDeleter mMeasurementDataDeleter;
-    private MockitoSession mStaticMockSession;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
 
     private class FakeDatastoreManager extends DatastoreManager {
         private FakeDatastoreManager() {
@@ -183,21 +189,11 @@ public class MeasurementDataDeleterTest {
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(false);
         mMeasurementDataDeleter =
                 spy(new MeasurementDataDeleter(new FakeDatastoreManager(), mFlags, mLogger));
-    }
-
-    @After
-    public void cleanup() {
-        mStaticMockSession.finishMocking();
     }
 
     @Test

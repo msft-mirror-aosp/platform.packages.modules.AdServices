@@ -171,9 +171,9 @@ public class UiUtils {
         forceSetFlag("rvc_ux_enabled", true);
     }
 
-    /** Override flag rvc_notification_enabled in tests to true */
+    /** Override flag rvc_post_ota_notification_enabled in tests to true */
     public static void enableRvcNotification() throws Exception {
-        forceSetFlag("rvc_notification_enabled", true);
+        forceSetFlag("rvc_post_ota_notification_enabled", true);
     }
 
     /** Override flag rvc_ux_enabled in tests to false */
@@ -280,14 +280,17 @@ public class UiUtils {
         int notificationHeader = -1;
         switch (ux) {
             case GA_UX:
+                // Should match the contentTitle string in ConsentNotificationTrigger.java.
                 notificationTitle =
                         isEuTest
-                                ? R.string.notificationUI_notification_ga_title_eu
-                                : R.string.notificationUI_notification_ga_title;
+                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                : R.string.notificationUI_notification_ga_title_v2;
+                // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
+                // consent_notification_screen_1_ga_v2_row.xml, respectively.
                 notificationHeader =
                         isEuTest
-                                ? R.string.notificationUI_header_ga_title_eu
-                                : R.string.notificationUI_header_ga_title;
+                                ? R.string.notificationUI_fledge_measurement_title_v2
+                                : R.string.notificationUI_header_ga_title_v2;
                 break;
             case BETA_UX:
                 notificationTitle =
@@ -625,23 +628,6 @@ public class UiUtils {
         scrollView.swipe(Direction.DOWN, 0.7f, 500);
     }
 
-    public static UiObject2 getConsentSwitch(UiDevice device) {
-        UiObject2 consentSwitch =
-                device.wait(
-                        Until.findObject(By.clazz("android.widget.Switch")),
-                        PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
-        // devices.
-        device.swipe(
-                consentSwitch.getVisibleBounds().centerX(),
-                500,
-                consentSwitch.getVisibleBounds().centerX(),
-                0,
-                100);
-
-        return consentSwitch;
-    }
-
     public static void performSwitchClick(
             UiDevice device, Context context, boolean dialogsOn, UiObject2 mainSwitch) {
         if (dialogsOn && mainSwitch.isChecked()) {
@@ -667,7 +653,10 @@ public class UiUtils {
     public static void gentleSwipe(UiDevice device) {
         UiObject2 scrollView =
                 device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
-        scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
+        // Some devices on R is not scrollable
+        if (scrollView != null) {
+                scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
+        }
     }
 
     public static void setFlipFlow(boolean isFlip) {
@@ -700,10 +689,13 @@ public class UiUtils {
     public static UiObject2 scrollTo(Context context, UiDevice device, int resId) {
         UiObject2 scrollView =
                 device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
-        String targetStr = getString(context, resId);
-        scrollView.scrollUntil(
-                Direction.DOWN,
-                Until.findObject(By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        if (scrollView != null) {
+            String targetStr = getString(context, resId);
+            scrollView.scrollUntil(
+                    Direction.DOWN,
+                    Until.findObject(
+                            By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        }
         return getElement(context, device, resId);
     }
 

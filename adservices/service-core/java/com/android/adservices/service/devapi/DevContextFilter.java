@@ -147,7 +147,7 @@ public class DevContextFilter {
 
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.w(
-                    "Unable to retrieve application info for app with ID %d and resolved package "
+                    "Unable to retrieve application info for app with ID %s and resolved package "
                             + "name '%s', considering not debuggable for safety.",
                     callingAppPackage, callingAppPackage);
             return false;

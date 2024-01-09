@@ -27,6 +27,8 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -81,7 +83,9 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -90,6 +94,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -100,6 +105,7 @@ import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -342,6 +348,15 @@ public class PersistAdSelectionResultRunnerTest {
             getReportingData(Uri.parse(BUYER_REPORTING_URI), Uri.EMPTY);
     private static final ReportingData REPORTING_DATA_WITH_EMPTY_BUYER =
             getReportingData(Uri.EMPTY, Uri.parse(SELLER_REPORTING_URI));
+
+    private static final boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED_IN_TEST = true;
+
+    private static final int ADSERVICES_STATUS_UNSET = -1;
+    private static final int SELLER_DESTINATION =
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+    private static final int BUYER_DESTINATION =
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+
     private Context mContext;
     private Flags mFlags;
     private ExecutorService mLightweightExecutorService;
@@ -364,6 +379,8 @@ public class PersistAdSelectionResultRunnerTest {
     private MockitoSession mStaticMockSession = null;
 
     private AuctionResultValidator mAuctionResultValidator;
+
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
 
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
@@ -426,7 +443,9 @@ public class PersistAdSelectionResultRunnerTest {
                         mForceContinueOnAbsentOwner,
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
-                        mAuctionResultValidator);
+                        mAuctionResultValidator,
+                        mFlags,
+                        mAdServicesLoggerMock);
     }
 
     @After
@@ -439,6 +458,10 @@ public class PersistAdSelectionResultRunnerTest {
     @Test
     public void testRunner_persistRemarketingResult_success() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
                 .when(mObliviousHttpEncryptorMock)
@@ -503,11 +526,49 @@ public class PersistAdSelectionResultRunnerTest {
                         WINNER_BUYER,
                         mAdSelectionEntryDaoSpy.getAdSelectionInitializationForId(AD_SELECTION_ID),
                         mAdSelectionEntryDaoSpy.getWinningCustomAudienceDataForId(AD_SELECTION_ID));
+
+        // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
+        verify(mAdServicesLoggerMock, times(2))
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
+        List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats.size()).isEqualTo(2);
+        // Verifies buyer destination log is correct.
+        DestinationRegisteredBeaconsReportedStats buyerDestinationStats = stats.get(0);
+        assertThat(buyerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(buyerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(buyerDestinationStats.getTableNumRows()).isEqualTo(2);
+        assertThat(buyerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
+        // Verifies seller destination log is correct.
+        DestinationRegisteredBeaconsReportedStats sellerDestinationStats = stats.get(1);
+        assertThat(sellerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(sellerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(2);
+        assertThat(sellerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
     }
 
     @Test
     public void testRunner_persistAppInstallResult_success() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
 
         doReturn(prepareDecryptedAuctionResultForAppInstallAd(AUCTION_RESULT))
                 .when(mObliviousHttpEncryptorMock)
@@ -572,12 +633,50 @@ public class PersistAdSelectionResultRunnerTest {
                         WINNER_BUYER,
                         mAdSelectionEntryDaoSpy.getAdSelectionInitializationForId(AD_SELECTION_ID),
                         mAdSelectionEntryDaoSpy.getWinningCustomAudienceDataForId(AD_SELECTION_ID));
+
+        // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
+        verify(mAdServicesLoggerMock, times(2))
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
+        List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats.size()).isEqualTo(2);
+        // Verifies buyer destination log is correct.
+        DestinationRegisteredBeaconsReportedStats buyerDestinationStats = stats.get(0);
+        assertThat(buyerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(buyerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(buyerDestinationStats.getTableNumRows()).isEqualTo(2);
+        assertThat(buyerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
+        // Verifies seller destination log is correct.
+        DestinationRegisteredBeaconsReportedStats sellerDestinationStats = stats.get(1);
+        assertThat(sellerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(sellerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(2);
+        assertThat(sellerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
     }
 
     @Test
     public void testRunner_persistRemarketingResult_withInvalidSellerReportingUriSuccess()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
 
         doReturn(
                         prepareDecryptedAuctionResultForRemarketingAd(
@@ -635,12 +734,50 @@ public class PersistAdSelectionResultRunnerTest {
                         mReportingLimits.getMaxRegisteredAdBeaconsTotalCount(),
                         mReportingLimits.getMaxRegisteredAdBeaconsPerAdTechCount(),
                         ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER);
+
+        // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
+        verify(mAdServicesLoggerMock, times(2))
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
+        List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats.size()).isEqualTo(2);
+        // Verifies buyer destination log is correct.
+        DestinationRegisteredBeaconsReportedStats buyerDestinationStats = stats.get(0);
+        assertThat(buyerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(buyerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(buyerDestinationStats.getTableNumRows()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
+        // Verifies seller destination log is correct.
+        DestinationRegisteredBeaconsReportedStats sellerDestinationStats = stats.get(1);
+        assertThat(sellerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(sellerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
     }
 
     @Test
     public void testRunner_persistAppInstallResult_withInvalidSellerReportingUriSuccess()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
 
         doReturn(
                         prepareDecryptedAuctionResultForAppInstallAd(
@@ -698,12 +835,50 @@ public class PersistAdSelectionResultRunnerTest {
                         mReportingLimits.getMaxRegisteredAdBeaconsTotalCount(),
                         mReportingLimits.getMaxRegisteredAdBeaconsPerAdTechCount(),
                         ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER);
+
+        // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
+        verify(mAdServicesLoggerMock, times(2))
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
+        List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats.size()).isEqualTo(2);
+        // Verifies buyer destination log is correct.
+        DestinationRegisteredBeaconsReportedStats buyerDestinationStats = stats.get(0);
+        assertThat(buyerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(buyerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(buyerDestinationStats.getTableNumRows()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
+        // Verifies seller destination log is correct.
+        DestinationRegisteredBeaconsReportedStats sellerDestinationStats = stats.get(1);
+        assertThat(sellerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(sellerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
     }
 
     @Test
     public void testRunner_persistRemarketingResult_withInvalidBuyerReportingUriSuccess()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
 
         doReturn(
                         prepareDecryptedAuctionResultForRemarketingAd(
@@ -761,6 +936,40 @@ public class PersistAdSelectionResultRunnerTest {
                         anyLong(),
                         anyLong(),
                         eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER));
+
+        // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
+        verify(mAdServicesLoggerMock, times(2))
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
+        List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats.size()).isEqualTo(2);
+        // Verifies buyer destination log is correct.
+        DestinationRegisteredBeaconsReportedStats buyerDestinationStats = stats.get(0);
+        assertThat(buyerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(buyerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(buyerDestinationStats.getTableNumRows()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
+        // Verifies seller destination log is correct.
+        DestinationRegisteredBeaconsReportedStats sellerDestinationStats = stats.get(1);
+        assertThat(sellerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(sellerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
     }
 
     // TODO(b/291680065): Remove the test when owner field is returned from B&A
@@ -768,6 +977,10 @@ public class PersistAdSelectionResultRunnerTest {
     public void testRunner_persistRemarketingResult_forceOnAbsentOwnerFalseSkipsValidation()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITHOUT_OWNER))
                 .when(mObliviousHttpEncryptorMock)
@@ -792,7 +1005,9 @@ public class PersistAdSelectionResultRunnerTest {
                         forceSearchOnAbsentOwner,
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
-                        mAuctionResultValidator);
+                        mAuctionResultValidator,
+                        mFlags,
+                        mAdServicesLoggerMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -809,6 +1024,40 @@ public class PersistAdSelectionResultRunnerTest {
                 WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
         verify(mCustomAudienceDaoMock, times(0)).getCustomAudiencesForBuyerAndName(any(), any());
         verify(mCustomAudienceDaoMock, times(0)).getCustomAudienceByPrimaryKey(any(), any(), any());
+
+        // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
+        verify(mAdServicesLoggerMock, times(2))
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
+        List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats.size()).isEqualTo(2);
+        // Verifies buyer destination log is correct.
+        DestinationRegisteredBeaconsReportedStats buyerDestinationStats = stats.get(0);
+        assertThat(buyerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(buyerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(buyerDestinationStats.getTableNumRows()).isEqualTo(2);
+        assertThat(buyerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
+        // Verifies seller destination log is correct.
+        DestinationRegisteredBeaconsReportedStats sellerDestinationStats = stats.get(1);
+        assertThat(sellerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(sellerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(2);
+        assertThat(sellerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
     }
 
     // TODO(b/291680065): Remove the test when owner field is returned from B&A
@@ -816,6 +1065,10 @@ public class PersistAdSelectionResultRunnerTest {
     public void testRunner_persistRemarketingResult_forceOnAbsentOwnerFalseFuzzySearch()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITHOUT_OWNER))
                 .when(mObliviousHttpEncryptorMock)
@@ -843,7 +1096,9 @@ public class PersistAdSelectionResultRunnerTest {
                         forceSearchOnAbsentOwner,
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
-                        mAuctionResultValidator);
+                        mAuctionResultValidator,
+                        mFlags,
+                        mAdServicesLoggerMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -861,6 +1116,40 @@ public class PersistAdSelectionResultRunnerTest {
         verify(mCustomAudienceDaoMock, times(1))
                 .getCustomAudiencesForBuyerAndName(WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
         verify(mCustomAudienceDaoMock, times(0)).getCustomAudienceByPrimaryKey(any(), any(), any());
+
+        // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
+        verify(mAdServicesLoggerMock, times(2))
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
+        List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats.size()).isEqualTo(2);
+        // Verifies buyer destination log is correct.
+        DestinationRegisteredBeaconsReportedStats buyerDestinationStats = stats.get(0);
+        assertThat(buyerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(buyerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(buyerDestinationStats.getTableNumRows()).isEqualTo(2);
+        assertThat(buyerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
+        // Verifies seller destination log is correct.
+        DestinationRegisteredBeaconsReportedStats sellerDestinationStats = stats.get(1);
+        assertThat(sellerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(sellerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(2);
+        assertThat(sellerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
     }
 
     @Test
@@ -967,7 +1256,9 @@ public class PersistAdSelectionResultRunnerTest {
                         mForceContinueOnAbsentOwner,
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
-                        mAuctionResultValidator);
+                        mAuctionResultValidator,
+                        mFlags,
+                        mAdServicesLoggerMock);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1119,6 +1410,10 @@ public class PersistAdSelectionResultRunnerTest {
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+
         doReturn(
                         prepareDecryptedAuctionResultForRemarketingAd(
                                 AUCTION_RESULT_WITH_INTERACTION_REPORTING_DATA_EXCEEDS_MAX))
@@ -1172,7 +1467,9 @@ public class PersistAdSelectionResultRunnerTest {
                         mForceContinueOnAbsentOwner,
                         reportingLimits,
                         mAdCounterHistogramUpdaterSpy,
-                        mAuctionResultValidator);
+                        mAuctionResultValidator,
+                        mFlags,
+                        mAdServicesLoggerMock);
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
@@ -1194,6 +1491,40 @@ public class PersistAdSelectionResultRunnerTest {
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .safelyInsertRegisteredAdInteractions(
                         anyLong(), any(), anyLong(), anyLong(), anyInt());
+
+        // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
+        verify(mAdServicesLoggerMock, times(2))
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
+        List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats.size()).isEqualTo(2);
+        // Verifies buyer destination log is correct.
+        DestinationRegisteredBeaconsReportedStats buyerDestinationStats = stats.get(0);
+        assertThat(buyerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(BUYER_DESTINATION);
+        assertThat(buyerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(buyerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .SMALLER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(buyerDestinationStats.getTableNumRows()).isEqualTo(0);
+        assertThat(buyerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
+        // Verifies seller destination log is correct.
+        DestinationRegisteredBeaconsReportedStats sellerDestinationStats = stats.get(1);
+        assertThat(sellerDestinationStats.getBeaconReportingDestinationType())
+                .isEqualTo(SELLER_DESTINATION);
+        assertThat(sellerDestinationStats.getAttemptedRegisteredBeacons()).isEqualTo(1);
+        assertThat(sellerDestinationStats.getAttemptedKeySizesRangeType())
+                .isEqualTo(
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType
+                                        .LARGER_THAN_MAXIMUM_KEY_SIZE));
+        assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(0);
+        assertThat(sellerDestinationStats.getAdServicesStatusCode())
+                .isEqualTo(ADSERVICES_STATUS_UNSET);
     }
 
     private byte[] prepareDecryptedAuctionResultForRemarketingAd(
@@ -1256,6 +1587,11 @@ public class PersistAdSelectionResultRunnerTest {
         @Override
         public long getFledgeCustomAudienceActiveTimeWindowInMs() {
             return FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;
+        }
+
+        @Override
+        public boolean getFledgeBeaconReportingMetricsEnabled() {
+            return FLEDGE_BEACON_REPORTING_METRICS_ENABLED_IN_TEST;
         }
     }
 
