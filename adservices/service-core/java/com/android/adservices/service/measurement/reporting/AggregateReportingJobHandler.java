@@ -374,8 +374,7 @@ public class AggregateReportingJobHandler {
                 .setTriggerDebugKey(aggregateReport.getTriggerDebugKey())
                 .setAggregationCoordinatorOrigin(aggregateReport.getAggregationCoordinatorOrigin())
                 .setDebugMode(
-                        mIsDebugInstance
-                                        && aggregateReport.getSourceDebugKey() != null
+                        aggregateReport.getSourceDebugKey() != null
                                         && aggregateReport.getTriggerDebugKey() != null
                                 ? "enabled"
                                 : null)
