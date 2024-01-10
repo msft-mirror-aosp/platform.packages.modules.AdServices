@@ -18,8 +18,12 @@ package com.android.adservices.ui.settings;
 
 import static com.android.adservices.service.FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -31,14 +35,13 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.BlockedTopicsSettingsTestUtil;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Class to test the CUJ that blocks/unblocks/resets topics with dialog enabled. */
-public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTestCase {
+public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest extends AdServicesUiTestCase {
     // Time out to start UI launcher.
     private static final int LAUNCHER_LAUNCH_TIMEOUT = 3000;
     // The epoch length to override. It would increase the test running time if it's too long. And
@@ -52,36 +55,33 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
                     .setTopicsKillSwitch(false)
                     .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)
                     .setDisableTopicsEnrollmentCheckForTests(true)
                     .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
+                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
+                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_DEBUG_UX, "GA_UX")
+                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
                     .setCompatModeFlags();
 
+    @Ignore("b/296642754")
     @Test
-    @Ignore("b/272511638")
-    public void topicBlockUnblockResetTest() throws Exception {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ui_toggle_speed_bump_enabled false");
+    public void topicBlockUnblockTest() throws Exception {
         // Launch main view of Privacy Sandbox Settings.
         ApkTestUtil.launchSettingView(mSpyContext, mDevice, LAUNCHER_LAUNCH_TIMEOUT);
 
         // Enter Topics Consent view.
         BlockedTopicsSettingsTestUtil.enterGaTopicsConsentView(mDevice);
 
-        // Enable Topics consent. If it has been enabled due to stale test failures, disable it and
-        // enable it again. This is to ensure no stale data or pending jobs.
-        //
-        // Note there is no dialog when the user opts out in GA.
         UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch2(mDevice);
-        if (consentSwitch.isChecked()) {
+        if (!consentSwitch.isChecked()) {
             consentSwitch.click();
         }
-        consentSwitch.click();
 
         // Navigate back to main view. This allows to refresh the topics list by re-entering Topics
         // consent view after a topic is generated . (There is no real-time listener)
@@ -102,13 +102,16 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
         // When there is no topic available to be blocked, it will display "no topics" text and the
         // "Block" button will not be displayed.
         assertThat(blockTopicButton).isNull();
+        ApkTestUtil.scrollTo(
+                mSpyContext, mDevice, R.string.settingsUI_topics_view_no_topics_ga_text);
         UiObject2 noTopicsText =
                 ApkTestUtil.getElement(
                         mSpyContext, mDevice, R.string.settingsUI_topics_view_no_topics_ga_text);
         assertThat(noTopicsText).isNotNull();
 
         // Click viewBlockedTopicsButton to view topics being blocked.
-        ApkTestUtil.scrollToAndClick(mDevice, R.string.settingsUI_view_blocked_topics_title);
+        ApkTestUtil.scrollToAndClick(
+                mSpyContext, mDevice, R.string.settingsUI_view_blocked_topics_title);
 
         // There is 1 topic being blocked and "Unblock" button should be visible. Unblock it.
         BlockedTopicsSettingsTestUtil.unblockATopicWithDialog(mDevice);
@@ -118,26 +121,5 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
                 ApkTestUtil.getElement(
                         mSpyContext, mDevice, R.string.settingsUI_no_blocked_topics_ga_text);
         assertThat(noUnblockedTopicsText).isNotNull();
-
-        // Press back to return to the Topics Consent view.
-        mDevice.pressBack();
-
-        // Verify there is a topic to be blocked.
-        assertThat(blockTopicButton).isNotNull();
-
-        // Reset blocked topics.
-        UiObject2 resetButton =
-                ApkTestUtil.scrollTo(
-                        mSpyContext, mDevice, R.string.settingsUI_reset_topics_ga_title);
-        BlockedTopicsSettingsTestUtil.resetATopicWithDialog(mDevice, resetButton);
-
-        // Scroll to consent switch and verify there is no topic to block after resetting.
-        consentSwitch =
-                ApkTestUtil.scrollTo(mSpyContext, mDevice, R.string.settingsUI_topics_switch_title);
-        assertThat(blockTopicButton).isNull();
-
-        // Disable user consent.
-        consentSwitch.click();
-        assertThat(consentSwitch.isChecked()).isFalse();
     }
 }
