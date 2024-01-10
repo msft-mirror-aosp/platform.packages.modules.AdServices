@@ -1,7 +1,6 @@
 {
   "description": "Three reporting windows configured for CTC - 2h (w1), 2d (w2) and expiry (w3). Source has T1(app) in W1 and T2(app) in W2.",
   "phflags_override": {
-    "measurement_enable_configurable_event_reporting_windows": "true",
     "measurement_event_reports_ctc_early_reporting_windows": "7200,172800"
   },
   "input": {

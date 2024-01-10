@@ -84,7 +84,6 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
     public void setup() throws UiObjectNotFoundException, IOException {
         mContext = spy(appContext.get());
 
-        doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
@@ -113,68 +112,6 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
     }
-
-    @Test
-    @FlakyTest(bugId = 302607350)
-    public void moreButtonTest() throws Exception {
-        startActivity(true);
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(2000);
-        }
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
-    }
-
-    @Test
-    public void acceptedConfirmationScreenTest() throws Exception {
-        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
-
-        startActivity(true);
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text_eu);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-        while (moreButton.exists()) {
-            moreButton.click();
-            Thread.sleep(2000);
-        }
-        assertThat(leftControlButton.exists()).isTrue();
-        assertThat(rightControlButton.exists()).isTrue();
-        assertThat(moreButton.exists()).isFalse();
-
-        rightControlButton.click();
-        UiObject acceptedTitle = getElement(R.string.notificationUI_confirmation_accept_title);
-        assertThat(acceptedTitle.exists()).isTrue();
-    }
-
-    @Test
-    @FlakyTest(bugId = 302607350)
-    public void notificationEuGaTest() throws Exception {
-        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        doReturn("GA_UX").when(mMockFlags).getDebugUx();
-
-        startActivity(true);
-
-        UiObject notificationEuGaTitle = getElement(R.string.notificationUI_header_ga_title_eu);
-        assertThat(notificationEuGaTitle.exists()).isTrue();
-
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-
-        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-    }
-
     @Test
     @FlakyTest(bugId = 302607350)
     public void notificationRowGaTest() throws Exception {
@@ -192,59 +129,29 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
     }
 
     @Test
-    public void acceptedConfirmationScreenGaTest() throws Exception {
+    @FlakyTest(bugId = 302607350)
+    public void notificationEuGaTest() throws Exception {
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
 
         startActivity(true);
 
         UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
+                getElement(R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
+                getElement(R.string.notificationUI_confirmation_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
 
         rightControlButton.click();
 
-        UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
+        UiObject acceptedTitle = getElement(R.string.notificationUI_header_ga_title_eu_v2);
         assertThat(acceptedTitle.exists()).isTrue();
         UiObject leftControlButtonOnSecondPage =
-                getElement(R.string.notificationUI_confirmation_left_control_button_text);
+                getElement(R.string.notificationUI_left_control_button_text_eu_v2);
         UiObject rightControlButtonOnSecondPage =
-                getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButtonOnSecondPage = getElement(R.string.notificationUI_more_button_text);
-        verifyControlsAndMoreButtonAreDisplayed(
-                leftControlButtonOnSecondPage,
-                rightControlButtonOnSecondPage,
-                moreButtonOnSecondPage);
-    }
-
-    @Test
-    @FlakyTest(bugId = 302607350)
-    public void declinedConfirmationScreenGaTest() throws Exception {
-        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        doReturn("GA_UX").when(mMockFlags).getDebugUx();
-
-        startActivity(true);
-
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_ga_text_eu);
-        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-
-        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-
-        leftControlButton.click();
-
-        UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
-        assertThat(acceptedTitle.exists()).isTrue();
-        UiObject leftControlButtonOnSecondPage =
-                getElement(R.string.notificationUI_confirmation_left_control_button_text);
-        UiObject rightControlButtonOnSecondPage =
-                getElement(R.string.notificationUI_confirmation_right_control_button_text);
+                getElement(R.string.notificationUI_right_control_button_ga_text_eu_v2);
         UiObject moreButtonOnSecondPage = getElement(R.string.notificationUI_more_button_text);
         verifyControlsAndMoreButtonAreDisplayed(
                 leftControlButtonOnSecondPage,

@@ -172,6 +172,24 @@
       ]
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesServiceCoreCommonUnitTests.
+      "name": "AdServicesServiceCoreCommonUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdExtServicesServiceCoreCommonUnitTests.
+      "name": "AdExtServicesServiceCoreCommonUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreAppSearchUnitTests.
       "name": "AdServicesServiceCoreAppSearchUnitTests[com.google.android.adservices.apex]",
       "options": [
@@ -635,6 +653,14 @@
       ]
     },
     {
+      "name": "AdServicesServiceCoreCommonUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "AdServicesServiceCoreAppSearchUnitTests",
       "options": [
         {
@@ -651,9 +677,7 @@
       ]
     },
     {
-      // Install com.google.android.adservices.apex and run
-      // AdServicesServiceCoreMeasurementUnitTests.
-      "name": "AdServicesServiceCoreMeasurementUnitTests[com.google.android.adservices.apex]",
+      "name": "AdServicesServiceCoreMeasurementUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -661,9 +685,7 @@
       ]
     },
     {
-      // Install com.google.android.extservices.apex and run
-      // AdExtServicesServiceCoreMeasurementUnitTests.
-      "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
+      "name": "AdExtServicesServiceCoreMeasurementUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

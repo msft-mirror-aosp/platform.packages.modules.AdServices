@@ -28,6 +28,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.data.encryptionkey.EncryptionKeyDaoTest.ENCRYPTION_KEY1;
+import static com.android.adservices.data.enrollment.EnrollmentDaoTest.ENROLLMENT_DATA1;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -51,6 +53,7 @@ import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.PREBUILT_FEATURE_IS_DISABLED;
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -119,12 +122,9 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
@@ -133,6 +133,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
@@ -151,6 +152,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -636,8 +638,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
+    private EnrollmentDao mEnrollmentDao;
     private EncryptionKeyDao mEncryptionKeyDao;
-    private EncryptionContextDao mEncryptionContextDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
@@ -655,6 +657,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Before
     public void setUp() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+
         mAdSelectionEntryDaoSpy =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
@@ -667,10 +671,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
                         .build()
                         .frequencyCapDao();
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
-        mEncryptionContextDao = serverDb.encryptionContextDao();
-        mEncryptionKeyDao = serverDb.encryptionKeyDao();
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
+        mEnrollmentDao = EnrollmentDao.getInstance(mContext);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
@@ -711,8 +713,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -867,7 +869,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionSuccess_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -963,8 +964,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1089,8 +1090,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1235,8 +1236,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1377,8 +1378,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1500,8 +1501,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1607,7 +1608,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionSuccess_prebuiltScoringLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1703,7 +1703,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionSuccess_prebuiltFeatureDisabled_failure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         Flags prebuiltDisabledFlags =
                 new AdSelectionE2ETestFlags() {
                     @Override
@@ -1719,8 +1718,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1818,8 +1817,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1913,7 +1912,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionSuccess_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2007,8 +2005,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2131,8 +2129,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2276,8 +2274,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2417,8 +2415,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2539,8 +2537,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2645,7 +2643,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithV3Header_scriptFail()
             throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -2714,7 +2711,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelection_getTooHighHeader_failWithError() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -2783,7 +2779,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionWithOverride_getTooHighHeader_failWithError() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -2879,7 +2874,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionContextualAds_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2905,7 +2899,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -2976,7 +2970,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @FlakyTest(bugId = 304764127)
     @Test
     public void testRunAdSelectionContextualAds_UseOverrides_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3002,7 +2995,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3091,8 +3084,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3152,7 +3145,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionContextualAds_Disabled_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3178,7 +3170,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3230,8 +3222,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3277,7 +3269,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionOnlyContextualAds_NoBuyers_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -3296,7 +3287,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of())
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3338,8 +3329,45 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    public void testRunAdSelectionOnlyContextualAds_unauthenticatedContextualAdsRemoved_Success()
+            throws Exception {
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of())
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setBuyerSignedContextualAds(createUnauthenticatedContextualAds())
+                        .build();
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackFailed(resultsCallback);
+        assertTrue(
+                resultsCallback
+                        .mFledgeErrorResponse
+                        .getErrorMessage()
+                        .contains(ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE));
+        assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
+    }
+
+    @Test
     public void testRunAdSelectionOnlyContextualAds_NoCAs_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -3365,7 +3393,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3417,7 +3445,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionOnlyContextualAds_NoCAsNoNetworkCall_Success() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -3457,7 +3484,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 paramKey,
                                 paramValue));
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
                         .setSeller(mSeller)
                         .setDecisionLogicUri(prebuiltUri)
@@ -3508,7 +3535,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     @FlakyTest(bugId = 315521295)
     public void testRunAdSelectionNoContextualAds_NoCAs_Failure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -3534,7 +3560,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logRunAdSelectionProcessReportedStats(any());
 
         AdSelectionConfig adSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
                         .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(mSeller)
                         .setDecisionLogicUri(
@@ -3577,8 +3603,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionWithRevokedUserConsentSuccess() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
@@ -3653,7 +3677,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMultipleCAsSuccess_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3767,7 +3790,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMultipleCAsSuccess_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3881,8 +3903,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMultipleCAsNoCachingSuccess_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -3962,8 +3982,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4002,8 +4022,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionMultipleCAsNoCachingSuccess_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -4083,8 +4101,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4122,8 +4140,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMultipleCAsJSCachedSuccess_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -4205,8 +4221,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4247,8 +4263,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMultipleCAsJSCachedSuccess_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -4330,8 +4344,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4373,7 +4387,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSucceedsWithOverride_preV3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -4455,8 +4468,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4511,7 +4524,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     @FlakyTest(bugId = 304764127)
     public void testRunAdSelectionSucceedsWithOverride_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -4595,8 +4607,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4650,7 +4662,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionActiveCAs() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -4743,7 +4754,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionNoCAsActive() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -4926,7 +4936,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionPartialAdsExcludedBidding() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5034,7 +5043,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMissingBiddingLogicFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -5140,7 +5148,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMissingScoringLogicFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5254,7 +5261,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionErrorFetchingScoringLogicFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5367,7 +5373,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionPartialMissingBiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5485,7 +5490,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionPartialNonPositiveScoring() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5608,7 +5612,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionNonPositiveScoringFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5728,7 +5731,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionBiddingTimesOutForCA() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -5786,8 +5788,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5907,7 +5909,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testRunAdSelectionImposesPerBuyerBiddingTimeout_preV3BiddingLogic()
             throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(6);
         doAnswer(
@@ -6039,8 +6040,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6115,8 +6116,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6177,7 +6178,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @FlakyTest(bugId = 304764127)
     @Test
     public void testRunAdSelectionImposesPerBuyerBiddingTimeout_v3BiddingLogic() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(6);
         doAnswer(
@@ -6309,8 +6309,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6385,8 +6385,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6446,7 +6446,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionScoringTimesOut() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -6504,8 +6503,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6677,7 +6676,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMissingBiddingSignalsFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -6770,7 +6768,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     @FlakyTest(bugId = 315521295)
     public void testRunAdSelectionMissingScoringSignalsFailure() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -6872,7 +6869,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionMissingPartialBiddingSignalsSuccess() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -6988,8 +6984,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionFailsWithInvalidPackageName() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         String invalidPackageName = CALLER_PACKAGE_NAME + "invalidPackageName";
 
         doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
@@ -7007,7 +7001,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredCustomAudiencePermission(
+                .assertAppDeclaredPermission(
                         mContext, invalidPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
 
         // Logger calls come after the callback is returned
@@ -7075,13 +7069,12 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         geq(0));
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredCustomAudiencePermission(
+                .assertAppDeclaredPermission(
                         mContext, invalidPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
     }
 
     @Test
     public void testRunAdSelectionFailsWhenAppCannotUsePPApi() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
         doThrow(new FilterException(new FledgeAuthorizationFilter.AdTechNotAllowedException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
@@ -7193,8 +7186,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -7327,8 +7320,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -7462,8 +7455,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mFrequencyCapDao,
-                        mEncryptionContextDao,
                         mEncryptionKeyDao,
+                        mEnrollmentDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -7561,8 +7554,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         // A null package means WebView is not installed
         doReturn(null).when(WebView::getCurrentWebViewPackage);
 
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
-
         // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
         JSScriptEngine.getInstance(mContext, LoggerFactory.getFledgeLogger()).shutdown();
 
@@ -7575,8 +7566,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             mCustomAudienceDao,
                             mEncodedPayloadDao,
                             mFrequencyCapDao,
-                            mEncryptionContextDao,
                             mEncryptionKeyDao,
+                            mEnrollmentDao,
                             mAdServicesHttpsClient,
                             mDevContextFilter,
                             mLightweightExecutorService,
@@ -7803,6 +7794,21 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 adCost);
     }
 
+    private Map<AdTechIdentifier, SignedContextualAds> createUnauthenticatedContextualAds() {
+        Map<AdTechIdentifier, SignedContextualAds> authenticatedContextualAds =
+                createContextualAds();
+        Map<AdTechIdentifier, SignedContextualAds> unauthenticatedContextualAds = new HashMap<>();
+        byte[] invalidSignatures = new byte[] {1, 2, 3};
+        for (Map.Entry<AdTechIdentifier, SignedContextualAds> buyersBundle :
+                authenticatedContextualAds.entrySet()) {
+            AdTechIdentifier buyer = buyersBundle.getKey();
+            SignedContextualAds ads = buyersBundle.getValue();
+            unauthenticatedContextualAds.put(
+                    buyer, ads.cloneToBuilder().setSignature(invalidSignatures).build());
+        }
+        return unauthenticatedContextualAds;
+    }
+
     private Map<AdTechIdentifier, SignedContextualAds> createContextualAds() {
         Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
 
@@ -7813,15 +7819,48 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
                                 .getHost());
         SignedContextualAds contextualAds2 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
-                                buyer2, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(
-                                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2))
-                        .build();
+                SignedContextualAdsFixture.signContextualAds(
+                        SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
+                                        buyer2, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
+                                .setDecisionLogicUri(
+                                        mMockWebServerRule.uriForPath(
+                                                BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)));
         buyerContextualAds.put(buyer2, contextualAds2);
-
+        persistEncryptionKeyInDb(buyerContextualAds);
         return buyerContextualAds;
+    }
+
+    private void persistEncryptionKeyInDb(
+            Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds) {
+        for (AdTechIdentifier adTech : buyerContextualAds.keySet()) {
+            String enrollmentId = adTech + "-enrollment-id";
+            String sourceRegistration = CommonFixture.getUri(adTech, "/source").toString();
+            String triggerRegistration = CommonFixture.getUri(adTech, "/trigger").toString();
+            String attributionReporting = CommonFixture.getUri(adTech, "/attrReport").toString();
+            String responseBasedRegistration = CommonFixture.getUri(adTech, "/response").toString();
+            String encryptionKeyUrl = CommonFixture.getUri(adTech, "/keys").toString();
+            mEnrollmentDao.insert(
+                    ENROLLMENT_DATA1
+                            .cloneToBuilder()
+                            .setEnrollmentId(enrollmentId)
+                            .setAttributionSourceRegistrationUrl(sourceRegistration)
+                            .setAttributionTriggerRegistrationUrl(triggerRegistration)
+                            .setAttributionReportingUrl(attributionReporting)
+                            .setRemarketingResponseBasedRegistrationUrl(responseBasedRegistration)
+                            .setEncryptionKeyUrl(encryptionKeyUrl)
+                            .build());
+            Uri reportingOriginUrl = CommonFixture.getUri(adTech, "/reportingOriginUrl");
+            mEncryptionKeyDao.insert(
+                    ENCRYPTION_KEY1
+                            .cloneToBuilder()
+                            .setEnrollmentId(enrollmentId)
+                            .setKeyType(EncryptionKey.KeyType.SIGNING)
+                            .setEncryptionKeyUrl(encryptionKeyUrl)
+                            .setProtocolType(EncryptionKey.ProtocolType.ECDSA)
+                            .setBody(PUBLIC_TEST_KEY_STRING)
+                            .setReportingOrigin(reportingOriginUrl)
+                            .build());
+        }
     }
 
     private void verifyErrorMessageIsCorrect(

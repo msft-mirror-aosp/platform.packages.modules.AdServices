@@ -16,7 +16,10 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
@@ -289,7 +292,7 @@ public class AggregateReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
@@ -299,7 +302,7 @@ public class AggregateReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
@@ -324,7 +327,7 @@ public class AggregateReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportingJobsThrowCryptoException()
                     && ThreadLocalRandom.current().nextFloat()
@@ -338,7 +341,7 @@ public class AggregateReportingJobHandler {
             // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportingJobsThrowUnaccountedException()
                     && ThreadLocalRandom.current().nextFloat()
@@ -371,8 +374,7 @@ public class AggregateReportingJobHandler {
                 .setTriggerDebugKey(aggregateReport.getTriggerDebugKey())
                 .setAggregationCoordinatorOrigin(aggregateReport.getAggregationCoordinatorOrigin())
                 .setDebugMode(
-                        mIsDebugInstance
-                                        && aggregateReport.getSourceDebugKey() != null
+                        aggregateReport.getSourceDebugKey() != null
                                         && aggregateReport.getTriggerDebugKey() != null
                                 ? "enabled"
                                 : null)

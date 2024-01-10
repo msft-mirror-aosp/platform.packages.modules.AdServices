@@ -51,7 +51,7 @@ import java.util.concurrent.Executors;
 public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
 
     // Test constants for testing encryption
-    static final String PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
+    static final String TEST_PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
 
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
@@ -470,6 +470,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
         // Set flags for encryption test
         flags.setFlag(FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED, true);
         flags.setFlag(FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9, true);
+        // Override encryption key for testing
+        flags.setFlag(FlagsConstants.KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY, TEST_PUBLIC_KEY_BASE64);
 
         // The Test App has 1 SDK: sdk6
         // sdk6 calls the Topics API.
@@ -519,7 +521,7 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
         assertThat(sdk6Result.getEncryptedTopics()).hasSize(1);
         assertThat(sdk6Result.getEncryptedTopics().get(0).getEncryptedTopic()).isNotNull();
         assertThat(sdk6Result.getEncryptedTopics().get(0).getKeyIdentifier())
-                .isEqualTo(PUBLIC_KEY_BASE64);
+                .isEqualTo(TEST_PUBLIC_KEY_BASE64);
         assertThat(sdk6Result.getEncryptedTopics().get(0).getEncapsulatedKey()).isNotNull();
     }
 

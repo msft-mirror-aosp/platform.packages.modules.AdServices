@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.adselection.signature;
 
-import static android.adservices.adselection.SignedContextualAdsFixture.PLACEHOLDER_SIGNATURE;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdWithBid;
@@ -42,6 +40,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class BinarySerializerSignedContextualAdsTest {
+    public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
+
     private SignedContextualAdsHashUtil mSerializer;
 
     @Before
@@ -131,7 +131,7 @@ public class BinarySerializerSignedContextualAdsTest {
                                                         .setRenderUri(Uri.parse(adRenderUri))
                                                         .build(),
                                                 Double.parseDouble(bid))))
-                        .setSignature(PLACEHOLDER_SIGNATURE)
+                        .setSignature(TEST_SIGNATURE)
                         .build();
 
         byte[] serialized = new SignedContextualAdsHashUtil().serialize(contextualAds);
@@ -203,7 +203,7 @@ public class BinarySerializerSignedContextualAdsTest {
                                                         .setRenderUri(Uri.parse(adRenderUri))
                                                         .build(),
                                                 Double.parseDouble(bid))))
-                        .setSignature(PLACEHOLDER_SIGNATURE)
+                        .setSignature(TEST_SIGNATURE)
                         .build();
 
         byte[] serialized = new SignedContextualAdsHashUtil().serialize(contextualAds);

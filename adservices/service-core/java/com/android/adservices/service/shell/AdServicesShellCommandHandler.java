@@ -21,6 +21,7 @@ import android.util.Log;
 
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -45,24 +46,30 @@ public final class AdServicesShellCommandHandler {
 
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_ATTRIBUTION_ACCESS = "is-allowed-attribution-access";
+
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
             "is-allowed-custom-audiences-access";
+
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
+
     @VisibleForTesting
     static final String HELP_ECHO =
             CMD_ECHO + " <message> - prints the given message (useful to check cmd is working).";
+
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_ATTRIBUTION_ACCESS =
             CMD_IS_ALLOWED_ATTRIBUTION_ACCESS
                     + " <package_name> <enrollment_id> - checks if the given enrollment id is"
                     + " allowed to use the Attribution APIs in the given app.";
+
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
             CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS
                     + " <package_name> <enrollment_id> - checks if the given enrollment id is"
                     + " allowed to use the Custom Audience APIs in the given app.";
+
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
             CMD_IS_ALLOWED_TOPICS_ACCESS
@@ -74,6 +81,7 @@ public final class AdServicesShellCommandHandler {
 
     @VisibleForTesting
     static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s). Syntax: %s";
+
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
     private static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
@@ -81,23 +89,27 @@ public final class AdServicesShellCommandHandler {
     private static final int RESULT_GENERIC_ERROR = -1;
 
     private final PrintWriter mOut;
+    private final PrintWriter mErr;
 
     private String[] mArgs;
     private int mArgPos;
     private String mCurArgData;
 
+    /** If PrintWriter {@code err} is not provided, we use {@code out} for the {@code err}. */
     public AdServicesShellCommandHandler(PrintWriter out) {
+        this(out, /* err= */ out);
+    }
+
+    public AdServicesShellCommandHandler(PrintWriter out, PrintWriter err) {
         mOut = Objects.requireNonNull(out, "out cannot be null");
+        mErr = Objects.requireNonNull(err, "err cannot be null");
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
     public int run(String... args) {
         Objects.requireNonNull(args, "args cannot be null");
-        // TODO(b/303886367): use Preconditions
-        if (args.length < 1) {
-            throw new IllegalArgumentException(
-                    "must have at least one argument (the command itself)");
-        }
+        Preconditions.checkArgument(
+                args.length >= 1, "must have at least one argument (the command itself)");
         if (DEBUG) {
             Log.d(TAG, "run(): " + Arrays.toString(args));
         }
@@ -112,13 +124,14 @@ public final class AdServicesShellCommandHandler {
             }
         } catch (Throwable e) {
             // TODO(b/308009734): need to test this
-            mOut.printf("Exception occurred while executing %s\n", Arrays.toString(mArgs));
+            mErr.printf("Exception occurred while executing %s\n", Arrays.toString(mArgs));
             e.printStackTrace(mOut);
         } finally {
             if (DEBUG) {
                 Log.d(TAG, "Flushing output");
             }
             mOut.flush();
+            mErr.flush();
         }
         if (DEBUG) {
             Log.d(TAG, "Sending command result: " + res);
@@ -168,7 +181,7 @@ public final class AdServicesShellCommandHandler {
     }
 
     private int invalidArgsError(String syntax) {
-        mOut.println(String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax));
+        mErr.println(String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax));
         return RESULT_GENERIC_ERROR;
     }
 
@@ -188,9 +201,9 @@ public final class AdServicesShellCommandHandler {
             case CMD_SHORT_HELP:
             case CMD_HELP:
                 onHelp();
-                return RESULT_GENERIC_ERROR;
+                return RESULT_OK;
             case "":
-                mOut.println(ERROR_EMPTY_COMMAND);
+                mErr.println(ERROR_EMPTY_COMMAND);
                 return RESULT_GENERIC_ERROR;
             case CMD_ECHO:
                 return runEcho();
@@ -199,7 +212,7 @@ public final class AdServicesShellCommandHandler {
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
             default:
-                mOut.printf("Unknown command: %s\n", cmd);
+                mErr.printf("Unknown command: %s\n", cmd);
                 return RESULT_GENERIC_ERROR;
         }
     }
