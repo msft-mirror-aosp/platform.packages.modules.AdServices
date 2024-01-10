@@ -49,3 +49,10 @@ flag {
     description: "Get the the effective target Sdk version for the sdk sandbox process"
     bug: "271547387"
 }
+
+flag {
+    name: "sdk_sandbox_dex_verifier"
+    namespace: "sdk_sandbox"
+    description: "Enables the static dex verifier for the SDK sandbox to run on new SDKs"
+    bug: "231441674"
+}
