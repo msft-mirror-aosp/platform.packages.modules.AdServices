@@ -128,7 +128,7 @@ public class ApkTestUtil {
         try {
             Thread.sleep(SCROLL_TIMEOUT);
         } catch (InterruptedException e) {
-            LogUtil.e("InterruptedException:", e.getMessage());
+            LogUtil.e("InterruptedException: %s", e.getMessage());
         }
         return obj;
     }
