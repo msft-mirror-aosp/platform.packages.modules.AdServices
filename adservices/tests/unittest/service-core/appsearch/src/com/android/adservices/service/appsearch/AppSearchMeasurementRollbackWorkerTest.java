@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @SmallTest
 public class AppSearchMeasurementRollbackWorkerTest {
@@ -157,6 +158,8 @@ public class AppSearchMeasurementRollbackWorkerTest {
                         RuntimeException.class,
                         () -> mWorker.clearAdServicesDeletionOccurred("mock_row_id"));
         assertThat(e).hasMessageThat().contains(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).hasCauseThat().isNotNull();
+        assertThat(e).hasCauseThat().isInstanceOf(TimeoutException.class);
     }
 
     @Test
@@ -276,6 +279,8 @@ public class AppSearchMeasurementRollbackWorkerTest {
                                 spyWorker.recordAdServicesDeletionOccurred(
                                         AdServicesManager.MEASUREMENT_DELETION, APEX_VERSION));
         assertThat(e).hasMessageThat().contains(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).hasCauseThat().isNotNull();
+        assertThat(e).hasCauseThat().isInstanceOf(TimeoutException.class);
     }
 
     @Test

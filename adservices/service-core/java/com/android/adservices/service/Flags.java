@@ -4517,7 +4517,7 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default value of the timeout for AppSearch read operations */
-    int DEFAULT_APPSEARCH_READ_TIMEOUT_MS = 500;
+    int DEFAULT_APPSEARCH_READ_TIMEOUT_MS = 750;
 
     /**
      * Gets the value of the timeout for AppSearch read operations, in milliseconds.
