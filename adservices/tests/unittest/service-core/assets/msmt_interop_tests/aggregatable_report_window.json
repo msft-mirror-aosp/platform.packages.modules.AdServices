@@ -231,7 +231,8 @@
               "key": "0x11",
               "value": 123
             }
-          ]
+          ],
+          "source_registration_time": "1704758400"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         // 7,200,000 ms  = 3,600 s (clamped aggregatable_report_window)  + 1
@@ -258,7 +259,8 @@
               "key": "0x32",
               "value": 321
             }
-          ]
+          ],
+          "source_registration_time": "1704758400"
         },
         // 90,000,000 ms  = 86,400 s (clamped aggregatable_report_window)  + 1
         // hour (base delay) + 1s (source's timestamp) - 1 ms offset

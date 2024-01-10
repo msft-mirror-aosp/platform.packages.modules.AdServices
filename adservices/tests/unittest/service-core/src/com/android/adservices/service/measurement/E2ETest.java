@@ -134,6 +134,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String HISTOGRAMS = "histograms";
         String SOURCE_DEBUG_KEY = "source_debug_key";
+        String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
@@ -532,9 +533,8 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return Arrays.hashCode(objArray);
     }
 
-    private static int hashForAggregateReportObject(OutputType outputType,
-            JSONObject obj) {
-        Object[] objArray = new Object[5];
+    private static int hashForAggregateReportObject(OutputType outputType, JSONObject obj) {
+        Object[] objArray = new Object[6];
         // TODO (b/306863121) add time to hash
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
         objArray[0] =
@@ -546,6 +546,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
         objArray[3] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
         objArray[4] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
+        objArray[5] = payload.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "");
         return Arrays.hashCode(objArray);
     }
 
@@ -669,6 +670,14 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             log("Aggregate histogram mismatch");
             return false;
         }
+        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "")
+                .equals(
+                        payload2.optString(
+                                AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, ""))) {
+            log("Source registration time mismatch");
+            return false;
+        }
+
         return matchReportTimeAndReportTo(reportType, expected, actual);
     }
 
