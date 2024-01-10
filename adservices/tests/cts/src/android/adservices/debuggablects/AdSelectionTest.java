@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class AdSelectionTest extends FledgeScenarioTest {
 
@@ -228,17 +229,17 @@ public class AdSelectionTest extends FledgeScenarioTest {
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
         setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig config = makeAdSelectionConfig();
         CustomAudience customAudience =
                 makeCustomAudience(SHOES_CA)
-                        .setExpirationTime(Instant.now().plus(1, ChronoUnit.SECONDS))
+                        .setExpirationTime(Instant.now().plus(5, ChronoUnit.SECONDS))
                         .build();
-        AdSelectionConfig config = makeAdSelectionConfig();
 
-        mCustomAudienceClient.joinCustomAudience(customAudience).get(1, TimeUnit.SECONDS);
+        mCustomAudienceClient.joinCustomAudience(customAudience).get(5, TimeUnit.SECONDS);
         Log.d(TAG, "Joined custom audience");
         // Make a call to verify ad selection succeeds before timing out.
         mAdSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS);
-        Thread.sleep(4000);
+        Thread.sleep(7000);
 
         Exception selectAdsException =
                 assertThrows(
@@ -354,6 +355,32 @@ public class AdSelectionTest extends FledgeScenarioTest {
         } finally {
             setDebugReportingEnabledForTesting(false);
             leaveCustomAudience(SHOES_CA);
+            leaveCustomAudience(SHIRTS_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    @Test
+    public void testAdSelection_withHighLatencyBackend_doesNotWinAuction() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-053.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig config = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(SHIRTS_CA);
+            Exception selectAdsException =
+                    assertThrows(
+                            ExecutionException.class,
+                            () ->
+                                    mAdSelectionClient
+                                            .selectAds(config)
+                                            .get(TIMEOUT, TimeUnit.SECONDS));
+            assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+        } finally {
             leaveCustomAudience(SHIRTS_CA);
         }
 

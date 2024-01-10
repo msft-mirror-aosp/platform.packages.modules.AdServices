@@ -2,7 +2,9 @@
   "description": "A2W test for trigger-aggregate-storage-limit debug report",
   "phflags_override": {
     "measurement_debug_join_key_enrollment_allowlist": "enrollment-id-ad-tech1.test",
-    "measurement_max_aggregate_reports_per_destination": "1"
+    "measurement_max_aggregate_reports_per_destination": "1",
+    "measurement_flex_api_max_information_gain_dual_destination_event": "9",
+    "measurement_flex_api_max_information_gain_dual_destination_navigation": "14"
   },
   "input": {
     "sources": [
@@ -190,7 +192,8 @@
             }
           ],
           "source_debug_key": "347982378",
-          "trigger_debug_key": "8971346781"
+          "trigger_debug_key": "8971346781",
+          "source_registration_time": "1643155200"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643325573000"
@@ -207,7 +210,8 @@
             }
           ],
           "source_debug_key": "347982378",
-          "trigger_debug_key": "8971346781"
+          "trigger_debug_key": "8971346781",
+          "source_registration_time": "1643155200"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "report_time": "1643321973000"

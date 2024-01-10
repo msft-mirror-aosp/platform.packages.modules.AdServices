@@ -184,15 +184,13 @@ public abstract class E2EMockTest extends E2ETest {
                         new AsyncSourceFetcher(
                                 sContext,
                                 mEnrollmentDao,
-                                mFlags,
-                                AdServicesLoggerImpl.getInstance()));
+                                mFlags));
         mAsyncTriggerFetcher =
                 spy(
                         new AsyncTriggerFetcher(
                                 sContext,
                                 mEnrollmentDao,
-                                mFlags,
-                                AdServicesLoggerImpl.getInstance()));
+                                mFlags));
         mDebugReportApi =
                 new DebugReportApi(
                         sContext,
@@ -632,6 +630,12 @@ public abstract class E2EMockTest extends E2ETest {
         if (!triggerDebugKey.isEmpty()) {
             aggregateJson.put(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, triggerDebugKey);
         }
+        if (sharedInfo.has(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME)) {
+            aggregateJson.put(
+                    AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME,
+                    sharedInfo.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME));
+        }
+
         return aggregateJson;
     }
 

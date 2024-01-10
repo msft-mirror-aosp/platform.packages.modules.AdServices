@@ -49,7 +49,10 @@ import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBid
 import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.Throttler;
@@ -76,6 +79,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -123,8 +127,11 @@ public abstract class AdSelectionRunner {
     static final String ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED =
             "On device auction kill switch enabled";
 
+    @NonNull protected final Context mContext;
     @NonNull protected final CustomAudienceDao mCustomAudienceDao;
     @NonNull protected final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull protected final EncryptionKeyDao mEncryptionKeyDao;
+    @NonNull protected final EnrollmentDao mEnrollmentDao;
     @NonNull protected final ListeningExecutorService mLightweightExecutorService;
     @NonNull protected final ListeningExecutorService mBackgroundExecutorService;
     @NonNull protected final ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -157,6 +164,8 @@ public abstract class AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
@@ -173,6 +182,8 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(encryptionKeyDao);
+        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(adServicesLogger);
@@ -184,8 +195,11 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(debugReporting);
         Objects.requireNonNull(adSelectionExecutionLogger);
 
+        mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
+        mEncryptionKeyDao = encryptionKeyDao;
+        mEnrollmentDao = enrollmentDao;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mScheduledExecutor = scheduledExecutor;
@@ -209,6 +223,8 @@ public abstract class AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
@@ -227,6 +243,8 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(encryptionKeyDao);
+        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(scheduledExecutor);
@@ -240,8 +258,11 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
 
+        mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
+        mEncryptionKeyDao = encryptionKeyDao;
+        mEnrollmentDao = enrollmentDao;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mScheduledExecutor = scheduledExecutor;
@@ -277,7 +298,6 @@ public abstract class AdSelectionRunner {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SELECTION);
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
-        AdSelectionConfig adSelectionConfig = inputParams.getAdSelectionConfig();
 
         try {
             ListenableFuture<Void> filterAndValidateRequestFuture =
@@ -501,7 +521,7 @@ public abstract class AdSelectionRunner {
                     @NonNull final String callerPackageName) {
         sLogger.v("Beginning Ad Selection Orchestration");
 
-        AdSelectionConfig adSelectionConfigInput = adSelectionConfig;
+        AdSelectionConfig adSelectionConfigInput;
         if (!mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
             // Empty all contextual ads if the feature is disabled
             sLogger.v("Contextual flow is disabled");
@@ -594,9 +614,7 @@ public abstract class AdSelectionRunner {
 
     private int countBuyersRequested(@NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
-        return adSelectionConfig.getCustomAudienceBuyers().stream()
-                .collect(Collectors.toSet())
-                .size();
+        return new HashSet<>(adSelectionConfig.getCustomAudienceBuyers()).size();
     }
 
     private int countBuyersFromCustomAudiences(
@@ -728,10 +746,27 @@ public abstract class AdSelectionRunner {
             AdSelectionConfig adSelectionConfig) {
         Map<AdTechIdentifier, SignedContextualAds> filteredContextualAdsMap = new HashMap<>();
         sLogger.v("Filtering contextual ads in Ad Selection Config");
+        boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
+        ProtectedAudienceSignatureManager signatureManager =
+                new ProtectedAudienceSignatureManager(
+                        mEnrollmentDao, mEncryptionKeyDao, isEnrollmentCheckEnabled);
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
                 adSelectionConfig.getBuyerSignedContextualAds().entrySet()) {
+            if (!signatureManager.isVerified(entry.getKey(), entry.getValue())) {
+                sLogger.v(
+                        "Contextual ads for buyer: '%s' have an invalid signature and will be"
+                                + " removed from the auction",
+                        entry.getKey());
+                continue;
+            }
             filteredContextualAdsMap.put(
                     entry.getKey(), mAdFilterer.filterContextualAds(entry.getValue()));
+            sLogger.v(
+                    "Buyer '%s' has a valid signature. It's contextual ads filtered from "
+                            + "%s ad(s) to %s ad(s)",
+                    entry.getKey(),
+                    entry.getValue().getAdsWithBid().size(),
+                    filteredContextualAdsMap.get(entry.getKey()).getAdsWithBid().size());
         }
         return adSelectionConfig
                 .cloneToBuilder()

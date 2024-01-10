@@ -61,7 +61,7 @@
                   {
                     "trigger_data": "0",
                     "priority": "1000",
-                    "value": "5"
+                    "value": 5
                   }
                 ]
               },
@@ -86,7 +86,7 @@
                   {
                     "trigger_data": "1",
                     "priority": "1010",
-                    "value": "11"
+                    "value": 11
                   }
                 ]
               },
@@ -111,7 +111,7 @@
                   {
                     "trigger_data": "0",
                     "priority": "1020",
-                    "value": "9"
+                    "value": 9
                   }
                 ]
               },
@@ -135,7 +135,7 @@
           "source_event_id": "123",
           "trigger_data": "1",
           "source_type": "event",
-          "trigger_summary_bucket": [10, 2147483646],
+          "trigger_summary_bucket": [10, 4294967295],
           "randomized_trigger_rate": 0.0000033261065791548415
         }
       }

@@ -48,7 +48,7 @@ public class AdFiltererNoOpImplTest {
             AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0);
 
     private static final SignedContextualAds.Builder CONTEXTUAL_ADS_BUILDER =
-            SignedContextualAdsFixture.aSignedContextualAdBuilder()
+            SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder()
                     .setAdsWithBid(ImmutableList.of(new AdWithBid(AD_DATA_BUILDER.build(), 1.0)))
                     .setBuyer(CommonFixture.VALID_BUYER_1)
                     .setDecisionLogicUri(

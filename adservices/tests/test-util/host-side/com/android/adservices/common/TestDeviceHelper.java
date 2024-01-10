@@ -33,6 +33,9 @@ import java.util.Objects;
  */
 public final class TestDeviceHelper {
 
+    // Copied from android.content.Intent
+    public static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
+
     public static final String ADSERVICES_SETTINGS_INTENT = "android.adservices.ui.SETTINGS";
 
     private static final Logger sLogger =
@@ -94,8 +97,39 @@ public final class TestDeviceHelper {
                 .doesNotContain("Error: Activity not started, unable to resolve Intent");
     }
 
-    public static void enableComponent(String packageName, String className) {
-        runShellCommand("pm enable %s/%s", packageName, className);
+    /** Enable the given component and return the result of the shell command */
+    public static String enableComponent(String packageName, String className) {
+        return runShellCommand("pm enable %s/%s", packageName, className);
+    }
+
+    /**
+     * Enable the given component for the given userId only and return the result of the shell
+     * command
+     */
+    public static String enableComponent(String packageName, String className, int userId) {
+        return runShellCommand("pm enable --user %d %s/%s", userId, packageName, className);
+    }
+
+    /**
+     * @return true if intent is in the pm list of active receivers, false otherwise
+     */
+    public static boolean isActiveReceiver(String intent, String packageName, String className) {
+        String receivers = runShellCommand("pm query-receivers --components -a %s", intent);
+
+        String packageAndFullClass = packageName + "/" + className;
+        if (receivers.contains(packageAndFullClass)) {
+            return true;
+        }
+
+        // check for the abbreviated name, with the package name substring with the class name
+        // replaced by "."
+        if (className.startsWith(packageName)) {
+            String packageAndShortClass =
+                    packageName + "/" + className.replaceFirst(packageName, ".");
+            return receivers.contains(packageAndShortClass);
+        }
+
+        return false;
     }
 
     private static final class DeviceUnavailableException extends IllegalStateException {

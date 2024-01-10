@@ -25,7 +25,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
@@ -199,6 +198,7 @@ public class SignalsEncodingE2ETest {
                         mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicMetadataDao,
+                        mSignalsDao,
                         mAdServicesHttpsClient,
                         mBackgroundExecutorService);
         mUpdateEncoderEventHandler =
@@ -244,7 +244,8 @@ public class SignalsEncodingE2ETest {
                         mBackgroundExecutorService,
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
-                        mAdtechUriValidator);
+                        mAdtechUriValidator,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
         mService =
                 new ProtectedSignalsServiceImpl(
                         mContextSpy,
@@ -277,9 +278,9 @@ public class SignalsEncodingE2ETest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mSignalsDao,
                         mAdSelectionScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -650,9 +651,9 @@ public class SignalsEncodingE2ETest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mSignalsDao,
                         mAdSelectionScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -686,9 +687,9 @@ public class SignalsEncodingE2ETest {
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
-                        mEncoderPersistenceDao,
                         mEncodedPayloadDao,
                         mSignalStorageManager,
+                        mSignalsDao,
                         mAdSelectionScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
@@ -705,7 +706,9 @@ public class SignalsEncodingE2ETest {
                 "Encoding JS should have returned size of signals as result",
                 new byte[] {(byte) expected.size()},
                 payload2);
-        assertTrue(secondEncodingRun.getCreationTime().isAfter(firstEncodingRun.getCreationTime()));
+        // The second run should skip based on the logic that we will skip encoding for unchanged
+        // buyer.
+        assertEquals(secondEncodingRun.getCreationTime(), firstEncodingRun.getCreationTime());
 
         encoderLogicDownloadedLatch.await(5, TimeUnit.SECONDS);
         assertEquals(
