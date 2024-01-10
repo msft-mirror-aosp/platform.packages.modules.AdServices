@@ -186,6 +186,7 @@ android_library {
     lint: {
         extra_check_modules: ["BackCompatLintChecker"],
         baseline_filename: "lint-baseline.xml",
+
     },
 }
 
@@ -225,7 +226,6 @@ cc_library_shared {
     ],
 }
 
-
 // Schemas needs to be bundled via this android_library since service-core unit tests for schema
 // migration will need this.
 android_library {
@@ -240,6 +240,6 @@ android_library {
     // See b/228270294 for the error about duplicated permissions.
     manifest: "EmptyManifest.xml",
     lint: {
-        baseline_filename: "lint-baseline.xml",
+        baseline_filename: "lint-baseline2.xml",
     },
 }
