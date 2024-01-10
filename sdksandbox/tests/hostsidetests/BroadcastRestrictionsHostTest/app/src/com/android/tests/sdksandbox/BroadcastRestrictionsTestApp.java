@@ -27,11 +27,14 @@ import android.app.sdksandbox.testutils.ConfigListener;
 import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.ProtoUtil;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.DeviceConfig;
+import android.util.ArrayMap;
+import android.util.ArraySet;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -211,9 +214,10 @@ public class BroadcastRestrictionsTestApp {
     public void testRegisterBroadcastReceiver_DeviceConfigEmptyAllowlistApplied() throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
 
-        // Set an empty allowlist for effectiveTargetSdkVersion U. This should block all
-        // BroadcastReceivers.
-        mDeviceConfigUtils.setProperty(PROPERTY_BROADCASTRECEIVER_ALLOWLIST, "CgQIIhIA");
+        ArrayMap<Integer, List<String>> allowedIntentActions = new ArrayMap<>();
+        allowedIntentActions.put(34, new ArrayList<>());
+        String encodedAllowlist = ProtoUtil.encodeBroadcastReceiverAllowlist(allowedIntentActions);
+        mDeviceConfigUtils.setProperty(PROPERTY_BROADCASTRECEIVER_ALLOWLIST, encodedAllowlist);
         loadSdk();
 
         assertThrows(
@@ -232,12 +236,10 @@ public class BroadcastRestrictionsTestApp {
     public void testRegisterBroadcastReceiver_DeviceConfigAllowlistApplied() throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
 
-        // Set an allowlist mapping from U to {android.intent.action.VIEW,
-        // android.intent.action.SCREEN_OFF}
-        final String encodedAllowlist =
-                "CkIIIhI+ChphbmRyb2lkLmludGVudC5hY3Rpb24uVklFVwogYW5kcm9pZC5pbnRlbnQuYWN0aW9uLlNDUk"
-                        + "VFTl9PRkY=";
-
+        ArrayMap<Integer, List<String>> allowedIntentActions = new ArrayMap<>();
+        allowedIntentActions.put(
+                34, new ArrayList<>(Arrays.asList(Intent.ACTION_VIEW, Intent.ACTION_SCREEN_OFF)));
+        String encodedAllowlist = ProtoUtil.encodeBroadcastReceiverAllowlist(allowedIntentActions);
         mDeviceConfigUtils.setProperty(PROPERTY_BROADCASTRECEIVER_ALLOWLIST, encodedAllowlist);
         loadSdk();
 
@@ -268,13 +270,10 @@ public class BroadcastRestrictionsTestApp {
 
         mDeviceConfigUtils.setProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
 
-        // Base64 encoded proto AllowedBroadcastReceivers containing the strings Intent.ACTION_VIEW
-        // and Intent.ACTION_SEND.
-        String encodedNextAllowlist =
-                "ChphbmRyb2lkLmludGVudC5hY3Rpb24uVklFVwoaYW5kcm9pZC5pbnRlbnQuYWN0aW9uLlNFTkQ=";
-        // Set the canary set.
-        mDeviceConfigUtils.setProperty(
-                PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST, encodedNextAllowlist);
+        ArraySet<String> allowedIntentActions =
+                new ArraySet<>(Arrays.asList(Intent.ACTION_VIEW, Intent.ACTION_SEND));
+        String encodedAllowlist = ProtoUtil.encodeBroadcastReceiverAllowlist(allowedIntentActions);
+        mDeviceConfigUtils.setProperty(PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST, encodedAllowlist);
         loadSdk();
 
         // No exception should be thrown when registering a BroadcastReceiver with

@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -36,8 +37,6 @@ import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -63,7 +62,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.List;
@@ -74,16 +72,6 @@ import java.util.List;
 @SpyStatic(FlagsFactory.class)
 public final class AppSearchConsentManagerTest extends AdServicesExtendedMockitoTestCase {
 
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-    @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
-    @Mock private Flags mFlags;
-    @Mock private AdServicesManager mAdServicesManager;
-    @Mock private BooleanFileDatastore mDatastore;
-    @Mock private SharedPreferences mSharedPrefs;
-    @Mock private AppConsentDao mAppConsentDao;
-    @Mock private SharedPreferences.Editor mEditor;
-
-    private AppSearchConsentManager mAppSearchConsentManager;
     private static final String API_TYPE = AdServicesApiType.TOPICS.toPpApiDatastoreKey();
     private static final String PACKAGE_NAME1 = "foo.bar.one";
     private static final String PACKAGE_NAME2 = "foo.bar.two";
@@ -92,12 +80,21 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     private static final Topic TOPIC2 = Topic.create(12, 12, 12);
     private static final Topic TOPIC3 = Topic.create(123, 123, 123);
 
+    private AppSearchConsentManager mAppSearchConsentManager;
+    private Context mContext;
+    @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
+    @Mock private Flags mFlags;
+    @Mock private AdServicesManager mAdServicesManager;
+    @Mock private BooleanFileDatastore mDatastore;
+    @Mock private SharedPreferences mSharedPrefs;
+    @Mock private AppConsentDao mAppConsentDao;
+    @Mock private SharedPreferences.Editor mEditor;
+
     @Before
     public void setup() {
-        ExtendedMockito.doReturn(mAppSearchConsentWorker)
-                .when(() -> AppSearchConsentWorker.getInstance());
+        mContext = spy(appContext.get());
         extendedMockito.mockGetFlags(mFlags);
-        mAppSearchConsentManager = AppSearchConsentManager.getInstance();
+        mAppSearchConsentManager = new AppSearchConsentManager(mContext, mAppSearchConsentWorker);
         ApplicationInfo app1 = new ApplicationInfo();
         app1.packageName = PACKAGE_NAME1;
         ApplicationInfo app2 = new ApplicationInfo();
@@ -354,7 +351,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         AdServicesManager mAdServicesManager = mock(AdServicesManager.class);
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager);
         assertThat(result).isFalse();
     }
 
@@ -365,7 +362,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager);
         assertThat(result).isFalse();
     }
 
@@ -377,7 +374,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager);
         assertThat(result).isFalse();
     }
 
@@ -390,7 +387,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager);
         assertThat(result).isFalse();
     }
 
@@ -405,7 +402,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager);
         assertThat(result).isFalse();
     }
 
@@ -422,7 +419,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager);
         assertThat(result).isFalse();
     }
 
@@ -431,7 +428,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         initConsentDataForMigration();
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager);
         assertThat(result).isTrue();
     }
 
@@ -442,7 +439,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
         boolean result =
                 mAppSearchConsentManager.migrateConsentDataIfNeeded(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+                        mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
         assertThat(result).isFalse();
     }
 
@@ -456,7 +453,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
                 .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
         boolean result =
                 mAppSearchConsentManager.migrateConsentDataIfNeeded(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+                        mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
         assertThat(result).isTrue();
         verify(mDatastore).put(eq(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), eq(true));
         verify(mAdServicesManager).recordNotificationDisplayed(true);
@@ -486,7 +483,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.migrateConsentDataIfNeeded(
-                        mContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+                        mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
         assertThat(result).isTrue();
 
         verify(mDatastore).put(eq(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), eq(true));
@@ -528,13 +525,12 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     @Test
     public void testMigrateConsentData_FromExtServices() throws Exception {
         initConsentDataForMigration();
-        Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
         doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
-                .when(spyContext)
+                .when(mContext)
                 .getPackageName();
         boolean result =
                 mAppSearchConsentManager.migrateConsentDataIfNeeded(
-                        spyContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+                        mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
         assertWithMessage("result from migrateConsentDataIfNeeded on extServices")
                 .that(result)
                 .isFalse();

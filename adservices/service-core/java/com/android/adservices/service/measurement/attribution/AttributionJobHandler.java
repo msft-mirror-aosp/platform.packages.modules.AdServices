@@ -57,6 +57,7 @@ import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate.MomentPlacement;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -105,6 +106,12 @@ class AttributionJobHandler {
         ATTRIBUTED
     }
 
+    enum ProcessingResult {
+        FAILURE,
+        SUCCESS_WITH_PENDING_RECORDS,
+        SUCCESS_ALL_RECORDS_PROCESSED
+    }
+
     AttributionJobHandler(DatastoreManager datastoreManager, DebugReportApi debugReportApi) {
         this(
                 datastoreManager,
@@ -139,32 +146,34 @@ class AttributionJobHandler {
      *
      * @return false if there are datastore failures or pending {@link Trigger} left, true otherwise
      */
-    boolean performPendingAttributions() {
+    ProcessingResult performPendingAttributions() {
         Optional<List<String>> pendingTriggersOpt = mDatastoreManager
                 .runInTransactionWithResult(IMeasurementDao::getPendingTriggerIds);
         if (!pendingTriggersOpt.isPresent()) {
             // Failure during trigger retrieval
             // Reschedule for retry
-            return false;
+            return ProcessingResult.FAILURE;
         }
         List<String> pendingTriggers = pendingTriggersOpt.get();
-
-        for (int i = 0;
-                i < pendingTriggers.size()
-                        && i < mFlags.getMeasurementMaxAttributionsPerInvocation();
-                i++) {
+        final int numRecordsToProcess =
+                Math.min(
+                        pendingTriggers.size(),
+                        mFlags.getMeasurementMaxAttributionsPerInvocation());
+        for (int i = 0; i < numRecordsToProcess; i++) {
             AttributionStatus attributionStatus = new AttributionStatus();
             boolean success = performAttribution(pendingTriggers.get(i), attributionStatus);
             logAttributionStats(attributionStatus);
             if (!success) {
                 // Failure during trigger attribution
                 // Reschedule for retry
-                return false;
+                return ProcessingResult.FAILURE;
             }
         }
 
         // Reschedule if there are unprocessed pending triggers.
-        return mFlags.getMeasurementMaxAttributionsPerInvocation() >= pendingTriggers.size();
+        return pendingTriggers.size() > numRecordsToProcess
+                ? ProcessingResult.SUCCESS_WITH_PENDING_RECORDS
+                : ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
     }
 
     /**
@@ -805,12 +814,8 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (mEventReportWindowCalcDelegate.getReportingTime(
-                source, trigger.getTriggerTime(), trigger.getDestinationType()) == -1
-                && (source.getTriggerSpecsString() == null
-                      || source.getTriggerSpecsString().isEmpty())) {
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
+        if (source.getTriggerSpecs() == null
+                && !isTriggerFallsWithinWindow(source, trigger, measurementDao)) {
             return TriggeringStatus.DROPPED;
         }
 
@@ -1324,14 +1329,8 @@ class AttributionJobHandler {
 
     private boolean isWithinReportLimit(
             Source source, int existingReportCount, @EventSurfaceType int destinationType) {
-        return mEventReportWindowCalcDelegate.getMaxReportCount(
-                        source, hasAppInstallAttributionOccurred(source, destinationType))
+        return mEventReportWindowCalcDelegate.getMaxReportCount(source, destinationType)
                 > existingReportCount;
-    }
-
-    private static boolean hasAppInstallAttributionOccurred(
-            Source source, @EventSurfaceType int destinationType) {
-        return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
     }
 
     private static boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
@@ -1745,5 +1744,28 @@ class AttributionJobHandler {
             AttributionStatus attributionStatus, int count) {
         attributionStatus.setAggregateDebugReportCount(
                 attributionStatus.getAggregateDebugReportCount() + count);
+    }
+
+    private boolean isTriggerFallsWithinWindow(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
+        MomentPlacement momentPlacement =
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger.getTriggerTime(), trigger.getDestinationType());
+        if (momentPlacement == MomentPlacement.BEFORE) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
+            return false;
+        }
+        if (momentPlacement == MomentPlacement.AFTER) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
+            return false;
+        }
+        return true;
     }
 }

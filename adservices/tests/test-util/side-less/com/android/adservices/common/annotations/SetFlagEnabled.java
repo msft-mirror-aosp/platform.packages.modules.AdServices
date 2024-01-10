@@ -29,9 +29,9 @@ import java.lang.annotation.Target;
  * in the test to true.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Repeatable(SetFlagsEnabled.class)
 public @interface SetFlagEnabled {
     /** Name of the flag. */
-    String name();
+    String value();
 }

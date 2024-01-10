@@ -218,6 +218,12 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(0f);
         when(mFlags.getMeasurementMinEventReportDelayMillis())
                 .thenReturn(Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS);
+        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+        when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
     }
 
     @Test
@@ -425,7 +431,9 @@ public class AttributionJobHandlerTest {
                         source.getWebDestinations()));
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
 
-        assertTrue(mHandler.performPendingAttributions());
+        assertEquals(
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
+                mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao).updateTriggerStatus(
                 eq(Collections.singletonList(trigger1.getId())), eq(Trigger.Status.ATTRIBUTED));
@@ -657,7 +665,6 @@ public class AttributionJobHandlerTest {
     public void performPendingAttributions_vtcWithConfiguredReportsCount_attributeUptoConfigLimit()
             throws DatastoreException {
         // Setup
-        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1383,6 +1390,9 @@ public class AttributionJobHandlerTest {
         doReturn(5L)
                 .when(mEventReportWindowCalcDelegate)
                 .getReportingTime(any(Source.class), anyLong(), anyInt());
+        doReturn(EventReportWindowCalcDelegate.MomentPlacement.WITHIN)
+                .when(mEventReportWindowCalcDelegate)
+                .fallsWithinWindow(any(Source.class), anyLong(), anyInt());
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -1593,7 +1603,9 @@ public class AttributionJobHandlerTest {
                         source2.getAppDestinations(),
                         source2.getWebDestinations()));
 
-        assertTrue(mHandler.performPendingAttributions());
+        assertEquals(
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
+                mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao, times(2)).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
         // Verify source dedup key updates.
@@ -1654,6 +1666,7 @@ public class AttributionJobHandlerTest {
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setInstallAttributed(true)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(10))
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(28))
                         .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
@@ -1733,6 +1746,7 @@ public class AttributionJobHandlerTest {
                         .setInstallAttributed(true)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(3))
                         .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -1743,6 +1757,7 @@ public class AttributionJobHandlerTest {
                         .setPriority(200L)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setEventTime(eventTime)
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -1906,7 +1921,9 @@ public class AttributionJobHandlerTest {
                 .thenReturn(
                         Pair.create(source1.getAppDestinations(), source1.getWebDestinations()));
 
-        assertTrue(mHandler.performPendingAttributions());
+        assertEquals(
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
+                mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
         // Verify new event report insertion.
@@ -1960,7 +1977,9 @@ public class AttributionJobHandlerTest {
                         Pair.create(source1.getAppDestinations(), source1.getWebDestinations()));
         when(mFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
 
-        assertTrue(mHandler.performPendingAttributions());
+        assertEquals(
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
+                mHandler.performPendingAttributions());
         // Verify trigger status updates.
         verify(mMeasurementDao).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
         // Verify new event report insertion.
@@ -2493,6 +2512,18 @@ public class AttributionJobHandlerTest {
         mHandler.performPendingAttributions();
         verify(mMeasurementDao, never()).updateSourceAggregateContributions(any());
         verify(mMeasurementDao, never()).insertAggregateReport(any());
+    }
+
+    @Test
+    public void performAttributions_noRecords_returnSuccess() throws DatastoreException {
+        // Setup
+        when(mMeasurementDao.getPendingTriggerIds()).thenReturn(Collections.emptyList());
+
+        // Execution
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
+
+        // Assertions
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
     }
 
     @Test
@@ -3321,6 +3352,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3416,6 +3448,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3513,6 +3546,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3608,6 +3642,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
                         .setId("sourceId")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3706,6 +3741,7 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .setId("sourceId")
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -3941,6 +3977,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -4019,6 +4056,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -4096,6 +4134,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -4318,6 +4357,7 @@ public class AttributionJobHandlerTest {
                                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                                         + "}\n")
+                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(triggerTime + 1L)
                         .setAggregatableReportWindow(triggerTime + 1L)
                         .build();
@@ -4444,10 +4484,10 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertTrue(result);
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
@@ -4536,10 +4576,10 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertTrue(result);
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
@@ -4632,10 +4672,10 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertTrue(result);
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
@@ -5997,10 +6037,10 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertTrue(result);
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
@@ -6040,10 +6080,10 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getTrigger(trigger.getId())).thenThrow(DatastoreException.class);
 
         // Execution
-        boolean result = mHandler.performPendingAttributions();
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
 
         // Assertion
-        assertEquals(false, result);
+        assertEquals(AttributionJobHandler.ProcessingResult.FAILURE, result);
         ArgumentCaptor<MeasurementAttributionStats> statusArg =
                 ArgumentCaptor.forClass(MeasurementAttributionStats.class);
         verify(mLogger).logMeasurementAttributionStats(statusArg.capture());
@@ -6109,6 +6149,7 @@ public class AttributionJobHandlerTest {
                         .setId("sourceId")
                         .setEventTime(TRIGGER_TIME - TimeUnit.SECONDS.toMillis(LOOKBACK_WINDOW - 1))
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(TRIGGER_TIME + TimeUnit.DAYS.toMillis(28))
                         .setEventReportWindow(TRIGGER_TIME + 1)
                         .setAggregatableReportWindow(TRIGGER_TIME + 1)
                         .build();

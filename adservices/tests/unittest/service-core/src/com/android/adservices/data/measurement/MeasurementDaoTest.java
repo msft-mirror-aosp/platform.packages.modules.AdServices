@@ -56,6 +56,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
@@ -89,11 +90,11 @@ import com.google.common.collect.ImmutableMultiset;
 import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
@@ -168,20 +169,21 @@ public class MeasurementDaoTest {
 
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
-    private MockitoSession mStaticMockSession;
     private Flags mFlags;
     private DatastoreManager mDatastoreManager;
     public static final Uri REGISTRATION_ORIGIN_2 =
             WebUtil.validUri("https://subdomain_2.example.test");
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(MeasurementDbHelper.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
+
     @Before
     public void before() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementDbHelper.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         mFlags = FlagsFactory.getFlagsForTest();
         mDatastoreManager =
@@ -196,8 +198,6 @@ public class MeasurementDaoTest {
         for (String table : ALL_MSMT_TABLES) {
             db.delete(table, null, null);
         }
-
-        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -4887,44 +4887,6 @@ public class MeasurementDaoTest {
                         .getCount());
     }
 
-    private static AsyncRegistration buildAsyncRegistration(String id) {
-
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                .setRegistrant(INSTALLED_REGISTRANT)
-                .setTopOrigin(INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
-    }
-
-    private static AsyncRegistration buildAsyncRegistrationWithNotDestination(String id) {
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
-                .setRegistrant(INSTALLED_REGISTRANT)
-                .setTopOrigin(INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRequestTime(Long.MAX_VALUE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
-    }
-
-    private static AsyncRegistration buildAsyncRegistrationWithNotRegistrant(String id) {
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                .setRegistrant(NOT_INSTALLED_REGISTRANT)
-                .setTopOrigin(NOT_INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
-    }
-
     @Test
     public void testDeleteDebugReport() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
@@ -6163,6 +6125,9 @@ public class MeasurementDaoTest {
             assertEquals(
                     asyncRegistration.getPlatformAdId(), validAsyncRegistration.getPlatformAdId());
             assertEquals(asyncRegistration.getPostBody(), validAsyncRegistration.getPostBody());
+            assertEquals(
+                    asyncRegistration.getRedirectBehavior(),
+                    validAsyncRegistration.getRedirectBehavior());
         }
     }
 

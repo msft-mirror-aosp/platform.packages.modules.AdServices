@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.SignedContextualAdsFixture.PLACEHOLDER_SIGNATURE;
-
 import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
 import static com.android.adservices.service.adselection.AdSelectionConfigValidator.TRUSTED_SCORING_SIGNALS_URI_TYPE;
 
@@ -351,7 +349,7 @@ public class AdSelectionConfigValidatorTest {
         Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
         SignedContextualAds contextualAds2 =
-                SignedContextualAdsFixture.generateSignedContextualAds(
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
                                 buyer2, ImmutableList.of(100.0, 200.0))
                         .setDecisionLogicUri(
                                 CommonFixture.getUri(
@@ -380,7 +378,7 @@ public class AdSelectionConfigValidatorTest {
         AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
         ImmutableList<Double> bids = ImmutableList.of(100.0, 200.0);
         SignedContextualAds contextualAds2 =
-                SignedContextualAdsFixture.generateSignedContextualAds(buyer2, bids)
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(buyer2, bids)
                         .setDecisionLogicUri(
                                 CommonFixture.getUri(buyer2, BUYER_BIDDING_LOGIC_URI_PATH))
                         .setAdsWithBid(
@@ -446,14 +444,9 @@ public class AdSelectionConfigValidatorTest {
         Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
         buyerContextualAds.put(
                 CommonFixture.VALID_BUYER_1,
-                new SignedContextualAds.Builder()
-                        .setBuyer(CommonFixture.VALID_BUYER_1)
-                        .setDecisionLogicUri(
-                                CommonFixture.getUri(
-                                        CommonFixture.VALID_BUYER_1,
-                                        SignedContextualAdsFixture.DECISION_LOGIC_FRAGMENT))
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder(
+                                CommonFixture.VALID_BUYER_1)
                         .setAdsWithBid(adsWithBids)
-                        .setSignature(PLACEHOLDER_SIGNATURE)
                         .build());
 
         AdSelectionConfig adSelectionConfig =

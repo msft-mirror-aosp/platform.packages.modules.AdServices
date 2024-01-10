@@ -184,15 +184,13 @@ public abstract class E2EMockTest extends E2ETest {
                         new AsyncSourceFetcher(
                                 sContext,
                                 mEnrollmentDao,
-                                mFlags,
-                                AdServicesLoggerImpl.getInstance()));
+                                mFlags));
         mAsyncTriggerFetcher =
                 spy(
                         new AsyncTriggerFetcher(
                                 sContext,
                                 mEnrollmentDao,
-                                mFlags,
-                                AdServicesLoggerImpl.getInstance()));
+                                mFlags));
         mDebugReportApi =
                 new DebugReportApi(
                         sContext,

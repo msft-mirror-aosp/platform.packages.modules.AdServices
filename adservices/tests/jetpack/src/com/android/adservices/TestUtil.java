@@ -93,6 +93,7 @@ public class TestUtil {
     public void overrideAllowlists(boolean override) {
         String overrideStr = override ? "*" : "null";
         runShellCommand("device_config put adservices ppapi_app_allow_list " + overrideStr);
+        runShellCommand("device_config put adservices msmt_api_app_allow_list " + overrideStr);
         runShellCommand(
                 "device_config put adservices ppapi_app_signature_allow_list " + overrideStr);
         runShellCommand(

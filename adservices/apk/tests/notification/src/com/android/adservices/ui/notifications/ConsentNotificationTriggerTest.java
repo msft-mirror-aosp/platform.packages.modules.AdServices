@@ -16,20 +16,19 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__RVC_UX;
-import static com.android.adservices.service.FlagsConstants.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
@@ -129,7 +128,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(false).when(mMockUxStatesManager).getFlag(any(String.class));
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
-        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED);
         cancelAllPreviousNotifications();
     }
 
@@ -141,59 +139,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     }
 
     @Test
-    public void testEuNotification() throws InterruptedException, UiObjectNotFoundException {
-        doReturn(true).when(mMockFlags).isEeaDevice();
-        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
-        doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
-
-        final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_title_eu);
-        final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_content_eu);
-
-        ConsentNotificationTrigger.showConsentNotification(mContext, true);
-        Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
-
-        verify(mAdServicesLogger, times(2)).logUIStats(any());
-
-        verify(mConsentManager, times(2)).getDefaultConsent();
-        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        verify(mConsentManager).disable(mContext);
-        verify(mConsentManager).recordNotificationDisplayed(true);
-
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
-        final Notification notification =
-                mNotificationManager.getActiveNotifications()[0].getNotification();
-        assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
-        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-                .isEqualTo(expectedTitle);
-        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
-                .isEqualTo(expectedContent);
-        assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags).isEqualTo(0);
-        assertThat(Notification.FLAG_NO_CLEAR & notification.flags).isEqualTo(0);
-        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags)
-                .isEqualTo(Notification.FLAG_AUTO_CANCEL);
-
-        sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
-        UiObject scroller =
-                sDevice.findObject(
-                        new UiSelector()
-                                .packageName("com.android.systemui")
-                                .resourceId("com.android.systemui:id/notification_stack_scroller"));
-
-        UiSelector notificationCardSelector =
-                new UiSelector().text(getString(R.string.notificationUI_notification_title_eu));
-        UiObject notificationCard = scroller.getChild(notificationCardSelector);
-        assertThat(notificationCard.exists()).isTrue();
-
-        notificationCard.click();
-        Thread.sleep(LAUNCH_TIMEOUT);
-        UiObject title = getPageElement(sDevice, R.string.notificationUI_header_title_eu);
-        assertThat(title.exists()).isTrue();
-    }
-
-    @Test
     public void testEuNotification_gaUxFlagEnabled()
             throws InterruptedException, UiObjectNotFoundException {
         doReturn(true).when(mMockFlags).isEeaDevice();
@@ -201,9 +146,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_ga_title_eu);
+                mContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_ga_content_eu);
+                mContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -237,7 +182,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_AUTO_CANCEL);
 
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
@@ -248,68 +197,16 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiObject notificationCard =
                 scroller.getChild(
                         new UiSelector()
-                                .text(getString(R.string.notificationUI_notification_ga_title_eu)));
+                                .text(
+                                        getString(
+                                                R.string
+                                                        .notificationUI_notification_ga_title_eu_v2)));
         assertThat(notificationCard.exists()).isTrue();
 
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT);
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
     }
-
-    @Test
-    public void testNonEuNotifications() throws InterruptedException, UiObjectNotFoundException {
-        doReturn(false).when(mMockFlags).isEeaDevice();
-        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
-        doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
-
-        final String expectedTitle = mContext.getString(R.string.notificationUI_notification_title);
-        final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_content);
-
-        ConsentNotificationTrigger.showConsentNotification(mContext, false);
-        Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
-
-        verify(mAdServicesLogger, times(2)).logUIStats(any());
-
-        verify(mConsentManager, times(2)).getDefaultConsent();
-        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        verify(mConsentManager).enable(mContext);
-        verify(mConsentManager).recordNotificationDisplayed(true);
-
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
-        final Notification notification =
-                mNotificationManager.getActiveNotifications()[0].getNotification();
-        assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
-        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-                .isEqualTo(expectedTitle);
-        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
-                .isEqualTo(expectedContent);
-        assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags).isEqualTo(0);
-        assertThat(Notification.FLAG_NO_CLEAR & notification.flags).isEqualTo(0);
-        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags)
-                .isEqualTo(Notification.FLAG_AUTO_CANCEL);
-
-        sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
-
-        UiObject scroller =
-                sDevice.findObject(
-                        new UiSelector()
-                                .packageName("com.android.systemui")
-                                .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        assertThat(scroller.exists()).isTrue();
-        UiObject notificationCard =
-                scroller.getChild(
-                        new UiSelector()
-                                .text(getString(R.string.notificationUI_notification_title)));
-        assertThat(notificationCard.exists()).isTrue();
-
-        notificationCard.click();
-        Thread.sleep(LAUNCH_TIMEOUT);
-        UiObject title = getPageElement(sDevice, R.string.notificationUI_header_title);
-        assertThat(title.exists()).isTrue();
-    }
-
     @Test
     public void testNonEuNotifications_gaUxEnabled() throws InterruptedException {
         doReturn(false).when(mMockFlags).isEeaDevice();
@@ -317,9 +214,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_ga_title);
+                mContext.getString(R.string.notificationUI_notification_ga_title_v2);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_ga_content);
+                mContext.getString(R.string.notificationUI_notification_ga_content_v2);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, false);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -362,9 +259,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_ga_title_eu);
+                mContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_ga_content_eu);
+                mContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -394,11 +291,16 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_ONGOING_EVENT);
         assertThat(Notification.FLAG_NO_CLEAR & notification.flags)
                 .isEqualTo(Notification.FLAG_NO_CLEAR);
-        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags).isEqualTo(0);
+        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags)
+                .isEqualTo(Notification.FLAG_AUTO_CANCEL);
         assertThat(notification.actions).isNull();
 
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
@@ -412,7 +314,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiSelector notificationCardSelector =
                 new UiSelector()
                         .textContains(
-                                getString(R.string.notificationUI_notification_ga_title_eu)
+                                getString(R.string.notificationUI_notification_ga_title_eu_v2)
                                         .substring(0, 15));
         if (scroller.exists()) {
             notificationCard = scroller.getChild(notificationCardSelector);
@@ -424,7 +326,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
+        assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
     }
 
     @Test
@@ -438,13 +340,12 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
-        doReturn(false).when(mMockUxStatesManager).getFlag(KEY_EU_NOTIF_FLOW_CHANGE_ENABLED);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_ga_title_eu);
+                mContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_ga_content_eu);
+                mContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -473,12 +374,17 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_ONGOING_EVENT);
         assertThat(Notification.FLAG_NO_CLEAR & notification.flags)
                 .isEqualTo(Notification.FLAG_NO_CLEAR);
-        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags).isEqualTo(0);
+        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags)
+                .isEqualTo(Notification.FLAG_AUTO_CANCEL);
         assertThat(notification.actions).isNull();
 
         // verify that notification was displayed
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
         UiObject scroller =
                 sDevice.findObject(
                         new UiSelector()
@@ -491,7 +397,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiSelector notificationCardSelector =
                 new UiSelector()
                         .textContains(
-                                getString(R.string.notificationUI_notification_ga_title_eu)
+                                getString(R.string.notificationUI_notification_ga_title_eu_v2)
                                         .substring(0, 15));
         if (scroller.exists()) {
             notificationCard = scroller.getChild(notificationCardSelector);
@@ -504,13 +410,15 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         // click the notification and verify that notification still exists (wasn't dismissed)
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
+        assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
 
         // go to confirmation page and verify that notification was dismissed
         UiObject leftControlButton =
-                getPageElement(sDevice, R.string.notificationUI_left_control_button_text_eu);
+                getPageElement(
+                        sDevice, R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
-                getPageElement(sDevice, R.string.notificationUI_right_control_button_ga_text_eu);
+                getPageElement(
+                        sDevice, R.string.notificationUI_confirmation_right_control_button_text);
         UiObject moreButton = getPageElement(sDevice, R.string.notificationUI_more_button_text);
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
         Thread.sleep(LAUNCH_TIMEOUT);
@@ -615,7 +523,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_AUTO_CANCEL);
 
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
@@ -662,13 +574,13 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         final String expectedTitle =
                 mContext.getString(
                         isEeaDevice
-                                ? R.string.notificationUI_notification_ga_title_eu
-                                : R.string.notificationUI_notification_ga_title);
+                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                : R.string.notificationUI_notification_ga_title_v2);
         final String expectedContent =
                 mContext.getString(
                         isEeaDevice
-                                ? R.string.notificationUI_notification_ga_content_eu
-                                : R.string.notificationUI_notification_ga_content);
+                                ? R.string.notificationUI_notification_ga_content_eu_v2
+                                : R.string.notificationUI_notification_ga_content_v2);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, isEeaDevice);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -736,7 +648,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .isEqualTo(Notification.FLAG_AUTO_CANCEL);
 
         sDevice.openNotification();
-        sDevice.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
+        sDevice.wait(
+                Until.hasObject(
+                        By.pkg("com.android.systemui")
+                                .res("com.android.systemui:id/notification_stack_scroller")),
+                LAUNCH_TIMEOUT);
 
         UiObject scroller =
                 sDevice.findObject(
@@ -751,9 +667,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                                         getString(
                                                 isEeaDevice
                                                         ? R.string
-                                                                .notificationUI_notification_ga_title_eu
+                                                                .notificationUI_notification_ga_title_eu_v2
                                                         : R.string
-                                                                .notificationUI_notification_ga_title)));
+                                                                .notificationUI_notification_ga_title_v2)));
         assertThat(notificationCard.exists()).isTrue();
 
         notificationCard.click();
