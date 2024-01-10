@@ -305,13 +305,17 @@ class AppSearchDao {
                                         // If we get failures in schemaResponse then we cannot try
                                         // to write.
                                         if (!setSchemaResponse.getMigrationFailures().isEmpty()) {
+                                            MigrationFailure failure =
+                                                    setSchemaResponse.getMigrationFailures().get(0);
                                             LogUtil.e(
                                                     "SetSchemaResponse migration failure: "
-                                                            + setSchemaResponse
-                                                                    .getMigrationFailures()
-                                                                    .get(0));
-                                            throw new RuntimeException(
-                                                    ERROR_MESSAGE_APPSEARCH_FAILURE);
+                                                            + failure);
+                                            String message =
+                                                    String.format(
+                                                            "%s Migration failure: %s",
+                                                            ERROR_MESSAGE_APPSEARCH_FAILURE,
+                                                            failure.getAppSearchResult());
+                                            throw new RuntimeException(message);
                                         }
                                         // The database knows about this schemaType and write can
                                         // occur.
@@ -323,10 +327,10 @@ class AppSearchDao {
                                     executor);
             return deleteFuture;
         } catch (AppSearchException e) {
-            LogUtil.e("Cannot instantiate AppSearch database: " + e.getMessage());
+            LogUtil.e(e, "Cannot instantiate AppSearch database");
+            return FluentFuture.from(
+                    Futures.immediateFailedFuture(
+                            new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e)));
         }
-        return FluentFuture.from(
-                Futures.immediateFailedFuture(
-                        new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE)));
     }
 }
