@@ -89,7 +89,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
-    public static PhFlags getInstance() {
+    static PhFlags getInstance() {
         return sSingleton;
     }
 

@@ -22,7 +22,8 @@ import android.content.Context;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 
 // TODO(b/297248322): move this class to sideless as the logic is duplicated on hostside
 /** Helper to check if AdServices is supported / enabled in a device. */
@@ -38,7 +39,7 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
 
     /** Gets the value of AdServices global kill switch. */
     public static boolean getGlobalKillSwitch() throws Exception {
-        PhFlags flags = PhFlags.getInstance();
+        Flags flags = FlagsFactory.getFlags();
         boolean value = invokeStaticMethodWithShellPermissions(() -> flags.getGlobalKillSwitch());
         sInstance.mLog.v("getGlobalKillSwitch(): %b", value);
         return value;
