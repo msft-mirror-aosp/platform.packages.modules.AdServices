@@ -4425,4 +4425,28 @@ public interface Flags extends CommonFlags {
     default int getBackgroundJobSamplingLoggingRate() {
         return DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
     }
+
+    /** Default value of the timeout for AppSearch write operations */
+    int DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS = 3000;
+
+    /**
+     * Gets the value of the timeout for AppSearch write operations, in milliseconds.
+     *
+     * @return the timeout, in milliseconds, for AppSearch write operations
+     */
+    default int getAppSearchWriteTimeout() {
+        return DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS;
+    }
+
+    /** Default value of the timeout for AppSearch read operations */
+    int DEFAULT_APPSEARCH_READ_TIMEOUT_MS = 500;
+
+    /**
+     * Gets the value of the timeout for AppSearch read operations, in milliseconds.
+     *
+     * @return the timeout, in milliseconds, for AppSearch read operations
+     */
+    default int getAppSearchReadTimeout() {
+        return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
+    }
 }
