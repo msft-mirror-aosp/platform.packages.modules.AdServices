@@ -387,8 +387,7 @@
               "key": "0x21",
               "value": 321
             }
-          ],
-          "source_registration_time": "1704758400"
+          ]
         },
         "report_time": "3605001",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"
