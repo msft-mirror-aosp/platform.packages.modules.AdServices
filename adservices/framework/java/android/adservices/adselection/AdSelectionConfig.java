@@ -17,12 +17,14 @@ package android.adservices.adselection;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.util.Collections;
 import java.util.List;
@@ -239,8 +241,8 @@ public final class AdSelectionConfig implements Parcelable {
     /**
      * @return a Map of buyers and corresponding Contextual Ads, these ads are expected to be
      *     pre-downloaded from the contextual path and injected into Ad Selection.
-     * @hide
      */
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @NonNull
     public Map<AdTechIdentifier, SignedContextualAds> getBuyerSignedContextualAds() {
         return mBuyerSignedContextualAds;
@@ -385,9 +387,8 @@ public final class AdSelectionConfig implements Parcelable {
          * <p>If not set, defaults to an empty map.
          *
          * <p>See {@link #getBuyerSignedContextualAds()} ()} for more details.
-         *
-         * @hide
          */
+        @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
         @NonNull
         public AdSelectionConfig.Builder setBuyerSignedContextualAds(
                 @NonNull Map<AdTechIdentifier, SignedContextualAds> buyerSignedContextualAds) {

@@ -1,6 +1,13 @@
 package: "com.android.adservices.flags"
 
 flag {
+    name: "fledge_ad_selection_filtering_enabled"
+    namespace: "adservices"
+    bug: "267712947"
+    description: "Enabled negative filtering feature with signed contextual ads"
+}
+
+flag {
     name: "topics_encryption_enabled"
     namespace: "adservices"
     bug: "303727027"
