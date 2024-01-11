@@ -35,6 +35,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -58,6 +60,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -78,6 +81,7 @@ import java.util.regex.Pattern;
 
 @SpyStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(StatsdAdServicesLogger.class)
 public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PKG_NAME = "pkg.I.am";
@@ -91,6 +95,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
+    @Mock private StatsdAdServicesLogger mStatsdLogger;
 
     private final FakeSharedPreferences mPrefs = new FakeSharedPreferences();
 
@@ -101,6 +106,8 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     public void setExpectations() {
         appContext.set(mMockContext);
         extendedMockito.mockGetFlags(mMockFlags);
+        mockGetStatsdAdServicesLogger();
+
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(mPrefs);
         mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
         mErrorLogUtilWithoutThrowableCallback = mockErrorLogUtilWithoutThrowable();
@@ -110,7 +117,9 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     public void testLogUsage_nullArgs() throws Exception {
         assertThrows(
                 NullPointerException.class,
-                () -> logUsageAndDontWait(/* packageName= */ null, RESULT_ALLOWED_APP_ALLOWS_ALL));
+                () -> logUsageAndDontWait(/* packageName= */ null, API, RESULT_ALLOWED_APP_ALLOWS_ALL));
+
+        assertNoMetricsLogged();
     }
 
     @Test
@@ -125,27 +134,29 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         assertEditNotCalled();
+        assertNoMetricsLogged();
     }
 
     @Test
     public void testLogUsage_firstTime() throws Exception {
-        logUsageAndWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        logUsageAndWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).hasSize(1);
         assertWithMessage("properties keys")
                 .that(allProps.keySet())
                 .containsExactly(KEY_PKG_NAME_API);
+        assertMetricsLogged(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
     }
 
     @Test
     public void testLogUsage_secondTimeSameResult() throws Exception {
         // 1st time is fine
-        logUsageAndWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        logUsageAndWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         // 2nd time should not call edit
         mPrefs.onEditThrows(); // will throw if edit() is called
-        logUsageAndDontWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).hasSize(1);
@@ -154,6 +165,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                 .containsExactly(KEY_PKG_NAME_API);
 
         assertEditNotCalled();
+        assertMetricsLogged(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
     }
 
     @Test
@@ -161,7 +173,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         int result = RESULT_ALLOWED_APP_ALLOWS_ALL;
         // 1st call
         Log.d(mTag, "1st call: result=" + result);
-        logUsageAndWait(PKG_NAME, result);
+        logUsageAndWait(PKG_NAME, API, result);
 
         int valueBefore = mPrefs.getInt(KEY_PKG_NAME_API, RESULT_UNSPECIFIED);
         expect.withMessage("stored value of %s after 1st call (result=%s)", PKG_NAME, result)
@@ -171,7 +183,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         // 2nd call
         result = RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
         Log.d(mTag, "2nd call: result=" + result);
-        logUsageAndWait(PKG_NAME, result);
+        logUsageAndWait(PKG_NAME, API, result);
 
         Map<String, ?> allProps = mPrefs.getAll();
         expect.withMessage("allProps").that(allProps).hasSize(1);
@@ -183,6 +195,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         expect.withMessage("stored value of %s after 2nd call (result=%s)", PKG_NAME, result)
                 .that(valueAfter)
                 .isEqualTo(RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG);
+        assertMetricsLogged(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
     }
 
     @Test
@@ -191,20 +204,21 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenThrow(exception);
 
-        logUsageAndDontWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         mErrorLogUtilWithThrowableCallback.assertReceived(
                 expect,
                 exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        assertNoMetricsLogged();
     }
 
     @Test
     public void testLogUsage_commitFailed() throws Exception {
         mPrefs.onCommitReturns(/* result= */ false);
 
-        logUsageAndDontWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).isEmpty();
@@ -213,6 +227,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        assertMetricsLogged(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
     }
 
     @Test
@@ -227,11 +242,12 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                             return mPrefs;
                         });
 
-        logUsageAndWait(PKG_NAME, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        logUsageAndWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         assertWithMessage("execution thread")
                 .that(executionThread.get())
                 .isNotSameInstanceAs(currentThread);
+        assertMetricsLogged(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
     }
 
     @Test
@@ -293,12 +309,11 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                 .matches(
                         Pattern.compile(
                                 ".*3 entries.*\n" + entry1 + entry2 + entry3, Pattern.DOTALL));
-    }
 
-    // Needs to wait until the shared prefs is committed() as it happens in a separated thread
-    private void logUsageAndWait(String appName, @Result int callResult)
-            throws InterruptedException {
-        logUsageAndWait(appName, API, callResult);
+        assertMetricsLogged(PKG_NAME, API_TOPICS, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        assertMetricsLogged(PKG_NAME, API_ATTRIBUTION, RESULT_DISALLOWED_BY_APP);
+        assertMetricsLogged(
+                PKG_NAME2, API_ATTRIBUTION, RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG);
     }
 
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
@@ -321,8 +336,8 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     // Should only be used in cases where the call is expect to not change the shared preferences
     // (in which case a listener would not be called)
-    private void logUsageAndDontWait(String appName, @Result int callResult) {
-        AppManifestConfigCall call = new AppManifestConfigCall(appName, API);
+    private void logUsageAndDontWait(String appName, int api, @Result int callResult) {
+        AppManifestConfigCall call = new AppManifestConfigCall(appName, api);
         call.result = callResult;
         Log.v(mTag, "logUsageAndDontWait(call=" + call + ")");
         AppManifestConfigMetricsLogger.logUsage(call);
@@ -339,6 +354,25 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON,
                 never());
+    }
+
+    private void assertMetricsLogged(String pkgName, @ApiType int api, @Result int result) {
+        AppManifestConfigCall call = new AppManifestConfigCall(pkgName, api);
+        call.result = result;
+        verify(mStatsdLogger).logAppManifestConfigCall(call);
+    }
+
+    private void assertNoMetricsLogged() {
+        verify(mStatsdLogger, never()).logAppManifestConfigCall(any());
+    }
+
+    // TODO(b/295321663): ideally it should be a method from AdServicesExtendedMockitoRule (so it
+    // checks if StatsdAdServicesLogger is mocked), but it would add a dependency to the
+    // aservices-service-core project - need to figure out a way to extend the rule to allow such
+    // dependencies)
+    private void mockGetStatsdAdServicesLogger() {
+        Log.v(mTag, "mockGetStatsdAdServicesLogger(): " + mStatsdLogger);
+        doReturn(mStatsdLogger).when(StatsdAdServicesLogger::getInstance);
     }
 
     // TODO(b/309857141): move to its own class / common package (it will be done in a later CL so

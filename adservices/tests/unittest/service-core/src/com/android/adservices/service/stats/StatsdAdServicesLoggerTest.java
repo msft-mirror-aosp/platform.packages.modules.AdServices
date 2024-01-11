@@ -36,6 +36,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
@@ -60,6 +61,9 @@ import android.adservices.adselection.ReportEventRequest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
@@ -1121,6 +1125,25 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
         verify(writeInvocation);
 
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogAppManifestConfigCall() {
+        String pkgName = "pkg.I.am";
+        @ApiType int apiType = AppManifestConfigCall.API_TOPICS;
+        @Result int result = AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
+        AppManifestConfigCall call = new AppManifestConfigCall(pkgName, apiType);
+        call.result = result;
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyString(), anyInt(), anyInt()));
+
+        mLogger.logAppManifestConfigCall(call);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                APP_MANIFEST_CONFIG_HELPER_CALLED, pkgName, apiType, result);
+        verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 }
