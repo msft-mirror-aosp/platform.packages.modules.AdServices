@@ -865,7 +865,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags.ClassifierType;
-import com.android.adservices.service.topics.fixture.SysPropForceDefaultValueFixture;
+import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
