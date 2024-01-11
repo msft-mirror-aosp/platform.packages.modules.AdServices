@@ -399,6 +399,9 @@ public class MeasurementDaoTest {
             assertEquals(
                     validTrigger.getAggregationCoordinatorOrigin(),
                     trigger.getAggregationCoordinatorOrigin());
+            assertEquals(
+                    validTrigger.getAggregatableSourceRegistrationTimeConfig(),
+                    trigger.getAggregatableSourceRegistrationTimeConfig());
         }
     }
 
@@ -4439,7 +4442,34 @@ public class MeasurementDaoTest {
             AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
             assertNotNull(aggregateReport);
             assertNotNull(aggregateReport.getId());
-            assertTrue(Objects.equals(validAggregateReport, aggregateReport));
+            assertEquals(validAggregateReport, aggregateReport);
+        }
+    }
+
+    @Test
+    public void testInsertAggregateReport_withNullSourceRegistrationTime() {
+        AggregateReport.Builder builder = AggregateReportFixture.getValidAggregateReportBuilder();
+        builder.setSourceRegistrationTime(null);
+        AggregateReport aggregateReportWithNullSourceRegistrationTime = builder.build();
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.insertAggregateReport(aggregateReportWithNullSourceRegistrationTime));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertTrue(cursor.moveToNext());
+            AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
+            assertNotNull(aggregateReport);
+            assertNotNull(aggregateReport.getId());
+            assertEquals(aggregateReportWithNullSourceRegistrationTime, aggregateReport);
         }
     }
 
@@ -7980,7 +8010,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         Trigger t1 =
                 triggerBuilder
                         .setId("t1")
@@ -8034,7 +8066,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         // Trigger with debug AdId present
         Trigger t1 =
                 triggerBuilder
@@ -8105,7 +8139,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         // Multiple triggers with same AdId
         Trigger t1 =
                 triggerBuilder
@@ -8184,7 +8220,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         // Multiple triggers with different AdIds but the same enrollmentId
         Trigger t1 =
                 triggerBuilder
@@ -8263,7 +8301,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         // Multiple triggers with different AdIds and differing enrollmentIds
         Trigger t1 =
                 triggerBuilder
