@@ -218,8 +218,7 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "333",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "333"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239174000"
@@ -233,8 +232,7 @@
               "value": 222
             }
           ],
-          "source_debug_key": "111",
-          "source_registration_time": "1643155200"
+          "source_debug_key": "111"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239175000"
@@ -249,8 +247,7 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "444",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "444"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239176000"
@@ -264,8 +261,7 @@
               "value": 444
             }
           ],
-          "trigger_debug_key": "555",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "555"
         },
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239177000"
@@ -279,8 +275,7 @@
               "value": 555
             }
           ],
-          "trigger_debug_key": "666",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "666"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239178000"
@@ -297,8 +292,7 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "333",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "333"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "report_time": "1643235574000"
@@ -313,8 +307,7 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "444",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "444"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "report_time": "1643235576000"
