@@ -58,11 +58,12 @@ import android.net.Uri;
 import android.os.Process;
 import android.util.Pair;
 
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.adservices.common.annotations.SetIntegerFlag;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -82,6 +83,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private AdvertisingCustomAudienceClient mClient;
@@ -97,12 +99,6 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
-
-    // TODO(b/317411225): remove this method and annotate the class with @SetFlagEnabled instead
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return super.getAdServicesFlagsSetterRule().setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
-    }
 
     @Before
     public void setup() throws Exception {
@@ -365,6 +361,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validFetchUri_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -385,12 +382,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validFetchUri_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validFetchUri_validRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -415,12 +414,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validName_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -442,12 +443,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validName_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validName_validRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -472,12 +475,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_tooLongName_invalidRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validActivationTime_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -500,12 +505,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validActivationTime_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validActivationTime_validRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -528,12 +535,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -555,12 +564,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validExpirationTime_validRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -583,12 +594,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -610,12 +623,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest();
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -638,6 +653,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 319330548)
     public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest();

@@ -27,3 +27,10 @@ flag {
     description: "Make Process#FIRST_SDK_SANDBOX_UID and Process#LAST_SDK_SANDBOX_UID public"
     bug: "314270319"
 }
+
+flag {
+    name: "sdk_sandbox_uid_to_app_uid_api"
+    namespace: "sdk_sandbox"
+    description: "Get the app uid for the input sdk sandbox uid"
+    bug: "314270319"
+}
