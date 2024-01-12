@@ -92,10 +92,11 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     private static final Topic TOPIC1 = Topic.create(0, 1, 11);
     private static final Topic TOPIC2 = Topic.create(12, 2, 22);
     private static final Topic TOPIC3 = Topic.create(123, 3, 33);
-    private static final int APPSEARCH_WRITE_TIMEOUT_MS = 1000;
+    private static final int APPSEARCH_TIMEOUT_MS = 1000;
 
     private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
-
+    private final ListeningExecutorService mExecutorService =
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     @Mock private Flags mMockFlags;
 
     @Before
@@ -105,7 +106,8 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                 .thenReturn(Flags.ADSERVICES_APK_SHA_CERTIFICATE);
         when(mMockFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
         // Reduce AppSearch write timeout to speed up the tests.
-        when(mMockFlags.getAppSearchWriteTimeout()).thenReturn(APPSEARCH_WRITE_TIMEOUT_MS);
+        when(mMockFlags.getAppSearchWriteTimeout()).thenReturn(APPSEARCH_TIMEOUT_MS);
+        when(mMockFlags.getAppSearchReadTimeout()).thenReturn(APPSEARCH_TIMEOUT_MS);
     }
 
     @Test
@@ -524,18 +526,14 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         initFailureResponse();
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
 
-        if (isBetaUx) {
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class, () -> worker.recordNotificationDisplayed(true));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } else {
-            RuntimeException e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () -> worker.recordGaUxNotificationDisplayed(true));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        }
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        isBetaUx
+                                ? () -> worker.recordNotificationDisplayed(true)
+                                : () -> worker.recordGaUxNotificationDisplayed(true));
+
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
@@ -808,7 +806,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @Test
     @MockStatic(AppSearchTopicsConsentDao.class)
     @SpyStatic(PlatformStorage.class)
-    public void testRecordUnblockedTopic_failure() throws Exception {
+    public void testRecordUnblockedTopic_failure() {
         AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
@@ -875,8 +873,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         initFailureResponse();
 
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-        RuntimeException e =
-                assertThrows(RuntimeException.class, () -> worker.clearBlockedTopics());
+        RuntimeException e = assertThrows(RuntimeException.class, worker::clearBlockedTopics);
         assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
@@ -887,8 +884,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         initTimeoutResponse();
 
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-        RuntimeException e =
-                assertThrows(RuntimeException.class, () -> worker.clearBlockedTopics());
+        RuntimeException e = assertThrows(RuntimeException.class, worker::clearBlockedTopics);
         assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         assertThat(e.getCause()).isNotNull();
         assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
@@ -955,7 +951,8 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
                 .thenReturn(Futures.immediateFuture(mockResponse));
 
-        AppSearchResult mockResult = Mockito.mock(AppSearchResult.class);
+        AppSearchResult<String> mockResult =
+                AppSearchResult.newFailedResult(AppSearchResult.RESULT_INVALID_ARGUMENT, "test");
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
@@ -967,11 +964,9 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
 
     private <T> ListenableFuture<T> getLongRunningOperation(T result) {
         // Wait for a time that's longer than the AppSearch write timeout, then return the result.
-        ListeningExecutorService ls =
-                MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-        return ls.submit(
+        return mExecutorService.submit(
                 () -> {
-                    TimeUnit.MILLISECONDS.sleep(APPSEARCH_WRITE_TIMEOUT_MS + 500);
+                    TimeUnit.MILLISECONDS.sleep(APPSEARCH_TIMEOUT_MS + 1000);
                     return result;
                 });
     }
