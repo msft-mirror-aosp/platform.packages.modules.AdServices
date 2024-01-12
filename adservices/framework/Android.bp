@@ -20,8 +20,8 @@ filegroup {
     name: "framework-adservices-sources",
     defaults: ["framework-sources-module-defaults"],
     srcs: [
-      "java/**/*.aidl",
-      "java/**/*.java"
+        "java/**/*.aidl",
+        "java/**/*.java",
     ],
     visibility: [
         "//packages/modules/AdServices/adservices:__subpackages__",
@@ -38,6 +38,7 @@ java_sdk_library {
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
         "error_prone_annotations",
+        "adservices_flags_lib",
     ],
     sdk_version: "module_current",
     min_sdk_version: "30",
@@ -50,7 +51,10 @@ java_sdk_library {
     impl_library_visibility: [
         "//packages/modules/AdServices:__subpackages__",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
 }
 
 java_library {
@@ -61,6 +65,7 @@ java_library {
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
         "error_prone_annotations",
+        "adservices_flags_lib",
     ],
     min_sdk_version: "30",
     defaults: ["framework-module-defaults"],
