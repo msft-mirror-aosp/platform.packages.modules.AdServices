@@ -38,9 +38,6 @@ java_library {
     apex_available: [
         "com.android.adservices",
     ],
-    lint: {
-        baseline_filename: "lint-baseline.xml",
-    },
 }
 
 filegroup {
@@ -95,7 +92,7 @@ java_sdk_library {
     ],
     java_resources: [
         ":platform_api_allowlist_per_target_sdk_version_current.binarypb",
-        ],
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
     ],

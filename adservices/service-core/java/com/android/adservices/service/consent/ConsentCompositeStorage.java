@@ -277,50 +277,6 @@ public class ConsentCompositeStorage implements IConsentStorage {
         }
     }
 
-    /**
-     * Retrieves the default AdId state.
-     *
-     * @return true if the AdId is enabled by default, false otherwise.
-     */
-    @Override
-    public boolean getDefaultAdIdState() {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                return storage.getDefaultAdIdState();
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreWhileRecordingDefaultConsent(e);
-                return false;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Retrieves the PP API default consent.
-     *
-     * @return AdServicesApiConsent.
-     */
-    @Override
-    public AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                return storage.getDefaultConsent(apiType);
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreWhileRecordingDefaultConsent(e);
-                return AdServicesApiConsent.REVOKED;
-            }
-        }
-        return AdServicesApiConsent.REVOKED;
-    }
-
     /** Returns current enrollment channel. */
     @Override
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
@@ -578,40 +534,6 @@ public class ConsentCompositeStorage implements IConsentStorage {
                         storage.getClass().getSimpleName());
             } catch (IOException e) {
                 logDataStoreWhileRecordingException(e);
-            }
-        }
-    }
-
-    /** Saves the default AdId state bit to data stores based on source of truth. */
-    @Override
-    public void recordDefaultAdIdState(boolean defaultAdIdState) {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                storage.recordDefaultAdIdState(defaultAdIdState);
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreManualInteractionException(e);
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    /** Saves the default consent of a user. */
-    @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent) {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                storage.recordDefaultConsent(apiType, defaultConsent);
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreManualInteractionException(e);
-                throw new RuntimeException(e);
             }
         }
     }
