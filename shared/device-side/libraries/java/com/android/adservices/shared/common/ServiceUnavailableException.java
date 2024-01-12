@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.exception;
+package com.android.adservices.shared.common;
 
 /** Exception class to indicate that AdServices isn't available. */
-public class AdServicesUnavailableException extends IllegalStateException {
-    public AdServicesUnavailableException(String message) {
+public class ServiceUnavailableException extends IllegalStateException {
+    public ServiceUnavailableException(String message) {
         super(message);
     }
 }
