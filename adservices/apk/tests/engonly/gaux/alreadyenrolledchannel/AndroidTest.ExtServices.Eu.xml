@@ -111,4 +111,9 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.adservices.tests.ui.gaux.alredyenrolledchannel"/>
     </test>
+
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
+        <option name="mainline-module-package-name" value="com.google.android.extservices"/>
+    </object>
 </configuration>
