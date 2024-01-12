@@ -50,7 +50,8 @@ public class AggregateReportBody {
 
     private static final String API_NAME = "attribution-reporting";
 
-    private interface PayloadBodyKeys {
+    @VisibleForTesting
+    interface PayloadBodyKeys {
         String SHARED_INFO = "shared_info";
         String AGGREGATION_SERVICE_PAYLOADS = "aggregation_service_payloads";
         String SOURCE_DEBUG_KEY = "source_debug_key";
@@ -64,7 +65,8 @@ public class AggregateReportBody {
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
     }
 
-    private interface SharedInfoKeys {
+    @VisibleForTesting
+    interface SharedInfoKeys {
         String API_NAME = "api";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String REPORT_ID = "report_id";
