@@ -176,6 +176,7 @@ public final class SignedContextualAds implements Parcelable {
      *
      * @return the signature
      */
+    @NonNull
     public byte[] getSignature() {
         return Arrays.copyOf(mSignature, mSignature.length);
     }
