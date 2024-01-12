@@ -353,7 +353,8 @@ public class AppSearchDaoTest {
         when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
                 .thenReturn(Futures.immediateFuture(mockResponse));
 
-        AppSearchResult mockResult = Mockito.mock(AppSearchResult.class);
+        AppSearchResult<String> mockResult =
+                AppSearchResult.newFailedResult(AppSearchResult.RESULT_INVALID_ARGUMENT, "test");
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
@@ -374,7 +375,8 @@ public class AppSearchDaoTest {
         assertThat(e.getMessage())
                 .isEqualTo(
                         "java.lang.RuntimeException: "
-                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE
+                                + " Migration failure: [FAILURE(3)]: test");
     }
 
     @Test
