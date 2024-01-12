@@ -27,10 +27,10 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroun
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
@@ -66,7 +66,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -86,7 +86,7 @@ import java.util.concurrent.Executors;
 @SpyStatic(MobileDataDownloadFactory.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MddFlags.class)
-@SpyStatic(AdservicesJobServiceLogger.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
 @SpyStatic(EnrollmentDataDownloadManager.class)
 @MockStatic(ServiceCompatUtils.class)
 public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
@@ -123,7 +123,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     @Mock private EnrollmentDataDownloadManager mSpyEnrollmentDataDownloadManager;
 
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-    private AdservicesJobServiceLogger mLogger;
+    private AdServicesJobServiceLogger mLogger;
 
     @Before
     public void setup() {

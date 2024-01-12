@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit;
  * Flags. The default values in this class must match with the default values in PH since we will
  * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
  * from the GCL.
+ *
+ * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  */
 public interface Flags extends CommonFlags {
     /** Topics Epoch Job Period. */
@@ -4430,8 +4432,8 @@ public interface Flags extends CommonFlags {
     }
 
     /**
-     * Default value to determine how many logging events {@link
-     * com.android.adservices.spe.AdservicesJobServiceLogger} should upload to the server.
+     * Default value to determine how many logging events {@link AdServicesJobServiceLogger} should
+     * upload to the server.
      *
      * <p>The value should be an integer in the range of [0, 100], where 100 is to log all events
      * and 0 is to log no events.
@@ -4439,8 +4441,7 @@ public interface Flags extends CommonFlags {
     int DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE = 5;
 
     /**
-     * Returns the sampling logging rate for {@link
-     * com.android.adservices.spe.AdservicesJobServiceLogger} for logging events.
+     * Returns the sampling logging rate for {@link AdServicesJobServiceLogger} for logging events.
      */
     default int getBackgroundJobSamplingLoggingRate() {
         return DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
