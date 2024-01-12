@@ -74,7 +74,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -93,18 +93,20 @@ public final class AppSearchConsentWorkerTest extends AdServicesUnitTestCase {
     private static final Topic TOPIC1 = Topic.create(0, 1, 11);
     private static final Topic TOPIC2 = Topic.create(12, 2, 22);
     private static final Topic TOPIC3 = Topic.create(123, 3, 33);
-    private List<Topic> mTopics = new ArrayList<>();
+
     private MockitoSession mMockitoSession;
-    @Mock
-    Flags mMockFlags;
-    private static final int APPSEARCH_WRITE_TIMEOUT_MS = 1000;
+    private static final int APPSEARCH_TIMEOUT_MS = 1000;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevelRule = SdkLevelSupportRule.forAtLeastS();
 
+    private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
+    private final ListeningExecutorService mExecutorService =
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+    @Mock private Flags mMockFlags;
+
     @Before
     public void setup() {
-        mTopics.addAll(List.of(TOPIC1, TOPIC2, TOPIC3));
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(FlagsFactory.class)
@@ -116,7 +118,8 @@ public final class AppSearchConsentWorkerTest extends AdServicesUnitTestCase {
                 .thenReturn(Flags.ADSERVICES_APK_SHA_CERTIFICATE);
         when(mMockFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
         // Reduce AppSearch write timeout to speed up the tests.
-        when(mMockFlags.getAppSearchWriteTimeout()).thenReturn(APPSEARCH_WRITE_TIMEOUT_MS);
+        when(mMockFlags.getAppSearchWriteTimeout()).thenReturn(APPSEARCH_TIMEOUT_MS);
+        when(mMockFlags.getAppSearchReadTimeout()).thenReturn(APPSEARCH_TIMEOUT_MS);
     }
 
     @After
@@ -1426,7 +1429,8 @@ public final class AppSearchConsentWorkerTest extends AdServicesUnitTestCase {
         when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
                 .thenReturn(Futures.immediateFuture(mockResponse));
 
-        AppSearchResult mockResult = Mockito.mock(AppSearchResult.class);
+        AppSearchResult<String> mockResult =
+                AppSearchResult.newFailedResult(AppSearchResult.RESULT_INVALID_ARGUMENT, "test");
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
@@ -1438,11 +1442,9 @@ public final class AppSearchConsentWorkerTest extends AdServicesUnitTestCase {
 
     private <T> ListenableFuture<T> getLongRunningOperation(T result) {
         // Wait for a time that's longer than the AppSearch write timeout, then return the result.
-        ListeningExecutorService ls =
-                MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-        return ls.submit(
+        return mExecutorService.submit(
                 () -> {
-                    TimeUnit.MILLISECONDS.sleep(APPSEARCH_WRITE_TIMEOUT_MS + 500);
+                    TimeUnit.MILLISECONDS.sleep(APPSEARCH_TIMEOUT_MS + 1000);
                     return result;
                 });
     }
