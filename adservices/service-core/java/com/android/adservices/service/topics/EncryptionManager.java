@@ -33,7 +33,7 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
@@ -90,7 +90,7 @@ public class EncryptionManager {
                                 new HpkeEncrypter(),
                                 EnrollmentDao.getInstance(context),
                                 EncryptionKeyDao.getInstance(context),
-                                PhFlags.getInstance());
+                                FlagsFactory.getFlags());
             }
         }
         return sSingleton;
