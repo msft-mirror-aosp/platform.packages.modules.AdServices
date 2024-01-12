@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.exception;
+package com.android.adservices.shared.common;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class AdServicesUnavailableExceptionTest extends AdServicesUnitTestCase {
+public class ServiceUnavailableExceptionTest extends AdServicesUnitTestCase {
 
     public static final String ERROR_MESSAGE = "error_message";
 
     @Test
     public void testAdServicesUnavailableException_correctErrorMsg() {
-        AdServicesUnavailableException exception =
-                new AdServicesUnavailableException(ERROR_MESSAGE);
+        ServiceUnavailableException exception = new ServiceUnavailableException(ERROR_MESSAGE);
 
         expect.that(exception).hasMessageThat().isEqualTo(ERROR_MESSAGE);
     }
 
     @Test
     public void testAdServicesUnavailableException_isOfTypeIllegalStateException() {
-        AdServicesUnavailableException exception =
-                new AdServicesUnavailableException(ERROR_MESSAGE);
+        ServiceUnavailableException exception = new ServiceUnavailableException(ERROR_MESSAGE);
 
         expect.that(exception).isInstanceOf(IllegalStateException.class);
     }
