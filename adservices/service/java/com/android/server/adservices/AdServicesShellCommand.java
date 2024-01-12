@@ -36,7 +36,9 @@ import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -57,12 +59,15 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
             AD_SERVICES_SYSTEM_SERVICE + " shell cmd is only callable by ADB (called by %d)";
 
     private static final String CMD_IS_SYSTEM_SERVICE_ENABLED = "is-system-service-enabled";
+    private static final String TIMEOUT_ARG = "--timeout";
+    // Default timeout value to wait for the shell command output when we bind to the adservices
+    // process.
+    private static final int DEFAULT_TIMEOUT_MILLIS = 5_000;
 
     private final Injector mInjector;
     private final Flags mFlags;
     private final Context mContext;
-
-    private static final int DEFAULT_TIMEOUT_MILLIS = 5_000;
+    private int mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
 
     AdServicesShellCommand(Context context) {
         this(new Injector(), PhFlags.getInstance(), context);
@@ -93,8 +98,6 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                 // If there is no explicit case is there, we assume we want to run the shell command
                 // in the adservices process.
             default:
-                // TODO(b/308009734): Check for --user args in the follow-up cl and change
-                //  context and bind to the service accordingly.
                 return runAdServicesShellCommand(mContext, getAllArgs());
         }
     }
@@ -102,10 +105,11 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     private int runAdServicesShellCommand(Context context, String[] args) {
         IShellCommand service = mInjector.getShellCommandService(context);
         if (service == null) {
-            getOutPrintWriter().println("Failed to connect to shell command service");
+            getErrPrintWriter().println("Failed to connect to shell command service");
             return -1;
         }
-        ShellCommandParam param = new ShellCommandParam(args);
+        String[] realArgs = handleAdServicesArgs(args);
+        ShellCommandParam param = new ShellCommandParam(realArgs);
         CountDownLatch latch = new CountDownLatch(1);
         AtomicInteger resultCode = new AtomicInteger(-1);
         try {
@@ -127,13 +131,12 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
             getErrPrintWriter()
                     .printf(
                             "Remote exception occurred while executing %s\n",
-                            Arrays.toString(args));
+                            Arrays.toString(realArgs));
 
             latch.countDown();
         }
 
-        // TODO(b/308009734): make the time out configurable with flags and command line argument.
-        await(latch, DEFAULT_TIMEOUT_MILLIS, getErrPrintWriter());
+        await(latch, mTimeoutMillis, getErrPrintWriter());
 
         return resultCode.get();
     }
@@ -149,6 +152,36 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
         } catch (InterruptedException e) {
             pw.println("Thread interrupted, failed to complete shell command");
             Thread.currentThread().interrupt();
+        }
+    }
+
+    private String[] handleAdServicesArgs(String[] args) {
+        // Contains all the args except --user, --timeout arg and its value.
+        List<String> realArgs = new ArrayList<>();
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            switch (arg) {
+                case TIMEOUT_ARG:
+                    mTimeoutMillis = parseTimeoutArg(args, ++i);
+                    break;
+                    // TODO(b/308009734): Check for --user args in the follow-up cl and change
+                    //  context and bind to the service accordingly.
+                default:
+                    realArgs.add(arg);
+            }
+        }
+        return realArgs.toArray(String[]::new);
+    }
+
+    private int parseTimeoutArg(String[] args, int index) {
+        if (index >= args.length) {
+            throw new IllegalArgumentException("Argument expected after " + args[index - 1]);
+        }
+
+        try {
+            return Integer.parseInt(args[index]);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Bad timeout value: " + args[index]);
         }
     }
 
