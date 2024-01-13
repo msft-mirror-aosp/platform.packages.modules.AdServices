@@ -105,7 +105,7 @@ public final class AppSearchMeasurementRollbackWorker implements MeasurementRoll
             LogUtil.d("Wrote measurement rollback data to AppSearch: %s", dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             LogUtil.e(e, "Failed to write measurement rollback to AppSearch");
-            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE, e);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
         }
@@ -137,7 +137,7 @@ public final class AppSearchMeasurementRollbackWorker implements MeasurementRoll
             LogUtil.d("Deleted MeasurementRollback data from AppSearch for: %s", storageIdentifier);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             LogUtil.e(e, "Failed to delete MeasurementRollback data in AppSearch");
-            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE, e);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
         }

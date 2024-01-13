@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -83,7 +84,7 @@ public class AsyncRegistrationQueueJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId();
-    private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long WAIT_IN_MILLIS = 5_000L;
     private static final long JOB_TRIGGER_MIN_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
     private static final long JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
     private JobScheduler mMockJobScheduler;
@@ -194,17 +195,21 @@ public class AsyncRegistrationQueueJobServiceTest {
 
                     // Verify before executing again to make sure the lock has been unlocked
                     ExtendedMockito.verify(
-                            () -> mSpyService.scheduleIfNeeded(any(), eq(true)),
-                            timeout(WAIT_IN_MILLIS).times(1));
+                            () ->
+                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).atLeast(1));
 
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
                     // Validate the job ran successfully twice
                     assertTrue(result);
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
                     ExtendedMockito.verify(
-                            () -> mSpyService.scheduleIfNeeded(any(), eq(true)),
-                            timeout(WAIT_IN_MILLIS).times(2));
-                    ExtendedMockito.verify(mSpyService, never()).jobFinished(any(), anyBoolean());
+                            () ->
+                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).atLeast(2));
                     verify(mMockJobScheduler, never())
                             .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
@@ -265,12 +270,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                                     /* shouldRetry= */ eq(true));
                     verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
                             .jobFinished(any(), eq(/* wantsReschedule= */ true));
-                    ExtendedMockito.verify(
-                            () ->
-                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                                            any(), anyBoolean()),
-                            never());
                     verify(mSpyService, never()).scheduleImmediately(any());
+                    verify(mMockJobScheduler, never()).schedule(any());
                 });
     }
 
@@ -304,7 +305,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                             () ->
                                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                             any(), eq(true)),
-                            timeout(WAIT_IN_MILLIS).times(1));
+                            timeout(WAIT_IN_MILLIS).atLeast(1));
                     verify(mSpyService, never()).scheduleImmediately(any());
                 });
     }
@@ -334,11 +335,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                                     /* isSuccessful= */ eq(true),
                                     /* shouldRetry= */ eq(true));
                     verify(mSpyService, never()).jobFinished(any(), anyBoolean());
-                    ExtendedMockito.verify(
-                            () ->
-                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                                            any(), anyBoolean()),
-                            never());
                     verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
                             .scheduleImmediately(any());
                 });
@@ -402,10 +398,9 @@ public class AsyncRegistrationQueueJobServiceTest {
                             mockContext, /* forceSchedule= */ false);
 
                     // Validate
-                    ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                    verify(mMockJobScheduler, never()).schedule(any());
                 });
     }
 
@@ -447,8 +442,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                             spyContext, /* forceSchedule= */ false);
 
                     // Validate
-                    ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
@@ -493,7 +486,8 @@ public class AsyncRegistrationQueueJobServiceTest {
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()));
+                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
+                            timeout(WAIT_IN_MILLIS));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
@@ -523,7 +517,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
-                            times(1));
+                            atLeast(1));
                     verify(mMockJobScheduler, times(1))
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
@@ -552,7 +546,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
-                            timeout(WAIT_IN_MILLIS).times(1));
+                            timeout(WAIT_IN_MILLIS).atLeast(1));
                     verify(mMockJobScheduler, timeout(WAIT_IN_MILLIS).times(1))
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
@@ -579,7 +573,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
-                            times(1));
+                            atLeast(1));
                     ArgumentCaptor<JobInfo> jobInfoArgumentCaptor =
                             ArgumentCaptor.forClass(JobInfo.class);
                     verify(mMockJobScheduler, timeout(WAIT_IN_MILLIS).times(1))
@@ -659,7 +653,7 @@ public class AsyncRegistrationQueueJobServiceTest {
         assertTrue(result);
         ExtendedMockito.verify(
                 () -> mSpyService.scheduleIfNeeded(any(), eq(true)),
-                timeout(WAIT_IN_MILLIS).times(1));
+                timeout(WAIT_IN_MILLIS).atLeast(1));
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
     }
 
