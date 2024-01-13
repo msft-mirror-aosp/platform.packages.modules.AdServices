@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
 import static com.android.adservices.service.measurement.reporting.DebugReportingJobService.DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
@@ -43,6 +44,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -56,7 +58,6 @@ import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -76,7 +77,7 @@ public class DebugReportingJobServiceTest {
     private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
 
-    private static final long WAIT_IN_MILLIS = 1000L;
+    private static final long WAIT_IN_MILLIS = 200L;
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
@@ -115,18 +116,15 @@ public class DebugReportingJobServiceTest {
                     // Setup
                     enableKillSwitch();
 
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
                     // Execute
-                    boolean result = mSpyService.onStartJob(mJobParameters);
+                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
                     // Validate
                     assertFalse(result);
-                    // Allow background thread to execute
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    if (!SdkLevel.isAtLeastT()) {
-                        // Additional sleep for S- test flakiness
-                        Thread.sleep(WAIT_IN_MILLIS);
-                    }
+
+                    callback.assertJobFinished();
                     verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
                     verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
@@ -137,26 +135,24 @@ public class DebugReportingJobServiceTest {
     public void onStartJob_killSwitchOff() throws Exception {
         runWithMocks(
                 () -> {
-                    // Setup
-                    disableKillSwitch();
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             DebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
+                    // Setup
+                    disableKillSwitch();
+
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
                     // Execute
-                    boolean result = mSpyService.onStartJob(mJobParameters);
+                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
                     // Validate
                     assertTrue(result);
-                    // Allow background thread to execute
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    if (!SdkLevel.isAtLeastT()) {
-                        // Additional sleep for S- test flakiness
-                        Thread.sleep(WAIT_IN_MILLIS);
-                    }
+
+                    callback.assertJobFinished();
 
                     verify(mMockDatastoreManager, times(2)).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
@@ -168,25 +164,24 @@ public class DebugReportingJobServiceTest {
     public void onStartJob_killSwitchOff_unlockingCheck() throws Exception {
         runWithMocks(
                 () -> {
-                    // Setup
-                    disableKillSwitch();
-                    CountDownLatch countDownLatch = createCountDownLatch();
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             DebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
+                    // Setup
+                    disableKillSwitch();
+
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
 
                     // Execute
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    countDownLatch = createCountDownLatch();
+                    callback.assertJobFinished();
+
+                    callback = createJobFinishedCallback(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    callback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
@@ -209,13 +204,14 @@ public class DebugReportingJobServiceTest {
                                             ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                                     any(Context.class)));
 
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
                     // Execute
                     boolean result = mSpyService.onStartJob(mJobParameters);
 
                     // Validate
                     assertFalse(result);
                     // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
+                    callback.assertJobFinished();
                     verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
                     verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
