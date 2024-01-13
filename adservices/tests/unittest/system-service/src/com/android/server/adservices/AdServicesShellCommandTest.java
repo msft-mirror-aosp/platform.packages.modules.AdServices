@@ -18,6 +18,7 @@ package com.android.server.adservices;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -25,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.shell.IShellCommand;
 import android.adservices.shell.IShellCommandCallback;
+import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
 import android.content.Context;
 import android.os.Process;
@@ -176,7 +178,7 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
                         .setErr(String.format("Unsupported command: %s", cmd))
                         .setResultCode(-1)
                         .build();
-        mockRunShellCommand(responseInvalidShellCommand);
+        mockRunShellCommand(responseInvalidShellCommand, cmd);
 
         int result = runCmd(cmd);
 
@@ -185,20 +187,6 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
         String err = getErr();
         expectHelpOutputHasAllCommands(err);
         expectHelpOutputHasMessages(err, cmd);
-    }
-
-    @Test
-    public void testExec_validAdServicesShellCommand() throws Exception {
-        String cmd = "echo";
-        ShellCommandResult response =
-                new ShellCommandResult.Builder().setOut(cmd).setResultCode(0).build();
-        mockRunShellCommand(response);
-
-        int result = runCmd(cmd);
-
-        expect.withMessage("result").that(result).isEqualTo(0);
-        expect.withMessage("out").that(getOut()).contains(cmd);
-        expect.withMessage("err").that(getErr()).isEmpty();
     }
 
     @Test
@@ -337,6 +325,85 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
         expectHelpOutputHasMessages(err, "--D'OH!");
     }
 
+    @Test
+    public void testExec_validAdServicesShellCommand_noArgs() throws Exception {
+        String cmd = "CMD_XYZ";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd);
+
+        int result = runCmd(cmd);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommand_withArgs() throws Exception {
+        String cmd = "CMD_XYZ";
+        String arg1 = "ARG1";
+        String arg2 = "ARG2";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd, arg1, arg2);
+
+        int result = runCmd(cmd, arg1, arg2);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommandWithTimeout() throws Exception {
+        String cmd = "CMD_XYZ";
+        String arg1 = "ARG1";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd, arg1);
+
+        int result = runCmd(cmd, arg1, "--timeout", "1000");
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommandWithTimeoutInAnyOrder() throws Exception {
+        String cmd = "CMD_XYZ";
+        String arg1 = "ARG1";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd, arg1);
+
+        int result = runCmd(cmd, "--timeout", "1000", arg1);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_invalidTimeoutArgPresent() {
+        // timeout value missing
+        int result = runCmd("CMD_XYZ", "hello", "--timeout");
+        expect.withMessage("timeout").that(result).isEqualTo(-1);
+        expect.withMessage("out").that(getOut()).isEmpty();
+        expect.withMessage("err").that(getErr()).contains("Argument expected after");
+
+        // timeout value not an integer
+        result = runCmd("CMD_XYZ", "hello", "--timeout", "abc");
+        expect.withMessage("timeout").that(result).isEqualTo(-1);
+        expect.withMessage("out").that(getOut()).isEmpty();
+        expect.withMessage("err").that(getErr()).contains("Bad timeout value");
+    }
+
     private void expectHelpOutputHasAllCommands(String helpOutput) {
         expectHelpOutputHasMessages(helpOutput, ALL_COMMANDS);
     }
@@ -371,13 +438,14 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
         when(mFlags.getAdServicesSystemServiceEnabled()).thenReturn(value);
     }
 
-    private void mockRunShellCommand(ShellCommandResult response) throws Exception {
+    private void mockRunShellCommand(ShellCommandResult response, String... args) throws Exception {
+        ShellCommandParam param = new ShellCommandParam(args);
         doAnswer(
                         invocation -> {
                             ((IShellCommandCallback) invocation.getArgument(1)).onResult(response);
                             return null;
                         })
                 .when(mIShellCommand)
-                .runShellCommand(any(), any());
+                .runShellCommand(eq(param), any());
     }
 }
