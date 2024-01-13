@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
@@ -87,7 +89,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
-    public static PhFlags getInstance() {
+    static PhFlags getInstance() {
         return sSingleton;
     }
 
@@ -5454,6 +5456,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES
                         + " = "
                         + getMeasurementEnableSessionStableKillSwitches());
+        writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
+        writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
     }
 
     @VisibleForTesting
@@ -6339,6 +6343,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
+                /* defaultValue */
+                MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
+    }
+
+    @Override
+    public boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
+                /* defaultValue */
+                MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED);
+    }
+
+    @Override
     public boolean getMeasurementEnableSessionStableKillSwitches() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -6385,5 +6409,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         }
 
         return loggingRatio;
+    }
+
+    @Override
+    public int getAppSearchWriteTimeout() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* name= */ FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS,
+                /* defaultValue= */ DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getAppSearchReadTimeout() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* name= */ FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS,
+                /* defaultValue= */ DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
     }
 }
