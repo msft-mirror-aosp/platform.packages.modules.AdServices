@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
@@ -50,6 +51,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -81,7 +83,7 @@ import java.util.concurrent.TimeUnit;
  * Unit test for {@link AttributionFallbackJobService
  */
 public class AttributionFallbackJobServiceTest {
-    private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -176,7 +178,6 @@ public class AttributionFallbackJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    CountDownLatch countDownLatch = createCountDownLatch();
 
                     ExtendedMockito.doNothing()
                             .when(
@@ -184,16 +185,16 @@ public class AttributionFallbackJobServiceTest {
                                             AttributionFallbackJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
                     // Execute
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    countDownLatch = createCountDownLatch();
+                    callback.assertJobFinished();
+
+                    callback = createJobFinishedCallback(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    callback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
