@@ -27,10 +27,12 @@ import android.app.sdksandbox.testutils.ConfigListener;
 import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.ProtoUtil;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.DeviceConfig;
+import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.webkit.WebViewUpdateService;
 
@@ -47,7 +49,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @RunWith(JUnit4.class)
 public class ContentProviderRestrictionsTestApp {
@@ -169,17 +173,16 @@ public class ContentProviderRestrictionsTestApp {
     public void testGetContentProvider_DeviceConfigAllowlistApplied() throws Exception {
         mDeviceConfigUtils.setProperty(ENFORCE_RESTRICTIONS, "true");
 
-        /**
-         * Base64 encoded proto ContentProviderAllowlists containing allowlist_per_target_sdk { key:
-         * 34 value { authorities: "com.android.textclassifier.icons" authorities: "user_dictionary"
-         * } }
-         *
-         * <p>allowlist_per_target_sdk { key: 35 value { authorities:
-         * "com.android.textclassifier.icons" authorities: "user_dictionary" } }
-         */
-        String encodedAllowlist =
-                "CjcIIhIzCiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucwoPdXNlcl9kaWN0aW9uYXJ5CjcII"
-                        + "xIzCiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucwoPdXNlcl9kaWN0aW9uYXJ5";
+        ArrayMap<Integer, List<String>> allowedAuthorities = new ArrayMap<>();
+        allowedAuthorities.put(
+                34,
+                new ArrayList<>(
+                        Arrays.asList("com.android.textclassifier.icons", "user_dictionary")));
+        allowedAuthorities.put(
+                35,
+                new ArrayList<>(
+                        Arrays.asList("com.android.textclassifier.icons", "user_dictionary")));
+        String encodedAllowlist = ProtoUtil.encodeContentProviderAllowlist(allowedAuthorities);
         mDeviceConfigUtils.setProperty(PROPERTY_CONTENTPROVIDER_ALLOWLIST, encodedAllowlist);
 
         loadSdk();
@@ -198,19 +201,19 @@ public class ContentProviderRestrictionsTestApp {
         mDeviceConfigUtils.setProperty(ENFORCE_RESTRICTIONS, "true");
         mDeviceConfigUtils.setProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
 
-        // Base64 encoded proto AllowedContentProviders containing the string
-        // 'com.android.textclassifier.icons'
-        String encodedNextAllowlist = "CiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucw==";
-        // Set the canary set.
+        ArraySet<String> nextAllowedAuthorities =
+                new ArraySet<>(Arrays.asList("com.android.textclassifier.icons"));
+        String nextEncodedAllowlist =
+                ProtoUtil.encodeContentProviderAllowlist(nextAllowedAuthorities);
         mDeviceConfigUtils.setProperty(
-                PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST, encodedNextAllowlist);
+                PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST, nextEncodedAllowlist);
 
-        // Base64 encoded proto ContentProviderAllowlists containing mappings to the string
-        // 'com.android.textclassifier.icons' and 'user_dictionary'.
-        String encodedAllowlist =
-                "CjcIIhIzCiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucwoPdXNlcl9kaWN0aW9uYXJ5";
-        // Also set the non-canary allowlist to verify that this allowlist is not applied when the
-        // canary flag is set.
+        ArrayMap<Integer, List<String>> allowedAuthorities = new ArrayMap<>();
+        allowedAuthorities.put(
+                34,
+                new ArrayList<>(
+                        Arrays.asList("com.android.textclassifier.icons", "user_dictionary")));
+        String encodedAllowlist = ProtoUtil.encodeContentProviderAllowlist(allowedAuthorities);
         mDeviceConfigUtils.setProperty(PROPERTY_CONTENTPROVIDER_ALLOWLIST, encodedAllowlist);
 
         loadSdk();
@@ -227,16 +230,9 @@ public class ContentProviderRestrictionsTestApp {
     public void testGetContentProvider_DeviceConfigWildcardAllowlistApplied() throws Exception {
         mDeviceConfigUtils.setProperty(ENFORCE_RESTRICTIONS, "true");
 
-        /*
-         * Base64 encoded proto ContentProviderAllowlists in the following form:
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value {
-         *     authorities: "*"
-         *   }
-         * }
-         */
-        String encodedAllowlist = "CgcIIhIDCgEq";
+        ArrayMap<Integer, List<String>> allowedAuthorities = new ArrayMap<>();
+        allowedAuthorities.put(34, new ArrayList<>(Arrays.asList("*")));
+        String encodedAllowlist = ProtoUtil.encodeContentProviderAllowlist(allowedAuthorities);
         mDeviceConfigUtils.setProperty(PROPERTY_CONTENTPROVIDER_ALLOWLIST, encodedAllowlist);
 
         loadSdk();
@@ -251,16 +247,9 @@ public class ContentProviderRestrictionsTestApp {
     public void testGetContentProvider_DeviceConfigAllowlistWithWildcardApplied() throws Exception {
         mDeviceConfigUtils.setProperty(ENFORCE_RESTRICTIONS, "true");
 
-        /*
-         * Base64 encoded proto ContentProviderAllowlists in the following form:
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value {
-         *     authorities: "com.android.contacts.*"
-         *   }
-         * }
-         */
-        String encodedAllowlist = "ChwIIhIYChZjb20uYW5kcm9pZC5jb250YWN0cy4q";
+        ArrayMap<Integer, List<String>> allowedAuthorities = new ArrayMap<>();
+        allowedAuthorities.put(34, new ArrayList<>(Arrays.asList("com.android.contacts.*")));
+        String encodedAllowlist = ProtoUtil.encodeContentProviderAllowlist(allowedAuthorities);
         mDeviceConfigUtils.setProperty(PROPERTY_CONTENTPROVIDER_ALLOWLIST, encodedAllowlist);
         loadSdk();
         mContentProvidersSdkApi.getContentProviderByAuthority(
@@ -335,16 +324,9 @@ public class ContentProviderRestrictionsTestApp {
                     throws Exception {
         mDeviceConfigUtils.setProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
 
-        /*
-         * Base64 encoded proto ContentProviderAllowlists in the following form:
-         * allowlist_per_target_sdk {
-         *   key: 34
-         *   value {
-         *     authorities: "com.android.contacts.*"
-         *   }
-         * }
-         */
-        String encodedAllowlist = "ChwIIhIYChZjb20uYW5kcm9pZC5jb250YWN0cy4q";
+        ArrayMap<Integer, List<String>> allowedAuthorities = new ArrayMap<>();
+        allowedAuthorities.put(34, new ArrayList<>(Arrays.asList("com.android.contacts.*")));
+        String encodedAllowlist = ProtoUtil.encodeContentProviderAllowlist(allowedAuthorities);
         mDeviceConfigUtils.setProperty(PROPERTY_CONTENTPROVIDER_ALLOWLIST, encodedAllowlist);
         loadSdk();
         mContentProvidersSdkApi.getContentProviderByAuthority(

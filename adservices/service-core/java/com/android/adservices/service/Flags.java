@@ -3248,7 +3248,7 @@ public interface Flags extends CommonFlags {
         return GA_UX_FEATURE_ENABLED;
     }
 
-    /** Set the debug UX, which should crrespond to the {@link PrivacySandboxUxCollection} enum. */
+    /** Set the debug UX, which should correspond to the {@link PrivacySandboxUxCollection} enum. */
     String DEBUG_UX = "UNSUPPORTED_UX";
 
     /** Returns the debug UX. */
@@ -3938,6 +3938,7 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
     }
 
+    /** Default value for null report rate including source registration time. */
     float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
 
     /**
@@ -3948,7 +3949,26 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
     }
 
-    /** Default U18 UX feature flag.. */
+    /** Default value for null report rate excluding source registration time. */
+    float MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME = .05f;
+
+    /**
+     * Returns the rate at which null aggregate reports are generated whenever the trigger is
+     * configured to exclude the source registration time and there is no matching source.
+     */
+    default float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
+        return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
+    }
+
+    /** Default value for Optional Source Registration Time feature flag. */
+    boolean MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED = false;
+
+    /** Returns true if source registration time is optional for aggregatable reports. */
+    default boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
+        return MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
+    }
+
+    /** Default U18 UX feature flag. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
     /** U18 UX feature flag.. */
@@ -4424,5 +4444,29 @@ public interface Flags extends CommonFlags {
      */
     default int getBackgroundJobSamplingLoggingRate() {
         return DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
+    }
+
+    /** Default value of the timeout for AppSearch write operations */
+    int DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS = 3000;
+
+    /**
+     * Gets the value of the timeout for AppSearch write operations, in milliseconds.
+     *
+     * @return the timeout, in milliseconds, for AppSearch write operations
+     */
+    default int getAppSearchWriteTimeout() {
+        return DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS;
+    }
+
+    /** Default value of the timeout for AppSearch read operations */
+    int DEFAULT_APPSEARCH_READ_TIMEOUT_MS = 750;
+
+    /**
+     * Gets the value of the timeout for AppSearch read operations, in milliseconds.
+     *
+     * @return the timeout, in milliseconds, for AppSearch read operations
+     */
+    default int getAppSearchReadTimeout() {
+        return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
     }
 }

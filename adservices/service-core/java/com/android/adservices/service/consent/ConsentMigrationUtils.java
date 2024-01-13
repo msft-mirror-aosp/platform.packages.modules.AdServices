@@ -126,10 +126,13 @@ public final class ConsentMigrationUtils {
             @NonNull Context context,
             @NonNull BooleanFileDatastore datastore,
             @Nullable AppSearchConsentStorageManager appSearchConsentManager,
-            @Nullable AdServicesExtDataStorageServiceManager adExtDataManager) {
+            @Nullable AdServicesExtDataStorageServiceManager adExtDataManager,
+            @Nullable StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(datastore);
+        Objects.requireNonNull(statsdAdServicesLogger);
         LogUtil.d("Check if consent migration to AppSearch is needed.");
+        AppConsents appConsents = null;
 
         // TODO (b/306753680): Add consent migration logging.
         try {
@@ -150,20 +153,35 @@ public final class ConsentMigrationUtils {
                 return;
             }
 
-            migrateDataToAppSearchV2(appSearchConsentManager, dataFromR, datastore);
+            appConsents = migrateDataToAppSearchV2(appSearchConsentManager, dataFromR, datastore);
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH, true);
             if (editor.commit()) {
                 LogUtil.d("Finished migrating consent to AppSearch.");
+                logMigrationToAppSearch(
+                        statsdAdServicesLogger,
+                        appConsents,
+                        ConsentMigrationStats.MigrationStatus.SUCCESS_WITH_SHARED_PREF_UPDATED,
+                        context);
             } else {
                 LogUtil.e("Finished migrating consent to AppSearch. Shared prefs not updated.");
+                logMigrationToAppSearch(
+                        statsdAdServicesLogger,
+                        appConsents,
+                        ConsentMigrationStats.MigrationStatus.SUCCESS_WITH_SHARED_PREF_NOT_UPDATED,
+                        context);
             }
 
             // No longer need access to Android R data. Safe to clear here.
             adExtDataManager.clearDataOnOtaAsync();
         } catch (Exception e) {
             LogUtil.e("Consent migration to AppSearch failed: ", e);
+            logMigrationToAppSearch(
+                    statsdAdServicesLogger,
+                    appConsents,
+                    ConsentMigrationStats.MigrationStatus.FAILURE,
+                    context);
         }
     }
 
@@ -329,17 +347,10 @@ public final class ConsentMigrationUtils {
     }
 
     @TargetApi(Build.VERSION_CODES.S)
-    private static void migrateDataToAppSearchV2(
+    private static AppConsents migrateDataToAppSearchV2(
             AppSearchConsentStorageManager appSearchConsentStorageManager,
             AdServicesExtDataParams dataFromR,
             BooleanFileDatastore datastore) {
-        // Default measurement consent is stored using PPAPI_ONLY source on R.
-        Boolean measurementDefaultConsent =
-                datastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT);
-        if (measurementDefaultConsent != null) {
-            appSearchConsentStorageManager.recordDefaultConsent(
-                    AdServicesApiType.MEASUREMENTS, measurementDefaultConsent);
-        }
 
         boolean isMeasurementConsented = dataFromR.getIsMeasurementConsented() == BOOLEAN_TRUE;
         appSearchConsentStorageManager.setConsent(
@@ -365,5 +376,13 @@ public final class ConsentMigrationUtils {
             appSearchConsentStorageManager.setAdultAccount(
                     dataFromR.getIsAdultAccount() == BOOLEAN_TRUE);
         }
+        AppConsents appConsents =
+                AppConsents.builder()
+                        .setDefaultConsent(false)
+                        .setMsmtConsent(isMeasurementConsented)
+                        .setFledgeConsent(false)
+                        .setTopicsConsent(false)
+                        .build();
+        return appConsents;
     }
 }

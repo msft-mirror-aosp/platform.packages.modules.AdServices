@@ -186,19 +186,6 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         return mAppSearchConsentWorker.getPrivacySandboxFeature();
     }
 
-    /** Gets default AdId State. */
-    @Override
-    public boolean getDefaultAdIdState() {
-        return mAppSearchConsentWorker.getConsent(ConsentConstants.DEFAULT_AD_ID_STATE);
-    }
-
-    /** Gets default consent by apitype. */
-    @Override
-    public AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) {
-        return AdServicesApiConsent.getConsent(
-                mAppSearchConsentWorker.getConsent(apiType.toDefaultConsentDatastoreKey()));
-    }
-
     /** Returns the current privacy sandbox enrollment channel. */
     @Override
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
@@ -402,18 +389,6 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
                             + " preference is not updated.");
         }
         return true;
-    }
-
-    /** Saves the default AdId State. */
-    @Override
-    public void recordDefaultAdIdState(boolean defaultAdIdState) {
-        mAppSearchConsentWorker.setConsent(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
-    }
-
-    /** Saves the default consent by apiType. */
-    @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent) {
-        mAppSearchConsentWorker.setConsent(apiType.toDefaultConsentDatastoreKey(), defaultConsent);
     }
 
     /**
