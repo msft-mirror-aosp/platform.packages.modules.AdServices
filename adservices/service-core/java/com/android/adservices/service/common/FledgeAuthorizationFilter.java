@@ -33,7 +33,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
@@ -204,7 +204,7 @@ public class FledgeAuthorizationFilter {
         }
 
         // Check if enrollment is in blocklist.
-        if (PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+        if (FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
             sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
@@ -275,7 +275,7 @@ public class FledgeAuthorizationFilter {
                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                         appPackageName, enrollmentData.getEnrollmentId());
         boolean isEnrollmentBlocklisted =
-                PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
+                FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
         int errorCause = EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue();
         if (isAllowedCustomAudiencesAccess && isEnrollmentBlocklisted) {
             errorCause = EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue();

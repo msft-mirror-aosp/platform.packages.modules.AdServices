@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * in the test to false.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Repeatable(SetFlagsDisabled.class)
 public @interface SetFlagDisabled {
     /** Name of the flag. */

@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * <p>This should be used with {@code AdServicesFlagsSetterRule}.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Repeatable(SetStringFlags.class)
 public @interface SetStringFlag {
     /** Name of the flag. */

@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.common.AndroidSdk.Level;
+
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -31,5 +33,10 @@ final class HostSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
     protected String runShellCommand(
             @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
         return TestDeviceHelper.runShellCommand(cmdFmt, cmdArgs);
+    }
+
+    @Override
+    public Level getDeviceApiLevel() {
+        return Level.forLevel(TestDeviceHelper.getApiLevel());
     }
 }
