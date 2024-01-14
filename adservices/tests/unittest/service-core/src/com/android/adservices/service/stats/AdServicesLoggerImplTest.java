@@ -93,6 +93,9 @@ import static org.mockito.Mockito.verify;
 import android.adservices.adselection.ReportEventRequest;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
@@ -741,5 +744,22 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
         verify(mStatsdLoggerMock).logInteractionReportingTableClearedStats(
                 argumentCaptor.capture());
         expect.that(stats).isEqualTo(argumentCaptor.getValue());
+    }
+
+    @Test
+    public void testLogAppManifestConfigCall() {
+        String pkgName = "pkg.I.am";
+        @ApiType int apiType = AppManifestConfigCall.API_TOPICS;
+        @Result int result = AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
+        AppManifestConfigCall call = new AppManifestConfigCall(pkgName, apiType);
+        call.result = result;
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+
+        adServicesLogger.logAppManifestConfigCall(call);
+
+        ArgumentCaptor<AppManifestConfigCall> argumentCaptor =
+                ArgumentCaptor.forClass(AppManifestConfigCall.class);
+        verify(mStatsdLoggerMock).logAppManifestConfigCall(argumentCaptor.capture());
+        expect.that(argumentCaptor.getValue()).isEqualTo(call);
     }
 }

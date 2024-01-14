@@ -16,7 +16,7 @@
 package com.android.adservices.cobalt;
 
 /**
- * This class contains contains that are used both by Cobalt classes and PhFlags (which in turn is
+ * This class contains constants that are used both by Cobalt classes and PhFlags (which in turn is
  * used by tests), it cannot contain any external dependency (otherwise it would break the test
  * project - we want to keep it simple).
  */

@@ -1148,14 +1148,14 @@ public class AggregateReportingJobHandlerTest {
                 sharedInfo.optString(AggregateReportBody.SharedInfoKeys.DEBUG_MODE));
     }
 
-    private static JSONObject createASampleAggregateReportBody(AggregateReport aggregateReport)
+    private JSONObject createASampleAggregateReportBody(AggregateReport aggregateReport)
             throws JSONException {
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setDebugCleartextPayload(CLEARTEXT_PAYLOAD)
                 .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
                 .build()
-                .toJson(AggregateCryptoFixture.getKey());
+                .toJson(AggregateCryptoFixture.getKey(), mMockFlags);
     }
 
     private static AggregateReport createASampleAggregateReport() {
