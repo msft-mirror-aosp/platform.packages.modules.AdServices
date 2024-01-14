@@ -171,9 +171,6 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
         expect.that(mAppConsentStorageManager.getCurrentPrivacySandboxFeature())
                 .isEqualTo(privacySandboxFeatureType);
 
-        mAppConsentStorageManager.recordDefaultAdIdState(true);
-
-        expect.that(mAppConsentStorageManager.getDefaultAdIdState()).isTrue();
 
         mAppConsentStorageManager.setU18Account(true);
         expect.that(mAppConsentStorageManager.isU18Account()).isTrue();
@@ -183,10 +180,6 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
                 // Skip UNKNOWN, recordDefaultConsent will throw exception for unknown
                 continue;
             }
-            mAppConsentStorageManager.recordDefaultConsent(apiType, true);
-
-            expect.that(mAppConsentStorageManager.getDefaultConsent(apiType).isGiven()).isTrue();
-
             mAppConsentStorageManager.setConsent(apiType, true);
             expect.that(mAppConsentStorageManager.getConsent(apiType).isGiven()).isTrue();
         }
