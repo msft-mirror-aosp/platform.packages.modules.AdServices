@@ -49,6 +49,7 @@ import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
+import android.app.sdksandbox.testutils.ProtoUtil;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.ComponentName;
@@ -62,6 +63,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.pm.UserInfo;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
@@ -71,6 +73,7 @@ import android.os.ServiceManager;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
+import android.util.ArraySet;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -1009,8 +1012,11 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testEnforceAllowedToStartActivity_deviceConfigAllowlist() {
-        /** Allowlist: Intent.ACTION_CALL */
-        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
+        ArrayMap<Integer, List<String>> allowedActivities = new ArrayMap<>();
+        allowedActivities.put(
+                Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
+                new ArrayList<>(Arrays.asList(Intent.ACTION_CALL)));
+        String encodedAllowedActivities = ProtoUtil.encodeActivityAllowlist(allowedActivities);
         setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1051,8 +1057,11 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testEnforceAllowedToStartActivity_nextRestrictionsApplied() {
-        /** Allowlist: Intent.ACTION_CALL */
-        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
+        ArrayMap<Integer, List<String>> allowedActivities = new ArrayMap<>();
+        allowedActivities.put(
+                Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
+                new ArrayList<>(Arrays.asList(Intent.ACTION_CALL)));
+        String encodedAllowedActivities = ProtoUtil.encodeActivityAllowlist(allowedActivities);
         setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1063,8 +1072,10 @@ public class SdkSandboxManagerServiceUnitTest {
                         sSdkSandboxManagerLocal.enforceAllowedToStartActivity(
                                 new Intent(Intent.ACTION_VIEW)));
 
-        /** Allowlist: Intent.ACTION_WEB_SEARCH */
-        String encodedNextAllowedActivities = "CiBhbmRyb2lkLmludGVudC5hY3Rpb24uV0VCX1NFQVJDSA==";
+        ArraySet<String> nextAllowedActivities =
+                new ArraySet<>(Arrays.asList(Intent.ACTION_WEB_SEARCH));
+        String encodedNextAllowedActivities =
+                ProtoUtil.encodeActivityAllowlist(nextAllowedActivities);
         setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, encodedNextAllowedActivities);
 
         setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
@@ -1091,8 +1102,11 @@ public class SdkSandboxManagerServiceUnitTest {
             sSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(action));
         }
 
-        /** Allowlist: Intent.ACTION_CALL */
-        String encodedAllowedActivities = "CiAIIhIcChphbmRyb2lkLmludGVudC5hY3Rpb24uQ0FMTA==";
+        ArrayMap<Integer, List<String>> allowedActivities = new ArrayMap<>();
+        allowedActivities.put(
+                Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
+                new ArrayList<>(Arrays.asList(Intent.ACTION_CALL)));
+        String encodedAllowedActivities = ProtoUtil.encodeActivityAllowlist(allowedActivities);
         setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
 
         sSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
@@ -1598,7 +1612,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testServiceRestriction_noFieldsSet() {
-        /**
+        /*
          * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
@@ -1608,7 +1622,9 @@ public class SdkSandboxManagerServiceUnitTest {
          *   }
          * }
          */
-        String encodedServiceAllowlist = "CgYIIhICCgA=";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, Arrays.asList());
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1625,7 +1641,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testServiceRestriction_oneFieldSet() {
-        /**
+        /*
          * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
@@ -1657,10 +1673,34 @@ public class SdkSandboxManagerServiceUnitTest {
          *   }
          * }
          */
-        String encodedServiceAllowlist =
-                "CnoIIhJ2ChsKASoSEHBhY2thZ2VOYW1lLnRlc3QaASoiASoKGQoBKhIBKhoOY2xhc3NOYW1lLnRlc3QiA"
-                    + "SoKFgoLYWN0aW9uLnRlc3QSASoaASoiASoKJAoBKhIBKhoBKiIZY29tcG9uZW50UGFja2FnZU5h"
-                    + "bWUudGVzdA==";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        List<ArrayMap<String, String>> services = new ArrayList<>();
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test",
+                        /*packageName=*/ "*",
+                        /*componentClassName=*/ "*",
+                        /*componentPackageName=*/ "*"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "*",
+                        /*packageName=*/ "packageName.test",
+                        /*componentClassName=*/ "*",
+                        /*componentPackageName=*/ "*"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "*",
+                        /*packageName=*/ "*",
+                        /*componentClassName=*/ "className.test",
+                        /*componentPackageName=*/ "*"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "*",
+                        /*packageName=*/ "*",
+                        /*componentClassName=*/ "*",
+                        /*componentPackageName=*/ "componentPackageName.test"));
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1694,7 +1734,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testServiceRestriction_twoFieldsSet() {
-        /**
+        /*
          * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
@@ -1720,10 +1760,28 @@ public class SdkSandboxManagerServiceUnitTest {
          *   }
          * }
          */
-        String encodedServiceAllowlist =
-                "CnoIIhJ2CiUKC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0GgEqIgEqCiMKC2FjdGlvbi50ZXN0Eg"
-                    + "EqGg5jbGFzc05hbWUudGVzdCIBKgooCgEqEhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUud"
-                    + "GVzdCIBKg==";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        List<ArrayMap<String, String>> services = new ArrayList<>();
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test",
+                        /*packageName=*/ "packageName.test",
+                        /*componentClassName=*/ "*",
+                        /*componentPackageName=*/ "*"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test",
+                        /*packageName=*/ "*",
+                        /*componentClassName=*/ "className.test",
+                        /*componentPackageName=*/ "*"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "*",
+                        /*packageName=*/ "packageName.test",
+                        /*componentClassName=*/ "className.test",
+                        /*componentPackageName=*/ "*"));
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1766,7 +1824,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testServiceRestriction_threeFieldsSet() {
-        /**
+        /*
          * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
@@ -1798,12 +1856,34 @@ public class SdkSandboxManagerServiceUnitTest {
          *   }
          * }
          */
-        String encodedServiceAllowlist =
-                "CvcBCCIS8gEKMgoLYWN0aW9uLnRlc3QSEHBhY2thZ2VOYW1lLnRlc3QaDmNsYXNzTmFtZS50ZXN0IgEqCj"
-                    + "0KC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0GgEqIhljb21wb25lbnRQYWNrYWdlTmFtZ"
-                    + "S50ZXN0CjsKC2FjdGlvbi50ZXN0EgEqGg5jbGFzc05hbWUudGVzdCIZY29tcG9uZW50UGFja2Fn"
-                    + "ZU5hbWUudGVzdApACgEqEhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUudGVzdCIZY29tcG9"
-                    + "uZW50UGFja2FnZU5hbWUudGVzdA==";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        List<ArrayMap<String, String>> services = new ArrayList<>();
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test",
+                        /*packageName=*/ "packageName.test",
+                        /*componentClassName=*/ "className.test",
+                        /*componentPackageName=*/ "*"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test",
+                        /*packageName=*/ "packageName.test",
+                        /*componentClassName=*/ "*",
+                        /*componentPackageName=*/ "componentPackageName.test"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test",
+                        /*packageName=*/ "*",
+                        /*componentClassName=*/ "className.test",
+                        /*componentPackageName=*/ "componentPackageName.test"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "*",
+                        /*packageName=*/ "packageName.test",
+                        /*componentClassName=*/ "className.test",
+                        /*componentPackageName=*/ "componentPackageName.test"));
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1843,7 +1923,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testServiceRestriction_multipleEntriesAllowlist() {
-        /**
+        /*
          * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
@@ -1863,10 +1943,22 @@ public class SdkSandboxManagerServiceUnitTest {
          *   }
          * }
          */
-        String encodedServiceAllowlist =
-                "CqUBCCISoAEKTgoMYWN0aW9uLnRlc3QxEhFwYWNrYWdlTmFtZS50ZXN0MRoPY2xhc3NOYW1lLnRlc3QxI"
-                    + "hpjb21wb25lbnRQYWNrYWdlTmFtZS50ZXN0MQpOCgxhY3Rpb24udGVzdDISEXBhY2thZ2VOYW1l"
-                    + "LnRlc3QyGg9jbGFzc05hbWUudGVzdDIiGmNvbXBvbmVudFBhY2thZ2VOYW1lLnRlc3Qy";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        List<ArrayMap<String, String>> services = new ArrayList<>();
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test1",
+                        /*packageName=*/ "packageName.test1",
+                        /*componentClassName=*/ "className.test1",
+                        /*componentPackageName=*/ "componentPackageName.test1"));
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test2",
+                        /*packageName=*/ "packageName.test2",
+                        /*componentClassName=*/ "className.test2",
+                        /*componentPackageName=*/ "componentPackageName.test2"));
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1880,7 +1972,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testServiceRestrictions_DeviceConfigNextAllowlistApplied() throws Exception {
         setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
-        /**
+        /*
          * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
@@ -1894,11 +1986,19 @@ public class SdkSandboxManagerServiceUnitTest {
          *   }
          * }
          */
-        String encodedServiceAllowlist =
-                "CjgIIhI0CjIKC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUudGVzdCIBKg==";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        List<ArrayMap<String, String>> services = new ArrayList<>();
+        services.add(
+                getAllowedServicesMap(
+                        /*action=*/ "action.test",
+                        /*packageName=*/ "packageName.test",
+                        /*componentClassName=*/ "className.test",
+                        /*componentPackageName=*/ "*"));
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
-        /**
+        /*
          * Service allowlist
          * allowed_services {
          *   action : "action.next"
@@ -1907,8 +2007,15 @@ public class SdkSandboxManagerServiceUnitTest {
          *   componentPackageName : "*"
          * }
          */
-        String encodedNextServiceAllowlist =
-                "CjIKC2FjdGlvbi5uZXh0EhBwYWNrYWdlTmFtZS5uZXh0Gg5jbGFzc05hbWUubmV4dCIBKg==";
+        List<ArrayMap<String, String>> allowedNextServices =
+                new ArrayList<>(
+                        Arrays.asList(
+                                getAllowedServicesMap(
+                                        /*action=*/ "action.next",
+                                        /*packageName=*/ "packageName.next",
+                                        /*componentClassName=*/ "className.next",
+                                        /*componentPackageName=*/ "*")));
+        String encodedNextServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedNextServices);
         setDeviceConfigProperty(PROPERTY_NEXT_SERVICE_ALLOWLIST, encodedNextServiceAllowlist);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1930,7 +2037,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testServiceRestrictions_ComponentNotSet() {
-        /**
+        /*
          * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
@@ -1944,7 +2051,17 @@ public class SdkSandboxManagerServiceUnitTest {
          *   }
          * }
          */
-        final String encodedServiceAllowlist = "ChwIIhIYChYKC2FjdGlvbi50ZXN0EgEqGgEqIgEq";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        List<ArrayMap<String, String>> services =
+                new ArrayList<>(
+                        Arrays.asList(
+                                getAllowedServicesMap(
+                                        /*action=*/ "action.test",
+                                        /*packageName=*/ "*",
+                                        /*componentClassName=*/ "*",
+                                        /*componentPackageName=*/ "*")));
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         final Intent intent = new Intent(INTENT_ACTION);
@@ -1952,7 +2069,7 @@ public class SdkSandboxManagerServiceUnitTest {
     }
     @Test
     public void testServiceRestrictions_AllFieldsSetToWildcard() {
-        /**
+        /*
          * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
@@ -1966,7 +2083,17 @@ public class SdkSandboxManagerServiceUnitTest {
          *   }
          * }
          */
-        String encodedServiceAllowlist = "ChIIIhIOCgwKASoSASoaASoiASo=";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        List<ArrayMap<String, String>> services =
+                new ArrayList<>(
+                        Arrays.asList(
+                                getAllowedServicesMap(
+                                        /*action=*/ "*",
+                                        /*packageName=*/ "*",
+                                        /*componentClassName=*/ "*",
+                                        /*componentPackageName=*/ "*")));
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
 
@@ -1991,7 +2118,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testServiceRestrictions_AllFieldsSet() {
-        /**Service allowlist
+        /*
+         * Service allowlist
          * allowlist_per_target_sdk {
          *   key: 34
          *   value: {
@@ -2004,9 +2132,17 @@ public class SdkSandboxManagerServiceUnitTest {
          *     }
          * }
          */
-        String encodedServiceAllowlist =
-                "ClAIIhJMCkoKC2FjdGlvbi50ZXN0EhBwYWNrYWdlTmFtZS50ZXN0Gg5jbGFzc05hbWUudGVzdCIZY29tc"
-                        + "G9uZW50UGFja2FnZU5hbWUudGVzdA==";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
+        List<ArrayMap<String, String>> services =
+                new ArrayList<>(
+                        Arrays.asList(
+                                getAllowedServicesMap(
+                                        /*action=*/ "action.test",
+                                        /*packageName=*/ "packageName.test",
+                                        /*componentClassName=*/ "className.test",
+                                        /*componentPackageName=*/ "componentPackageName.test")));
+        allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
         testServiceRestriction(
@@ -2769,6 +2905,19 @@ public class SdkSandboxManagerServiceUnitTest {
     private static Bundle getTestBundle() {
         final Bundle data = new Bundle();
         data.putString(TEST_KEY, TEST_VALUE);
+        return data;
+    }
+
+    private ArrayMap<String, String> getAllowedServicesMap(
+            String action,
+            String packageName,
+            String componentClassName,
+            String componentPackageName) {
+        ArrayMap<String, String> data = new ArrayMap<>(/* capacity= */ 4);
+        data.put("action", action);
+        data.put("packageName", packageName);
+        data.put("componentClassName", componentClassName);
+        data.put("componentPackageName", componentPackageName);
         return data;
     }
 }
