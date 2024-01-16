@@ -55,6 +55,9 @@ java_sdk_library {
         "com.android.adservices",
         "com.android.extservices",
     ],
+    aconfig_declarations: [
+        "adservices_flags",
+    ],
 }
 
 java_library {
