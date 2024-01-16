@@ -2420,8 +2420,10 @@ public class SdkSandboxManagerServiceUnitTest {
         final FileDescriptor err = FileDescriptor.err;
 
         final SdkSandboxShellCommand command = Mockito.mock(SdkSandboxShellCommand.class);
-        Mockito.when(mInjector.createShellCommand(mService, mSpyContext)).thenReturn(command);
-
+        Mockito.when(
+                        mInjector.createShellCommand(
+                                mService, mSpyContext, /* supportsAdServicesShellCmd= */ true))
+                .thenReturn(command);
         final String[] args = new String[] {"start"};
 
         mService.handleShellCommand(
@@ -2430,7 +2432,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 new ParcelFileDescriptor(err),
                 args);
 
-        Mockito.verify(mInjector).createShellCommand(mService, mSpyContext);
+        Mockito.verify(mInjector)
+                .createShellCommand(mService, mSpyContext, /* supportsAdServicesShellCmd= */ true);
         Mockito.verify(command).exec(mService, in, out, err, args);
     }
 
