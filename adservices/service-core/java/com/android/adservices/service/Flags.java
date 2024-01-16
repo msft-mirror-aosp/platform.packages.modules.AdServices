@@ -3965,11 +3965,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default RVC NOTIFICATION feature flag.. */
-    boolean DEFAULT_RVC_NOTIFICATION_ENABLED = false;
+    boolean DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED = false;
 
     /** RVC Notification feature flag.. */
-    default boolean getEnableRvcNotification() {
-        return DEFAULT_RVC_NOTIFICATION_ENABLED;
+    default boolean getEnableRvcPostOtaNotification() {
+        return DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
     }
 
     /** Default enableAdServices system API feature flag.. */
@@ -4439,7 +4439,7 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default value of the timeout for AppSearch read operations */
-    int DEFAULT_APPSEARCH_READ_TIMEOUT_MS = 500;
+    int DEFAULT_APPSEARCH_READ_TIMEOUT_MS = 750;
 
     /**
      * Gets the value of the timeout for AppSearch read operations, in milliseconds.
