@@ -2409,7 +2409,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -2456,7 +2455,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
@@ -2495,7 +2493,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(ConsentMigrationStats.MigrationStatus.FAILURE)
                         .setMigrationType(
                                 ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE)
@@ -2833,7 +2830,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -2878,7 +2874,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
@@ -2913,7 +2908,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(ConsentMigrationStats.MigrationStatus.FAILURE)
                         .setMigrationType(
                                 ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)

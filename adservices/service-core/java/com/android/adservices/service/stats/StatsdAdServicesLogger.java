@@ -434,7 +434,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                     stats.getMsmtConsent(),
                     stats.getTopicsConsent(),
                     stats.getFledgeConsent(),
-                    stats.getDefaultConsent(),
+                    true,
                     stats.getMigrationType().getMigrationTypeValue(),
                     stats.getRegion(),
                     stats.getMigrationStatus().getMigrationStatusValue());

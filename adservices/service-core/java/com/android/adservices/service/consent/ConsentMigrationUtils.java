@@ -321,10 +321,6 @@ public final class ConsentMigrationUtils {
         // supported on R.
         AppConsents appConsents =
                 AppConsents.builder()
-                        .setDefaultConsent(
-                                measurementDefaultConsent != null
-                                        ? measurementDefaultConsent
-                                        : false)
                         .setMsmtConsent(isMeasurementConsented)
                         .setFledgeConsent(false)
                         .setTopicsConsent(false)
@@ -378,7 +374,6 @@ public final class ConsentMigrationUtils {
         }
         AppConsents appConsents =
                 AppConsents.builder()
-                        .setDefaultConsent(false)
                         .setMsmtConsent(isMeasurementConsented)
                         .setFledgeConsent(false)
                         .setTopicsConsent(false)

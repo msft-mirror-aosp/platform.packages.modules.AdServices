@@ -2422,7 +2422,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -2465,7 +2464,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
@@ -2501,7 +2499,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(ConsentMigrationStats.MigrationStatus.FAILURE)
                         .setMigrationType(
                                 ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE)
@@ -2828,7 +2825,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(mConsentDatastore.get(ConsentConstants.FLEDGE_DEFAULT_CONSENT)).isTrue();
         assertThat(mConsentDatastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT)).isTrue();
         assertThat(mConsentDatastore.get(ConsentConstants.CONSENT_KEY)).isTrue();
-        assertThat(mConsentDatastore.get(ConsentConstants.DEFAULT_CONSENT)).isTrue();
         verify(mockAdServicesManager).recordDefaultConsent(eq(true));
         verify(mockAdServicesManager).recordTopicsDefaultConsent(eq(true));
         verify(mockAdServicesManager).recordFledgeDefaultConsent(eq(true));
@@ -2847,7 +2843,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -2893,7 +2888,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
@@ -2930,7 +2924,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(ConsentMigrationStats.MigrationStatus.FAILURE)
                         .setMigrationType(
                                 ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
