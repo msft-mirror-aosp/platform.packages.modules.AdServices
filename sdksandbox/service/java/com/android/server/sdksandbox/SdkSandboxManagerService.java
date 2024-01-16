@@ -274,8 +274,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         SdkSandboxShellCommand createShellCommand(
-                SdkSandboxManagerService service, Context context) {
-            return new SdkSandboxShellCommand(service, context);
+                SdkSandboxManagerService service,
+                Context context,
+                boolean supportsAdServicesShellCmd) {
+            return new SdkSandboxShellCommand(service, context, supportsAdServicesShellCmd);
         }
 
         boolean isEmulator() {
@@ -1811,8 +1813,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public int handleShellCommand(ParcelFileDescriptor in, ParcelFileDescriptor out,
             ParcelFileDescriptor err, String[] args) {
+        boolean supportsAdServicesShellCmd = !mAdServicesManagerPublished;
         return mInjector
-                .createShellCommand(this, mContext)
+                .createShellCommand(this, mContext, supportsAdServicesShellCmd)
                 .exec(
                         this,
                         in.getFileDescriptor(),
