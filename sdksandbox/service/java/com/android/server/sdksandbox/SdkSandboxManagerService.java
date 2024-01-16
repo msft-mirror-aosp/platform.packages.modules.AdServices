@@ -111,6 +111,7 @@ import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
+
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -274,10 +275,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         SdkSandboxShellCommand createShellCommand(
-                SdkSandboxManagerService service,
-                Context context,
-                boolean supportsAdServicesShellCmd) {
-            return new SdkSandboxShellCommand(service, context, supportsAdServicesShellCmd);
+                SdkSandboxManagerService service, Context context) {
+            return new SdkSandboxShellCommand(service, context);
         }
 
         boolean isEmulator() {
@@ -1813,9 +1812,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public int handleShellCommand(ParcelFileDescriptor in, ParcelFileDescriptor out,
             ParcelFileDescriptor err, String[] args) {
-        boolean supportsAdServicesShellCmd = !mAdServicesManagerPublished;
         return mInjector
-                .createShellCommand(this, mContext, supportsAdServicesShellCmd)
+                .createShellCommand(this, mContext)
                 .exec(
                         this,
                         in.getFileDescriptor(),
