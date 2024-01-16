@@ -1,6 +1,38 @@
 package: "com.android.adservices.flags"
 
 flag {
+    name: "adext_data_service_apis_enabled"
+    namespace: "adservices"
+    # TODO(b/320156647): Add bug number and description
+    bug: "320156647"
+    description: "Enter a description per b/320156647"
+}
+
+flag {
+    name: "adservices_enablement_check_enabled"
+    namespace: "adservices"
+    # TODO(b/320156647): Add bug number and description
+    bug: "320156647"
+    description: "Enter a description per b/320156647"
+}
+
+flag {
+    name: "adservices_outcomereceiver_r_api_enabled"
+    namespace: "adservices"
+    # TODO(b/320156647): Add bug number and description
+    bug: "320156647"
+    description: "Enter a description per b/320156647"
+}
+
+flag {
+    name: "enable_adservices_api_enabled"
+    namespace: "adservices"
+    # TODO(b/320156647): Add bug number and description
+    bug: "320156647"
+    description: "Enter a description per b/320156647"
+}
+
+flag {
     name: "fledge_ad_selection_filtering_enabled"
     namespace: "adservices"
     bug: "267712947"

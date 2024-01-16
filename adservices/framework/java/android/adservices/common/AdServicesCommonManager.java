@@ -40,6 +40,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -64,10 +65,6 @@ public class AdServicesCommonManager {
     public static final String AD_SERVICES_COMMON_SERVICE = "ad_services_common_service";
 
     private static final String KEY_AD_ID_CACHE_ENABLED = FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
-    private static final String KEY_ENABLE_ADSERVICES_API_ENABLED =
-            FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
-    private static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
-            FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 
     private final Context mContext;
     private final ServiceBinder<IAdServicesCommonService> mAdServicesCommonServiceBinder;
@@ -133,7 +130,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
@@ -247,7 +244,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_ENABLE_ADSERVICES_API_ENABLED)
+    @FlaggedApi(Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
