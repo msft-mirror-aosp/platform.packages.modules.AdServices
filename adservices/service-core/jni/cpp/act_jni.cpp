@@ -29,7 +29,7 @@ const char* IllegalArgumentExceptionClass = "java/lang/IllegalArgumentException"
 const char* IllegalStateExceptionClass = "java/lang/IllegalStateException";
 
 
-JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientParameters(
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJniWrapper_generateClientParameters(
     JNIEnv *env,
     jclass,
     jbyteArray scheme_parameter_bytes,
@@ -69,7 +69,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientPa
 }
 
 
-JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateTokensRequest(
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJniWrapper_generateTokensRequest(
     JNIEnv *env,
     jclass,
     jbyteArray messagesInBytes,
@@ -152,7 +152,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateTokensRe
     return jni_util::JniUtil::SerializeProtoToJniByteArray(env, generated_tokens_request_proto);
 }
 
-JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJni_verifyTokensResponse(
+JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJniWrapper_verifyTokensResponse(
     JNIEnv *env,
     jclass,
     jbyteArray messagesInBytes,
@@ -247,7 +247,7 @@ JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJni_verifyTokensRespon
 }
 
 
-JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_recoverTokens(
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJniWrapper_recoverTokens(
     JNIEnv *env,
     jclass,
     jbyteArray messagesInBytes,
