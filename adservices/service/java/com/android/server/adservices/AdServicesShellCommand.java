@@ -83,7 +83,9 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     @Override
     public int onCommand(String cmd) {
         int callingUid = mInjector.getCallingUid();
-        if (callingUid != Process.ROOT_UID && callingUid != Process.SHELL_UID) {
+        if (callingUid != Process.ROOT_UID
+                && callingUid != Process.SHELL_UID
+                && callingUid != Process.SYSTEM_UID) {
             throw new SecurityException(String.format(WRONG_UID_TEMPLATE, callingUid));
         }
         if (cmd == null || cmd.isEmpty() || cmd.equals("-h") || cmd.equals("help")) {
