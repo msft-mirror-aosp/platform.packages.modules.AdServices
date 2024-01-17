@@ -8,6 +8,13 @@ flag {
 }
 
 flag {
+    name: "protected_signals_enabled"
+    namespace: "adservices"
+    bug: "299946888"
+    description: "Enables Protected Signals API"
+}
+
+flag {
     name: "topics_encryption_enabled"
     namespace: "adservices"
     bug: "303727027"
