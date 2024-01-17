@@ -28,10 +28,13 @@ import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -46,6 +49,12 @@ public class AdServicesCommonManagerTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
+
+    @Before
+    public void setup() {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+    }
 
     @Test
     public void testStatusManagerNotAuthorized() {
