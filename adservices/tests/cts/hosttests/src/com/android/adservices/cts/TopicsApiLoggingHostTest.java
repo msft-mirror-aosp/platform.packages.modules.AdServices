@@ -36,6 +36,7 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
 import com.android.tradefed.testtype.IDeviceTest;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,6 +68,7 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
             "com.google.android.ext.adservices.api";
     private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
             "com.android.ext.adservices.api";
+    private static final String LOW_RAM_DEVICE_CONFIG = "ro.config.low_ram";
 
     @Rule public TestMetrics mMetrics = new TestMetrics();
 
@@ -87,6 +89,9 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
 
     @Before
     public void setUp() throws Exception {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(isDeviceSupported());
+
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
 
@@ -279,5 +284,9 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
         getDevice()
                 .executeShellCommand(
                         "device_config put adservices enable_back_compat " + isEnabled);
+    }
+
+    private boolean isDeviceSupported() throws DeviceNotAvailableException {
+        return !getDevice().getProperty(LOW_RAM_DEVICE_CONFIG).equals("true");
     }
 }
