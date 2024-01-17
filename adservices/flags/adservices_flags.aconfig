@@ -9,6 +9,14 @@ flag {
 }
 
 flag {
+    name: "ad_id_cache_enabled"
+    namespace: "adservices"
+    # TODO(b/320156647): Add bug number and description
+    bug: "320156647"
+    description: "Enter a description per b/320156647"
+}
+
+flag {
     name: "adservices_enablement_check_enabled"
     namespace: "adservices"
     # TODO(b/320156647): Add bug number and description
