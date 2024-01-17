@@ -16,15 +16,14 @@
 
 package android.adservices.common;
 
-import android.adservices.FlagsConstants;
 import android.annotation.FlaggedApi;
 import android.annotation.SystemApi;
+
+import com.android.adservices.flags.Flags;
 
 /** Permissions used by the AdServices APIs. */
 public class AdServicesPermissions {
     private AdServicesPermissions() {}
-
-    private static final String KEY_AD_ID_CACHE_ENABLED = FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
 
     /** This permission needs to be declared by the caller of Topics APIs. */
     public static final String ACCESS_ADSERVICES_TOPICS =
@@ -125,7 +124,7 @@ public class AdServicesPermissions {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     public static final String UPDATE_PRIVILEGED_AD_ID =
             "android.permission.UPDATE_PRIVILEGED_AD_ID";
 
@@ -135,7 +134,7 @@ public class AdServicesPermissions {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     public static final String UPDATE_PRIVILEGED_AD_ID_COMPAT =
             "android.permission.UPDATE_PRIVILEGED_AD_ID_COMPAT";
 }
