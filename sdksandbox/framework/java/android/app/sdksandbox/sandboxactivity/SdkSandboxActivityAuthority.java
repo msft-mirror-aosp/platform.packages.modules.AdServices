@@ -44,7 +44,6 @@ public abstract class SdkSandboxActivityAuthority {
 
     /** Returns a Single instance of this class, instantiated lazily. */
     @NonNull
-    @FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public static SdkSandboxActivityAuthority getInstance() {
         return InstanceHolder.INSTANCE;
     }
@@ -61,7 +60,6 @@ public abstract class SdkSandboxActivityAuthority {
      * @hide
      */
     @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
-    @FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public static boolean isSdkSandboxActivityIntent(
             @NonNull Context context, @Nullable Intent intent) {
         if (intent == null) {
@@ -95,7 +93,6 @@ public abstract class SdkSandboxActivityAuthority {
      */
     @NonNull
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-    @FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public ActivityContextInfo getActivityContextInfo(@NonNull Intent intent) {
         SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
         ActivityContextInfo contextInfo = registry.getContextInfo(intent);
