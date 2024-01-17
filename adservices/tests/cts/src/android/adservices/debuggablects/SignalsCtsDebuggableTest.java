@@ -30,6 +30,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -119,6 +120,7 @@ public class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
+    @FlakyTest(bugId = 320688231)
     public void testUpdateSignals_badUri_failure() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/signals-default.json", "");
