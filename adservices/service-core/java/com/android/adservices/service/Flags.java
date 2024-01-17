@@ -3049,6 +3049,18 @@ public interface Flags extends CommonFlags {
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
+    long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
+
+    /** Returns max allowed size in bytes for trigger registrations header. */
+    default long getMaxTriggerRegistrationHeaderSizeBytes() {
+        return MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+    }
+
+    boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
+    /** Returns true when the new trigger registration header size limitation are applied. */
+    default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
+        return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+    }
 
     /**
      * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap
