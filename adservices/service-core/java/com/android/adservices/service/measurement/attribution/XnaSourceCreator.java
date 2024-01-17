@@ -188,8 +188,8 @@ public class XnaSourceCreator {
                 attributionConfig.getPostInstallExclusivityWindow(),
                 builder::setInstallCooldownWindow);
         Optional.ofNullable(attributionConfig.getFilterData())
-                .map(mFilter::serializeFilterSet)
-                .map(JSONArray::toString)
+                .map(filterData -> filterData.serializeAsJson(mFlags))
+                .map(JSONObject::toString)
                 .ifPresent(builder::setFilterData);
         builder.setExpiryTime(calculateDerivedSourceExpiry(attributionConfig, parentSource));
         builder.setAggregateSource(createAggregatableSourceWithSharedKeys(parentSource, trigger));

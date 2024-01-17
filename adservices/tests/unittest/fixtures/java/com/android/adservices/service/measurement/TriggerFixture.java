@@ -136,14 +136,12 @@ public final class TriggerFixture {
                         .setPriority(99L)
                         .setExpiry(604800L)
                         .setFilterData(
-                                Collections.singletonList(
-                                        new FilterMap.Builder()
-                                                .setAttributionFilterMap(
-                                                        Map.of(
-                                                                "campaign_type",
-                                                                Collections.singletonList(
-                                                                        "install")))
-                                                .build()))
+                                new FilterMap.Builder()
+                                        .setAttributionFilterMap(
+                                                Map.of(
+                                                        "campaign_type",
+                                                        Collections.singletonList("install")))
+                                        .build())
                         .build();
 
         public static final String ATTRIBUTION_CONFIGS_STRING =
