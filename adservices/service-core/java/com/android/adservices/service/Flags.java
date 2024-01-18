@@ -1050,7 +1050,7 @@ public interface Flags extends CommonFlags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
-    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
+    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = true;
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
@@ -1470,7 +1470,7 @@ public interface Flags extends CommonFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://publickeyservice-test1.bas-kms.xyz/v1alpha/publicKeys";
+            "https://publickeyservice-v150.coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
 
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
@@ -3049,6 +3049,18 @@ public interface Flags extends CommonFlags {
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
+    long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
+
+    /** Returns max allowed size in bytes for trigger registrations header. */
+    default long getMaxTriggerRegistrationHeaderSizeBytes() {
+        return MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+    }
+
+    boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
+    /** Returns true when the new trigger registration header size limitation are applied. */
+    default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
+        return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+    }
 
     /**
      * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap

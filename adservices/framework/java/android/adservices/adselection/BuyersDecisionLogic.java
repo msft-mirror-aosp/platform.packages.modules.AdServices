@@ -17,11 +17,13 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.util.Collections;
 import java.util.Map;
@@ -30,8 +32,8 @@ import java.util.Objects;
 /**
  * @return The override for the decision logic for each buyer that is used by contextual ads for
  *     reporting, which may be extended to updating bid values for contextual ads in the future
- * @hide
  */
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class BuyersDecisionLogic implements Parcelable {
 
     @NonNull
