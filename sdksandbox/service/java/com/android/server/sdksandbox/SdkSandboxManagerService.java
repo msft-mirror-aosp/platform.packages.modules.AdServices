@@ -1209,7 +1209,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void logSandboxActivityApiLatency(int method, int callResult, int latencyMillis) {
-        mSdkSandboxStatsdLogger.logSandboxActivityApiLatency(method, callResult, latencyMillis);
+        logSandboxActivityApiLatency(method, callResult, latencyMillis, Binder.getCallingUid());
+    }
+
+    private void logSandboxActivityApiLatency(
+            int method, int callResult, int latencyMillis, int clientUid) {
+        // TODO(b/321974997): log SDK package name in addition to existing data.
+        mSdkSandboxStatsdLogger.logSandboxActivityApiLatency(
+                method, callResult, latencyMillis, clientUid);
     }
 
     interface SandboxBindingCallback {
@@ -2019,6 +2026,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public ActivityInterceptResult onInterceptActivityLaunch(
                 @NonNull ActivityInterceptorInfo info) {
             final ActivityInfo activityInfo = info.getActivityInfo();
+            ActivityInterceptorCallback.ActivityInterceptResult activityInterceptResult = null;
+            long timeEventStarted = mInjector.elapsedRealtime();
+            int callingUid = info.getCallingUid();
 
             // Do not add any lines before checking if interception should apply, this interception
             // happens for every single activity and adding logic might add significant performance
@@ -2026,29 +2036,45 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             switch (shouldIntercept(info)) {
                 case SANDBOXED_ACTIVITY:
                     // Update process name and uid to match sandbox process for the calling app.
-                    activityInfo.applicationInfo.uid =
-                            Process.toSdkSandboxUid(info.getCallingUid());
-                    CallingInfo callingInfo =
-                            new CallingInfo(info.getCallingUid(), info.getCallingPackage());
+                    activityInfo.applicationInfo.uid = Process.toSdkSandboxUid(callingUid);
+                    CallingInfo callingInfo = new CallingInfo(callingUid, info.getCallingPackage());
                     try {
                         activityInfo.processName =
                                 mInjector
                                         .getSdkSandboxServiceProvider()
                                         .toSandboxProcessName(callingInfo);
                     } catch (PackageManager.NameNotFoundException e) {
+                        SdkSandboxManagerService.this.logSandboxActivityApiLatency(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
+                                SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION,
+                                (int) (mInjector.elapsedRealtime() - timeEventStarted),
+                                callingUid);
                         Log.e(
                                 TAG,
                                 "onInterceptActivityLaunch failed for: " + callingInfo.toString(),
                                 e);
                         throw new SecurityException(e.toString());
                     }
+                    activityInterceptResult =
+                            new ActivityInterceptorCallback.ActivityInterceptResult(
+                                    info.getIntent(), info.getCheckedOptions(), true);
+                    SdkSandboxManagerService.this.logSandboxActivityApiLatency(
+                            SdkSandboxStatsLog
+                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
+                            SdkSandboxStatsLog
+                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                            (int) (mInjector.elapsedRealtime() - timeEventStarted),
+                            callingUid);
                     break;
                 case INSTRUMENTATION_ACTIVITY:
                     // Tests instrumented to run in the Sandbox already use a sandbox Uid.
-                    activityInfo.applicationInfo.uid = info.getCallingUid();
+                    activityInfo.applicationInfo.uid = callingUid;
                     callingInfo =
-                            new CallingInfo(
-                                    info.getCallingUid(), activityInfo.applicationInfo.packageName);
+                            new CallingInfo(callingUid, activityInfo.applicationInfo.packageName);
+                    activityInterceptResult =
+                            new ActivityInterceptorCallback.ActivityInterceptResult(
+                                    info.getIntent(), info.getCheckedOptions(), true);
                     try {
                         activityInfo.processName =
                                 mInjector
@@ -2063,11 +2089,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     }
                     break;
                 default: // NO_INTERCEPT
+                    SdkSandboxManagerService.this.logSandboxActivityApiLatency(
+                            SdkSandboxStatsLog
+                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
+                            SdkSandboxStatsLog
+                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
+                            (int) (mInjector.elapsedRealtime() - timeEventStarted),
+                            callingUid);
                     return null;
             }
 
-            return new ActivityInterceptorCallback.ActivityInterceptResult(
-                    info.getIntent(), info.getCheckedOptions(), true);
+            return activityInterceptResult;
         }
     }
 
