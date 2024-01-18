@@ -914,11 +914,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1031,11 +1031,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1155,11 +1155,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Instantiate new adSelectionConfig with data version header in trusted seller signals
         AdSelectionConfig adSelectionConfig =
@@ -1301,11 +1301,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Instantiate new adSelectionConfig with data version header in trusted seller signals
         AdSelectionConfig adSelectionConfig =
@@ -1442,11 +1442,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1568,11 +1568,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1653,11 +1653,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         String paramKey = "reportingUrl";
         String paramValue = "https://www.test.com/reporting/seller";
@@ -1769,11 +1769,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         String paramKey = "reportingUrl";
         String paramValue = "https://www.test.com/reporting/seller";
@@ -1881,11 +1881,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1956,11 +1956,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2070,11 +2070,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2194,11 +2194,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Instantiate new adSelectionConfig with data version header in trusted seller signals
         AdSelectionConfig adSelectionConfig =
@@ -2339,11 +2339,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Instantiate new adSelectionConfig with data version header in trusted seller signals
         AdSelectionConfig adSelectionConfig =
@@ -2479,11 +2479,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2602,11 +2602,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2687,11 +2687,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2755,11 +2755,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2823,11 +2823,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
@@ -2930,11 +2930,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3026,11 +3026,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         final String fakeDecisionLogicForBuyer = "\"reportWin() { completely fake }\"";
         // Set dev override for  ad selection
@@ -3201,11 +3201,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         Flags flagsWithContextualAdsDisabled =
                 new AdSelectionE2ETestFlags() {
@@ -3646,11 +3646,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3722,11 +3722,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -3746,7 +3746,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyerX,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyerX),
-                    /*debuggable=*/ false);
+                    false);
 
             participatingBuyers.add(buyerX);
         }
@@ -3835,11 +3835,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -3859,7 +3859,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyerX,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyerX),
-                    /*debuggable=*/ false);
+                    false);
 
             participatingBuyers.add(buyerX);
         }
@@ -3924,11 +3924,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -3952,7 +3952,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                    /*debuggable=*/ false);
+                    false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -4043,11 +4043,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -4071,7 +4071,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                    /*debuggable=*/ false);
+                    false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -4161,11 +4161,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -4190,7 +4190,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                    /*debuggable=*/ false);
+                    false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -4284,11 +4284,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -4313,7 +4313,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                    /*debuggable=*/ false);
+                    false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -4492,11 +4492,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4631,11 +4631,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4720,15 +4720,15 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudienceActive,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceInactive,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceExpired,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3),
-                /*debuggable=*/ false);
+                false);
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
         runAdSelectionProcessLoggerLatch.await();
@@ -4811,15 +4811,15 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceInactive,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceExpired,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceOutdated,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4982,11 +4982,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5120,11 +5120,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5232,11 +5232,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5345,11 +5345,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5458,11 +5458,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5581,11 +5581,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5703,11 +5703,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5879,11 +5879,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -5987,11 +5987,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -6015,7 +6015,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3),
-                    /*debuggable=*/ false);
+                    false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -6256,11 +6256,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -6284,7 +6284,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceX,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3),
-                    /*debuggable=*/ false);
+                    false);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -6591,11 +6591,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6739,11 +6739,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6840,11 +6840,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6952,11 +6952,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -7035,11 +7035,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, invalidPackageName);
@@ -7118,11 +7118,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -7237,11 +7237,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -7371,11 +7371,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // First call to Ad Selection should succeed
         AdSelectionTestCallback resultsCallbackFirstCall =
@@ -7520,11 +7520,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, mAdSelectionConfig, CALLER_PACKAGE_NAME);
@@ -7607,11 +7607,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyer1,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                    /*debuggable=*/ false);
+                    false);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyer2,
                     CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                    /*debuggable=*/ false);
+                    false);
 
             // Ad selection should fail gracefully and not crash
             AdSelectionTestCallback resultsCallback =
