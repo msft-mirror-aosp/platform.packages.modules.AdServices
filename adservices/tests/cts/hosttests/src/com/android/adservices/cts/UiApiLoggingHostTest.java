@@ -69,6 +69,7 @@ public class UiApiLoggingHostTest implements IDeviceTest {
             "com.google.android.ext.adservices.api";
     private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
             "com.android.ext.adservices.api";
+    private static final String LOW_RAM_DEVICE_CONFIG = "ro.config.low_ram";
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final int APPSEARCH_ONLY = 3;
     private int mApiLevel;
@@ -259,6 +260,7 @@ public class UiApiLoggingHostTest implements IDeviceTest {
     private boolean isDeviceSupported(ITestDevice device) throws Exception {
         return !DeviceUtils.hasFeature(device, FEATURE_WATCH)
                 && !DeviceUtils.hasFeature(device, FEATURE_AUTOMOTIVE)
-                && !DeviceUtils.hasFeature(device, FEATURE_LEANBACK);
+                && !DeviceUtils.hasFeature(device, FEATURE_LEANBACK)
+                && !device.getProperty(LOW_RAM_DEVICE_CONFIG).equals("true");
     }
 }
