@@ -27,8 +27,6 @@ import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXE
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
@@ -43,12 +41,13 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -58,9 +57,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
@@ -73,7 +69,8 @@ import java.util.concurrent.TimeUnit;
  * metrics. This test creates an example {@link JobService} to use logging methods in {@link
  * AdServicesJobServiceLogger} and runs tests against this class.
  */
-public class AdServicesJobServiceTest {
+@SpyStatic(FlagsFactory.class)
+public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
@@ -104,19 +101,10 @@ public class AdServicesJobServiceTest {
     @Mock private Clock mMockClock;
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
     private AdServicesJobServiceLogger mLogger;
-    private MockitoSession mStaticMockSession;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
 
         mLogger = spy(new AdServicesJobServiceLogger(CONTEXT, mMockClock, mMockStatsdLogger));
 
@@ -128,9 +116,8 @@ public class AdServicesJobServiceTest {
     public void teardown() {
         // Clear shared preference
         CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
-
-        mStaticMockSession.finishMocking();
     }
+
     /** To test 1) success as first execution 2) success result code */
     @Test
     public void testJobExecutionLifeCycle_succeedThenSucceed() throws InterruptedException {
@@ -149,8 +136,10 @@ public class AdServicesJobServiceTest {
         // First Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -161,11 +150,13 @@ public class AdServicesJobServiceTest {
                         PERIOD_EXECUTION_1,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
                         stopReason);
+
         // Second Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
         CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+
+        expect.that(
                         logOperationCalledLatch2.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -198,7 +189,7 @@ public class AdServicesJobServiceTest {
         jobService.setShouldRetryOnJobFinished(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -214,7 +205,7 @@ public class AdServicesJobServiceTest {
         jobService.setShouldRetryOnJobFinished(false);
         CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch2.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -249,7 +240,7 @@ public class AdServicesJobServiceTest {
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
         jobService.onStopJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -272,7 +263,7 @@ public class AdServicesJobServiceTest {
         CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
         jobService.onStopJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch2.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -305,7 +296,7 @@ public class AdServicesJobServiceTest {
         jobService.setOnSuccessCallback(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -323,7 +314,7 @@ public class AdServicesJobServiceTest {
         CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
         // Logging doesn't happen because the execution is open-ended.
-        assertThat(
+        expect.that(
                         logOperationCalledLatch2.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
@@ -334,7 +325,7 @@ public class AdServicesJobServiceTest {
         jobService.setShouldOnStopJobHappen(true);
         CountDownLatch logOperationCalledLatch3 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch3.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -373,7 +364,7 @@ public class AdServicesJobServiceTest {
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
         // Logging doesn't happen because the execution is open-ended.
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
@@ -396,7 +387,7 @@ public class AdServicesJobServiceTest {
                 .when(mLogger)
                 .logJobStatsHelper(anyInt(), anyLong(), anyLong(), anyInt(), anyInt());
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch2.await(
                                 BACKGROUND_EXECUTION_TIMEOUT * 2, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -435,7 +426,7 @@ public class AdServicesJobServiceTest {
         jobService.setShouldSkip(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -450,7 +441,7 @@ public class AdServicesJobServiceTest {
         jobService.setShouldSkip(true);
         CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch2.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isTrue();
@@ -472,7 +463,7 @@ public class AdServicesJobServiceTest {
         jobService.setOnSuccessCallback(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
@@ -488,7 +479,7 @@ public class AdServicesJobServiceTest {
         jobService.setShouldRetryOnJobFinished(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
@@ -505,7 +496,7 @@ public class AdServicesJobServiceTest {
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
         jobService.onStopJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
@@ -520,7 +511,7 @@ public class AdServicesJobServiceTest {
         jobService.setShouldSkip(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
         jobService.onStartJob(mMockJobParameters);
-        assertThat(
+        expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
