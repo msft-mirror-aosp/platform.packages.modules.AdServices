@@ -33,6 +33,7 @@ import android.os.SystemClock;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.shared.common.ServiceUnavailableException;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -89,9 +90,9 @@ public class AdIdCompatibleManager {
         try {
             service = mServiceBinder.getService();
 
-            // Throw ISE and set it to the callback when service is not available
+            // Throw ServiceUnavailableException and set it to the callback.
             if (service == null) {
-                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                throw new ServiceUnavailableException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
             }
         } catch (RuntimeException e) {
             LogUtil.e(e, "Failed binding to AdId service");
