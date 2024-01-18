@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,18 +56,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-/** Unit test for {@link AdservicesJobServiceLogger}. */
-public class AdservicesJobServiceLoggerTest {
+/** Unit test for {@link AdServicesJobServiceLogger}. */
+public class AdServicesJobServiceLoggerTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
     private static final int JOB_ID_1 =
-            AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
+            AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
     private static final int JOB_ID_2 =
-            AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId();
-
-    private AdservicesJobServiceLogger mLogger;
+            AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId();
+    private AdServicesJobServiceLogger mLogger;
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
     @Mock Flags mMockFlags;
 
@@ -82,7 +81,7 @@ public class AdservicesJobServiceLoggerTest {
     public void setup() {
         mLogger =
                 Mockito.spy(
-                        new AdservicesJobServiceLogger(
+                        new AdServicesJobServiceLogger(
                                 CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
         mockGetFlags(mMockFlags);
 
@@ -98,8 +97,8 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testPersistJobExecutionData_firstExecution() {
-        String keyJobStartTime = AdservicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdservicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
         SharedPreferences sharedPreferences =
                 CONTEXT.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         long startJobTimestamp = 100L;
@@ -115,9 +114,9 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testPersistJobExecutionData_openEndedLastExecution() {
-        String keyJobStartTime = AdservicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdservicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStopTime = AdservicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
+        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStopTime = AdServicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
         // previousJobStopTime < previousJobStartTime, which indicates previous execution finished
         // with an open end.
         long previousJobStartTime = 100L;
@@ -163,9 +162,9 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testPersistJobExecutionData_closeEndedLastExecution() {
-        String keyJobStartTime = AdservicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdservicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStopTime = AdservicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
+        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStopTime = AdServicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
         long previousJobStartTime = 100L;
         long previousJobStopTime = 150L;
         long previousExecutionPeriod = 100L;
@@ -208,10 +207,10 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testPersistJobExecutionData_multipleJobs() {
-        String keyJobStartTime1 = AdservicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod1 = AdservicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStartTime2 = AdservicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_2);
-        String keyExecutionPeriod2 = AdservicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_2);
+        String keyJobStartTime1 = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod1 = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStartTime2 = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_2);
+        String keyExecutionPeriod2 = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_2);
         SharedPreferences sharedPreferences =
                 CONTEXT.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         long startJobTimestamp1 = 100L;
@@ -235,9 +234,9 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testLogExecutionStats() {
-        String keyJobStartTime = AdservicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdservicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStopTime = AdservicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
+        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStopTime = AdServicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
         long jobStartTime = 100L;
         long jobStopTime = 200L;
         long executionPeriod = 50L;
@@ -271,9 +270,9 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testLogExecutionStats_invalidStats() {
-        String keyJobStartTime = AdservicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdservicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStopTime = AdservicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
+        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStopTime = AdServicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
         long jobStopTime = 200L;
         long executionPeriod = 50L;
         int stopReason = UNAVAILABLE_STOP_REASON;
@@ -376,10 +375,10 @@ public class AdservicesJobServiceLoggerTest {
 
     @Test
     public void testConvertLongToInteger() {
-        assertThat(AdservicesJobServiceLogger.convertLongToInteger((long) Integer.MIN_VALUE - 1))
+        assertThat(AdServicesJobServiceLogger.convertLongToInteger((long) Integer.MIN_VALUE - 1))
                 .isEqualTo(Integer.MIN_VALUE);
-        assertThat(AdservicesJobServiceLogger.convertLongToInteger((long) Integer.MAX_VALUE + 1))
+        assertThat(AdServicesJobServiceLogger.convertLongToInteger((long) Integer.MAX_VALUE + 1))
                 .isEqualTo(Integer.MAX_VALUE);
-        assertThat(AdservicesJobServiceLogger.convertLongToInteger(1000L)).isEqualTo(1000);
+        assertThat(AdServicesJobServiceLogger.convertLongToInteger(1000L)).isEqualTo(1000);
     }
 }

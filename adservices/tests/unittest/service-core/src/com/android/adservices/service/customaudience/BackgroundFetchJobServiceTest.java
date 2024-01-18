@@ -26,7 +26,7 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinish
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
-import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -64,7 +64,7 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -102,7 +102,7 @@ public class BackgroundFetchJobServiceTest {
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private PackageManager mPackageManagerMock;
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
-    private AdservicesJobServiceLogger mSpyLogger;
+    private AdServicesJobServiceLogger mSpyLogger;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -116,7 +116,7 @@ public class BackgroundFetchJobServiceTest {
                         .mockStatic(ConsentManager.class)
                         .spyStatic(BackgroundFetchJobService.class)
                         .spyStatic(BackgroundFetchWorker.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
+                        .spyStatic(AdServicesJobServiceLogger.class)
                         .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)

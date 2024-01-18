@@ -17,7 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.DEBUG_REPORTING;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -38,7 +38,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -66,7 +66,7 @@ public final class DebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(DEBUG_REPORT_JOB_ID);
+        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(DEBUG_REPORT_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LoggerFactory.getMeasurementLogger().e("DebugReportingJobService is disabled");
@@ -78,7 +78,7 @@ public final class DebugReportingJobService extends JobService {
                 sBlockingExecutor.submit(
                         () -> {
                             sendReports();
-                            AdservicesJobServiceLogger.getInstance(DebugReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance(DebugReportingJobService.this)
                                     .recordJobFinished(
                                             DEBUG_REPORT_JOB_ID,
                                             /* isSuccessful */ true,
@@ -95,7 +95,7 @@ public final class DebugReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, DEBUG_REPORT_JOB_ID, shouldRetry);
         return shouldRetry;
     }

@@ -17,7 +17,7 @@
 package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -25,7 +25,7 @@ import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobE
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -62,7 +62,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -94,7 +94,6 @@ public class AttributionFallbackJobServiceTest {
 
     private AttributionFallbackJobService mSpyService;
     private Flags mMockFlags;
-    private AdservicesJobServiceLogger mSpyLogger;
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -103,10 +102,12 @@ public class AttributionFallbackJobServiceTest {
                     .spyStatic(DatastoreManagerFactory.class)
                     .spyStatic(AttributionFallbackJobService.class)
                     .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .spyStatic(AdServicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .setStrictness(Strictness.LENIENT)
                     .build();
+
+    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setUp() {
@@ -117,7 +118,7 @@ public class AttributionFallbackJobServiceTest {
 
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
         mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
+                spy(new AdServicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
     }
 
     @Test
@@ -549,7 +550,7 @@ public class AttributionFallbackJobServiceTest {
         ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(1))
                 .when(mMockFlags)
                 .getMeasurementAttributionFallbackJobPeriodMs();
-        mockGetAdservicesJobServiceLogger(mSpyLogger);
+        mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();
