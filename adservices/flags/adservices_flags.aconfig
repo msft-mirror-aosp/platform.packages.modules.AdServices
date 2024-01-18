@@ -48,14 +48,6 @@ flag {
 }
 
 flag {
-    name: "ondevice_personalization_apis_enabled"
-    namespace: "adservices"
-    # TODO(b/320156647): Add bug number and description
-    bug: "320156647"
-    description: "Enter a description per b/320156647"
-}
-
-flag {
     name: "protected_signals_enabled"
     namespace: "adservices"
     bug: "299946888"
