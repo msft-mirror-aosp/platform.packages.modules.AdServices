@@ -5285,14 +5285,11 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 .setAttributionFilterMap(
                                         Map.of("product", Collections.singletonList("prod1")))
                                 .build());
-        List<FilterMap> filterData =
-                Collections.singletonList(
-                        new FilterMap.Builder()
-                                .setAttributionFilterMap(
-                                        Map.of(
-                                                "campaign_type",
-                                                Collections.singletonList("install")))
-                                .build());
+        FilterMap filterData =
+                new FilterMap.Builder()
+                        .setAttributionFilterMap(
+                                Map.of("campaign_type", Collections.singletonList("install")))
+                        .build();
         AttributionConfig attributionConfig1 =
                 new AttributionConfig.Builder()
                         .setSourceAdtech("AdTech1-Ads")
@@ -5392,14 +5389,11 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 .setAttributionFilterMap(
                                         Map.of("product", Collections.singletonList("prod1")))
                                 .build());
-        List<FilterMap> filterData =
-                Collections.singletonList(
-                        new FilterMap.Builder()
-                                .setAttributionFilterMap(
-                                        Map.of(
-                                                "campaign_type",
-                                                Collections.singletonList("install")))
-                                .build());
+        FilterMap filterData =
+                new FilterMap.Builder()
+                        .setAttributionFilterMap(
+                                Map.of("campaign_type", Collections.singletonList("install")))
+                        .build();
         AttributionConfig attributionConfig1 =
                 new AttributionConfig.Builder()
                         .setSourceAdtech("AdTech1-Ads")

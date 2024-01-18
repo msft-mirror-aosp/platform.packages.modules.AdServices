@@ -8,13 +8,13 @@
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
+          "attribution_src_url": "https://www.ad-tech1.com",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
         "responses": [
           {
-            "url": "https://www.ad-tech1.test",
+            "url": "https://www.ad-tech1.com",
             "response": {
               "Attribution-Reporting-Register-Source": {
                 "source_event_id": "1",
@@ -47,13 +47,13 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech2.test",
+          "attribution_src_url": "https://www.ad-tech2.com",
           "source_type": "navigation",
           "registrant": "example.1s2.test"
         },
         "responses": [
           {
-            "url": "https://www.ad-tech2.test",
+            "url": "https://www.ad-tech2.com",
             "response": {
               "Attribution-Reporting-Register-Source": {
                 "source_event_id": "1",
@@ -80,26 +80,21 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
+          "attribution_src_url": "https://www.ad-tech1.com",
           "registrant": "example.2d1.test"
         },
         "responses": [
           {
-            "url": "https://www.ad-tech1.test",
+            "url": "https://www.ad-tech1.com",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "filters": [{
-                  "conversion_subdomain": [
-                    "electronics.megastore"
-                  ],
-                  "product": [
-                    "1234",
-                    "234"
-                  ],
-                  "ctid": [
-                    "id"
-                  ]
-                }],
+                "filters" : [
+                  {
+                    "ctid": [
+                      "not_matching_trigger"
+                    ]
+                  }
+                ],
                 "event_trigger_data": [
                   {
                     "trigger_data": "2",
@@ -158,7 +153,16 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-ad-tech2.test",
+                    "source_network": "enrollment-id-www.ad-tech2.com",
+                    "source_priority_range": {
+                      "start": 1,
+                      "end": 1000
+                    },
+                    "source_filters": {
+                      "source_type": [
+                        "navigation"
+                      ]
+                    },
                     "filter_data": {
                       "conversion_subdomain": [
                         "electronics.megastore"
@@ -169,15 +173,6 @@
                       ],
                       "ctid": [
                         "id"
-                      ]
-                    },
-                    "source_priority_range": {
-                      "start": 1,
-                      "end": 1000
-                    },
-                    "source_filters": {
-                      "source_type": [
-                        "navigation"
                       ]
                     },
                     "priority": "200",
@@ -196,25 +191,6 @@
   },
   "output": {
     "event_level_results": [],
-    "aggregatable_results": [
-      {
-        "report_time": "800004200001",
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
-        "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
-          "source_site": "android-app://example.1s2.test",
-          "histograms": [
-            {
-              "key": "0x559",
-              "value": 32768
-            },
-            {
-              "key": "0xb85",
-              "value": 1664
-            }
-          ]
-        }
-      }
-    ]
+    "aggregatable_results": []
   }
 }

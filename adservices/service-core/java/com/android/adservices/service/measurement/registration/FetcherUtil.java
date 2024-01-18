@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  *
  * @hide
  */
-class FetcherUtil {
+public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
