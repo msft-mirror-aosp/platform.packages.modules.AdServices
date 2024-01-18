@@ -16,18 +16,19 @@
 
 package com.android.adservices.service.shell;
 
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_ECHO;
+import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_HELP;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_SHORT_HELP;
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.DEFAULT_FACTORIES_SUPPLIER;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.ERROR_EMPTY_COMMAND;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.ERROR_TEMPLATE_INVALID_ARGS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_ECHO;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertThrows;
@@ -43,7 +44,11 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @SpyStatic(AppManifestConfigHelper.class)
 public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
@@ -254,6 +259,25 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                 .isEqualTo("true\n");
     }
 
+    @Test
+    public void testUniqueCommandsInShellCommandFactory() {
+        Map<String, List<String>> commandToFactories = new HashMap<>();
+        for (ShellCommandFactory factory : DEFAULT_FACTORIES_SUPPLIER.get()) {
+            for (String cmd : factory.getAllCommands()) {
+                commandToFactories
+                        .computeIfAbsent(cmd, unused -> new ArrayList<>())
+                        .add(factory.getClass().getSimpleName());
+            }
+        }
+
+        for (String cmd : commandToFactories.keySet()) {
+            List<String> factories = commandToFactories.get(cmd);
+            expect.withMessage("factories(%s) for cmd %s", factories, cmd)
+                    .that(factories)
+                    .hasSize(1);
+        }
+    }
+
     private void assertHelpContents(String help) {
         expect.withMessage("help")
                 .that(help.split("\n"))
@@ -269,7 +293,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         OneTimeCommand cmd = new OneTimeCommand(expect);
 
         String expectedResult =
-                String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax) + "\n";
+                String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
         String actualResult = cmd.runInvalid(args);
 
         expect.withMessage("result of %s", Arrays.toString(args))
