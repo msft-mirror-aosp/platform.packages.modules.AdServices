@@ -538,7 +538,7 @@ public class AuctionServerE2ETest {
                         .build();
         Assert.assertNotNull(winningCustomAudience.getAds());
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                winningCustomAudience, Uri.EMPTY, /*debuggable=*/ false);
+                winningCustomAudience, Uri.EMPTY, false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -663,7 +663,7 @@ public class AuctionServerE2ETest {
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                /*debuggable=*/ false);
+                false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -739,7 +739,7 @@ public class AuctionServerE2ETest {
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                /*debuggable=*/ false);
+                false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -954,7 +954,7 @@ public class AuctionServerE2ETest {
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                /*debuggable=*/ false);
+                false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1105,7 +1105,7 @@ public class AuctionServerE2ETest {
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                /*debuggable=*/ false);
+                false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1212,7 +1212,7 @@ public class AuctionServerE2ETest {
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                /*debuggable=*/ false);
+                false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1304,7 +1304,7 @@ public class AuctionServerE2ETest {
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                /*debuggable=*/ false);
+                false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1378,7 +1378,7 @@ public class AuctionServerE2ETest {
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                /*debuggable=*/ false);
+                false);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1609,7 +1609,7 @@ public class AuctionServerE2ETest {
                             .build();
             customAudiences.put(name, thisCustomAudience);
             mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                    thisCustomAudience, Uri.EMPTY, /*debuggable=*/ false);
+                    thisCustomAudience, Uri.EMPTY, false);
         }
         return customAudiences;
     }

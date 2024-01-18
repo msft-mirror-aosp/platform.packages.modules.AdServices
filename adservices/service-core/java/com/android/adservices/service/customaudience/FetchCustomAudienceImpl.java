@@ -459,7 +459,8 @@ public class FetchCustomAudienceImpl {
                                             .setTrustedBiddingData(
                                                     DBTrustedBiddingData.fromServiceObject(
                                                             mFusedCustomAudience
-                                                                    .getTrustedBiddingData()));
+                                                                    .getTrustedBiddingData()))
+                                            .setDebuggable(devContext.getDevOptionsEnabled());
 
                             List<DBAdData> ads = new ArrayList<>();
                             for (AdData ad : mFusedCustomAudience.getAds()) {
