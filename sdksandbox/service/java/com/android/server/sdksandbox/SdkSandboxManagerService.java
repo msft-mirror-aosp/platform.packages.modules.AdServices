@@ -428,6 +428,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private void registerSandboxActivityInterceptor() {
         final ActivityInterceptorCallback mActivityInterceptorCallback =
                 info -> {
+                    long timeEventStarted = mInjector.elapsedRealtime();
+                    int callingUid = info.getCallingUid();
+
                     final Intent intent = info.getIntent();
                     final String sdkSandboxPackageName =
                             mContext.getPackageManager().getSdkSandboxPackageName();
@@ -438,6 +441,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             || !intent.getPackage().equals(sdkSandboxPackageName)
                             || intent.getAction() == null
                             || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
+                        this.logSandboxActivityApiLatency(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
+                                (int) (mInjector.elapsedRealtime() - timeEventStarted),
+                                callingUid);
                         return null;
                     }
 
@@ -445,11 +455,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     if (intent.getComponent() != null) {
                         final String componentPackageName = intent.getComponent().getPackageName();
                         if (!componentPackageName.equals(sdkSandboxPackageName)) {
+                            this.logSandboxActivityApiLatency(
+                                    SdkSandboxStatsLog
+                                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
+                                    SdkSandboxStatsLog
+                                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
+                                    (int) (mInjector.elapsedRealtime() - timeEventStarted),
+                                    callingUid);
                             return null;
                         }
                     }
-                    CallingInfo callingInfo =
-                            new CallingInfo(info.getCallingUid(), info.getCallingPackage());
+                    CallingInfo callingInfo = new CallingInfo(callingUid, info.getCallingPackage());
                     String sandboxProcessName = null;
                     try {
                         sandboxProcessName =
@@ -457,6 +473,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                         .getSdkSandboxServiceProvider()
                                         .toSandboxProcessName(callingInfo);
                     } catch (PackageManager.NameNotFoundException e) {
+                        this.logSandboxActivityApiLatency(
+                                SdkSandboxStatsLog
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
+                                SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION,
+                                (int) (mInjector.elapsedRealtime() - timeEventStarted),
+                                callingUid);
                         Log.e(
                                 TAG,
                                 "registerSandboxActivityInterceptor failed for: "
@@ -464,15 +486,25 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 e);
                         throw new SecurityException(e);
                     }
-                    final int sandboxUid = Process.toSdkSandboxUid(info.getCallingUid());
+                    final int sandboxUid = Process.toSdkSandboxUid(callingUid);
 
                     // Update process name and uid to match sandbox process for the calling app.
                     ActivityInfo activityInfo = info.getActivityInfo();
                     activityInfo.applicationInfo.uid = sandboxUid;
                     activityInfo.processName = sandboxProcessName;
 
-                    return new ActivityInterceptorCallback.ActivityInterceptResult(
-                            info.getIntent(), info.getCheckedOptions(), true);
+                    ActivityInterceptorCallback.ActivityInterceptResult activityInterceptResult =
+                            new ActivityInterceptorCallback.ActivityInterceptResult(
+                                    info.getIntent(), info.getCheckedOptions(), true);
+
+                    this.logSandboxActivityApiLatency(
+                            SdkSandboxStatsLog
+                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
+                            SdkSandboxStatsLog
+                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                            (int) (mInjector.elapsedRealtime() - timeEventStarted),
+                            callingUid);
+                    return activityInterceptResult;
                 };
         ActivityInterceptorCallbackRegistry registry =
                 ActivityInterceptorCallbackRegistry.getInstance();
@@ -1242,7 +1274,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void logSandboxActivityApiLatency(int method, int callResult, int latencyMillis) {
-        mSdkSandboxStatsdLogger.logSandboxActivityApiLatency(method, callResult, latencyMillis);
+        logSandboxActivityApiLatency(method, callResult, latencyMillis, Binder.getCallingUid());
+    }
+
+    private void logSandboxActivityApiLatency(
+            int method, int callResult, int latencyMillis, int clientUid) {
+        // TODO(b/321974997): log SDK package name in addition to existing data.
+        mSdkSandboxStatsdLogger.logSandboxActivityApiLatency(
+                method, callResult, latencyMillis, clientUid);
     }
 
     interface SandboxBindingCallback {
