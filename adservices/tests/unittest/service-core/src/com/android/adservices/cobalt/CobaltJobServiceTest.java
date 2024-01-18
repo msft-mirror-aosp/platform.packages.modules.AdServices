@@ -28,7 +28,7 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroun
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
-import static com.android.adservices.spe.AdservicesJobInfo.COBALT_LOGGING_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -56,7 +56,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.cobalt.CobaltPeriodicJob;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -73,7 +73,7 @@ import java.util.concurrent.Executors;
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(CobaltFactory.class)
-@SpyStatic(AdservicesJobServiceLogger.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
 public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
@@ -91,7 +91,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
     @Mock JobParameters mMockJobParameters;
 
     private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
-    private AdservicesJobServiceLogger mLogger;
+    private AdServicesJobServiceLogger mLogger;
 
     @Before
     public void setup() {
