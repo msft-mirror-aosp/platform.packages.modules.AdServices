@@ -930,6 +930,8 @@ public final class FlagsConstants {
             "enable_update_trigger_registration_header_limit";
 
     // UI keys
+    public static final String KEY_PAS_UX_ENABLED = "pas_ux_enabled";
+
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =
             "ui_feature_type_logging_enabled";
 
