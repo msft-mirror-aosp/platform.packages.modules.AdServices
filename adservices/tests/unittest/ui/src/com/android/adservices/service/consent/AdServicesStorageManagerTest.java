@@ -33,7 +33,6 @@ import android.annotation.Nullable;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.IAdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.RemoteException;
@@ -49,8 +48,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.Spy;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,7 +57,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class AdServicesStorageManagerTest extends AdServicesMockitoTestCase {
-    @Spy private Context mContextSpy;
     @Mock private IAdServicesManager mMockIAdServicesManager;
 
     private AdServicesStorageManager mAdServicesStorageManager;
@@ -103,15 +99,14 @@ public final class AdServicesStorageManagerTest extends AdServicesMockitoTestCas
 
     @Before
     public void setup() throws IOException {
-        mContextSpy = Mockito.spy(appContext.get());
-        mPackageManager = mContextSpy.getPackageManager();
+        mPackageManager = mSpyContext.getPackageManager();
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
-        doReturn(mPackageManager).when(mContextSpy).getPackageManager();
-        doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
+        doReturn(mPackageManager).when(mSpyContext).getPackageManager();
+        doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
         mAdServicesStorageManager =
                 spy(
                         new AdServicesStorageManager(
-                                mAdServicesManager, mContextSpy.getPackageManager()));
+                                mAdServicesManager, mSpyContext.getPackageManager()));
     }
 
     @Test

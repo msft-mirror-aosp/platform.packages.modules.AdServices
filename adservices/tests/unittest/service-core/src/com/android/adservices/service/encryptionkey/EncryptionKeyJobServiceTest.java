@@ -40,7 +40,6 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
@@ -72,29 +71,25 @@ import org.mockito.internal.stubbing.answers.CallsRealMethods;
 @MockStatic(ServiceCompatUtils.class)
 public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int ENCRYPTION_KEY_JOB_ID = ENCRYPTION_KEY_PERIODIC_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
 
-    @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private JobParameters mMockJobParameters;
     @Mock private JobInfo mMockJobInfo;
 
-    private Context mSpyContext;
     private AdServicesJobServiceLogger mSpyLogger;
     private EncryptionKeyJobService mSpyService;
 
     @Before
     public void setUp() {
         extendedMockito.mockGetFlags(mMockFlags);
-        mSpyContext = spy(ApplicationProvider.getApplicationContext());
         mSpyService = spy(new EncryptionKeyJobService());
         mSpyLogger =
                 spy(
                         new AdServicesJobServiceLogger(
-                                CONTEXT, Clock.SYSTEM_CLOCK, mock(StatsdAdServicesLogger.class)));
+                                sContext, Clock.SYSTEM_CLOCK, mock(StatsdAdServicesLogger.class)));
         setDefaultExpectations();
     }
 

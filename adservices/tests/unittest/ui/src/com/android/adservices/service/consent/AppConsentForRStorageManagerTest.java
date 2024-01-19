@@ -25,7 +25,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.common.BooleanFileDatastore;
@@ -41,7 +40,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 
@@ -50,7 +48,6 @@ import java.io.IOException;
 @SpyStatic(FlagsFactory.class)
 public final class AppConsentForRStorageManagerTest extends AdServicesExtendedMockitoTestCase {
 
-    private Context mContextSpy;
     private BooleanFileDatastore mAppDaoDatastore;
     private BooleanFileDatastore mConsentDatastore;
     private AppConsentDao mAppConsentDaoSpy;
@@ -61,19 +58,18 @@ public final class AppConsentForRStorageManagerTest extends AdServicesExtendedMo
 
     @Before
     public void setup() {
-        mContextSpy = Mockito.spy(appContext.get());
         mConsentDatastore =
                 new BooleanFileDatastore(
-                        mContextSpy,
+                        mSpyContext,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
                         ConsentConstants.STORAGE_VERSION);
 
         mAppDaoDatastore =
                 new BooleanFileDatastore(
-                        mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
+                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
 
         mAppConsentDaoSpy =
-                spy(new AppConsentDao(mAppDaoDatastore, mContextSpy.getPackageManager()));
+                spy(new AppConsentDao(mAppDaoDatastore, mSpyContext.getPackageManager()));
         mAppConsentForRStorageManager =
                 spy(
                         new AppConsentForRStorageManager(
