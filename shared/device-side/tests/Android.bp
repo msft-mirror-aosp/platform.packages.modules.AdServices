@@ -25,6 +25,7 @@ android_test {
     static_libs: [
         "adservices-shared-common",
         "adservices-shared-error-logging",
+        "adservices-shared-exceptions",
         "adservices-shared-storage",
         "adservices-shared-testing",
         "adservices-shared-util",

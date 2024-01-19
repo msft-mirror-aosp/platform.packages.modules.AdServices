@@ -16,7 +16,6 @@
 
 package android.adservices.extdata;
 
-import android.adservices.FlagsConstants;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -24,6 +23,8 @@ import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -34,11 +35,8 @@ import java.lang.annotation.RetentionPolicy;
  * @hide
  */
 @SystemApi
-@FlaggedApi("enable_adext_data_service_apis")
+@FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
 public final class AdServicesExtDataParams implements Parcelable {
-    private static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
-            FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
-
     /**
      * Custom tri-state boolean type to represent true, false, and unknown
      *
@@ -126,7 +124,6 @@ public final class AdServicesExtDataParams implements Parcelable {
      * @param measurementRollbackApexVersion ExtServices apex version for measurement rollback
      *     handling. -1 if no data.
      */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public AdServicesExtDataParams(
             @TriStateBoolean int isNotificationDisplayed,
             @TriStateBoolean int isMeasurementConsented,
@@ -153,7 +150,6 @@ public final class AdServicesExtDataParams implements Parcelable {
 
     /** Creator for Parcelable. */
     @NonNull
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public static final Creator<AdServicesExtDataParams> CREATOR =
             new Creator<AdServicesExtDataParams>() {
                 @Override
@@ -168,13 +164,11 @@ public final class AdServicesExtDataParams implements Parcelable {
             };
 
     @Override
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public int describeContents() {
         return 0;
     }
 
     @Override
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public void writeToParcel(@NonNull Parcel out, int flags) {
         out.writeInt(mIsNotificationDisplayed);
         out.writeInt(mIsMeasurementConsented);
@@ -185,35 +179,30 @@ public final class AdServicesExtDataParams implements Parcelable {
     }
 
     /** Returns 1 if notification was shown on R, 0 if not shown, -1 if unknown. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @TriStateBoolean
     public int getIsNotificationDisplayed() {
         return mIsNotificationDisplayed;
     }
 
     /** Returns 1 if measurement was consented, 0 if not, -1 if unknown. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @TriStateBoolean
     public int getIsMeasurementConsented() {
         return mIsMeasurementConsented;
     }
 
     /** Returns 1 if account is U18 account, 0 if not, -1 if unknown. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @TriStateBoolean
     public int getIsU18Account() {
         return mIsU18Account;
     }
 
     /** Returns 1 if account is adult account, 0 if not, -1 if unknown. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @TriStateBoolean
     public int getIsAdultAccount() {
         return mIsAdultAccount;
     }
 
     /** Returns 1 if user interacted, -1 if not, 0 if unknown. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     @UserManualInteraction
     public int getManualInteractionWithConsentStatus() {
         return mManualInteractionWithConsentStatus;
@@ -223,7 +212,6 @@ public final class AdServicesExtDataParams implements Parcelable {
      * Returns ExtServices apex version for handling measurement rollback. -1 is returned if no data
      * is available.
      */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public long getMeasurementRollbackApexVersion() {
         return mMeasurementRollbackApexVersion;
     }

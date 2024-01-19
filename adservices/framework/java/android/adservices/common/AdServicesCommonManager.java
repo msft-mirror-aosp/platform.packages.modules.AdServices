@@ -23,7 +23,6 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
 
-import android.adservices.FlagsConstants;
 import android.adservices.adid.AdId;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
@@ -40,6 +39,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -62,12 +62,6 @@ import java.util.concurrent.Executor;
 public class AdServicesCommonManager {
     /** @hide */
     public static final String AD_SERVICES_COMMON_SERVICE = "ad_services_common_service";
-
-    private static final String KEY_AD_ID_CACHE_ENABLED = FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
-    private static final String KEY_ENABLE_ADSERVICES_API_ENABLED =
-            FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
-    private static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
-            FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 
     private final Context mContext;
     private final ServiceBinder<IAdServicesCommonService> mAdServicesCommonServiceBinder;
@@ -133,7 +127,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
@@ -247,7 +241,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_ENABLE_ADSERVICES_API_ENABLED)
+    @FlaggedApi(Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
@@ -311,7 +305,7 @@ public class AdServicesCommonManager {
      */
     // TODO(b/295205476): Move exceptions into the callback.
     @SystemApi
-    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
     public void updateAdId(
             @NonNull UpdateAdIdRequest updateAdIdRequest,
@@ -360,7 +354,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
     @RequiresApi(Build.VERSION_CODES.S)
     public void updateAdId(

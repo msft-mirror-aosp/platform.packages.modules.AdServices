@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.EVENT_REPORTING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -37,7 +37,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -67,7 +67,7 @@ public final class EventReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStartJob(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
@@ -84,7 +84,7 @@ public final class EventReportingJobService extends JobService {
                         () -> {
                             processPendingReports();
 
-                            AdservicesJobServiceLogger.getInstance(EventReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance(EventReportingJobService.this)
                                     .recordJobFinished(
                                             MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                                             /* isSuccessful= */ true,
@@ -129,7 +129,7 @@ public final class EventReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -193,7 +193,7 @@ public final class EventReportingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance(this)
                     .recordJobSkipped(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID, skipReason);
         }
 

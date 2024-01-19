@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,18 +67,19 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 /**
- * Unit test to test each flow for a job service using {@link AdservicesJobServiceLogger} to log the
+ * Unit test to test each flow for a job service using {@link AdServicesJobServiceLogger} to log the
  * metrics. This test creates an example {@link JobService} to use logging methods in {@link
- * AdservicesJobServiceLogger} and runs tests against this class.
+ * AdServicesJobServiceLogger} and runs tests against this class.
  */
-public class AdservicesJobServiceTest {
+public class AdServicesJobServiceTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
     private static final int JOB_ID =
-            AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
+            AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
     // Below are constant timestamps passed to mocked Clock as returned value of
     // clock.currentTimeMillis(). They are timestamps of consecutive events in sequence.
     // Setting consecutive two values have a different difference in order to avoid interfering the
@@ -101,9 +102,8 @@ public class AdservicesJobServiceTest {
     @Mock private Flags mMockFlags;
     @Mock private JobParameters mMockJobParameters;
     @Mock private Clock mMockClock;
-
-    private AdservicesJobServiceLogger mLogger;
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
+    private AdServicesJobServiceLogger mLogger;
     private MockitoSession mStaticMockSession;
 
     @Before
@@ -118,7 +118,7 @@ public class AdservicesJobServiceTest {
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-        mLogger = spy(new AdservicesJobServiceLogger(CONTEXT, mMockClock, mMockStatsdLogger));
+        mLogger = spy(new AdServicesJobServiceLogger(CONTEXT, mMockClock, mMockStatsdLogger));
 
         // Clear shared preference
         CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
@@ -554,9 +554,9 @@ public class AdservicesJobServiceTest {
         private boolean mShouldRetryOnJobFinished;
         private boolean mShouldOnStopJobHappen;
         private boolean mShouldSkip;
-        private final AdservicesJobServiceLogger mLogger;
+        private final AdServicesJobServiceLogger mLogger;
 
-        TestJobService(AdservicesJobServiceLogger logger) {
+        TestJobService(AdServicesJobServiceLogger logger) {
             mLogger = logger;
         }
 
