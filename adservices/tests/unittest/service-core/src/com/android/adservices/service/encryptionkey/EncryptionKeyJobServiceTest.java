@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.encryptionkey;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
-import static com.android.adservices.spe.AdservicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -29,8 +29,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -53,7 +51,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -70,7 +68,7 @@ import org.mockito.internal.stubbing.answers.CallsRealMethods;
 @SpyStatic(EncryptionKeyDao.class)
 @SpyStatic(EncryptionKeyJobService.class)
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(AdservicesJobServiceLogger.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
 public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
@@ -85,7 +83,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockito
     @Mock private JobInfo mMockJobInfo;
 
     private Context mSpyContext;
-    private AdservicesJobServiceLogger mSpyLogger;
+    private AdServicesJobServiceLogger mSpyLogger;
     private EncryptionKeyJobService mSpyService;
 
     @Before
@@ -95,7 +93,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockito
         mSpyService = spy(new EncryptionKeyJobService());
         mSpyLogger =
                 spy(
-                        new AdservicesJobServiceLogger(
+                        new AdServicesJobServiceLogger(
                                 CONTEXT, Clock.SYSTEM_CLOCK, mock(StatsdAdServicesLogger.class)));
         setDefaultExpectations();
     }
@@ -299,7 +297,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockito
         doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance(any()));
         doReturn(mock(EncryptionKeyDao.class)).when(() -> EncryptionKeyDao.getInstance(any()));
         doNothing().when(() -> EncryptionKeyJobService.schedule(any(), any()));
-        mockGetAdservicesJobServiceLogger(mSpyLogger);
+        mockGetAdServicesJobServiceLogger(mSpyLogger);
     }
 
     private void enableKillSwitch() {

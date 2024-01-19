@@ -16,7 +16,6 @@
 
 package android.adservices.extdata;
 
-import android.adservices.FlagsConstants;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -27,6 +26,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
+
+import com.android.adservices.flags.Flags;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -41,11 +42,8 @@ import java.util.Objects;
  * @hide
  */
 @SystemApi
-@FlaggedApi("enable_adext_data_service_apis")
+@FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
 public abstract class AdServicesExtDataStorageService extends Service {
-    private static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
-            FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
-
     /**
      * Supported data field IDs.
      *
@@ -65,48 +63,38 @@ public abstract class AdServicesExtDataStorageService extends Service {
     public @interface AdServicesExtDataFieldId {}
 
     /** Field to represent whether AdServices consent notification has been shown on Android R. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public static final int FIELD_IS_NOTIFICATION_DISPLAYED = 0;
 
     /** Field to represent whether user provided consent for Measurement API. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public static final int FIELD_IS_MEASUREMENT_CONSENTED = 1;
 
     /** Field to represent whether account is U18. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public static final int FIELD_IS_U18_ACCOUNT = 2;
 
     /** Field to represent whether it's an adult account. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public static final int FIELD_IS_ADULT_ACCOUNT = 3;
 
     /** Field to represent whether user manually interacted with consent */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public static final int FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS = 4;
 
     /** Field to represent ExtServices apex version for measurement rollback handling. */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public static final int FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION = 5;
 
     /** The intent that the service must respond to. Add it to the intent filter of the service. */
     @SdkConstant(SdkConstant.SdkConstantType.SERVICE_ACTION)
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public static final String SERVICE_INTERFACE =
             "android.adservices.extdata.AdServicesExtDataStorageService";
 
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public AdServicesExtDataStorageService() {}
 
     @Nullable
     @Override
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public final IBinder onBind(@Nullable Intent intent) {
         return mInterface.asBinder();
     }
 
     /** Abstract onGetAdServicesExtData method to get all stored ext data values from data store. */
     @NonNull
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public abstract AdServicesExtDataParams onGetAdServicesExtData();
 
     /**
@@ -115,7 +103,6 @@ public abstract class AdServicesExtDataStorageService extends Service {
      * @param adServicesExtDataParams data object that stores fields to be updated.
      * @param adServicesExtDataFields explicit list of fields that need to be updated in data store.
      */
-    @FlaggedApi(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
     public abstract void onPutAdServicesExtData(
             @NonNull AdServicesExtDataParams adServicesExtDataParams,
             @NonNull @AdServicesExtDataFieldId int[] adServicesExtDataFields);

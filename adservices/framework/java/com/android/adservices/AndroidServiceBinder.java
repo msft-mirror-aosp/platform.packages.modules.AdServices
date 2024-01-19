@@ -45,6 +45,7 @@ import android.os.IBinder;
 import android.os.SystemProperties;
 import android.text.TextUtils;
 
+import com.android.adservices.shared.common.ServiceUnavailableException;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.List;
@@ -104,7 +105,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     public T getService() {
         if (mSimulatingLowRamDevice) {
-            throw new IllegalStateException(
+            throw new ServiceUnavailableException(
                     "Service is not bound (because of SystemProperty "
                             + SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW
                             + ")");
@@ -171,7 +172,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
         synchronized (mLock) {
             if (mService == null) {
-                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                throw new ServiceUnavailableException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
             }
             return mService;
         }
