@@ -304,6 +304,7 @@ public class AuctionServerE2ETest {
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
 
+        doReturn(mFlags).when(FlagsFactory::getFlags);
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDaoSpy = spy(sharedDb.frequencyCapDao());
         AdSelectionServerDatabase serverDb =
@@ -360,7 +361,9 @@ public class AuctionServerE2ETest {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
-        reset(mAdServicesHttpsClientSpy);
+        if (mAdServicesHttpsClientSpy != null) {
+            reset(mAdServicesHttpsClientSpy);
+        }
     }
 
     @Test
