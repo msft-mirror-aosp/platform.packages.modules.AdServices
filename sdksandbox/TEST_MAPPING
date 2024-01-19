@@ -155,19 +155,7 @@
   ],
   "sdksandbox-postsubmit": [
     {
-      "name": "CtsContentTestCases"
-    },
-    {
-      "name": "CtsDisplayTestCases"
-    },
-    {
-      "name": "CtsInputMethodTestCases"
-    },
-    {
-      "name": "CtsMediaAudioTestCases"
-    },
-    {
-      "name": "CtsOsTestCases"
+      "name": "CtsViewTestCases"
     }
   ]
 }
