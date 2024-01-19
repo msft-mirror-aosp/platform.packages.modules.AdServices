@@ -16,7 +16,6 @@
 
 package com.android.adservices.spe;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 import static com.android.adservices.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
@@ -27,37 +26,35 @@ import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXE
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
-
-import com.google.common.truth.Expect;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
 /** Unit test for {@link AdServicesJobServiceLogger}. */
-public class AdServicesJobServiceLoggerTest {
+@SpyStatic(FlagsFactory.class)
+public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMockitoTestCase {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
@@ -70,20 +67,13 @@ public class AdServicesJobServiceLoggerTest {
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
     @Mock Flags mMockFlags;
 
-    @Rule(order = 0)
-    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(FlagsFactory.class).build();
-
-    @Rule(order = 1)
-    public final Expect expect = Expect.create();
-
     @Before
     public void setup() {
         mLogger =
                 Mockito.spy(
                         new AdServicesJobServiceLogger(
                                 CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
-        mockGetFlags(mMockFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
 
         // Clear shared preference
         CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
@@ -104,11 +94,12 @@ public class AdServicesJobServiceLoggerTest {
         long startJobTimestamp = 100L;
 
         mLogger.persistJobExecutionData(JOB_ID_1, startJobTimestamp);
-        assertThat(
+
+        expect.that(
                         sharedPreferences.getLong(
                                 keyJobStartTime, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP))
                 .isEqualTo(startJobTimestamp);
-        assertThat(sharedPreferences.getLong(keyExecutionPeriod, UNAVAILABLE_JOB_EXECUTION_PERIOD))
+        expect.that(sharedPreferences.getLong(keyExecutionPeriod, UNAVAILABLE_JOB_EXECUTION_PERIOD))
                 .isEqualTo(UNAVAILABLE_JOB_EXECUTION_PERIOD);
     }
 
@@ -152,11 +143,11 @@ public class AdServicesJobServiceLoggerTest {
                         previousExecutionPeriod,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         UNAVAILABLE_STOP_REASON);
-        assertThat(
+        expect.that(
                         sharedPreferences.getLong(
                                 keyJobStartTime, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP))
                 .isEqualTo(currentJobStartTime);
-        assertThat(sharedPreferences.getLong(keyExecutionPeriod, UNAVAILABLE_JOB_EXECUTION_PERIOD))
+        expect.that(sharedPreferences.getLong(keyExecutionPeriod, UNAVAILABLE_JOB_EXECUTION_PERIOD))
                 .isEqualTo(currentJobStartTime - previousJobStartTime);
     }
 
@@ -197,11 +188,11 @@ public class AdServicesJobServiceLoggerTest {
                         previousExecutionPeriod,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         UNAVAILABLE_STOP_REASON);
-        assertThat(
+        expect.that(
                         sharedPreferences.getLong(
                                 keyJobStartTime, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP))
                 .isEqualTo(currentJobStartTime);
-        assertThat(sharedPreferences.getLong(keyExecutionPeriod, UNAVAILABLE_JOB_EXECUTION_PERIOD))
+        expect.that(sharedPreferences.getLong(keyExecutionPeriod, UNAVAILABLE_JOB_EXECUTION_PERIOD))
                 .isEqualTo(currentJobStartTime - previousJobStartTime);
     }
 
@@ -218,17 +209,22 @@ public class AdServicesJobServiceLoggerTest {
 
         mLogger.persistJobExecutionData(JOB_ID_1, startJobTimestamp1);
         mLogger.persistJobExecutionData(JOB_ID_2, startJobTimestamp2);
-        assertThat(
+
+        expect.that(
                         sharedPreferences.getLong(
                                 keyJobStartTime1, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP))
                 .isEqualTo(startJobTimestamp1);
-        assertThat(sharedPreferences.getLong(keyExecutionPeriod1, UNAVAILABLE_JOB_EXECUTION_PERIOD))
+        expect.that(
+                        sharedPreferences.getLong(
+                                keyExecutionPeriod1, UNAVAILABLE_JOB_EXECUTION_PERIOD))
                 .isEqualTo(UNAVAILABLE_JOB_EXECUTION_PERIOD);
-        assertThat(
+        expect.that(
                         sharedPreferences.getLong(
                                 keyJobStartTime2, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP))
                 .isEqualTo(startJobTimestamp2);
-        assertThat(sharedPreferences.getLong(keyExecutionPeriod2, UNAVAILABLE_JOB_EXECUTION_PERIOD))
+        expect.that(
+                        sharedPreferences.getLong(
+                                keyExecutionPeriod2, UNAVAILABLE_JOB_EXECUTION_PERIOD))
                 .isEqualTo(UNAVAILABLE_JOB_EXECUTION_PERIOD);
     }
 
@@ -262,7 +258,7 @@ public class AdServicesJobServiceLoggerTest {
         verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID_1, executionLatency, executionPeriod, resultCode, stopReason);
-        assertThat(
+        expect.that(
                         sharedPreferences.getLong(
                                 keyJobStopTime, UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP))
                 .isEqualTo(jobStopTime);
@@ -289,8 +285,9 @@ public class AdServicesJobServiceLoggerTest {
         editor.commit();
 
         mLogger.logExecutionStats(JOB_ID_1, jobStopTime, resultCode, stopReason);
+
         // Verify stop time is not updated.
-        assertThat(
+        expect.that(
                         sharedPreferences.getLong(
                                 keyJobStopTime, UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP))
                 .isEqualTo(UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP);
@@ -300,8 +297,9 @@ public class AdServicesJobServiceLoggerTest {
         editor.putLong(keyJobStartTime, jobStopTime + 1);
         editor.commit();
         mLogger.logExecutionStats(JOB_ID_1, jobStopTime, resultCode, stopReason);
+
         // Verify stop time is not updated.
-        assertThat(
+        expect.that(
                         sharedPreferences.getLong(
                                 keyJobStopTime, UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP))
                 .isEqualTo(UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP);
@@ -324,7 +322,7 @@ public class AdServicesJobServiceLoggerTest {
                 JOB_ID_1, executionDurationInMs, executionFrequencyInMs, resultCode, stopReason);
 
         verify(mMockStatsdLogger).logExecutionReportedStats(captor.capture());
-        assertThat(captor.getValue())
+        expect.that(captor.getValue())
                 .isEqualTo(
                         ExecutionReportedStats.builder()
                                 .setJobId(JOB_ID_1)
@@ -353,7 +351,7 @@ public class AdServicesJobServiceLoggerTest {
                 JOB_ID_1, executionDurationInMs, executionFrequencyInMs, resultCode, stopReason);
 
         verify(mMockStatsdLogger).logExecutionReportedStats(captor.capture());
-        assertThat(captor.getValue())
+        expect.that(captor.getValue())
                 .isEqualTo(
                         ExecutionReportedStats.builder()
                                 .setJobId(JOB_ID_1)
@@ -366,19 +364,19 @@ public class AdServicesJobServiceLoggerTest {
 
     @Test
     public void testShouldLog() {
-        doReturn(0).when(mMockFlags).getBackgroundJobSamplingLoggingRate();
+        when(mMockFlags.getBackgroundJobSamplingLoggingRate()).thenReturn(0);
         expect.that(mLogger.shouldLog()).isFalse();
 
-        doReturn(100).when(mMockFlags).getBackgroundJobSamplingLoggingRate();
+        when(mMockFlags.getBackgroundJobSamplingLoggingRate()).thenReturn(100);
         expect.that(mLogger.shouldLog()).isTrue();
     }
 
     @Test
     public void testConvertLongToInteger() {
-        assertThat(AdServicesJobServiceLogger.convertLongToInteger((long) Integer.MIN_VALUE - 1))
+        expect.that(AdServicesJobServiceLogger.convertLongToInteger((long) Integer.MIN_VALUE - 1))
                 .isEqualTo(Integer.MIN_VALUE);
-        assertThat(AdServicesJobServiceLogger.convertLongToInteger((long) Integer.MAX_VALUE + 1))
+        expect.that(AdServicesJobServiceLogger.convertLongToInteger((long) Integer.MAX_VALUE + 1))
                 .isEqualTo(Integer.MAX_VALUE);
-        assertThat(AdServicesJobServiceLogger.convertLongToInteger(1000L)).isEqualTo(1000);
+        expect.that(AdServicesJobServiceLogger.convertLongToInteger(1000L)).isEqualTo(1000);
     }
 }
