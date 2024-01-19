@@ -35,7 +35,6 @@ import android.content.IntentFilter;
 import android.content.pm.ProviderInfo;
 import android.os.Build;
 import android.os.Process;
-import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 
@@ -62,7 +61,6 @@ import org.mockito.quality.Strictness;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class SdkSandboxRestrictionsUnitTest {
@@ -89,6 +87,7 @@ public class SdkSandboxRestrictionsUnitTest {
     private SdkSandboxManagerLocal mSdkSandboxManagerLocal;
     private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
     private SdkSandboxManagerService.Injector mInjector;
+    private DeviceConfigUtil mDeviceConfigUtil;
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
@@ -151,6 +150,8 @@ public class SdkSandboxRestrictionsUnitTest {
         assertThat(mSdkSandboxManagerLocal).isNotNull();
 
         mSdkSandboxSettingsListener = mService.getSdkSandboxSettingsListener();
+        mDeviceConfigUtil = new DeviceConfigUtil(mSdkSandboxSettingsListener);
+
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandboxUid(Mockito.anyInt()));
     }
 
@@ -195,7 +196,7 @@ public class SdkSandboxRestrictionsUnitTest {
 
     @Test
     public void testEnforceAllowedToStartActivity_restrictionsNotApplied() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
         Intent intent = new Intent(Intent.ACTION_CALL);
         mSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
     }
@@ -207,7 +208,8 @@ public class SdkSandboxRestrictionsUnitTest {
                 Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
                 new ArrayList<>(Arrays.asList(Intent.ACTION_CALL)));
         String encodedAllowedActivities = ProtoUtil.encodeActivityAllowlist(allowedActivities);
-        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
 
         Intent intent = new Intent(Intent.ACTION_CALL);
         mSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
@@ -223,7 +225,7 @@ public class SdkSandboxRestrictionsUnitTest {
 
     @Test
     public void testEnforceAllowedToStartActivity_restrictionEnforcedDeviceConfigAllowlistNotSet() {
-        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, null);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, null);
 
         for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
             mSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(action));
@@ -238,7 +240,7 @@ public class SdkSandboxRestrictionsUnitTest {
 
     @Test
     public void testEnforceAllowedToStartActivity_restrictionsNotEnforced() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
         mSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent());
     }
 
@@ -249,7 +251,8 @@ public class SdkSandboxRestrictionsUnitTest {
                 Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
                 new ArrayList<>(Arrays.asList(Intent.ACTION_CALL)));
         String encodedAllowedActivities = ProtoUtil.encodeActivityAllowlist(allowedActivities);
-        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
 
         mSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_CALL));
         assertThrows(
@@ -262,9 +265,11 @@ public class SdkSandboxRestrictionsUnitTest {
                 new ArraySet<>(Arrays.asList(Intent.ACTION_WEB_SEARCH));
         String encodedNextAllowedActivities =
                 ProtoUtil.encodeActivityAllowlist(nextAllowedActivities);
-        setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, encodedNextAllowedActivities);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_NEXT_ACTIVITY_ALLOWLIST, encodedNextAllowedActivities);
 
-        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
         mSdkSandboxManagerLocal.enforceAllowedToStartActivity(new Intent(Intent.ACTION_WEB_SEARCH));
         assertThrows(
                 SecurityException.class,
@@ -275,8 +280,9 @@ public class SdkSandboxRestrictionsUnitTest {
 
     @Test
     public void testEnforceAllowedToStartActivity_nextRestrictionsAppliedButAllowlistNotSet() {
-        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
-        setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, "");
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_NEXT_ACTIVITY_ALLOWLIST, "");
 
         Intent intent = new Intent(Intent.ACTION_CALL);
 
@@ -292,7 +298,8 @@ public class SdkSandboxRestrictionsUnitTest {
                 Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
                 new ArrayList<>(Arrays.asList(Intent.ACTION_CALL)));
         String encodedAllowedActivities = ProtoUtil.encodeActivityAllowlist(allowedActivities);
-        setDeviceConfigProperty(PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_ACTIVITY_ALLOWLIST, encodedAllowedActivities);
 
         mSdkSandboxManagerLocal.enforceAllowedToStartActivity(intent);
         for (String action : SdkSandboxManagerService.DEFAULT_ACTIVITY_ALLOWED_ACTIONS) {
@@ -346,7 +353,8 @@ public class SdkSandboxRestrictionsUnitTest {
         ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, Arrays.asList());
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         /* Allows all the services to start/ bind */
         assertThrows(
@@ -421,7 +429,8 @@ public class SdkSandboxRestrictionsUnitTest {
                         /*componentPackageName=*/ "componentPackageName.test"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
                 /*action=*/ INTENT_ACTION,
@@ -501,7 +510,8 @@ public class SdkSandboxRestrictionsUnitTest {
                         /*componentPackageName=*/ "*"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
                 /*action=*/ INTENT_ACTION,
@@ -602,7 +612,8 @@ public class SdkSandboxRestrictionsUnitTest {
                         /*componentPackageName=*/ "componentPackageName.test"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
                 /*action=*/ INTENT_ACTION,
@@ -676,7 +687,8 @@ public class SdkSandboxRestrictionsUnitTest {
                         /*componentPackageName=*/ "componentPackageName.test2"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
                 /*action=*/ "action.test1",
@@ -687,7 +699,8 @@ public class SdkSandboxRestrictionsUnitTest {
 
     @Test
     public void testServiceRestrictions_DeviceConfigNextAllowlistApplied() throws Exception {
-        setDeviceConfigProperty(PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS, "true");
         /*
          * Service allowlist
          * allowlist_per_target_sdk {
@@ -712,7 +725,8 @@ public class SdkSandboxRestrictionsUnitTest {
                         /*componentPackageName=*/ "*"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         /*
          * Service allowlist
@@ -732,7 +746,8 @@ public class SdkSandboxRestrictionsUnitTest {
                                         /*componentClassName=*/ "className.next",
                                         /*componentPackageName=*/ "*")));
         String encodedNextServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedNextServices);
-        setDeviceConfigProperty(PROPERTY_NEXT_SERVICE_ALLOWLIST, encodedNextServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_NEXT_SERVICE_ALLOWLIST, encodedNextServiceAllowlist);
 
         testServiceRestriction(
                 /*action=*/ "action.next",
@@ -777,7 +792,8 @@ public class SdkSandboxRestrictionsUnitTest {
                                         /*componentPackageName=*/ "*")));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         final Intent intent = new Intent(INTENT_ACTION);
         mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(intent);
@@ -810,7 +826,8 @@ public class SdkSandboxRestrictionsUnitTest {
                                         /*componentPackageName=*/ "*")));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
                 /*action=*/ INTENT_ACTION,
@@ -858,7 +875,8 @@ public class SdkSandboxRestrictionsUnitTest {
                                         /*componentPackageName=*/ "componentPackageName.test")));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
-        setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
+        mDeviceConfigUtil.setDeviceConfigProperty(
+                PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
         testServiceRestriction(
                 INTENT_ACTION, PACKAGE_NAME, COMPONENT_CLASS_NAME, COMPONENT_PACKAGE_NAME);
     }
@@ -890,7 +908,7 @@ public class SdkSandboxRestrictionsUnitTest {
     /** Tests expected behavior when broadcast receiver restrictions are not applied. */
     @Test
     public void testCanRegisterBroadcastReceiver_restrictionsNotApplied() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
         assertThat(
                         mSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
                                 new IntentFilter(Intent.ACTION_SEND),
@@ -902,7 +920,7 @@ public class SdkSandboxRestrictionsUnitTest {
     /** Tests expected behavior when broadcast receiver restrictions are applied. */
     @Test
     public void testCanRegisterBroadcastReceiver_restrictionsApplied() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
         assertThat(
                         mSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
                                 new IntentFilter(Intent.ACTION_SEND),
@@ -940,7 +958,7 @@ public class SdkSandboxRestrictionsUnitTest {
      */
     @Test
     public void testCanRegisterBroadcastReceiver_protectedBroadcast() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
         assertThat(
                         mSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
                                 new IntentFilter(Intent.ACTION_SEND),
@@ -951,7 +969,7 @@ public class SdkSandboxRestrictionsUnitTest {
 
     @Test
     public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_DefaultAccess() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, null);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, null);
         // The default value of the flag enforcing restrictions is true and access should be
         // restricted.
         assertThat(
@@ -962,7 +980,7 @@ public class SdkSandboxRestrictionsUnitTest {
 
     @Test
     public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessNotAllowed() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "true");
         assertThat(
                         mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
                                 new ProviderInfo()))
@@ -971,7 +989,7 @@ public class SdkSandboxRestrictionsUnitTest {
 
     @Test
     public void testSdkSandboxSettings_canAccessContentProviderFromSdkSandbox_AccessAllowed() {
-        setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_ENFORCE_RESTRICTIONS, "false");
         assertThat(
                         mSdkSandboxManagerLocal.canAccessContentProviderFromSdkSandbox(
                                 new ProviderInfo()))
@@ -1007,21 +1025,5 @@ public class SdkSandboxRestrictionsUnitTest {
         data.put("componentClassName", componentClassName);
         data.put("componentPackageName", componentPackageName);
         return data;
-    }
-
-    // TODO(b/320686372): Extract this method to a util class
-    private void setDeviceConfigProperty(String property, String value) {
-        // Explicitly calling the onPropertiesChanged method to avoid race conditions
-        if (value == null) {
-            // Map.of() does not handle null, so we need to use an ArrayMap to delete a property
-            ArrayMap<String, String> properties = new ArrayMap<>();
-            properties.put(property, null);
-            mSdkSandboxSettingsListener.onPropertiesChanged(
-                    new DeviceConfig.Properties(DeviceConfig.NAMESPACE_ADSERVICES, properties));
-        } else {
-            mSdkSandboxSettingsListener.onPropertiesChanged(
-                    new DeviceConfig.Properties(
-                            DeviceConfig.NAMESPACE_ADSERVICES, Map.of(property, value)));
-        }
     }
 }
