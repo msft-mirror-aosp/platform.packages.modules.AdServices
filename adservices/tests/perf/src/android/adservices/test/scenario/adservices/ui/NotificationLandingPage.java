@@ -57,7 +57,7 @@ public class NotificationLandingPage {
 
     @Before
     public void setup() throws Exception {
-        UiUtils.setFlipFlow(false);
+        UiUtils.setFlipFlow(true);
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
         AdservicesTestHelper.killAdservicesProcess(sContext);
