@@ -68,8 +68,6 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
-import android.provider.DeviceConfig;
-import android.util.ArrayMap;
 import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -107,7 +105,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -124,7 +121,6 @@ public class SdkSandboxManagerServiceUnitTest {
             "com.android.codeproviderresources";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final String PROPERTY_DISABLE_SANDBOX = "disable_sdk_sandbox";
-    private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
 
     private static final String TEST_KEY = "key";
     private static final String TEST_VALUE = "value";
@@ -157,6 +153,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private SdkSandboxStorageManager mSdkSandboxStorageManager;
     private static SdkSandboxManagerLocal sSdkSandboxManagerLocal;
     private CallingInfo mCallingInfo;
+    private DeviceConfigUtil mDeviceConfigUtil;
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
@@ -239,6 +236,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         sSdkSandboxSettingsListener = mService.getSdkSandboxSettingsListener();
         assertThat(sSdkSandboxSettingsListener).isNotNull();
+        mDeviceConfigUtil = new DeviceConfigUtil(sSdkSandboxSettingsListener);
 
         mClientAppUid = Process.myUid();
         mSandboxLatencyInfo = new SandboxLatencyInfo();
@@ -1681,10 +1679,10 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testKillswitchStopsSandbox() throws Exception {
         disableKillUid();
-        setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
         sSdkSandboxSettingsListener.setKillSwitchState(false);
         loadSdk(SDK_NAME);
-        setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
         assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isEqualTo(null);
@@ -2054,21 +2052,6 @@ public class SdkSandboxManagerServiceUnitTest {
             assumeTrue("Device must be at least U", SdkLevel.isAtLeastU());
         } else {
             assumeFalse("Device must be less than U", SdkLevel.isAtLeastU());
-        }
-    }
-
-    private void setDeviceConfigProperty(String property, String value) {
-        // Explicitly calling the onPropertiesChanged method to avoid race conditions
-        if (value == null) {
-            // Map.of() does not handle null, so we need to use an ArrayMap to delete a property
-            ArrayMap<String, String> properties = new ArrayMap<>();
-            properties.put(property, null);
-            sSdkSandboxSettingsListener.onPropertiesChanged(
-                    new DeviceConfig.Properties(DeviceConfig.NAMESPACE_ADSERVICES, properties));
-        } else {
-            sSdkSandboxSettingsListener.onPropertiesChanged(
-                    new DeviceConfig.Properties(
-                            DeviceConfig.NAMESPACE_ADSERVICES, Map.of(property, value)));
         }
     }
 
