@@ -37,16 +37,19 @@ class BackCompatJobServiceDetectorTest : LintDetectorTest() {
     @Test
     fun validJobService_safeClass_doesNotThrow() {
         lint().files(
-                java("""
+            java(
+                """
 package com.android.adservices.service.topics;
 
-import com.android.adservices.spe.AdservicesJobInfo;
+import com.android.adservices.spe.AdServicesJobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 
 
 public final class EpochJobService extends JobService {
-    private static final int TOPICS_EPOCH_JOB_ID = AdservicesJobInfo.TOPICS_EPOCH_JOB.getJobId();
+    @SuppressWarnings("InvalidAdServicesJobService")
+    private static final int TOPICS_EPOCH_JOB_ID = AdServicesJobInfo.TOPICS_EPOCH_JOB.getJobId();
+    
     @Override
     public boolean onStartJob(JobParameters params) {
         return true;
@@ -57,7 +60,9 @@ public final class EpochJobService extends JobService {
         return true;
     }
 }
-                """), *stubs).run().expectClean()
+                """
+            ), *stubs
+        ).run().expectClean()
     }
 
     @Test
@@ -245,12 +250,12 @@ public final class EpochJobService extends JobService {
             java(
                     """
             package com.android.adservices.spe;
-            public enum AdservicesJobInfo {
+            public enum AdServicesJobInfo {
                 TOPICS_EPOCH_JOB("TOPICS_EPOCH_JOB", 2);
                 private final String mJobServiceName;
                 private final int mJobId;
 
-                AdservicesJobInfo(String jobServiceName, int jobId) {
+                AdServicesJobInfo(String jobServiceName, int jobId) {
                     mJobServiceName = jobServiceName;
                     mJobId = jobId;
                 }

@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit;
  * Flags. The default values in this class must match with the default values in PH since we will
  * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
  * from the GCL.
+ *
+ * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  */
 public interface Flags extends CommonFlags {
     /** Topics Epoch Job Period. */
@@ -1470,7 +1472,7 @@ public interface Flags extends CommonFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://publickeyservice-test1.bas-kms.xyz/v1alpha/publicKeys";
+            "https://publickeyservice-v150.coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
 
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
@@ -3049,6 +3051,18 @@ public interface Flags extends CommonFlags {
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
+    long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
+
+    /** Returns max allowed size in bytes for trigger registrations header. */
+    default long getMaxTriggerRegistrationHeaderSizeBytes() {
+        return MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+    }
+
+    boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
+    /** Returns true when the new trigger registration header size limitation are applied. */
+    default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
+        return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+    }
 
     /**
      * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap
@@ -4430,8 +4444,8 @@ public interface Flags extends CommonFlags {
     }
 
     /**
-     * Default value to determine how many logging events {@link
-     * com.android.adservices.spe.AdservicesJobServiceLogger} should upload to the server.
+     * Default value to determine how many logging events {@link AdServicesJobServiceLogger} should
+     * upload to the server.
      *
      * <p>The value should be an integer in the range of [0, 100], where 100 is to log all events
      * and 0 is to log no events.
@@ -4439,8 +4453,7 @@ public interface Flags extends CommonFlags {
     int DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE = 5;
 
     /**
-     * Returns the sampling logging rate for {@link
-     * com.android.adservices.spe.AdservicesJobServiceLogger} for logging events.
+     * Returns the sampling logging rate for {@link AdServicesJobServiceLogger} for logging events.
      */
     default int getBackgroundJobSamplingLoggingRate() {
         return DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;

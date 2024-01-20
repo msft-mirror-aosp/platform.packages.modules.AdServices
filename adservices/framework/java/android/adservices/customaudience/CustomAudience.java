@@ -441,10 +441,10 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience build() {
-            Objects.requireNonNull(mBuyer);
-            Objects.requireNonNull(mName);
-            Objects.requireNonNull(mDailyUpdateUri);
-            Objects.requireNonNull(mBiddingLogicUri);
+            Objects.requireNonNull(mBuyer, "The buyer has not been provided");
+            Objects.requireNonNull(mName, "The name has not been provided");
+            Objects.requireNonNull(mDailyUpdateUri, "The daily update URI has not been provided");
+            Objects.requireNonNull(mBiddingLogicUri, "The bidding logic URI has not been provided");
 
             // To pass the API lint, we should not allow null Collection.
             if (mAds == null) {
