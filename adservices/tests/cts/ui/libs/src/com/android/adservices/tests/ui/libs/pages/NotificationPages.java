@@ -183,7 +183,7 @@ public class NotificationPages {
             leftControlButton.click();
         } else {
             rightControlButton.click();
-
+            Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             if (isFlip) {
                 UiObject2 title2 =
                         getElement(context, device, R.string.notificationUI_header_ga_title_eu_v2);
