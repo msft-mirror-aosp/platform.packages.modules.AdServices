@@ -56,7 +56,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /** Class for logging methods used by background jobs. */
-public final class AdservicesJobServiceLogger {
+public final class AdServicesJobServiceLogger {
     private static final Object SINGLETON_LOCK = new Object();
     private static final ReadWriteLock sReadWriteLock = new ReentrantReadWriteLock();
     // JobService runs the execution on the main thread, so the logging part should be offloaded to
@@ -66,15 +66,15 @@ public final class AdservicesJobServiceLogger {
             MoreExecutors.newSequentialExecutor(AdServicesExecutors.getBackgroundExecutor());
     private static final Random sRandom = new Random();
 
-    private static volatile AdservicesJobServiceLogger sSingleton;
+    private static volatile AdServicesJobServiceLogger sSingleton;
 
     private final Context mContext;
     private final Clock mClock;
     private final StatsdAdServicesLogger mStatsdLogger;
 
-    /** Create an instance of {@link AdservicesJobServiceLogger}. */
+    /** Create an instance of {@link AdServicesJobServiceLogger}. */
     @VisibleForTesting
-    public AdservicesJobServiceLogger(
+    public AdServicesJobServiceLogger(
             @NonNull Context context,
             @NonNull Clock clock,
             @NonNull StatsdAdServicesLogger statsdLogger) {
@@ -83,14 +83,14 @@ public final class AdservicesJobServiceLogger {
         mStatsdLogger = statsdLogger;
     }
 
-    /** Get a singleton instance of {@link AdservicesJobServiceLogger} to be used. */
+    /** Get a singleton instance of {@link AdServicesJobServiceLogger} to be used. */
     @NonNull
-    public static AdservicesJobServiceLogger getInstance(@NonNull Context context) {
+    public static AdServicesJobServiceLogger getInstance(@NonNull Context context) {
         if (sSingleton == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sSingleton == null) {
                     sSingleton =
-                            new AdservicesJobServiceLogger(
+                            new AdServicesJobServiceLogger(
                                     context,
                                     Clock.SYSTEM_CLOCK,
                                     StatsdAdServicesLogger.getInstance());
@@ -247,7 +247,7 @@ public final class AdservicesJobServiceLogger {
             LogUtil.e(
                     "Execution Stat is INVALID for job %s, jobStartTimestamp: %d, jobStopTimestamp:"
                             + " %d.",
-                    AdservicesJobInfo.getJobIdToInfoMap().get(jobId),
+                    AdServicesJobInfo.getJobIdToInfoMap().get(jobId),
                     jobStartExecutionTimestamp,
                     jobStopExecutionTimestamp);
             return;
@@ -268,7 +268,7 @@ public final class AdservicesJobServiceLogger {
                 LogUtil.e(
                         "Failed to update job Ending Execution Logging Data for Job %s, Job ID ="
                                 + " %d.",
-                        AdservicesJobInfo.getJobIdToInfoMap().get(jobId).getJobServiceName(),
+                        AdServicesJobInfo.getJobIdToInfoMap().get(jobId).getJobServiceName(),
                         jobId);
             }
         } finally {
@@ -411,7 +411,7 @@ public final class AdservicesJobServiceLogger {
                 // TODO(b/279231865): Log CEL with SPE_FAIL_TO_COMMIT_JOB_START_TIME.
                 LogUtil.e(
                         "Failed to update onStartJob() Logging Data for Job %s, Job ID = %d",
-                        AdservicesJobInfo.getJobIdToInfoMap().get(jobId).getJobServiceName(),
+                        AdServicesJobInfo.getJobIdToInfoMap().get(jobId).getJobServiceName(),
                         jobId);
             }
         } finally {

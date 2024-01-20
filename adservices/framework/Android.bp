@@ -39,6 +39,9 @@ java_sdk_library {
         "androidx.annotation_annotation",
         "error_prone_annotations",
     ],
+    static_libs : [
+        "adservices-shared-exceptions",
+    ],
     sdk_version: "module_current",
     min_sdk_version: "30",
     permitted_packages: [
@@ -61,6 +64,9 @@ java_library {
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
         "error_prone_annotations",
+    ],
+    static_libs : [
+        "adservices-shared-exceptions",
     ],
     min_sdk_version: "30",
     defaults: ["framework-module-defaults"],

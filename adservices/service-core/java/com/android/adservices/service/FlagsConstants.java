@@ -923,6 +923,11 @@ public final class FlagsConstants {
     // Max response payload size allowed per source/trigger registration
     public static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
             "max_response_based_registration_size_bytes";
+    public static final String KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES =
+            "max_trigger_registration_header_size_bytes";
+
+    public static final String KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT =
+            "enable_update_trigger_registration_header_limit";
 
     // UI keys
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =

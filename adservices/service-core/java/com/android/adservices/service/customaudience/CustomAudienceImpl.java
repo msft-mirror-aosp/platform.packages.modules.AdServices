@@ -139,7 +139,8 @@ public class CustomAudienceImpl {
                         callerPackageName,
                         currentTime,
                         customAudienceDefaultExpireIn,
-                        dataConversionStrategy);
+                        dataConversionStrategy,
+                        devContext.getDevOptionsEnabled());
 
         sLogger.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
