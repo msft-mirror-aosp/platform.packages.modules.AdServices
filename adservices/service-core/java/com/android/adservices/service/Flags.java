@@ -1654,6 +1654,13 @@ public interface Flags extends CommonFlags {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED = false;
+
+    /** Returns whether the omit-ads flag is enabled for the server auction. */
+    default boolean getFledgeAuctionServerOmitAdsEnabled() {
+        return FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
