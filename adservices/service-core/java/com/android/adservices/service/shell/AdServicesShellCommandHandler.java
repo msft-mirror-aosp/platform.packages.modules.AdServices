@@ -189,18 +189,18 @@ public final class AdServicesShellCommandHandler {
      * Commands - for each new one, add onHelp(), onCommand(), and runCommand() *
      ****************************************************************************/
 
-    private void onHelp() {
-        mOut.println(HELP_ECHO);
-        mOut.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
-        mOut.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
-        mOut.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
+    private static void onHelp(PrintWriter pw) {
+        pw.println(HELP_ECHO);
+        pw.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
+        pw.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+        pw.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
     }
 
     private int onCommand(String cmd) {
         switch (cmd) {
             case CMD_SHORT_HELP:
             case CMD_HELP:
-                onHelp();
+                onHelp(mOut);
                 return RESULT_OK;
             case "":
                 mErr.println(ERROR_EMPTY_COMMAND);
@@ -212,7 +212,8 @@ public final class AdServicesShellCommandHandler {
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
             default:
-                mErr.printf("Unknown command: %s\n", cmd);
+                mErr.printf("Unknown command: %s\n Valid commands are: \n", cmd);
+                onHelp(mErr);
                 return RESULT_GENERIC_ERROR;
         }
     }
