@@ -858,7 +858,12 @@ class AttributionJobHandler {
         }
 
         if (getMatchingEffectiveTriggerData(eventTrigger, source).isEmpty()) {
-            // TODO (b/)314189512: send "trigger-event-no-matching-trigger-data" debug report.
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
             return TriggeringStatus.DROPPED;
         }
 
@@ -989,6 +994,12 @@ class AttributionJobHandler {
                 getMatchingEffectiveTriggerData(eventTrigger, source);
 
         if (maybeEffectiveTriggerData.isEmpty()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
             return false;
         }
 

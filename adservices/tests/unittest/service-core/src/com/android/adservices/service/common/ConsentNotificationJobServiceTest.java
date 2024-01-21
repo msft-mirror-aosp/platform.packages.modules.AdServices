@@ -61,7 +61,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -99,7 +99,7 @@ public class ConsentNotificationJobServiceTest {
     @Mock private SharedPreferences.Editor mEditor;
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
     @Mock UxStatesManager mUxStatesManager;
-    private AdservicesJobServiceLogger mSpyLogger;
+    private AdServicesJobServiceLogger mSpyLogger;
     private MockitoSession mStaticMockSession = null;
 
     /** Initialize static spies. */
@@ -114,7 +114,7 @@ public class ConsentNotificationJobServiceTest {
                         .spyStatic(ConsentManager.class)
                         .spyStatic(AdServicesSyncUtil.class)
                         .spyStatic(ConsentNotificationJobService.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
+                        .spyStatic(AdServicesJobServiceLogger.class)
                         .spyStatic(UxStatesManager.class)
                         .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.WARN)

@@ -102,6 +102,9 @@ public class DBCustomAudience {
     @Nullable
     private final List<DBAdData> mAds;
 
+    @ColumnInfo(name = "debuggable", defaultValue = "0")
+    private final boolean mDebuggable;
+
     public DBCustomAudience(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
@@ -113,7 +116,8 @@ public class DBCustomAudience {
             @Nullable AdSelectionSignals userBiddingSignals,
             @Nullable DBTrustedBiddingData trustedBiddingData,
             @NonNull Uri biddingLogicUri,
-            @Nullable List<DBAdData> ads) {
+            @Nullable List<DBAdData> ads,
+            boolean debuggable) {
         Preconditions.checkStringNotEmpty(owner, "Owner must be provided");
         Objects.requireNonNull(buyer, "Buyer must be provided.");
         Preconditions.checkStringNotEmpty(name, "Name must be provided");
@@ -135,6 +139,7 @@ public class DBCustomAudience {
         mTrustedBiddingData = trustedBiddingData;
         mBiddingLogicUri = biddingLogicUri;
         mAds = ads;
+        mDebuggable = debuggable;
     }
 
     /**
@@ -146,6 +151,7 @@ public class DBCustomAudience {
      * @param currentTime the timestamp when calling the method
      * @param defaultExpireIn the default expiration from activation
      * @param adDataConversionStrategy Strategy to convert ads from DB
+     * @param debuggable If the CA was created in a debuggable context
      * @return storage model
      */
     @NonNull
@@ -154,7 +160,8 @@ public class DBCustomAudience {
             @NonNull String callerPackageName,
             @NonNull Instant currentTime,
             @NonNull Duration defaultExpireIn,
-            @NonNull AdDataConversionStrategy adDataConversionStrategy) {
+            @NonNull AdDataConversionStrategy adDataConversionStrategy,
+            boolean debuggable) {
         Objects.requireNonNull(parcelable);
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(currentTime);
@@ -191,6 +198,7 @@ public class DBCustomAudience {
                 .setBiddingLogicUri(parcelable.getBiddingLogicUri())
                 .setTrustedBiddingData(
                         DBTrustedBiddingData.fromServiceObject(parcelable.getTrustedBiddingData()))
+                .setDebuggable(debuggable)
                 .setAds(
                         parcelable.getAds().isEmpty()
                                 ? null
@@ -335,6 +343,11 @@ public class DBCustomAudience {
         return mAds;
     }
 
+    /** Returns if CA was created in a debuggable context. */
+    public boolean isDebuggable() {
+        return mDebuggable;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -366,7 +379,8 @@ public class DBCustomAudience {
                 mUserBiddingSignals,
                 mTrustedBiddingData,
                 mBiddingLogicUri,
-                mAds);
+                mAds,
+                mDebuggable);
     }
 
     /**
@@ -386,7 +400,8 @@ public class DBCustomAudience {
                 .setUserBiddingSignals(this.mUserBiddingSignals)
                 .setTrustedBiddingData(this.mTrustedBiddingData)
                 .setBiddingLogicUri(this.mBiddingLogicUri)
-                .setAds(this.mAds);
+                .setAds(this.mAds)
+                .setDebuggable(this.mDebuggable);
     }
 
     @Override
@@ -416,6 +431,8 @@ public class DBCustomAudience {
                 + mBiddingLogicUri
                 + ", mAds="
                 + mAds
+                + ", mDebuggable="
+                + mDebuggable
                 + '}';
     }
 
@@ -432,6 +449,8 @@ public class DBCustomAudience {
         private DBTrustedBiddingData mTrustedBiddingData;
         private Uri mBiddingLogicUri;
         private List<DBAdData> mAds;
+        private boolean mDebuggable;
+
         public Builder() {}
 
         public Builder(@NonNull DBCustomAudience customAudience) {
@@ -449,6 +468,7 @@ public class DBCustomAudience {
             mTrustedBiddingData = customAudience.getTrustedBiddingData();
             mBiddingLogicUri = customAudience.getBiddingLogicUri();
             mAds = customAudience.getAds();
+            mDebuggable = customAudience.isDebuggable();
         }
 
         /** See {@link #getOwner()} for detail. */
@@ -518,6 +538,12 @@ public class DBCustomAudience {
             return this;
         }
 
+        /** See {@link #isDebuggable()} for detail. */
+        public Builder setDebuggable(boolean debuggable) {
+            mDebuggable = debuggable;
+            return this;
+        }
+
         /**
          * Build the {@link DBCustomAudience}.
          *
@@ -535,7 +561,8 @@ public class DBCustomAudience {
                     mUserBiddingSignals,
                     mTrustedBiddingData,
                     mBiddingLogicUri,
-                    mAds);
+                    mAds,
+                    mDebuggable);
         }
     }
 

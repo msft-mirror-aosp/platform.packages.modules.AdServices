@@ -422,14 +422,22 @@ public final class AdSelectionConfig implements Parcelable {
          */
         @NonNull
         public AdSelectionConfig build() {
-            Objects.requireNonNull(mSeller);
-            Objects.requireNonNull(mDecisionLogicUri);
-            Objects.requireNonNull(mCustomAudienceBuyers);
-            Objects.requireNonNull(mAdSelectionSignals);
-            Objects.requireNonNull(mSellerSignals);
-            Objects.requireNonNull(mPerBuyerSignals);
-            Objects.requireNonNull(mBuyerSignedContextualAds);
-            Objects.requireNonNull(mTrustedScoringSignalsUri);
+            Objects.requireNonNull(mSeller, "The seller has not been provided");
+            Objects.requireNonNull(
+                mDecisionLogicUri, "The decision logic URI has not been provided");
+            Objects.requireNonNull(
+                mCustomAudienceBuyers, "The custom audience buyers have not been provided");
+            Objects.requireNonNull(
+                mAdSelectionSignals, "The ad selection signals have not been provided");
+            Objects.requireNonNull(mSellerSignals, "The seller signals have not been provided");
+            Objects.requireNonNull(
+                mPerBuyerSignals, "The per buyer signals have not been provided");
+            Objects.requireNonNull(
+                mBuyerSignedContextualAds,
+                "The buyer signed contextual ads have not been provided");
+            Objects.requireNonNull(
+                mTrustedScoringSignalsUri,
+                "The trusted scoring signals URI have not been provided");
             return new AdSelectionConfig(
                     mSeller,
                     mDecisionLogicUri,

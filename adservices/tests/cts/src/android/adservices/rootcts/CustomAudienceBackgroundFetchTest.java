@@ -16,7 +16,7 @@
 
 package android.adservices.rootcts;
 
-import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 
 import static com.google.common.truth.Truth.assertThat;
 
