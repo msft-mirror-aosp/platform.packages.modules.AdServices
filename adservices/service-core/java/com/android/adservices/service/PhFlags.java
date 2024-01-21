@@ -3186,6 +3186,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
     }
 
+    @Override
+    public long getMaxTriggerRegistrationHeaderSizeBytes() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
+                /* defaultValue */ MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
+    }
+
+    @Override
+    public boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
+                MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;

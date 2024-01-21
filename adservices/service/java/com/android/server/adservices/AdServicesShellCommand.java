@@ -58,7 +58,12 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     static final String WRONG_UID_TEMPLATE =
             AD_SERVICES_SYSTEM_SERVICE + " shell cmd is only callable by ADB (called by %d)";
 
-    private static final String CMD_IS_SYSTEM_SERVICE_ENABLED = "is-system-service-enabled";
+    @VisibleForTesting
+    static final String CMD_IS_SYSTEM_SERVICE_ENABLED = "is-system-service-enabled";
+
+    @VisibleForTesting static final String CMD_SHORT_HELP = "-h";
+    @VisibleForTesting static final String CMD_HELP = "help";
+
     private static final String TIMEOUT_ARG = "--timeout";
     // Default timeout value to wait for the shell command output when we bind to the adservices
     // process.
@@ -86,8 +91,9 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
         if (callingUid != Process.ROOT_UID && callingUid != Process.SHELL_UID) {
             throw new SecurityException(String.format(WRONG_UID_TEMPLATE, callingUid));
         }
-        if (cmd == null || cmd.isEmpty() || cmd.equals("-h") || cmd.equals("help")) {
+        if (cmd == null || cmd.isEmpty() || cmd.equals(CMD_SHORT_HELP) || cmd.equals(CMD_HELP)) {
             onHelp();
+            runAdServicesShellCommand(mContext, new String[] {CMD_HELP});
             return 0;
         }
         switch (cmd) {
@@ -197,7 +203,11 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                     verbose = true;
                     break;
                 default:
-                    return showError("Invalid option: %s", opt);
+                    PrintWriter errPw = getErrPrintWriter();
+                    errPw.printf("Invalid option: %s\n\n", opt);
+                    errPw.println("Valid Command:");
+                    showIsSystemServerEnabledHelpCommand(errPw);
+                    return -1;
             }
         }
 
@@ -234,16 +244,24 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
         return -1;
     }
 
-    private static void showValidCommands(PrintWriter pw) {
-        pw.println("help: ");
-        pw.println("    Prints this help text.");
-        pw.println();
+    private static void showIsSystemServerEnabledHelpCommand(PrintWriter pw) {
         pw.println("is-system-service-enabled [-v || --verbose]");
         pw.println(
                 "    Returns a boolean indicating whether the AdServices System Service is"
                         + "enabled.");
         pw.println("    Use [-v || --verbose] to also show the default value");
         pw.println();
+    }
+
+    private static void showHelpCommand(PrintWriter pw) {
+        pw.println("help: ");
+        pw.println("    Prints this help text.");
+        pw.println();
+    }
+
+    private static void showValidCommands(PrintWriter pw) {
+        showHelpCommand(pw);
+        showIsSystemServerEnabledHelpCommand(pw);
     }
 
     // Needed because Binder.getCallingUid() is native and cannot be mocked

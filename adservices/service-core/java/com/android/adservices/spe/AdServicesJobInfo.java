@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Enum class to store background jobs metadata. */
-public enum AdservicesJobInfo {
+public enum AdServicesJobInfo {
     MAINTENANCE_JOB("MAINTENANCE_JOB", 1),
 
     TOPICS_EPOCH_JOB("TOPICS_EPOCH_JOB", 2),
@@ -88,10 +88,10 @@ public enum AdservicesJobInfo {
     private final int mJobId;
 
     // The reverse mapping to get Job Info by Job ID.
-    private static final Map<Integer, AdservicesJobInfo> JOB_ID_TO_INFO_MAP =
+    private static final Map<Integer, AdServicesJobInfo> JOB_ID_TO_INFO_MAP =
             Collections.unmodifiableMap(initializeMapping());
 
-    AdservicesJobInfo(String jobServiceName, int jobId) {
+    AdServicesJobInfo(String jobServiceName, int jobId) {
         mJobServiceName = jobServiceName;
         mJobId = jobId;
     }
@@ -114,13 +114,13 @@ public enum AdservicesJobInfo {
         return mJobId;
     }
 
-    static Map<Integer, AdservicesJobInfo> getJobIdToInfoMap() {
+    static Map<Integer, AdServicesJobInfo> getJobIdToInfoMap() {
         return JOB_ID_TO_INFO_MAP;
     }
 
-    private static Map<Integer, AdservicesJobInfo> initializeMapping() {
-        Map<Integer, AdservicesJobInfo> map = new HashMap<>();
-        for (AdservicesJobInfo info : AdservicesJobInfo.values()) {
+    private static Map<Integer, AdServicesJobInfo> initializeMapping() {
+        Map<Integer, AdServicesJobInfo> map = new HashMap<>();
+        for (AdServicesJobInfo info : AdServicesJobInfo.values()) {
             map.put(info.getJobId(), info);
         }
 
