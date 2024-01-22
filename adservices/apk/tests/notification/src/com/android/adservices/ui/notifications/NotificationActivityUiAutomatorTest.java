@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 
 import android.content.Context;
 import android.content.Intent;
@@ -57,7 +56,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
-import java.io.IOException;
 
 @SpyStatic(PhFlags.class)
 @SpyStatic(BackgroundJobsManager.class)
@@ -74,16 +72,13 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
     @Mock private ConsentManager mConsentManager;
-    private Context mContext;
 
     // TODO(b/261216850): Migrate this NotificationActivity to non-mock test
     @Mock private Flags mMockFlags;
     @Mock private UxStatesManager mUxStatesManager;
 
     @Before
-    public void setup() throws UiObjectNotFoundException, IOException {
-        mContext = spy(appContext.get());
-
+    public void setup() throws Exception {
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
@@ -110,7 +105,7 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
     public void teardown() throws Exception {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + getTestName() + "_");
 
-        AdservicesTestHelper.killAdservicesProcess(mContext);
+        AdservicesTestHelper.killAdservicesProcess(mSpyContext);
     }
     @Test
     @FlakyTest(bugId = 302607350)
@@ -196,7 +191,7 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
         Intent intent = new Intent(NOTIFICATION_TEST_PACKAGE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("isEUDevice", isEUActivity);
-        mContext.startActivity(intent);
+        mSpyContext.startActivity(intent);
 
         sDevice.wait(Until.hasObject(By.pkg(NOTIFICATION_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
@@ -222,7 +217,7 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
 
         if (!sentence.exists()) {
             sDevice.pressBack();
-            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mSpyContext);
             return true;
         }
 
