@@ -1251,8 +1251,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void logSandboxActivityEvent(int method, int callResult, int latencyMillis) {
-        mSdkSandboxStatsdLogger.logSandboxActivityEvent(method, callResult, latencyMillis);
+    public void logSandboxActivityApiLatency(int method, int callResult, int latencyMillis) {
+        mSdkSandboxStatsdLogger.logSandboxActivityApiLatency(method, callResult, latencyMillis);
     }
 
     interface SandboxBindingCallback {
@@ -2298,7 +2298,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     }
                 }
             } catch (SecurityException e) {
-                logEnforceAllowedToHostSandboxedActivityEvent(
+                logEnforceAllowedToHostSandboxedActivityLatency(
                         SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION,
                         timeEventStarted);
                 throw e;
@@ -2306,7 +2306,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             final CallingInfo callingInfo = new CallingInfo(clientAppUid, clientAppPackageName);
             if (mServiceProvider.getSdkSandboxServiceForApp(callingInfo) == null) {
-                logEnforceAllowedToHostSandboxedActivityEvent(
+                logEnforceAllowedToHostSandboxedActivityLatency(
                         SdkSandboxStatsLog
                                 .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION_NO_SANDBOX_PROCESS,
                         timeEventStarted);
@@ -2319,7 +2319,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             Bundle extras = intent.getExtras();
             if (extras == null || extras.getBinder(getSandboxedActivityHandlerKey()) == null) {
-                logEnforceAllowedToHostSandboxedActivityEvent(
+                logEnforceAllowedToHostSandboxedActivityLatency(
                         SdkSandboxStatsLog
                                 .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_ILLEGAL_ARGUMENT_EXCEPTION,
                         timeEventStarted);
@@ -2330,14 +2330,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 + "SandboxedActivityHandler.");
             }
 
-            logEnforceAllowedToHostSandboxedActivityEvent(
+            logEnforceAllowedToHostSandboxedActivityLatency(
                     SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
                     timeEventStarted);
         }
 
-        private void logEnforceAllowedToHostSandboxedActivityEvent(
+        private void logEnforceAllowedToHostSandboxedActivityLatency(
                 int callResult, long timeEventStarted) {
-            SdkSandboxManagerService.this.logSandboxActivityEvent(
+            SdkSandboxManagerService.this.logSandboxActivityApiLatency(
                     SdkSandboxStatsLog
                             .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__ENFORCE_ALLOWED_TO_HOST_SANDBOXED_ACTIVITY,
                     callResult,

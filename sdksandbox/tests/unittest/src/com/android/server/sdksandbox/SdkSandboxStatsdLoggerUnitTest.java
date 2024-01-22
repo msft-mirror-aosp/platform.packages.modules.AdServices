@@ -182,8 +182,8 @@ public class SdkSandboxStatsdLoggerUnitTest {
     }
 
     @Test
-    public void testLogSandboxActivityEvent_CallsStatsd() {
-        mSdkSandboxStatsdLogger.logSandboxActivityEvent(
+    public void testlogSandboxActivityApiLatency_CallsStatsd() {
+        mSdkSandboxStatsdLogger.logSandboxActivityApiLatency(
                 SdkSandboxStatsLog
                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
                 SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,

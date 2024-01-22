@@ -705,15 +705,15 @@ public final class SdkSandboxManager {
 
         fromActivity.startActivity(intent);
 
-        logStartSdkSandboxActivityEvent(timeEventStarted);
+        logStartSdkSandboxActivityLatency(timeEventStarted);
     }
 
     // TODO(b/304459399): move Sandbox Activity latency logging to its own class
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-    private void logStartSdkSandboxActivityEvent(long timeEventStarted) {
+    private void logStartSdkSandboxActivityLatency(long timeEventStarted) {
         try {
             // TODO(b/305240130): retrieve SDK info from sandbox process
-            mService.logSandboxActivityEvent(
+            mService.logSandboxActivityApiLatency(
                     StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
                     StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
                     (int) (mTimeProvider.elapsedRealtime() - timeEventStarted));
