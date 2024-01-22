@@ -16,42 +16,30 @@
 
 package com.android.adservices.service.shell;
 
-import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
 import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
 import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
 
 import org.junit.Test;
 
-import java.util.Arrays;
-
 public final class EchoCommandTest extends ShellCommandTest<EchoCommand> {
-
-    public EchoCommandTest() {
-        super(new EchoCommand());
-    }
 
     @Test
     public void testRun_invalid() throws Exception {
+        EchoCommand echoCommand = new EchoCommand();
+
         // no args
-        expectInvalidArgument(HELP_ECHO, CMD_ECHO);
+        runAndExpectInvalidArgument(echoCommand, HELP_ECHO, CMD_ECHO);
         // empty message
-        expectInvalidArgument(HELP_ECHO, CMD_ECHO, "");
+        runAndExpectInvalidArgument(echoCommand, HELP_ECHO, CMD_ECHO, "");
         // more than 1 arg
-        expectInvalidArgument(HELP_ECHO, CMD_ECHO, "4", "8", "15", "16", "23", "42");
+        runAndExpectInvalidArgument(
+                echoCommand, HELP_ECHO, CMD_ECHO, "4", "8", "15", "16", "23", "42");
     }
 
     @Test
     public void testRun_valid() {
-        Result actualResult = run(CMD_ECHO, "108");
+        Result actualResult = run(new EchoCommand(), CMD_ECHO, "108");
 
         expectSuccess(actualResult, "108\n");
-    }
-
-    private void expectInvalidArgument(String syntax, String... args) throws Exception {
-        Result actualResult = run(args);
-        String expectedErr =
-                String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
-
-        expectFailure(actualResult, expectedErr);
     }
 }
