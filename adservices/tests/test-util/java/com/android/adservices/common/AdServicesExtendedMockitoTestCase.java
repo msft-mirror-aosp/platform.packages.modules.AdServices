@@ -17,12 +17,16 @@ package com.android.adservices.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
 
+import android.content.Context;
+
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 /**
@@ -36,6 +40,11 @@ import org.mockito.quality.Strictness;
  */
 @ClearInlineMocksMode(CLEAR_AFTER_TEST_CLASS)
 public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTestCase {
+
+    @Mock protected Context mMockContext;
+
+    /** Spy the {@link AdServicesUnitTestCase#sContext} */
+    @Spy protected final Context mSpyContext = sContext;
 
     // NOTE: must use CLEAR_AFTER_TEST_CLASS by default (defined as a class annotation, so it's used
     // by both ExtendedMockitoInlineCleanerRule and AdServicesExtendedMockitoRule), as some tests
