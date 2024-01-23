@@ -376,7 +376,8 @@
               "key": "0x2559",
               "value": 32768
             }
-          ]
+          ],
+          "source_registration_time": "799977600"
         }
       }
     ]

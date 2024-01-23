@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -6788,9 +6789,5 @@ public class AttributionJobHandlerTest {
         } catch (JSONException ignored) {
             return null;
         }
-    }
-
-    private static long roundDownToDay(long timestamp) {
-        return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 }
