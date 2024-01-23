@@ -226,7 +226,8 @@ public class SdkSandboxManagerServiceUnitTest {
                                 mSpyContext,
                                 mSdkSandboxStorageManager,
                                 sProvider,
-                                sSdkSandboxPulledAtoms));
+                                sSdkSandboxPulledAtoms,
+                                new SdkSandboxStatsdLogger()));
 
         mService = new SdkSandboxManagerService(mSpyContext, mInjector);
         mService.forceEnableSandbox();
