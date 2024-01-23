@@ -52,6 +52,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
@@ -176,6 +177,7 @@ public class AttributionJobServiceTest {
                 });
     }
 
+    @FlakyTest(bugId = 319962463)
     @Test
     public void onStartJob_killSwitchOff_unlockingCheck() throws Exception {
         runWithMocks(
@@ -525,6 +527,7 @@ public class AttributionJobServiceTest {
                 });
     }
 
+    @FlakyTest(bugId = 319962463)
     @Test
     public void scheduleIfNeeded_killSwitchOff_previouslyNotExecuted_dontForceSchedule_schedule()
             throws Exception {
