@@ -5474,6 +5474,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementEnableSessionStableKillSwitches());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED
+                        + " = "
+                        + isGetAdServicesCommonStatesEnabled());
     }
 
     @VisibleForTesting
@@ -5723,6 +5728,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
                 getConsentAlreadyInteractedEnableMode());
+        uxMap.put(
+                FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
+                isGetAdServicesCommonStatesEnabled());
         return uxMap;
     }
 
@@ -6441,5 +6449,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* name= */ FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS,
                 /* defaultValue= */ DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean isGetAdServicesCommonStatesEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
+                /* defaultValue */ DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED);
     }
 }

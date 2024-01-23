@@ -4482,4 +4482,12 @@ public interface Flags extends CommonFlags {
     default int getAppSearchReadTimeout() {
         return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
     }
+
+    /** default value for get adservices common states enabled */
+    boolean DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED = false;
+
+    /** Returns if the get adservices common states service enabled. */
+    default boolean isGetAdServicesCommonStatesEnabled() {
+        return DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
+    }
 }
