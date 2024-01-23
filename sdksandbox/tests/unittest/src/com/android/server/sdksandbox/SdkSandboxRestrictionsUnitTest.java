@@ -144,7 +144,8 @@ public class SdkSandboxRestrictionsUnitTest {
                                                 .getPath()),
                                 new FakeSdkSandboxProvider(
                                         Mockito.spy(FakeSdkSandboxService.class)),
-                                Mockito.spy(SdkSandboxPulledAtoms.class)));
+                                Mockito.spy(SdkSandboxPulledAtoms.class),
+                                new SdkSandboxStatsdLogger()));
         mService = new SdkSandboxManagerService(context, mInjector);
         mSdkSandboxManagerLocal = mService.getLocalManager();
         assertThat(mSdkSandboxManagerLocal).isNotNull();
