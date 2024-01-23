@@ -1190,4 +1190,7 @@ public final class FlagsConstants {
 
     public static final String KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE =
             "key_background_job_sampling_logging_rate";
+
+    public static final String KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED =
+            "is_get_ad_services_common_states_enabled";
 }
