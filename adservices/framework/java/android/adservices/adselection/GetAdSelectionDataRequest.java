@@ -17,8 +17,10 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.net.Uri;
 
 /**
  * Represents a request containing the information to get ad selection data.
@@ -29,8 +31,12 @@ import android.annotation.Nullable;
 public final class GetAdSelectionDataRequest {
     @Nullable private final AdTechIdentifier mSeller;
 
-    private GetAdSelectionDataRequest(@Nullable AdTechIdentifier seller) {
+    @Nullable private final Uri mCoordinatorOriginUri;
+
+    private GetAdSelectionDataRequest(
+            @Nullable AdTechIdentifier seller, @Nullable Uri coordinatorOriginUri) {
         this.mSeller = seller;
+        this.mCoordinatorOriginUri = coordinatorOriginUri;
     }
 
     /**
@@ -42,10 +48,23 @@ public final class GetAdSelectionDataRequest {
     }
 
     /**
+     * @return the coordinator origin Uri where the public keys for encryption are fetched from
+     *     <p>See {@link Builder#setCoordinatorOriginUri(Uri)} for more details on the coordinator
+     *     origin
+     */
+    @Nullable
+    @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled")
+    public Uri getCoordinatorOriginUri() {
+        return mCoordinatorOriginUri;
+    }
+
+    /**
      * Builder for {@link GetAdSelectionDataRequest} objects.
      */
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;
+
+        @Nullable private Uri mCoordinatorOriginUri;
 
         public Builder() {}
 
@@ -57,11 +76,29 @@ public final class GetAdSelectionDataRequest {
         }
 
         /**
+         * Sets the coordinator origin from which PPAPI should fetch the public key for payload
+         * encryption. The origin must use HTTPS URI.
+         *
+         * <p>The origin will only contain the scheme, hostname and port of the URL. If the origin
+         * is not provided or is null, PPAPI will use the default coordinator URI.
+         *
+         * <p>The origin must belong to a list of pre-approved coordinator origins. Otherwise,
+         * {@link AdSelectionManager#getAdSelectionData} will throw an IllegalArgumentException
+         */
+        @NonNull
+        @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled")
+        public GetAdSelectionDataRequest.Builder setCoordinatorOriginUri(
+                @Nullable Uri coordinatorOriginUri) {
+            this.mCoordinatorOriginUri = coordinatorOriginUri;
+            return this;
+        }
+
+        /**
          * Builds a {@link GetAdSelectionDataRequest} instance.
          */
         @NonNull
         public GetAdSelectionDataRequest build() {
-            return new GetAdSelectionDataRequest(mSeller);
+            return new GetAdSelectionDataRequest(mSeller, mCoordinatorOriginUri);
         }
     }
 }
