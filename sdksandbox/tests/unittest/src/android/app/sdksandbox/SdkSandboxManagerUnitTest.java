@@ -601,7 +601,7 @@ public class SdkSandboxManagerUnitTest {
     }
 
     @Test
-    public void testStartSandboxActivity_logSandboxActivityEventCalled() throws Exception {
+    public void testStartSandboxActivity_logSandboxActivityApiLatencyCalled() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         Activity fromActivitySpy = Mockito.mock(Activity.class);
@@ -609,7 +609,7 @@ public class SdkSandboxManagerUnitTest {
         mSdkSandboxManager.startSdkSandboxActivity(fromActivitySpy, token);
 
         Mockito.verify(mBinder, Mockito.times(1))
-                .logSandboxActivityEvent(
+                .logSandboxActivityApiLatency(
                         Mockito.eq(
                                 SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY),
                         Mockito.anyInt(),
