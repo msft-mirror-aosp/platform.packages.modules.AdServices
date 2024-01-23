@@ -31,6 +31,7 @@ android_test {
         "CtsSdkProviderApi",
         "CtsMediationTestSdkApi",
         "sdk_sandbox_flags_lib",
+        "android.content.pm.flags-aconfig-java",
         "flag-junit",
     ],
     libs: [

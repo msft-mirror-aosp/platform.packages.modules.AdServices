@@ -32,6 +32,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.net.Uri;
@@ -355,6 +356,18 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     public void unregisterSdkSandboxClientImportanceListener() {
         mContext.getSystemService(SdkSandboxController.class)
                 .unregisterSdkSandboxClientImportanceListener(mClientImportanceListener);
+    }
+
+    @Override
+    public int getLauncherActivityCount() {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        intent.setPackage(CLIENT_PACKAGE_NAME);
+        intent.setAction(Intent.ACTION_MAIN);
+        List<ResolveInfo> launcherActivities =
+                mContext.getPackageManager()
+                        .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER);
+        return launcherActivities.size();
     }
 
     private void registerLifecycleEvents(
