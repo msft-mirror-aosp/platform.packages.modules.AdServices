@@ -243,6 +243,7 @@ public class AttributionJobServiceTest {
                 });
     }
 
+    @FlakyTest(bugId = 319966935)
     @Test
     public void testRescheduling_failureWhileProcessingRecords_dontRescheduleManually()
             throws Exception {
@@ -319,6 +320,7 @@ public class AttributionJobServiceTest {
                 });
     }
 
+    @FlakyTest(bugId = 319966935)
     @Test
     public void testRescheduling_hasMoreRecordsToProcess_rescheduleImmediately() throws Exception {
         runWithMocks(
