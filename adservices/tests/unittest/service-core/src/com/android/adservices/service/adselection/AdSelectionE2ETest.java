@@ -99,7 +99,6 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
@@ -619,16 +618,15 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Mock private CallerMetadata mMockCallerMetadata;
     @Mock private FledgeHttpCache.HttpCacheObserver mCacheObserver;
 
-    @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     @Mock private File mMockDBAdSelectionFile;
     @Mock private ConsentManager mConsentManagerMock;
 
     private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             spy(
                     new FledgeAuthorizationFilter(
-                            mContext.getPackageManager(),
+                            mSpyContext.getPackageManager(),
                             new EnrollmentDao(
-                                    mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
+                                    mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
                             mAdServicesLoggerMock));
 
     private ExecutorService mLightweightExecutorService;
@@ -660,19 +658,19 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
 
         mAdSelectionEntryDaoSpy =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
         mAppInstallDao =
-                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, SharedStorageDatabase.class)
                         .build()
                         .appInstallDao();
         mFrequencyCapDao =
-                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, SharedStorageDatabase.class)
                         .build()
                         .frequencyCapDao();
-        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContext);
-        mEnrollmentDao = EnrollmentDao.getInstance(mContext);
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mSpyContext);
+        mEnrollmentDao = EnrollmentDao.getInstance(mSpyContext);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
@@ -681,12 +679,12 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
         mAdServicesHttpsClient =
@@ -694,10 +692,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
         mAdSelectionDebugReportDao =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDebugReportingDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDebugReportingDatabase.class)
                         .build()
                         .getAdSelectionDebugReportDao();
-        mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));
+        mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mSpyContext));
         mAdIdFetcher =
                 new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
 
@@ -720,7 +718,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -851,7 +849,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
                         .build();
-        when(mContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
+        when(mSpyContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
                 .when(mAdSelectionServiceFilter)
@@ -971,7 +969,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithCPCEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1097,7 +1095,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1243,7 +1241,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1385,7 +1383,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1508,7 +1506,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithCPCDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1725,7 +1723,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         prebuiltDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1824,7 +1822,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2012,7 +2010,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithCPCEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2136,7 +2134,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2281,7 +2279,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2422,7 +2420,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2544,7 +2542,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithCPCDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3091,7 +3089,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3229,7 +3227,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithContextualAdsDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3989,7 +3987,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4108,7 +4106,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4207,7 +4205,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
                         .build();
 
-        HttpCache cache = CacheProviderFactory.create(mContext, mFlags);
+        HttpCache cache = CacheProviderFactory.create(mSpyContext, mFlags);
         cache.addObserver(mCacheObserver);
 
         // Creating client which has caching
@@ -4228,7 +4226,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4330,7 +4328,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
                         .build();
 
-        HttpCache cache = CacheProviderFactory.create(mContext, mFlags);
+        HttpCache cache = CacheProviderFactory.create(mSpyContext, mFlags);
         cache.addObserver(mCacheObserver);
 
         // Creating client which has caching
@@ -4351,7 +4349,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4475,7 +4473,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4614,7 +4612,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5795,7 +5793,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6047,7 +6045,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithLenientBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6123,7 +6121,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithTightBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6316,7 +6314,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithLenientBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6392,7 +6390,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithTightBuyerBiddingLimits,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6510,7 +6508,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7002,7 +7000,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        mContext, invalidPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+                        mSpyContext,
+                        invalidPackageName,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7070,7 +7070,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         verify(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        mContext, invalidPackageName, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+                        mSpyContext,
+                        invalidPackageName,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
     }
 
     @Test
@@ -7193,7 +7195,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7327,7 +7329,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         throttlingFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7462,7 +7464,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContext,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7555,7 +7557,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         doReturn(null).when(WebView::getCurrentWebViewPackage);
 
         // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-        JSScriptEngine.getInstance(mContext, LoggerFactory.getFledgeLogger()).shutdown();
+        JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger()).shutdown();
 
         try {
             // Create a new local service impl so that the WebView stub takes effect
@@ -7573,7 +7575,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             mLightweightExecutorService,
                             mBackgroundExecutorService,
                             mScheduledExecutor,
-                            mContext,
+                            mSpyContext,
                             mAdServicesLoggerMock,
                             mFlags,
                             CallingAppUidSupplierProcessImpl.create(),
@@ -7629,7 +7631,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             geq((int) BINDER_ELAPSED_TIME_MS));
         } finally {
             // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-            JSScriptEngine.getInstance(mContext, LoggerFactory.getFledgeLogger()).shutdown();
+            JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger()).shutdown();
         }
     }
 

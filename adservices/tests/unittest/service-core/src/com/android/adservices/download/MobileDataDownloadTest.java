@@ -138,7 +138,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
     private MobileDataDownload mMdd;
-    private Context mContext;
 
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
@@ -146,7 +145,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
     @Before
     public void setUp() throws Exception {
-        mContext = appContext.get();
         // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
         // the whole test suite run.
         // Checking wifi connection using WifiManager isn't working on low-performance devices.

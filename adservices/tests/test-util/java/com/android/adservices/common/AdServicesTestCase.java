@@ -15,9 +15,12 @@
  */
 package com.android.adservices.common;
 
+import android.content.Context;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.util.Log;
+
+import androidx.test.InstrumentationRegistry;
 
 import com.google.common.truth.Expect;
 import com.google.errorprone.annotations.FormatMethod;
@@ -51,11 +54,23 @@ abstract class AdServicesTestCase {
     private static final String PROP_EXCEPTION_THROWN_FREQUENCY =
             "debug.adservices.test.postTestThrownFrequency";
 
+    /** Reference to the context of package being instrumented (target context). */
+    protected static final Context sContext = InstrumentationRegistry.getTargetContext();
+
+    /** Package name of the app being instrumented. */
+    protected static final String sPackageName = sContext.getPackageName();
+
     private static int sTestCount;
 
     private int mTestNumber;
 
     protected final String mTag = getClass().getSimpleName();
+
+    /** Reference to the context of package being instrumented (target context). */
+    protected final Context mContext = sContext;
+
+    /** Package name of the app being instrumented. */
+    protected final String mPackageName = sPackageName;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();

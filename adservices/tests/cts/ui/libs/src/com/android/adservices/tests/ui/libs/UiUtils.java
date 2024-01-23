@@ -789,25 +789,4 @@ public class UiUtils {
         Boolean response = responseFuture.get();
         assertThat(response).isTrue();
     }
-
-    /***
-     * Click on the More button on the notification page.
-     * @param moreButton moreButton
-     * @throws UiObjectNotFoundException uiObjectNotFoundException
-     * @throws InterruptedException interruptedException
-     */
-    public static void clickMoreToBottom(UiObject moreButton)
-            throws UiObjectNotFoundException, InterruptedException {
-        if (!moreButton.exists()) {
-            LogUtil.e("More Button not Found");
-            return;
-        }
-
-        int clickCount = 10;
-        while (moreButton.exists() && clickCount-- > 0) {
-            moreButton.click();
-            TimeUnit.MILLISECONDS.sleep(SCROLL_WAIT_TIME);
-        }
-        assertThat(moreButton.exists()).isFalse();
-    }
 }
