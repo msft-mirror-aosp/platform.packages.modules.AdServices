@@ -27,7 +27,6 @@ import static com.android.adservices.service.measurement.reporting.DebugReportSe
 import static com.android.adservices.service.measurement.reporting.EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.EventReportSender.EVENT_ATTRIBUTION_REPORT_URI_PATH;
 
-import android.content.Context;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
@@ -40,7 +39,6 @@ import android.view.MotionEvent.PointerCoords;
 import android.view.MotionEvent.PointerProperties;
 
 import androidx.annotation.Nullable;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
@@ -93,7 +91,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     // Used to fuzzy-match expected report (not delivery) time
     private static final String LOG_TAG = "ADSERVICES_MSMT_E2E_TEST";
 
-    static final Context sContext = ApplicationProvider.getApplicationContext();
     private final String mName;
     private final Collection<Action> mActionsList;
     final ReportObjects mExpectedOutput;

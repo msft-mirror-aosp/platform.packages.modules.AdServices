@@ -42,6 +42,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,7 +50,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobScheduler;
-import android.content.Context;
 
 import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -104,8 +104,6 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Mock private JobScheduler mJobScheduler;
 
-    @Mock private Context mContext;
-
     @Before
     public void setDefaultExpectations() throws Exception {
         extendedMockito.mockGetFlags(mMockFlags);
@@ -155,7 +153,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
         assertTopicsJobsScheduled(1);
@@ -188,7 +186,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(1);
@@ -220,7 +218,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
         assertTopicsJobsScheduled(0);
@@ -245,7 +243,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
         assertTopicsJobsScheduled(1);
@@ -273,7 +271,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
         assertTopicsJobsScheduled(1);
@@ -302,7 +300,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
         assertTopicsJobsScheduled(1);
@@ -328,7 +326,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getEncryptionKeyPeriodicFetchKillSwitch()).thenReturn(false);
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
 
-        BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
         assertTopicsJobsScheduled(0);
@@ -353,7 +351,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getEncryptionKeyPeriodicFetchKillSwitch()).thenReturn(false);
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
         assertTopicsJobsScheduled(1);
@@ -371,7 +369,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
     public void testScheduleMeasurementBackgroundJobs_measurementKillSwitchOn() throws Exception {
         when(mMockFlags.getMeasurementKillSwitch()).thenReturn(true);
 
-        BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(0);
@@ -386,7 +384,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
     public void testScheduleMeasurementBackgroundJobs_measurementKillSwitchOff() throws Exception {
         when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
         assertTopicsJobsScheduled(0);
@@ -402,7 +400,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(true);
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
 
-        BackgroundJobsManager.scheduleTopicsBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleTopicsBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(0);
@@ -418,7 +416,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
 
-        BackgroundJobsManager.scheduleTopicsBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleTopicsBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(1);
@@ -433,7 +431,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
     public void testScheduleFledgeBackgroundJobs_selectAdsKillSwitchOn() throws Exception {
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(true);
 
-        BackgroundJobsManager.scheduleFledgeBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleFledgeBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(0);
@@ -449,7 +447,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleFledgeBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleFledgeBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(0);
@@ -466,7 +464,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
 
-        BackgroundJobsManager.scheduleFledgeBackgroundJobs(mContext);
+        BackgroundJobsManager.scheduleFledgeBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(0);
@@ -480,7 +478,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
     public void testScheduleCobaltBackgroundJobs_CobaltLoggingEnabled() throws Exception {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
 
-        BackgroundJobsManager.scheduleCobaltBackgroundJob(mContext);
+        BackgroundJobsManager.scheduleCobaltBackgroundJob(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(0);
@@ -494,7 +492,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
     public void testScheduleCobaltBackgroundJobs_CobaltLoggingdisabled() throws Exception {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(false);
 
-        BackgroundJobsManager.scheduleCobaltBackgroundJob(mContext);
+        BackgroundJobsManager.scheduleCobaltBackgroundJob(mMockContext);
 
         assertMeasurementJobsScheduled(0);
         assertTopicsJobsScheduled(0);
