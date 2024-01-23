@@ -762,14 +762,14 @@ public class SdkSandboxStatsdMetricsUnitTest {
     }
 
     @Test
-    public void testLogSandboxActivityEvent_CallsStatsd() throws Exception {
-        mService.logSandboxActivityEvent(
+    public void testlogSandboxActivityApiLatency_CallsStatsd() throws Exception {
+        mService.logSandboxActivityApiLatency(
                 StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
                 StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
                 /*latencyMillis=*/ 123);
 
         Mockito.verify(mSdkSandboxStatsdLogger)
-                .logSandboxActivityEvent(
+                .logSandboxActivityApiLatency(
                         StatsdUtil
                                 .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
                         StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
@@ -790,7 +790,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 });
 
         Mockito.verify(mSdkSandboxStatsdLogger)
-                .logSandboxActivityEvent(
+                .logSandboxActivityApiLatency(
                         SdkSandboxStatsLog
                                 .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__ENFORCE_ALLOWED_TO_HOST_SANDBOXED_ACTIVITY,
                         SdkSandboxStatsLog
@@ -808,7 +808,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 });
 
         Mockito.verify(mSdkSandboxStatsdLogger)
-                .logSandboxActivityEvent(
+                .logSandboxActivityApiLatency(
                         Mockito.eq(
                                 SdkSandboxStatsLog
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__ENFORCE_ALLOWED_TO_HOST_SANDBOXED_ACTIVITY),
@@ -831,7 +831,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 });
 
         Mockito.verify(mSdkSandboxStatsdLogger)
-                .logSandboxActivityEvent(
+                .logSandboxActivityApiLatency(
                         Mockito.eq(
                                 SdkSandboxStatsLog
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__ENFORCE_ALLOWED_TO_HOST_SANDBOXED_ACTIVITY),
@@ -857,7 +857,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 });
 
         Mockito.verify(mSdkSandboxStatsdLogger)
-                .logSandboxActivityEvent(
+                .logSandboxActivityApiLatency(
                         Mockito.eq(
                                 SdkSandboxStatsLog
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__ENFORCE_ALLOWED_TO_HOST_SANDBOXED_ACTIVITY),
@@ -881,7 +881,7 @@ public class SdkSandboxStatsdMetricsUnitTest {
                 intent, Process.myUid(), TEST_PACKAGE);
 
         Mockito.verify(mSdkSandboxStatsdLogger)
-                .logSandboxActivityEvent(
+                .logSandboxActivityApiLatency(
                         Mockito.eq(
                                 SdkSandboxStatsLog
                                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__ENFORCE_ALLOWED_TO_HOST_SANDBOXED_ACTIVITY),
