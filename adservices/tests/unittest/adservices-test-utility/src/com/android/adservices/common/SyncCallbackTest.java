@@ -22,11 +22,17 @@ import static com.android.adservices.common.SyncCallback.MSG_WRONG_ERROR_RECEIVE
 
 import static org.junit.Assert.assertThrows;
 
+import android.util.Log;
+
+import com.android.adservices.common.LogEntry.Level;
+import com.android.adservices.mockito.LogInterceptor;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+
 import org.junit.Test;
 
 import java.util.NoSuchElementException;
 
-public final class SyncCallbackTest extends AdServicesUnitTestCase {
+public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int TIMEOUT_MS = 200;
 
@@ -242,6 +248,40 @@ public final class SyncCallbackTest extends AdServicesUnitTestCase {
                 .containsMatch(".*failIfCalledOnMainThread=false.*");
         expect.withMessage("toString()").that(string).containsMatch(".*result=null.*");
         expect.withMessage("toString()").that(string).containsMatch(".*error=null.*");
+    }
+
+    @Test
+    @SpyStatic(Log.class)
+    public void testLogV() {
+        SyncCallback<String, Exception> callback = new SyncCallback<>();
+        String tag = SyncCallback.TAG;
+        LogInterceptor logInterceptor = extendedMockito.interceptLogV(tag);
+
+        callback.logV("Answer=%d", 42);
+
+        expect.withMessage("Log.*() calls to tag %s", tag)
+                .that(logInterceptor.getAllEntries(tag))
+                .hasSize(1);
+        expect.withMessage("Log.v() calls to tag %s", tag)
+                .that(logInterceptor.getPlainMessages(tag, Level.VERBOSE))
+                .containsExactly("[" + callback.getName() + "] Answer=42");
+    }
+
+    @Test
+    @SpyStatic(Log.class)
+    public void testLogE() {
+        SyncCallback<String, Exception> callback = new SyncCallback<>();
+        String tag = SyncCallback.TAG;
+        LogInterceptor logInterceptor = extendedMockito.interceptLogE(tag);
+
+        callback.logE("Answer=%d", 42);
+
+        expect.withMessage("Log.*() calls to tag %s", tag)
+                .that(logInterceptor.getAllEntries(tag))
+                .hasSize(1);
+        expect.withMessage("Log.e() calls to tag %s", tag)
+                .that(logInterceptor.getPlainMessages(tag, Level.ERROR))
+                .containsExactly("[" + callback.getName() + "] Answer=42");
     }
 
     private void assertResultReceived(
