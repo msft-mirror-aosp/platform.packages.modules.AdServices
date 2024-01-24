@@ -197,7 +197,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
         }
     }
 
@@ -223,7 +223,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(triggerRegistration.mTimestamp);
         }
     }
 
