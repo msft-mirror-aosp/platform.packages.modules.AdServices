@@ -65,11 +65,7 @@ public class SyncCallback<T, E> {
 
     private static final AtomicInteger sNextId = new AtomicInteger();
 
-    // Id's only used on toString(), to help debug race conditions
-    private final int mId = sNextId.incrementAndGet();
-
-    // Similar, name is used on logs
-    private final String mName = getClass().getSimpleName() + "#" + mId;
+    private final String mId = getClass().getSimpleName() + "#" + sNextId.incrementAndGet();
 
     private final CountDownLatch mLatch = new CountDownLatch(1);
     private final int mTimeoutMs;
@@ -98,6 +94,15 @@ public class SyncCallback<T, E> {
     protected SyncCallback(int timeoutMs, boolean failIfCalledOnMainThread) {
         mTimeoutMs = timeoutMs;
         mFailIfCalledOnMainThread = failIfCalledOnMainThread;
+    }
+
+    /**
+     * Gets this callback id.
+     *
+     * @return a unique identifier for this callback.
+     */
+    public final String getId() {
+        return mId;
     }
 
     @VisibleForTesting
@@ -209,18 +214,13 @@ public class SyncCallback<T, E> {
         return getResult();
     }
 
-    @VisibleForTesting
-    String getName() {
-        return mName;
-    }
-
     /**
      * Convenience method to log a verbose message - it includes an unique identifier for the
      * callback.
      */
     @FormatMethod
     protected final void logV(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        Log.v(TAG, "[" + getName() + "] " + String.format(msgFmt, msgArgs));
+        Log.v(TAG, "[" + getId() + "] " + String.format(msgFmt, msgArgs));
     }
 
     /**
@@ -229,12 +229,12 @@ public class SyncCallback<T, E> {
      */
     @FormatMethod
     protected final void logE(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        Log.e(TAG, "[" + getName() + "] " + String.format(msgFmt, msgArgs));
+        Log.e(TAG, "[" + getId() + "] " + String.format(msgFmt, msgArgs));
     }
 
     @Override
     public String toString() {
-        return getName()
+        return getId()
                 + "[latch="
                 + mLatch
                 + ", timeoutMs="
