@@ -406,7 +406,7 @@ public class SdkSandboxManagerServiceUnitTest {
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
-        assertThat(callback.getLoadSdkErrorMsg()).contains("not found for loading");
+        assertThat(callback.getLoadSdkErrorMsg()).contains("does.not.exist not found");
     }
 
     @Test

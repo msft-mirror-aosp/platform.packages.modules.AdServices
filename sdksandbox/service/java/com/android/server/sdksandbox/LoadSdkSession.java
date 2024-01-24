@@ -40,7 +40,6 @@ import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.UserHandle;
-import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.Log;
 import android.view.SurfaceControlViewHost;
@@ -56,6 +55,7 @@ import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represents the lifecycle of a single request to load an SDK for a specific app.
@@ -175,7 +175,8 @@ class LoadSdkSession {
             String sdkName,
             CallingInfo callingInfo,
             Bundle loadParams,
-            ILoadSdkCallback loadCallback) {
+            ILoadSdkCallback loadCallback)
+            throws PackageManager.NameNotFoundException {
         mContext = context;
         mSdkSandboxManagerService = service;
         mInjector = injector;
@@ -279,9 +280,7 @@ class LoadSdkSession {
         }
     }
 
-    void handleLoadFailure(
-            LoadSdkException exception,
-            SandboxLatencyInfo sandboxLatencyInfo) {
+    void handleLoadFailure(LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
 
         synchronized (mLock) {
@@ -705,55 +704,47 @@ class LoadSdkSession {
                 appUid);
     }
 
-    // Returns an empty string if there is no issue getting information the SDK provider, else the
-    // error message.
-    String getSdkProviderErrorIfExists() {
-        if (mSdkProviderInfo == null) {
-            return mSdkName + " not found for loading";
-        }
-        if (TextUtils.isEmpty(mSdkProviderInfo.getSdkProviderClassName())) {
-            return mSdkName + " did not set " + PROPERTY_SDK_PROVIDER_CLASS_NAME;
-        }
-        return "";
-    }
+    private SdkProviderInfo createSdkProviderInfo() throws PackageManager.NameNotFoundException {
+        UserHandle userHandle = UserHandle.getUserHandleForUid(mCallingInfo.getUid());
+        Context userContext = mContext.createContextAsUser(userHandle, /* flags= */ 0);
+        PackageManager pm = userContext.getPackageManager();
+        ApplicationInfo info =
+                pm.getApplicationInfo(
+                        mCallingInfo.getPackageName(),
+                        ApplicationInfoFlags.of(PackageManager.GET_SHARED_LIBRARY_FILES));
+        List<SharedLibraryInfo> sharedLibraries =
+                info.getSharedLibraryInfos().stream()
+                        .filter(
+                                sharedLibraryInfo ->
+                                        ((sharedLibraryInfo.getType()
+                                                        == SharedLibraryInfo.TYPE_SDK_PACKAGE)
+                                                && sharedLibraryInfo.getName().equals(mSdkName)))
+                        .collect(Collectors.toList());
 
-    private SdkProviderInfo createSdkProviderInfo() {
+        if (sharedLibraries.size() == 0) {
+            throw new PackageManager.NameNotFoundException(mSdkName);
+        }
+
+        // TODO(b/322334874): Add test for the case when property not present
+        String sdkProviderClassName;
         try {
-            UserHandle userHandle = UserHandle.getUserHandleForUid(mCallingInfo.getUid());
-            Context userContext = mContext.createContextAsUser(userHandle, /* flags= */ 0);
-            PackageManager pm = userContext.getPackageManager();
-            ApplicationInfo info =
-                    pm.getApplicationInfo(
-                            mCallingInfo.getPackageName(),
-                            ApplicationInfoFlags.of(PackageManager.GET_SHARED_LIBRARY_FILES));
-            List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
-            for (int j = 0; j < sharedLibraries.size(); j++) {
-                SharedLibraryInfo sharedLibrary = sharedLibraries.get(j);
-                if (sharedLibrary.getType() != SharedLibraryInfo.TYPE_SDK_PACKAGE) {
-                    continue;
-                }
-
-                if (!mSdkName.equals(sharedLibrary.getName())) {
-                    continue;
-                }
-
-                String sdkProviderClassName =
-                        pm.getProperty(
-                                        PROPERTY_SDK_PROVIDER_CLASS_NAME,
-                                        sharedLibrary.getDeclaringPackage().getPackageName())
-                                .getString();
-                ApplicationInfo applicationInfo =
-                        pm.getPackageInfo(
-                                        sharedLibrary.getDeclaringPackage(),
-                                        PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
-                                                | PackageManager.MATCH_ANY_USER)
-                                .applicationInfo;
-                return new SdkProviderInfo(applicationInfo, sharedLibrary, sdkProviderClassName);
-            }
-            return null;
+            sdkProviderClassName =
+                    pm.getProperty(
+                                    PROPERTY_SDK_PROVIDER_CLASS_NAME,
+                                    sharedLibraries.get(0).getDeclaringPackage().getPackageName())
+                            .getString();
         } catch (PackageManager.NameNotFoundException e) {
-            return null;
+            throw new PackageManager.NameNotFoundException(
+                    PROPERTY_SDK_PROVIDER_CLASS_NAME + " property");
         }
+
+        ApplicationInfo applicationInfo =
+                pm.getPackageInfo(
+                                sharedLibraries.get(0).getDeclaringPackage(),
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
+                                        | PackageManager.MATCH_ANY_USER)
+                        .applicationInfo;
+        return new SdkProviderInfo(applicationInfo, sharedLibraries.get(0), sdkProviderClassName);
     }
 
     ApplicationInfo getApplicationInfo() {
