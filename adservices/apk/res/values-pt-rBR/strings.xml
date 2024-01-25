@@ -231,6 +231,52 @@
     <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Estamos lançando um recurso de privacidade de anúncios chamado \"medição de anúncios\". O Android compartilha apenas informações muito limitadas entre apps, como quando um anúncio foi mostrado para você, para ajudar os apps a medir a performance de anúncios."</string>
     <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Você pode mudar as configurações de privacidade de anúncios."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Os apps que você usa podem pedir informações ao Android para medir a performance dos anúncios. O Android permite que apps coletem apenas tipos limitados de dados."</string>
+    <!-- no translation found for notificationUI_pas_notification_title (2880747565880976151) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_notification_content (7200569206675143377) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_re_notification_title (1612904687007265472) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_re_notification_content (9047623340455640294) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_body_main (371275798529092654) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_body1 (537707631782767256) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_expand_button_text1 (2379258858617055290) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_body2 (7375288059359352651) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_expand_button_text2 (4280828889465163839) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (9217875245904594608) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_msmt_body1 (8137499250834619055) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (9103617585020938272) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_msmt_body2 (6851292551607742780) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_body1 (3661071599833077753) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (3728208089340373091) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_body2 (4045452140643598861) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (3464616082120107461) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_body3 (2314209349205046774) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_leanr_more_link (1435562037697292354) -->
+    <skip />
+    <!-- no translation found for settingsUI_pas_apps_view_body_text (1361388534766061773) -->
+    <skip />
+    <!-- no translation found for settingsUI_pas_apps_view_footer (8579532462533659757) -->
+    <skip />
+    <!-- no translation found for settingsUI_pas_msmt_view_footer (36182838044629137) -->
+    <skip />
+    <!-- no translation found for settingsUI_pas_topics_view_footer (3024519684713767142) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustração colorida de símbolos representando temas de interesse, como música, notícias e esportes"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustração colorida de um cadeado dentro de um círculo"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Pequena ilustração em preto e branco de nove pontos formando um quadrado"</string>
