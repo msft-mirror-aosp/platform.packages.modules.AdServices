@@ -16,33 +16,22 @@
 
 package com.android.adservices.common;
 
+import static com.android.adservices.common.ConcurrencyHelper.runAsync;
+import static com.android.adservices.common.ConcurrencyHelper.runOnMainThread;
+import static com.android.adservices.common.SyncCallback.MSG_WRONG_ERROR_RECEIVED;
+
 import static org.junit.Assert.assertThrows;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.os.SystemClock;
-import android.util.Log;
-
-import com.google.common.truth.Expect;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.NoSuchElementException;
 
-public final class OutcomeReceiverForTestsTest {
-
-    private static final String TAG = OutcomeReceiverForTestsTest.class.getSimpleName();
+@RequiresSdkLevelAtLeastS(reason = "android.os.OutcomeReceiver was introduced on S")
+public final class OutcomeReceiverForTestsTest extends AdServicesUnitTestCase {
 
     private static final String RESULT = "Saul Goodman!";
 
     private static final int TIMEOUT_MS = 200;
-
-    private static int sThreadId;
-
-    @Rule public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule public final Expect expect = Expect.create();
 
     private final Exception mError = new UnsupportedOperationException("D'OH!");
 
@@ -51,9 +40,8 @@ public final class OutcomeReceiverForTestsTest {
         OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>(TIMEOUT_MS * 3);
 
         runAsync(TIMEOUT_MS, () -> receiver.onResult(RESULT));
-        String result = receiver.assertSuccess();
 
-        assertSuccess(receiver, result);
+        assertSuccess(receiver, RESULT);
     }
 
     @Test
@@ -130,9 +118,8 @@ public final class OutcomeReceiverForTestsTest {
                 new OutcomeReceiverForTests<>(TIMEOUT_MS, /* failIfCalledOnMainThread= */ false);
 
         runOnMainThread(() -> receiver.onResult(RESULT));
-        String result = receiver.assertSuccess();
 
-        assertSuccess(receiver, result);
+        assertSuccess(receiver, RESULT);
     }
 
     @Test
@@ -148,9 +135,8 @@ public final class OutcomeReceiverForTestsTest {
         OutcomeReceiverForTests<String> receiver = new OutcomeReceiverForTests<>(TIMEOUT_MS * 3);
 
         runAsync(TIMEOUT_MS, () -> receiver.onError(mError));
-        Exception error = receiver.assertFailure(mError.getClass());
 
-        assertFailure(receiver, error);
+        assertFailure(receiver, mError);
     }
 
     @Test
@@ -168,9 +154,7 @@ public final class OutcomeReceiverForTestsTest {
                 .hasMessageThat()
                 .isEqualTo(
                         String.format(
-                                OutcomeReceiverForTests.ERROR_WRONG_EXCEPTION_RECEIVED,
-                                NoSuchElementException.class,
-                                mError));
+                                MSG_WRONG_ERROR_RECEIVED, NoSuchElementException.class, mError));
     }
 
     @Test
@@ -230,9 +214,8 @@ public final class OutcomeReceiverForTestsTest {
                 new OutcomeReceiverForTests<>(TIMEOUT_MS, /* failIfCalledOnMainThread= */ false);
 
         runOnMainThread(() -> receiver.onError(mError));
-        Exception error = receiver.assertFailure(mError.getClass());
 
-        assertFailure(receiver, error);
+        assertFailure(receiver, mError);
     }
 
     @Test
@@ -253,38 +236,25 @@ public final class OutcomeReceiverForTestsTest {
         expect.withMessage("toString()").that(string).containsMatch(".*error=null.*");
     }
 
-    private static void runAsync(long timeoutMs, Runnable r) {
-        Thread t =
-                new Thread(
-                        () -> {
-                            Log.v(TAG, "Sleeping " + timeoutMs + "ms on " + Thread.currentThread());
-                            SystemClock.sleep(timeoutMs);
-                            Log.v(TAG, "Woke up");
-                            r.run();
-                            Log.v(TAG, "Done");
-                        },
-                        TAG + ".runAsync()_thread#" + ++sThreadId);
-        Log.v(TAG, "Starting thread " + t);
-        t.start();
-    }
-
-    private void runOnMainThread(Runnable r) {
-        new Handler(Looper.getMainLooper()).post(r);
-    }
-
-    private void assertSuccess(OutcomeReceiverForTests<String> receiver, String result) {
-        expect.withMessage("assertSuccess()").that(result).isEqualTo(RESULT);
-        expect.withMessage("getResult()").that(receiver.getResult()).isEqualTo(RESULT);
+    private void assertSuccess(OutcomeReceiverForTests<String> receiver, String expectedResult)
+            throws InterruptedException {
+        String actualResult = receiver.assertSuccess();
+        expect.withMessage("assertSuccess()").that(actualResult).isEqualTo(expectedResult);
+        expect.withMessage("getResult()").that(receiver.getResult()).isEqualTo(expectedResult);
         expect.withMessage("getError()").that(receiver.getError()).isNull();
-        expect.withMessage("toString()").that(receiver.toString()).contains("result=" + RESULT);
-        expect.withMessage("toString()").that(receiver.toString()).contains("error=null");
+        String toString = receiver.toString();
+        expect.withMessage("toString()").that(toString).contains("result=" + expectedResult);
+        expect.withMessage("toString()").that(toString).contains("error=null");
     }
 
-    private void assertFailure(OutcomeReceiverForTests<String> receiver, Exception error) {
-        expect.withMessage("assertFailure()").that(error).isSameInstanceAs(mError);
-        expect.withMessage("getError()").that(receiver.getError()).isSameInstanceAs(mError);
+    private void assertFailure(OutcomeReceiverForTests<String> receiver, Exception expectedError)
+            throws InterruptedException {
+        Exception actualError = receiver.assertFailure(expectedError.getClass());
+        expect.withMessage("assertFailure()").that(actualError).isSameInstanceAs(expectedError);
+        expect.withMessage("getError()").that(receiver.getError()).isSameInstanceAs(expectedError);
         expect.withMessage("getResult()").that(receiver.getResult()).isNull();
-        expect.withMessage("toString()").that(receiver.toString()).contains("result=null");
-        expect.withMessage("toString()").that(receiver.toString()).contains("error=" + mError);
+        String toString = receiver.toString();
+        expect.withMessage("toString()").that(toString).contains("result=null");
+        expect.withMessage("toString()").that(toString).contains("error=" + expectedError);
     }
 }
