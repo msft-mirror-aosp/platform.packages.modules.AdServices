@@ -24,6 +24,7 @@ import static android.adservices.extdata.AdServicesExtDataParams.STATE_UNKNOWN;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.never;
@@ -42,6 +43,8 @@ import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
+import com.android.adservices.service.stats.ConsentMigrationStats;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Rule;
@@ -68,9 +71,14 @@ public class ConsentMigrationUtilsTest {
                     .setManualInteractionWithConsentStatus(STATE_UNKNOWN)
                     .build();
 
+    private static final int REGION_ROW_CODE = 2;
+
     @Rule
     public final AdServicesExtendedMockitoRule mExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(SdkLevel.class).build();
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(SdkLevel.class)
+                    .spyStatic(DeviceRegionProvider.class)
+                    .build();
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
     @Mock private BooleanFileDatastore mDatastoreMock;
@@ -79,6 +87,7 @@ public class ConsentMigrationUtilsTest {
     @Mock private SharedPreferences mSharedPreferencesMock;
     @Mock private SharedPreferences.Editor mSharedPreferencesEditorMock;
     @Mock private AdServicesExtDataParams mAdServicesExtDataParamsMock;
+    @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
 
     @Test
     public void testHandleConsentMigrationToAppSearchIfNeeded_onR_skipsMigration() {
@@ -89,10 +98,12 @@ public class ConsentMigrationUtilsTest {
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
-                mAdServicesExtDataManagerMock);
+                mAdServicesExtDataManagerMock,
+                mStatsdAdServicesLoggerMock);
 
         verifyZeroInteractions(mAppSearchConsentManagerMock);
         verifyZeroInteractions(mAdServicesExtDataManagerMock);
+        verifyZeroInteractions(mStatsdAdServicesLoggerMock);
     }
 
     @Test
@@ -103,10 +114,12 @@ public class ConsentMigrationUtilsTest {
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
-                mAdServicesExtDataManagerMock);
+                mAdServicesExtDataManagerMock,
+                mStatsdAdServicesLoggerMock);
 
         verifyZeroInteractions(mAppSearchConsentManagerMock);
         verifyZeroInteractions(mAdServicesExtDataManagerMock);
+        verifyZeroInteractions(mStatsdAdServicesLoggerMock);
     }
 
     @Test
@@ -115,10 +128,15 @@ public class ConsentMigrationUtilsTest {
         mockSDevice();
 
         ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
-                mContextSpy, mDatastoreMock, mAppSearchConsentManagerMock, null);
+                mContextSpy,
+                mDatastoreMock,
+                mAppSearchConsentManagerMock,
+                null,
+                mStatsdAdServicesLoggerMock);
 
         verifyZeroInteractions(mAdServicesExtDataManagerMock);
         verifyZeroInteractions(mAppSearchConsentManagerMock);
+        verifyZeroInteractions(mStatsdAdServicesLoggerMock);
     }
 
     @Test
@@ -136,10 +154,12 @@ public class ConsentMigrationUtilsTest {
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
-                mAdServicesExtDataManagerMock);
+                mAdServicesExtDataManagerMock,
+                mStatsdAdServicesLoggerMock);
 
         verifyZeroInteractions(mAppSearchConsentManagerMock);
         verifyZeroInteractions(mAdServicesExtDataManagerMock);
+        verifyZeroInteractions(mStatsdAdServicesLoggerMock);
     }
 
     @Test
@@ -157,12 +177,14 @@ public class ConsentMigrationUtilsTest {
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
-                mAdServicesExtDataManagerMock);
+                mAdServicesExtDataManagerMock,
+                mStatsdAdServicesLoggerMock);
 
         verify(mAppSearchConsentManagerMock).wasU18NotificationDisplayed();
         verifyNoMoreInteractions(mAppSearchConsentManagerMock);
 
         verifyZeroInteractions(mAdServicesExtDataManagerMock);
+        verifyZeroInteractions(mStatsdAdServicesLoggerMock);
     }
 
     @Test
@@ -183,7 +205,8 @@ public class ConsentMigrationUtilsTest {
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
-                mAdServicesExtDataManagerMock);
+                mAdServicesExtDataManagerMock,
+                mStatsdAdServicesLoggerMock);
 
         verify(mAppSearchConsentManagerMock).wasU18NotificationDisplayed();
         verify(mAppSearchConsentManagerMock).wasGaUxNotificationDisplayed();
@@ -192,6 +215,7 @@ public class ConsentMigrationUtilsTest {
 
         verify(mAdServicesExtDataManagerMock).getAdServicesExtData();
         verifyNoMoreInteractions(mAdServicesExtDataManagerMock);
+        verifyZeroInteractions(mStatsdAdServicesLoggerMock);
     }
 
     @Test
@@ -211,11 +235,14 @@ public class ConsentMigrationUtilsTest {
         when(mSharedPreferencesMock.edit()).thenReturn(mSharedPreferencesEditorMock);
         when(mSharedPreferencesEditorMock.commit()).thenReturn(true);
 
+        doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
+
         ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
-                mAdServicesExtDataManagerMock);
+                mAdServicesExtDataManagerMock,
+                mStatsdAdServicesLoggerMock);
 
         verify(mAppSearchConsentManagerMock).wasU18NotificationDisplayed();
         verify(mAppSearchConsentManagerMock).wasGaUxNotificationDisplayed();
@@ -241,6 +268,20 @@ public class ConsentMigrationUtilsTest {
         verify(mAdServicesExtDataManagerMock).getAdServicesExtData();
         verify(mAdServicesExtDataManagerMock).clearDataOnOtaAsync();
         verifyNoMoreInteractions(mAdServicesExtDataManagerMock);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(false)
+                        .setFledgeConsent(false)
+                        .setMsmtConsent(false)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.ADEXT_SERVICE_TO_APPSEARCH)
+                        .setRegion(REGION_ROW_CODE)
+                        .build();
+        verify(mStatsdAdServicesLoggerMock).logConsentMigrationStats(consentMigrationStats);
     }
 
     @Test
@@ -260,11 +301,14 @@ public class ConsentMigrationUtilsTest {
         when(mSharedPreferencesMock.edit()).thenReturn(mSharedPreferencesEditorMock);
         when(mSharedPreferencesEditorMock.commit()).thenReturn(false);
 
+        doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
+
         ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
-                mAdServicesExtDataManagerMock);
+                mAdServicesExtDataManagerMock,
+                mStatsdAdServicesLoggerMock);
 
         verify(mAppSearchConsentManagerMock).wasU18NotificationDisplayed();
         verify(mAppSearchConsentManagerMock).wasGaUxNotificationDisplayed();
@@ -291,6 +335,20 @@ public class ConsentMigrationUtilsTest {
         verify(mAdServicesExtDataManagerMock).getAdServicesExtData();
         verify(mAdServicesExtDataManagerMock).clearDataOnOtaAsync();
         verifyNoMoreInteractions(mAdServicesExtDataManagerMock);
+
+        ConsentMigrationStats consentMigrationStats =
+                ConsentMigrationStats.builder()
+                        .setTopicsConsent(false)
+                        .setFledgeConsent(false)
+                        .setMsmtConsent(true)
+                        .setMigrationStatus(
+                                ConsentMigrationStats.MigrationStatus
+                                        .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
+                        .setMigrationType(
+                                ConsentMigrationStats.MigrationType.ADEXT_SERVICE_TO_APPSEARCH)
+                        .setRegion(REGION_ROW_CODE)
+                        .build();
+        verify(mStatsdAdServicesLoggerMock).logConsentMigrationStats(consentMigrationStats);
     }
 
     private void mockNoNotifOnS() {

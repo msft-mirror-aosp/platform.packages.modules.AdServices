@@ -46,7 +46,7 @@ public class AdSelectionDatabaseMigrationTest {
             new MigrationTestHelper(INSTRUMENTATION, AdSelectionDatabase.class);
 
     @Test
-    public void testMigrate1To2() throws IOException {
+    public void testMigration1To2() throws IOException {
         String adSelectionOverridesTable = "ad_selection_from_outcomes_overrides";
 
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 1);
@@ -62,7 +62,7 @@ public class AdSelectionDatabaseMigrationTest {
     }
 
     @Test
-    public void testMigrate2To3() throws IOException {
+    public void testMigration2To3() throws IOException {
         String registeredAdInteractionsTable = "registered_ad_interactions";
 
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2);
@@ -81,7 +81,7 @@ public class AdSelectionDatabaseMigrationTest {
     }
 
     @Test
-    public void testMigrate3To4() throws IOException {
+    public void testMigration3To4() throws IOException {
         String adSelectionTable = "ad_selection";
 
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 3);
@@ -98,7 +98,7 @@ public class AdSelectionDatabaseMigrationTest {
     }
 
     @Test
-    public void testMigrate6To7() throws IOException {
+    public void testMigration6To7() throws IOException {
         String adSelectionTable = "ad_selection";
 
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 6);
@@ -139,7 +139,7 @@ public class AdSelectionDatabaseMigrationTest {
     }
 
     @Test
-    public void testMigrate7To8() throws IOException {
+    public void testMigration7To8() throws IOException {
         String adSelectionTable = "ad_selection";
 
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 7);

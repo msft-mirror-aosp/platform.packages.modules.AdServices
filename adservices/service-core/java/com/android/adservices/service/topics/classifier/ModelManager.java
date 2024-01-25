@@ -665,7 +665,7 @@ public class ModelManager {
                     try {
                         inputFields.add(ClassifierInputField.valueOf(line));
                     } catch (IllegalArgumentException e) {
-                        LogUtil.e("Invalid input field in classifier input config: {}", line);
+                        LogUtil.e("Invalid input field in classifier input config: %s", line);
                         return ClassifierInputConfig.getEmptyConfig();
                     }
                 }
@@ -696,7 +696,7 @@ public class ModelManager {
         try {
             String formattedInput =
                     String.format(classifierInputConfig.getInputFormat(), (Object[]) inputFields);
-            LogUtil.d("Validated classifier input format: {}", formattedInput);
+            LogUtil.d("Validated classifier input format: %s", formattedInput);
         } catch (IllegalFormatException e) {
             LogUtil.e("Classifier input config is incorrectly formatted");
             return false;

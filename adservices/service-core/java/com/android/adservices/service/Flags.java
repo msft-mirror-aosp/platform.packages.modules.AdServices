@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit;
  * Flags. The default values in this class must match with the default values in PH since we will
  * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
  * from the GCL.
+ *
+ * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  */
 public interface Flags extends CommonFlags {
     /** Topics Epoch Job Period. */
@@ -709,7 +711,7 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT;
     }
 
-    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.46173F;
+    float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION = 11.5F;
 
     /** Returns max information gain in Flexible Event API for Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainNavigation() {
@@ -1470,7 +1472,7 @@ public interface Flags extends CommonFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://publickeyservice-test1.bas-kms.xyz/v1alpha/publicKeys";
+            "https://publickeyservice-v150.coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
 
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
@@ -3049,6 +3051,18 @@ public interface Flags extends CommonFlags {
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
+    long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
+
+    /** Returns max allowed size in bytes for trigger registrations header. */
+    default long getMaxTriggerRegistrationHeaderSizeBytes() {
+        return MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+    }
+
+    boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
+    /** Returns true when the new trigger registration header size limitation are applied. */
+    default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
+        return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+    }
 
     /**
      * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap
@@ -3248,7 +3262,7 @@ public interface Flags extends CommonFlags {
         return GA_UX_FEATURE_ENABLED;
     }
 
-    /** Set the debug UX, which should crrespond to the {@link PrivacySandboxUxCollection} enum. */
+    /** Set the debug UX, which should correspond to the {@link PrivacySandboxUxCollection} enum. */
     String DEBUG_UX = "UNSUPPORTED_UX";
 
     /** Returns the debug UX. */
@@ -3522,14 +3536,6 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
     }
 
-    /** Disable early reporting windows configurability by default. */
-    boolean MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS = false;
-
-    /** Returns true if event reporting windows configurability is enabled, false otherwise. */
-    default boolean getMeasurementEnableConfigurableEventReportingWindows() {
-        return MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
-    }
-
     /**
      * Default early reporting windows for VTC type source. Derived from {@link
      * com.android.adservices.service.measurement.PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
@@ -3589,18 +3595,8 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
     }
 
-    /** Disable conversions configurability by default. */
-    boolean DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS = false;
-
-    /**
-     * Returns true, if event reports max conversions configurability is enabled, false otherwise.
-     */
-    default boolean getMeasurementEnableVtcConfigurableMaxEventReports() {
-        return DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS;
-    }
-
-    /** Disable conversions configurability by default. */
-    int DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT = 2;
+    /** Default max allowed number of event reports. */
+    int DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT = 1;
 
     /** Returns the default max allowed number of event reports. */
     default int getMeasurementVtcConfigurableMaxEventReportsCount() {
@@ -3956,6 +3952,7 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
     }
 
+    /** Default value for null report rate including source registration time. */
     float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
 
     /**
@@ -3966,7 +3963,26 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
     }
 
-    /** Default U18 UX feature flag.. */
+    /** Default value for null report rate excluding source registration time. */
+    float MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME = .05f;
+
+    /**
+     * Returns the rate at which null aggregate reports are generated whenever the trigger is
+     * configured to exclude the source registration time and there is no matching source.
+     */
+    default float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
+        return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
+    }
+
+    /** Default value for Optional Source Registration Time feature flag. */
+    boolean MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED = false;
+
+    /** Returns true if source registration time is optional for aggregatable reports. */
+    default boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
+        return MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
+    }
+
+    /** Default U18 UX feature flag. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
     /** U18 UX feature flag.. */
@@ -3983,11 +3999,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default RVC NOTIFICATION feature flag.. */
-    boolean DEFAULT_RVC_NOTIFICATION_ENABLED = false;
+    boolean DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED = false;
 
     /** RVC Notification feature flag.. */
-    default boolean getEnableRvcNotification() {
-        return DEFAULT_RVC_NOTIFICATION_ENABLED;
+    default boolean getEnableRvcPostOtaNotification() {
+        return DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
     }
 
     /** Default enableAdServices system API feature flag.. */
@@ -4104,76 +4120,6 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
     }
 
-    float MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000208f;
-
-    /**
-     * {@link Source} Noise probability for 'Event' when both destinations (app and web) are
-     * available on the source and supports install attribution.
-     */
-    default float getMeasurementInstallAttrDualDestinationEventNoiseProbability() {
-        return MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218f;
-
-    /**
-     * {@link Source} Noise probability for 'Navigation' when both destinations (app and web) are
-     * available on the source.
-     */
-    default float getMeasurementDualDestinationNavigationNoiseProbability() {
-        return MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY =
-            MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-
-    /**
-     * {@link Source} Noise probability for 'Navigation' when both destinations (app and web) are
-     * available on the source and supports install attribution.
-     */
-    default float getMeasurementInstallAttrDualDestinationNavigationNoiseProbability() {
-        return MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY = 0.0000042f;
-
-    /**
-     * {@link Source} Noise probability for 'Event' when both destinations (app and web) are
-     * available on the source.
-     */
-    default float getMeasurementDualDestinationEventNoiseProbability() {
-        return MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY = 0.0000125f;
-
-    /** {@link Source} Noise probability for 'Event' which supports install attribution. */
-    default float getMeasurementInstallAttrEventNoiseProbability() {
-        return MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_EVENT_NOISE_PROBABILITY = 0.0000025f;
-
-    /** {@link Source} Noise probability for 'Event'. */
-    default float getMeasurementEventNoiseProbability() {
-        return MEASUREMENT_EVENT_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_NAVIGATION_NOISE_PROBABILITY = 0.0024263f;
-
-    /** {@link Source} Noise probability for 'Navigation'. */
-    default float getMeasurementNavigationNoiseProbability() {
-        return MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
-    }
-
-    float MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
-            MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
-
-    /** {@link Source} Noise probability for 'Navigation' which supports install attribution. */
-    default float getMeasurementInstallAttrNavigationNoiseProbability() {
-        return MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
-    }
-
     boolean MEASUREMENT_ENABLE_PREINSTALL_CHECK = false;
 
     /** Returns true when pre-install check is enabled. */
@@ -4282,6 +4228,16 @@ public interface Flags extends CommonFlags {
     /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
     default boolean getMsmtEnableApiStatusAllowListCheck() {
         return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
+    }
+
+    /**
+     * Flag to control whether redirect registration urls should be modified to prefix the path
+     * string with .well-known
+     */
+    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
+
+    default boolean getMeasurementEnableRedirectToWellKnownPath() {
+        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
     /**
@@ -4488,8 +4444,8 @@ public interface Flags extends CommonFlags {
     }
 
     /**
-     * Default value to determine how many logging events {@link
-     * com.android.adservices.spe.AdservicesJobServiceLogger} should upload to the server.
+     * Default value to determine how many logging events {@link AdServicesJobServiceLogger} should
+     * upload to the server.
      *
      * <p>The value should be an integer in the range of [0, 100], where 100 is to log all events
      * and 0 is to log no events.
@@ -4497,10 +4453,49 @@ public interface Flags extends CommonFlags {
     int DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE = 5;
 
     /**
-     * Returns the sampling logging rate for {@link
-     * com.android.adservices.spe.AdservicesJobServiceLogger} for logging events.
+     * Returns the sampling logging rate for {@link AdServicesJobServiceLogger} for logging events.
      */
     default int getBackgroundJobSamplingLoggingRate() {
         return DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
+    }
+
+    /** Default value of the timeout for AppSearch write operations */
+    int DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS = 3000;
+
+    /**
+     * Gets the value of the timeout for AppSearch write operations, in milliseconds.
+     *
+     * @return the timeout, in milliseconds, for AppSearch write operations
+     */
+    default int getAppSearchWriteTimeout() {
+        return DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS;
+    }
+
+    /** Default value of the timeout for AppSearch read operations */
+    int DEFAULT_APPSEARCH_READ_TIMEOUT_MS = 750;
+
+    /**
+     * Gets the value of the timeout for AppSearch read operations, in milliseconds.
+     *
+     * @return the timeout, in milliseconds, for AppSearch read operations
+     */
+    default int getAppSearchReadTimeout() {
+        return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
+    }
+
+    /** default value for get adservices common states enabled */
+    boolean DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED = false;
+
+    /** Returns if the get adservices common states service enabled. */
+    default boolean isGetAdServicesCommonStatesEnabled() {
+        return DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
+    }
+
+    /** Default value to determine whether ux related to the PAS Ux are enabled. */
+    boolean DEFAULT_PAS_UX_ENABLED = false;
+
+    /** Returns whether features related to the PAS Ux are enabled */
+    default boolean getPasUxEnabled() {
+        return DEFAULT_PAS_UX_ENABLED;
     }
 }

@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
+import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -24,7 +25,7 @@ import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobE
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -50,6 +51,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -61,7 +63,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -81,13 +83,13 @@ public class VerboseDebugReportingFallbackJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
-    private static final long WAIT_IN_MILLIS = 1_000L;
+    private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
     private JobScheduler mMockJobScheduler;
     private VerboseDebugReportingFallbackJobService mSpyService;
     private DatastoreManager mMockDatastoreManager;
-    private AdservicesJobServiceLogger mSpyLogger;
     private Flags mMockFlags;
+    private AdServicesJobServiceLogger mSpyLogger;
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -97,7 +99,7 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                     .spyStatic(DatastoreManagerFactory.class)
                     .spyStatic(EnrollmentDao.class)
                     .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .spyStatic(AdServicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .setStrictness(Strictness.LENIENT)
                     .build();
@@ -109,7 +111,7 @@ public class VerboseDebugReportingFallbackJobServiceTest {
 
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
         mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
+                spy(new AdServicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
         when(mMockFlags.getMeasurementVerboseDebugReportingFallbackJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
@@ -176,23 +178,22 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    CountDownLatch countDownLatch = createCountDownLatch();
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             VerboseDebugReportingFallbackJobService
                                                     .scheduleIfNeeded(any(), anyBoolean()));
 
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
                     // Execute
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    countDownLatch = createCountDownLatch();
+                    callback.assertJobFinished();
+
+                    callback = createJobFinishedCallback(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    callback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
@@ -426,13 +427,15 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                                 ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                         any(Context.class)));
 
+        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
         // Validate
         assertFalse(result);
-        // Allow background thread to execute
-        Thread.sleep(WAIT_IN_MILLIS);
+
+        callback.assertJobFinished();
         verify(mSpyService, times(1)).jobFinished(any(), eq(false));
         verify(mMockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID));
@@ -442,13 +445,15 @@ public class VerboseDebugReportingFallbackJobServiceTest {
         // Setup
         enableKillSwitch();
 
+        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
         // Validate
         assertFalse(result);
-        // Allow background thread to execute
-        Thread.sleep(WAIT_IN_MILLIS);
+
+        callback.assertJobFinished();
         verify(mSpyService, times(1)).jobFinished(any(), eq(false));
         verify(mMockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID));
@@ -463,13 +468,15 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                                 VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
 
+        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
         // Validate
         assertTrue(result);
-        // Allow background thread to execute
-        Thread.sleep(WAIT_IN_MILLIS);
+
+        callback.assertJobFinished();
         ExtendedMockito.verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
         verify(mMockJobScheduler, never())
                 .cancel(eq(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID));
@@ -495,7 +502,7 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                         () ->
                                 ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                         any(Context.class)));
-        mockGetAdservicesJobServiceLogger(mSpyLogger);
+        mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();

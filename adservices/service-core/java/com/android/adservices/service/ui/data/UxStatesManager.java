@@ -102,7 +102,7 @@ public class UxStatesManager {
     /** Returns process statble UX flags. */
     public boolean getFlag(String uxFlagKey) {
         if (!mUxFlags.containsKey(uxFlagKey)) {
-            LogUtil.e("Key not found in cached UX flags: ", uxFlagKey);
+            LogUtil.e("Key not found in cached UX flags: %s", uxFlagKey);
         }
         Boolean value = mUxFlags.get(uxFlagKey);
         return value != null ? value : false;

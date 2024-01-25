@@ -47,16 +47,13 @@ import java.util.regex.Pattern;
  *
  * @hide
  */
-class FetcherUtil {
-    static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
-    static final String REDIRECT_LOCATION_HEADER_KEY = "Location";
+public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
      * Determine all redirects.
      *
-     * <p>Generates a list of: (url, allows_regular_redirects) tuples. Returns true if all steps
-     * succeed. Returns false if there are any failures.
+     * <p>Generates a map of: (redirectType, List&lt;Uri&gt;)
      */
     static Map<AsyncRegistration.RedirectType, List<Uri>> parseRedirects(
             @NonNull Map<String, List<String>> headers) {
@@ -234,12 +231,18 @@ class FetcherUtil {
                     > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
             }
+            // Process known reserved keys that start with underscore first, then invalidate on
+            // catch-all.
             if (flags.getMeasurementEnableLookbackWindowFilter()
                     && FilterMap.LOOKBACK_WINDOW.equals(key)) {
                 if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
                     return false;
                 }
                 continue;
+            }
+            // Invalidate catch-all reserved prefix.
+            if (key.startsWith(FilterMap.RESERVED_PREFIX)) {
+                return false;
             }
             JSONArray values = filtersObj.optJSONArray(key);
             if (values == null
@@ -304,7 +307,7 @@ class FetcherUtil {
 
     private static List<Uri> parseListRedirects(Map<String, List<String>> headers) {
         List<Uri> redirects = new ArrayList<>();
-        List<String> field = headers.get(REDIRECT_LIST_HEADER_KEY);
+        List<String> field = headers.get(AsyncRedirects.REDIRECT_LIST_HEADER_KEY);
         int maxRedirects = FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
         if (field != null) {
             for (int i = 0; i < Math.min(field.size(), maxRedirects); i++) {
@@ -316,7 +319,7 @@ class FetcherUtil {
 
     private static List<Uri> parseLocationRedirects(Map<String, List<String>> headers) {
         List<Uri> redirects = new ArrayList<>();
-        List<String> field = headers.get(REDIRECT_LOCATION_HEADER_KEY);
+        List<String> field = headers.get(AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY);
         if (field != null && !field.isEmpty()) {
             redirects.add(Uri.parse(field.get(0)));
             if (field.size() > 1) {

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
@@ -87,7 +89,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
-    public static PhFlags getInstance() {
+    static PhFlags getInstance() {
         return sSingleton;
     }
 
@@ -3184,6 +3186,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
     }
 
+    @Override
+    public long getMaxTriggerRegistrationHeaderSizeBytes() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
+                /* defaultValue */ MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
+    }
+
+    @Override
+    public boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
+                MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
@@ -3481,16 +3499,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableConfigurableEventReportingWindows() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS,
-                /* defaultValue */ MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS);
-    }
-
-    @Override
     public String getMeasurementEventReportsVtcEarlyReportingWindows() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
@@ -3576,6 +3584,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableRedirectToWellKnownPath() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
+                /* defaultValue */ MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH);
+    }
+
+    @Override
     public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -3597,6 +3613,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         super.dump(writer, args); // common flags
 
+        writer.println("\t" + FlagsConstants.KEY_PAS_UX_ENABLED + " = " + getPasUxEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED
@@ -4290,49 +4307,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementMinReportingOriginUpdateWindow());
         writer.println(
                 "\t"
-                        + FlagsConstants
-                        .KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY
-                        + " = "
-                        + getMeasurementDualDestinationNavigationNoiseProbability());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                        .KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
-                        + " = "
-                        + getMeasurementInstallAttrDualDestinationEventNoiseProbability());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                        .KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY
-                        + " = "
-                        + getMeasurementInstallAttrDualDestinationNavigationNoiseProbability());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
-                        + " = "
-                        + getMeasurementDualDestinationEventNoiseProbability());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY
-                        + " = "
-                        + getMeasurementInstallAttrEventNoiseProbability());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY
-                        + " = "
-                        + getMeasurementInstallAttrNavigationNoiseProbability());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY
-                        + " = "
-                        + getMeasurementEventNoiseProbability());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY
-                        + " = "
-                        + getMeasurementNavigationNoiseProbability());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
                         + " = "
                         + getAsyncRegistrationJobQueueKillSwitch());
@@ -4376,11 +4350,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS
                         + " = "
                         + getMeasurementMinEventReportDelayMillis());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS
-                        + " = "
-                        + getMeasurementEnableConfigurableEventReportingWindows());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS
@@ -5504,6 +5473,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES
                         + " = "
                         + getMeasurementEnableSessionStableKillSwitches());
+        writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
+        writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED
+                        + " = "
+                        + isGetAdServicesCommonStatesEnabled());
     }
 
     @VisibleForTesting
@@ -5697,12 +5673,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableRvcNotification() {
+    public boolean getEnableRvcPostOtaNotification() {
         return getEnableAdServicesSystemApi()
                 && DeviceConfig.getBoolean(
                         FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED,
-                        /* defaultValue */ DEFAULT_RVC_NOTIFICATION_ENABLED);
+                        /* flagName */ FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
+                        /* defaultValue */ DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
     }
 
     @Override
@@ -5711,6 +5687,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API,
                 /* defaultValue */ DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
+    }
+
+    @Override
+    public boolean getPasUxEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PAS_UX_ENABLED,
+                /* defaultValue */ DEFAULT_PAS_UX_ENABLED);
     }
 
     @Override
@@ -5725,7 +5709,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 getRecordManualInteractionEnabled());
         uxMap.put(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
         uxMap.put(FlagsConstants.KEY_RVC_UX_ENABLED, getEnableRvcUx());
-        uxMap.put(FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED, getEnableRvcNotification());
+        uxMap.put(
+                FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
+                getEnableRvcPostOtaNotification());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(
@@ -5751,6 +5737,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
                 getConsentAlreadyInteractedEnableMode());
+        uxMap.put(
+                FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
+                isGetAdServicesCommonStatesEnabled());
+        uxMap.put(FlagsConstants.KEY_PAS_UX_ENABLED, getPasUxEnabled());
         return uxMap;
     }
 
@@ -5858,99 +5848,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public float getMeasurementInstallAttrDualDestinationEventNoiseProbability() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getFloat(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
-                /* defaultValue */ MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY);
-    }
-
-    @Override
-    public float getMeasurementDualDestinationNavigationNoiseProbability() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getFloat(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
-                /* defaultValue */ MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY);
-    }
-
-    @Override
-    public float getMeasurementInstallAttrDualDestinationNavigationNoiseProbability() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getFloat(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
-                /* defaultValue */ MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY);
-    }
-
-    @Override
-    public float getMeasurementDualDestinationEventNoiseProbability() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getFloat(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
-                /* defaultValue */ MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY);
-    }
-
-    @Override
-    public float getMeasurementInstallAttrEventNoiseProbability() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getFloat(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
-                /* defaultValue */ MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY);
-    }
-
-    @Override
-    public float getMeasurementInstallAttrNavigationNoiseProbability() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getFloat(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
-                /* defaultValue */ MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY);
-    }
-
-    @Override
-    public float getMeasurementEventNoiseProbability() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getFloat(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY,
-                /* defaultValue */ MEASUREMENT_EVENT_NOISE_PROBABILITY);
-    }
-
-    @Override
-    public float getMeasurementNavigationNoiseProbability() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getFloat(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY,
-                /* defaultValue */ MEASUREMENT_NAVIGATION_NOISE_PROBABILITY);
-    }
-
-    @Override
     public boolean getMeasurementEnablePreinstallCheck() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK,
                 /* defaultValue */ MEASUREMENT_ENABLE_PREINSTALL_CHECK);
-    }
-
-    @Override
-    public boolean getMeasurementEnableVtcConfigurableMaxEventReports() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS,
-                /* defaultValue */
-                DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS);
     }
 
     @Override
@@ -6474,6 +6377,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
+                /* defaultValue */
+                MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
+    }
+
+    @Override
+    public boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
+                /* defaultValue */
+                MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED);
+    }
+
+    @Override
     public boolean getMeasurementEnableSessionStableKillSwitches() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -6520,5 +6443,29 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         }
 
         return loggingRatio;
+    }
+
+    @Override
+    public int getAppSearchWriteTimeout() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* name= */ FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS,
+                /* defaultValue= */ DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getAppSearchReadTimeout() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* name= */ FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS,
+                /* defaultValue= */ DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean isGetAdServicesCommonStatesEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
+                /* defaultValue */ DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED);
     }
 }

@@ -89,7 +89,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2-KEEP",
@@ -106,7 +107,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ]
       },
@@ -127,7 +129,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ]
       },
@@ -192,7 +195,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2-REMOVE",
@@ -209,7 +213,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -296,7 +301,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -377,7 +383,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2-REMOVE",
@@ -394,7 +401,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "aggregate_reports": [
@@ -478,7 +486,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "aggregate_reports": [
@@ -558,7 +567,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2-REMOVE",
@@ -575,7 +585,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "attributions": [
@@ -656,7 +667,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "attributions": [
@@ -718,7 +730,8 @@
                   "key_1": ["value_1"]
                 }]
               }
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "aggregate_reports": [
@@ -784,7 +797,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.test",
             "webDestination": "https://foo.test",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           },
           {
             "registrationId": "AR2-REMOVE",
@@ -801,7 +815,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.test",
             "webDestination": "https://foo.test",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           }
         ]
       },
@@ -822,7 +837,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.test",
             "webDestination": "https://foo.test",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           }
         ]
       },
@@ -965,7 +981,8 @@
               }
             ],
             "triggerTime": 1648665733601,
-            "registrant": "android-app://com.registrant.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -983,7 +1000,8 @@
               }
             ],
             "triggerTime": 1648665733605,
-            "registrant": "android-app://remove.me"
+            "registrant": "android-app://remove.me",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T3",
@@ -1001,7 +1019,8 @@
               }
             ],
             "triggerTime": 1648665733601,
-            "registrant": "android-app://com.registrant.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T4",
@@ -1020,7 +1039,8 @@
               }
             ],
             "triggerTime": 1648665733601,
-            "registrant": "android-app://com.registrant.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -1192,7 +1212,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           },
           {
             "registrationId": "AR2",
@@ -1209,7 +1230,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           }
         ]
       },
@@ -1315,7 +1337,8 @@
               }
             ],
             "triggerTime": 1648665733601,
-            "registrant": "android-app://com.registrant.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -1365,7 +1388,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           },
           {
             "registrationId": "AR2",
@@ -1382,7 +1406,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           }
         ]
       },

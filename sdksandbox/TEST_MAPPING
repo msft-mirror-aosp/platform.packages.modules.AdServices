@@ -31,7 +31,7 @@
       "name": "SdkSandboxShellHostTest[com.google.android.adservices.apex]"
     },
     {
-      "name": "BroadcastRestrictionsHostTest[com.google.android.adservices.apex]"
+      "name": "SdkSandboxRestrictionsTests[com.google.android.adservices.apex]"
     },
     {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]",
@@ -107,7 +107,7 @@
       "name": "SdkSandboxShellHostTest"
     },
     {
-      "name": "BroadcastRestrictionsHostTest"
+      "name": "SdkSandboxRestrictionsTests"
     },
     {
       "name": "ContentProviderRestrictionsHostTest"
@@ -149,19 +149,7 @@
   ],
   "sdksandbox-postsubmit": [
     {
-      "name": "CtsContentTestCases"
-    },
-    {
-      "name": "CtsDisplayTestCases"
-    },
-    {
-      "name": "CtsInputMethodTestCases"
-    },
-    {
-      "name": "CtsMediaAudioTestCases"
-    },
-    {
-      "name": "CtsOsTestCases"
+      "name": "CtsViewTestCases"
     }
   ]
 }

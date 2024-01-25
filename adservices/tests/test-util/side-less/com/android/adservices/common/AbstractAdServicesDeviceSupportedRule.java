@@ -17,6 +17,8 @@ package com.android.adservices.common;
 
 import com.android.adservices.common.Logger.RealLogger;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -66,6 +68,10 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
 
     protected final Logger mLog;
     private final AbstractDeviceSupportHelper mDeviceSupportHelper;
+
+    @VisibleForTesting
+    static final String REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE =
+            "Test annotated with @RequiresLowRamDevice and device is not";
 
     /** Default constructor. */
     public AbstractAdServicesDeviceSupportedRule(
@@ -117,7 +123,7 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 }
                 if (!isLowRamDevice && requiresLowRamDevice != null) {
                     throw new AssumptionViolatedException(
-                            "Test annotated with @RequiresLowRamDevice and device is not");
+                            REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE);
                 }
 
                 base.evaluate();

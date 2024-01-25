@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class SyncCallback<T, E> {
 
-    private static final String TAG = SyncCallback.class.getSimpleName();
+    private static final String TAG = "adservices." + SyncCallback.class.getSimpleName();
 
     private static final boolean DEFAULT_BEHAVIOR_FOR_FAIL_IF_CALLED_ON_MAIN_THREAD = true;
 
@@ -59,6 +59,7 @@ public class SyncCallback<T, E> {
 
     private @Nullable E mError;
     private @Nullable T mResult;
+    private boolean mIsResultSet;
     private @Nullable String mMethodCalled;
     private @Nullable RuntimeException mInternalFailure;
     private final boolean mFailIfCalledOnMainThread;
@@ -80,6 +81,7 @@ public class SyncCallback<T, E> {
     protected SyncCallback(int timeoutMs, boolean failIfCalledOnMainThread) {
         mTimeoutMs = timeoutMs;
         mFailIfCalledOnMainThread = failIfCalledOnMainThread;
+        mIsResultSet = false;
     }
 
     @VisibleForTesting
@@ -101,8 +103,9 @@ public class SyncCallback<T, E> {
      * @throws IllegalStateException if {@link #injectResult(T)} or {@link #injectError(E)} was
      *     already called.
      */
-    public final void injectResult(T result) {
+    public final void injectResult(@Nullable T result) {
         mResult = result;
+        mIsResultSet = true;
         setMethodCalled("injectResult", result);
     }
 
@@ -114,6 +117,7 @@ public class SyncCallback<T, E> {
      */
     public final void injectError(E error) {
         mError = error;
+        mIsResultSet = false;
         setMethodCalled("injectError", error);
     }
 
@@ -125,7 +129,7 @@ public class SyncCallback<T, E> {
      */
     public final T assertResultReceived() throws InterruptedException {
         assertReceived();
-        assertWithMessage("result").that(mResult).isNotNull();
+        assertWithMessage("result").that(mIsResultSet).isTrue();
         assertWithMessage("error").that(mError).isNull();
         return mResult;
     }
@@ -138,7 +142,7 @@ public class SyncCallback<T, E> {
      */
     public final E assertErrorReceived() throws InterruptedException {
         assertReceived();
-        assertWithMessage("result").that(mResult).isNull();
+        assertWithMessage("result").that(mIsResultSet).isFalse();
         assertWithMessage("error").that(mError).isNotNull();
         return mError;
     }
@@ -186,6 +190,8 @@ public class SyncCallback<T, E> {
                 + mEpoch
                 + ", error="
                 + mError
+                + ", mIsResultSet="
+                + mIsResultSet
                 + ", result="
                 + mResult
                 + ", methodCalled="

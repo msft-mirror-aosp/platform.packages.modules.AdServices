@@ -93,6 +93,7 @@ public final class MeasurementTables {
         String REGISTRATION_ID = "registration_id";
         String PLATFORM_AD_ID = "platform_ad_id";
         String REQUEST_POST_BODY = "request_post_body";
+        String REDIRECT_BEHAVIOR = "redirect_behavior";
     }
 
     /** Contract for Source. */
@@ -177,6 +178,8 @@ public final class MeasurementTables {
         String DEBUG_AD_ID = "debug_ad_id";
         String REGISTRATION_ORIGIN = "registration_origin";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
+        String AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG =
+                "aggregatable_source_registration_time_config";
     }
 
     /** Contract for EventReport. */
@@ -327,39 +330,41 @@ public final class MeasurementTables {
 
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_LATEST =
             "CREATE TABLE "
-                    + MeasurementTables.AsyncRegistrationContract.TABLE
+                    + AsyncRegistrationContract.TABLE
                     + " ("
-                    + MeasurementTables.AsyncRegistrationContract.ID
+                    + AsyncRegistrationContract.ID
                     + " TEXT PRIMARY KEY NOT NULL, "
-                    + MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI
+                    + AsyncRegistrationContract.REGISTRATION_URI
                     + " TEXT, "
-                    + MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION
+                    + AsyncRegistrationContract.WEB_DESTINATION
                     + " TEXT, "
-                    + MeasurementTables.AsyncRegistrationContract.OS_DESTINATION
+                    + AsyncRegistrationContract.OS_DESTINATION
                     + " TEXT, "
-                    + MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + AsyncRegistrationContract.VERIFIED_DESTINATION
                     + " TEXT, "
-                    + MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN
+                    + AsyncRegistrationContract.TOP_ORIGIN
                     + " TEXT, "
-                    + MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE
+                    + AsyncRegistrationContract.SOURCE_TYPE
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.REGISTRANT
+                    + AsyncRegistrationContract.REGISTRANT
                     + " TEXT, "
-                    + MeasurementTables.AsyncRegistrationContract.REQUEST_TIME
+                    + AsyncRegistrationContract.REQUEST_TIME
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
+                    + AsyncRegistrationContract.RETRY_COUNT
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.TYPE
+                    + AsyncRegistrationContract.TYPE
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED
+                    + AsyncRegistrationContract.DEBUG_KEY_ALLOWED
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION
+                    + AsyncRegistrationContract.AD_ID_PERMISSION
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID
+                    + AsyncRegistrationContract.REGISTRATION_ID
                     + " TEXT NOT NULL,"
-                    + MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID
+                    + AsyncRegistrationContract.PLATFORM_AD_ID
                     + " TEXT, "
                     + AsyncRegistrationContract.REQUEST_POST_BODY
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REDIRECT_BEHAVIOR
                     + " TEXT "
                     + ")";
 
@@ -635,6 +640,8 @@ public final class MeasurementTables {
                     + TriggerContract.REGISTRATION_ORIGIN
                     + " TEXT, "
                     + TriggerContract.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG
                     + " TEXT "
                     + ")";
 

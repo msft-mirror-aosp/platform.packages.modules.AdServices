@@ -58,7 +58,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -75,7 +76,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -152,7 +154,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       },
       {
         "registrationId": "AR2",
@@ -169,7 +172,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       }
     ]
   },
@@ -230,7 +234,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -247,7 +252,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -324,7 +330,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       },
       {
         "registrationId": "AR2",
@@ -341,7 +348,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       }
     ]
   },

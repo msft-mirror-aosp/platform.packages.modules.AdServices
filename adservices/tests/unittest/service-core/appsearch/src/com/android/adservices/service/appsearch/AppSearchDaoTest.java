@@ -43,6 +43,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
@@ -52,6 +53,8 @@ import com.android.adservices.service.consent.ConsentConstants;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,6 +66,8 @@ import org.mockito.MockitoAnnotations;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @SmallTest
 public class AppSearchDaoTest {
@@ -87,7 +92,13 @@ public class AppSearchDaoTest {
             new PackageIdentifier(
                     /* packageName= */ TEST, /* sha256= */ new Signature(SHA).toByteArray());
 
-    @Rule
+    private static final int APPSEARCH_READ_TIMEOUT_MS = 500;
+
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this).mockStatic(FlagsFactory.class).build();
 
@@ -95,6 +106,7 @@ public class AppSearchDaoTest {
     public void before() {
         MockitoAnnotations.initMocks(this);
         when(mFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
+        when(mFlags.getAppSearchReadTimeout()).thenReturn(APPSEARCH_READ_TIMEOUT_MS);
         doReturn(mFlags).when(FlagsFactory::getFlags);
     }
 
@@ -205,6 +217,30 @@ public class AppSearchDaoTest {
     }
 
     @Test
+    public void testReadConsentData_timeout() {
+        AppSearchDao result =
+                AppSearchDao.readConsentData(
+                        AppSearchConsentDao.class,
+                        getLongRunningOperation(mGlobalSearchSession),
+                        mExecutor,
+                        NAMESPACE,
+                        TEST,
+                        mAdServicesPackageName);
+        assertThat(result).isNull();
+    }
+
+    private <T> ListenableFuture<T> getLongRunningOperation(T result) {
+        // Wait for a time that's longer than the AppSearch read timeout, then return the result.
+        ListeningExecutorService ls =
+                MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+        return ls.submit(
+                () -> {
+                    TimeUnit.MILLISECONDS.sleep(APPSEARCH_READ_TIMEOUT_MS + 500);
+                    return result;
+                });
+    }
+
+    @Test
     public void testReadAppSearchData_emptyQuery() {
         AppSearchDao dao =
                 AppSearchDao.readAppSearchSessionData(
@@ -262,7 +298,8 @@ public class AppSearchDaoTest {
         when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
                 .thenReturn(Futures.immediateFuture(mockResponse));
 
-        AppSearchResult mockResult = Mockito.mock(AppSearchResult.class);
+        AppSearchResult<Void> mockResult =
+                AppSearchResult.newFailedResult(AppSearchResult.RESULT_INVALID_ARGUMENT, "test");
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
@@ -278,11 +315,12 @@ public class AppSearchDaoTest {
                         Futures.immediateFuture(mockSession),
                         List.of(PACKAGE_IDENTIFIER),
                         mExecutor);
-        ExecutionException e = assertThrows(ExecutionException.class, () -> result.get());
+        ExecutionException e = assertThrows(ExecutionException.class, result::get);
         assertThat(e.getMessage())
                 .isEqualTo(
                         "java.lang.RuntimeException: "
-                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE
+                                + " Migration failure: [FAILURE(3)]: test");
     }
 
     @Test
@@ -320,7 +358,8 @@ public class AppSearchDaoTest {
         when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
                 .thenReturn(Futures.immediateFuture(mockResponse));
 
-        AppSearchResult mockResult = Mockito.mock(AppSearchResult.class);
+        AppSearchResult<String> mockResult =
+                AppSearchResult.newFailedResult(AppSearchResult.RESULT_INVALID_ARGUMENT, "test");
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
@@ -337,11 +376,12 @@ public class AppSearchDaoTest {
                         mExecutor,
                         TEST,
                         NAMESPACE);
-        ExecutionException e = assertThrows(ExecutionException.class, () -> result.get());
+        ExecutionException e = assertThrows(ExecutionException.class, result::get);
         assertThat(e.getMessage())
                 .isEqualTo(
                         "java.lang.RuntimeException: "
-                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE
+                                + " Migration failure: [FAILURE(3)]: test");
     }
 
     @Test

@@ -16,9 +16,10 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
+import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService.VERBOSE_DEBUG_REPORT_JOB_ID;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -44,6 +45,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.JobServiceCallback;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -54,7 +56,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -75,13 +77,13 @@ public class VerboseDebugReportingJobServiceTest {
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
 
-    private static final long WAIT_IN_MILLIS = 1000L;
+    private static final long WAIT_IN_MILLIS = 200L;
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
     private JobParameters mJobParameters;
-    private AdservicesJobServiceLogger mSpyLogger;
     private VerboseDebugReportingJobService mSpyService;
+    private AdServicesJobServiceLogger mSpyLogger;
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -91,7 +93,7 @@ public class VerboseDebugReportingJobServiceTest {
                     .spyStatic(EnrollmentDao.class)
                     .spyStatic(VerboseDebugReportingJobService.class)
                     .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .spyStatic(AdServicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .setStrictness(Strictness.LENIENT)
                     .build();
@@ -104,7 +106,7 @@ public class VerboseDebugReportingJobServiceTest {
         mJobParameters = mock(JobParameters.class);
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
         mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
+                spy(new AdServicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
     }
 
     @Test
@@ -114,13 +116,15 @@ public class VerboseDebugReportingJobServiceTest {
                     // Setup
                     enableKillSwitch();
 
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
                     // Execute
-                    boolean result = mSpyService.onStartJob(mJobParameters);
+                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
                     // Validate
                     assertFalse(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    callback.assertJobFinished();
                     verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
                     verify(mMockJobScheduler, times(1))
@@ -140,13 +144,15 @@ public class VerboseDebugReportingJobServiceTest {
                                             VerboseDebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
                     // Execute
-                    boolean result = mSpyService.onStartJob(mJobParameters);
+                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
                     // Validate
                     assertTrue(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    callback.assertJobFinished();
                     verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
                     verify(mMockJobScheduler, never())
@@ -160,23 +166,22 @@ public class VerboseDebugReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    CountDownLatch countDownLatch = createCountDownLatch();
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             VerboseDebugReportingJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
                     // Execute
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    countDownLatch = createCountDownLatch();
+                    callback.assertJobFinished();
+
+                    callback = createJobFinishedCallback(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    countDownLatch.await();
-                    // TODO (b/298021244): replace sleep() with a better approach
-                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    callback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
@@ -200,13 +205,15 @@ public class VerboseDebugReportingJobServiceTest {
                                             ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                                     any(Context.class)));
 
+                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+
                     // Execute
-                    boolean result = mSpyService.onStartJob(mJobParameters);
+                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
                     // Validate
                     assertFalse(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
+
+                    callback.assertJobFinished();
                     verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
                     verify(mMockJobScheduler, times(1))
@@ -404,7 +411,7 @@ public class VerboseDebugReportingJobServiceTest {
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
-        mockGetAdservicesJobServiceLogger(mSpyLogger);
+        mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();

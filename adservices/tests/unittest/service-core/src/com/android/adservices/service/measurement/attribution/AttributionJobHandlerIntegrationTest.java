@@ -77,7 +77,7 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
                 (new AttributionJobHandler(
                                 datastoreManager,
                                 FlagsFactory.getFlags(),
-                                new DebugReportApi(sContext, FlagsFactory.getFlagsForTest()),
+                                new DebugReportApi(sContext, FlagsFactory.getFlags()),
                                 new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
                                 new SourceNoiseHandler(FlagsFactory.getFlags()),
                                 mLogger,

@@ -67,6 +67,8 @@ public class SelectAdsFlagRule implements TestRule {
                         + "true");
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_auction_server_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_enabled true");
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "fledge_auction_server_auction_key_fetch_uri",
@@ -113,5 +115,6 @@ public class SelectAdsFlagRule implements TestRule {
                 "device_config put adservices fledge_select_ads_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices enable_back_compat true");
     }
 }

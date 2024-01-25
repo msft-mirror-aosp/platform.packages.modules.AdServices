@@ -92,7 +92,7 @@ public class CustomAudienceImplTest {
                         VALID_DB_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
-                        /*debuggable=*/ false);
+                        false);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
@@ -147,7 +147,8 @@ public class CustomAudienceImplTest {
                         Duration.ofMillis(
                                 CommonFixture.FLAGS_FOR_TEST
                                         .getFledgeCustomAudienceDefaultExpireInMs()),
-                        AD_DATA_CONVERSION_STRATEGY);
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false);
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(

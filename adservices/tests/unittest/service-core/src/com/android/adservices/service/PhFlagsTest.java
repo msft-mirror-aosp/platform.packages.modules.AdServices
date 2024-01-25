@@ -50,6 +50,8 @@ import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MI
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
@@ -61,6 +63,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SER
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.Flags.DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_MAINLINE_TRAIN_VERSION;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ASYNC_REGISTRATION_JOB_TRIGGER_MIN_DELAY_MS;
@@ -68,7 +71,6 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ATTRIBUTI
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
-import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION;
@@ -83,7 +85,8 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
-import static com.android.adservices.service.Flags.DEFAULT_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
@@ -236,6 +239,7 @@ import static com.android.adservices.service.Flags.IS_U18_UX_DETENTION_CHANNEL_E
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
+import static com.android.adservices.service.Flags.MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
@@ -282,15 +286,12 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_EXPIRED_JO
 import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
-import static com.android.adservices.service.Flags.MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.Flags.MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
@@ -298,6 +299,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATIO
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_PREINSTALL_CHECK;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT;
@@ -308,6 +310,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SOURCE_DEA
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
@@ -322,7 +325,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_RE
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
-import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -337,10 +339,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFO
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_LITE_API_ENABLED;
-import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.Flags.MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
@@ -385,7 +383,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MIN_INSTALL_ATTRI
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.Flags.MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
@@ -402,6 +399,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
@@ -617,12 +615,14 @@ import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP
 import static com.android.adservices.service.FlagsConstants.KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINLINE_TRAIN_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
+import static com.android.adservices.service.FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
@@ -675,8 +675,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
@@ -684,7 +682,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
@@ -692,6 +689,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION;
@@ -702,7 +700,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
@@ -717,7 +715,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -732,10 +729,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_TRIGGER_DATA_CARDINALITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
@@ -790,7 +783,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
@@ -817,6 +809,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_ALL
 import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
@@ -827,7 +820,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
@@ -5300,24 +5293,6 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetMeasurementEnableConfigurableEventReportingWindows() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableConfigurableEventReportingWindows())
-                .isEqualTo(MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS);
-
-        boolean phOverridingValue = !MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableConfigurableEventReportingWindows())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testGetMeasurementEventReportsVtcEarlyReportingWindows() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
@@ -6855,6 +6830,39 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMaxTriggerRegistrationHeaderSizeBytes_measurementOverride() {
+        // without any overriding, the value is hard coded constant
+        assertThat(mPhFlags.getMaxTriggerRegistrationHeaderSizeBytes())
+                .isEqualTo(MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
+
+        long phOverridingValue = MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES + 5L;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
+                Long.toString(phOverridingValue),
+                false);
+
+        assertThat(mPhFlags.getMaxTriggerRegistrationHeaderSizeBytes())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementEnableUpdateTriggerHeaderLimit() {
+        assertThat(mPhFlags.getMeasurementEnableUpdateTriggerHeaderLimit())
+                .isEqualTo(MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT);
+
+        boolean phOverridingValue = !MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
+                Boolean.toString(phOverridingValue),
+                false);
+
+        assertThat(mPhFlags.getMeasurementEnableUpdateTriggerHeaderLimit())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetOffDeviceAdSelectionRequestCompressionEnabled() {
         assertThat(mPhFlags.getAdSelectionOffDeviceRequestCompressionEnabled())
                 .isEqualTo(FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
@@ -7576,6 +7584,21 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testPasUxEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(DEFAULT_PAS_UX_ENABLED);
+
+        boolean phOverridingValue = !DEFAULT_PAS_UX_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PAS_UX_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testRvcUxEnabled_adServicesSystemApiTrue_rvcUxTrue() {
         testRvcUxEnabled(true, true, true);
     }
@@ -7677,7 +7700,8 @@ public class PhFlagsTest {
             boolean adServicesSystemApi, boolean phOverridingValue, boolean expected) {
 
         // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getEnableRvcNotification()).isEqualTo(DEFAULT_RVC_NOTIFICATION_ENABLED);
+        assertThat(mPhFlags.getEnableRvcPostOtaNotification())
+                .isEqualTo(DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -7686,11 +7710,11 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_RVC_NOTIFICATION_ENABLED,
+                KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getEnableRvcNotification()).isEqualTo(expected);
+        assertThat(mPhFlags.getEnableRvcPostOtaNotification()).isEqualTo(expected);
     }
 
     @Test
@@ -7919,144 +7943,6 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetMeasurementInstallAttrDualDestinationEventNoiseProbability() {
-        assertThat(mPhFlags.getMeasurementInstallAttrDualDestinationEventNoiseProbability())
-                .isEqualTo(MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue =
-                MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY + .0001f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementInstallAttrDualDestinationEventNoiseProbability())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementDualDestinationNavigationNoiseProbability() {
-        assertThat(mPhFlags.getMeasurementDualDestinationNavigationNoiseProbability())
-                .isEqualTo(MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue =
-                MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY + .0001f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementDualDestinationNavigationNoiseProbability())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementInstallAttrDualDestinationNavigationNoiseProbability() {
-        assertThat(mPhFlags.getMeasurementInstallAttrDualDestinationNavigationNoiseProbability())
-                .isEqualTo(MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue =
-                MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY + .0001f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementInstallAttrDualDestinationNavigationNoiseProbability())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementDualDestinationEventNoiseProbability() {
-        assertThat(mPhFlags.getMeasurementDualDestinationEventNoiseProbability())
-                .isEqualTo(MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue = MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY + .0001f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementDualDestinationEventNoiseProbability())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementInstallAttrEventNoiseProbability() {
-        assertThat(mPhFlags.getMeasurementInstallAttrEventNoiseProbability())
-                .isEqualTo(MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue = MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY + .0001f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementInstallAttrEventNoiseProbability())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementInstallAttrNavigationNoiseProbability() {
-        assertThat(mPhFlags.getMeasurementInstallAttrNavigationNoiseProbability())
-                .isEqualTo(MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue = MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY + .0001f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementInstallAttrNavigationNoiseProbability())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementEventNoiseProbability() {
-        assertThat(mPhFlags.getMeasurementEventNoiseProbability())
-                .isEqualTo(MEASUREMENT_EVENT_NOISE_PROBABILITY);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue = MEASUREMENT_EVENT_NOISE_PROBABILITY + .0001f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_EVENT_NOISE_PROBABILITY,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEventNoiseProbability()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementNavigationNoiseProbability() {
-        assertThat(mPhFlags.getMeasurementNavigationNoiseProbability())
-                .isEqualTo(MEASUREMENT_NAVIGATION_NOISE_PROBABILITY);
-
-        // Now overriding with the value from PH.
-        float phOverridingValue = MEASUREMENT_NAVIGATION_NOISE_PROBABILITY + .0001f;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_NAVIGATION_NOISE_PROBABILITY,
-                Float.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementNavigationNoiseProbability())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testGetMeasurementEnablePreinstallCheck() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         assertThat(mPhFlags.getMeasurementEnablePreinstallCheck())
@@ -8178,24 +8064,6 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getMeasurementEnableSharedFilterDataKeysXNA())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementEnableVtcConfigurableMaxEventReports() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementEnableVtcConfigurableMaxEventReports())
-                .isEqualTo(DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS);
-
-        boolean phOverridingValue = !DEFAULT_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ENABLE_VTC_CONFIGURABLE_MAX_EVENT_REPORTS,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementEnableVtcConfigurableMaxEventReports())
                 .isEqualTo(phOverridingValue);
     }
 
@@ -9710,6 +9578,22 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMeasurementEnableRedirectToWellKnownPath() {
+        assertThat(mPhFlags.getMeasurementEnableRedirectToWellKnownPath())
+                .isEqualTo(MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH);
+
+        boolean phOverridingValue = !MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementEnableRedirectToWellKnownPath())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetMeasurementEnableMaxAggregateReportsPerSource() {
         assertThat(mPhFlags.getMeasurementEnableMaxAggregateReportsPerSource())
                 .isEqualTo(MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE);
@@ -10074,6 +9958,42 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetMeasurementNullAggregateReportRateExcludingSourceRegistrationTime() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime())
+                .isEqualTo(Flags.MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
+
+        float phOverridingValue = .5f;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
+                Double.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
+                .isEqualTo(MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED);
+
+        boolean phOverridingValue =
+                !Flags.MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants
+                        .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetMeasurementEnableSessionStableKillSwitches() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementEnableSessionStableKillSwitches())
@@ -10140,6 +10060,37 @@ public class PhFlagsTest {
         assertThrows(IllegalArgumentException.class, mPhFlags::getBackgroundJobSamplingLoggingRate);
     }
 
+    @Test
+    public void testGetAppSearchWriteTimeout() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAppSearchWriteTimeout())
+                .isEqualTo(DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS);
+
+        int phOverridingValue = DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS + 1000;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAppSearchWriteTimeout()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAppSearchReadTimeout() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAppSearchReadTimeout()).isEqualTo(DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
+
+        int phOverridingValue = DEFAULT_APPSEARCH_READ_TIMEOUT_MS + 500;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAppSearchReadTimeout()).isEqualTo(phOverridingValue);
+    }
+
     private void overrideBackgroundJobSamplingLoggingRate(int phOverridingValue) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -10163,5 +10114,21 @@ public class PhFlagsTest {
                     Boolean.toString(!phOverridingValue),
                     true);
         }
+    }
+
+    @Test
+    public void testIsGetAdServicesCommonStatesEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.isGetAdServicesCommonStatesEnabled())
+                .isEqualTo(DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED);
+
+        boolean phOverridingValue = !DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.isGetAdServicesCommonStatesEnabled()).isEqualTo(phOverridingValue);
     }
 }

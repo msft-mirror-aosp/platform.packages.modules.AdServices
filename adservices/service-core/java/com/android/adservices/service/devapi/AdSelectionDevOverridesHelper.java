@@ -194,7 +194,7 @@ public class AdSelectionDevOverridesHelper {
                         .build());
 
         List<DBBuyerDecisionOverride> dbBuyerDecisionOverrideList =
-                buyersDecisionLogic.getLogicMap().entrySet().stream()
+                buyersDecisionLogic.getPerBuyerLogicMap().entrySet().stream()
                         .map(
                                 x ->
                                         DBBuyerDecisionOverride.builder()

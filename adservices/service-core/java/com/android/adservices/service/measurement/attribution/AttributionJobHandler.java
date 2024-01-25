@@ -18,12 +18,15 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
+
+import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
@@ -218,6 +221,12 @@ class AttributionJobHandler {
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_MATCHING_SOURCE);
+                        if (mFlags.getMeasurementNullAggregateReportEnabled()
+                                && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
+                                        trigger.getAggregatableSourceRegistrationTimeConfig())) {
+                            generateNullAggregateReportForNoMatchingSource(measurementDao, trigger);
+                        }
+
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -232,9 +241,11 @@ class AttributionJobHandler {
                         try {
                             source.buildTriggerSpecs();
                         } catch (JSONException e) {
-                            LoggerFactory.getMeasurementLogger().e(
-                                    e, "AttributionJobHandler::performAttribution cannot build "
-                                            + "trigger specs");
+                            LoggerFactory.getMeasurementLogger()
+                                    .e(
+                                            e,
+                                            "AttributionJobHandler::performAttribution cannot build"
+                                                    + " trigger specs");
                             ignoreTrigger(trigger, measurementDao);
                             return;
                         }
@@ -332,8 +343,8 @@ class AttributionJobHandler {
                             // records during processing.)
                             if (source.getTriggerSpecs() == null
                                     && isEventTriggeringStatusAttributed) {
-                                insertAttribution(Attribution.Scope.EVENT, source, trigger,
-                                        measurementDao);
+                                insertAttribution(
+                                        Attribution.Scope.EVENT, source, trigger, measurementDao);
                             }
                             if (isAggregateTriggeringStatusAttributed) {
                                 insertAttribution(
@@ -342,12 +353,13 @@ class AttributionJobHandler {
                                         trigger,
                                         measurementDao);
                             }
-                        // Non-scoped attribution rate-limiting: insert attribution if aggregate
-                        // report was created or if an event report was created and the source is
-                        // non-flex.
+                            // Non-scoped attribution rate-limiting: insert attribution if aggregate
+                            // report was created or if an event report was created and the source
+                            // is
+                            // non-flex.
                         } else if (isAggregateTriggeringStatusAttributed
                                 || (isEventTriggeringStatusAttributed
-                                      && source.getTriggerSpecs() == null)) {
+                                        && source.getTriggerSpecs() == null)) {
                             insertAttribution(source, trigger, measurementDao);
                         }
                         attributionStatus.setAttributionResult(
@@ -515,7 +527,7 @@ class AttributionJobHandler {
                             // TODO: b/254855494 unused field, incorrect value; cleanup
                             .setPublisher(source.getRegistrant())
                             .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
-                            .setSourceRegistrationTime(roundDownToDay(source.getEventTime()))
+                            .setSourceRegistrationTime(getSourceRegistrationTime(source, trigger))
                             .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                             .setEnrollmentId(trigger.getEnrollmentId())
                             .setDebugCleartextPayload(
@@ -548,7 +560,9 @@ class AttributionJobHandler {
             }
             AggregateReport aggregateReport = aggregateReportBuilder.build();
 
-            if (mFlags.getMeasurementNullAggregateReportEnabled()) {
+            if (mFlags.getMeasurementNullAggregateReportEnabled()
+                    && Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
+                            trigger.getAggregatableSourceRegistrationTimeConfig())) {
                 generateNullAggregateReports(trigger, aggregateReport, measurementDao);
             }
 
@@ -568,6 +582,41 @@ class AttributionJobHandler {
                             "AttributionJobHandler::maybeGenerateAggregateReport JSONException when"
                                     + " parse aggregate fields.");
             return TriggeringStatus.DROPPED;
+        }
+    }
+
+    @Nullable
+    private Long getSourceRegistrationTime(Source source, Trigger trigger) {
+        Long sourceRegistrationTime = roundDownToDay(source.getEventTime());
+        if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
+                && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
+                        trigger.getAggregatableSourceRegistrationTimeConfig())) {
+            // A null source registration time implies source registration time should be excluded
+            // from the report.
+            sourceRegistrationTime = null;
+        }
+        return sourceRegistrationTime;
+    }
+
+    private void generateNullAggregateReportForNoMatchingSource(
+            IMeasurementDao measurementDao, Trigger trigger) throws DatastoreException {
+        float nullRate = mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime();
+        if (Math.random() < nullRate) {
+            try {
+                AggregateReport nullReport =
+                        // Although the WICG spec states the trigger time should be used here, we
+                        // pass null because the source_registration_time is intended for exclusion
+                        // anyway.
+                        getNullAggregateReport(trigger, null);
+                measurementDao.insertAggregateReport(nullReport);
+            } catch (JSONException e) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                e,
+                                "JSONException when building null aggregate report for failed"
+                                        + " attribution for trigger with ID: "
+                                        + trigger.getId());
+            }
         }
     }
 
@@ -596,7 +645,7 @@ class AttributionJobHandler {
         }
     }
 
-    private AggregateReport getNullAggregateReport(Trigger trigger, long sourceTime)
+    private AggregateReport getNullAggregateReport(Trigger trigger, @Nullable Long sourceTime)
             throws JSONException {
         AggregateReport.Builder nullReportBuilder =
                 new AggregateReport.Builder()
@@ -810,7 +859,12 @@ class AttributionJobHandler {
         }
 
         if (getMatchingEffectiveTriggerData(eventTrigger, source).isEmpty()) {
-            // TODO (b/)314189512: send "trigger-event-no-matching-trigger-data" debug report.
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
             return TriggeringStatus.DROPPED;
         }
 
@@ -941,6 +995,12 @@ class AttributionJobHandler {
                 getMatchingEffectiveTriggerData(eventTrigger, source);
 
         if (maybeEffectiveTriggerData.isEmpty()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
             return false;
         }
 
@@ -1329,14 +1389,8 @@ class AttributionJobHandler {
 
     private boolean isWithinReportLimit(
             Source source, int existingReportCount, @EventSurfaceType int destinationType) {
-        return mEventReportWindowCalcDelegate.getMaxReportCount(
-                        source, hasAppInstallAttributionOccurred(source, destinationType))
+        return mEventReportWindowCalcDelegate.getMaxReportCount(source, destinationType)
                 > existingReportCount;
-    }
-
-    private static boolean hasAppInstallAttributionOccurred(
-            Source source, @EventSurfaceType int destinationType) {
-        return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
     }
 
     private static boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
@@ -1498,9 +1552,7 @@ class AttributionJobHandler {
         return OptionalInt.of(newAggregateContributions);
     }
 
-    private static long roundDownToDay(long timestamp) {
-        return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
-    }
+
 
     private boolean isReportingOriginWithinPrivacyBounds(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
