@@ -368,7 +368,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     // TODO(b/295321663): ideally it should be a method from AdServicesExtendedMockitoRule (so it
     // checks if StatsdAdServicesLogger is mocked), but it would add a dependency to the
-    // aservices-service-core project - need to figure out a way to extend the rule to allow such
+    // adservices-service-core project - need to figure out a way to extend the rule to allow such
     // dependencies)
     private void mockGetStatsdAdServicesLogger() {
         Log.v(mTag, "mockGetStatsdAdServicesLogger(): " + mStatsdLogger);
@@ -478,12 +478,14 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         @Override
         public void registerOnSharedPreferenceChangeListener(
                 OnSharedPreferenceChangeListener listener) {
+            Log.d(TAG, "registerOnSharedPreferenceChangeListener(): " + listener);
             mEditor.mListeners.add(listener);
         }
 
         @Override
         public void unregisterOnSharedPreferenceChangeListener(
                 OnSharedPreferenceChangeListener listener) {
+            Log.d(TAG, "unregisterOnSharedPreferenceChangeListener(): " + listener);
             mEditor.mListeners.remove(listener);
         }
 
@@ -580,6 +582,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
             }
 
             private void notifyListeners() {
+                Log.d(TAG, "notifyListeners(): " + mListeners.size() + " listeners");
                 for (OnSharedPreferenceChangeListener listener : mListeners) {
                     for (String key : mKeysToNotify) {
                         Log.v(TAG, "Notifying key change (" + key + ") to " + listener);
