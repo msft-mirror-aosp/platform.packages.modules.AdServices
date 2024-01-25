@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -33,8 +34,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -77,13 +80,15 @@ public class DebugReportingJobServiceTest {
     private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
 
-    private static final long WAIT_IN_MILLIS = 200L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
     private JobParameters mJobParameters;
     private DebugReportingJobService mSpyService;
     private AdServicesJobServiceLogger mSpyLogger;
+
+    private Flags mMockFlags;
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -107,6 +112,7 @@ public class DebugReportingJobServiceTest {
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
         mSpyLogger =
                 spy(new AdServicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
+        mMockFlags = mock(Flags.class);
     }
 
     @Test
@@ -144,6 +150,10 @@ public class DebugReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
+                    ExtendedMockito.doNothing()
+                            .when(mSpyLogger)
+                            .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
                     JobServiceCallback callback = createJobFinishedCallback(mSpyService);
 
                     // Execute
@@ -172,16 +182,22 @@ public class DebugReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
+                    ExtendedMockito.doNothing()
+                            .when(mSpyLogger)
+                            .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
                     JobServiceCallback callback = createJobFinishedCallback(mSpyService);
 
                     // Execute
-                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    callback.assertJobFinished();
-
-                    callback = createJobFinishedCallback(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-
                     callback.assertJobFinished();
+
+                    assertTrue(result);
+
+                    JobServiceCallback secondCallback = createJobFinishedCallback(mSpyService);
+                    result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    secondCallback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
@@ -377,8 +393,7 @@ public class DebugReportingJobServiceTest {
                             .when(mSpyService)
                             .sendReports();
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    Thread.sleep(WAIT_IN_MILLIS);
-
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1)).onStartJob(any());
                     assertNotNull(mSpyService.getFutureForTesting());
 
                     boolean onStopJobResult =
@@ -419,12 +434,10 @@ public class DebugReportingJobServiceTest {
     }
 
     private void toggleKillSwitch(boolean value) {
-        Flags mockFlags = Mockito.mock(Flags.class);
-        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value).when(mockFlags).getMeasurementJobDebugReportingKillSwitch();
-        ExtendedMockito.doReturn(JobInfo.NETWORK_TYPE_ANY)
-                .when(mockFlags)
-                .getMeasurementDebugReportingJobRequiredNetworkType();
+        adServicesExtendedMockitoRule.mockGetFlags(mMockFlags);
+        when(mMockFlags.getMeasurementJobDebugReportingKillSwitch()).thenReturn(value);
+        when(mMockFlags.getMeasurementDebugReportingJobRequiredNetworkType())
+                .thenReturn(JobInfo.NETWORK_TYPE_ANY);
     }
 
     private CountDownLatch createCountDownLatch() {
