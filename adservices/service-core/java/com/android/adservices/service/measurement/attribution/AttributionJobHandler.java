@@ -214,6 +214,20 @@ class AttributionJobHandler {
                         logDelayedSourceRegistrationStats(matchingDelayedSource.get(), trigger);
                     }
 
+                    boolean triggerHasAggregatableData;
+                    try {
+                        triggerHasAggregatableData =
+                                trigger.getAggregatableAttributionTrigger(mFlags).isPresent();
+                    } catch (JSONException e) {
+                        LoggerFactory.getMeasurementLogger()
+                                .e(
+                                        e,
+                                        "AttributionJobHandler::performAttribution JSONException"
+                                                + " when parse aggregate fields.");
+                        ignoreTrigger(trigger, measurementDao);
+                        return;
+                    }
+
                     if (sourceOpt.isEmpty()) {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                                 trigger, measurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
@@ -221,12 +235,8 @@ class AttributionJobHandler {
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.NO_MATCHING_SOURCE);
-                        if (mFlags.getMeasurementNullAggregateReportEnabled()
-                                && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
-                                        trigger.getAggregatableSourceRegistrationTimeConfig())) {
-                            generateNullAggregateReportForNoMatchingSource(measurementDao, trigger);
-                        }
-
+                        maybeGenerateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, triggerHasAggregatableData);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -266,6 +276,8 @@ class AttributionJobHandler {
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.TOP_LEVEL_FILTER_MATCH_FAILURE);
+                        maybeGenerateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, triggerHasAggregatableData);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -324,6 +336,11 @@ class AttributionJobHandler {
                                     measurementDao,
                                     attributionStatus);
 
+                    if (aggregateTriggeringStatus == TriggeringStatus.DROPPED) {
+                        maybeGenerateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, triggerHasAggregatableData);
+                    }
+
                     boolean isEventTriggeringStatusAttributed =
                             eventTriggeringStatus == TriggeringStatus.ATTRIBUTED;
                     boolean isAggregateTriggeringStatusAttributed =
@@ -375,6 +392,17 @@ class AttributionJobHandler {
                         ignoreTrigger(trigger, measurementDao);
                     }
                 });
+    }
+
+    private void maybeGenerateNullAggregateReportForNonAttributedTrigger(
+            IMeasurementDao measurementDao, Trigger trigger, boolean triggerHasAggregatableData)
+            throws DatastoreException {
+        if (mFlags.getMeasurementNullAggregateReportEnabled()
+                && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
+                        trigger.getAggregatableSourceRegistrationTimeConfig())
+                && triggerHasAggregatableData) {
+            generateNullAggregateReportForNonAttributedTrigger(measurementDao, trigger);
+        }
     }
 
     private boolean shouldAttributionBeBlockedByRateLimits(
@@ -598,7 +626,7 @@ class AttributionJobHandler {
         return sourceRegistrationTime;
     }
 
-    private void generateNullAggregateReportForNoMatchingSource(
+    private void generateNullAggregateReportForNonAttributedTrigger(
             IMeasurementDao measurementDao, Trigger trigger) throws DatastoreException {
         float nullRate = mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime();
         if (Math.random() < nullRate) {
@@ -613,8 +641,8 @@ class AttributionJobHandler {
                 LoggerFactory.getMeasurementLogger()
                         .e(
                                 e,
-                                "JSONException when building null aggregate report for failed"
-                                        + " attribution for trigger with ID: "
+                                "JSONException when building null aggregate report for"
+                                        + " non-attributed trigger with ID: "
                                         + trigger.getId());
             }
         }
