@@ -376,6 +376,30 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
     }
 
+    /** Returns whether measurement click deduplication is enabled. */
+    default boolean getMeasurementIsClickDeduplicationEnabled() {
+        return MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED;
+    }
+
+    /** Default whether measurement click deduplication is enabled. */
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = true;
+
+    /** Returns whether measurement click deduplication is enforced. */
+    default boolean getMeasurementIsClickDeduplicationEnforced() {
+        return MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED;
+    }
+
+    /** Default whether measurement click deduplication is enforced. */
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = true;
+
+    /** Returns the number of sources that can be registered with a single click. */
+    default long getMeasurementMaxSourcesPerClick() {
+        return MEASUREMENT_MAX_SOURCES_PER_CLICK;
+    }
+
+    /** Default max number of sources that can be registered with single click. */
+    long MEASUREMENT_MAX_SOURCES_PER_CLICK = 1;
+
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
