@@ -751,6 +751,144 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
+    public void testListDebuggableCustomAudiences_happyPath() {
+        DBCustomAudience.Builder ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1);
+        DBCustomAudience ca1 = ca.setName("ca1").build();
+        DBCustomAudience ca2 = ca.setName("ca2").build();
+        DBCustomAudienceBackgroundFetchData.Builder builder =
+                DBCustomAudienceBackgroundFetchData.builder()
+                        .setBuyer(ca1.getBuyer())
+                        .setOwner(ca1.getOwner())
+                        .setIsDebuggable(true)
+                        .setDailyUpdateUri(ca1.getBiddingLogicUri())
+                        .setEligibleUpdateTime(Instant.now().truncatedTo(ChronoUnit.SECONDS));
+        DBCustomAudienceBackgroundFetchData backgroundFetchData1 =
+                builder.setName(ca1.getName()).build();
+        DBCustomAudienceBackgroundFetchData backgroundFetchData2 =
+                builder.setName(ca2.getName()).build();
+        mCustomAudienceDao.persistCustomAudience(ca1);
+        mCustomAudienceDao.persistCustomAudience(ca2);
+        mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(
+                backgroundFetchData1, CUSTOM_AUDIENCE_UPDATABLE_DATA);
+        mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(
+                backgroundFetchData2, CUSTOM_AUDIENCE_UPDATABLE_DATA);
+
+        List<DBCustomAudienceBackgroundFetchData> caList =
+                mCustomAudienceDao.listDebuggableCustomAudienceBackgroundFetchData(
+                        ca1.getOwner(), ca1.getBuyer());
+
+        assertThat(caList).containsExactly(backgroundFetchData1, backgroundFetchData2);
+    }
+
+    @Test
+    public void testListDebuggableCustomAudiences_withNoResult_returnsEmpty() {
+        List<DBCustomAudience> caList =
+                mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(
+                        "", AdTechIdentifier.fromString(""));
+
+        assertThat(caList).isEmpty();
+    }
+
+    @Test
+    public void testListBackgroundDebuggableCustomAudiences_happyPath() {
+        DBCustomAudience ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setName("ca1")
+                        .setDebuggable(true)
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(ca);
+        DBCustomAudience ca2 =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setName("ca2")
+                        .setDebuggable(true)
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(ca2);
+
+        List<DBCustomAudience> caList =
+                mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(
+                        ca.getOwner(), ca.getBuyer());
+
+        assertThat(caList).containsExactly(ca, ca2);
+    }
+
+    @Test
+    public void testListBackgroundDebuggableCustomAudiences_withNoResult_returnsEmpty() {
+        List<DBCustomAudienceBackgroundFetchData> caList =
+                mCustomAudienceDao.listDebuggableCustomAudienceBackgroundFetchData(
+                        "", AdTechIdentifier.fromString(""));
+
+        assertThat(caList).isEmpty();
+    }
+
+    @Test
+    public void testViewDebuggableCustomAudiences_happyPath() {
+        DBCustomAudience expected =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setDebuggable(true)
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(expected);
+
+        DBCustomAudience actual =
+                mCustomAudienceDao.getDebuggableCustomAudienceByPrimaryKey(
+                        expected.getOwner(), expected.getBuyer(), expected.getName());
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void testViewBackgroundDebuggableCustomAudiences_happyPath() {
+        DBCustomAudience ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setDebuggable(true)
+                        .build();
+        DBCustomAudienceBackgroundFetchData expected =
+                DBCustomAudienceBackgroundFetchData.builder()
+                        .setBuyer(ca.getBuyer())
+                        .setName(ca.getName())
+                        .setOwner(ca.getOwner())
+                        .setIsDebuggable(true)
+                        .setDailyUpdateUri(ca.getBiddingLogicUri())
+                        .setEligibleUpdateTime(Instant.now().truncatedTo(ChronoUnit.SECONDS))
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(ca);
+        mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(
+                expected, CUSTOM_AUDIENCE_UPDATABLE_DATA);
+
+        DBCustomAudienceBackgroundFetchData actual =
+                mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        ca.getOwner(), ca.getBuyer(), ca.getName());
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void testViewDebuggableCustomAudiences_withNoResult_returnsNull() {
+        DBCustomAudience ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        mCustomAudienceDao.persistCustomAudience(ca);
+
+        DBCustomAudience actual =
+                mCustomAudienceDao.getDebuggableCustomAudienceByPrimaryKey(
+                        ca.getOwner(), ca.getBuyer(), ca.getName());
+
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    public void testViewBackgroundDebuggableCustomAudiences_withNoResult_throwsException() {
+        DBCustomAudience ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        mCustomAudienceDao.persistCustomAudience(ca);
+
+        DBCustomAudienceBackgroundFetchData actual =
+                mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        ca.getOwner(), ca.getBuyer(), ca.getName());
+
+        assertThat(actual).isNull();
+    }
+
+    @Test
     public void testDoesNotDeleteCustomAudienceOverrideWithIncorrectPackageName() {
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
 

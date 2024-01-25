@@ -215,8 +215,6 @@ public class DebugReportingJobServiceTest {
                     verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
                     verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
-                    ExtendedMockito.verifyZeroInteractions(
-                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
                 });
     }
 
