@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 
@@ -1551,9 +1552,7 @@ class AttributionJobHandler {
         return OptionalInt.of(newAggregateContributions);
     }
 
-    private static long roundDownToDay(long timestamp) {
-        return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
-    }
+
 
     private boolean isReportingOriginWithinPrivacyBounds(
             Source source, Trigger trigger, IMeasurementDao measurementDao)

@@ -151,7 +151,9 @@
             {"key": "0xa85", "value": 1664},
             {"key": "0x0", "value": 0},
             {"key": "0x0", "value": 0},
-            {"key": "0x0", "value": 0}]}
+            {"key": "0x0", "value": 0}],
+            "source_registration_time": "799977600"
+        }
       }]
   }
 }
