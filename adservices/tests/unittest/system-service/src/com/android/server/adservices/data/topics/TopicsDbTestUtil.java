@@ -69,9 +69,7 @@ public final class TopicsDbTestUtil {
             SQLiteDatabase db, String tableName, int columnCount) {
         final Set<String> tableColumns = getTableColumns(db, tableName);
         int actualCol = tableColumns.size();
-        LogUtil.d(
-                "DbTestUtil_log_test,",
-                " table name: " + tableName + " column count: " + actualCol);
+        LogUtil.d("DbTestUtil_log_test: table name: %s, column count: %d", tableName, actualCol);
         return tableColumns.size() == columnCount;
     }
 
