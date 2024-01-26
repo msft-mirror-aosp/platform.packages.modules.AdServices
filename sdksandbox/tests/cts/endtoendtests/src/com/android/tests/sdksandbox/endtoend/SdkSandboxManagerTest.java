@@ -34,6 +34,7 @@ import android.app.ActivityManager;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
@@ -88,10 +89,10 @@ public class SdkSandboxManagerTest {
     private ActivityScenario<TestActivity> mScenario;
 
     private SdkSandboxManager mSdkSandboxManager;
-
     @Before
     public void setup() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        assumeTrue("Device supports SdkSandbox", DeviceSupportUtils.isSdkSandboxSupported(context));
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         unloadAllSdks();
         mScenario = mRule.getScenario();
