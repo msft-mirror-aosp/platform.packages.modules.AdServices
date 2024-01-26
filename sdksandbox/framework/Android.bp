@@ -19,7 +19,7 @@ package {
 filegroup {
     name: "framework-sdksandbox-aidl-sources",
     srcs: [
-      "java/**/*.aidl",
+        "java/**/*.aidl",
     ],
     visibility: [
         "//frameworks/base",
@@ -32,8 +32,8 @@ filegroup {
     name: "framework-sdksandbox-sources",
     defaults: ["framework-sources-module-defaults"],
     srcs: [
-      "java/**/*.java",
-      ":framework-sdksandbox-aidl-sources",
+        "java/**/*.java",
+        ":framework-sdksandbox-aidl-sources",
     ],
     visibility: ["//packages/modules/AdServices:__subpackages__"],
     path: "java",
@@ -41,7 +41,7 @@ filegroup {
 
 filegroup {
     name: "framework-sdksandbox-jarjar",
-    srcs: ["jarjar_rules.txt"]
+    srcs: ["jarjar_rules.txt"],
 }
 
 java_defaults {
@@ -76,13 +76,4 @@ java_sdk_library {
             "com.android.server.sdksandbox.**",
         ],
     },
-}
-
-java_api_contribution {
-    name: "framework-sdksandbox-public-stubs",
-    api_surface: "public",
-    api_file: "api/current.txt",
-    visibility: [
-        "//build/orchestrator/apis",
-    ],
 }
