@@ -26,6 +26,7 @@ java_library {
     ],
     static_libs: [
         "service-sdksandbox.impl",
+        "compatibility-device-util-axt",
         "truth-prebuilt",
         "androidx.test.ext.junit",
         "SdkSandbox-java-lib",
@@ -42,5 +43,6 @@ java_library_host {
     srcs: [
         "src/**/hosttestutils/*.java",
     ],
+    static_libs: ["compatibility-host-util"],
     libs: ["tradefed"],
 }
