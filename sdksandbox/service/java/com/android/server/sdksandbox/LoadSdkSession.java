@@ -19,7 +19,6 @@ package com.android.server.sdksandbox;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 
 import android.annotation.IntDef;
 import android.annotation.Nullable;
@@ -223,9 +222,6 @@ class LoadSdkSession {
             handleLoadFailure(
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE, "Sandbox is not available"),
-                    /*startTimeOfErrorStage=*/ -1,
-                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ false,
                     sandboxLatencyInfo);
         }
 
@@ -245,9 +241,6 @@ class LoadSdkSession {
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             "Failed to load SDK as sandbox is dead"),
-                    /*startTimeOfErrorStage=*/ -1,
-                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ false,
                     sandboxLatencyInfo);
         } catch (RemoteException e) {
             String errorMsg = "Failed to load sdk";
@@ -255,9 +248,6 @@ class LoadSdkSession {
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             handleLoadFailure(
                     new LoadSdkException(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR, errorMsg),
-                    /*startTimeOfErrorStage=*/ -1,
-                    /*stage*/ SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ false,
                     sandboxLatencyInfo);
         }
     }
@@ -289,24 +279,10 @@ class LoadSdkSession {
         }
     }
 
-    // TODO(b/296844050): remove startTimeOfErrorStage, stage and successAtStage parameters.
     void handleLoadFailure(
             LoadSdkException exception,
-            long startTimeOfErrorStage,
-            int stage,
-            boolean successAtStage,
             SandboxLatencyInfo sandboxLatencyInfo) {
-        final long timeSystemServerCalledApp = mInjector.elapsedRealtime();
-        sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerCalledApp);
-        if (stage != SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED) {
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                    (int) (timeSystemServerCalledApp - startTimeOfErrorStage),
-                    successAtStage,
-                    stage,
-                    mCallingInfo.getUid());
-        }
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
 
         synchronized (mLock) {
             if (getStatus() == LOAD_PENDING) {
@@ -464,9 +440,6 @@ class LoadSdkSession {
                         new LoadSdkException(
                                 SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                                 "Could not load SDK, sandbox has died"),
-                        /*startTimeOfErrorStage=*/ -1,
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED,
-                        /*successAtStage=*/ false,
                         new SandboxLatencyInfo());
             }
 
@@ -556,9 +529,6 @@ class LoadSdkSession {
             }
             handleLoadFailure(
                     updateLoadSdkErrorCode(exception),
-                    /*startTimeOfErrorStage=*/ -1,
-                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ true,
                     sandboxLatencyInfo);
         }
 
