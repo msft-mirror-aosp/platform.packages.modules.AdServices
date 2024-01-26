@@ -52,6 +52,21 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetId() {
+        SyncCallback<String, Exception> callback1 = new SyncCallback<>();
+        String id1 = callback1.getId();
+        expect.withMessage("id of 1st callback (%s)", callback1).that(id1).isNotNull();
+        expect.withMessage("id of 1st callback (%s)", callback1).that(id1).isNotEmpty();
+
+        SyncCallback<String, Exception> callback2 = new SyncCallback<>();
+        String id2 = callback2.getId();
+        expect.withMessage("id of 2nd callback (%s)", callback2).that(id2).isNotNull();
+        expect.withMessage("id of 2nd callback (%s)", callback2).that(id2).isNotEmpty();
+
+        expect.withMessage("id of 2nd callback (%s)", callback2).that(id2).isNotEqualTo(id1);
+    }
+
+    @Test
     public void testGetMaxTimeoutMs() {
         SyncCallback<String, Exception> callback = new SyncCallback<>(42);
 
@@ -264,7 +279,7 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
                 .hasSize(1);
         expect.withMessage("Log.v() calls to tag %s", tag)
                 .that(logInterceptor.getPlainMessages(tag, Level.VERBOSE))
-                .containsExactly("[" + callback.getName() + "] Answer=42");
+                .containsExactly("[" + callback.getId() + "] Answer=42");
     }
 
     @Test
@@ -281,7 +296,7 @@ public final class SyncCallbackTest extends AdServicesExtendedMockitoTestCase {
                 .hasSize(1);
         expect.withMessage("Log.e() calls to tag %s", tag)
                 .that(logInterceptor.getPlainMessages(tag, Level.ERROR))
-                .containsExactly("[" + callback.getName() + "] Answer=42");
+                .containsExactly("[" + callback.getId() + "] Answer=42");
     }
 
     private void assertResultReceived(
