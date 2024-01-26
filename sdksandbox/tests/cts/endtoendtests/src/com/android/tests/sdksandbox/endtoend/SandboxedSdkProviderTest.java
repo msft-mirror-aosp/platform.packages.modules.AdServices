@@ -19,9 +19,11 @@ package com.android.tests.sdksandbox.endtoend;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
+import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
@@ -41,6 +43,8 @@ public class SandboxedSdkProviderTest {
 
     @Before
     public void setup() {
+        final Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        assumeTrue("Device supports SdkSandbox", DeviceSupportUtils.isSdkSandboxSupported(context));
         mSdk = new TestSandboxedSdkProvider();
     }
 
