@@ -103,7 +103,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         AGGREGATE,
         EVENT_DEBUG,
         AGGREGATE_DEBUG,
-        DEBUG_REPORT_API
+        VERBOSE_DEBUG
     }
 
     private enum OutputType {
@@ -207,7 +207,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
         String DEBUG_EVENT_REPORT_OBJECTS_KEY = "debug_event_level_results";
         String DEBUG_AGGREGATE_REPORT_OBJECTS_KEY = "debug_aggregatable_results";
-        String DEBUG_REPORT_API_OBJECTS_KEY = "verbose_debug_reports";
+        String VERBOSE_DEBUG_OBJECTS_KEY = "verbose_debug_reports";
         String INSTALLS_KEY = "installs";
         String UNINSTALLS_KEY = "uninstalls";
         String INSTALLS_URI_KEY = "uri";
@@ -403,7 +403,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             reportUrl = DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH;
         } else if (reportType == ReportType.AGGREGATE_DEBUG) {
             reportUrl = DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
-        } else if (reportType == ReportType.DEBUG_REPORT_API) {
+        } else if (reportType == ReportType.VERBOSE_DEBUG) {
             reportUrl = DEBUG_REPORT_URI_PATH;
         }
         return origin + "/" + reportUrl;
@@ -680,8 +680,8 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return matchReportTimeAndReportTo(reportType, expected, actual);
     }
 
-    private boolean areEqualDebugReportJsons(JSONObject expected, JSONObject actual)
-            throws JSONException {
+    private boolean areEqualDebugReportJsons(
+            ReportType reportType, JSONObject expected, JSONObject actual) throws JSONException {
         JSONArray payloads1 = expected.getJSONArray(TestFormatJsonMapping.PAYLOAD_KEY);
         JSONArray payloads2 = actual.getJSONArray(TestFormatJsonMapping.PAYLOAD_KEY);
         if (payloads1.length() != payloads2.length()) {
@@ -723,11 +723,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 return false;
             }
         }
-        return expected.optString(TestFormatJsonMapping.REPORT_TO_KEY)
-                .equals(
-                        getReportUrl(
-                                ReportType.DEBUG_REPORT_API,
-                                actual.optString(TestFormatJsonMapping.REPORT_TO_KEY)));
+        return matchReportTimeAndReportTo(reportType, expected, actual);
     }
 
     private boolean areEqualUnparsableRegistrationJsons(JSONObject expected, JSONObject actual) {
@@ -839,7 +835,9 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         }
         for (int i = 0; i < expected.mDebugReportObjects.size(); i++) {
             if (!areEqualDebugReportJsons(
-                    expected.mDebugReportObjects.get(i), actual.mDebugReportObjects.get(i))) {
+                    ReportType.VERBOSE_DEBUG,
+                    expected.mDebugReportObjects.get(i),
+                    actual.mDebugReportObjects.get(i))) {
                 log("Debug report object mismatch");
                 return false;
             }
@@ -1442,9 +1440,9 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             }
         }
 
-        if (!output.isNull(TestFormatJsonMapping.DEBUG_REPORT_API_OBJECTS_KEY)) {
+        if (!output.isNull(TestFormatJsonMapping.VERBOSE_DEBUG_OBJECTS_KEY)) {
             JSONArray debugReportObjectsArray =
-                    output.getJSONArray(TestFormatJsonMapping.DEBUG_REPORT_API_OBJECTS_KEY);
+                    output.getJSONArray(TestFormatJsonMapping.VERBOSE_DEBUG_OBJECTS_KEY);
             for (int i = 0; i < debugReportObjectsArray.length(); i++) {
                 debugReportObjects.add(debugReportObjectsArray.getJSONObject(i));
             }

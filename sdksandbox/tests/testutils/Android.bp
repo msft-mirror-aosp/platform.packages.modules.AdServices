@@ -44,5 +44,8 @@ java_library_host {
     srcs: [
         "src/**/hosttestutils/*.java",
     ],
+    static_libs: [
+    "compatibility-host-util",
+    ],
     libs: ["tradefed"],
 }

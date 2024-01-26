@@ -169,6 +169,12 @@ public final class FlagsConstants {
             "measurement_is_click_verification_enabled";
     public static final String KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT =
             "measurement_is_click_verified_by_input_event";
+    public static final String KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED =
+            "measurement_is_click_deduplication_enabled";
+    public static final String KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED =
+            "measurement_is_click_deduplication_enforced";
+    public static final String KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK =
+            "measurement_max_sources_per_click";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE =
             "measurement_enforce_foreground_status_register_source";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER =
@@ -930,6 +936,8 @@ public final class FlagsConstants {
             "enable_update_trigger_registration_header_limit";
 
     // UI keys
+    public static final String KEY_PAS_UX_ENABLED = "pas_ux_enabled";
+
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =
             "ui_feature_type_logging_enabled";
 

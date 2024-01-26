@@ -101,6 +101,7 @@ java_library_host {
         ":adservices-service-core-flags-constants-sources",
         ":adservices-test-utility-sideless-sources",
     ],
+    static_libs: ["compatibility-host-util"],
     libs: [
         "tradefed",
     ],

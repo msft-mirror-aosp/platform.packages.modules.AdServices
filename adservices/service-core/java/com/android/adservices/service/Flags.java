@@ -376,6 +376,30 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
     }
 
+    /** Returns whether measurement click deduplication is enabled. */
+    default boolean getMeasurementIsClickDeduplicationEnabled() {
+        return MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED;
+    }
+
+    /** Default whether measurement click deduplication is enabled. */
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = true;
+
+    /** Returns whether measurement click deduplication is enforced. */
+    default boolean getMeasurementIsClickDeduplicationEnforced() {
+        return MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED;
+    }
+
+    /** Default whether measurement click deduplication is enforced. */
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = true;
+
+    /** Returns the number of sources that can be registered with a single click. */
+    default long getMeasurementMaxSourcesPerClick() {
+        return MEASUREMENT_MAX_SOURCES_PER_CLICK;
+    }
+
+    /** Default max number of sources that can be registered with single click. */
+    long MEASUREMENT_MAX_SOURCES_PER_CLICK = 1;
+
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
@@ -4489,5 +4513,13 @@ public interface Flags extends CommonFlags {
     /** Returns if the get adservices common states service enabled. */
     default boolean isGetAdServicesCommonStatesEnabled() {
         return DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
+    }
+
+    /** Default value to determine whether ux related to the PAS Ux are enabled. */
+    boolean DEFAULT_PAS_UX_ENABLED = false;
+
+    /** Returns whether features related to the PAS Ux are enabled */
+    default boolean getPasUxEnabled() {
+        return DEFAULT_PAS_UX_ENABLED;
     }
 }
