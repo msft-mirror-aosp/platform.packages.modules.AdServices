@@ -67,6 +67,7 @@ public class SdkSandboxRestrictionsTest {
     @Before
     public void setUp() {
         assumeTrue(
+                "Device supports SdkSandbox",
                 DeviceSupportUtils.isSdkSandboxSupported(
                         InstrumentationRegistry.getInstrumentation().getContext()));
     }
