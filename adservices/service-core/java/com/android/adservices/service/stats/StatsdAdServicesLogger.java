@@ -128,7 +128,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     /** log method for UI stats. */
     public void logUIStats(UIStats uiStats) {
-        AdServicesStatsLog.write(uiStats.getCode(), uiStats.getRegion(), uiStats.getAction());
+        AdServicesStatsLog.write(
+                uiStats.getCode(),
+                uiStats.getRegion(),
+                uiStats.getAction(),
+                uiStats.getDefaultConsent(),
+                uiStats.getDefaultAdIdState(),
+                /* @deprecated feature_type= */ 0,
+                uiStats.getUx(),
+                uiStats.getEnrollmentChannel());
     }
 
     @Override
