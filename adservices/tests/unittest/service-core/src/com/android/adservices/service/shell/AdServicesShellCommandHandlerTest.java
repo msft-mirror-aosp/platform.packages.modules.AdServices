@@ -33,6 +33,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertThrows;
 
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -286,7 +287,9 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         HELP_ECHO,
                         HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
                         HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                        HELP_IS_ALLOWED_TOPICS_ACCESS);
+                        HELP_IS_ALLOWED_TOPICS_ACCESS,
+                        CustomAudienceListCommand.HELP,
+                        CustomAudienceViewCommand.HELP);
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {

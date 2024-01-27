@@ -17,6 +17,7 @@
 package android.adservices.customaudience;
 
 import static android.adservices.common.AdDataFixture.getValidFilterAdDataWithAdRenderIdByBuyer;
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer;
 
 import android.adservices.common.AdData;
@@ -25,6 +26,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
+
 
 import java.time.Duration;
 import java.time.Instant;
@@ -105,6 +107,13 @@ public final class CustomAudienceFixture {
                 .setTrustedBiddingData(getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(AdDataFixture.getValidAdsByBuyer(buyer));
+    }
+
+    /** Build valid CA with server auction flags */
+    public static CustomAudience.Builder getValidBuilderByBuyerWithServerAuctionFLags(
+            AdTechIdentifier buyer) {
+        return getValidBuilderForBuyer(buyer)
+                .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS);
     }
 
     public static CustomAudience.Builder getValidBuilderWithSubdomainsForBuyer(

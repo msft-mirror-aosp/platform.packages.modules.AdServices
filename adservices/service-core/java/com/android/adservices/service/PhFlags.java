@@ -2552,6 +2552,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerOmitAdsEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED);
+    }
+
+    @Override
     public String getFledgeAuctionServerJoinKeyFetchUri() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4811,6 +4819,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeAuctionServerEnabledForReportImpression());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerOmitAdsEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT
                         + " = "
                         + getFledgeAuctionServerEnabledForReportEvent());
@@ -6374,14 +6387,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS,
                 /* defaultValue */ DEFAULT_AD_ID_FETCHER_TIMEOUT_MS);
-    }
-
-    @Override
-    public boolean getAppConfigReturnsEnabledByDefault() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
-                /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
     }
 
     @Override

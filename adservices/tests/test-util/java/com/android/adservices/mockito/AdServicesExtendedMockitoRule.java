@@ -26,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.common.LogEntry.Level;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -145,6 +146,37 @@ public class AdServicesExtendedMockitoRule
         logV("mockGetCallingUidOrThrow(Process.myUid=%d)", uid);
         mockBinderGetCallingUidOrThrow(uid);
     }
+
+    /**
+     * Statically spy on {@code Log.v} for that {@code tag}.
+     *
+     * @return object that can be used to assert the {@code Log.v} calls.
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Log}.
+     */
+    public final LogInterceptor interceptLogV(String tag) {
+        logV("interceptLogV(%s)", tag);
+        assertSpiedOrMocked(Log.class);
+
+        return LogInterceptor.forTagAndLevels(tag, Level.VERBOSE);
+    }
+
+    /**
+     * Statically spy on {@code Log.e} for that {@code tag}.
+     *
+     * @return object that can be used to assert the {@code Log.e} calls.
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Log}.
+     */
+    public final LogInterceptor interceptLogE(String tag) {
+        logV("interceptLogE(%s)", tag);
+        assertSpiedOrMocked(Log.class);
+
+        return LogInterceptor.forTagAndLevels(tag, Level.ERROR);
+    }
+
+    // NOTE: current tests are only intercepting v and e, but we could add more methods on demand
+    // (even one that takes Level...levels)
 
     // mock only, don't log
     private void mockBinderGetCallingUidOrThrow(int uid) {

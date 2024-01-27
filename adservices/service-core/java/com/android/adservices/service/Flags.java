@@ -1678,6 +1678,13 @@ public interface Flags extends CommonFlags {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED = false;
+
+    /** Returns whether the omit-ads flag is enabled for the server auction. */
+    default boolean getFledgeAuctionServerOmitAdsEnabled() {
+        return FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
@@ -4404,13 +4411,19 @@ public interface Flags extends CommonFlags {
         return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
     }
 
-    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;
+    /**
+     * @deprecated TODO(b/314962688): remove (will always be true)
+     */
+    @Deprecated boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
 
     /**
      * Returns whether the API access checked by the AdServices XML config returns {@code true} by
      * default (i.e., when the app doesn't define the config XML file or if the given API access is
      * missing from that file).
+     *
+     * @deprecated TODO(b/314962688): remove
      */
+    @Deprecated
     default boolean getAppConfigReturnsEnabledByDefault() {
         return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }

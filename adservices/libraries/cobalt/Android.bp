@@ -37,6 +37,7 @@ android_library {
     static_libs: [
         "adservices-cobalt-proto-lite",
         "androidx.annotation_annotation",
+        "androidx.sqlite_sqlite",
         "guava",
         "libprotobuf-java-lite",
     ],
