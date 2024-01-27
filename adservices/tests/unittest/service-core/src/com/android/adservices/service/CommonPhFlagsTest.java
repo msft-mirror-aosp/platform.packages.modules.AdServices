@@ -23,7 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.provider.DeviceConfig;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.topics.fixture.SysPropForceDefaultValueFixture;
+import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Rule;

@@ -142,6 +142,23 @@ public class DBCustomAudienceTest {
     }
 
     @Test
+    public void testFromServiceObject_successWithServerAuctionFlags() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(
+                                CommonFixture.VALID_BUYER_1)
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false));
+    }
+
+    @Test
     public void testFromServiceObject_nullCustomAudience() {
         assertThrows(
                 NullPointerException.class,

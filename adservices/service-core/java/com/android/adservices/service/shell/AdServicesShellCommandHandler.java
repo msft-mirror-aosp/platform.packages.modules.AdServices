@@ -89,7 +89,11 @@ public final class AdServicesShellCommandHandler {
     // Add more per API shell factory implementations as we create them.
     @VisibleForTesting
     static final Supplier<ShellCommandFactory[]> DEFAULT_FACTORIES_SUPPLIER =
-            () -> new ShellCommandFactory[] {CommonShellCommandFactory.getInstance()};
+            () ->
+                    new ShellCommandFactory[] {
+                        CommonShellCommandFactory.getInstance(),
+                        CustomAudienceShellCommandFactory.getInstance(),
+                    };
 
     private final PrintWriter mOut;
     private final PrintWriter mErr;
@@ -206,6 +210,8 @@ public final class AdServicesShellCommandHandler {
         pw.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
         pw.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
         pw.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
+        pw.println(CustomAudienceListCommand.HELP);
+        pw.println(CustomAudienceViewCommand.HELP);
     }
 
     private int onCommand(String cmd) {

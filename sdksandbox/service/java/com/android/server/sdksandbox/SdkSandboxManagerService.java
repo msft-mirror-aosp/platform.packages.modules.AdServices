@@ -79,7 +79,6 @@ import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
@@ -670,19 +669,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             Bundle params,
             ILoadSdkCallback callback,
             SandboxLatencyInfo sandboxLatencyInfo) {
-        LoadSdkSession loadSdkSession =
-                new LoadSdkSession(
-                        mContext, this, mInjector, sdkName, callingInfo, params, callback);
-        // SDK provider was invalid. This load request should fail.
-        String errorMsg = loadSdkSession.getSdkProviderErrorIfExists();
-        if (!TextUtils.isEmpty(errorMsg)) {
-            Log.w(TAG, errorMsg);
+        LoadSdkSession loadSdkSession;
+
+        try {
+            loadSdkSession =
+                    new LoadSdkSession(
+                            mContext, this, mInjector, sdkName, callingInfo, params, callback);
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w(TAG, e.getMessage(), e);
             sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
-            loadSdkSession.handleLoadFailure(
-                    new LoadSdkException(SdkSandboxManager.LOAD_SDK_NOT_FOUND, errorMsg),
-                    sandboxLatencyInfo);
+
+            LoadSdkException loadSdkException =
+                    new LoadSdkException(
+                            SdkSandboxManager.LOAD_SDK_NOT_FOUND, e.getMessage() + " not found");
+            sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
+            try {
+                callback.onLoadSdkFailure(loadSdkException, sandboxLatencyInfo);
+            } catch (RemoteException remoteException) {
+                Log.w(TAG, "Failed to send onLoadSdkFailure", remoteException);
+            }
             return;
         }
 
