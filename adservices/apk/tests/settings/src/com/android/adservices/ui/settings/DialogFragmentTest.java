@@ -29,7 +29,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -75,7 +74,6 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
 
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static UiDevice sDevice;
 
     @Mock

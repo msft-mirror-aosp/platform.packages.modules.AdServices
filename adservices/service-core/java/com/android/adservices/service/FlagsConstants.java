@@ -169,6 +169,12 @@ public final class FlagsConstants {
             "measurement_is_click_verification_enabled";
     public static final String KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT =
             "measurement_is_click_verified_by_input_event";
+    public static final String KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED =
+            "measurement_is_click_deduplication_enabled";
+    public static final String KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED =
+            "measurement_is_click_deduplication_enforced";
+    public static final String KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK =
+            "measurement_max_sources_per_click";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE =
             "measurement_enforce_foreground_status_register_source";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER =
@@ -672,6 +678,8 @@ public final class FlagsConstants {
             "fledge_auction_server_ad_render_id_max_length";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED =
             "fledge_auction_server_ad_render_id_enabled";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED =
+            "fledge_auction_server_omit_ads_enabled";
 
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
@@ -930,6 +938,8 @@ public final class FlagsConstants {
             "enable_update_trigger_registration_header_limit";
 
     // UI keys
+    public static final String KEY_PAS_UX_ENABLED = "pas_ux_enabled";
+
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =
             "ui_feature_type_logging_enabled";
 
@@ -1190,4 +1200,7 @@ public final class FlagsConstants {
 
     public static final String KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE =
             "key_background_job_sampling_logging_rate";
+
+    public static final String KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED =
+            "is_get_ad_services_common_states_enabled";
 }

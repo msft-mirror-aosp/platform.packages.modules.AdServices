@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.topics.fixture;
+package com.android.adservices.service.fixture;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -26,10 +26,7 @@ import com.android.compatibility.common.util.ShellUtils;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- * Unit test for {@link
- * com.android.adservices.service.topics.fixture.SysPropForceDefaultValueFixture}
- */
+/** Unit test for {@link SysPropForceDefaultValueFixture} */
 public class SysPropForceDefaultValueFixtureTest {
     @Rule
     public AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =

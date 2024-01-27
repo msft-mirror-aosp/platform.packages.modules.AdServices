@@ -958,7 +958,6 @@ public class ConsentManagerV2 {
             editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, true);
             appConsents =
                     AppConsents.builder()
-                            .setDefaultConsent(consentKey)
                             .setMsmtConsent(consentKey)
                             .setFledgeConsent(consentKey)
                             .setTopicsConsent(consentKey)
@@ -1226,7 +1225,6 @@ public class ConsentManagerV2 {
                         consentMap.get(AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey()))
                 .setTopicsConsent(consentMap.get(AdServicesApiType.TOPICS.toPpApiDatastoreKey()))
                 .setFledgeConsent(consentMap.get(AdServicesApiType.FLEDGE.toPpApiDatastoreKey()))
-                .setDefaultConsent(true)
                 .build();
     }
 
@@ -1362,7 +1360,6 @@ public class ConsentManagerV2 {
                         .setMsmtConsent(appConsents == null || appConsents.getMsmtConsent())
                         .setTopicsConsent(appConsents == null || appConsents.getTopicsConsent())
                         .setFledgeConsent(appConsents == null || appConsents.getFledgeConsent())
-                        .setDefaultConsent(appConsents == null || appConsents.getDefaultConsent())
                         .setRegion(getConsentRegion(context))
                         .build();
         return consentMigrationStats;
