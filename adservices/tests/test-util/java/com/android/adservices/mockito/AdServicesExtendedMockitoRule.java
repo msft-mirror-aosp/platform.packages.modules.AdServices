@@ -148,6 +148,13 @@ public class AdServicesExtendedMockitoRule
         mockBinderGetCallingUidOrThrow(uid);
     }
 
+    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
+    public final void mockIsAtLeastR(boolean isIt) {
+        logV("mockIsAtLeastR(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastR);
+    }
+
     /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
     public final void mockIsAtLeastS(boolean isIt) {
         logV("mockIsAtLeastS(%b)", isIt);
