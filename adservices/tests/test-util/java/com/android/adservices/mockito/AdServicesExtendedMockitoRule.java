@@ -149,14 +149,14 @@ public class AdServicesExtendedMockitoRule
     }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
-    public void mockIsAtLeastS(boolean isIt) {
+    public final void mockIsAtLeastS(boolean isIt) {
         logV("mockIsAtLeastS(%b)", isIt);
         assertSpiedOrMocked(SdkLevel.class);
         doReturn(isIt).when(SdkLevel::isAtLeastS);
     }
 
     /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
-    public void mockIsAtLeastT(boolean isIt) {
+    public final void mockIsAtLeastT(boolean isIt) {
         logV("mockIsAtLeastT(%b)", isIt);
         assertSpiedOrMocked(SdkLevel.class);
         doReturn(isIt).when(SdkLevel::isAtLeastT);
@@ -232,7 +232,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     @Override
-    protected boolean getClearInlineMethodsAtTheEnd(Description description) {
+    protected final boolean getClearInlineMethodsAtTheEnd(Description description) {
         ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
         if (annotation != null) {
             boolean shouldClear = shouldClearInlineMocksAfterTest(description, annotation.value());
