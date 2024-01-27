@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.adservices;
+package com.android.adservices.service.kanon;
+
+import com.android.adservices.ActJniWrapper;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -30,55 +32,20 @@ import private_join_and_compute.anonymous_counting_tokens.TokensRequestPrivateSt
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 
-/** Contains JNI wrappers for the ACT(Anonymous counting tokens). */
-public class ActJni {
-
-    static {
-        System.loadLibrary("hpke_jni");
-    }
-
-    private static native byte[] generateClientParameters(
-            byte[] schemeParameters, byte[] serverPublicParameters);
-
-    private static native byte[] generateTokensRequest(
-            byte[] messages,
-            byte[] schemeParameters,
-            byte[] clientPublicParameters,
-            byte[] clientPrivateParameters,
-            byte[] serverPublicParameters);
-
-    private static native boolean verifyTokensResponse(
-            byte[] messages,
-            byte[] tokensRequest,
-            byte[] tokensRequestPrivateState,
-            byte[] tokensResponse,
-            byte[] schemeParameters,
-            byte[] clientPublicParameters,
-            byte[] clientPrivateParameters,
-            byte[] serverPublicParameters);
-
-    private static native byte[] recoverTokens(
-            byte[] messages,
-            byte[] tokensRequest,
-            byte[] tokensRequestPrivateState,
-            byte[] tokensResponse,
-            byte[] schemeParameters,
-            byte[] clientPublicParameters,
-            byte[] clientPrivateParameters,
-            byte[] serverPublicParameters);
-
+public class AnonymousCountingTokensImpl implements AnonymousCountingTokens {
     /**
      * Returns a fresh set of Client parameters corresponding to these SchemeParameters and
      * ServerPublicParameters.
      */
-    public static ClientParameters generateClientParameters(
+    public ClientParameters generateClientParameters(
             SchemeParameters schemeParametersProto,
             ServerPublicParameters serverPublicParametersProto)
             throws InvalidProtocolBufferException {
         byte[] schemeParametersInBytes = schemeParametersProto.toByteArray();
         byte[] serverPublicParametersInBytes = serverPublicParametersProto.toByteArray();
         byte[] clientParametersInBytes =
-                generateClientParameters(schemeParametersInBytes, serverPublicParametersInBytes);
+                ActJniWrapper.generateClientParameters(
+                        schemeParametersInBytes, serverPublicParametersInBytes);
         return ClientParameters.parseFrom(clientParametersInBytes);
     }
 
@@ -86,7 +53,7 @@ public class ActJni {
      * Returns a tuple of client_fingerprints, TokensRequest and TokensRequestPrivateState for the
      * given set of messages.
      */
-    public static GeneratedTokensRequestProto generateTokensRequest(
+    public GeneratedTokensRequestProto generateTokensRequest(
             MessagesSet messagesProto,
             SchemeParameters schemeParametersProto,
             ClientPublicParameters clientPublicParametersProto,
@@ -100,7 +67,7 @@ public class ActJni {
         byte[] serverPublicParametersInBytes = serverPublicParameters.toByteArray();
 
         byte[] generateTokensRequestInBytes =
-                generateTokensRequest(
+                ActJniWrapper.generateTokensRequest(
                         messagesInBytes,
                         schemeParametersInBytes,
                         clientPublicParametersInBytes,
@@ -113,7 +80,7 @@ public class ActJni {
      * Returns {@code true} on a valid response. Returns {@code false} if the parameters don't
      * correspond to ACT v0.
      */
-    public static boolean verifyTokensResponse(
+    public boolean verifyTokensResponse(
             MessagesSet messagesProto,
             TokensRequest tokensRequestProto,
             TokensRequestPrivateState tokensRequestPrivateStateProto,
@@ -131,7 +98,7 @@ public class ActJni {
         byte[] clientPrivateParametersInBytes = clientPrivateParametersProto.toByteArray();
         byte[] serverPublicParametersInBytes = serverPublicParameters.toByteArray();
 
-        return verifyTokensResponse(
+        return ActJniWrapper.verifyTokensResponse(
                 messagesInBytes,
                 tokensRequestInBytes,
                 tokensRequestPrivateStateInBytes,
@@ -143,7 +110,7 @@ public class ActJni {
     }
 
     /** Returns a vector of tokens corresponding to the supplied messages. */
-    public static TokensSet recoverTokens(
+    public TokensSet recoverTokens(
             MessagesSet messagesProto,
             TokensRequest tokensRequestProto,
             TokensRequestPrivateState tokensRequestPrivateStateProto,
@@ -163,7 +130,7 @@ public class ActJni {
         byte[] serverPublicParametersInBytes = serverPublicParameters.toByteArray();
 
         byte[] tokensSetInBytes =
-                recoverTokens(
+                ActJniWrapper.recoverTokens(
                         messagesInBytes,
                         tokensRequestInBytes,
                         tokensRequestPrivateStateInBytes,

@@ -56,7 +56,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.os.PersistableBundle;
 
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.BooleanSyncCallback;
@@ -91,8 +90,7 @@ import java.util.concurrent.Executors;
 @MockStatic(ServiceCompatUtils.class)
 public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
+    private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
     private static final int MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID =
             MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId();
     private static final int MDD_CHARGING_PERIODIC_TASK_JOB_ID =
@@ -141,7 +139,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
-        mLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
+        mLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
 
         // MDD Task Tag.
         PersistableBundle bundle = new PersistableBundle();
@@ -377,7 +375,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
-                                new ComponentName(CONTEXT, MddJobService.class))
+                                new ComponentName(sContext, MddJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(TASK_PERIOD_MS, FLEX_MS)
                         .build();
@@ -436,7 +434,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
-                                new ComponentName(CONTEXT, MddJobService.class))
+                                new ComponentName(sContext, MddJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(TASK_PERIOD_MS, FLEX_MS)
                         .build();
@@ -480,7 +478,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
         mExecutorService.execute(
                 () ->
                         callback.injectResult(
-                                MddJobService.scheduleIfNeeded(CONTEXT, forceSchedule)));
+                                MddJobService.scheduleIfNeeded(sContext, forceSchedule)));
 
         return callback;
     }
@@ -497,7 +495,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private void scheduleJobsDirectly() {
         for (Integer jobId : ALL_JOB_IDS) {
             JobInfo jobInfo =
-                    new JobInfo.Builder(jobId, new ComponentName(CONTEXT, MddJobService.class))
+                    new JobInfo.Builder(jobId, new ComponentName(sContext, MddJobService.class))
                             .setRequiresCharging(true)
                             .setPeriodic(TASK_PERIOD_MS, FLEX_MS)
                             .build();

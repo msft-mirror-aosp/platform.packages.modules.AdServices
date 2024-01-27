@@ -97,7 +97,6 @@ import android.content.pm.PackageManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
 
@@ -166,7 +165,6 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.verification.VerificationMode;
 
 import java.io.IOException;
@@ -208,8 +206,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     private static final int UX_TYPE_COUNT = 5;
     private static final int ENROLLMENT_CHANNEL_COUNT = 20;
 
-    @Spy
-    private final Context mContextSpy = ApplicationProvider.getApplicationContext();
     private BooleanFileDatastore mDatastore;
     private BooleanFileDatastore mConsentDatastore;
     private ConsentManager mConsentManager;
@@ -241,17 +237,17 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     public void setup() throws IOException {
         mDatastore =
                 new BooleanFileDatastore(
-                        mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
+                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
         // For each file, we should ensure there is only one instance of datastore that is able to
         // access it. (Refer to BooleanFileDatastore.class)
-        mConsentDatastore = ConsentManager.createAndInitializeDataStore(mContextSpy);
-        mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mContextSpy.getPackageManager()));
+        mConsentDatastore = ConsentManager.createAndInitializeDataStore(mSpyContext);
+        mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mSpyContext.getPackageManager()));
         mEnrollmentDaoSpy =
                 spy(
                         new EnrollmentDao(
-                                mContextSpy, DbTestUtil.getSharedDbHelperForTest(), mMockFlags));
+                                mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mMockFlags));
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
-        doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
+        doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
 
         // Default to use PPAPI consent to test migration-irrelevant logics.
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
@@ -322,7 +318,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.enable(mContextSpy);
+        spyConsentManager.enable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
 
@@ -343,7 +339,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.enable(mContextSpy);
+        spyConsentManager.enable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
 
@@ -364,7 +360,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.enable(mContextSpy);
+        spyConsentManager.enable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
 
@@ -385,7 +381,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.enable(mContextSpy);
+        spyConsentManager.enable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
 
@@ -411,8 +407,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .getConsent(ConsentParcel.ALL_API);
 
         doReturn(true).when(mMockFlags).getConsentManagerLazyEnableMode();
-        spyConsentManager.enable(mContextSpy);
-        spyConsentManager.enable(mContextSpy);
+        spyConsentManager.enable(mSpyContext);
+        spyConsentManager.enable(mSpyContext);
         assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
         verify(spyConsentManager, times(0)).setConsentToPpApi(isGiven);
         verifyResetApiCalled(spyConsentManager, 0);
@@ -428,7 +424,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .when(mMockIAdServicesManager)
                 .getConsent(ConsentParcel.ALL_API);
         doReturn(false).when(mMockFlags).getConsentManagerLazyEnableMode();
-        spyConsentManager.enable(mContextSpy);
+        spyConsentManager.enable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
         verify(spyConsentManager).setConsentToPpApi(isGiven);
@@ -447,7 +443,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn(true).when(mMockFlags).getConsentManagerLazyEnableMode();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
         verify(
                 () ->
@@ -470,7 +466,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .getConsent(ConsentParcel.MEASUREMENT);
         doReturn(false).when(mMockFlags).getConsentManagerLazyEnableMode();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
 
         verify(
@@ -496,7 +492,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, invalidConsentSourceOfTruth);
 
-        assertThrows(RuntimeException.class, () -> spyConsentManager.enable(mContextSpy));
+        assertThrows(RuntimeException.class, () -> spyConsentManager.enable(mSpyContext));
     }
 
     @Test
@@ -506,7 +502,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.disable(mContextSpy);
+        spyConsentManager.disable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isFalse();
 
@@ -527,7 +523,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.disable(mContextSpy);
+        spyConsentManager.disable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isFalse();
 
@@ -548,7 +544,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.disable(mContextSpy);
+        spyConsentManager.disable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isFalse();
 
@@ -570,7 +566,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.disable(mContextSpy);
+        spyConsentManager.disable(mSpyContext);
 
         assertThat(spyConsentManager.getConsent().isGiven()).isFalse();
 
@@ -591,7 +587,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, invalidConsentSourceOfTruth);
 
-        assertThrows(RuntimeException.class, () -> spyConsentManager.disable(mContextSpy));
+        assertThrows(RuntimeException.class, () -> spyConsentManager.disable(mSpyContext));
     }
 
     @Test
@@ -602,7 +598,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
 
         verify(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         verify(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -654,7 +650,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
 
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
 
         verify(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
         verify(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)), never());
@@ -718,8 +714,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testJobsAreUnscheduledAfterDisabling() {
-        doReturn(mJobSchedulerMock).when(mContextSpy).getSystemService(JobScheduler.class);
-        mConsentManager.disable(mContextSpy);
+        doReturn(mJobSchedulerMock).when(mSpyContext).getSystemService(JobScheduler.class);
+        mConsentManager.disable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptOutSelected());
 
@@ -754,7 +750,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testDataIsResetAfterConsentIsRevoked() throws IOException {
-        mConsentManager.disable(mContextSpy);
+        mConsentManager.disable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptOutSelected());
 
@@ -773,7 +769,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testDataIsResetAfterConsentIsRevokedFilteringDisabled() throws IOException {
         doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
-        mConsentManager.disable(mContextSpy);
+        mConsentManager.disable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptOutSelected());
 
@@ -790,7 +786,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testDataIsResetAfterConsentIsGiven() throws IOException {
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptInSelected());
 
@@ -809,7 +805,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testDataIsResetAfterConsentIsGivenFilteringDisabled() throws IOException {
         doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptInSelected());
 
@@ -828,7 +824,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     public void testIsFledgeConsentRevokedForAppWithFullApiConsentGaUxEnabled_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
@@ -910,7 +906,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         mConsentManager = getConsentManagerByConsentSourceOfTruth(consentSourceOfTruth);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(true);
 
-        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
 
         String app1 = AppConsentDaoFixture.APP10_PACKAGE_NAME;
@@ -972,7 +968,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxEnabled_ppApiOnly()
             throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        mConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
+        mConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
         assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         verify(() -> UiStatsLogger.logOptOutSelected(AdServicesApiType.FLEDGE));
@@ -1027,7 +1023,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     public void testIsFledgeConsentRevokedForNotFoundAppGaUxEnabledThrows_ppApiOnly()
             throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
@@ -1088,7 +1084,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.APPSEARCH_ONLY);
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(isGaUxEnabled);
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(true);
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -1117,7 +1113,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             testIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentGaUxEnabled_ppApi()
                     throws IOException, PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
@@ -1236,7 +1232,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                     throws PackageManager.NameNotFoundException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
 
-        mConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
+        mConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
         assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
@@ -1291,7 +1287,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows_ppApiOnly()
             throws PackageManager.NameNotFoundException {
-        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
@@ -1341,7 +1337,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testGetKnownAppsWithConsent_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -1508,7 +1504,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             throws IOException, PackageManager.NameNotFoundException {
         doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
 
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -1551,7 +1547,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             throws IOException, PackageManager.NameNotFoundException {
         doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
 
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -1599,7 +1595,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testSetConsentForApp_ppApiOnly() throws Exception {
-        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
@@ -1854,7 +1850,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
 
         // Prepopulate with consent data for some apps
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -1917,7 +1913,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         // Prepopulate with consent data for some apps
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptInSelected());
 
@@ -1989,7 +1985,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
 
         // Prepopulate with consent data for some apps
-        mConsentManager.enable(mContextSpy);
+        mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -2349,7 +2345,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
-        ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore);
+        ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore);
         assertThat(mConsentDatastore.get(CONSENT_KEY)).isNull();
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isNull();
 
@@ -2359,12 +2355,12 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
         // Consent is not cleared again
-        ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore);
+        ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore);
         assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         // Clear shared preference
-        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);
+        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);
     }
 
     @Test
@@ -2379,19 +2375,19 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         ConsentManager.migratePpApiConsentToSystemService(
-                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
+                mSpyContext, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
 
         verify(mMockIAdServicesManager).setConsent(any());
         verify(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         // Verify this should only happen once
         ConsentManager.migratePpApiConsentToSystemService(
-                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
+                mSpyContext, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
         verify(mMockIAdServicesManager).setConsent(any());
         verify(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         // Clear shared preference
-        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
+        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);
     }
 
     @Test
@@ -2406,7 +2402,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         SharedPreferences sharedPreferences =
-                mContextSpy.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+                mSpyContext.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, false);
@@ -2415,14 +2411,13 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.migratePpApiConsentToSystemService(
-                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
+                mSpyContext, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
 
         ConsentMigrationStats consentMigrationStats =
                 ConsentMigrationStats.builder()
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -2434,8 +2429,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mStatsdAdServicesLoggerMock).logConsentMigrationStats(consentMigrationStats);
 
         // Clear shared preference
-        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
-        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED);
+        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);
+        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED);
     }
 
     @Test
@@ -2451,21 +2446,20 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SharedPreferences.Editor editor = mock(SharedPreferences.Editor.class);
         doReturn(editor).when(sharedPreferences).edit();
         doReturn(false).when(editor).commit();
-        doReturn(sharedPreferences).when(mContextSpy).getSharedPreferences(anyString(), anyInt());
+        doReturn(sharedPreferences).when(mSpyContext).getSharedPreferences(anyString(), anyInt());
 
         doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.migratePpApiConsentToSystemService(
-                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
+                mSpyContext, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
 
         ConsentMigrationStats consentMigrationStats =
                 ConsentMigrationStats.builder()
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
@@ -2478,7 +2472,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn(true).when(editor).commit();
         // Clear shared preference
-        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
+        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);
     }
 
     @Test
@@ -2494,14 +2488,13 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.migratePpApiConsentToSystemService(
-                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
+                mSpyContext, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock);
 
         ConsentMigrationStats consentMigrationStats =
                 ConsentMigrationStats.builder()
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(ConsentMigrationStats.MigrationStatus.FAILURE)
                         .setMigrationType(
                                 ConsentMigrationStats.MigrationType.PPAPI_TO_SYSTEM_SERVICE)
@@ -2511,41 +2504,41 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mStatsdAdServicesLoggerMock).logConsentMigrationStats(consentMigrationStats);
 
         // Clear shared preference
-        ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
+        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);
     }
 
     @Test
     public void testHandleConsentMigrationIfNeeded_ExtServices() throws RemoteException {
         doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
-                .when(mContextSpy)
+                .when(mSpyContext)
                 .getPackageName();
 
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock, 2);
+                mSpyContext, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLoggerMock, 2);
 
-        verify(mContextSpy, never()).getSharedPreferences(anyString(), anyInt());
+        verify(mSpyContext, never()).getSharedPreferences(anyString(), anyInt());
         verify(mMockIAdServicesManager, never()).setConsent(any());
     }
 
     @Test
     public void testHandleConsentMigrationFromAppSearchIfNeeded_ExtServices() throws Exception {
         doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
-                .when(mContextSpy)
+                .when(mSpyContext)
                 .getPackageName();
         SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
         SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
         when(mockSharedPrefs.edit()).thenReturn(mockEditor);
-        when(mContextSpy.getSharedPreferences(any(String.class), anyInt()))
+        when(mSpyContext.getSharedPreferences(any(String.class), anyInt()))
                 .thenReturn(mockSharedPrefs);
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mDatastore,
                 mAppConsentDaoSpy,
                 mAppSearchConsentManagerMock,
                 mAdServicesManager,
                 mStatsdAdServicesLoggerMock);
 
-        verify(mContextSpy, never()).getSharedPreferences(anyString(), anyInt());
+        verify(mSpyContext, never()).getSharedPreferences(anyString(), anyInt());
         verify(mAppSearchConsentManagerMock, never())
                 .migrateConsentDataIfNeeded(any(), any(), any(), any());
         verify(mMockIAdServicesManager, never()).setConsent(any());
@@ -2564,7 +2557,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testResetSharedPreference() {
         SharedPreferences sharedPreferences =
-                mContextSpy.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+                mSpyContext.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putBoolean(SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, true);
@@ -2580,8 +2573,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                                 SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue */ false))
                 .isTrue();
 
-        resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);
-        resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
+        resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);
+        resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);
 
         assertThat(sharedPreferences.getBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue */ true))
                 .isFalse();
@@ -2596,20 +2589,20 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .when(
                         () ->
                                 ConsentManager.resetSharedPreference(
-                                        mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED));
+                                        mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
         doNothing()
                 .when(
                         () ->
                                 ConsentManager.migratePpApiConsentToSystemService(
-                                        mContextSpy,
+                                        mSpyContext,
                                         mConsentDatastore,
                                         mAdServicesManager,
                                         mStatsdAdServicesLoggerMock));
-        doNothing().when(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
+        doNothing().when(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));
 
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mConsentDatastore,
                 mAdServicesManager,
                 mStatsdAdServicesLoggerMock,
@@ -2618,16 +2611,16 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(
                 () ->
                         ConsentManager.resetSharedPreference(
-                                mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED));
+                                mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
         verify(
                 () ->
                         ConsentManager.migratePpApiConsentToSystemService(
-                                mContextSpy,
+                                mSpyContext,
                                 mConsentDatastore,
                                 mAdServicesManager,
                                 mStatsdAdServicesLoggerMock),
                 never());
-        verify(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore), never());
+        verify(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore), never());
     }
 
     @Test
@@ -2637,20 +2630,20 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .when(
                         () ->
                                 ConsentManager.resetSharedPreference(
-                                        mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED));
+                                        mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
         doNothing()
                 .when(
                         () ->
                                 ConsentManager.migratePpApiConsentToSystemService(
-                                        mContextSpy,
+                                        mSpyContext,
                                         mConsentDatastore,
                                         mAdServicesManager,
                                         mStatsdAdServicesLoggerMock));
-        doNothing().when(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
+        doNothing().when(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));
 
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mConsentDatastore,
                 mAdServicesManager,
                 mStatsdAdServicesLoggerMock,
@@ -2659,16 +2652,16 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(
                 () ->
                         ConsentManager.resetSharedPreference(
-                                mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED),
+                                mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED),
                 never());
         verify(
                 () ->
                         ConsentManager.migratePpApiConsentToSystemService(
-                                mContextSpy,
+                                mSpyContext,
                                 mConsentDatastore,
                                 mAdServicesManager,
                                 mStatsdAdServicesLoggerMock));
-        verify(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
+        verify(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));
     }
 
     @Test
@@ -2678,20 +2671,20 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .when(
                         () ->
                                 ConsentManager.resetSharedPreference(
-                                        mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED));
+                                        mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
         doNothing()
                 .when(
                         () ->
                                 ConsentManager.migratePpApiConsentToSystemService(
-                                        mContextSpy,
+                                        mSpyContext,
                                         mConsentDatastore,
                                         mAdServicesManager,
                                         mStatsdAdServicesLoggerMock));
-        doNothing().when(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
+        doNothing().when(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));
 
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mConsentDatastore,
                 mAdServicesManager,
                 mStatsdAdServicesLoggerMock,
@@ -2700,16 +2693,16 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(
                 () ->
                         ConsentManager.resetSharedPreference(
-                                mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED),
+                                mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED),
                 never());
         verify(
                 () ->
                         ConsentManager.migratePpApiConsentToSystemService(
-                                mContextSpy,
+                                mSpyContext,
                                 mConsentDatastore,
                                 mAdServicesManager,
                                 mStatsdAdServicesLoggerMock));
-        verify(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore), never());
+        verify(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore), never());
     }
 
     @Test
@@ -2719,20 +2712,20 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .when(
                         () ->
                                 ConsentManager.resetSharedPreference(
-                                        mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED));
+                                        mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
         doNothing()
                 .when(
                         () ->
                                 ConsentManager.migratePpApiConsentToSystemService(
-                                        mContextSpy,
+                                        mSpyContext,
                                         mConsentDatastore,
                                         mAdServicesManager,
                                         mStatsdAdServicesLoggerMock));
-        doNothing().when(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore));
+        doNothing().when(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));
 
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager.handleConsentMigrationIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mConsentDatastore,
                 mAdServicesManager,
                 mStatsdAdServicesLoggerMock,
@@ -2741,17 +2734,17 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(
                 () ->
                         ConsentManager.resetSharedPreference(
-                                mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED),
+                                mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED),
                 never());
         verify(
                 () ->
                         ConsentManager.migratePpApiConsentToSystemService(
-                                mContextSpy,
+                                mSpyContext,
                                 mConsentDatastore,
                                 mAdServicesManager,
                                 mStatsdAdServicesLoggerMock),
                 never());
-        verify(() -> ConsentManager.clearPpApiConsent(mContextSpy, mConsentDatastore), never());
+        verify(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore), never());
     }
 
     @Test
@@ -2763,11 +2756,11 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
         SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
         when(mockSharedPrefs.edit()).thenReturn(mockEditor);
-        when(mContextSpy.getSharedPreferences(any(String.class), anyInt()))
+        when(mSpyContext.getSharedPreferences(any(String.class), anyInt()))
                 .thenReturn(mockSharedPrefs);
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mockDatastore,
                 mAppConsentDaoSpy,
                 mAppSearchConsentManagerMock,
@@ -2798,7 +2791,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
         SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
         when(mockSharedPrefs.edit()).thenReturn(mockEditor);
-        when(mContextSpy.getSharedPreferences(any(String.class), anyInt()))
+        when(mSpyContext.getSharedPreferences(any(String.class), anyInt()))
                 .thenReturn(mockSharedPrefs);
         when(mAppSearchConsentManagerMock.getUserManualInteractionWithConsent())
                 .thenReturn(MANUAL_INTERACTIONS_RECORDED);
@@ -2806,7 +2799,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mConsentDatastore,
                 mAppConsentDaoSpy,
                 mAppSearchConsentManagerMock,
@@ -2828,7 +2821,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(mConsentDatastore.get(ConsentConstants.FLEDGE_DEFAULT_CONSENT)).isTrue();
         assertThat(mConsentDatastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT)).isTrue();
         assertThat(mConsentDatastore.get(ConsentConstants.CONSENT_KEY)).isTrue();
-        assertThat(mConsentDatastore.get(ConsentConstants.DEFAULT_CONSENT)).isTrue();
         verify(mockAdServicesManager).recordDefaultConsent(eq(true));
         verify(mockAdServicesManager).recordTopicsDefaultConsent(eq(true));
         verify(mockAdServicesManager).recordFledgeDefaultConsent(eq(true));
@@ -2847,7 +2839,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -2872,7 +2863,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
         SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
         when(mockSharedPrefs.edit()).thenReturn(mockEditor);
-        when(mContextSpy.getSharedPreferences(any(String.class), anyInt()))
+        when(mSpyContext.getSharedPreferences(any(String.class), anyInt()))
                 .thenReturn(mockSharedPrefs);
         when(mAppSearchConsentManagerMock.getUserManualInteractionWithConsent())
                 .thenReturn(MANUAL_INTERACTIONS_RECORDED);
@@ -2881,7 +2872,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mConsentDatastore,
                 mAppConsentDaoSpy,
                 mAppSearchConsentManagerMock,
@@ -2893,7 +2884,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)
@@ -2918,7 +2908,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
-                mContextSpy,
+                mSpyContext,
                 mConsentDatastore,
                 mAppConsentDaoSpy,
                 mAppSearchConsentManagerMock,
@@ -2930,7 +2920,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setTopicsConsent(true)
                         .setFledgeConsent(true)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(ConsentMigrationStats.MigrationStatus.FAILURE)
                         .setMigrationType(
                                 ConsentMigrationStats.MigrationType.APPSEARCH_TO_SYSTEM_SERVICE)
@@ -2993,7 +2982,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager temporalConsentManager =
                 getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
 
-        temporalConsentManager.enable(mContextSpy);
+        temporalConsentManager.enable(mSpyContext);
 
         verify(mUiStatsLoggerMock).logOptInSelected();
     }
@@ -3004,7 +2993,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager temporalConsentManager =
                 getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
 
-        temporalConsentManager.enable(mContextSpy);
+        temporalConsentManager.enable(mSpyContext);
 
         verify(mUiStatsLoggerMock).logOptInSelected();
     }
@@ -3018,7 +3007,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.TOPICS);
 
         assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
         verify(spyConsentManager)
@@ -3036,7 +3025,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 getSpiedConsentManagerForConsentPerApiTesting(
                         isGiven, consentSourceOfTruth, AdServicesApiType.TOPICS.toConsentApiType());
 
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.TOPICS);
 
         assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
         verify(
@@ -3060,7 +3049,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 getSpiedConsentManagerForConsentPerApiTesting(
                         isGiven, consentSourceOfTruth, AdServicesApiType.TOPICS.toConsentApiType());
 
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.TOPICS);
 
         assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
         verify(
@@ -3091,7 +3080,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.TOPICS);
         verify(spyConsentManager)
                 .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ true), eq(apiType));
         verify(mAppSearchConsentManagerMock)
@@ -3112,7 +3101,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         verify(spyConsentManager)
                 .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ true), eq(apiType));
         verify(mAdServicesExtDataManagerMock).setMsmtConsent(eq(true));
@@ -3131,7 +3120,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.disable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         verify(spyConsentManager)
                 .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ false), eq(apiType));
         verify(mAdServicesExtDataManagerMock).setMsmtConsent(eq(false));
@@ -3151,7 +3140,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 getSpiedConsentManagerForConsentPerApiTesting(
                         isGiven, consentSourceOfTruth, AdServicesApiType.FLEDGE.toConsentApiType());
 
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
 
         assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isTrue();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -3168,7 +3157,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 getSpiedConsentManagerForConsentPerApiTesting(
                         isGiven, consentSourceOfTruth, AdServicesApiType.FLEDGE.toConsentApiType());
 
-        spyConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
 
         assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isFalse();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -3403,9 +3392,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.TOPICS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
 
         assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
         assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isTrue();
@@ -3432,9 +3421,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
 
         // set up the initial state
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
-        spyConsentManager.enable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.TOPICS);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
 
         assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
         assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isTrue();
@@ -3450,9 +3439,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(spyConsentManager, times(3)).setAggregatedConsentToPpApi();
 
         // disable all the consent one by one
-        spyConsentManager.disable(mContextSpy, AdServicesApiType.TOPICS);
-        spyConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
-        spyConsentManager.disable(mContextSpy, AdServicesApiType.MEASUREMENTS);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.TOPICS);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
 
         assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isFalse();
         assertThat(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()).isFalse();

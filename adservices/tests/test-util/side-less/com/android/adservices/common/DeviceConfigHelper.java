@@ -173,24 +173,11 @@ final class DeviceConfigHelper {
             String value = mode.name().toLowerCase();
             mLog.v("SyncDisabledModeForTest(%s)", value);
 
+            // TODO(b/294423183): figure out a solution for R when needed
             if (getDeviceApiLevel().isAtLeast(S)) {
                 // Command supported only on S+.
                 runShellCommand("device_config set_sync_disabled_for_tests %s", value);
                 return;
-            }
-
-            // Using airplane mode as a workaround to disable flag sync on R.
-            switch (mode) {
-                case NONE:
-                    runShellCommand("settings put global airplane_mode_on 0");
-                    runShellCommand("am broadcast -a android.intent.action.AIRPLANE_MODE");
-                    break;
-                case PERSISTENT:
-                    runShellCommand("settings put global airplane_mode_on 1");
-                    runShellCommand("am broadcast -a android.intent.action.AIRPLANE_MODE");
-                    break;
-                default:
-                    mLog.v("Sync disabled mode (%s) not supported on R. Skipping", value);
             }
         }
 

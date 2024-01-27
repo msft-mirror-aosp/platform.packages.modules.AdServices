@@ -15,6 +15,11 @@
  */
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
+import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_GENERIC_ERROR;
+import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_OK;
+import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
+
 import android.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -22,6 +27,8 @@ import android.util.Log;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
+
+import com.google.common.base.Supplier;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -39,11 +46,13 @@ import java.util.Objects;
  * <p>By convention, methods implementing commands should be prefixed with {@code run}.
  */
 public final class AdServicesShellCommandHandler {
+    @VisibleForTesting static final String ERROR_EMPTY_COMMAND = "Must provide a non-empty command";
 
     @VisibleForTesting static final String CMD_SHORT_HELP = "-h";
     @VisibleForTesting static final String CMD_HELP = "help";
-    @VisibleForTesting static final String CMD_ECHO = "echo";
 
+    // TODO(b/308009734): Move CMD_IS_ALLOWED_XXX constants and shell commands to
+    // CommonShellCommandFactory
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_ATTRIBUTION_ACCESS = "is-allowed-attribution-access";
 
@@ -53,10 +62,6 @@ public final class AdServicesShellCommandHandler {
 
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
-
-    @VisibleForTesting
-    static final String HELP_ECHO =
-            CMD_ECHO + " <message> - prints the given message (useful to check cmd is working).";
 
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_ATTRIBUTION_ACCESS =
@@ -77,19 +82,22 @@ public final class AdServicesShellCommandHandler {
                     + " enrollment id is allowed to use the Topics APIs in the given app, when"
                     + " using SDK sandbox or not.";
 
-    @VisibleForTesting static final String ERROR_EMPTY_COMMAND = "Must provide a non-empty command";
-
-    @VisibleForTesting
-    static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s). Syntax: %s";
-
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
     private static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
-    private static final int RESULT_OK = 0;
-    private static final int RESULT_GENERIC_ERROR = -1;
+
+    // Add more per API shell factory implementations as we create them.
+    @VisibleForTesting
+    static final Supplier<ShellCommandFactory[]> DEFAULT_FACTORIES_SUPPLIER =
+            () ->
+                    new ShellCommandFactory[] {
+                        CommonShellCommandFactory.getInstance(),
+                        CustomAudienceShellCommandFactory.getInstance(),
+                    };
 
     private final PrintWriter mOut;
     private final PrintWriter mErr;
+    private final Supplier<ShellCommandFactory[]> mFactoriesSupplier;
 
     private String[] mArgs;
     private int mArgPos;
@@ -101,8 +109,16 @@ public final class AdServicesShellCommandHandler {
     }
 
     public AdServicesShellCommandHandler(PrintWriter out, PrintWriter err) {
+        this(out, err, DEFAULT_FACTORIES_SUPPLIER);
+    }
+
+    @VisibleForTesting
+    AdServicesShellCommandHandler(
+            PrintWriter out, PrintWriter err, Supplier<ShellCommandFactory[]> factoriesSupplier) {
         mOut = Objects.requireNonNull(out, "out cannot be null");
         mErr = Objects.requireNonNull(err, "err cannot be null");
+        mFactoriesSupplier =
+                Objects.requireNonNull(factoriesSupplier, "factoriesSupplier cannot be null");
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
@@ -181,7 +197,7 @@ public final class AdServicesShellCommandHandler {
     }
 
     private int invalidArgsError(String syntax) {
-        mErr.println(String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax));
+        mErr.printf(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax);
         return RESULT_GENERIC_ERROR;
     }
 
@@ -194,6 +210,8 @@ public final class AdServicesShellCommandHandler {
         pw.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
         pw.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
         pw.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
+        pw.println(CustomAudienceListCommand.HELP);
+        pw.println(CustomAudienceViewCommand.HELP);
     }
 
     private int onCommand(String cmd) {
@@ -205,31 +223,26 @@ public final class AdServicesShellCommandHandler {
             case "":
                 mErr.println(ERROR_EMPTY_COMMAND);
                 return RESULT_GENERIC_ERROR;
-            case CMD_ECHO:
-                return runEcho();
             case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
             default:
-                mErr.printf("Unknown command: %s\n Valid commands are: \n", cmd);
-                onHelp(mErr);
-                return RESULT_GENERIC_ERROR;
-        }
-    }
+                // TODO (b/308009734): Move other shell commands implement ICommand interface.
+                ShellCommand shellCommand = null;
+                for (ShellCommandFactory factory : mFactoriesSupplier.get()) {
+                    shellCommand = factory.getShellCommand(cmd);
+                    if (shellCommand != null) {
+                        break;
+                    }
+                }
 
-    private int runEcho() {
-        if (!hasExactNumberOfArgs(1)) {
-            return invalidArgsError(HELP_ECHO);
+                if (shellCommand == null) {
+                    mErr.printf("Unknown command: %s\n", cmd);
+                    return RESULT_GENERIC_ERROR;
+                }
+                return shellCommand.run(mOut, mErr, mArgs);
         }
-        String message = getNextArg();
-        if (TextUtils.isEmpty(message)) {
-            return invalidArgsError(HELP_ECHO);
-        }
-
-        Log.i(TAG, "runEcho: message='" + message + "'");
-        mOut.println(message);
-        return RESULT_OK;
     }
 
     private int runIsAllowedApiAccess(String cmd) {

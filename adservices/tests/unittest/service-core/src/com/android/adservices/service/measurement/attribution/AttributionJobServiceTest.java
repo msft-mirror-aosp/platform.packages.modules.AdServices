@@ -33,6 +33,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -85,7 +86,7 @@ import java.util.concurrent.TimeUnit;
  * Unit test for {@link AttributionJobService
  */
 public class AttributionJobServiceTest {
-    private static final long WAIT_IN_MILLIS = 200L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
@@ -189,16 +190,25 @@ public class AttributionJobServiceTest {
                                             AttributionJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
+                    ExtendedMockito.doNothing()
+                            .when(mSpyLogger)
+                            .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
                     JobServiceCallback callback = createJobFinishedCallback(mSpyService);
 
                     // Execute
-                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    callback.assertJobFinished();
-
-                    callback = createJobFinishedCallback(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-
                     callback.assertJobFinished();
+
+                    assertTrue(result);
+
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
+                            .jobFinished(any(), anyBoolean());
+
+                    JobServiceCallback secondCallback = createJobFinishedCallback(mSpyService);
+                    // Execute
+                    result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    secondCallback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
@@ -217,7 +227,7 @@ public class AttributionJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+                    adServicesExtendedMockitoRule.mockGetFlags(mMockFlags);
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_shouldDisableJobTrue();
@@ -230,7 +240,7 @@ public class AttributionJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+                    adServicesExtendedMockitoRule.mockGetFlags(mMockFlags);
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
                     onStartJob_shouldDisableJobTrue();
@@ -299,11 +309,16 @@ public class AttributionJobServiceTest {
                             .when(mSpyService)
                             .acquireLockAndProcessPendingAttributions();
 
+                    ExtendedMockito.doNothing()
+                            .when(mSpyLogger)
+                            .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
                     // Execute
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
                     // Validate, do not reschedule with jobFinished, but reschedule manually
                     assertTrue(result);
+
                     verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
                             .recordJobFinished(
                                     eq(MEASUREMENT_ATTRIBUTION_JOB_ID),
@@ -589,8 +604,8 @@ public class AttributionJobServiceTest {
                             .when(mSpyService)
                             .acquireLockAndProcessPendingAttributions();
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    Thread.sleep(WAIT_IN_MILLIS);
 
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1)).onStartJob(any());
                     assertNotNull(mSpyService.getFutureForTesting());
 
                     boolean onStopJobResult =
@@ -697,8 +712,8 @@ public class AttributionJobServiceTest {
     }
 
     private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value).when(mMockFlags).getMeasurementJobAttributionKillSwitch();
+        adServicesExtendedMockitoRule.mockGetFlags(mMockFlags);
+        when(mMockFlags.getMeasurementJobAttributionKillSwitch()).thenReturn(value);
     }
 
     private CountDownLatch createCountDownLatch() {
