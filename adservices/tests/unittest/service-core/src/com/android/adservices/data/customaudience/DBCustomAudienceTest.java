@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -149,12 +151,13 @@ public class DBCustomAudienceTest {
     @Test
     public void testFromServiceObject_successWithServerAuctionFlags() {
         assertEquals(
-                DBCustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(
                                 CommonFixture.VALID_BUYER_1)
                         .build(),
                 DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(
-                                        CommonFixture.VALID_BUYER_1)
+                        CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                                        CommonFixture.VALID_BUYER_1,
+                                        FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
