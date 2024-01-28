@@ -34,13 +34,12 @@ abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        String packageName = sContext.getPackageName();
-        Log.d(mTag, "getAdServicesFlagsSetterRule(): allow-listing for " + packageName);
+        Log.d(mTag, "getAdServicesFlagsSetterRule(): allow-listing for " + mPackageName);
         return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                 .setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE)
                 .setCompatModeFlags()
-                .setMsmtApiAppAllowList(packageName)
-                .setMsmtWebContextClientAllowList(packageName)
+                .setMsmtApiAppAllowList(mPackageName)
+                .setMsmtWebContextClientAllowList(mPackageName)
                 .setConsentManagerDebugMode(true)
                 .setConsentNotifiedDebugMode(true)
                 .setSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)

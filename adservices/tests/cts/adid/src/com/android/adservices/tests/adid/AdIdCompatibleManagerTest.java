@@ -23,6 +23,8 @@ import android.adservices.common.AdServicesOutcomeReceiver;
 import android.os.LimitExceededException;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.shared.common.ServiceUnavailableException;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -67,12 +69,12 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
 
     @Test
     public void testAdIdCompatibleManager_verifyRateLimitReached() throws Exception {
-        final AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
+        AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
         AdServicesOutcomeReceiverForTests<AdId> callback;
 
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = flags.getAdIdRequestPerSecond();
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = flags.getAdIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
             callback = new AdServicesOutcomeReceiverForTests<>();
             adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
@@ -89,10 +91,21 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
         callback = new AdServicesOutcomeReceiverForTests<>();
         adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
             callback.assertFailure(LimitExceededException.class);
         }
+    }
+
+    @Test
+    @RequiresLowRamDevice
+    public void testAdIdCompatibleManagerTest_whenDeviceNotSupported() throws Exception {
+        AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
+        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
+
+        adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
+
+        callback.assertFailure(ServiceUnavailableException.class);
     }
 }

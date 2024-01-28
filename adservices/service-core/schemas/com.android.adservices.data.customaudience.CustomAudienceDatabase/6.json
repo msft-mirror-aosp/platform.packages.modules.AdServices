@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 6,
-    "identityHash": "1190519c00f7dcef6b229755b63deca4",
+    "identityHash": "fa36bc1546db7dfa49012f5418d5887e",
     "entities": [
       {
         "tableName": "custom_audience",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`owner` TEXT NOT NULL, `buyer` TEXT NOT NULL, `name` TEXT NOT NULL, `expiration_time` INTEGER NOT NULL, `activation_time` INTEGER NOT NULL, `creation_time` INTEGER NOT NULL, `last_ads_and_bidding_data_updated_time` INTEGER NOT NULL, `user_bidding_signals` TEXT, `bidding_logic_uri` TEXT NOT NULL, `ads` TEXT, `debuggable` INTEGER NOT NULL DEFAULT 0, `trusted_bidding_data_uri` TEXT, `trusted_bidding_data_keys` TEXT, PRIMARY KEY(`owner`, `buyer`, `name`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`owner` TEXT NOT NULL, `buyer` TEXT NOT NULL, `name` TEXT NOT NULL, `expiration_time` INTEGER NOT NULL, `activation_time` INTEGER NOT NULL, `creation_time` INTEGER NOT NULL, `last_ads_and_bidding_data_updated_time` INTEGER NOT NULL, `user_bidding_signals` TEXT, `bidding_logic_uri` TEXT NOT NULL, `ads` TEXT, `debuggable` INTEGER NOT NULL DEFAULT 0, `auction_server_request_flags` INTEGER NOT NULL DEFAULT 0, `trusted_bidding_data_uri` TEXT, `trusted_bidding_data_keys` TEXT, PRIMARY KEY(`owner`, `buyer`, `name`))",
         "fields": [
           {
             "fieldPath": "mOwner",
@@ -71,6 +71,13 @@
           {
             "fieldPath": "mDebuggable",
             "columnName": "debuggable",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "mAuctionServerRequestFlags",
+            "columnName": "auction_server_request_flags",
             "affinity": "INTEGER",
             "notNull": true,
             "defaultValue": "0"
@@ -344,7 +351,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1190519c00f7dcef6b229755b63deca4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fa36bc1546db7dfa49012f5418d5887e')"
     ]
   }
 }

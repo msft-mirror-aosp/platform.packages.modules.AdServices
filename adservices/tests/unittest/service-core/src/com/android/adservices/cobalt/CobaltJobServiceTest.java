@@ -46,8 +46,6 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.BooleanSyncCallback;
 import com.android.adservices.common.JobServiceCallback;
@@ -81,7 +79,6 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
     private static final long JOB_INTERVAL_MS = 21_600_000L;
     private static final long JOB_FLEX_MS = 2_000_000L;
     private static final int COBALT_LOGGING_JOB_ID = COBALT_LOGGING_JOB.getJobId();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final JobScheduler sJobScheduler = sContext.getSystemService(JobScheduler.class);
     @Spy private CobaltJobService mSpyCobaltJobService;
 

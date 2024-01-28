@@ -39,6 +39,7 @@ import androidx.appsearch.platformstorage.PlatformStorage;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
@@ -79,7 +80,11 @@ public class AppSearchMeasurementRollbackWorkerTest {
     @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
     @Mock private Flags mMockFlags;
 
-    @Rule
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .mockStatic(PlatformStorage.class)

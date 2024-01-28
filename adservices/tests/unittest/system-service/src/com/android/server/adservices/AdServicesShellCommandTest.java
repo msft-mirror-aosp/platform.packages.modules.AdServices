@@ -37,11 +37,9 @@ import android.os.RemoteException;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.server.adservices.AdServicesShellCommand.Injector;
 
-import com.google.common.truth.Expect;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -57,8 +55,6 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
     private static final String[] ALL_COMMANDS =
             new String[] {"help", CMD_IS_SYSTEM_SERVICE_ENABLED};
 
-    @Rule public final Expect expect = Expect.create();
-
     private final StringWriter mOutStringWriter = new StringWriter();
     private final StringWriter mErrStringWriter = new StringWriter();
 
@@ -66,7 +62,6 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
     private final PrintWriter mErr = new PrintWriter(mErrStringWriter);
 
     @Mock private Flags mFlags;
-    @Mock private Context mContext;
 
     @Mock private IShellCommand mIShellCommand;
 
@@ -89,7 +84,7 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
                     }
                 };
         mShellCmd =
-                new AdServicesShellCommand(mInjector, mFlags, mContext) {
+                new AdServicesShellCommand(mInjector, mFlags, mMockContext) {
                     @Override
                     public PrintWriter getOutPrintWriter() {
                         return mOut;
@@ -132,7 +127,7 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
                                                     }
                                                 },
                                                 mFlags,
-                                                mContext)
+                                                mMockContext)
                                         .onCommand("D'OH"));
         assertThat(e)
                 .hasMessageThat()

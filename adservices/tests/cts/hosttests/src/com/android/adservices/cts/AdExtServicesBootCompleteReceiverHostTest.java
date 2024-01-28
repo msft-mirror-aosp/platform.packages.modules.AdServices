@@ -20,8 +20,6 @@ import static com.android.adservices.common.TestDeviceHelper.ADSERVICES_SETTINGS
 import static com.android.adservices.common.TestDeviceHelper.startActivity;
 import static com.android.adservices.common.AndroidSdk.PRE_T;
 
-import android.platform.test.annotations.FlakyTest;
-
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.common.BackgroundLogReceiver;
@@ -62,7 +60,6 @@ public class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSid
                     .setAdServicesEnabled(true);
 
     @Test
-    @FlakyTest(bugId = 313782211)
     public void testExtBootCompleteReceiver() throws Exception {
         // reboot the device
         mDevice.reboot();

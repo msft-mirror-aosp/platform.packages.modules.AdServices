@@ -15,12 +15,7 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.shared.util.Preconditions.checkState;
-import static com.android.internal.util.Preconditions.checkArgument;
-
 import androidx.annotation.Nullable;
-
-import com.android.internal.annotations.VisibleForTesting;
 
 // TODO(b/302757068): add unit tests (and/or convert tests from OutcomeReceiverForTestsTest)
 /**
@@ -33,10 +28,6 @@ import com.android.internal.annotations.VisibleForTesting;
  * it.
  */
 public abstract class ExceptionFailureSyncCallback<T> extends SyncCallback<T, Exception> {
-
-    @VisibleForTesting
-    static final String ERROR_WRONG_EXCEPTION_RECEIVED =
-            "expected exception of type %s, but received %s";
 
     /**
      * Default constructor, uses {@link #DEFAULT_TIMEOUT_MS} for timeout and fails if the {@code
@@ -102,14 +93,7 @@ public abstract class ExceptionFailureSyncCallback<T> extends SyncCallback<T, Ex
      */
     public <E extends Exception> E assertFailure(Class<E> expectedClass)
             throws InterruptedException {
-        checkArgument(expectedClass != null, "expectedClass cannot be null");
-        Exception error = assertErrorReceived();
-        checkState(
-                expectedClass.isInstance(error),
-                ERROR_WRONG_EXCEPTION_RECEIVED,
-                expectedClass,
-                error);
-        return expectedClass.cast(error);
+        return assertErrorReceived(expectedClass);
     }
 
     /**
