@@ -133,8 +133,8 @@ public class UIStats {
                 + mDefaultAdIdState
                 + ", mUx="
                 + mUx
-                + mEnrollmentChannel
                 + ", mEnrollmentChannel="
+                + mEnrollmentChannel
                 + '}';
     }
 

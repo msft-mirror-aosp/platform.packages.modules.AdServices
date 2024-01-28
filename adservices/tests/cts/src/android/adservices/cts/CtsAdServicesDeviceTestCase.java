@@ -22,13 +22,11 @@ abstract class CtsAdServicesDeviceTestCase extends AdServicesCtsTestCase {
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        String packageName = sContext.getPackageName();
-
         // NOTE: currently it's only used by AdServicesCommonManagerTest, so it's setting the
         // flags used by it. Once / if it's used by tests that don't need (or cannot have) them,
         // we'd need to split this method
         return AdServicesFlagsSetterRule.withDefaultLogcatTags()
                 .setCompatModeFlags()
-                .setPpapiAppAllowList(packageName);
+                .setPpapiAppAllowList(mPackageName);
     }
 }

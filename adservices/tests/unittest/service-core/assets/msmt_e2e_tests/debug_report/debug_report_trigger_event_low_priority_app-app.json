@@ -216,6 +216,7 @@
     ],
     "verbose_debug_reports": [
       {
+        "report_time": "1643235578000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
           {

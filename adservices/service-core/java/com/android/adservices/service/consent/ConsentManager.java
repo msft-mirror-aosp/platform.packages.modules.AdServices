@@ -1584,7 +1584,6 @@ public class ConsentManager {
             editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, true);
             appConsents =
                     AppConsents.builder()
-                            .setDefaultConsent(consentKey)
                             .setMsmtConsent(consentKey)
                             .setFledgeConsent(consentKey)
                             .setTopicsConsent(consentKey)
@@ -1911,7 +1910,6 @@ public class ConsentManager {
                 .setMsmtConsent(measurementConsented)
                 .setTopicsConsent(topicsConsented)
                 .setFledgeConsent(fledgeConsented)
-                .setDefaultConsent(defaultConsent)
                 .build();
     }
 
@@ -2316,7 +2314,6 @@ public class ConsentManager {
                         .setMsmtConsent(appConsents == null || appConsents.getMsmtConsent())
                         .setTopicsConsent(appConsents == null || appConsents.getTopicsConsent())
                         .setFledgeConsent(appConsents == null || appConsents.getFledgeConsent())
-                        .setDefaultConsent(appConsents == null || appConsents.getDefaultConsent())
                         .setRegion(getConsentRegion(context))
                         .build();
         return consentMigrationStats;

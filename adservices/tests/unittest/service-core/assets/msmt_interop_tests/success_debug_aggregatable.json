@@ -222,7 +222,8 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "333"
+          "trigger_debug_key": "333",
+          "source_registration_time": "0"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "report_time": "1000"
@@ -237,7 +238,8 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "333"
+          "trigger_debug_key": "333",
+          "source_registration_time": "0"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"
@@ -251,7 +253,8 @@
               "value": 222
             }
           ],
-          "source_debug_key": "111"
+          "source_debug_key": "111",
+          "source_registration_time": "0"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3602000"
@@ -265,7 +268,8 @@
               "value": 333
             }
           ],
-          "source_debug_key": "111"
+          "source_debug_key": "111",
+          "source_registration_time": "0"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3603000"
@@ -279,7 +283,8 @@
               "value": 444
             }
           ],
-          "trigger_debug_key": "555"
+          "trigger_debug_key": "555",
+          "source_registration_time": "0"
         },
         "report_url": "https://another-reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3604000"
@@ -293,7 +298,8 @@
               "value": 555
             }
           ],
-          "trigger_debug_key": "666"
+          "trigger_debug_key": "666",
+          "source_registration_time": "0"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3605000"

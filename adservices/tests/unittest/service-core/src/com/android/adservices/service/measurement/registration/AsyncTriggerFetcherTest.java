@@ -40,11 +40,9 @@ import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.RegistrationRequestFixture;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
 
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
@@ -157,8 +155,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://subdomain.foo.test");
     private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
             new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
-    private static final Context CONTEXT =
-            InstrumentationRegistry.getInstrumentation().getContext();
     private static final String DEFAULT_EVENT_TRIGGER_DATA = "[]";
 
     private static final int UNKNOWN_SOURCE_TYPE = 0;
@@ -198,7 +194,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Before
     public void setup() {
         extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
-        mFetcher = spy(new AsyncTriggerFetcher(CONTEXT, mEnrollmentDao, mFlags));
+        mFetcher = spy(new AsyncTriggerFetcher(sContext, mEnrollmentDao, mFlags));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         ExtendedMockito.doReturn(Optional.of(ENROLLMENT_ID))
@@ -3482,7 +3478,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 RegistrationRequestFixture.getInvalidRegistrationRequest(
                         RegistrationRequest.REGISTER_TRIGGER,
                         WebUtil.validUri("http://foo.test"),
-                        CONTEXT.getPackageName(),
+                        sContext.getPackageName(),
                         SDK_PACKAGE_NAME);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -3498,21 +3494,22 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testBadTriggerUrl() throws Exception {
-        AsyncRegistration registration = createAsyncRegistration(
-                UUID.randomUUID().toString(),
-                WebUtil.validUri("bad-schema://foo.test"),
-                null,
-                null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
-                null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
-                AsyncRegistration.RegistrationType.APP_SOURCE,
-                null,
-                System.currentTimeMillis(),
-                0,
-                false,
-                false,
-                null);
+        AsyncRegistration registration =
+                createAsyncRegistration(
+                        UUID.randomUUID().toString(),
+                        WebUtil.validUri("bad-schema://foo.test"),
+                        null,
+                        null,
+                        Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
+                        null,
+                        Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
+                        AsyncRegistration.RegistrationType.APP_SOURCE,
+                        null,
+                        System.currentTimeMillis(),
+                        0,
+                        false,
+                        false,
+                        null);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -5503,7 +5500,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mFlags.getWebContextClientAppAllowList())
-                .thenReturn(CONTEXT.getPackageName() + ",some_other_package");
+                .thenReturn(sContext.getPackageName() + ",some_other_package");
         String originalAttributionConfigString =
                 "[{\n"
                         + "\"source_network\": \"AdTech1-Ads\",\n"
@@ -6666,7 +6663,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_TRIGGER,
                         Uri.parse(triggerUri),
-                        CONTEXT.getPackageName(),
+                        sContext.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .build();
     }
@@ -6675,7 +6672,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_TRIGGER,
                         Uri.parse(triggerUri),
-                        CONTEXT.getPackageName(),
+                        sContext.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(true)
                 .setAdIdValue(PLATFORM_AD_ID_VALUE)
@@ -6695,9 +6692,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 registrationRequest.getRegistrationUri(),
                 null,
                 null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                         ? AsyncRegistration.RegistrationType.APP_SOURCE
                         : AsyncRegistration.RegistrationType.APP_TRIGGER,
@@ -6716,9 +6713,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 registrationRequest.getRegistrationUri(),
                 null,
                 null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                         ? AsyncRegistration.RegistrationType.APP_SOURCE
                         : AsyncRegistration.RegistrationType.APP_TRIGGER,
@@ -6741,7 +6738,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                     webTriggerParams.getRegistrationUri(),
                     null,
                     null,
-                    Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                    Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                     null,
                     webTriggerRegistrationRequest.getDestination(),
                     AsyncRegistration.RegistrationType.WEB_TRIGGER,
