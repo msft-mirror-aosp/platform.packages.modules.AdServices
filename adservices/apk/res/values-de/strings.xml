@@ -136,7 +136,7 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Von Android geschätzte Interessen"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"Apps, die Interessen schätzen"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Erfolgsmessung von Anzeigen"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Anzeigen-Erfolgsmessung"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Apps können die Privacy Sandbox verwenden, um die Effektivität ihrer Anzeigen zu messen. Werbetreibende können dazu unter Android vorübergehend Daten zu deinen Interaktionen mit ihren Anzeigen und Apps speichern. Die Menge der Daten, die gespeichert werden können, ist begrenzt und die Daten werden regelmäßig gelöscht.\n\nDu kannst sie auch jederzeit manuell löschen, indem du die Privacy Sandbox deaktivierst."</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android schätzt aufgrund der von dir genutzten Apps von Zeit zu Zeit deine Hauptinteressen. Apps können diese Informationen von Android anfordern, um dir relevantere Werbung zu präsentieren.\n\nWenn du ein Interesse blockierst, wird es der Liste nicht noch einmal hinzugefügt – es sei denn, du hebst die Blockierung auf. Es kann aber sein, dass du weiterhin entsprechende Werbung siehst."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blockieren"</string>

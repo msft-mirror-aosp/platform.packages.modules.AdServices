@@ -77,7 +77,7 @@
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Annunci più utili"</string>
     <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Le app possono chiedere ad Android informazioni utili a personalizzare gli annunci che vedi."</string>
     <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Android rileva argomenti di interesse in base alle app che hai usato di recente."</string>
-    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Le app che usi possono anche stabilire i tuoi interessi in base a come le utilizzi. Ad esempio, se usi un\'app che vende scarpe da corsa a lunga distanza, l\'app potrebbe decidere che ti interessa partecipare a maratone."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Le app che usi possono anche stabilire i tuoi interessi in base a come le utilizzi. Ad esempio, se usi un\'app che vende scarpe da corsa per lunghe distanze, l\'app potrebbe decidere che ti interessa partecipare a maratone."</string>
     <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"In seguito, un\'app che utilizzi può chiedere queste informazioni: gli argomenti degli annunci o gli annunci suggeriti dalle app che hai usato."</string>
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android elimina automaticamente e regolarmente gli argomenti e i dati suggeriti dalle app. Puoi anche bloccare specifici argomenti e app che non vuoi diano suggerimenti."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Misurazione del rendimento di un annuncio"</string>
