@@ -3090,6 +3090,7 @@ public interface Flags extends CommonFlags {
     }
 
     boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
+
     /** Returns true when the new trigger registration header size limitation are applied. */
     default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
         return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
@@ -4534,5 +4535,125 @@ public interface Flags extends CommonFlags {
     /** Returns whether features related to the PAS Ux are enabled */
     default boolean getPasUxEnabled() {
         return DEFAULT_PAS_UX_ENABLED;
+    }
+
+    /** Default value of the KAnon Sign/join feature flag */
+    boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED = false;
+
+    /** Default value of k-anon fetch server parameters url. */
+    String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getServerPublicParams";
+
+    /** Default value of k-anon register client parameters url. */
+    String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/registerClient";
+
+    /** Default value of k-anon get tokens url. */
+    String FLEDGE_DEFAULT_KANON_GET_TOKENS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getTokens";
+
+    /** Default value of k-anon get tokens url. */
+    String FLEDGE_DEFAULT_KANON_JOIN_URL =
+            "https://staging-chromekanonymity-pa.sandbox.googleapis.com/v1/proxy/req";
+
+    /** Default size of batch in a kanon sign call */
+    int FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE = 32;
+
+    /** Default percentage of messages to be signed/joined immediately. */
+    int FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS = 10;
+
+    /** Default ttl of kanon-messages stored in the database */
+    long FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS = 2 * 7 * 24 * 60 * 60; // 2 weeks
+
+    /** Default frequency of the KAnon Sign/Join background process */
+    int FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY = 2;
+
+    /** Default number of messages processed in a single background process */
+    int FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS = 100;
+
+    /**
+     * This is a feature flag for KAnon Sign/Join feature.
+     *
+     * @return {@code true} if the feature is enabled, otherwise returns {@code false}.
+     */
+    default boolean getFledgeKAnonSignJoinFeatureEnabled() {
+        return FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch server parameters during k-anon
+     * sign call
+     *
+     * @return kanon fetch server params url.
+     */
+    default String getFledgeKAnonFetchServerParamsUrl() {
+        return FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to register client parameters during k-anon
+     * sign call.
+     *
+     * @return register client params url
+     */
+    default String getFledgeKAnonRegisterClientParametersUrl() {
+        return FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch Tokens during k-anon sign call.
+     *
+     * @return default value of get tokens url
+     */
+    default String getFledgeKAnonGetTokensUrl() {
+        return FLEDGE_DEFAULT_KANON_GET_TOKENS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to make k-anon JOIN join call.
+     *
+     * @return default value of get tokens url
+     */
+    default String getFledgeKAnonJoinUrl() {
+        return FLEDGE_DEFAULT_KANON_JOIN_URL;
+    }
+
+    /**
+     * This method returns the value of batch size in a batch kanon sign call
+     *
+     * @return k-anon sign batch size
+     */
+    default int getFledgeKAnonSignBatchSize() {
+        return FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE;
+    }
+
+    /**
+     * This method returns an integer tha represents the percentage of the messages that needs to be
+     * signed/joined immediately.
+     */
+    default int getFledgeKAnonPercentageImmediateSignJoinCalls() {
+        return FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
+    }
+
+    /**
+     * This method returns the max ttl of a KAnonMessage in the Database. This is used to determine
+     * when to clean up the old KAnonMessages from the database
+     *
+     * @return kanon max ttl for a kano message
+     */
+    default long getFledgeKAnonMessageTtlSeconds() {
+        return FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS;
+    }
+
+    /** This method returns the number of k-anon sign/join background processes per day. */
+    default int getFledgeKAnonBackgroundProcessFrequencyPerDay() {
+        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY;
+    }
+
+    /**
+     * This method returns the number of k-anon messages to be processed per background process run.
+     */
+    default int getFledgeKAnonMessagesPerBackgroundProcess() {
+        return FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
     }
 }
