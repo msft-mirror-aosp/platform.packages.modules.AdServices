@@ -177,7 +177,8 @@
             }
           ],
           "source_debug_key": "347982378",
-          "trigger_debug_key": "8971346781"
+          "trigger_debug_key": "8971346781",
+          "source_registration_time": "1643155200"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643325573000"
@@ -196,7 +197,8 @@
             }
           ],
           "source_debug_key": "347982378",
-          "trigger_debug_key": "8971346781"
+          "trigger_debug_key": "8971346781",
+          "source_registration_time": "1643155200"
         }
       }
     ],
@@ -215,6 +217,7 @@
             }
           }
         ],
+        "report_time": "1643321973001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
       }
     ]

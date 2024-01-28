@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include <jni.h>
-/* Header for class com_android_adservices_ActJni */
+/* Header for class com_android_adservices_ActJniWrapper */
 
 #ifndef ADSERVICES_SERVICE_CORE_JNI_INCLUDE_ACT_JNI_H_
 #define ADSERVICES_SERVICE_CORE_JNI_INCLUDE_ACT_JNI_H_
@@ -22,36 +22,36 @@
 extern "C" {
 #endif
 /*
- * Class:     com_android_adservices_ActJni
+ * Class:     com_android_adservices_ActJniWrapper
  * Method:    generateClientParameters
  * Signature: ([B[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateClientParameters
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJniWrapper_generateClientParameters
   (JNIEnv *, jclass, jbyteArray, jbyteArray);
 
 /*
-* Class:     com_android_adservices_ActJni
+* Class:     com_android_adservices_ActJniWrapper
 * Method:    generateTokensRequest
 * Signature: ([B[B[B[B)[B
 */
-JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_generateTokensRequest
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJniWrapper_generateTokensRequest
 (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
 
 /*
-* Class:     com_android_adservices_ActJni
+* Class:     com_android_adservices_ActJniWrapper
 * Method:    verifyTokensResponse
 * Signature: ([B[B[B[B[B[B[B[B)Z
 */
-JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJni_verifyTokensResponse
+JNIEXPORT jboolean JNICALL Java_com_android_adservices_ActJniWrapper_verifyTokensResponse
 (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray,
                                         jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
 
 /*
-* Class:     com_android_adservices_ActJni
+* Class:     com_android_adservices_ActJniWrapper
 * Method:    recoverTokens
 * Signature: ([B[B[B[B[B[B[B[B)Z
 */
-JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJni_recoverTokens
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_ActJniWrapper_recoverTokens
 (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray,
                                         jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
 

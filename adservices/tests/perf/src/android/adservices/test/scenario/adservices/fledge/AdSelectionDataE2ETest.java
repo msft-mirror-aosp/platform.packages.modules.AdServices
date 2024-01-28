@@ -37,6 +37,7 @@ import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -67,13 +68,18 @@ public class AdSelectionDataE2ETest {
             "ContextualSignalsContextualWinner.json";
 
     private static final String CONTEXTUAL_SIGNALS_FIVE_BUYERS = "ContextualSignalsFiveBuyers.json";
+    private static final String CONTEXTUAL_SIGNALS_TWO_BUYERS = "ContextualSignalsTwoBuyers.json";
     private static final String CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD =
             "CustomAudienceOneBuyerOneCaOneAd.json";
     private static final String CUSTOM_AUDIENCE_FIVE_BUYERS_MULTIPLE_CA =
             "CustomAudienceServerAuctionFiveBuyersMultipleCa.json";
+
+    private static final String CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA =
+            "CustomAudienceServerAuctionTwoBuyersMultipleCa.json";
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
-    private static final String SFE_ADDRESS = "https://seller1-patest.sfe.bas-gcp.pstest.dev/v1/selectAd";
+    private static final String SFE_ADDRESS =
+            "https://seller1-patest.sfe.bas-gcp.pstest.dev/v1/selectAd";
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
@@ -154,6 +160,52 @@ public class AdSelectionDataE2ETest {
     }
 
     @Test
+    public void runAdSelection_twoBuyersMultipleCa_dummyData_remarketingWinner() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA);
+
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        SelectAdResponse selectAdResponse =
+                FakeAdExchangeServer.runServerAuction(
+                        CONTEXTUAL_SIGNALS_TWO_BUYERS,
+                        outcome.getAdSelectionData(),
+                        SFE_ADDRESS,
+                        SERVER_RESPONSE_LOGGING_ENABLED);
+
+        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setAdSelectionId(outcome.getAdSelectionId())
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .setAdSelectionResult(
+                                BaseEncoding.base64()
+                                        .decode(selectAdResponse.auctionResultCiphertext))
+                        .build();
+
+        AdSelectionOutcome adSelectionOutcome =
+                AD_SELECTION_CLIENT
+                        .persistAdSelectionResult(persistAdSelectionResultRequest)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+
+        Assert.assertEquals(
+                AD_WINNER_DOMAIN + getWinningAdRenderIdForDummyScripts(customAudiences),
+                adSelectionOutcome.getRenderUri().toString());
+    }
+
+    @Test
+    @FlakyTest(bugId = 322323696)
     public void runAdSelection_fiveBuyersMultipleCa_dummyData_remarketingWinner() throws Exception {
         List<CustomAudience> customAudiences =
                 CustomAudienceTestFixture.readCustomAudiences(

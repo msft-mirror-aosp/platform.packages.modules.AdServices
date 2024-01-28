@@ -53,8 +53,18 @@ public class CustomAudienceImplTest {
             CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .build();
 
+    private static final CustomAudience VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
+            CustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(
+                            CommonFixture.VALID_BUYER_1)
+                    .build();
+
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+
+    private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
+            DBCustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(
+                            CommonFixture.VALID_BUYER_1)
+                    .build();
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
             AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
@@ -97,6 +107,31 @@ public class CustomAudienceImplTest {
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE);
+        verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
+    }
+
+    @Test
+    public void testJoinCustomAudienceWithServerAuctionFlags_runNormally() {
+
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+
+        mImpl.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                CustomAudienceFixture.VALID_OWNER,
+                DevContext.createForDevOptionsDisabled());
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        VALID_DB_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1),
+                        false);
+        verify(mClockMock).instant();
+        verify(mCustomAudienceQuantityCheckerMock)
+                .check(
+                        VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                        CustomAudienceFixture.VALID_OWNER);
+        verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS);
         verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
     }
 

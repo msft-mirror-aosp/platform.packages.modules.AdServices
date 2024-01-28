@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.adservices;
+package com.android.adservices.kanon;
 
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.ActJniUtility;
+import com.android.adservices.service.kanon.AnonymousCountingTokens;
+import com.android.adservices.service.kanon.AnonymousCountingTokensImpl;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -26,13 +30,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-
-import android.util.Log;
 
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
 import private_join_and_compute.anonymous_counting_tokens.ClientPrivateParameters;
@@ -42,22 +39,24 @@ import private_join_and_compute.anonymous_counting_tokens.MessagesSet;
 import private_join_and_compute.anonymous_counting_tokens.SchemeParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPrivateParameters;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.Token;
 import private_join_and_compute.anonymous_counting_tokens.TokensRequest;
 import private_join_and_compute.anonymous_counting_tokens.TokensRequestPrivateState;
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
-public class ActJniTest {
-
+public class AnonymousCountingTokensTest {
     private SchemeParameters mSchemeParameters;
     private ServerPublicParameters mServerPublicParameters;
     private static final String GOLDEN_TRANSCRIPT_PATH = "act/golden_transcript_1";
     private ServerPrivateParameters mServerPrivateParameters;
     private ClientParameters mClientParameters;
     private Transcript mTranscript;
+    private AnonymousCountingTokens mAnonymousCountingTokens;
 
     @Before
     public void setup() throws IOException {
@@ -65,6 +64,7 @@ public class ActJniTest {
         InputStream inputStream = sContext.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
 
+        mAnonymousCountingTokens = new AnonymousCountingTokensImpl();
         mSchemeParameters = mTranscript.getSchemeParameters();
         mServerPublicParameters = mTranscript.getServerParameters().getPublicParameters();
         mServerPrivateParameters = mTranscript.getServerParameters().getPrivateParameters();
@@ -74,9 +74,11 @@ public class ActJniTest {
     @Test
     public void testGenerateClientParams_generatesDifferentClientParams() throws IOException {
         ClientParameters clientParameters =
-                ActJni.generateClientParameters(mSchemeParameters, mServerPublicParameters);
+                mAnonymousCountingTokens.generateClientParameters(
+                        mSchemeParameters, mServerPublicParameters);
         ClientParameters otherClientParameters =
-                ActJni.generateClientParameters(mSchemeParameters, mServerPublicParameters);
+                mAnonymousCountingTokens.generateClientParameters(
+                        mSchemeParameters, mServerPublicParameters);
 
         Assert.assertNotEquals(
                 clientParameters
@@ -97,7 +99,7 @@ public class ActJniTest {
         Assert.assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        ActJni.generateClientParameters(
+                        mAnonymousCountingTokens.generateClientParameters(
                                 invalidSchemeParameters, mServerPublicParameters));
     }
 
@@ -106,7 +108,8 @@ public class ActJniTest {
             throws InvalidProtocolBufferException {
 
         ClientParameters clientParameters =
-                ActJni.generateClientParameters(mSchemeParameters, mServerPublicParameters);
+                mAnonymousCountingTokens.generateClientParameters(
+                        mSchemeParameters, mServerPublicParameters);
         Assert.assertTrue(
                 ActJniUtility.checkClientParameters(
                         mSchemeParameters,
@@ -134,14 +137,14 @@ public class ActJniTest {
                         .build();
 
         GeneratedTokensRequestProto generatedTokenRequestResponse =
-                ActJni.generateTokensRequest(
+                mAnonymousCountingTokens.generateTokensRequest(
                         messagesSet,
                         mSchemeParameters,
                         clientPublicParameters,
                         clientPrivateParameters,
                         mServerPublicParameters);
         GeneratedTokensRequestProto generatedTokenRequestResponse2 =
-                ActJni.generateTokensRequest(
+                mAnonymousCountingTokens.generateTokensRequest(
                         messagesSet2,
                         mSchemeParameters,
                         clientPublicParameters,
@@ -175,7 +178,7 @@ public class ActJniTest {
                         .addMessage("message_2")
                         .build();
         GeneratedTokensRequestProto generatedTokenRequestResponse =
-                ActJni.generateTokensRequest(
+                mAnonymousCountingTokens.generateTokensRequest(
                         messagesSet,
                         mSchemeParameters,
                         clientPublicParameters,
@@ -189,7 +192,7 @@ public class ActJniTest {
         Assert.assertThrows(
                 IllegalStateException.class,
                 () ->
-                        ActJni.verifyTokensResponse(
+                        mAnonymousCountingTokens.verifyTokensResponse(
                                 messagesSet,
                                 tokensRequest,
                                 tokensRequestPrivateState,
@@ -203,12 +206,10 @@ public class ActJniTest {
     @Test
     public void test_verifyTokensResponse_returnsTrueWithCorrectTokenResponse() {
         MessagesSet messagesSet =
-                MessagesSet.newBuilder()
-                        .addAllMessage(mTranscript.getMessagesList())
-                        .build();
+                MessagesSet.newBuilder().addAllMessage(mTranscript.getMessagesList()).build();
 
         Assert.assertTrue(
-                ActJni.verifyTokensResponse(
+                mAnonymousCountingTokens.verifyTokensResponse(
                         messagesSet,
                         mTranscript.getTokensRequest(),
                         mTranscript.getTokensRequestPrivateState(),
@@ -220,15 +221,12 @@ public class ActJniTest {
     }
 
     @Test
-    public void test_recoverTokens_returnsTheCorrectTokens()
-            throws InvalidProtocolBufferException {
+    public void test_recoverTokens_returnsTheCorrectTokens() throws InvalidProtocolBufferException {
         MessagesSet messagesSet =
-                MessagesSet.newBuilder()
-                        .addAllMessage(mTranscript.getMessagesList())
-                        .build();
+                MessagesSet.newBuilder().addAllMessage(mTranscript.getMessagesList()).build();
 
         TokensSet tokensSet =
-                ActJni.recoverTokens(
+                mAnonymousCountingTokens.recoverTokens(
                         messagesSet,
                         mTranscript.getTokensRequest(),
                         mTranscript.getTokensRequestPrivateState(),

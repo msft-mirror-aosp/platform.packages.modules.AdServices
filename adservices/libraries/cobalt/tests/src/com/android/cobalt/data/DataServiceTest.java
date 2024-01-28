@@ -107,8 +107,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
 
     @Before
     public void setup() {
-        mCobaltDatabase =
-                Room.inMemoryDatabaseBuilder(appContext.get(), CobaltDatabase.class).build();
+        mCobaltDatabase = Room.inMemoryDatabaseBuilder(mContext, CobaltDatabase.class).build();
         mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
         mTestOnlyDao = mCobaltDatabase.testOnlyDao();
         mDataService = new DataService(EXECUTOR, mCobaltDatabase);

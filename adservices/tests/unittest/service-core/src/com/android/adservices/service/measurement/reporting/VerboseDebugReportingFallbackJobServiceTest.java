@@ -32,6 +32,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -83,7 +85,7 @@ public class VerboseDebugReportingFallbackJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
-    private static final long WAIT_IN_MILLIS = 200L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
     private JobScheduler mMockJobScheduler;
     private VerboseDebugReportingFallbackJobService mSpyService;
@@ -183,17 +185,25 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                                     () ->
                                             VerboseDebugReportingFallbackJobService
                                                     .scheduleIfNeeded(any(), anyBoolean()));
+                    ExtendedMockito.doNothing()
+                            .when(mSpyLogger)
+                            .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
 
                     JobServiceCallback callback = createJobFinishedCallback(mSpyService);
 
                     // Execute
-                    mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    callback.assertJobFinished();
-
-                    callback = createJobFinishedCallback(mSpyService);
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-
                     callback.assertJobFinished();
+
+                    assertTrue(result);
+
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
+                            .jobFinished(any(), anyBoolean());
+
+                    JobServiceCallback secondCallback = createJobFinishedCallback(mSpyService);
+                    // Execute
+                    result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    secondCallback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
@@ -407,8 +417,7 @@ public class VerboseDebugReportingFallbackJobServiceTest {
                             .when(mSpyService)
                             .sendReports();
                     mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    Thread.sleep(WAIT_IN_MILLIS);
-
+                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1)).onStartJob(any());
                     assertNotNull(mSpyService.getFutureForTesting());
 
                     boolean onStopJobResult =

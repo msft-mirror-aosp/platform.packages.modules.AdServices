@@ -105,6 +105,10 @@ public class DBCustomAudience {
     @ColumnInfo(name = "debuggable", defaultValue = "0")
     private final boolean mDebuggable;
 
+    @ColumnInfo(name = "auction_server_request_flags", defaultValue = "0")
+    @CustomAudience.AuctionServerRequestFlag
+    private final int mAuctionServerRequestFlags;
+
     public DBCustomAudience(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
@@ -117,7 +121,8 @@ public class DBCustomAudience {
             @Nullable DBTrustedBiddingData trustedBiddingData,
             @NonNull Uri biddingLogicUri,
             @Nullable List<DBAdData> ads,
-            boolean debuggable) {
+            boolean debuggable,
+            @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags) {
         Preconditions.checkStringNotEmpty(owner, "Owner must be provided");
         Objects.requireNonNull(buyer, "Buyer must be provided.");
         Preconditions.checkStringNotEmpty(name, "Name must be provided");
@@ -140,6 +145,7 @@ public class DBCustomAudience {
         mBiddingLogicUri = biddingLogicUri;
         mAds = ads;
         mDebuggable = debuggable;
+        mAuctionServerRequestFlags = auctionServerRequestFlags;
     }
 
     /**
@@ -210,9 +216,12 @@ public class DBCustomAudience {
                                                                 .build())
                                         .collect(Collectors.toList()))
                 .setUserBiddingSignals(parcelable.getUserBiddingSignals())
+                .setAuctionServerRequestFlags(parcelable.getAuctionServerRequestFlags())
                 .build();
     }
 
+    // TODO(b/321092996) Update this once {@link CustomAudienceUpdatableData} is updated with the
+    // new field
     /**
      * Creates a copy of the current {@link DBCustomAudience} object updated with data from a {@link
      * CustomAudienceUpdatableData} object.
@@ -348,6 +357,12 @@ public class DBCustomAudience {
         return mDebuggable;
     }
 
+    /** Returns the bitfield of auction server request flags. */
+    @CustomAudience.AuctionServerRequestFlag
+    public int getAuctionServerRequestFlags() {
+        return mAuctionServerRequestFlags;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -363,7 +378,8 @@ public class DBCustomAudience {
                 && Objects.equals(mUserBiddingSignals, that.mUserBiddingSignals)
                 && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
                 && mBiddingLogicUri.equals(that.mBiddingLogicUri)
-                && Objects.equals(mAds, that.mAds);
+                && Objects.equals(mAds, that.mAds)
+                && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags;
     }
 
     @Override
@@ -380,7 +396,8 @@ public class DBCustomAudience {
                 mTrustedBiddingData,
                 mBiddingLogicUri,
                 mAds,
-                mDebuggable);
+                mDebuggable,
+                mAuctionServerRequestFlags);
     }
 
     /**
@@ -401,7 +418,8 @@ public class DBCustomAudience {
                 .setTrustedBiddingData(this.mTrustedBiddingData)
                 .setBiddingLogicUri(this.mBiddingLogicUri)
                 .setAds(this.mAds)
-                .setDebuggable(this.mDebuggable);
+                .setDebuggable(this.mDebuggable)
+                .setAuctionServerRequestFlags(this.mAuctionServerRequestFlags);
     }
 
     @Override
@@ -433,6 +451,8 @@ public class DBCustomAudience {
                 + mAds
                 + ", mDebuggable="
                 + mDebuggable
+                + ", mAuctionServerRequestFlags="
+                + mAuctionServerRequestFlags
                 + '}';
     }
 
@@ -450,6 +470,7 @@ public class DBCustomAudience {
         private Uri mBiddingLogicUri;
         private List<DBAdData> mAds;
         private boolean mDebuggable;
+        @CustomAudience.AuctionServerRequestFlag private int mAuctionServerRequestFlags;
 
         public Builder() {}
 
@@ -469,6 +490,7 @@ public class DBCustomAudience {
             mBiddingLogicUri = customAudience.getBiddingLogicUri();
             mAds = customAudience.getAds();
             mDebuggable = customAudience.isDebuggable();
+            mAuctionServerRequestFlags = customAudience.getAuctionServerRequestFlags();
         }
 
         /** See {@link #getOwner()} for detail. */
@@ -544,6 +566,14 @@ public class DBCustomAudience {
             return this;
         }
 
+        /** Sets the bitfield of auction server request flags. */
+        @NonNull
+        public Builder setAuctionServerRequestFlags(
+                @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags) {
+            mAuctionServerRequestFlags = auctionServerRequestFlags;
+            return this;
+        }
+
         /**
          * Build the {@link DBCustomAudience}.
          *
@@ -562,7 +592,8 @@ public class DBCustomAudience {
                     mTrustedBiddingData,
                     mBiddingLogicUri,
                     mAds,
-                    mDebuggable);
+                    mDebuggable,
+                    mAuctionServerRequestFlags);
         }
     }
 
