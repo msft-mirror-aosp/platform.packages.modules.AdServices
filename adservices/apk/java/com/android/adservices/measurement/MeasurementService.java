@@ -77,7 +77,7 @@ public class MeasurementService extends Service {
                     new MeasurementServiceImpl(
                             this,
                             Clock.SYSTEM_CLOCK,
-                            ConsentManager.getInstance(this),
+                            ConsentManager.getInstance(),
                             new CachedFlags(flags),
                             appImportanceFilter);
         }
@@ -99,9 +99,7 @@ public class MeasurementService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this)
-                .getConsent(AdServicesApiType.MEASUREMENTS)
-                .isGiven();
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
     private void schedulePeriodicJobsIfNeeded() {

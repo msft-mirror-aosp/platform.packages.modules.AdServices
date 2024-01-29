@@ -564,7 +564,7 @@ public final class UiStatsLogger {
         if (UxStatesManager.getInstance(context).getUx() == RVC_UX) {
             return getDefaultConsent(AdServicesApiType.MEASUREMENTS);
         }
-        Boolean defaultConsent = ConsentManager.getInstance(context).getDefaultConsent();
+        Boolean defaultConsent = ConsentManager.getInstance().getDefaultConsent();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultConsent == null) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__CONSENT_UNSPECIFIED;
@@ -577,7 +577,7 @@ public final class UiStatsLogger {
 
     private static int getDefaultAdIdState() {
         Context context = getApplicationContext();
-        Boolean defaultAdIdState = ConsentManager.getInstance(context).getDefaultAdIdState();
+        Boolean defaultAdIdState = ConsentManager.getInstance().getDefaultAdIdState();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultAdIdState == null) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__STATE_UNSPECIFIED;
@@ -593,7 +593,7 @@ public final class UiStatsLogger {
         switch (apiType) {
             case TOPICS:
                 Boolean topicsDefaultConsent =
-                        ConsentManager.getInstance(context).getTopicsDefaultConsent();
+                        ConsentManager.getInstance().getTopicsDefaultConsent();
                 // edge case where the user checks topic consent before receiving consent
                 // notification.
                 if (topicsDefaultConsent == null) {
@@ -605,7 +605,7 @@ public final class UiStatsLogger {
                 }
             case FLEDGE:
                 Boolean fledgeDefaultConsent =
-                        ConsentManager.getInstance(context).getFledgeDefaultConsent();
+                        ConsentManager.getInstance().getFledgeDefaultConsent();
                 // edge case where the user checks FLEDGE consent before receiving consent
                 // notification.
                 if (fledgeDefaultConsent == null) {
@@ -617,7 +617,7 @@ public final class UiStatsLogger {
                 }
             case MEASUREMENTS:
                 Boolean measurementDefaultConsent =
-                        ConsentManager.getInstance(context).getMeasurementDefaultConsent();
+                        ConsentManager.getInstance().getMeasurementDefaultConsent();
                 // edge case where the user checks measurement consent before receiving consent
                 // notification.
                 if (measurementDefaultConsent == null) {

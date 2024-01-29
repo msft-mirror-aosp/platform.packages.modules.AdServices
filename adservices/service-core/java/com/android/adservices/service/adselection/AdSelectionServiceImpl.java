@@ -265,7 +265,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 new AdSelectionServiceFilter(
                         context,
-                        ConsentManager.getInstance(context),
+                        ConsentManager.getInstance(),
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,
@@ -282,7 +282,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                         FlagsFactory.getFlags()),
-                ConsentManager.getInstance(context),
+                ConsentManager.getInstance(),
                 new ObliviousHttpEncryptorImpl(
                         new AdSelectionEncryptionKeyManager(
                                 AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
@@ -1045,7 +1045,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mLightweightExecutor,
                         mBackgroundExecutor,
                         mContext.getPackageManager(),
-                        ConsentManager.getInstance(mContext),
+                        ConsentManager.getInstance(),
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
@@ -1112,7 +1112,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mLightweightExecutor,
                         mBackgroundExecutor,
                         mContext.getPackageManager(),
-                        ConsentManager.getInstance(mContext),
+                        ConsentManager.getInstance(),
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
@@ -1162,7 +1162,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mLightweightExecutor,
                         mBackgroundExecutor,
                         mContext.getPackageManager(),
-                        ConsentManager.getInstance(mContext),
+                        ConsentManager.getInstance(),
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
@@ -1217,7 +1217,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mLightweightExecutor,
                         mBackgroundExecutor,
                         mContext.getPackageManager(),
-                        ConsentManager.getInstance(mContext),
+                        ConsentManager.getInstance(),
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
@@ -1268,7 +1268,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mLightweightExecutor,
                         mBackgroundExecutor,
                         mContext.getPackageManager(),
-                        ConsentManager.getInstance(mContext),
+                        ConsentManager.getInstance(),
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
@@ -1317,7 +1317,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mLightweightExecutor,
                         mBackgroundExecutor,
                         mContext.getPackageManager(),
-                        ConsentManager.getInstance(mContext),
+                        ConsentManager.getInstance(),
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
