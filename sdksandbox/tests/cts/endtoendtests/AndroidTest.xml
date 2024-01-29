@@ -44,6 +44,7 @@
         <option name="test-file-name" value="EmptySdkProviderApp.apk"/>
         <option name="test-file-name" value="SdkSandboxManagerCtsProvider.apk"/>
         <option name="test-file-name" value="SdkSandboxMediationTestProvider.apk" />
+        <option name="test-file-name" value="CtsSdkProviderAppWithoutSdkProviderClassNameProperty.apk"/>
         <option name="test-file-name" value="SdkSandboxManagerTests.apk"/>
     </target_preparer>
 

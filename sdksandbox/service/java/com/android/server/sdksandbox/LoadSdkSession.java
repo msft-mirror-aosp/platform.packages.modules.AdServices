@@ -725,7 +725,6 @@ class LoadSdkSession {
             throw new PackageManager.NameNotFoundException(mSdkName);
         }
 
-        // TODO(b/322334874): Add test for the case when property not present
         String sdkProviderClassName;
         try {
             sdkProviderClassName =
