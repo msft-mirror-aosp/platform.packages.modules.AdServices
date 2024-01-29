@@ -217,7 +217,7 @@ public class ConsentNotificationJobService extends JobService {
             setConsentManager(ConsentManager.getInstance());
         }
         if (mUxStatesManager == null) {
-            setUxStatesManager(UxStatesManager.getInstance(getApplicationContext()));
+            setUxStatesManager(UxStatesManager.getInstance());
         }
 
         mConsentManager.recordDefaultAdIdState(mConsentManager.isAdIdEnabled());
