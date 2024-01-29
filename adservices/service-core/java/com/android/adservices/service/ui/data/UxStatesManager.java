@@ -78,9 +78,7 @@ public class UxStatesManager {
                     LogUtil.d("Creaeting new UxStatesManager.");
                     sUxStatesManager =
                             new UxStatesManager(
-                                    context,
-                                    FlagsFactory.getFlags(),
-                                    ConsentManager.getInstance(context));
+                                    context, FlagsFactory.getFlags(), ConsentManager.getInstance());
                 }
             }
         }

@@ -729,7 +729,7 @@ public class PackageChangedReceiverTest {
                         .startMocking();
         try {
             // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
             CountDownLatch completionLatch = new CountDownLatch(1);
             doAnswer(
@@ -766,7 +766,7 @@ public class PackageChangedReceiverTest {
                         .startMocking();
         try {
             // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
             // Track whether the clearConsentForUninstalledApp was ever invoked.
             // Use a CountDownLatch since this invocation happens on a background thread.
@@ -1179,7 +1179,7 @@ public class PackageChangedReceiverTest {
                         .startMocking();
         try {
             ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastS);
-            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
             Intent intent =
                     createIntentSentByAdServiceSystemService(

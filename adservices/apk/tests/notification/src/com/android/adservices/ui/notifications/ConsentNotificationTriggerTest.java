@@ -118,7 +118,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(mAdServicesLogger).when(UiStatsLogger::getAdServicesLogger);
         doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance(any(Context.class)));
         doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(false).when(mMockUxStatesManager).isEeaDevice();

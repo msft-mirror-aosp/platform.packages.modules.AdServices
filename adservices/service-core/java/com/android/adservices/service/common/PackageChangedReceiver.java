@@ -311,7 +311,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Deleting consent data for package %s with UID %d", packageName, packageUid);
         sBackgroundExecutor.execute(
                 () -> {
-                    ConsentManager instance = ConsentManager.getInstance(context);
+                    ConsentManager instance = ConsentManager.getInstance();
                     if (packageUid == DEFAULT_PACKAGE_UID) {
                         // There can be multiple instances of PackageChangedReceiver, e.g. in
                         // different user profiles. The system broadcasts a package change
