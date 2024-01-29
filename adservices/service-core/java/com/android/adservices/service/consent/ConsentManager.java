@@ -976,7 +976,7 @@ public class ConsentManager {
      */
     public Boolean wasNotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasNotificationDisplayed(),
@@ -1017,7 +1017,7 @@ public class ConsentManager {
      */
     public Boolean wasGaUxNotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasGaUxNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasGaUxNotificationDisplayed(),
@@ -2039,7 +2039,7 @@ public class ConsentManager {
      */
     public Boolean wasU18NotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED),
                 () -> mAdServicesManager.wasU18NotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasU18NotificationDisplayed(),
