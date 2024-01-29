@@ -70,12 +70,15 @@ java_library {
 java_library {
     name: "android.ext.adservices",
     static_libs: ["framework-adservices.impl"],
+    installable: true,
+    provides_uses_lib: "android.ext.adservices",
     sdk_version: "module_current",
     min_sdk_version: "30",
     max_sdk_version: "32",
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
+        "//vendor:__subpackages__",
     ],
     apex_available: ["com.android.extservices"],
 }

@@ -26,6 +26,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.util.ArrayMap;
 import android.util.Log;
 
@@ -85,12 +86,19 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                 notifyFailedBinding(serviceConnection);
                 return;
             }
-            final Intent intent = new Intent().setComponent(componentName);
+            Intent intent = new Intent().setComponent(componentName);
 
             sdkSandboxConnection = new SdkSandboxConnection(serviceConnection);
 
-            final String callingPackageName = callingInfo.getPackageName();
-            String sandboxProcessName = toSandboxProcessName(callingPackageName);
+            String callingPackageName = callingInfo.getPackageName();
+            String sandboxProcessName = null;
+            try {
+                sandboxProcessName = toSandboxProcessName(callingInfo);
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e(TAG, "bindService failed for: " + callingInfo.toString(), e);
+                notifyFailedBinding(serviceConnection);
+                return;
+            }
             try {
                 boolean bound;
                 // For U+, we start the sandbox and then bind to it to prevent restarts. For T,
@@ -192,7 +200,8 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     @Override
-    public void stopSandboxService(CallingInfo callingInfo) {
+    public void stopSandboxService(CallingInfo callingInfo)
+            throws PackageManager.NameNotFoundException {
         synchronized (mLock) {
             SdkSandboxConnection sandbox = getSdkSandboxConnectionLocked(callingInfo);
 
@@ -205,9 +214,9 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                 Log.e(TAG, "Failed to find sdk sandbox service");
                 return;
             }
-            final Intent intent = new Intent().setComponent(componentName);
-            final String callingPackageName = callingInfo.getPackageName();
-            String sandboxProcessName = toSandboxProcessName(callingPackageName);
+            Intent intent = new Intent().setComponent(componentName);
+            String callingPackageName = callingInfo.getPackageName();
+            String sandboxProcessName = toSandboxProcessName(callingInfo);
 
             mActivityManagerLocal.stopSdkSandboxService(
                     intent, callingInfo.getUid(), callingPackageName, sandboxProcessName);
@@ -264,6 +273,19 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     @Override
+    public boolean isSandboxBoundForApp(CallingInfo callingInfo) {
+        synchronized (mLock) {
+            SdkSandboxConnection connection = getSdkSandboxConnectionLocked(callingInfo);
+            if (connection != null) {
+                synchronized (connection.mLock) {
+                    return connection.isBound;
+                }
+            }
+            return false;
+        }
+    }
+
+    @Override
     public int getSandboxStatusForApp(CallingInfo callingInfo) {
         synchronized (mLock) {
             SdkSandboxConnection connection = getSdkSandboxConnectionLocked(callingInfo);
@@ -277,8 +299,16 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
 
     @Override
     @NonNull
-    public String toSandboxProcessName(@NonNull String packageName) {
-        return getProcessName(packageName) + SANDBOX_PROCESS_NAME_SUFFIX;
+    public String toSandboxProcessName(@NonNull CallingInfo callingInfo)
+            throws PackageManager.NameNotFoundException {
+        return getProcessName(callingInfo) + SANDBOX_PROCESS_NAME_SUFFIX;
+    }
+
+    @Override
+    @NonNull
+    public String toSandboxProcessNameForInstrumentation(@NonNull CallingInfo callingInfo)
+            throws PackageManager.NameNotFoundException {
+        return getProcessName(callingInfo) + SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
     }
 
     @Nullable
@@ -308,14 +338,12 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
         return mAppSdkSandboxConnections.get(callingInfo);
     }
 
-    private String getProcessName(String packageName) {
-        try {
-            return mContext.getPackageManager().getApplicationInfo(packageName,
-                    /*flags=*/ 0).processName;
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e(TAG, packageName + " package not found");
-        }
-        return packageName;
+    private String getProcessName(CallingInfo callingInfo)
+            throws PackageManager.NameNotFoundException {
+        UserHandle userHandle = UserHandle.getUserHandleForUid(callingInfo.getUid());
+        return mContext.getPackageManager()
+                .getApplicationInfoAsUser(callingInfo.getPackageName(), /*flags=*/ 0, userHandle)
+                .processName;
     }
 
     // Represents the connection to an SDK sandbox service.

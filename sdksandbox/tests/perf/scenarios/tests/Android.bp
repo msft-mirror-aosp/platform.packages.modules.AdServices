@@ -37,4 +37,5 @@ android_test {
     test_suites: ["device-tests", "general-tests"],
     data: [":perfetto_artifacts"],
     min_sdk_version: "33",
+    target_sdk_version: "33",
 }

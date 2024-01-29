@@ -26,9 +26,10 @@ import androidx.room.migration.bundle.SchemaBundle;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.adselection.AdSelectionDatabase;
-import com.android.adservices.data.adselection.AdSelectionEncryptionDatabase;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 
 import com.google.common.collect.ImmutableList;
 
@@ -52,8 +53,9 @@ public class RoomSchemaMigrationGuardrailTest {
             ImmutableList.of(
                     CustomAudienceDatabase.class,
                     AdSelectionDatabase.class,
-                    AdSelectionEncryptionDatabase.class,
-                    SharedStorageDatabase.class);
+                    AdSelectionServerDatabase.class,
+                    SharedStorageDatabase.class,
+                    ProtectedSignalsDatabase.class);
     private static final List<DatabaseWithVersion> BYPASS_DATABASE_VERSIONS_NEW_FIELD_ONLY =
             ImmutableList.of(new DatabaseWithVersion(CustomAudienceDatabase.class, 2));
 

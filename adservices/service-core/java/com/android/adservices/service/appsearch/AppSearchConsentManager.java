@@ -39,6 +39,9 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -59,10 +62,11 @@ import java.util.stream.Collectors;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppSearchConsentManager {
-    private Context mContext;
-    private AppSearchConsentWorker mAppSearchConsentWorker;
+    private final Context mContext;
+    private final AppSearchConsentWorker mAppSearchConsentWorker;
 
-    private AppSearchConsentManager(
+    @VisibleForTesting
+    AppSearchConsentManager(
             @NonNull Context context, @NonNull AppSearchConsentWorker appSearchConsentWorker) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appSearchConsentWorker);
@@ -71,9 +75,9 @@ public class AppSearchConsentManager {
     }
 
     /** Returns an instance of AppSearchConsentManager. */
-    public static AppSearchConsentManager getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-        return new AppSearchConsentManager(context, AppSearchConsentWorker.getInstance(context));
+    public static AppSearchConsentManager getInstance() {
+        return new AppSearchConsentManager(
+                ApplicationContextSingleton.get(), AppSearchConsentWorker.getInstance());
     }
 
     /**
@@ -229,6 +233,14 @@ public class AppSearchConsentManager {
     public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName) {
         Objects.requireNonNull(packageName);
 
+        boolean isRevoked =
+                mAppSearchConsentWorker
+                        .getAppsWithConsent(AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT)
+                        .contains(packageName);
+
+        if (isRevoked) {
+            return true;
+        }
         return !mAppSearchConsentWorker.addAppWithConsent(
                 AppSearchAppConsentDao.APPS_WITH_CONSENT, packageName);
     }
@@ -255,8 +267,8 @@ public class AppSearchConsentManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    public void recordNotificationDisplayed() {
-        mAppSearchConsentWorker.recordNotificationDisplayed();
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
+        mAppSearchConsentWorker.recordNotificationDisplayed(wasNotificationDisplayed);
     }
 
     /**
@@ -272,8 +284,8 @@ public class AppSearchConsentManager {
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
      */
-    public void recordGaUxNotificationDisplayed() {
-        mAppSearchConsentWorker.recordGaUxNotificationDisplayed();
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
+        mAppSearchConsentWorker.recordGaUxNotificationDisplayed(wasNotificationDisplayed);
     }
 
     /**
@@ -339,8 +351,9 @@ public class AppSearchConsentManager {
      * @return whether migration should occur.
      */
     @VisibleForTesting
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     boolean shouldInitConsentDataFromAppSearch(
-            Context context,
             SharedPreferences sharedPreferences,
             BooleanFileDatastore datastore,
             AdServicesManager adServicesManager) {
@@ -361,7 +374,7 @@ public class AppSearchConsentManager {
         if (shouldSkipMigration) {
             LogUtil.d(
                     "Consent migration from AppSearch is already done for user %d.",
-                    context.getUser().getIdentifier());
+                    mContext.getUser().getIdentifier());
             return false;
         }
 
@@ -397,13 +410,11 @@ public class AppSearchConsentManager {
      * @return whether or not we performed a migration
      */
     public boolean migrateConsentDataIfNeeded(
-            @NonNull Context context,
             @NonNull SharedPreferences sharedPreferences,
             @NonNull BooleanFileDatastore datastore,
             @Nullable AdServicesManager adServicesManager,
             @NonNull AppConsentDao appConsentDao)
             throws IOException {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(sharedPreferences);
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(appConsentDao);
@@ -412,9 +423,9 @@ public class AppSearchConsentManager {
         // System Server migration is a T+ feature. On T+, this function should only execute
         // if it's within the AdServices APK and not ExtServices. So check if it's within
         // ExtServices, and bail out if that's the case on any platform.
-        String packageName = context.getPackageName();
+        String packageName = mContext.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
-            LogUtil.i(
+            LogUtil.d(
                     "Aborting attempt to migrate Consent data to PPAPI and System Service in"
                             + " ExtServices");
             return false;
@@ -423,18 +434,17 @@ public class AppSearchConsentManager {
         // <p>a) The device is T+
         // <p>b) Data is not already migrated
         // <p>c) We showed the notification on S- (as recorded in AppSearch).
-        if (!shouldInitConsentDataFromAppSearch(
-                context, sharedPreferences, datastore, adServicesManager)) {
+        if (!shouldInitConsentDataFromAppSearch(sharedPreferences, datastore, adServicesManager)) {
             return false;
         }
 
         if (wasNotificationDisplayed()) {
             datastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordNotificationDisplayed();
+            adServicesManager.recordNotificationDisplayed(true);
         }
         if (wasGaUxNotificationDisplayed()) {
             datastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordGaUxNotificationDisplayed();
+            adServicesManager.recordGaUxNotificationDisplayed(true);
         }
         if (!wasGaUxNotificationDisplayed() && !wasNotificationDisplayed()) {
             // This shouldn't happen since we checked that either of these notifications is
@@ -555,5 +565,28 @@ public class AppSearchConsentManager {
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
     public Boolean wasU18NotificationDisplayed() {
         return mAppSearchConsentWorker.wasU18NotificationDisplayed();
+    }
+
+    /** Returns the current privacy sandbox UX. */
+    public PrivacySandboxUxCollection getUx() {
+        return mAppSearchConsentWorker.getUx();
+    }
+
+    /** Set the current privacy sandbox UX. */
+    public void setUx(PrivacySandboxUxCollection ux) {
+        mAppSearchConsentWorker.setUx(ux);
+    }
+
+    /** Returns the current privacy sandbox enrollment channel. */
+    public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
+            PrivacySandboxUxCollection ux) {
+        return mAppSearchConsentWorker.getEnrollmentChannel(ux);
+    }
+
+    /** Set the current privacy sandbox enrollment channel. */
+    public void setEnrollmentChannel(
+            PrivacySandboxUxCollection ux,
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
+        mAppSearchConsentWorker.setEnrollmentChannel(ux, enrollmentChannel);
     }
 }

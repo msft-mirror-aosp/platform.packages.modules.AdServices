@@ -126,6 +126,11 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logMeasurementAdIdMatchForDebugKeysStats(MsmtAdIdMatchForDebugKeysStats stats) {
+        mStatsdAdServicesLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
+    }
+
+    @Override
     public void logMeasurementAttributionStats(
             MeasurementAttributionStats measurementAttributionStats) {
         mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
@@ -141,5 +146,55 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
             MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats) {
         mStatsdAdServicesLogger.logMeasurementDelayedSourceRegistrationStats(
                 measurementDelayedSourceRegistrationStats);
+    }
+
+    @Override
+    public void logMeasurementClickVerificationStats(
+            MeasurementClickVerificationStats measurementClickVerificationStats) {
+        mStatsdAdServicesLogger.logMeasurementClickVerificationStats(
+                measurementClickVerificationStats);
+    }
+
+    @Override
+    public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
+        mStatsdAdServicesLogger.logEnrollmentDataStats(mType, mIsSuccessful, mBuildId);
+    }
+
+    @Override
+    public void logEnrollmentMatchStats(boolean mIsSuccessful, int mBuildId) {
+        mStatsdAdServicesLogger.logEnrollmentMatchStats(mIsSuccessful, mBuildId);
+    }
+
+    @Override
+    public void logEnrollmentFileDownloadStats(boolean mIsSuccessful, int mBuildId) {
+        mStatsdAdServicesLogger.logEnrollmentFileDownloadStats(mIsSuccessful, mBuildId);
+    }
+
+    @Override
+    public void logEnrollmentFailedStats(
+            int mBuildId,
+            int mDataFileGroupStatus,
+            int mEnrollmentRecordCountInTable,
+            String mQueryParameter,
+            int mErrorCause) {
+        mStatsdAdServicesLogger.logEnrollmentFailedStats(
+                mBuildId,
+                mDataFileGroupStatus,
+                mEnrollmentRecordCountInTable,
+                mQueryParameter,
+                mErrorCause);
+    }
+
+    /** Logs encryption key fetch stats. */
+    @Override
+    public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {
+        mStatsdAdServicesLogger.logEncryptionKeyFetchedStats(stats);
+    }
+
+    /** Logs encryption key datastore transaction ended stats. */
+    @Override
+    public void logEncryptionKeyDbTransactionEndedStats(
+            AdServicesEncryptionKeyDbTransactionEndedStats stats) {
+        mStatsdAdServicesLogger.logEncryptionKeyDbTransactionEndedStats(stats);
     }
 }

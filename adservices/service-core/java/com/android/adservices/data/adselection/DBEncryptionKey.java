@@ -143,6 +143,8 @@ public abstract class DBEncryptionKey {
 
         /** Builds the key based on the set values after validating the input. */
         public final DBEncryptionKey build() {
+            // TODO(b/284445328): Set creation Instant as the instant key was fetched.
+            // This would allow accurate computation of expiry instant as fetchInstant + maxage.
             Instant creationInstant = Instant.now();
             setCreationInstant(creationInstant);
             setExpiryInstant(creationInstant.plusSeconds(getExpiryTtlSeconds()));

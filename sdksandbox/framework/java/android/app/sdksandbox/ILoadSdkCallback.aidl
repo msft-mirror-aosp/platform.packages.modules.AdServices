@@ -17,11 +17,12 @@
 package android.app.sdksandbox;
 
 import android.os.Bundle;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.LoadSdkException;
 
 /** @hide */
 interface ILoadSdkCallback {
-    oneway void onLoadSdkSuccess(in SandboxedSdk sandboxedSdkParcel, long timeSystemServerCalledApp);
-    oneway void onLoadSdkFailure(in LoadSdkException exception, long timeSystemServerCalledApp);
+    oneway void onLoadSdkSuccess(in SandboxedSdk sandboxedSdkParcel, in SandboxLatencyInfo sandboxLatencyInfo);
+    oneway void onLoadSdkFailure(in LoadSdkException exception, in SandboxLatencyInfo sandboxLatencyInfo);
 }

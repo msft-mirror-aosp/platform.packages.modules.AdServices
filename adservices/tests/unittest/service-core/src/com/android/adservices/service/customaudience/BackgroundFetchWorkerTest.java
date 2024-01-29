@@ -16,8 +16,12 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.service.stats.Clock.SYSTEM_CLOCK;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -25,10 +29,12 @@ import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,8 +47,10 @@ import android.content.pm.PackageManager;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -54,6 +62,10 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
+import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -86,11 +98,20 @@ public class BackgroundFetchWorkerTest {
     private final Flags mFlags = new BackgroundFetchWorkerTestFlags(true);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule deviceSupportRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
-    @Mock private Clock mClock;
+    @Mock private Clock mClockMock;
+    @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
+    @Mock private UpdateCustomAudienceExecutionLogger mUpdateCustomAudienceExecutionLoggerMock;
+    private BackgroundFetchExecutionLogger mBackgroundFetchExecutionLoggerSpy;
+    @Mock private CustomAudienceLoggerFactory mCustomAudienceLoggerFactoryMock;
 
     private CustomAudienceDao mCustomAudienceDaoSpy;
     private AppInstallDao mAppInstallDaoSpy;
@@ -99,10 +120,19 @@ public class BackgroundFetchWorkerTest {
 
     @Before
     public void setup() {
+        when(mCustomAudienceLoggerFactoryMock.getUpdateCustomAudienceExecutionLogger())
+                .thenReturn(mUpdateCustomAudienceExecutionLoggerMock);
+        mBackgroundFetchExecutionLoggerSpy =
+                Mockito.spy(
+                        new BackgroundFetchExecutionLogger(
+                                SYSTEM_CLOCK, mAdServicesLoggerImplMock));
+        when(mCustomAudienceLoggerFactoryMock.getBackgroundFetchExecutionLogger())
+                .thenReturn(mBackgroundFetchExecutionLoggerSpy);
+
         mCustomAudienceDaoSpy =
                 Mockito.spy(
                         Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                                .addTypeConverter(new DBCustomAudience.Converters(true))
+                                .addTypeConverter(new DBCustomAudience.Converters(true, true))
                                 .build()
                                 .customAudienceDao());
         mAppInstallDaoSpy =
@@ -118,11 +148,16 @@ public class BackgroundFetchWorkerTest {
                                 mAppInstallDaoSpy,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
 
         mBackgroundFetchWorker =
                 new BackgroundFetchWorker(
-                        mCustomAudienceDaoSpy, mFlags, mBackgroundFetchRunnerSpy, mClock);
+                        mCustomAudienceDaoSpy,
+                        mFlags,
+                        mBackgroundFetchRunnerSpy,
+                        mClockMock,
+                        mCustomAudienceLoggerFactoryMock);
     }
 
     @Test
@@ -134,13 +169,18 @@ public class BackgroundFetchWorkerTest {
                                 null,
                                 FlagsFactory.getFlagsForTest(),
                                 mBackgroundFetchRunnerSpy,
-                                mClock));
+                                mClockMock,
+                                mCustomAudienceLoggerFactoryMock));
 
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new BackgroundFetchWorker(
-                                mCustomAudienceDaoSpy, null, mBackgroundFetchRunnerSpy, mClock));
+                                mCustomAudienceDaoSpy,
+                                null,
+                                mBackgroundFetchRunnerSpy,
+                                mClockMock,
+                                mCustomAudienceLoggerFactoryMock));
 
         assertThrows(
                 NullPointerException.class,
@@ -149,7 +189,8 @@ public class BackgroundFetchWorkerTest {
                                 mCustomAudienceDaoSpy,
                                 FlagsFactory.getFlagsForTest(),
                                 null,
-                                mClock));
+                                mClockMock,
+                                mCustomAudienceLoggerFactoryMock));
 
         assertThrows(
                 NullPointerException.class,
@@ -158,11 +199,21 @@ public class BackgroundFetchWorkerTest {
                                 mCustomAudienceDaoSpy,
                                 FlagsFactory.getFlagsForTest(),
                                 mBackgroundFetchRunnerSpy,
+                                null,
+                                mCustomAudienceLoggerFactoryMock));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundFetchWorker(
+                                mCustomAudienceDaoSpy,
+                                FlagsFactory.getFlagsForTest(),
+                                mBackgroundFetchRunnerSpy,
+                                mClockMock,
                                 null));
     }
 
     @Test
-    public void testRunBackgroundFetchThrowsTimeoutDuringUpdates() {
+    public void testRunBackgroundFetchThrowsTimeoutDuringUpdates() throws InterruptedException {
         class FlagsWithSmallTimeout implements Flags {
             @Override
             public long getFledgeBackgroundFetchJobMaxRuntimeMs() {
@@ -178,7 +229,8 @@ public class BackgroundFetchWorkerTest {
                         mAppInstallDaoSpy,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
-                        flags);
+                        flags,
+                        mCustomAudienceLoggerFactoryMock);
             }
 
             @Override
@@ -213,7 +265,8 @@ public class BackgroundFetchWorkerTest {
                         mCustomAudienceDaoSpy,
                         flagsWithSmallTimeout,
                         backgroundFetchRunnerWithSleep,
-                        mClock);
+                        mClockMock,
+                        mCustomAudienceLoggerFactoryMock);
 
         // Mock a custom audience eligible for update
         DBCustomAudienceBackgroundFetchData fetchData =
@@ -221,11 +274,22 @@ public class BackgroundFetchWorkerTest {
                                 CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .build();
-        doReturn(Arrays.asList(fetchData))
+        List<DBCustomAudienceBackgroundFetchData> fetchDataList = Arrays.asList(fetchData);
+        doReturn(fetchDataList)
                 .when(mCustomAudienceDaoSpy)
                 .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
 
-        when(mClock.instant()).thenReturn(Instant.now());
+        when(mClockMock.instant()).thenReturn(Instant.now());
+
+        // Ensure that log is closed after timeout.
+        CountDownLatch closeLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInovcation -> {
+                            closeLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mBackgroundFetchExecutionLoggerSpy)
+                .close(anyInt(), anyInt());
 
         // Time out while updating custom audiences
         ExecutionException expected =
@@ -233,6 +297,11 @@ public class BackgroundFetchWorkerTest {
                         ExecutionException.class,
                         () -> backgroundFetchWorkerThatTimesOut.runBackgroundFetch().get());
         assertThat(expected.getCause()).isInstanceOf(TimeoutException.class);
+        // Wait for logger to close.
+        assertThat(closeLoggerLatch.await(200, TimeUnit.MILLISECONDS)).isTrue();
+        // Background data already fetched, internal error due to failure in runner.
+        verify(mBackgroundFetchExecutionLoggerSpy)
+                .close(fetchDataList.size(), STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -244,9 +313,14 @@ public class BackgroundFetchWorkerTest {
                                 CommonFixture.FIXED_NOW, 1)
                         .isEmpty());
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -255,6 +329,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedPackageAppInstallEntries();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
+        verify(mBackgroundFetchExecutionLoggerSpy).close(0, STATUS_SUCCESS);
     }
 
     @Test
@@ -266,16 +341,22 @@ public class BackgroundFetchWorkerTest {
                         mCustomAudienceDaoSpy,
                         flagsFilteringDisabled,
                         mBackgroundFetchRunnerSpy,
-                        mClock);
+                        mClockMock,
+                        mCustomAudienceLoggerFactoryMock);
         assertTrue(
                 mCustomAudienceDaoSpy
                         .getActiveEligibleCustomAudienceBackgroundFetchData(
                                 CommonFixture.FIXED_NOW, 1)
                         .isEmpty());
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -284,9 +365,11 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy, times(0)).deleteDisallowedPackageAppInstallEntries();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
+        verify(mBackgroundFetchExecutionLoggerSpy).close(0, STATUS_SUCCESS);
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchUpdateOneCustomAudience()
             throws ExecutionException, InterruptedException {
         // Mock a single custom audience eligible for update
@@ -295,16 +378,21 @@ public class BackgroundFetchWorkerTest {
                                 CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .build();
-        doReturn(Arrays.asList(fetchData))
+        List<DBCustomAudienceBackgroundFetchData> fetchDataList = Arrays.asList(fetchData);
+        doReturn(fetchDataList)
                 .when(mCustomAudienceDaoSpy)
                 .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -313,6 +401,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedPackageAppInstallEntries();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
+        verify(mBackgroundFetchExecutionLoggerSpy).close(fetchDataList.size(), STATUS_SUCCESS);
     }
 
     @Test
@@ -337,9 +426,13 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -349,6 +442,7 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
+        verify(mBackgroundFetchExecutionLoggerSpy).close(fetchDataList.size(), STATUS_SUCCESS);
     }
 
     @Test
@@ -379,7 +473,10 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        // ensures that we verify only after BackgroundExecuterLoggerClose#close is executed.
+        CountDownLatch latchForExecutionLoggerClose = new CountDownLatch(1);
+        setLatchToCountdownOnLogClose(latchForExecutionLoggerClose);
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
 
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
         mExecutorService.execute(
@@ -397,10 +494,11 @@ public class BackgroundFetchWorkerTest {
         // Wait til updates are partially complete, then try running background fetch again and
         // verify nothing is done
         partialCompletionLatch.await();
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(1));
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(1));
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
         bgfWorkStoppedLatch.await();
+        latchForExecutionLoggerClose.await();
         verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
         verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
@@ -410,6 +508,7 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
+        verify(mBackgroundFetchExecutionLoggerSpy).close(fetchDataList.size(), STATUS_SUCCESS);
     }
 
     @Test
@@ -445,17 +544,31 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        // Ensure that logger is closed after stopping work.
+        CountDownLatch closeLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInovcation -> {
+                            closeLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mBackgroundFetchExecutionLoggerSpy)
+                .close(anyInt(), anyInt());
 
-        ListenableFuture<Void> backgrounFetchResult = mBackgroundFetchWorker.runBackgroundFetch();
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+
+        ListenableFuture<Void> backgroundFetchResult = mBackgroundFetchWorker.runBackgroundFetch();
 
         // Wait til updates are partially complete, then try stopping background fetch
         partialCompletionLatch.await();
         mBackgroundFetchWorker.stopWork();
         // stopWork() should notify to the worker that the work should end so the future
         // should complete within the time required to update the custom audiences
-        backgrounFetchResult.get(
+        backgroundFetchResult.get(
                 100 * (numEligibleCustomAudiences * 3 / 4) + 100, TimeUnit.SECONDS);
+        // Wait for logger to close.
+        assertThat(closeLoggerLatch.await(200, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mBackgroundFetchExecutionLoggerSpy)
+                .close(numEligibleCustomAudiences, STATUS_SUCCESS);
     }
 
     @Test
@@ -489,9 +602,19 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        // Ensure that logger is closed after stopping work.
+        CountDownLatch closeLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInovcation -> {
+                            closeLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mBackgroundFetchExecutionLoggerSpy)
+                .close(anyInt(), anyInt());
 
-        ListenableFuture<Void> backgrounFetchResult = mBackgroundFetchWorker.runBackgroundFetch();
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+
+        ListenableFuture<Void> backgroundFetchResult = mBackgroundFetchWorker.runBackgroundFetch();
 
         // Wait til updates are partially complete, then try stopping background fetch
         mBackgroundFetchWorker.stopWork();
@@ -499,10 +622,14 @@ public class BackgroundFetchWorkerTest {
         // stopWork() called before updating the data should cause immediate termination
         // waiting for 200ms to handle thread scheduling delays.
         // The important check is that the time is less than the time of updating all CAs
-        backgrounFetchResult.get(200, TimeUnit.MILLISECONDS);
+        backgroundFetchResult.get(200, TimeUnit.MILLISECONDS);
+        // Wait for logger to close.
+        assertThat(closeLoggerLatch.await(200, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mBackgroundFetchExecutionLoggerSpy).close(0, STATUS_SUCCESS);
     }
 
     @Test
+    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchInSequence() throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
         CountDownLatch completionLatch = new CountDownLatch(numEligibleCustomAudiences / 2);
@@ -541,7 +668,7 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
 
         CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
         mExecutorService.execute(
@@ -560,7 +687,7 @@ public class BackgroundFetchWorkerTest {
         // verify the second run updates more custom audiences successfully
         completionLatch.await();
         bgfWorkStoppedLatch.await();
-        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(1));
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(1));
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
         verify(mBackgroundFetchRunnerSpy, times(2)).deleteExpiredCustomAudiences(any());
@@ -575,6 +702,45 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
         assertThat(completionCount.get()).isEqualTo(numEligibleCustomAudiences);
+        verify(mBackgroundFetchExecutionLoggerSpy, times(2))
+                .close(numEligibleCustomAudiences / 2, STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testRunBackgroundFetchHandlesLoggerCloseError()
+            throws ExecutionException, InterruptedException {
+        // Mock a single custom audience eligible for update
+        DBCustomAudienceBackgroundFetchData fetchData =
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER_1)
+                        .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
+                        .build();
+        List<DBCustomAudienceBackgroundFetchData> fetchDataList = Arrays.asList(fetchData);
+        doReturn(fetchDataList)
+                .when(mCustomAudienceDaoSpy)
+                .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
+        doReturn(FluentFuture.from(immediateFuture(null)))
+                .when(mBackgroundFetchRunnerSpy)
+                .updateCustomAudience(any(), any());
+
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+
+        doThrow(new IllegalStateException())
+                .when(mBackgroundFetchExecutionLoggerSpy)
+                .close(anyInt(), anyInt());
+
+        // Background fetch should complete without error
+        mBackgroundFetchWorker.runBackgroundFetch().get();
+    }
+
+    private void setLatchToCountdownOnLogClose(CountDownLatch latch) {
+        doAnswer(
+                        unusedInvocation -> {
+                            latch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerImplMock)
+                .logBackgroundFetchProcessReportedStats(any());
     }
 
     private static class BackgroundFetchWorkerTestFlags implements Flags {

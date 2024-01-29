@@ -22,6 +22,7 @@ import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -32,15 +33,16 @@ public class ContentProvidersTestSandboxedSdkProvider extends SandboxedSdkProvid
 
     static class ContentProvidersTestSdkImpl extends IContentProvidersSdkApi.Stub {
         private final Context mContext;
+        private final ContentResolver mContentResolver;
 
         ContentProvidersTestSdkImpl(Context sdkContext) {
             mContext = sdkContext;
+            mContentResolver = mContext.getContentResolver();
         }
 
         @Override
         public void getContentProvider() {
-            final ContentResolver contentResolver = mContext.getContentResolver();
-            contentResolver.query(
+            mContentResolver.query(
                     UserDictionary.Words.CONTENT_URI,
                     /*projection=*/ null,
                     /*queryArgs=*/ null,
@@ -48,11 +50,15 @@ public class ContentProvidersTestSandboxedSdkProvider extends SandboxedSdkProvid
         }
 
         @Override
+        public void getContentProviderByAuthority(String authority) {
+            mContentResolver.query(Uri.parse("content://" + authority), null, null, null);
+        }
+
+        @Override
         public void registerContentObserver() {
-            final ContentResolver contentResolver = mContext.getContentResolver();
             final ContentObserver observer =
                     new ContentObserver(new Handler(Looper.getMainLooper())) {};
-            contentResolver.registerContentObserver(
+            mContentResolver.registerContentObserver(
                     UserDictionary.Words.CONTENT_URI, /*notifyForDescendants=*/ true, observer);
         }
     }

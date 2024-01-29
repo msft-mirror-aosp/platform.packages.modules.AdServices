@@ -34,7 +34,6 @@ android_app {
         "com.google.android.material_material",
         "androidx.concurrent_concurrent-futures",
     ],
-    // TODO(b/269145496): Remove dex_preopt: false.
     dex_preopt: {
         enabled: false,
     },

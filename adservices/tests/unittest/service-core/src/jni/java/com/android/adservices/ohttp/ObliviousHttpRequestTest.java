@@ -41,9 +41,7 @@ public class ObliviousHttpRequestTest {
                         BaseEncoding.base16().lowerCase().decode(encString));
         ObliviousHttpRequestContext requestContext =
                 ObliviousHttpRequestContext.create(
-                        keyConfig,
-                        encapsulatedSharedSecret,
-                        HpkeContextNativeRef.createHpkeContextReference());
+                        keyConfig, encapsulatedSharedSecret, new byte[1]);
         String plainText = "something";
         String cipherText = "not actual cipher";
         byte[] cipherTextBytes = cipherText.getBytes(StandardCharsets.US_ASCII);

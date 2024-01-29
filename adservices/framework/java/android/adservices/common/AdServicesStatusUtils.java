@@ -21,6 +21,7 @@ import android.annotation.NonNull;
 import android.os.LimitExceededException;
 
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.TimeoutException;
@@ -122,11 +123,49 @@ public class AdServicesStatusUtils {
      * <p>This error may be considered similar to {@link IllegalStateException}.
      */
     public static final int STATUS_JS_SANDBOX_UNAVAILABLE = 14;
+    /**
+     * The service received an invalid object from the remote server.
+     *
+     * <p>This error may be considered similar to {@link InvalidObjectException}.
+     */
+    public static final int STATUS_INVALID_OBJECT = 15;
+    /**
+     * The caller is not authorized to make this call because it crosses user boundaries.
+     *
+     * <p>This error may be considered similar to {@link SecurityException}.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES = 16;
+
+    /**
+     * Result code for Server Rate Limit Reached.
+     *
+     * <p>This error may be considered similar to {@link LimitExceededException}.
+     */
+    public static final int STATUS_SERVER_RATE_LIMIT_REACHED = 17;
+    /**
+     * Consent notification has not been displayed yet. AdServices is not available.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET = 18;
+
+    /**
+     * Result code for Encryption related failures.
+     *
+     * <p>This error may be considered similar to {@link IllegalArgumentException}.
+     */
+    public static final int STATUS_ENCRYPTION_FAILURE = 19;
 
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
+
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
+
+    /** The error message to be returned along with {@link LimitExceededException}. */
+    public static final String SERVER_RATE_LIMIT_REACHED_ERROR_MESSAGE =
+            "Server rate limit exceeded.";
+
     /**
      * The error message to be returned along with {@link SecurityException} when permission was not
      * requested in the manifest.
@@ -145,7 +184,12 @@ public class AdServicesStatusUtils {
      */
     public static final String ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE =
             "Background thread is not allowed to call this service.";
-
+    /**
+     * The error message to be returned along with {@link SecurityException} when call failed
+     * because it crosses user boundaries.
+     */
+    public static final String SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES =
+            "Caller is not authorized to access information from another user";
     /**
      * The error message to be returned along with {@link SecurityException} when caller not allowed
      * to perform this operation on behalf of the given package.
@@ -155,6 +199,11 @@ public class AdServicesStatusUtils {
 
     /** The error message to be returned along with {@link TimeoutException}. */
     public static final String TIMED_OUT_ERROR_MESSAGE = "API timed out.";
+    /** The error message to be returned along with {@link InvalidObjectException}. */
+    public static final String INVALID_OBJECT_ERROR_MESSAGE =
+            "The service received an invalid object from the server.";
+    /** The error message to be returned along with {@link IllegalArgumentException}. */
+    public static final String ENCRYPTION_FAILURE_MESSAGE = "Failed to encrypt responses.";
 
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
@@ -165,11 +214,14 @@ public class AdServicesStatusUtils {
     @NonNull
     public static Exception asException(@StatusCode int statusCode) {
         switch (statusCode) {
+            case STATUS_ENCRYPTION_FAILURE:
+                return new IllegalArgumentException(ENCRYPTION_FAILURE_MESSAGE);
             case STATUS_INVALID_ARGUMENT:
                 return new IllegalArgumentException();
             case STATUS_IO_ERROR:
                 return new IOException();
             case STATUS_KILLSWITCH_ENABLED: // Intentional fallthrough
+            case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
                 return new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
@@ -187,6 +239,10 @@ public class AdServicesStatusUtils {
                 return new TimeoutException(TIMED_OUT_ERROR_MESSAGE);
             case STATUS_RATE_LIMIT_REACHED:
                 return new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
+            case STATUS_INVALID_OBJECT:
+                return new InvalidObjectException(INVALID_OBJECT_ERROR_MESSAGE);
+            case STATUS_SERVER_RATE_LIMIT_REACHED:
+                return new LimitExceededException(SERVER_RATE_LIMIT_REACHED_ERROR_MESSAGE);
             default:
                 return new IllegalStateException();
         }
@@ -221,7 +277,11 @@ public class AdServicesStatusUtils {
                 STATUS_BACKGROUND_CALLER,
                 STATUS_UNAUTHORIZED,
                 STATUS_TIMEOUT,
-                STATUS_JS_SANDBOX_UNAVAILABLE
+                STATUS_JS_SANDBOX_UNAVAILABLE,
+                STATUS_INVALID_OBJECT,
+                STATUS_SERVER_RATE_LIMIT_REACHED,
+                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
+                STATUS_ENCRYPTION_FAILURE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

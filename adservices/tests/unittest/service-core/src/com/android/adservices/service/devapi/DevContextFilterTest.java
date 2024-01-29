@@ -27,12 +27,12 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Process;
 import android.provider.Settings;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -60,7 +60,7 @@ public class DevContextFilterTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(Settings.Global.class)
-                        .mockStatic(Build.class)
+                        .mockStatic(BuildCompatUtils.class)
                         .startMocking();
         MockitoAnnotations.initMocks(this);
 
@@ -101,7 +101,7 @@ public class DevContextFilterTest {
         // No need to call disableDeveloperOptions since they wouldn't be checked because we are
         // in a debuggable build and Mockito would complain of the not necesasry mock.
         // Not preparing the mock would anyway cause the check method to return false.
-        when(Build.isDebuggable()).thenReturn(true);
+        when(BuildCompatUtils.isDebuggable()).thenReturn(true);
 
         when(mAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
         mockInstalledApplications(aDebuggableAppInfo());

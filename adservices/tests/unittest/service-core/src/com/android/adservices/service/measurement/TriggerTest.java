@@ -22,9 +22,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -33,6 +36,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -42,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@RunWith(MockitoJUnitRunner.class)
 public class TriggerTest {
     private static final String TOP_LEVEL_FILTERS_JSON_STRING =
             "[{\n"
@@ -80,6 +87,8 @@ public class TriggerTest {
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT =
             WebUtil.validUri("https://subdomain.example.test/with/path?query=0#fragment");
     private static final Uri WEB_DESTINATION_INVALID = Uri.parse("https://example.notatld");
+
+    @Mock Flags mFlags;
 
     @Test
     public void testEqualsPass() throws JSONException {
@@ -122,7 +131,7 @@ public class TriggerTest {
                         .setDebugKey(DEBUG_KEY)
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
-                                        .getAggregatableAttributionTrigger()
+                                        .getAggregatableAttributionTrigger(mFlags)
                                         .orElse(null))
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
@@ -151,7 +160,7 @@ public class TriggerTest {
                         .setDebugKey(DEBUG_KEY)
                         .setAggregatableAttributionTrigger(
                                 TriggerFixture.getValidTrigger()
-                                        .getAggregatableAttributionTrigger()
+                                        .getAggregatableAttributionTrigger(mFlags)
                                         .orElse(null))
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
@@ -445,7 +454,7 @@ public class TriggerTest {
                         .build();
 
         Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
-                trigger.getAggregatableAttributionTrigger();
+                trigger.getAggregatableAttributionTrigger(mFlags);
         assertTrue(aggregatableAttributionTrigger.isPresent());
         assertNotNull(aggregatableAttributionTrigger.get().getTriggerData());
         assertEquals(values, aggregatableAttributionTrigger.get().getValues());
@@ -495,7 +504,7 @@ public class TriggerTest {
                         .setAggregateDeduplicationKeys(aggregateDedupKeys.toString())
                         .build();
         Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
-                trigger.getAggregatableAttributionTrigger();
+                trigger.getAggregatableAttributionTrigger(mFlags);
 
         assertTrue(aggregatableAttributionTrigger.isPresent());
         AggregatableAttributionTrigger aggregateTrigger = aggregatableAttributionTrigger.get();
@@ -742,7 +751,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void parseEventTriggers() throws JSONException {
+    public void parseEventTriggers_handlesValueField() throws JSONException {
         // setup
         JSONObject filtersMap1 =
                 new JSONObject(
@@ -768,6 +777,7 @@ public class TriggerTest {
                                         + "{\n"
                                         + "  \"trigger_data\": \"2\",\n"
                                         + "  \"priority\": \"2\",\n"
+                                        + "  \"value\": \"100\",\n"
                                         + "  \"deduplication_key\": \"2\",\n"
                                         + "  \"filters\": [{\n"
                                         + "    \"filter_key_1\": [\"filter_value_1\"], \n"
@@ -781,6 +791,7 @@ public class TriggerTest {
                                         + "{\n"
                                         + "  \"trigger_data\": \"3\",\n"
                                         + "  \"priority\": \"3\",\n"
+                                        + "  \"value\": \"120\",\n"
                                         + "  \"deduplication_key\": \"3\",\n"
                                         + "  \"not_filters\": [{\n"
                                         + "    \"key_1\": [\"value_1_x\"] \n"
@@ -792,28 +803,35 @@ public class TriggerTest {
         EventTrigger eventTrigger1 =
                 new EventTrigger.Builder(new UnsignedLong(2L))
                         .setTriggerPriority(2L)
+                        .setTriggerValue(100L)
                         .setDedupKey(new UnsignedLong(2L))
-                        .setFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(filtersMap1)
-                                        .build()))
-                        .setNotFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(notFiltersMap1)
-                                        .build()))
+                        .setFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(filtersMap1)
+                                                .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(notFiltersMap1)
+                                                .build()))
                         .build();
         EventTrigger eventTrigger2 =
                 new EventTrigger.Builder(new UnsignedLong(3L))
                         .setTriggerPriority(3L)
+                        .setTriggerValue(120L)
                         .setDedupKey(new UnsignedLong(3L))
-                        .setNotFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(notFiltersMap2)
-                                        .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(notFiltersMap2)
+                                                .build()))
                         .build();
 
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+
         // Action
-        List<EventTrigger> actualEventTriggers = trigger.parseEventTriggers();
+        List<EventTrigger> actualEventTriggers = trigger.parseEventTriggers(mFlags);
 
         // Assertion
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);

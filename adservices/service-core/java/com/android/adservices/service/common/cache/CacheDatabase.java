@@ -21,12 +21,13 @@ import static com.android.adservices.service.common.cache.CacheDatabase.DATABASE
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
@@ -34,6 +35,9 @@ import java.util.Objects;
 /** A class that represents the database for caching web requests related to Fledge */
 @Database(
         entities = {DBCacheEntry.class},
+        autoMigrations = {
+            @AutoMigration(from = 1, to = 2),
+        },
         version = DATABASE_VERSION)
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CacheDatabase extends RoomDatabase {
@@ -41,7 +45,8 @@ public abstract class CacheDatabase extends RoomDatabase {
 
     // TODO(b/270615351): Create migration rollback test for version bump
     public static final int DATABASE_VERSION = 2;
-    public static final String DATABASE_NAME = "fledgehttpcache.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("fledgehttpcache.db");
 
     @GuardedBy("SINGLETON_LOCK")
     private static CacheDatabase sSingleton = null;
@@ -52,7 +57,8 @@ public abstract class CacheDatabase extends RoomDatabase {
         synchronized (SINGLETON_LOCK) {
             if (Objects.isNull(sSingleton)) {
                 sSingleton =
-                        Room.databaseBuilder(context, CacheDatabase.class, DATABASE_NAME)
+                        FileCompatUtils.roomDatabaseBuilderHelper(
+                                        context, CacheDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .build();
             }

@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -44,7 +46,8 @@ public class DebugReportSenderTest {
         Uri reportingOrigin = Uri.parse("https://ad-tech.example");
         JSONObject eventReportJson = createDebugReport().toPayloadJson();
 
-        DebugReportSender spyDebugReportSender = Mockito.spy(new DebugReportSender());
+        DebugReportSender spyDebugReportSender =
+                Mockito.spy(new DebugReportSender(ApplicationProvider.getApplicationContext()));
 
         Mockito.doReturn(httpUrlConnection)
                 .when(spyDebugReportSender)

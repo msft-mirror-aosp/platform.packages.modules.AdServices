@@ -18,6 +18,7 @@ package com.android.adservices.service.js;
 
 import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
+import static com.android.adservices.service.js.JSScriptArgument.jsonArrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
@@ -59,6 +60,31 @@ public class JSScriptArgumentTest {
         JSScriptArgument arg = jsonArg("jsonArg", jsonValue);
         assertThat(arg.variableDeclaration())
                 .isEqualTo(String.format("const jsonArg = %s;", jsonValue));
+    }
+
+    @Test
+    public void testJsonArrayArg() throws JSONException {
+        final String jsonArrayValue =
+                "[\n"
+                        + "    {\n"
+                        + "        \"name\": \"John\",\n"
+                        + "        \"age\": 30,\n"
+                        + "        \"city\": \"New York\"\n"
+                        + "    },\n"
+                        + "    {\n"
+                        + "        \"name\": \"Alice\",\n"
+                        + "        \"age\": 25,\n"
+                        + "        \"city\": \"Los Angeles\"\n"
+                        + "    },\n"
+                        + "    {\n"
+                        + "        \"name\": \"Bob\",\n"
+                        + "        \"age\": 35,\n"
+                        + "        \"city\": \"Chicago\"\n"
+                        + "    }\n"
+                        + "]";
+        JSScriptArgument arg = jsonArrayArg("jsonArrayArg", jsonArrayValue);
+        assertThat(arg.variableDeclaration())
+                .isEqualTo(String.format("const jsonArrayArg = %s;", jsonArrayValue));
     }
 
     @Test

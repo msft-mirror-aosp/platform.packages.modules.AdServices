@@ -25,12 +25,15 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 
-/** Resolves whether user consent has been provided or not to use the PPAPI. */
+/**
+ * Resolves whether user consent has been provided or not to use the PPAPI. {@link
+ * #isAllowed(Context)} will return true if consent notification was shown and opt-in occurred.
+ * Opt-in can happen by default value as well based on the region.
+ */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class UserConsentAccessResolver implements IAccessResolver {
@@ -43,12 +46,9 @@ public class UserConsentAccessResolver implements IAccessResolver {
 
     @Override
     public boolean isAllowed(@NonNull Context context) {
-        AdServicesApiConsent userConsent;
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent =
+                mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS);
+
         return userConsent.isGiven();
     }
 

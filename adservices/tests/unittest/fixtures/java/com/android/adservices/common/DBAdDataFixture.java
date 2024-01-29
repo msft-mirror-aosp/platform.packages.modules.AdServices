@@ -46,8 +46,22 @@ public class DBAdDataFixture {
                 .setMetadata(mirrorAdData.getMetadata());
     }
 
+    public static DBAdData.Builder getValidDbAdDataNoFiltersBuilder(
+            AdTechIdentifier buyer, int sequenceNumber) {
+        AdData mirrorAdData = AdDataFixture.getValidFilterAdDataByBuyer(buyer, sequenceNumber);
+        return new DBAdData.Builder()
+                .setRenderUri(mirrorAdData.getRenderUri())
+                .setMetadata(mirrorAdData.getMetadata());
+    }
+
     public static List<DBAdData> getValidDbAdDataListByBuyer(AdTechIdentifier buyer) {
         return AdDataFixture.getValidFilterAdsByBuyer(buyer).stream()
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
+                .collect(Collectors.toList());
+    }
+
+    public static List<DBAdData> getValidDbAdDataListByBuyerWithAdRenderId(AdTechIdentifier buyer) {
+        return AdDataFixture.getValidFilterAdsWithAdRenderIdByBuyer(buyer).stream()
                 .map(DBAdDataFixture::convertAdDataToDBAdData)
                 .collect(Collectors.toList());
     }
@@ -69,6 +83,7 @@ public class DBAdDataFixture {
                 adData.getRenderUri(),
                 adData.getMetadata(),
                 adData.getAdCounterKeys(),
-                adData.getAdFilters());
+                adData.getAdFilters(),
+                adData.getAdRenderId());
     }
 }

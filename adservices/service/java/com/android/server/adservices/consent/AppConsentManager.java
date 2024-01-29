@@ -18,11 +18,12 @@ package com.android.server.adservices.consent;
 
 import android.annotation.NonNull;
 
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
-import com.android.server.adservices.common.BooleanFileDatastore;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +46,8 @@ public class AppConsentManager {
 
     @VisibleForTesting
     static final String BASE_DIR_MUST_BE_PROVIDED_ERROR_MESSAGE = "Base dir must be provided.";
+
+    @VisibleForTesting static final String DUMP_PREFIX = "  ";
 
     /**
      * The {@link BooleanFileDatastore} will store {@code true} if an app has had its consent
@@ -230,6 +233,16 @@ public class AppConsentManager {
         int separatorIndex = datastoreKey.lastIndexOf(DATASTORE_KEY_SEPARATOR);
         Preconditions.checkArgument(separatorIndex > 0, "Invalid datastore key");
         return datastoreKey.substring(0, separatorIndex);
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix) {
+        writer.printf("%sAppConsentManager:\n", prefix);
+        String prefix2 = prefix + DUMP_PREFIX;
+        String prefix3 = prefix2 + DUMP_PREFIX;
+
+        writer.printf("%sDatastore:\n", prefix2);
+        mDatastore.dump(writer, prefix3);
     }
 
     /** tearDown method used for Testing only. */

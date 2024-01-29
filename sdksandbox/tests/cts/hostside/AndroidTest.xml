@@ -24,16 +24,7 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="SdkSandboxDataIsolationTestProvider.apk" />
-    </target_preparer>
-
-    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-        <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="SdkSandboxStorageTestProvider.apk" />
-    </target_preparer>
-
-    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-        <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="SdkSandboxMediationTestProvider.apk" />
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
@@ -51,11 +42,6 @@
     <test class="com.android.tradefed.testtype.HostTest" >
         <option name="class"
                 value="com.android.sdksandbox.cts.host.CtsSdkSandboxStorageHostTest" />
-    </test>
-
-    <test class="com.android.tradefed.testtype.HostTest" >
-        <option name="class"
-                value="com.android.sdksandbox.cts.host.SdkSandboxMediationHostTest" />
     </test>
 
     <object type="module_controller"

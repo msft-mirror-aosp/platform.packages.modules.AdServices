@@ -18,34 +18,29 @@ package com.android.adservices.data.common;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdFilters;
-import android.annotation.Nullable;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Represents data specific to an ad that is necessary for ad selection and rendering.
- *
- * <p>Hiding for future implementation and review for public exposure.
- *
- * @hide
- */
+/** Represents data specific to an ad that is necessary for ad selection and rendering. */
 public class DBAdData {
     @NonNull private final Uri mRenderUri;
-    @NonNull
-    private final String mMetadata;
-    @NonNull private final Set<String> mAdCounterKeys;
+    @NonNull private final String mMetadata;
+    @NonNull private final Set<Integer> mAdCounterKeys;
     @Nullable private final AdFilters mAdFilters;
+    @Nullable private final String mAdRenderId;
 
     public DBAdData(
             @NonNull Uri renderUri,
             @NonNull String metadata,
-            @NonNull Set<String> adCounterKeys,
-            @Nullable AdFilters adFilters) {
+            @NonNull Set<Integer> adCounterKeys,
+            @Nullable AdFilters adFilters,
+            @Nullable String adRenderId) {
         Objects.requireNonNull(renderUri);
         Objects.requireNonNull(metadata);
         Objects.requireNonNull(adCounterKeys);
@@ -53,16 +48,19 @@ public class DBAdData {
         mMetadata = metadata;
         mAdCounterKeys = adCounterKeys;
         mAdFilters = adFilters;
+        mAdRenderId = adRenderId;
     }
 
     /** Returns the estimated size, in bytes, of the components of this object. */
     public int size() {
         int totalSize = mRenderUri.toString().getBytes().length + mMetadata.getBytes().length;
-        for (String adCounterKey : mAdCounterKeys) {
-            totalSize += adCounterKey.getBytes().length;
-        }
+        // Each int should cost about 4 bytes
+        totalSize += 4 * mAdCounterKeys.size();
         if (mAdFilters != null) {
             totalSize += mAdFilters.getSizeInBytes();
+        }
+        if (mAdRenderId != null) {
+            totalSize += mAdRenderId.getBytes().length;
         }
         return totalSize;
     }
@@ -73,20 +71,28 @@ public class DBAdData {
         return mRenderUri;
     }
 
-    /** See {@link AdData#getMetadata()} ()} */
+    /** See {@link AdData#getMetadata()} */
     @NonNull
     public String getMetadata() {
         return mMetadata;
     }
-    /** See {@link AdData#getAdCounterKeys()} ()} */
+
+    /** See {@link AdData#getAdCounterKeys()} */
     @NonNull
-    public Set<String> getAdCounterKeys() {
+    public Set<Integer> getAdCounterKeys() {
         return mAdCounterKeys;
     }
-    /** See {@link AdData#getAdFilters()} ()} */
+
+    /** See {@link AdData#getAdFilters()} */
     @Nullable
     public AdFilters getAdFilters() {
         return mAdFilters;
+    }
+
+    /** See {@link AdData#getAdRenderId()} */
+    @Nullable
+    public String getAdRenderId() {
+        return mAdRenderId;
     }
 
     @Override
@@ -97,12 +103,13 @@ public class DBAdData {
         return mRenderUri.equals(adData.mRenderUri)
                 && mMetadata.equals(adData.mMetadata)
                 && mAdCounterKeys.equals(adData.getAdCounterKeys())
-                && Objects.equals(mAdFilters, adData.getAdFilters());
+                && Objects.equals(mAdFilters, adData.getAdFilters())
+                && Objects.equals(mAdRenderId, adData.getAdRenderId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mRenderUri, mMetadata, mAdCounterKeys, mAdFilters);
+        return Objects.hash(mRenderUri, mMetadata, mAdCounterKeys, mAdFilters, mAdRenderId);
     }
 
     @Override
@@ -112,24 +119,33 @@ public class DBAdData {
                 + mRenderUri
                 + ", mMetadata='"
                 + mMetadata
-                + "', mAdCounterKeys="
+                + '\''
+                + ", mAdCounterKeys="
                 + mAdCounterKeys
                 + ", mAdFilters="
                 + mAdFilters
+                + ", mAdRenderId='"
+                + mAdRenderId
+                + '\''
                 + '}';
     }
 
-
-    /**
-     * Builder to construct a {@link DBAdData}.
-     */
+    /** Builder to construct a {@link DBAdData}. */
     public static class Builder {
         @Nullable private Uri mRenderUri;
         @Nullable private String mMetadata;
-        @NonNull private Set<String> mAdCounterKeys = new HashSet<>();
+        @NonNull private Set<Integer> mAdCounterKeys = new HashSet<>();
         @Nullable private AdFilters mAdFilters;
+        @Nullable private String mAdRenderId;
 
-        public Builder() {
+        public Builder() {}
+
+        public Builder(AdData copyFrom) {
+            setRenderUri(copyFrom.getRenderUri());
+            setAdFilters(copyFrom.getAdFilters());
+            setMetadata(copyFrom.getMetadata());
+            setAdCounterKeys(copyFrom.getAdCounterKeys());
+            setAdRenderId(copyFrom.getAdRenderId());
         }
 
         /** See {@link AdData#getRenderUri()} for details. */
@@ -145,7 +161,7 @@ public class DBAdData {
         }
 
         /** See {@link AdData#getAdCounterKeys()} for details. */
-        public Builder setAdCounterKeys(@NonNull Set<String> adCounterKeys) {
+        public Builder setAdCounterKeys(@NonNull Set<Integer> adCounterKeys) {
             this.mAdCounterKeys = adCounterKeys;
             return this;
         }
@@ -156,13 +172,20 @@ public class DBAdData {
             return this;
         }
 
+        /** See {@link AdData#getAdRenderId()} for details. */
+        @NonNull
+        public Builder setAdRenderId(@Nullable String adRenderId) {
+            this.mAdRenderId = adRenderId;
+            return this;
+        }
+
         /**
          * Build the {@link DBAdData}.
          *
          * @return the built {@link DBAdData}.
          */
         public DBAdData build() {
-            return new DBAdData(mRenderUri, mMetadata, mAdCounterKeys, mAdFilters);
+            return new DBAdData(mRenderUri, mMetadata, mAdCounterKeys, mAdFilters, mAdRenderId);
         }
     }
 }

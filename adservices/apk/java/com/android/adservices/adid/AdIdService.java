@@ -59,7 +59,7 @@ public class AdIdService extends Service {
             mAdIdService =
                     new AdIdServiceImpl(
                             this,
-                            AdIdWorker.getInstance(this),
+                            AdIdWorker.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),

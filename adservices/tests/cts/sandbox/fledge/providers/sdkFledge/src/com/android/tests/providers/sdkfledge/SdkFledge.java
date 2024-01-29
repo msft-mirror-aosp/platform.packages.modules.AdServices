@@ -19,8 +19,9 @@ package com.android.tests.providers.sdkfledge;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -28,6 +29,7 @@ import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceCl
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
@@ -137,9 +139,9 @@ public class SdkFledge extends SandboxedSdkProvider {
     private static final String HTTPS_SCHEME = "https";
 
     private static final int BUYER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private static final String INTERACTION_DATA = "{\"key\":\"value\"}";
 
@@ -271,9 +273,6 @@ public class SdkFledge extends SandboxedSdkProvider {
 
         try {
             mCustomAudienceClient.joinCustomAudience(customAudience1).get(10, TimeUnit.SECONDS);
-
-            complyWithAPIThrottling(SLEEP_TIME_MS);
-
             mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             String errorMessage =
@@ -377,15 +376,15 @@ public class SdkFledge extends SandboxedSdkProvider {
         // TODO(b/274837158) Uncomment after API is un-hidden
 
         //        try {
-        //            ReportInteractionRequest reportInteractionClickRequest =
-        //                    new ReportInteractionRequest(
+        //            ReportEventRequest reportInteractionClickRequest =
+        //                    new ReportEventRequest(
         //                            adSelectionId,
         //                            CLICK_INTERACTION,
         //                            INTERACTION_DATA,
         //                            BUYER_DESTINATION | SELLER_DESTINATION);
         //
-        //            ReportInteractionRequest reportInteractionHoverRequest =
-        //                    new ReportInteractionRequest(
+        //            ReportEventRequest reportInteractionHoverRequest =
+        //                    new ReportEventRequest(
         //                            adSelectionId,
         //                            HOVER_INTERACTION,
         //                            INTERACTION_DATA,
@@ -407,14 +406,12 @@ public class SdkFledge extends SandboxedSdkProvider {
         //            throw new LoadSdkException(e, new Bundle());
         //        }
 
-        // TODO(b/221876775): Unhide for frequency cap mainline promotion
-        /*
         try {
             UpdateAdCounterHistogramRequest updateHistogramRequest =
-                    new UpdateAdCounterHistogramRequest.Builder()
-                            .setAdSelectionId(adSelectionId)
-                            .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                            .setCallerAdTech(AD_SELECTION_CONFIG.getSeller())
+                    new UpdateAdCounterHistogramRequest.Builder(
+                                    adSelectionId,
+                                    FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                    AD_SELECTION_CONFIG.getSeller())
                             .build();
             mAdSelectionClient
                     .updateAdCounterHistogram(updateHistogramRequest)
@@ -427,7 +424,6 @@ public class SdkFledge extends SandboxedSdkProvider {
             Log.e(TAG, errorMessage);
             throw new LoadSdkException(exception, new Bundle());
         }
-        */
 
         // If we got this far, that means the test succeeded
         return new SandboxedSdk(new Binder());
@@ -520,21 +516,5 @@ public class SdkFledge extends SandboxedSdkProvider {
 
     private static Uri getUri(String host, String path) {
         return Uri.parse(HTTPS_SCHEME + "://" + host + path);
-    }
-
-    private static void complyWithAPIThrottling(long timeout) {
-        Log.i(TAG, String.format("Starting to sleep for %d ms", timeout));
-        long currentTime = System.currentTimeMillis();
-        long wakeupTime = currentTime + timeout;
-        while (wakeupTime - currentTime > 0) {
-            Log.i(TAG, String.format("Time left to sleep: %d ms", wakeupTime - currentTime));
-            try {
-                Thread.sleep(wakeupTime - currentTime);
-            } catch (InterruptedException ignored) {
-
-            }
-            currentTime = System.currentTimeMillis();
-        }
-        Log.i(TAG, "Done sleeping");
     }
 }
