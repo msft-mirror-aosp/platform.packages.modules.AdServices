@@ -20,3 +20,10 @@ flag {
     bug: "295861450"
     description: "Enables the SELinux domain sdk_sandbox_audit"
 }
+
+flag {
+    name: "sdk_sandbox_instrumentation_info"
+    namespace: "sdk_sandbox"
+    bug: "315018061"
+    description: "Enables the getSdkSandboxApplicationInfoForInstrumentation API for tests"
+}

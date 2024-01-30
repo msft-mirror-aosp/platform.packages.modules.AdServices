@@ -27,9 +27,14 @@ import android.app.Activity;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.content.Context;
 import android.os.Process;
+import android.platform.test.annotations.RequiresFlagsEnabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
+
+import com.android.sdksandbox.flags.Flags;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,10 +44,14 @@ import org.junit.runners.JUnit4;
 
 /** Tests for the instrumentation running the Sdk sanbdox tests. */
 @RunWith(JUnit4.class)
+@RequiresFlagsEnabled(Flags.FLAG_SDK_SANDBOX_INSTRUMENTATION_INFO)
 public class SdkSandboxInstrumentationTest {
 
     private Context mContext;
     private Context mTargetContext;
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Rule
     public final ActivityTestRule mActivityRule =
