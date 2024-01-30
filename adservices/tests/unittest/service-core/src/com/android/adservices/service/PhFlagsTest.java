@@ -28,6 +28,8 @@ import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.Flags.APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
 import static com.android.adservices.service.Flags.BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_LENGTH;
@@ -471,6 +473,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
@@ -1259,12 +1263,7 @@ public class PhFlagsTest {
     public void testTopicsCobaltLoggingEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
-        // Enable the cobalt_logging_enabled to test other flag values.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_COBALT_LOGGING_ENABLED,
-                Boolean.toString(true),
-                /* makeDefault */ false);
+        setCobaltLoggingEnabled(true);
 
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getTopicsCobaltLoggingEnabled())
@@ -1378,6 +1377,54 @@ public class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getCobaltLoggingEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAppNameApiErrorCobaltLoggingEnabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+        setCobaltLoggingEnabled(true);
+
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled())
+                .isEqualTo(APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAppNameApiErrorCobaltLoggingEnabled_cobaltLoggingDisabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+        setCobaltLoggingEnabled(false);
+
+        // APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED is guarded by COBALT_LOGGING_ENABLED.
+        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isEqualTo(false);
+    }
+
+    @Test
+    public void testGetAppNameApiErrorCobaltLoggingSamplingRate() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingSamplingRate())
+                .isEqualTo(APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE);
+
+        int phOverridingValue = APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE - 1;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingSamplingRate())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -10350,6 +10397,14 @@ public class PhFlagsTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 property,
                 phOverridingValue,
+                /* makeDefault */ false);
+    }
+
+    private static void setCobaltLoggingEnabled(boolean overridingValue) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_COBALT_LOGGING_ENABLED,
+                Boolean.toString(overridingValue),
                 /* makeDefault */ false);
     }
 }
