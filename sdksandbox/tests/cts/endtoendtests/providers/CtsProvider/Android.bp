@@ -26,6 +26,7 @@ android_test_helper_app {
     static_libs: [
         "SdkSandbox-java-lib",
         "CtsSdkProviderApi",
+        "androidx.sqlite_sqlite",
         "truth",
         "androidx.room_room-runtime",
     ],
