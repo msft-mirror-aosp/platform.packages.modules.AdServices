@@ -47,7 +47,7 @@ public class AdSelectionConfigTest {
                         .setAdSelectionSignals(AdSelectionConfigFixture.AD_SELECTION_SIGNALS)
                         .setSellerSignals(AdSelectionConfigFixture.SELLER_SIGNALS)
                         .setPerBuyerSignals(AdSelectionConfigFixture.PER_BUYER_SIGNALS)
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .setTrustedScoringSignalsUri(
                                 AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
@@ -59,7 +59,7 @@ public class AdSelectionConfigTest {
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.AD_SELECTION_SIGNALS);
         assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.SELLER_SIGNALS);
         assertEquals(config.getPerBuyerSignals(), AdSelectionConfigFixture.PER_BUYER_SIGNALS);
-        assertEquals(config.getBuyerSignedContextualAds(), contextualAdsMap);
+        assertEquals(config.getPerBuyerSignedContextualAds(), contextualAdsMap);
         assertEquals(
                 config.getTrustedScoringSignalsUri(),
                 AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
@@ -83,7 +83,8 @@ public class AdSelectionConfigTest {
         assertEquals(config.getSellerSignals(), fromParcel.getSellerSignals());
         assertEquals(config.getPerBuyerSignals(), fromParcel.getPerBuyerSignals());
         assertEquals(
-                config.getBuyerSignedContextualAds(), fromParcel.getBuyerSignedContextualAds());
+                config.getPerBuyerSignedContextualAds(),
+                fromParcel.getPerBuyerSignedContextualAds());
         assertEquals(
                 config.getTrustedScoringSignalsUri(), fromParcel.getTrustedScoringSignalsUri());
     }
@@ -111,7 +112,7 @@ public class AdSelectionConfigTest {
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
         assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
         assertTrue(config.getPerBuyerSignals().isEmpty());
-        assertTrue(config.getBuyerSignedContextualAds().isEmpty());
+        assertTrue(config.getPerBuyerSignedContextualAds().isEmpty());
     }
 
     @Test

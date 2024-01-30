@@ -18,6 +18,5 @@ package android.adservices.adselection;
 
 /**
  * Decision logic provided by the buyer, to be used in the override for contextual flow
- *@hide
  */
-parcelable BuyersDecisionLogic;
+parcelable PerBuyerDecisionLogic;

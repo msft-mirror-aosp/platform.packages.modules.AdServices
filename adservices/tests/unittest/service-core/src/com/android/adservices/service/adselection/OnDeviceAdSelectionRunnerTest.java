@@ -3081,7 +3081,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build()
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
-                        .setBuyerSignedContextualAds(signedContextualAdsMap)
+                        .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
 
         final Flags flags =
@@ -3143,7 +3143,7 @@ public class OnDeviceAdSelectionRunnerTest {
         assertEquals(
                 "The contextual ads should have reached scoring as is",
                 signedContextualAdsMap,
-                mAdSelectionConfigArgumentCaptor.getValue().getBuyerSignedContextualAds());
+                mAdSelectionConfigArgumentCaptor.getValue().getPerBuyerSignedContextualAds());
     }
 
     @Test
@@ -3155,7 +3155,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
                         // Despite populating Contextual Ads, they will be removed
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
         final Flags flags =
                 new OnDeviceAdSelectionRunnerTestFlags() {
@@ -3226,7 +3226,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build()
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         final Flags flags =
@@ -3296,7 +3296,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 contextualAdsMap.get(CommonFixture.VALID_BUYER_1).getAdsWithBid(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
-                        .getBuyerSignedContextualAds()
+                        .getPerBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_1)
                         .getAdsWithBid());
         assertEquals(
@@ -3304,7 +3304,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 Collections.emptyList(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
-                        .getBuyerSignedContextualAds()
+                        .getPerBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_2)
                         .getAdsWithBid());
     }

@@ -82,7 +82,7 @@ public class AddCustomAudienceOverrideRequest {
     }
 
     /**
-     * Returns the override bidding logic JavaScript version.
+     * Returns the value to return as version for JavaScript bidding logic.
      *
      * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
      */
