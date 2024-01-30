@@ -22,10 +22,12 @@ import android.adservices.shell.IShellCommand;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.UserHandle;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.ServiceBinder;
@@ -109,7 +111,11 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     }
 
     private int runAdServicesShellCommand(Context context, String[] args) {
-        IShellCommand service = mInjector.getShellCommandService(context);
+        // Shell always runs on System User (User 0), if secondary user (Eg. User 10) is running
+        // then change
+        // the context to the secondary user.
+        Context curUserContext = getContextForUser(context, ActivityManager.getCurrentUser());
+        IShellCommand service = mInjector.getShellCommandService(curUserContext);
         if (service == null) {
             getErrPrintWriter().println("Failed to connect to shell command service");
             return -1;
@@ -262,6 +268,13 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     private static void showValidCommands(PrintWriter pw) {
         showHelpCommand(pw);
         showIsSystemServerEnabledHelpCommand(pw);
+    }
+
+    private Context getContextForUser(Context context, int userId) {
+        if (userId == context.getUser().getIdentifier()) {
+            return context;
+        }
+        return context.createContextAsUser(UserHandle.of(userId), /* flags= */ 0);
     }
 
     // Needed because Binder.getCallingUid() is native and cannot be mocked

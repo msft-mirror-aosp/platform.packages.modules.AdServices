@@ -556,9 +556,9 @@ public class ModelManager {
                                 // in the ASSETS_PROPERTY_ATTRIBUTIONS.
                                 reader.skipValue();
                                 sLogger.e(
-                                        attribution,
-                                        " is a redundant metadata attribution of "
-                                                + "metadata property.");
+                                        "%s is a redundant metadata attribution of "
+                                                + "metadata property.",
+                                        attribution);
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_PROPERTY,
                                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
@@ -577,8 +577,8 @@ public class ModelManager {
                                 // in the ASSET_NORMAL_ATTRIBUTIONS.
                                 reader.skipValue();
                                 sLogger.e(
-                                        attribution,
-                                        " is a redundant metadata attribution of asset.");
+                                        "%s is a redundant metadata attribution of asset.",
+                                        attribution);
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET,
                                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);

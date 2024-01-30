@@ -31,3 +31,17 @@ android_test_helper_app {
     target_sdk_version: "33",
 }
 
+android_test_helper_app {
+    name: "SdkProviderAppWithoutSdkProviderClassNameProperty",
+    certificate: ":sdksandbox-test",
+    defaults: ["platform_app_defaults"],
+    manifest: "AndroidManifestWithoutSdkProviderClassNameProperty.xml",
+    sdk_version: "current",
+    compile_dex: true,
+    dex_preopt: {
+        enabled: true,
+    },
+    test_suites: ["general-tests"],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
+}

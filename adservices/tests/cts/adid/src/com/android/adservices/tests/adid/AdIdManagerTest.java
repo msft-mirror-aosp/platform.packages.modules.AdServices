@@ -22,6 +22,8 @@ import android.adservices.adid.AdIdManager;
 import android.os.LimitExceededException;
 import android.util.Log;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.ExceptionFailureSyncCallback;
 import com.android.adservices.common.OutcomeReceiverForTests;
@@ -80,6 +82,7 @@ public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 322812739)
     public void testAdIdManager_verifyRateLimitReached() throws Exception {
         // Rate limit hasn't reached yet
         long nowInMillis = System.currentTimeMillis();
