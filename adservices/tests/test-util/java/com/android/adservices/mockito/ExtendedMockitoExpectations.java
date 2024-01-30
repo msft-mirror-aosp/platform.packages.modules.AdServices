@@ -59,12 +59,6 @@ public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
-    public static void mockIsAtLeastR(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastR(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastR);
-    }
-
     // TODO(b/314969513): remove once there is no more usage
     /**
      * Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}.
