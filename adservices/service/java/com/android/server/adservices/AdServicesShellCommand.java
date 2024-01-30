@@ -22,18 +22,17 @@ import android.adservices.shell.IShellCommand;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.UserHandle;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.ServiceBinder;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
-
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -109,7 +108,10 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     }
 
     private int runAdServicesShellCommand(Context context, String[] args) {
-        IShellCommand service = mInjector.getShellCommandService(context);
+        // Shell always runs on System User (User 0), if secondary user (Eg. User 10) is running
+        // then change the context to the secondary user.
+        Context curUserContext = getContextForUser(context, ActivityManager.getCurrentUser());
+        IShellCommand service = mInjector.getShellCommandService(curUserContext);
         if (service == null) {
             getErrPrintWriter().println("Failed to connect to shell command service");
             return -1;
@@ -128,7 +130,7 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                                 getOutPrintWriter().println(response.getOut());
                                 resultCode.set(response.getResultCode());
                             } else {
-                                showError("%s", response.getErr());
+                                getErrPrintWriter().println(response.getErr());
                             }
                             latch.countDown();
                         }
@@ -205,7 +207,7 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                 default:
                     PrintWriter errPw = getErrPrintWriter();
                     errPw.printf("Invalid option: %s\n\n", opt);
-                    errPw.println("Valid Command:");
+                    errPw.print("Syntax: ");
                     showIsSystemServerEnabledHelpCommand(errPw);
                     return -1;
             }
@@ -235,15 +237,6 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
         showValidCommands(pw);
     }
 
-    @FormatMethod
-    private int showError(@FormatString String fmt, Object... args) {
-        PrintWriter pw = getErrPrintWriter();
-        String error = String.format(fmt, args);
-        pw.printf("%s. Valid commands are: \n", error);
-        showValidCommands(pw);
-        return -1;
-    }
-
     private static void showIsSystemServerEnabledHelpCommand(PrintWriter pw) {
         pw.println("is-system-service-enabled [-v || --verbose]");
         pw.println(
@@ -262,6 +255,13 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     private static void showValidCommands(PrintWriter pw) {
         showHelpCommand(pw);
         showIsSystemServerEnabledHelpCommand(pw);
+    }
+
+    private Context getContextForUser(Context context, int userId) {
+        if (userId == context.getUser().getIdentifier()) {
+            return context;
+        }
+        return context.createContextAsUser(UserHandle.of(userId), /* flags= */ 0);
     }
 
     // Needed because Binder.getCallingUid() is native and cannot be mocked

@@ -57,7 +57,7 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public MainViewModel(@NonNull Application application) {
-        this(application, ConsentManager.getInstance(application));
+        this(application, ConsentManager.getInstance());
     }
 
     @VisibleForTesting
@@ -90,7 +90,7 @@ public class MainViewModel extends AndroidViewModel {
         }
         mAdServicesConsent.postValue(getConsentFromConsentManager());
         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance(getApplication())
+            ConsentManager.getInstance()
                     .recordUserManualInteractionWithConsent(
                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         }

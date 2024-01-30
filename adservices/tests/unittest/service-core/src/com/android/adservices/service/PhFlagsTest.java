@@ -16,8 +16,9 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
+import static com.android.adservices.common.AndroidSdk.RVC;
+import static com.android.adservices.common.AndroidSdk.SC;
+import static com.android.adservices.common.AndroidSdk.SC_V2;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -878,23 +879,25 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.common.RequiresSdkRange;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.modules.utils.testing.StaticMockFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
@@ -903,21 +906,31 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
 @SmallTest
-public class PhFlagsTest {
-    @Rule
-    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(SdkLevel.class)
-                    .addStaticMockFixtures(
-                            TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new)
-                    .build();
+@SpyStatic(SdkLevel.class)
+public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
+
+    private static final String REASON_TO_NOT_MOCK_SDK_LEVEL =
+            "Uses Flags.java constant that checks SDK level when the class is instantiated, hence"
+                    + " calls to static SdkLevel methods cannot be mocked";
 
     private final Flags mPhFlags = PhFlags.getInstance();
     private final Flags mTestFlags = FlagsFactory.getFlagsForTest();
+
+    @Override
+    protected Supplier<? extends StaticMockFixture>[] getStaticMockFixtureSuppliers() {
+        @SuppressWarnings("unchecked")
+        Supplier<? extends StaticMockFixture>[] suppliers =
+                (Supplier<? extends StaticMockFixture>[])
+                        new Supplier<?>[] {
+                            TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new
+                        };
+        return (Supplier<? extends StaticMockFixture>[]) suppliers;
+    }
 
     @Test
     public void testGetTopicsEpochJobPeriodMs() {
@@ -3489,9 +3502,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsPeriodicEncodingEnabled() {
-        assertEquals(
-                PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED,
-                mPhFlags.getProtectedSignalsPeriodicEncodingEnabled());
+        assertThat(mPhFlags.getProtectedSignalsPeriodicEncodingEnabled())
+                .isEqualTo(PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED);
 
         boolean phOverrideValue = !PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
         DeviceConfig.setProperty(
@@ -3506,9 +3518,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalPeriodicEncodingJobPeriodMs() {
-        assertEquals(
-                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS,
-                mPhFlags.getProtectedSignalPeriodicEncodingJobPeriodMs());
+        assertThat(mPhFlags.getProtectedSignalPeriodicEncodingJobPeriodMs())
+                .isEqualTo(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS);
 
         long phOverrideValue = PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS + 10;
         DeviceConfig.setProperty(
@@ -3523,9 +3534,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsPeriodicEncodingJobFlexMs() {
-        assertEquals(
-                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS,
-                mPhFlags.getProtectedSignalsPeriodicEncodingJobFlexMs());
+        assertThat(mPhFlags.getProtectedSignalsPeriodicEncodingJobFlexMs())
+                .isEqualTo(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS);
 
         long phOverrideValue = PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS + 5;
         DeviceConfig.setProperty(
@@ -3540,9 +3550,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsEncoderRefreshWindowSeconds() {
-        assertEquals(
-                PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS,
-                mPhFlags.getProtectedSignalsEncoderRefreshWindowSeconds());
+        assertThat(mPhFlags.getProtectedSignalsEncoderRefreshWindowSeconds())
+                .isEqualTo(PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS);
 
         long phOverrideValue = PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS + 5;
         DeviceConfig.setProperty(
@@ -3557,9 +3566,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsEncodedPayloadMaxSizeBytes() {
-        assertEquals(
-                PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
-                mPhFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes());
+        assertThat(mPhFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes())
+                .isEqualTo(PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
 
         int phOverrideValue = PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES + 5;
         DeviceConfig.setProperty(
@@ -3574,9 +3582,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsFetchSignalUpdatesMaxSizeBytes() {
-        assertEquals(
-                PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES,
-                mPhFlags.getProtectedSignalsFetchSignalUpdatesMaxSizeBytes());
+        assertThat(mPhFlags.getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())
+                .isEqualTo(PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES);
 
         int phOverrideValue = PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES + 5;
         DeviceConfig.setProperty(
@@ -4090,7 +4097,7 @@ public class PhFlagsTest {
             boolean sdkAtleastT,
             boolean enableBackCompat,
             boolean expected) {
-        mockIsAtLeastT(sdkAtleastT);
+        extendedMockito.mockIsAtLeastT(sdkAtleastT);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_GLOBAL_KILL_SWITCH,
@@ -7062,22 +7069,22 @@ public class PhFlagsTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultConsentSourceOfTruth_isAtLeastT() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // On T+, default is PPAPI_AND_SYSTEM_SERVER.
         assertThat(DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_SYSTEM_SERVER);
     }
 
     @Test
+    @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultConsentSourceOfTruth_isS() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
         // On S, default is APPSEARCH_ONLY.
         assertThat(DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(APPSEARCH_ONLY);
     }
 
     @Test
+    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultConsentSourceOfTruth_isR() {
-        Assume.assumeFalse(SdkLevel.isAtLeastS());
         // On R, default is PPAPI_AND_ADEXT_SERVICE.
         assertThat(DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_ADEXT_SERVICE);
     }
@@ -7097,22 +7104,22 @@ public class PhFlagsTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultBlockedTopicsConsentSourceOfTruth_isAtLeastT() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // On T+, default is PPAPI_AND_SYSTEM_SERVER.
         assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_SYSTEM_SERVER);
     }
 
     @Test
+    @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultBlockedTopicsConsentSourceOfTruth_isS() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
         // On S, default is APPSEARCH_ONLY.
         assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(APPSEARCH_ONLY);
     }
 
     @Test
+    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultBlockedTopicsConsentSourceOfTruth_isR() {
-        Assume.assumeFalse(SdkLevel.isAtLeastS());
         // On R, default is PPAPI_AND_ADEXT_SERVICE.
         assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_ADEXT_SERVICE);
     }
@@ -7345,7 +7352,7 @@ public class PhFlagsTest {
 
     private void testEnableBackCompat(
             boolean sdkAtleastT, boolean enableBackCompat, boolean expected) {
-        mockIsAtLeastT(sdkAtleastT);
+        extendedMockito.mockIsAtLeastT(sdkAtleastT);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_ENABLE_BACK_COMPAT,
@@ -7356,8 +7363,8 @@ public class PhFlagsTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultEnableAppsearchConsentData_isAtLeastT() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // On T+, default is false.
         assertWithMessage("%s on T", FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA)
                 .that(ENABLE_APPSEARCH_CONSENT_DATA)
@@ -7365,8 +7372,8 @@ public class PhFlagsTest {
     }
 
     @Test
+    @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultEnableAppsearchConsentData_isS() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT());
         // On S, default is true.
         assertWithMessage("%s on S", FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA)
                 .that(ENABLE_APPSEARCH_CONSENT_DATA)
@@ -7374,8 +7381,8 @@ public class PhFlagsTest {
     }
 
     @Test
+    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultEnableAppsearchConsentData_isR() {
-        Assume.assumeFalse(SdkLevel.isAtLeastS());
         // On R, default is true.
         assertWithMessage("%s on R", FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA)
                 .that(ENABLE_APPSEARCH_CONSENT_DATA)
@@ -7389,7 +7396,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getEnableAppsearchConsentData())
                 .isEqualTo(ENABLE_APPSEARCH_CONSENT_DATA);
@@ -7405,8 +7412,8 @@ public class PhFlagsTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultEnableAdExtServiceConsentData_isAtLeastS() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         // On S+, default is false.
         assertWithMessage("%s on S", KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA)
                 .that(ENABLE_ADEXT_SERVICE_CONSENT_DATA)
@@ -7414,8 +7421,8 @@ public class PhFlagsTest {
     }
 
     @Test
+    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testDefaultEnableAdExtServiceConsentData_isR() {
-        Assume.assumeFalse(SdkLevel.isAtLeastR());
         // On R, default is true.
         assertWithMessage("%s on R", KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA)
                 .that(ENABLE_ADEXT_SERVICE_CONSENT_DATA)
@@ -7494,7 +7501,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         assertThat(mPhFlags.isBackCompatActivityFeatureEnabled())
                 .isEqualTo(IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
 
@@ -7518,7 +7525,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
@@ -7544,8 +7551,8 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
-        mockIsAtLeastS(false);
+        extendedMockito.mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastS(false);
 
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionREnabled())
@@ -7571,7 +7578,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
@@ -7593,7 +7600,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
@@ -7700,40 +7707,41 @@ public class PhFlagsTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testRvcUxEnabled_adServicesSystemApiTrue_isSplus() {
-        testRvcUxEnabled_default(true, true, false);
+        testRvcUxEnabled_default(/* adServicesSystemApi= */ true, /* expected= */ false);
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testRvcUxEnabled_adServicesSystemApiFalse_isSplus() {
-        testRvcUxEnabled_default(true, false, false);
+        testRvcUxEnabled_default(/* adServicesSystemApi= */ false, /* expected= */ false);
     }
 
     @Test
+    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testRvcUxEnabled_adServicesSystemApiTrue_isR() {
-        testRvcUxEnabled_default(false, true, true);
+        testRvcUxEnabled_default(/* adServicesSystemApi= */ true, /* expected= */ true);
     }
 
     @Test
+    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testRvcUxEnabled_adServicesSystemApiFalse_isR() {
-        testRvcUxEnabled_default(false, false, false);
+        testRvcUxEnabled_default(/* adServicesSystemApi= */ false, /* expected= */ false);
     }
 
-    private void testRvcUxEnabled_default(
-            boolean assumeIsAtLeastS, boolean adServicesSystemApi, boolean expected) {
-        if (assumeIsAtLeastS) {
-            Assume.assumeTrue(SdkLevel.isAtLeastS());
-        } else {
-            Assume.assumeFalse(SdkLevel.isAtLeastS());
-        }
-
+    private void testRvcUxEnabled_default(boolean adServicesSystemApi, boolean expected) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_ENABLE_AD_SERVICES_SYSTEM_API,
                 Boolean.toString(adServicesSystemApi),
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getEnableRvcUx()).isEqualTo(expected);
+        assertWithMessage(
+                        "getEnableRvcUx() when %s=%s",
+                        KEY_ENABLE_AD_SERVICES_SYSTEM_API, adServicesSystemApi)
+                .that(mPhFlags.getEnableRvcUx())
+                .isEqualTo(expected);
     }
 
     private void testRvcUxEnabled(

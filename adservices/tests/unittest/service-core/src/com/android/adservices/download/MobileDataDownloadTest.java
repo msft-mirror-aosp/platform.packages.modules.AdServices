@@ -163,9 +163,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance(any(Context.class)));
-
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
         overridingMddLoggingLevel("VERBOSE");
     }
 

@@ -24,6 +24,8 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 // NOTE: this class is used by device and host side, so it cannot have any Android dependency
@@ -71,7 +73,11 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
 
     @VisibleForTesting
     static final String REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE =
-            "Test annotated with @RequiresLowRamDevice and device is not";
+            "Test annotated with @RequiresLowRamDevice and device is not.";
+
+    @VisibleForTesting
+    static final String REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE =
+            "Test annotated with @RequiresGoDevice and device is not a Go device.";
 
     /** Default constructor. */
     public AbstractAdServicesDeviceSupportedRule(
@@ -82,17 +88,24 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
     }
 
     /** Checks whether {@code AdServices} is supported by the device. */
-    public final boolean isAdServicesSupportedOnDevice() throws Exception {
+    public final boolean isAdServicesSupportedOnDevice() {
         boolean isSupported = mDeviceSupportHelper.isDeviceSupported();
         mLog.v("isAdServicesSupportedOnDevice(): %b", isSupported);
         return isSupported;
     }
 
     /** Checks whether the device has low ram. */
-    public final boolean isLowRamDevice() throws Exception {
+    public final boolean isLowRamDevice() {
         boolean isLowRamDevice = mDeviceSupportHelper.isLowRamDevice();
         mLog.v("isLowRamDevice(): %b", isLowRamDevice);
         return isLowRamDevice;
+    }
+
+    /** Checks whether the device is a go device. */
+    public final boolean isGoDevice() {
+        boolean isGoDevice = mDeviceSupportHelper.isGoDevice();
+        mLog.v("isGoDevice(): %b", isGoDevice);
+        return isGoDevice;
     }
 
     @Override
@@ -108,22 +121,38 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 String testName = description.getDisplayName();
                 boolean isDeviceSupported = isAdServicesSupportedOnDevice();
                 boolean isLowRamDevice = isLowRamDevice();
+                boolean isGoDevice = isGoDevice();
                 RequiresLowRamDevice requiresLowRamDevice =
                         description.getAnnotation(RequiresLowRamDevice.class);
+                RequiresGoDevice requiresGoDevice =
+                        description.getAnnotation(RequiresGoDevice.class);
                 mLog.d(
                         "apply(): testName=%s, isDeviceSupported=%b, isLowRamDevice=%b,"
                                 + " requiresLowRamDevice=%s",
                         testName, isDeviceSupported, isLowRamDevice, requiresLowRamDevice);
+                List<String> assumptionViolatedReasons = new ArrayList<>();
 
-                if (!isDeviceSupported && requiresLowRamDevice == null) {
+                if (!isDeviceSupported
+                        && requiresLowRamDevice == null
+                        && requiresGoDevice == null) {
                     // Low-ram devices is a sub-set of unsupported, hence we cannot skip it right
                     // away as the test might be annotated with @RequiresLowRamDevice (which is
                     // checked below)
-                    throw new AssumptionViolatedException("Device doesn't support Adservices");
+                    assumptionViolatedReasons.add("Device doesn't support Adservices");
+                } else {
+                    if (!isLowRamDevice && requiresLowRamDevice != null) {
+                        assumptionViolatedReasons.add(
+                                REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE);
+                    }
+                    if (!isGoDevice && requiresGoDevice != null) {
+                        assumptionViolatedReasons.add(
+                                REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE);
+                    }
                 }
-                if (!isLowRamDevice && requiresLowRamDevice != null) {
-                    throw new AssumptionViolatedException(
-                            REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE);
+
+                // Throw exception in case any of the assumption was violated.
+                if (!assumptionViolatedReasons.isEmpty()) {
+                    throw new DeviceConditionsViolatedException(assumptionViolatedReasons);
                 }
 
                 base.evaluate();
