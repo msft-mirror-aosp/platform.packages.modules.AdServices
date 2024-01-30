@@ -104,19 +104,6 @@ public final class CobaltLoggerImpl implements CobaltLogger {
     }
 
     @Override
-    public ListenableFuture<Void> noOpLogString(
-            long metricId, String stringValue, List<Integer> eventVector) {
-        return Futures.immediateFuture(null);
-    }
-
-    /**
-     * Logs an event for a STRING metric.
-     *
-     * @param metricId registered ID of the STRING metric which the event occurred for
-     * @param stringValue the string to log
-     * @param eventCodes registered events codes of the event which occurred
-     * @return An optional ListenableFuture that is ready when logging completes
-     */
     public ListenableFuture<Void> logString(
             long metricId, String stringValue, List<Integer> eventCodes) {
         long currentTimeMillis = mSystemClock.currentTimeMillis();
