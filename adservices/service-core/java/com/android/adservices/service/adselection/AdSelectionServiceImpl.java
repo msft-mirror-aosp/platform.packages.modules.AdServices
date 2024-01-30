@@ -36,9 +36,9 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
-import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
@@ -1009,14 +1009,14 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull BuyersDecisionLogic buyersDecisionLogic,
+            @NonNull PerBuyerDecisionLogic perBuyerDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 
         try {
             Objects.requireNonNull(adSelectionConfig);
             Objects.requireNonNull(decisionLogicJS);
-            Objects.requireNonNull(buyersDecisionLogic);
+            Objects.requireNonNull(perBuyerDecisionLogic);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
@@ -1060,7 +1060,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 adSelectionConfig,
                 decisionLogicJS,
                 trustedScoringSignals,
-                buyersDecisionLogic,
+                perBuyerDecisionLogic,
                 callback);
     }
 

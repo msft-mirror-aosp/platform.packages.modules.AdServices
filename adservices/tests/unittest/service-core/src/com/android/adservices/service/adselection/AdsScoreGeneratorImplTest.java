@@ -821,7 +821,7 @@ public class AdsScoreGeneratorImplTest {
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
@@ -829,7 +829,7 @@ public class AdsScoreGeneratorImplTest {
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
         List<SignedContextualAds> signedContextualAds =
-                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
+                mAdSelectionConfig.getPerBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
         for (SignedContextualAds ctx : signedContextualAds) {
@@ -942,7 +942,7 @@ public class AdsScoreGeneratorImplTest {
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
@@ -950,7 +950,7 @@ public class AdsScoreGeneratorImplTest {
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
         List<SignedContextualAds> signedContextualAds =
-                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
+                mAdSelectionConfig.getPerBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
         for (SignedContextualAds ctx : signedContextualAds) {
@@ -1090,7 +1090,7 @@ public class AdsScoreGeneratorImplTest {
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
@@ -1098,7 +1098,7 @@ public class AdsScoreGeneratorImplTest {
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
         List<SignedContextualAds> signedContextualAds =
-                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
+                mAdSelectionConfig.getPerBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
         for (SignedContextualAds ctx : signedContextualAds) {
@@ -1127,7 +1127,7 @@ public class AdsScoreGeneratorImplTest {
                         .setDecisionLogic(fakeDecisionLogicForBuyer)
                         .setBuyer(BUYER_2)
                         .build();
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(buyerDecisionOverride));
         mDevContext =
                 DevContext.builder()
@@ -1261,7 +1261,7 @@ public class AdsScoreGeneratorImplTest {
                         .setDecisionLogicUri(decisionLogicUri)
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         List<AdWithBid> adsWithBid =
@@ -1269,7 +1269,7 @@ public class AdsScoreGeneratorImplTest {
                         .map(a -> a.getAdWithBid())
                         .collect(Collectors.toList());
         List<SignedContextualAds> signedContextualAds =
-                mAdSelectionConfig.getBuyerSignedContextualAds().values().stream()
+                mAdSelectionConfig.getPerBuyerSignedContextualAds().values().stream()
                         .collect(Collectors.toList());
         List<AdWithBid> contextualBidAds = new ArrayList<>();
         for (SignedContextualAds ctx : signedContextualAds) {

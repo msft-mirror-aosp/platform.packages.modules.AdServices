@@ -422,7 +422,7 @@ public class AdSelectionManagerTest {
                 AdSelectionConfig adSelectionConfig,
                 String s,
                 AdSelectionSignals adSelectionSignals,
-                BuyersDecisionLogic buyersDecisionLogic,
+                PerBuyerDecisionLogic perBuyerDecisionLogic,
                 AdSelectionOverrideCallback adSelectionOverrideCallback)
                 throws RemoteException {
             throw new UnsupportedOperationException();
