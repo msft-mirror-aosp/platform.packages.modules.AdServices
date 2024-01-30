@@ -126,8 +126,7 @@ public class ConsentNotificationJobServiceTest {
         mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
         ExtendedMockito.doReturn(mUxStatesManager)
                 .when(() -> UxStatesManager.getInstance(any(Context.class)));
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
         mConsentNotificationJobService.setConsentManager(mConsentManager);
         mConsentNotificationJobService.setUxStatesManager(mUxStatesManager);
@@ -210,7 +209,7 @@ public class ConsentNotificationJobServiceTest {
 
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         mConsentNotificationJobService.setConsentManager(consentManager);
-        doReturn(consentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(consentManager).when(() -> ConsentManager.getInstance());
         Mockito.doReturn(true).when(mUxStatesManager).isEeaDevice();
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(eq(ADID_ENABLE_STATUS), anyBoolean())).thenReturn(true);
@@ -443,7 +442,7 @@ public class ConsentNotificationJobServiceTest {
         doNothing().when(consentManager).recordNotificationDisplayed(true);
         doNothing().when(consentManager).recordGaUxNotificationDisplayed(true);
         mConsentNotificationJobService.setConsentManager(consentManager);
-        doReturn(consentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(consentManager).when(() -> ConsentManager.getInstance());
         Mockito.doReturn(true).when(mUxStatesManager).isEeaDevice();
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);

@@ -16,9 +16,9 @@
 
 package com.android.server.sdksandbox;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SdkConstant;
-import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -27,6 +27,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ProviderInfo;
 import android.os.IBinder;
 
+import com.android.sdksandbox.flags.Flags;
 import com.android.tools.r8.keepanno.annotations.KeepForApi;
 import com.android.tools.r8.keepanno.annotations.KeepItemKind;
 import com.android.tools.r8.keepanno.annotations.KeepTarget;
@@ -148,8 +149,8 @@ public interface SdkSandboxManagerLocal {
      * @return {@link ApplicationInfo} of the sdk sandbox process to be instrumented
      * @throws NameNotFoundException if the sandbox package name cannot be found.
      */
-    @SuppressLint("UnflaggedApi") // The API is only used for tests.
     @NonNull
+    @FlaggedApi(Flags.FLAG_SDK_SANDBOX_INSTRUMENTATION_INFO)
     ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
             @NonNull ApplicationInfo clientAppInfo, boolean isSdkInSandbox)
             throws NameNotFoundException;

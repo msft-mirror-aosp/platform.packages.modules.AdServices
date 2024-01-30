@@ -39,9 +39,9 @@ public class UxUtil {
                 ? fragmentActivity
                         .getIntent()
                         .getBooleanExtra(
-                                "isEUDevice",
-                                /* default= */ UxStatesManager.getInstance(context).isEeaDevice())
-                : !ConsentManager.getInstance(context).isAdIdEnabled()
+                                  "isEUDevice",
+                                  UxStatesManager.getInstance(context).isEeaDevice())
+                : !ConsentManager.getInstance().isAdIdEnabled()
                         || UxStatesManager.getInstance(context).isEeaDevice();
     }
 

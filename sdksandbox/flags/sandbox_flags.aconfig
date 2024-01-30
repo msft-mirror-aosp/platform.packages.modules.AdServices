@@ -29,6 +29,13 @@ flag {
 }
 
 flag {
+    name: "sdk_sandbox_instrumentation_info"
+    namespace: "sdk_sandbox"
+    bug: "315018061"
+    description: "Enables the getSdkSandboxApplicationInfoForInstrumentation API for tests"
+}
+
+flag {
     name: "sdk_sandbox_uid_to_app_uid_api"
     namespace: "sdk_sandbox"
     description: "Get the app uid for the input sdk sandbox uid"

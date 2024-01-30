@@ -188,7 +188,7 @@ public class BackgroundFetchRunner {
                             } catch (Exception e) {
                                 sLogger.d(
                                         "Error when closing updateCustomAudienceExecutionLogger, "
-                                                + "skipping metrics logging: {}",
+                                                + "skipping metrics logging: %s",
                                         e.getMessage());
                             }
 

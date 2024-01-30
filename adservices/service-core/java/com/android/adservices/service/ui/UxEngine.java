@@ -61,7 +61,7 @@ public class UxEngine {
         LogUtil.d("UxEngine getInstance called.");
         return new UxEngine(
                 context,
-                ConsentManager.getInstance(context),
+                ConsentManager.getInstance(),
                 UxStatesManager.getInstance(context),
                 UxEngineUtil.getInstance());
     }

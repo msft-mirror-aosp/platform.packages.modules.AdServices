@@ -644,7 +644,7 @@ public class AsyncTriggerFetcher {
                         || ((Integer) maybeInt)
                                 > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
                     LoggerFactory.getMeasurementLogger()
-                            .d("Aggregate values '" + id + "' is invalid. %s", maybeInt);
+                            .d("Aggregate values '%s' is invalid. %s", id, maybeInt);
                     return false;
                 }
             }

@@ -24,6 +24,7 @@ import android.content.Context;
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
 import androidx.javascriptengine.JavaScriptSandbox;
+import androidx.javascriptengine.MemoryLimitExceededException;
 import androidx.javascriptengine.SandboxDeadException;
 
 import com.android.adservices.LoggerFactory;
@@ -499,6 +500,13 @@ public class JSScriptEngine {
                                 mJsSandboxProvider.destroyIfCurrentInstance(jsSandbox);
                                 throw new JSScriptEngineConnectionException(
                                         JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG, exception);
+                            } else if (exception instanceof MemoryLimitExceededException) {
+                                /*
+                                  In case of androidx.javascriptengine.MemoryLimitExceededException
+                                  we should not retry the JS Evaluation but close the current
+                                  instance of Javascript Sandbox.
+                                */
+                                mJsSandboxProvider.destroyIfCurrentInstance(jsSandbox);
                             }
                             throw new JSExecutionException(
                                     "Failure running JS in WebView: " + exception.getMessage(),

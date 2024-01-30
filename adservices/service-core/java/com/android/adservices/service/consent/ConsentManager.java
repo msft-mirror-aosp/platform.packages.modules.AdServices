@@ -74,6 +74,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
@@ -204,8 +205,8 @@ public class ConsentManager {
      * existing instance will be returned.
      */
     @NonNull
-    public static ConsentManager getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    public static ConsentManager getInstance() {
+        Context context = ApplicationContextSingleton.get();
 
         Trace.beginSection("ConsentManager#Initialization");
         if (sConsentManager == null) {

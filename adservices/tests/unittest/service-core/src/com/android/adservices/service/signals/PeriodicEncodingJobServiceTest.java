@@ -217,7 +217,7 @@ public class PeriodicEncodingJobServiceTest {
                 };
 
         doReturn(flagsWithGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -362,7 +362,7 @@ public class PeriodicEncodingJobServiceTest {
                     }
                 };
         doReturn(flagsWithKillSwitchOff).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -529,7 +529,7 @@ public class PeriodicEncodingJobServiceTest {
                     }
                 };
         doReturn(flagsEnabledPeriodicEncoding).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
         doReturn(mPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
@@ -582,7 +582,7 @@ public class PeriodicEncodingJobServiceTest {
                     }
                 };
         doReturn(flagsEnabledPeriodicEncoding).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
         doReturn(mPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
@@ -860,7 +860,7 @@ public class PeriodicEncodingJobServiceTest {
     private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
         doReturn(mPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
@@ -914,7 +914,7 @@ public class PeriodicEncodingJobServiceTest {
     private void testOnStartJobUpdateSuccess() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -963,7 +963,7 @@ public class PeriodicEncodingJobServiceTest {
     }
 
     private void testOnStartJobConsentRevokedGaUxEnabled() {
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
