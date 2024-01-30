@@ -94,11 +94,6 @@ public class FlagsFactory {
         }
 
         @Override
-        public boolean getAppConfigReturnsEnabledByDefault() {
-            return false;
-        }
-
-        @Override
         public boolean getFledgeBeaconReportingMetricsEnabled() {
             return true;
         }

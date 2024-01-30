@@ -91,7 +91,7 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
     void processAction(RegisterSource sourceRegistration) throws IOException, JSONException {
         super.processAction(sourceRegistration);
         if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
         }
     }
 
@@ -99,7 +99,7 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
     void processAction(RegisterWebSource sourceRegistration) throws IOException, JSONException {
         super.processAction(sourceRegistration);
         if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
         }
     }
 

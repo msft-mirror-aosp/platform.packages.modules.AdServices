@@ -211,6 +211,21 @@ public abstract class CustomAudienceDao {
     @Query("SELECT COUNT(DISTINCT owner) FROM custom_audience")
     public abstract long getCustomAudienceOwnerCount();
 
+    /** List all custom audiences by owner and buyer that are marked as debuggable. */
+    @Query(
+            "SELECT * FROM custom_audience "
+                    + "WHERE owner=:owner AND buyer=:buyer AND debuggable=1")
+    @Nullable
+    public abstract List<DBCustomAudience> listDebuggableCustomAudiencesByOwnerAndBuyer(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer);
+
+    /** Get custom audience by owner, buyer and name that are marked as debuggable. */
+    @Query(
+            "SELECT * FROM custom_audience "
+                    + "WHERE owner = :owner AND buyer = :buyer AND name = :name AND debuggable = 1")
+    public abstract DBCustomAudience getDebuggableCustomAudienceByPrimaryKey(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
+
     /**
      * Get the count of total custom audience, the count for the given owner and the count of
      * distinct owner in one transaction.
@@ -315,6 +330,34 @@ public abstract class CustomAudienceDao {
     public abstract DBCustomAudienceBackgroundFetchData
             getCustomAudienceBackgroundFetchDataByPrimaryKey(
                     @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
+
+    /**
+     * Get debuggable custom audience background fetch data by its unique key.
+     *
+     * @return custom audience background fetch data if it exists
+     */
+    @Query(
+            "SELECT * FROM custom_audience_background_fetch_data WHERE owner = :owner AND buyer ="
+                    + " :buyer AND name = :name AND is_debuggable = 1")
+    @Nullable
+    @VisibleForTesting
+    public abstract DBCustomAudienceBackgroundFetchData
+            getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                    @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
+
+    /**
+     * List debuggable custom audience background fetch data by its unique key.
+     *
+     * @return custom audience background fetch data if it exists
+     */
+    @Query(
+            "SELECT * FROM custom_audience_background_fetch_data "
+                    + "WHERE owner = :owner AND buyer = :buyer AND is_debuggable = 1")
+    @Nullable
+    @VisibleForTesting
+    public abstract List<DBCustomAudienceBackgroundFetchData>
+            listDebuggableCustomAudienceBackgroundFetchData(
+                    @NonNull String owner, @NonNull AdTechIdentifier buyer);
 
     /**
      * Get custom audience JS override by its unique key.

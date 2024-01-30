@@ -27,14 +27,12 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 
@@ -81,7 +79,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     private static final Topic TOPIC3 = Topic.create(123, 123, 123);
 
     private AppSearchConsentManager mAppSearchConsentManager;
-    private Context mContext;
     @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
     @Mock private Flags mFlags;
     @Mock private AdServicesManager mAdServicesManager;
@@ -92,9 +89,9 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
     @Before
     public void setup() {
-        mContext = spy(appContext.get());
         extendedMockito.mockGetFlags(mFlags);
-        mAppSearchConsentManager = new AppSearchConsentManager(mContext, mAppSearchConsentWorker);
+        mAppSearchConsentManager =
+                new AppSearchConsentManager(mSpyContext, mAppSearchConsentWorker);
         ApplicationInfo app1 = new ApplicationInfo();
         app1.packageName = PACKAGE_NAME1;
         ApplicationInfo app2 = new ApplicationInfo();
@@ -526,7 +523,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     public void testMigrateConsentData_FromExtServices() throws Exception {
         initConsentDataForMigration();
         doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
-                .when(mContext)
+                .when(mSpyContext)
                 .getPackageName();
         boolean result =
                 mAppSearchConsentManager.migrateConsentDataIfNeeded(

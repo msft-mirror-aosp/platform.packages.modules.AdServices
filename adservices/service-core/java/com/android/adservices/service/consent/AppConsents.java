@@ -39,11 +39,6 @@ public abstract class AppConsents {
     public abstract boolean getFledgeConsent();
 
     /**
-     * @return opt-in/out value for all apps in beta
-     */
-    public abstract boolean getDefaultConsent();
-
-    /**
      * @return generic builder.
      */
     public static AppConsents.Builder builder() {
@@ -61,9 +56,6 @@ public abstract class AppConsents {
 
         /** Set opt-in/out value for fledge app */
         public abstract AppConsents.Builder setFledgeConsent(boolean value);
-
-        /** Set opt-in/out value for all apps in beta */
-        public abstract AppConsents.Builder setDefaultConsent(boolean value);
 
         /** build for {@link AppConsents}. */
         public abstract AppConsents build();

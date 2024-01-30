@@ -49,7 +49,7 @@ public class ProtectedSignalsDatabaseMigrationTest {
             new MigrationTestHelper(INSTRUMENTATION, ProtectedSignalsDatabase.class);
 
     @Test
-    public void testMigrate1To2() throws IOException {
+    public void testMigration1To2() throws IOException {
         try (SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 1)) {
             List<String> tables = listTables(db);
             assertTrue(tables.contains(DBProtectedSignal.TABLE_NAME));
@@ -78,7 +78,7 @@ public class ProtectedSignalsDatabaseMigrationTest {
     }
 
     @Test
-    public void testMigrate2To3() throws IOException {
+    public void testMigration2To3() throws IOException {
         final String encoderLogicMetadataTable = "encoder_logics";
         final int version = 2;
         final int failedEncodingCount = 3;

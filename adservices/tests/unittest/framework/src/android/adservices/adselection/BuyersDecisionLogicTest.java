@@ -43,8 +43,8 @@ public class BuyersDecisionLogicTest {
         BuyersDecisionLogic obj =
                 new BuyersDecisionLogic(
                         ImmutableMap.of(BUYER_1, DECISION_LOGIC, BUYER_2, DECISION_LOGIC));
-        assertThat(obj.getLogicMap()).containsEntry(BUYER_1, DECISION_LOGIC);
-        assertThat(obj.getLogicMap()).containsEntry(BUYER_2, DECISION_LOGIC);
+        assertThat(obj.getPerBuyerLogicMap()).containsEntry(BUYER_1, DECISION_LOGIC);
+        assertThat(obj.getPerBuyerLogicMap()).containsEntry(BUYER_2, DECISION_LOGIC);
     }
 
     @Test
@@ -58,7 +58,7 @@ public class BuyersDecisionLogicTest {
         p.setDataPosition(0);
 
         BuyersDecisionLogic fromParcel = BuyersDecisionLogic.CREATOR.createFromParcel(p);
-        Map<AdTechIdentifier, DecisionLogic> mapFromParcel = fromParcel.getLogicMap();
+        Map<AdTechIdentifier, DecisionLogic> mapFromParcel = fromParcel.getPerBuyerLogicMap();
         assertNotNull(mapFromParcel);
         assertThat(mapFromParcel.get(BUYER_1)).isEqualTo(DECISION_LOGIC);
         assertThat(mapFromParcel.get(BUYER_2)).isEqualTo(DECISION_LOGIC);
@@ -73,7 +73,7 @@ public class BuyersDecisionLogicTest {
     @Test
     public void testDefaultEmpty() {
         BuyersDecisionLogic empty = BuyersDecisionLogic.EMPTY;
-        assertEquals(0, empty.getLogicMap().size());
+        assertEquals(0, empty.getPerBuyerLogicMap().size());
     }
 
     @Test

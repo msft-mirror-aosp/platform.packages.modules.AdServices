@@ -45,6 +45,7 @@ import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -54,21 +55,19 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class EnrollmentDaoTest {
+public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private SharedDbHelper mDbHelper;
@@ -191,7 +190,6 @@ public class EnrollmentDaoTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
         when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(false);
         when(mEnrollmentUtil.getBuildId()).thenReturn(1);
@@ -317,14 +315,10 @@ public class EnrollmentDaoTest {
     }
 
     @Test
+    @SpyStatic(ErrorLogUtil.class)
     public void testDeleteAllDoesNotThrowException() {
         SharedDbHelper helper = Mockito.mock(SharedDbHelper.class);
         SQLiteDatabase db = mock(SQLiteDatabase.class);
-        MockitoSession mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(ErrorLogUtil.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
 
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         EnrollmentDao enrollmentDao =
@@ -341,7 +335,6 @@ public class EnrollmentDaoTest {
 
         boolean result = enrollmentDao.deleteAll();
         assertFalse(result);
-        mStaticMockSession.finishMocking();
     }
 
     @Test

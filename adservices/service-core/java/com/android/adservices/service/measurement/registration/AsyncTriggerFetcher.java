@@ -49,6 +49,7 @@ import java.net.URLConnection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -267,13 +268,41 @@ public class AsyncTriggerFetcher {
                     && !json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
                 builder.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
             }
+
+            builder.setAggregatableSourceRegistrationTimeConfig(
+                    getSourceRegistrationTimeConfig(json));
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
+
             return Optional.of(builder.build());
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger().e(e, "Trigger Parsing failed");
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
             return Optional.empty();
+        } catch (IllegalArgumentException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "AsyncTriggerFetcher: IllegalArgumentException");
+            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+            return Optional.empty();
         }
+    }
+
+    private Trigger.SourceRegistrationTimeConfig getSourceRegistrationTimeConfig(JSONObject json) {
+        Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig =
+                Trigger.SourceRegistrationTimeConfig.INCLUDE;
+
+        if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()) {
+            sourceRegistrationTimeConfig = Trigger.SourceRegistrationTimeConfig.EXCLUDE;
+            if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME)) {
+                String sourceRegistrationTimeConfigString =
+                        json.optString(TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME)
+                                .toUpperCase(Locale.ENGLISH);
+                sourceRegistrationTimeConfig =
+                        Trigger.SourceRegistrationTimeConfig.valueOf(
+                                sourceRegistrationTimeConfigString);
+            }
+        }
+
+        return sourceRegistrationTimeConfig;
     }
 
     private boolean isAllowlisted(String allowlist, String origin) {
@@ -615,7 +644,7 @@ public class AsyncTriggerFetcher {
                         || ((Integer) maybeInt)
                                 > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
                     LoggerFactory.getMeasurementLogger()
-                            .d("Aggregate values '" + id + "' is invalid. %s", maybeInt);
+                            .d("Aggregate values '%s' is invalid. %s", id, maybeInt);
                     return false;
                 }
             }
@@ -730,5 +759,6 @@ public class AsyncTriggerFetcher {
         String DEBUG_JOIN_KEY = "debug_join_key";
         String DEBUG_AD_ID = "debug_ad_id";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
+        String AGGREGATABLE_SOURCE_REGISTRATION_TIME = "aggregatable_source_registration_time";
     }
 }

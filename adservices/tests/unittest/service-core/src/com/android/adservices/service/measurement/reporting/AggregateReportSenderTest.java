@@ -23,6 +23,7 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -87,7 +88,8 @@ public class AggregateReportSenderTest {
         Mockito.when(httpUrlConnection.getResponseCode()).thenReturn(200);
 
         JSONObject aggregateReportJson =
-                createAggregateReportBodyExample1().toJson(AggregateCryptoFixture.getKey());
+                createAggregateReportBodyExample1()
+                        .toJson(AggregateCryptoFixture.getKey(), FlagsFactory.getFlags());
         Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
 
         AggregateReportSender aggregateReportSender = new AggregateReportSender(false, sContext);

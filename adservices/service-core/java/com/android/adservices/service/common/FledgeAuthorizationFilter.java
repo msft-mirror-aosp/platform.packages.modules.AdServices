@@ -33,7 +33,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
@@ -123,45 +123,20 @@ public class FledgeAuthorizationFilter {
      * @param apiNameLoggingId the id of the api being called
      * @throws SecurityException if the package did not declare custom audience permission
      */
-    public void assertAppDeclaredCustomAudiencePermission(
+    public void assertAppDeclaredPermission(
             @NonNull Context context, @NonNull String appPackageName, int apiNameLoggingId)
             throws SecurityException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appPackageName);
 
         if (!PermissionHelper.hasCustomAudiencesPermission(context, appPackageName)) {
-            logAndThrowPermissionFailure(apiNameLoggingId);
+            sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
+            throw new SecurityException(
+                    AdServicesStatusUtils
+                            .SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
         }
-    }
-
-    /**
-     * Check if the app had declared the protected signals permission.
-     *
-     * @param context api service context
-     * @param apiNameLoggingId the id of the api being called
-     * @throws SecurityException if the package did not declare custom audience permission
-     */
-    public void assertAppDeclaredProtectedSignalsPermission(
-            @NonNull Context context, @NonNull String appPackageName, int apiNameLoggingId)
-            throws SecurityException {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(appPackageName);
-
-        if (!PermissionHelper.hasProtectedSignalsPermission(context, appPackageName)) {
-            /*
-             * Using the same message for both since getAdSelectionData can be called with either
-             * permission and we don't want the error message to depend on which is checked first.
-             */
-            logAndThrowPermissionFailure(apiNameLoggingId);
-        }
-    }
-
-    private void logAndThrowPermissionFailure(int apiNameLoggingId) {
-        sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
-        mAdServicesLogger.logFledgeApiCallStats(
-                apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
-        throw new SecurityException(
-                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
     }
 
     /**
@@ -229,7 +204,7 @@ public class FledgeAuthorizationFilter {
         }
 
         // Check if enrollment is in blocklist.
-        if (PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+        if (FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
             sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
@@ -300,7 +275,7 @@ public class FledgeAuthorizationFilter {
                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                         appPackageName, enrollmentData.getEnrollmentId());
         boolean isEnrollmentBlocklisted =
-                PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
+                FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
         int errorCause = EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue();
         if (isAllowedCustomAudiencesAccess && isEnrollmentBlocklisted) {
             errorCause = EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue();

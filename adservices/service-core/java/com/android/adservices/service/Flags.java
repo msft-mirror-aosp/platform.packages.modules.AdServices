@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit;
  * Flags. The default values in this class must match with the default values in PH since we will
  * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
  * from the GCL.
+ *
+ * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  */
 public interface Flags extends CommonFlags {
     /** Topics Epoch Job Period. */
@@ -373,6 +375,30 @@ public interface Flags extends CommonFlags {
     default boolean getMeasurementIsClickVerifiedByInputEvent() {
         return MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
     }
+
+    /** Returns whether measurement click deduplication is enabled. */
+    default boolean getMeasurementIsClickDeduplicationEnabled() {
+        return MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED;
+    }
+
+    /** Default whether measurement click deduplication is enabled. */
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = true;
+
+    /** Returns whether measurement click deduplication is enforced. */
+    default boolean getMeasurementIsClickDeduplicationEnforced() {
+        return MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED;
+    }
+
+    /** Default whether measurement click deduplication is enforced. */
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = true;
+
+    /** Returns the number of sources that can be registered with a single click. */
+    default long getMeasurementMaxSourcesPerClick() {
+        return MEASUREMENT_MAX_SOURCES_PER_CLICK;
+    }
+
+    /** Default max number of sources that can be registered with single click. */
+    long MEASUREMENT_MAX_SOURCES_PER_CLICK = 1;
 
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
@@ -1470,7 +1496,7 @@ public interface Flags extends CommonFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://publickeyservice-test1.bas-kms.xyz/v1alpha/publicKeys";
+            "https://publickeyservice-v150.coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
 
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
@@ -1650,6 +1676,13 @@ public interface Flags extends CommonFlags {
     /** Returns the max length of Ad Render Id. */
     default long getFledgeAuctionServerAdRenderIdMaxLength() {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED = false;
+
+    /** Returns whether the omit-ads flag is enabled for the server auction. */
+    default boolean getFledgeAuctionServerOmitAdsEnabled() {
+        return FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -3049,6 +3082,19 @@ public interface Flags extends CommonFlags {
     boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
+    long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
+
+    /** Returns max allowed size in bytes for trigger registrations header. */
+    default long getMaxTriggerRegistrationHeaderSizeBytes() {
+        return MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+    }
+
+    boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
+
+    /** Returns true when the new trigger registration header size limitation are applied. */
+    default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
+        return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+    }
 
     /**
      * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap
@@ -3248,7 +3294,7 @@ public interface Flags extends CommonFlags {
         return GA_UX_FEATURE_ENABLED;
     }
 
-    /** Set the debug UX, which should crrespond to the {@link PrivacySandboxUxCollection} enum. */
+    /** Set the debug UX, which should correspond to the {@link PrivacySandboxUxCollection} enum. */
     String DEBUG_UX = "UNSUPPORTED_UX";
 
     /** Returns the debug UX. */
@@ -3938,6 +3984,7 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
     }
 
+    /** Default value for null report rate including source registration time. */
     float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
 
     /**
@@ -3948,7 +3995,26 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
     }
 
-    /** Default U18 UX feature flag.. */
+    /** Default value for null report rate excluding source registration time. */
+    float MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME = .05f;
+
+    /**
+     * Returns the rate at which null aggregate reports are generated whenever the trigger is
+     * configured to exclude the source registration time and there is no matching source.
+     */
+    default float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
+        return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
+    }
+
+    /** Default value for Optional Source Registration Time feature flag. */
+    boolean MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED = false;
+
+    /** Returns true if source registration time is optional for aggregatable reports. */
+    default boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
+        return MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
+    }
+
+    /** Default U18 UX feature flag. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
     /** U18 UX feature flag.. */
@@ -3965,11 +4031,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** Default RVC NOTIFICATION feature flag.. */
-    boolean DEFAULT_RVC_NOTIFICATION_ENABLED = false;
+    boolean DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED = false;
 
     /** RVC Notification feature flag.. */
-    default boolean getEnableRvcNotification() {
-        return DEFAULT_RVC_NOTIFICATION_ENABLED;
+    default boolean getEnableRvcPostOtaNotification() {
+        return DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
     }
 
     /** Default enableAdServices system API feature flag.. */
@@ -4346,13 +4412,19 @@ public interface Flags extends CommonFlags {
         return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
     }
 
-    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;
+    /**
+     * @deprecated TODO(b/314962688): remove (will always be true)
+     */
+    @Deprecated boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
 
     /**
      * Returns whether the API access checked by the AdServices XML config returns {@code true} by
      * default (i.e., when the app doesn't define the config XML file or if the given API access is
      * missing from that file).
+     *
+     * @deprecated TODO(b/314962688): remove
      */
+    @Deprecated
     default boolean getAppConfigReturnsEnabledByDefault() {
         return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
@@ -4410,8 +4482,8 @@ public interface Flags extends CommonFlags {
     }
 
     /**
-     * Default value to determine how many logging events {@link
-     * com.android.adservices.spe.AdservicesJobServiceLogger} should upload to the server.
+     * Default value to determine how many logging events {@link AdServicesJobServiceLogger} should
+     * upload to the server.
      *
      * <p>The value should be an integer in the range of [0, 100], where 100 is to log all events
      * and 0 is to log no events.
@@ -4419,10 +4491,169 @@ public interface Flags extends CommonFlags {
     int DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE = 5;
 
     /**
-     * Returns the sampling logging rate for {@link
-     * com.android.adservices.spe.AdservicesJobServiceLogger} for logging events.
+     * Returns the sampling logging rate for {@link AdServicesJobServiceLogger} for logging events.
      */
     default int getBackgroundJobSamplingLoggingRate() {
         return DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
+    }
+
+    /** Default value of the timeout for AppSearch write operations */
+    int DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS = 3000;
+
+    /**
+     * Gets the value of the timeout for AppSearch write operations, in milliseconds.
+     *
+     * @return the timeout, in milliseconds, for AppSearch write operations
+     */
+    default int getAppSearchWriteTimeout() {
+        return DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS;
+    }
+
+    /** Default value of the timeout for AppSearch read operations */
+    int DEFAULT_APPSEARCH_READ_TIMEOUT_MS = 750;
+
+    /**
+     * Gets the value of the timeout for AppSearch read operations, in milliseconds.
+     *
+     * @return the timeout, in milliseconds, for AppSearch read operations
+     */
+    default int getAppSearchReadTimeout() {
+        return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
+    }
+
+    /** default value for get adservices common states enabled */
+    boolean DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED = false;
+
+    /** Returns if the get adservices common states service enabled. */
+    default boolean isGetAdServicesCommonStatesEnabled() {
+        return DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
+    }
+
+    /** Default value to determine whether ux related to the PAS Ux are enabled. */
+    boolean DEFAULT_PAS_UX_ENABLED = false;
+
+    /** Returns whether features related to the PAS Ux are enabled */
+    default boolean getPasUxEnabled() {
+        return DEFAULT_PAS_UX_ENABLED;
+    }
+
+    /** Default value of the KAnon Sign/join feature flag */
+    boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED = false;
+
+    /** Default value of k-anon fetch server parameters url. */
+    String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getServerPublicParams";
+
+    /** Default value of k-anon register client parameters url. */
+    String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/registerClient";
+
+    /** Default value of k-anon get tokens url. */
+    String FLEDGE_DEFAULT_KANON_GET_TOKENS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getTokens";
+
+    /** Default value of k-anon get tokens url. */
+    String FLEDGE_DEFAULT_KANON_JOIN_URL =
+            "https://staging-chromekanonymity-pa.sandbox.googleapis.com/v1/proxy/req";
+
+    /** Default size of batch in a kanon sign call */
+    int FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE = 32;
+
+    /** Default percentage of messages to be signed/joined immediately. */
+    int FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS = 10;
+
+    /** Default ttl of kanon-messages stored in the database */
+    long FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS = 2 * 7 * 24 * 60 * 60; // 2 weeks
+
+    /** Default frequency of the KAnon Sign/Join background process */
+    int FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY = 2;
+
+    /** Default number of messages processed in a single background process */
+    int FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS = 100;
+
+    /**
+     * This is a feature flag for KAnon Sign/Join feature.
+     *
+     * @return {@code true} if the feature is enabled, otherwise returns {@code false}.
+     */
+    default boolean getFledgeKAnonSignJoinFeatureEnabled() {
+        return FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch server parameters during k-anon
+     * sign call
+     *
+     * @return kanon fetch server params url.
+     */
+    default String getFledgeKAnonFetchServerParamsUrl() {
+        return FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to register client parameters during k-anon
+     * sign call.
+     *
+     * @return register client params url
+     */
+    default String getFledgeKAnonRegisterClientParametersUrl() {
+        return FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch Tokens during k-anon sign call.
+     *
+     * @return default value of get tokens url
+     */
+    default String getFledgeKAnonGetTokensUrl() {
+        return FLEDGE_DEFAULT_KANON_GET_TOKENS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to make k-anon JOIN join call.
+     *
+     * @return default value of get tokens url
+     */
+    default String getFledgeKAnonJoinUrl() {
+        return FLEDGE_DEFAULT_KANON_JOIN_URL;
+    }
+
+    /**
+     * This method returns the value of batch size in a batch kanon sign call
+     *
+     * @return k-anon sign batch size
+     */
+    default int getFledgeKAnonSignBatchSize() {
+        return FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE;
+    }
+
+    /**
+     * This method returns an integer tha represents the percentage of the messages that needs to be
+     * signed/joined immediately.
+     */
+    default int getFledgeKAnonPercentageImmediateSignJoinCalls() {
+        return FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
+    }
+
+    /**
+     * This method returns the max ttl of a KAnonMessage in the Database. This is used to determine
+     * when to clean up the old KAnonMessages from the database
+     *
+     * @return kanon max ttl for a kano message
+     */
+    default long getFledgeKAnonMessageTtlSeconds() {
+        return FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS;
+    }
+
+    /** This method returns the number of k-anon sign/join background processes per day. */
+    default int getFledgeKAnonBackgroundProcessFrequencyPerDay() {
+        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY;
+    }
+
+    /**
+     * This method returns the number of k-anon messages to be processed per background process run.
+     */
+    default int getFledgeKAnonMessagesPerBackgroundProcess() {
+        return FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
     }
 }
