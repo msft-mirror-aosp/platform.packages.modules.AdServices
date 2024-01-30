@@ -65,13 +65,25 @@ public final class ExtendedMockitoExpectations {
         doReturn(isIt).when(SdkLevel::isAtLeastR);
     }
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
+    // TODO(b/314969513): remove once there is no more usage
+    /**
+     * Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}.
+     *
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastS(boolean)} instead
+     */
+    @Deprecated
     public static void mockIsAtLeastS(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
         doReturn(isIt).when(SdkLevel::isAtLeastS);
     }
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
+    // TODO(b/314969513): remove once there is no more usage
+    /**
+     * Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}.
+     *
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastT(boolean)} instead
+     */
+    @Deprecated
     public static void mockIsAtLeastT(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastT(" + isIt + ")");
         doReturn(isIt).when(SdkLevel::isAtLeastT);

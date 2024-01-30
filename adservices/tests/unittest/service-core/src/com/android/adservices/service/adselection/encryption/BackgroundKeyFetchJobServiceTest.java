@@ -34,7 +34,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -45,8 +44,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -56,6 +54,8 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -64,20 +64,26 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class BackgroundKeyFetchJobServiceTest {
+// The actual scheduling of the job needs to be mocked out because the test application does
+// not have the required permissions to schedule the job with the constraints requested by
+// the BackgroundKeyFetchJobService, and adding them is non-trivial.
+@SpyStatic(FlagsFactory.class)
+@MockStatic(ConsentManager.class)
+@SpyStatic(BackgroundKeyFetchJobService.class)
+@SpyStatic(BackgroundKeyFetchWorker.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID =
             FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB.getJobId();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
+    private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
 
@@ -96,45 +102,28 @@ public class BackgroundKeyFetchJobServiceTest {
     @Mock private BackgroundKeyFetchWorker mBgFWorkerMock;
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
-    @Mock StatsdAdServicesLogger mMockStatsdLogger;
+    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
+    @Mock private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
-    private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setup() {
-        // The actual scheduling of the job needs to be mocked out because the test application does
-        // not have the required permissions to schedule the job with the constraints requested by
-        // the BackgroundKeyFetchJobService, and adding them is non-trivial.
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(ConsentManager.class)
-                        .spyStatic(BackgroundKeyFetchJobService.class)
-                        .spyStatic(BackgroundKeyFetchWorker.class)
-                        .spyStatic(AdServicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
         Assume.assumeNotNull(JOB_SCHEDULER);
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID));
 
-        mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
+        mSpyLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
     }
 
     @After
     public void teardown() {
         JOB_SCHEDULER.cancelAll();
-        mStaticMockSession.finishMocking();
     }
 
     @Test
-    public void testOnStartJobConsentRevokedGaUxDisabled()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
+    public void testOnStartJobConsentRevokedGaUxDisabled() throws Exception {
+        extendedMockito.mockGetFlags(mFlagsWithEnabledBgFGaUxDisabled);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
@@ -146,7 +135,7 @@ public class BackgroundKeyFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundKeyFetchJobService.class))
+                                new ComponentName(sContext, BackgroundKeyFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -161,9 +150,8 @@ public class BackgroundKeyFetchJobServiceTest {
     }
 
     @Test
-    public void testOnStartJobAdSelectionDataKillSwitchOn()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(mFlagsWithAdSelectionDataKillSwitchOn).when(FlagsFactory::getFlags);
+    public void testOnStartJobAdSelectionDataKillSwitchOn() throws Exception {
+        extendedMockito.mockGetFlags(mFlagsWithAdSelectionDataKillSwitchOn);
         doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
         doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
 
@@ -171,7 +159,7 @@ public class BackgroundKeyFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundKeyFetchJobService.class))
+                                new ComponentName(sContext, BackgroundKeyFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -186,9 +174,8 @@ public class BackgroundKeyFetchJobServiceTest {
     }
 
     @Test
-    public void testOnStartJobAdSelectionDataKillSwitchOff()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(mFlagsWithAdSelectionDataKillSwitchOff).when(FlagsFactory::getFlags);
+    public void testOnStartJobAdSelectionDataKillSwitchOff() throws Exception {
+        extendedMockito.mockGetFlags(mFlagsWithAdSelectionDataKillSwitchOff);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -217,11 +204,10 @@ public class BackgroundKeyFetchJobServiceTest {
     }
 
     @Test
-    public void testOnStartJobUpdateSuccessdd()
-            throws InterruptedException, ExecutionException, TimeoutException {
+    public void testOnStartJobUpdateSuccessdd() throws Exception {
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
                 new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
-        doReturn(flagsWithEnabledBgFGaUxDisabledWithoutLogging).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(flagsWithEnabledBgFGaUxDisabledWithoutLogging);
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
@@ -251,10 +237,10 @@ public class BackgroundKeyFetchJobServiceTest {
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
+    public void testOnStartJobUpdateTimeoutHandled() throws Exception {
         Flags flagsWithEnabledBgFGaUxDisabled =
                 new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxDisabled();
-        doReturn(flagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
@@ -284,10 +270,9 @@ public class BackgroundKeyFetchJobServiceTest {
     }
 
     @Test
-    public void testOnStartJobUpdateExecutionExceptionHandled() throws InterruptedException {
+    public void testOnStartJobUpdateExecutionExceptionHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
-
-        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mFlagsWithEnabledBgFGaUxDisabled);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -318,8 +303,7 @@ public class BackgroundKeyFetchJobServiceTest {
 
     @Test
     public void testOnStopJobCallsStopWork() {
-        Flags mockFlag = mock(Flags.class);
-        doReturn(mockFlag).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
 
         doReturn(mBgFWorkerMock).when(() -> BackgroundKeyFetchWorker.getInstance(any()));
         doNothing().when(mBgFWorkerMock).stopWork();
@@ -334,7 +318,7 @@ public class BackgroundKeyFetchJobServiceTest {
         doCallRealMethod()
                 .when(() -> BackgroundKeyFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        BackgroundKeyFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithDisabledBgF, false);
+        BackgroundKeyFetchJobService.scheduleIfNeeded(sContext, mFlagsWithDisabledBgF, false);
 
         ExtendedMockito.verify(() -> BackgroundKeyFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
@@ -347,7 +331,7 @@ public class BackgroundKeyFetchJobServiceTest {
         doNothing().when(() -> BackgroundKeyFetchJobService.schedule(any(), any()));
 
         BackgroundKeyFetchJobService.scheduleIfNeeded(
-                CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, false);
+                sContext, mFlagsWithEnabledBgFGaUxDisabled, false);
 
         ExtendedMockito.verify(() -> BackgroundKeyFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
@@ -358,7 +342,7 @@ public class BackgroundKeyFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundKeyFetchJobService.class))
+                                new ComponentName(sContext, BackgroundKeyFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -368,7 +352,7 @@ public class BackgroundKeyFetchJobServiceTest {
                 .when(() -> BackgroundKeyFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
         BackgroundKeyFetchJobService.scheduleIfNeeded(
-                CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, false);
+                sContext, mFlagsWithEnabledBgFGaUxDisabled, false);
 
         ExtendedMockito.verify(() -> BackgroundKeyFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
@@ -379,7 +363,7 @@ public class BackgroundKeyFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundKeyFetchJobService.class))
+                                new ComponentName(sContext, BackgroundKeyFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -390,7 +374,7 @@ public class BackgroundKeyFetchJobServiceTest {
         doNothing().when(() -> BackgroundKeyFetchJobService.schedule(any(), any()));
 
         BackgroundKeyFetchJobService.scheduleIfNeeded(
-                CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, true);
+                sContext, mFlagsWithEnabledBgFGaUxDisabled, true);
 
         ExtendedMockito.verify(() -> BackgroundKeyFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
@@ -398,17 +382,15 @@ public class BackgroundKeyFetchJobServiceTest {
 
     @Test
     public void testScheduleFlagDisabled() {
-        BackgroundKeyFetchJobService.schedule(CONTEXT, mFlagsWithDisabledBgF);
+        BackgroundKeyFetchJobService.schedule(sContext, mFlagsWithDisabledBgF);
 
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        Flags mockFlag = mock(Flags.class);
+    public void testOnStartJob_shouldDisableJobTrue() throws Exception {
         // Logging killswitch is on.
-        doReturn(mockFlag).when(FlagsFactory::getFlags);
+        extendedMockito.mockGetFlags(mMockFlags);
 
         doReturn(true)
                 .when(
@@ -422,7 +404,7 @@ public class BackgroundKeyFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundKeyFetchJobService.class))
+                                new ComponentName(sContext, BackgroundKeyFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
