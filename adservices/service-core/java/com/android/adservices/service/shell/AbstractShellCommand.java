@@ -25,7 +25,7 @@ abstract class AbstractShellCommand implements ShellCommand {
     static final int RESULT_GENERIC_ERROR = -1;
     static final int RESULT_OK = 0;
 
-    static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s). Syntax: %s\n";
+    static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s).\n\nSyntax: %s\n";
 
     static int invalidArgsError(String syntax, PrintWriter err, String[] args) {
         err.printf(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
