@@ -278,6 +278,21 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     }
 
     @Test
+    public void testLoadSdkPropertySdkProviderClassNameNotSet() {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(
+                "com.android.property_sdkprovider_classname_not_present",
+                new Bundle(),
+                Runnable::run,
+                callback);
+        callback.assertLoadSdkIsUnsuccessful();
+        assertThat(callback.getLoadSdkErrorCode()).isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
+        assertThat(callback.getLoadSdkErrorMsg())
+                .isEqualTo(
+                        "android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME property not found");
+    }
+
+    @Test
     public void testUnloadAndReloadSdk() throws Exception {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);
