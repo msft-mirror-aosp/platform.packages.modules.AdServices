@@ -690,6 +690,8 @@ public final class FlagsConstants {
             "fledge_auction_server_ad_render_id_enabled";
     public static final String KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED =
             "fledge_auction_server_omit_ads_enabled";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED =
+            "fledge_auction_server_request_flags_enabled";
 
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =

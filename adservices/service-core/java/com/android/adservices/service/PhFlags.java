@@ -2579,6 +2579,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerOmitAdsEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4850,6 +4858,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED
                         + " = "
                         + getFledgeAuctionServerOmitAdsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerRequestFlagsEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT

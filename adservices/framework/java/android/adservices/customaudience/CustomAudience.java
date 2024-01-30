@@ -72,7 +72,7 @@ public final class CustomAudience implements Parcelable {
     @IntDef(
             flag = true,
             prefix = {"FLAG_AUCTION_SERVER_REQUEST"},
-            value = {FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS})
+            value = {FLAG_AUCTION_SERVER_REQUEST_DEFAULT, FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS})
     @Retention(RetentionPolicy.SOURCE)
     public @interface AuctionServerRequestFlag {}
 

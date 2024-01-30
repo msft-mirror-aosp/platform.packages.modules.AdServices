@@ -1678,6 +1678,13 @@ public interface Flags extends CommonFlags {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED = false;
+
+    /** Returns whether the server auction request flags are enabled */
+    default boolean getFledgeAuctionServerRequestFlagsEnabled() {
+        return FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED = false;
 
     /** Returns whether the omit-ads flag is enabled for the server auction. */
