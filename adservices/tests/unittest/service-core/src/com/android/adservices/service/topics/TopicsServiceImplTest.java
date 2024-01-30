@@ -68,6 +68,7 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.common.NoFailureSyncCallback;
@@ -97,7 +98,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
