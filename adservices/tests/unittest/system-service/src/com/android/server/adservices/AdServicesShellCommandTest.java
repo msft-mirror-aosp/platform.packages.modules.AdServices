@@ -189,12 +189,10 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
     @Test
     public void testExec_invalidCommand() throws Exception {
         String cmd = "D'OH!";
+        String helpMsg = "Use -h for help.";
         ShellCommandResult responseInvalidShellCommand =
                 new ShellCommandResult.Builder()
-                        .setErr(
-                                String.format(
-                                        "Unsupported command: %s\n%s",
-                                        cmd, HELP_ADSERVICES_SERVICE_CMDS))
+                        .setErr(String.format("Unsupported command: %s\n%s", cmd, helpMsg))
                         .setResultCode(-1)
                         .build();
         mockRunShellCommand(responseInvalidShellCommand, cmd);
@@ -203,10 +201,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
 
         expect.withMessage("result").that(result).isEqualTo(-1);
         expect.withMessage("out").that(getOut()).isEmpty();
-        String err = getErr();
-        expectHelpOutputHasAllCommands(err);
-        expectHelpOutputHasMessages(err, HELP_ADSERVICES_SERVICE_CMDS);
-        expectHelpOutputHasMessages(err, cmd);
+        expectHelpOutputHasMessages(getErr(), cmd, helpMsg);
     }
 
     @Test

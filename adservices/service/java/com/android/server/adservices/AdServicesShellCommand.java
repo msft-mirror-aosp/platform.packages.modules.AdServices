@@ -34,9 +34,6 @@ import com.android.adservices.ServiceBinder;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
-
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -112,8 +109,7 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
 
     private int runAdServicesShellCommand(Context context, String[] args) {
         // Shell always runs on System User (User 0), if secondary user (Eg. User 10) is running
-        // then change
-        // the context to the secondary user.
+        // then change the context to the secondary user.
         Context curUserContext = getContextForUser(context, ActivityManager.getCurrentUser());
         IShellCommand service = mInjector.getShellCommandService(curUserContext);
         if (service == null) {
@@ -134,7 +130,7 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                                 getOutPrintWriter().println(response.getOut());
                                 resultCode.set(response.getResultCode());
                             } else {
-                                showError("%s", response.getErr());
+                                getErrPrintWriter().println(response.getErr());
                             }
                             latch.countDown();
                         }
@@ -211,7 +207,7 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                 default:
                     PrintWriter errPw = getErrPrintWriter();
                     errPw.printf("Invalid option: %s\n\n", opt);
-                    errPw.println("Valid Command:");
+                    errPw.print("Syntax: ");
                     showIsSystemServerEnabledHelpCommand(errPw);
                     return -1;
             }
@@ -239,15 +235,6 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
         PrintWriter pw = getOutPrintWriter();
         pw.println("AdServices (adservices_manager) commands: ");
         showValidCommands(pw);
-    }
-
-    @FormatMethod
-    private int showError(@FormatString String fmt, Object... args) {
-        PrintWriter pw = getErrPrintWriter();
-        String error = String.format(fmt, args);
-        pw.printf("%s. Valid commands are: \n", error);
-        showValidCommands(pw);
-        return -1;
     }
 
     private static void showIsSystemServerEnabledHelpCommand(PrintWriter pw) {
