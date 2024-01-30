@@ -250,8 +250,7 @@
               "key": "0x559",
               "value": 123
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"
@@ -264,8 +263,7 @@
               "key": "0x559",
               "value": 456
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3603000"
@@ -278,8 +276,7 @@
               "key": "0x559",
               "value": 789
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3604000"
@@ -292,8 +289,7 @@
               "key": "0x559",
               "value": 987
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3605000"
