@@ -22,12 +22,15 @@ import android.content.Context;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
+import com.android.modules.utils.testing.StaticMockFixture;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
+
+import java.util.function.Supplier;
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
@@ -56,8 +59,17 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
             new ExtendedMockitoInlineCleanerRule();
 
     @Rule(order = 10)
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this).setStrictness(getStrictness()).build();
+    public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
+
+    private AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        AdServicesExtendedMockitoRule.Builder builder =
+                new AdServicesExtendedMockitoRule.Builder(this);
+        Supplier<? extends StaticMockFixture>[] suppliers = getStaticMockFixtureSuppliers();
+        if (suppliers != null) {
+            builder.addStaticMockFixtures(suppliers);
+        }
+        return builder.setStrictness(getStrictness()).build();
+    }
 
     /**
      * Allows subclasses to override the default strictness of the {@link #extendedMockito} rule.
@@ -70,5 +82,16 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
      */
     protected Strictness getStrictness() {
         return Strictness.LENIENT;
+    }
+
+    /**
+     * Allows subclasses to set the suppliers of {@link StaticMockFixture} of the {@link
+     * #extendedMockito} rule.
+     *
+     * @return {@code null} by default (so it's not set).
+     */
+    @Nullable
+    protected Supplier<? extends StaticMockFixture>[] getStaticMockFixtureSuppliers() {
+        return null;
     }
 }

@@ -16,8 +16,6 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -878,23 +876,23 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.modules.utils.testing.StaticMockFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
@@ -903,21 +901,26 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
 @SmallTest
-public class PhFlagsTest {
-    @Rule
-    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(SdkLevel.class)
-                    .addStaticMockFixtures(
-                            TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new)
-                    .build();
-
+@SpyStatic(SdkLevel.class)
+public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private final Flags mPhFlags = PhFlags.getInstance();
     private final Flags mTestFlags = FlagsFactory.getFlagsForTest();
+
+    @Override
+    protected Supplier<? extends StaticMockFixture>[] getStaticMockFixtureSuppliers() {
+        @SuppressWarnings("unchecked")
+        Supplier<? extends StaticMockFixture>[] suppliers =
+                (Supplier<? extends StaticMockFixture>[])
+                        new Supplier<?>[] {
+                            TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new
+                        };
+        return (Supplier<? extends StaticMockFixture>[]) suppliers;
+    }
 
     @Test
     public void testGetTopicsEpochJobPeriodMs() {
@@ -3489,9 +3492,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsPeriodicEncodingEnabled() {
-        assertEquals(
-                PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED,
-                mPhFlags.getProtectedSignalsPeriodicEncodingEnabled());
+        assertThat(mPhFlags.getProtectedSignalsPeriodicEncodingEnabled())
+                .isEqualTo(PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED);
 
         boolean phOverrideValue = !PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
         DeviceConfig.setProperty(
@@ -3506,9 +3508,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalPeriodicEncodingJobPeriodMs() {
-        assertEquals(
-                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS,
-                mPhFlags.getProtectedSignalPeriodicEncodingJobPeriodMs());
+        assertThat(mPhFlags.getProtectedSignalPeriodicEncodingJobPeriodMs())
+                .isEqualTo(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS);
 
         long phOverrideValue = PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS + 10;
         DeviceConfig.setProperty(
@@ -3523,9 +3524,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsPeriodicEncodingJobFlexMs() {
-        assertEquals(
-                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS,
-                mPhFlags.getProtectedSignalsPeriodicEncodingJobFlexMs());
+        assertThat(mPhFlags.getProtectedSignalsPeriodicEncodingJobFlexMs())
+                .isEqualTo(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS);
 
         long phOverrideValue = PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS + 5;
         DeviceConfig.setProperty(
@@ -3540,9 +3540,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsEncoderRefreshWindowSeconds() {
-        assertEquals(
-                PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS,
-                mPhFlags.getProtectedSignalsEncoderRefreshWindowSeconds());
+        assertThat(mPhFlags.getProtectedSignalsEncoderRefreshWindowSeconds())
+                .isEqualTo(PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS);
 
         long phOverrideValue = PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS + 5;
         DeviceConfig.setProperty(
@@ -3557,9 +3556,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsEncodedPayloadMaxSizeBytes() {
-        assertEquals(
-                PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
-                mPhFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes());
+        assertThat(mPhFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes())
+                .isEqualTo(PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
 
         int phOverrideValue = PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES + 5;
         DeviceConfig.setProperty(
@@ -3574,9 +3572,8 @@ public class PhFlagsTest {
 
     @Test
     public void testGetProtectedSignalsFetchSignalUpdatesMaxSizeBytes() {
-        assertEquals(
-                PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES,
-                mPhFlags.getProtectedSignalsFetchSignalUpdatesMaxSizeBytes());
+        assertThat(mPhFlags.getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())
+                .isEqualTo(PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES);
 
         int phOverrideValue = PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES + 5;
         DeviceConfig.setProperty(
@@ -4090,7 +4087,7 @@ public class PhFlagsTest {
             boolean sdkAtleastT,
             boolean enableBackCompat,
             boolean expected) {
-        mockIsAtLeastT(sdkAtleastT);
+        extendedMockito.mockIsAtLeastT(sdkAtleastT);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_GLOBAL_KILL_SWITCH,
@@ -7345,7 +7342,7 @@ public class PhFlagsTest {
 
     private void testEnableBackCompat(
             boolean sdkAtleastT, boolean enableBackCompat, boolean expected) {
-        mockIsAtLeastT(sdkAtleastT);
+        extendedMockito.mockIsAtLeastT(sdkAtleastT);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_ENABLE_BACK_COMPAT,
@@ -7389,7 +7386,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getEnableAppsearchConsentData())
                 .isEqualTo(ENABLE_APPSEARCH_CONSENT_DATA);
@@ -7494,7 +7491,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         assertThat(mPhFlags.isBackCompatActivityFeatureEnabled())
                 .isEqualTo(IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
 
@@ -7518,7 +7515,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
@@ -7544,8 +7541,8 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
-        mockIsAtLeastS(false);
+        extendedMockito.mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastS(false);
 
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionREnabled())
@@ -7571,7 +7568,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
@@ -7593,7 +7590,7 @@ public class PhFlagsTest {
                 KEY_ENABLE_BACK_COMPAT,
                 Boolean.toString(true),
                 /* makeDefault */ false);
-        mockIsAtLeastT(false);
+        extendedMockito.mockIsAtLeastT(false);
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementRollbackDeletionAppSearchKillSwitch())
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH);
