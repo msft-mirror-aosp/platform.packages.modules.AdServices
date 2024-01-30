@@ -156,6 +156,32 @@ public final class CustomAudience implements Parcelable {
         dest.writeInt(mAuctionServerRequestFlags);
     }
 
+    @Override
+    public String toString() {
+        return "CustomAudience{"
+                + "mBuyer="
+                + mBuyer
+                + ", mName='"
+                + mName
+                + ", mActivationTime="
+                + mActivationTime
+                + ", mExpirationTime="
+                + mExpirationTime
+                + ", mDailyUpdateUri="
+                + mDailyUpdateUri
+                + ", mUserBiddingSignals="
+                + mUserBiddingSignals
+                + ", mTrustedBiddingData="
+                + mTrustedBiddingData
+                + ", mBiddingLogicUri="
+                + mBiddingLogicUri
+                + ", mAds="
+                + mAds
+                + ", mAuctionServerRequestFlags="
+                + mAuctionServerRequestFlags
+                + '}';
+    }
+
     /** @hide */
     @Override
     public int describeContents() {
