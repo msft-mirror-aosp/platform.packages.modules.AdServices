@@ -45,7 +45,7 @@ final class ArgParser {
     }
 
     /**
-     * Parses command line arguments with the `--key=value` format.
+     * Parses command line arguments with the {@code --key value} format.
      *
      * @param args list of command line args, where the first element is the invoked command.
      * @return map containing arguments.
@@ -54,9 +54,13 @@ final class ArgParser {
      */
     Map<String, String> parse(String... args) {
         checkArgument(args.length > 0, "No argument was passed to ArgParser.");
-        Log.d(TAG, "Parsing command line arguments: " + Arrays.toString(args));
-        for (int i = 1; i < args.length; i++) {
-            parseArgument(args[i]);
+        Log.v(TAG, "Parsing command line arguments: " + Arrays.toString(args));
+        for (int i = 1; i < args.length; i += 2) {
+            checkArgument(
+                    i + 1 < args.length,
+                    "Required value for argument `%s` is not present",
+                    args[i]);
+            parseArgument(args[i], args[i + 1]);
         }
         verifyRequiredArgsArePresent();
         return mParsedArgs;
@@ -65,39 +69,33 @@ final class ArgParser {
     /**
      * Gets the value of a given command line argument by key.
      *
-     * @param key Key of the argument, e.g. `--key=value`
-     * @return Value of the argument e.g. `--key=value`
+     * @param key Key of the argument, e.g. {@code --key value}
+     * @return Value of the argument e.g. {@code --key value}
      */
-    String getValue(@NonNull String key) {
+    String getValue(String key) {
         checkArgument(
                 mParsedArgs.containsKey(key),
                 String.format("Required command line argument `%s` is not present", key));
         return mParsedArgs.get(key);
     }
 
-    private void parseArgument(String keyValueArgument) {
+    private void parseArgument(String key, String value) {
         checkArgument(
-                keyValueArgument.startsWith("--") && keyValueArgument.contains("="),
+                key.startsWith("--") && !value.contains("--"),
                 String.format(
-                        "Command line arguments %s must use the syntax `--key=value`",
-                        keyValueArgument));
+                        "Command line arguments `%s %s` must use the syntax `--key value`",
+                        key, value));
+        key = key.substring(2); // Remove the "--".
 
-        String[] parts = keyValueArgument.substring(2).split("=");
-        checkArgument(
-                parts.length == 2, "Command line arguments %s must use the syntax `--key=value`");
-
-        String key = parts[0];
-        String value = parts[1];
         checkArgument(
                 !Strings.isNullOrEmpty(key) && !Strings.isNullOrEmpty(value),
                 String.format(
-                        "Command line arguments %s must use the syntax `--key=value`",
-                        keyValueArgument));
+                        "Command line arguments `%s %s` must use the syntax `--key value`",
+                        key, value));
         checkArgument(
                 !mParsedArgs.containsKey(key),
                 String.format(
-                        "Command line argument as key `%s` is defined multiple times",
-                        keyValueArgument));
+                        "Command line argument with key `%s` is defined multiple times", key));
         mParsedArgs.put(key, value);
     }
 
