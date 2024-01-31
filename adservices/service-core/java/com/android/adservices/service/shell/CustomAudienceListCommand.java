@@ -42,9 +42,9 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
             CMD
                     + " --"
                     + CustomAudienceArgs.OWNER
-                    + "=<owner> --"
+                    + " <owner> --"
                     + CustomAudienceArgs.BUYER
-                    + "=<buyer>";
+                    + " <buyer>";
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final ArgParser mArgParser;
