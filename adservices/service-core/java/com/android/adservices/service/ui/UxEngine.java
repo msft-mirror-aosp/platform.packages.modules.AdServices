@@ -62,7 +62,7 @@ public class UxEngine {
         return new UxEngine(
                 context,
                 ConsentManager.getInstance(),
-                UxStatesManager.getInstance(context),
+                UxStatesManager.getInstance(),
                 UxEngineUtil.getInstance());
     }
 

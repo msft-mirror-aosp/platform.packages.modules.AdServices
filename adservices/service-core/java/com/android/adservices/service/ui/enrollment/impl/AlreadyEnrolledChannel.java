@@ -64,8 +64,7 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
     /** No-Op if the user has already enrolled. */
     public void enroll(Context context, ConsentManager consentManager) {
         if (!consentManager.wasGaUxNotificationDisplayed()
-                && isPreNotificationManualUser(
-                        consentManager, UxStatesManager.getInstance(context))) {
+                && isPreNotificationManualUser(consentManager, UxStatesManager.getInstance())) {
             UiStatsLogger.logRequestedNotificationIneligible();
             consentManager.recordGaUxNotificationDisplayed(true);
         }

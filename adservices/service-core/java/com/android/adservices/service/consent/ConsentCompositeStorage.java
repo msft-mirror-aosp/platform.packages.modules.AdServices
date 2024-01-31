@@ -751,10 +751,10 @@ public class ConsentCompositeStorage implements IConsentStorage {
                         storage.getClass().getSimpleName());
             } catch (IOException e) {
                 logDataStoreWhileRecordingException(e);
-                return false;
+                return true;
             }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -774,10 +774,10 @@ public class ConsentCompositeStorage implements IConsentStorage {
                         storage.getClass().getSimpleName());
             } catch (IOException e) {
                 logDataStoreWhileRecordingException(e);
-                return false;
+                return true;
             }
         }
-        return false;
+        return true;
     }
 
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
@@ -792,10 +792,10 @@ public class ConsentCompositeStorage implements IConsentStorage {
                         storage.getClass().getSimpleName());
             } catch (IOException e) {
                 logDataStoreWhileRecordingException(e);
-                return false;
+                return true;
             }
         }
-        return false;
+        return true;
     }
 
     private static void logDataStoreWhileRecordingException(IOException e) {
