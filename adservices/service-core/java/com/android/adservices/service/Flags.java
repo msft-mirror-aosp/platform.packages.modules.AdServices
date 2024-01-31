@@ -4199,11 +4199,38 @@ public interface Flags extends CommonFlags {
     /**
      * Returns whether the topics cobalt logging feature is enabled.
      *
-     * <p>The topics cobalt logging will be disabled either the getCobaltLoggingEnabled or {@code
-     * TOPICS_COBALT_LOGGING_ENABLED} is {@code false}.
+     * <p>The topics cobalt logging will be disabled either the {@code getCobaltLoggingEnabled} or
+     * {@code TOPICS_COBALT_LOGGING_ENABLED} is {@code false}.
      */
     default boolean getTopicsCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled() && TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /** Default value of whether app name and api error cobalt logging feature is enabled. */
+    boolean APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the app name and api error cobalt logging feature is enabled.
+     *
+     * <p>The app name and api error cobalt logging will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED} is {@code
+     * false}.
+     */
+    default boolean getAppNameApiErrorCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of {@link AppNameApiErrorLogger} logging sampling rate.
+     *
+     * <p>The value should be an integer in the range of {@code [0, 100]}, where {@code 100} is to
+     * log all events and {@code 0} is to log no events.
+     */
+    int APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE = 100;
+
+    /** Returns the {@link AppNameApiErrorLogger} logging sampling rate. */
+    default int getAppNameApiErrorCobaltLoggingSamplingRate() {
+        return APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
     }
 
     /** Default value of Cobalt Adservices Api key. */
