@@ -294,9 +294,9 @@ public final class AdData implements Parcelable {
          */
         @NonNull
         public AdData build() {
-            Objects.requireNonNull(mRenderUri);
+            Objects.requireNonNull(mRenderUri, "The render URI has not been provided");
             // TODO(b/231997523): Add JSON field validation.
-            Objects.requireNonNull(mMetadata);
+            Objects.requireNonNull(mMetadata, "The metadata has not been provided");
 
             return new AdData(this);
         }

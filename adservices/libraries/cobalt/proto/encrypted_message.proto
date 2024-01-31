@@ -35,6 +35,7 @@ option java_package = "com.google.cobalt";
 // the EncryptedMessage proto to carry the ciphertext in both cases.
 //
 message EncryptedMessage {
+
   // The different schemes used in Cobalt to encrypt a message.
   enum EncryptionScheme {
     // The message is not encrypted. |ciphertext| contains plaintext bytes of a

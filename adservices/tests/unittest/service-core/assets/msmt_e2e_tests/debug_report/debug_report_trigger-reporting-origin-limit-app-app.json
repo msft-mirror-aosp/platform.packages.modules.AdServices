@@ -120,7 +120,7 @@
           "source_type": "navigation",
           "source_debug_key": "347982378",
           "trigger_debug_key": "8971346783",
-          "randomized_trigger_rate": 0.0024263
+          "randomized_trigger_rate": 0.0008051
         }
       }
     ],
@@ -136,7 +136,7 @@
           "source_type": "navigation",
           "source_debug_key": "347982378",
           "trigger_debug_key": "8971346783",
-          "randomized_trigger_rate": 0.0024263
+          "randomized_trigger_rate": 0.0008051
         }
       }
     ],
@@ -155,6 +155,7 @@
             }
           }
         ],
+        "report_time": "800000600001",
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/debug/verbose"
       }
     ]

@@ -216,7 +216,8 @@
             }
           ],
           "source_debug_key": "112",
-          "trigger_debug_key": "211"
+          "trigger_debug_key": "211",
+          "source_registration_time": "799977600"
         }
       }
     ],
@@ -238,7 +239,8 @@
             }
           ],
           "source_debug_key": "112",
-          "trigger_debug_key": "211"
+          "trigger_debug_key": "211",
+          "source_registration_time": "799977600"
         }
       }
     ]

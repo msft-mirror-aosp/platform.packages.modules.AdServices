@@ -22,11 +22,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -45,8 +43,6 @@ import java.util.Optional;
 @SpyStatic(AppManifestConfigHelper.class)
 public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
     private static final Uri REGISTRATION_URI = Uri.parse("https://ad-tech.test/register");
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final String PACKAGE_NAME = "com.package.name";

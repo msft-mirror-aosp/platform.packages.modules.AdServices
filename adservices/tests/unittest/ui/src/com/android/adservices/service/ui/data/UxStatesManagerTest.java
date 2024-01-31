@@ -82,7 +82,7 @@ public class UxStatesManagerTest {
                         .startMocking();
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance(any()));
+        ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
 
         mContext = ApplicationProvider.getApplicationContext();
 

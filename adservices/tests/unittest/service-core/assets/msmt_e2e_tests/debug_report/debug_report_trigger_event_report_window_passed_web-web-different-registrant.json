@@ -101,7 +101,7 @@
         "source_type": "navigation",
         "source_debug_key": "347982378",
         "trigger_debug_key": "8971346781",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0001372
       }
     }],
     "debug_event_level_results": [{
@@ -115,11 +115,12 @@
         "source_type": "navigation",
         "source_debug_key": "347982378",
         "trigger_debug_key": "8971346781",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0001372
       }
     }],
     "verbose_debug_reports": [
       {
+        "report_time": "1643321974000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
           {

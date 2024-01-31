@@ -89,8 +89,8 @@ public class TopicsConnectionTest {
         flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
+    @FlakyTest(bugId = 321944400)
     @Test
-    @FlakyTest(bugId = 300194644)
     public void testEnableGlobalKillSwitch() throws Exception {
         // First enable the Global Kill Switch and then connect to the TopicsService.
         // The connection should fail with Exception.
