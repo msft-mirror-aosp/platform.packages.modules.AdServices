@@ -2536,6 +2536,101 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void shouldDoSimpleAttribution_IncrementStatsEventReportCount()
+            throws DatastoreException {
+        Trigger trigger = createAPendingTriggerEventScopeOnly();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAggregatableReportWindow(TRIGGER_TIME + 1L)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+        String expectedAttributionStatus =
+                getAttributionStatus(List.of(trigger.getId()), List.of("5"), List.of("2"));
+        verify(mMeasurementDao)
+                .updateSourceAttributedTriggers(eq(source.getId()), eq(expectedAttributionStatus));
+        verify(mMeasurementDao).insertEventReport(any());
+
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
+
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(0, measurementAttributionStats.getAggregateReportCount());
+        assertEquals(0, measurementAttributionStats.getAggregateDebugReportCount());
+        assertEquals(1, measurementAttributionStats.getEventReportCount());
+        assertEquals(0, measurementAttributionStats.getEventDebugReportCount());
+    }
+
+    @Test
+    public void shouldDoSimpleAttribution_IncrementStatsAggregateAndEventReportCount()
+            throws DatastoreException, JSONException {
+        JSONArray triggerData = getAggregateTriggerData();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setAggregateTriggerData(triggerData.toString())
+                        .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .build();
+        Source source = getAggregateSource();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+
+        verify(mMeasurementDao).insertAggregateReport(any());
+        verify(mMeasurementDao).insertEventReport(any());
+
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(1, measurementAttributionStats.getAggregateReportCount());
+        assertEquals(0, measurementAttributionStats.getAggregateDebugReportCount());
+        assertEquals(1, measurementAttributionStats.getEventReportCount());
+        assertEquals(0, measurementAttributionStats.getEventDebugReportCount());
+    }
+
+    @Test
     public void performPendingAttributions_GeneratesAggregateReport_WithReportingOriginOfTrigger()
             throws JSONException, DatastoreException {
         JSONArray triggerData = getAggregateTriggerData();
