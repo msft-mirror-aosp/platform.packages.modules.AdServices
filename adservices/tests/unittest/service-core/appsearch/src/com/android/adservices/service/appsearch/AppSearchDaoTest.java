@@ -43,6 +43,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
@@ -93,7 +94,11 @@ public class AppSearchDaoTest {
 
     private static final int APPSEARCH_READ_TIMEOUT_MS = 500;
 
-    @Rule
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this).mockStatic(FlagsFactory.class).build();
 

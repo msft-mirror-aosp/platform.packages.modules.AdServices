@@ -51,8 +51,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.util.Log;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.Nullable;
 import com.android.adservices.common.SyncCallback;
@@ -71,12 +69,12 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.lang.ref.WeakReference;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -170,12 +168,6 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         assertMetricsLogged(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
     }
 
-    @FlakyTest(
-            bugId = 315979774,
-            detail =
-                    "Should be fine now (issue was probably calling mPrefs instead of pref, and"
-                        + " method is simpler now regardless), but annotation will be removed in a"
-                        + " follow-up CL")
     @Test
     public void testLogUsage_secondTimeDifferentResult() throws Exception {
         int result = RESULT_ALLOWED_APP_ALLOWS_ALL;
@@ -324,21 +316,39 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                 PKG_NAME2, API_ATTRIBUTION, RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG);
     }
 
+    // TODO(b/309857141): we're seeing failures (bug 321768749) where testDump_multipleEntries()
+    // fails with the following exception:
+    //
+    // IllegalStateException: injectResult(pkg.I.am-3) called after injectResult(pkg.I.am-1)
+    //
+    // That's happening in the listener.assertResultReceived() call, which means the same
+    // listener received the updates. Unfortunately we haven't be able to reproduce it, and the
+    // listener in theory is local to this method - the only possible explanation is that
+    // because FakeSharedPreferences is not thread-safe, the reference is somehow used
+    // afterwards (even though it's unregistered in the finally block below.
+    //
+    // So, to fix that issue, we're currently guarding access to mPrefs, but hopefully we can
+    // remove this synchronization once FakeSharedPreferences is thread safe.
+    private final Object mPrefsListenersLock = new Object();
+
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
     private void logUsageAndWait(String appName, @ApiType int api, @Result int callResult)
             throws InterruptedException {
-        SyncOnSharedPreferenceChangeListener listener = new SyncOnSharedPreferenceChangeListener();
-        mPrefs.registerOnSharedPreferenceChangeListener(listener);
-        try {
-            AppManifestConfigCall call = new AppManifestConfigCall(appName, api);
-            call.result = callResult;
-            Log.v(mTag, "logUsageAndWait(call=" + call + ", listener=" + listener + ")");
+        synchronized (mPrefsListenersLock) {
+            SyncOnSharedPreferenceChangeListener listener =
+                    new SyncOnSharedPreferenceChangeListener();
+            mPrefs.registerOnSharedPreferenceChangeListener(listener);
+            try {
+                AppManifestConfigCall call = new AppManifestConfigCall(appName, api);
+                call.result = callResult;
+                Log.v(mTag, "logUsageAndWait(call=" + call + ", listener=" + listener + ")");
 
-            AppManifestConfigMetricsLogger.logUsage(call);
-            String result = listener.assertResultReceived();
-            Log.v(mTag, "result: " + result);
-        } finally {
-            mPrefs.unregisterOnSharedPreferenceChangeListener(listener);
+                AppManifestConfigMetricsLogger.logUsage(call);
+                String result = listener.assertResultReceived();
+                Log.v(mTag, "result: " + result);
+            } finally {
+                mPrefs.unregisterOnSharedPreferenceChangeListener(listener);
+            }
         }
     }
 
@@ -376,7 +386,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     // TODO(b/295321663): ideally it should be a method from AdServicesExtendedMockitoRule (so it
     // checks if StatsdAdServicesLogger is mocked), but it would add a dependency to the
-    // aservices-service-core project - need to figure out a way to extend the rule to allow such
+    // adservices-service-core project - need to figure out a way to extend the rule to allow such
     // dependencies)
     private void mockGetStatsdAdServicesLogger() {
         Log.v(mTag, "mockGetStatsdAdServicesLogger(): " + mStatsdLogger);
@@ -486,20 +496,37 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         @Override
         public void registerOnSharedPreferenceChangeListener(
                 OnSharedPreferenceChangeListener listener) {
-            mEditor.mListeners.add(listener);
+            String id = getId(listener);
+            Log.d(
+                    TAG,
+                    "registerOnSharedPreferenceChangeListener(): id="
+                            + id
+                            + ", listener="
+                            + listener);
+
+            mEditor.mListeners.put(id, new WeakReference<>(listener));
         }
 
         @Override
         public void unregisterOnSharedPreferenceChangeListener(
                 OnSharedPreferenceChangeListener listener) {
-            mEditor.mListeners.remove(listener);
+            String id = getId(listener);
+            Log.d(
+                    TAG,
+                    "unregisterOnSharedPreferenceChangeListener(): id="
+                            + id
+                            + ", listener="
+                            + listener);
+
+            mEditor.mListeners.remove(id);
         }
 
         private final class FakeEditor implements Editor {
 
             private final Map<String, Object> mProps = new LinkedHashMap<>();
             private final Set<String> mKeysToNotify = new LinkedHashSet<>();
-            private final List<OnSharedPreferenceChangeListener> mListeners = new ArrayList<>();
+            private final Map<String, WeakReference<OnSharedPreferenceChangeListener>> mListeners =
+                    new LinkedHashMap<>();
 
             private boolean mCommitResult = true;
 
@@ -588,16 +615,30 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
             }
 
             private void notifyListeners() {
-                for (OnSharedPreferenceChangeListener listener : mListeners) {
-                    for (String key : mKeysToNotify) {
-                        Log.v(TAG, "Notifying key change (" + key + ") to " + listener);
-                        listener.onSharedPreferenceChanged(FakeSharedPreferences.this, key);
+                Log.d(TAG, "notifyListeners(): " + mListeners.size() + " listeners");
+                for (WeakReference<OnSharedPreferenceChangeListener> ref : mListeners.values()) {
+                    OnSharedPreferenceChangeListener listener = ref.get();
+                    if (listener != null) {
+                        for (String key : mKeysToNotify) {
+                            Log.v(TAG, "Notifying key change (" + key + ") to " + listener);
+                            listener.onSharedPreferenceChanged(FakeSharedPreferences.this, key);
+                        }
                     }
                 }
                 Log.v(TAG, "Clearing keys to notify (" + mKeysToNotify + ")");
                 mKeysToNotify.clear();
             }
+
         }
+    }
+
+    private static String getId(OnSharedPreferenceChangeListener listener) {
+        Objects.requireNonNull(listener, "listener cannot be null");
+
+        // TODO(b/309857141): check for some sort of Identifiable interface instead
+        return listener instanceof SyncOnSharedPreferenceChangeListener
+                ? ((SyncOnSharedPreferenceChangeListener) listener).getId()
+                : String.valueOf(System.identityHashCode(listener));
     }
 
     // TODO(b/309857141): move to its own class / common package (it will be done in a later CL so

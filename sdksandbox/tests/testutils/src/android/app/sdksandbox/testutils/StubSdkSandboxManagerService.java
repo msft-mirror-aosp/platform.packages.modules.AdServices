@@ -115,10 +115,10 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             ISdkSandboxProcessDeathCallback callback) {}
 
     @Override
-    public void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {}
+    public void logSandboxApiLatency(SandboxLatencyInfo sandboxLatencyInfo) {}
 
     @Override
-    public void logSandboxActivityEvent(int method, int callResult, int latencyMillis) {}
+    public void logSandboxActivityApiLatency(int method, int callResult, int latencyMillis) {}
 
     @Override
     public IBinder getAdServicesManager() {

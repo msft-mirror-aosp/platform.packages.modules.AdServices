@@ -61,7 +61,8 @@
               "key": "0xfff55ce7eddddc7eff7f375ff6b3b4df",
               "value": 123
             }
-          ]
+          ],
+          "source_registration_time": "0"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"

@@ -80,4 +80,14 @@ final class TestAnnotations {
     public static RequiresSdkRange sdkRange(int atLeast, int atMost, String reason) {
         return new AutoAnnotation_TestAnnotations_sdkRange(atLeast, atMost, reason);
     }
+
+    @AutoAnnotation
+    public static RequiresLowRamDevice requiresLowRamDevice() {
+        return new AutoAnnotation_TestAnnotations_requiresLowRamDevice();
+    }
+
+    @AutoAnnotation
+    public static RequiresGoDevice requiresGoDevice() {
+        return new AutoAnnotation_TestAnnotations_requiresGoDevice();
+    }
 }

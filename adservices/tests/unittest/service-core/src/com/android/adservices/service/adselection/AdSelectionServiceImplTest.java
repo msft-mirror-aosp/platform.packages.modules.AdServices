@@ -403,7 +403,7 @@ public class AdSelectionServiceImplTest {
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
                         DevContext.createForDevOptionsDisabled());
 
-        when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
+        when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
         doNothing()

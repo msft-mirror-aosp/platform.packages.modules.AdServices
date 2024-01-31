@@ -74,6 +74,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
@@ -204,8 +205,8 @@ public class ConsentManager {
      * existing instance will be returned.
      */
     @NonNull
-    public static ConsentManager getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    public static ConsentManager getInstance() {
+        Context context = ApplicationContextSingleton.get();
 
         Trace.beginSection("ConsentManager#Initialization");
         if (sConsentManager == null) {
@@ -975,7 +976,7 @@ public class ConsentManager {
      */
     public Boolean wasNotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasNotificationDisplayed(),
@@ -1016,7 +1017,7 @@ public class ConsentManager {
      */
     public Boolean wasGaUxNotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasGaUxNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasGaUxNotificationDisplayed(),
@@ -1584,7 +1585,6 @@ public class ConsentManager {
             editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, true);
             appConsents =
                     AppConsents.builder()
-                            .setDefaultConsent(consentKey)
                             .setMsmtConsent(consentKey)
                             .setFledgeConsent(consentKey)
                             .setTopicsConsent(consentKey)
@@ -1911,7 +1911,6 @@ public class ConsentManager {
                 .setMsmtConsent(measurementConsented)
                 .setTopicsConsent(topicsConsented)
                 .setFledgeConsent(fledgeConsented)
-                .setDefaultConsent(defaultConsent)
                 .build();
     }
 
@@ -2040,7 +2039,7 @@ public class ConsentManager {
      */
     public Boolean wasU18NotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED),
                 () -> mAdServicesManager.wasU18NotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasU18NotificationDisplayed(),
@@ -2079,7 +2078,26 @@ public class ConsentManager {
                 () -> mUxStatesDao.getUx(),
                 () -> convertUxString(mAdServicesManager.getUx()),
                 () -> mAppSearchConsentManager.getUx(),
-                () -> mUxStatesDao.getUx(),
+                () -> {
+                    PrivacySandboxUxCollection ux = mUxStatesDao.getUx();
+
+                    // Workaround to make getUx() rollback safe on R. Rollback could change
+                    // ux enum to UNSUPPORTED_UX after daily ping and before the
+                    // notification is displayed.
+
+                    if (ux == PrivacySandboxUxCollection.UNSUPPORTED_UX) {
+                        // Use getIsU18Account to infer ux enum since getIsU18Account is
+                        // rollback safe
+                        if (mFlags.getU18UxEnabled() && mAdExtDataManager.getIsU18Account()) {
+                            ux = PrivacySandboxUxCollection.U18_UX;
+                        } else if (mAdExtDataManager.getIsAdultAccount()) {
+                            // Use getIsAdultAccount to infer ux enum since getIsAdultAccount is
+                            // rollback safe
+                            ux = PrivacySandboxUxCollection.RVC_UX;
+                        }
+                    }
+                    return ux;
+                },
                 /* errorLogger= */ null);
     }
 
@@ -2297,7 +2315,6 @@ public class ConsentManager {
                         .setMsmtConsent(appConsents == null || appConsents.getMsmtConsent())
                         .setTopicsConsent(appConsents == null || appConsents.getTopicsConsent())
                         .setFledgeConsent(appConsents == null || appConsents.getFledgeConsent())
-                        .setDefaultConsent(appConsents == null || appConsents.getDefaultConsent())
                         .setRegion(getConsentRegion(context))
                         .build();
         return consentMigrationStats;

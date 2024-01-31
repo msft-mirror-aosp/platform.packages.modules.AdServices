@@ -439,7 +439,7 @@ public class FledgeE2ETest {
                         anyInt(),
                         any(),
                         any());
-        when(ConsentManager.getInstance(CONTEXT_SPY)).thenReturn(mConsentManagerMock);
+        when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
         doNothing()
