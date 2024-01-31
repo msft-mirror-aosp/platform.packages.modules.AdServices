@@ -243,6 +243,7 @@ import static com.android.adservices.service.Flags.FLEDGE_REPORT_INTERACTION_REQ
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.Flags.GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.Flags.GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ISOLATE_MAX_HEAP_SIZE_BYTES;
 import static com.android.adservices.service.Flags.IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
@@ -638,6 +639,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IN
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_BLOCKED_TOPIC_IDS;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
@@ -10414,5 +10416,23 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_COBALT_LOGGING_ENABLED,
                 Boolean.toString(overridingValue),
                 /* makeDefault */ false);
+    }
+
+    @Test
+    public void testGetAdServicesCommonStatesAllowList() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getAdServicesCommonStatesAllowList())
+                .isEqualTo(GET_ADSERVICES_COMMON_STATES_ALLOW_LIST);
+
+        // Now overriding with the value from PH.
+        String phOverridingValue =
+                GET_ADSERVICES_COMMON_STATES_ALLOW_LIST + ",SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAdServicesCommonStatesAllowList()).isEqualTo(phOverridingValue);
     }
 }

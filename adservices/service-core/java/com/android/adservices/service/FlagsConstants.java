@@ -1245,4 +1245,8 @@ public final class FlagsConstants {
     /** Key for number of messages processes in a single background process. */
     public static final String KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS =
             "fledge_kanon_number_of_messages_per_background_process";
+
+    /** key for allow list of get adservices common states. */
+    public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
+            "get_adservices_common_states_allow_list";
 }
