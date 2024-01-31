@@ -229,17 +229,17 @@ public class AdSelectionTest extends FledgeScenarioTest {
                 ScenarioDispatcher.fromScenario(
                         "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
         setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig config = makeAdSelectionConfig();
         CustomAudience customAudience =
                 makeCustomAudience(SHOES_CA)
-                        .setExpirationTime(Instant.now().plus(1, ChronoUnit.SECONDS))
+                        .setExpirationTime(Instant.now().plus(5, ChronoUnit.SECONDS))
                         .build();
-        AdSelectionConfig config = makeAdSelectionConfig();
 
-        mCustomAudienceClient.joinCustomAudience(customAudience).get(1, TimeUnit.SECONDS);
+        mCustomAudienceClient.joinCustomAudience(customAudience).get(5, TimeUnit.SECONDS);
         Log.d(TAG, "Joined custom audience");
         // Make a call to verify ad selection succeeds before timing out.
         mAdSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS);
-        Thread.sleep(4000);
+        Thread.sleep(7000);
 
         Exception selectAdsException =
                 assertThrows(

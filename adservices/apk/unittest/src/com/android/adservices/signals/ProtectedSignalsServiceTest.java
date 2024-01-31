@@ -110,7 +110,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
     public void testBindableProtectedSignalsServiceKillSwitchOffGaUxEnabled() {
         doReturn(mMockProtectedSignalsServiceImpl)
                 .when(() -> ProtectedSignalsServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(eq(AdServicesApiType.FLEDGE));

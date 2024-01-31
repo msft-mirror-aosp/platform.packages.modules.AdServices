@@ -97,8 +97,17 @@ public final class TestDeviceHelper {
                 .doesNotContain("Error: Activity not started, unable to resolve Intent");
     }
 
-    public static void enableComponent(String packageName, String className) {
-        runShellCommand("pm enable %s/%s", packageName, className);
+    /** Enable the given component and return the result of the shell command */
+    public static String enableComponent(String packageName, String className) {
+        return runShellCommand("pm enable %s/%s", packageName, className);
+    }
+
+    /**
+     * Enable the given component for the given userId only and return the result of the shell
+     * command
+     */
+    public static String enableComponent(String packageName, String className, int userId) {
+        return runShellCommand("pm enable --user %d %s/%s", userId, packageName, className);
     }
 
     /**

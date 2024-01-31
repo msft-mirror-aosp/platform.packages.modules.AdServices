@@ -69,7 +69,7 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263,
+        "randomized_trigger_rate": 0.0008051,
         "source_debug_key" : "347982378",
         "trigger_debug_key" : "8971346783"
       }
@@ -83,7 +83,7 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263,
+        "randomized_trigger_rate": 0.0008051,
         "source_debug_key" : "347982378",
         "trigger_debug_key" : "8971346783"
       }

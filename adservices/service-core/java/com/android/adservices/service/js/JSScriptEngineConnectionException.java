@@ -21,7 +21,8 @@ package com.android.adservices.service.js;
  * process.
  */
 public class JSScriptEngineConnectionException extends RuntimeException {
-    public JSScriptEngineConnectionException(String msg, RuntimeException connectionException) {
+
+    public JSScriptEngineConnectionException(String msg, Throwable connectionException) {
         super(msg, connectionException);
     }
 }

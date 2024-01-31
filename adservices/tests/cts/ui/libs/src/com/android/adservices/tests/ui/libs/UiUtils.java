@@ -171,9 +171,9 @@ public class UiUtils {
         forceSetFlag("rvc_ux_enabled", true);
     }
 
-    /** Override flag rvc_notification_enabled in tests to true */
+    /** Override flag rvc_post_ota_notification_enabled in tests to true */
     public static void enableRvcNotification() throws Exception {
-        forceSetFlag("rvc_notification_enabled", true);
+        forceSetFlag("rvc_post_ota_notification_enabled", true);
     }
 
     /** Override flag rvc_ux_enabled in tests to false */
@@ -628,23 +628,6 @@ public class UiUtils {
         scrollView.swipe(Direction.DOWN, 0.7f, 500);
     }
 
-    public static UiObject2 getConsentSwitch(UiDevice device) {
-        UiObject2 consentSwitch =
-                device.wait(
-                        Until.findObject(By.clazz("android.widget.Switch")),
-                        PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
-        // devices.
-        device.swipe(
-                consentSwitch.getVisibleBounds().centerX(),
-                500,
-                consentSwitch.getVisibleBounds().centerX(),
-                0,
-                100);
-
-        return consentSwitch;
-    }
-
     public static void performSwitchClick(
             UiDevice device, Context context, boolean dialogsOn, UiObject2 mainSwitch) {
         if (dialogsOn && mainSwitch.isChecked()) {
@@ -805,26 +788,5 @@ public class UiUtils {
 
         Boolean response = responseFuture.get();
         assertThat(response).isTrue();
-    }
-
-    /***
-     * Click on the More button on the notification page.
-     * @param moreButton moreButton
-     * @throws UiObjectNotFoundException uiObjectNotFoundException
-     * @throws InterruptedException interruptedException
-     */
-    public static void clickMoreToBottom(UiObject moreButton)
-            throws UiObjectNotFoundException, InterruptedException {
-        if (!moreButton.exists()) {
-            LogUtil.e("More Button not Found");
-            return;
-        }
-
-        int clickCount = 10;
-        while (moreButton.exists() && clickCount-- > 0) {
-            moreButton.click();
-            TimeUnit.MILLISECONDS.sleep(SCROLL_WAIT_TIME);
-        }
-        assertThat(moreButton.exists()).isFalse();
     }
 }

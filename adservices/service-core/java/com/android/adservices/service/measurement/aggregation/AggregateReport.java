@@ -50,7 +50,7 @@ public class AggregateReport {
     private String mId;
     private Uri mPublisher;
     private Uri mAttributionDestination;
-    private long mSourceRegistrationTime;
+    @Nullable private Long mSourceRegistrationTime;
     private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
     private String mEnrollmentId;
     private String mDebugCleartextPayload;
@@ -92,7 +92,7 @@ public class AggregateReport {
         mId = null;
         mPublisher = null;
         mAttributionDestination = null;
-        mSourceRegistrationTime = 0L;
+        mSourceRegistrationTime = null;
         mScheduledReportTime = 0L;
         mEnrollmentId = null;
         mDebugCleartextPayload = null;
@@ -114,7 +114,7 @@ public class AggregateReport {
         AggregateReport aggregateReport = (AggregateReport) obj;
         return Objects.equals(mPublisher, aggregateReport.mPublisher)
                 && Objects.equals(mAttributionDestination, aggregateReport.mAttributionDestination)
-                && mSourceRegistrationTime == aggregateReport.mSourceRegistrationTime
+                && Objects.equals(mSourceRegistrationTime, aggregateReport.mSourceRegistrationTime)
                 && mScheduledReportTime == aggregateReport.mScheduledReportTime
                 && Objects.equals(mEnrollmentId, aggregateReport.mEnrollmentId)
                 && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
@@ -179,10 +179,9 @@ public class AggregateReport {
         return mAttributionDestination;
     }
 
-    /**
-     * Source registration time.
-     */
-    public long getSourceRegistrationTime() {
+    /** Source registration time. */
+    @Nullable
+    public Long getSourceRegistrationTime() {
         return mSourceRegistrationTime;
     }
 
@@ -356,10 +355,8 @@ public class AggregateReport {
             return this;
         }
 
-        /**
-         * See {@link AggregateReport#getSourceRegistrationTime()}.
-         */
-        public Builder setSourceRegistrationTime(long sourceRegistrationTime) {
+        /** See {@link AggregateReport#getSourceRegistrationTime()}. */
+        public Builder setSourceRegistrationTime(@Nullable Long sourceRegistrationTime) {
             mAttributionReport.mSourceRegistrationTime = sourceRegistrationTime;
             return this;
         }
@@ -453,14 +450,14 @@ public class AggregateReport {
             return this;
         }
 
-        /** See {@link AggregateReport#getRegistrationOrigin()} ()} */
+        /** See {@link AggregateReport#getRegistrationOrigin()} */
         @NonNull
         public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mAttributionReport.mRegistrationOrigin = registrationOrigin;
             return this;
         }
 
-        /** See {@link AggregateReport#getAggregationCoordinatorOrigin()} ()} */
+        /** See {@link AggregateReport#getAggregationCoordinatorOrigin()} */
         public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
             mAttributionReport.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
             return this;
@@ -487,7 +484,7 @@ public class AggregateReport {
          *     contributions are hardcoded, so this should not be thrown.
          */
         public Builder getNullAggregateReportBuilder(
-                Trigger trigger, long fakeSourceTime, long delay, String apiVersion)
+                Trigger trigger, @Nullable Long fakeSourceTime, long delay, String apiVersion)
                 throws JSONException {
             long reportTime = trigger.getTriggerTime() + delay;
             AggregateHistogramContribution paddingContribution =

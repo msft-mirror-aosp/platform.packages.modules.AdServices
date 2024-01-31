@@ -19,6 +19,9 @@ package com.android.adservices.service.profiling;
 import android.annotation.NonNull;
 import android.os.Trace;
 
+import com.android.adservices.LogUtil;
+
+import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
 /** Utility class providing methods for using {@link android.os.Trace}. */
@@ -93,6 +96,8 @@ public final class Tracing {
             "ObliviousHttpEncryptorImpl#createAndSerializeRequest";
     public static final String OHTTP_ENCRYPT_BYTES = "ObliviousHttpEncryptorImpl#encryptBytes";
 
+    private static final String PERFETTO_TRIGGER_COMMAND = "/system/bin/trigger_perfetto";
+
     /**
      * Begins an asynchronous trace and generates random cookie.
      *
@@ -116,5 +121,21 @@ public final class Tracing {
      */
     public static void endAsyncSection(@NonNull String sectionName, int traceCookie) {
         Trace.endAsyncSection(sectionName, traceCookie);
+    }
+
+    /**
+     * Notifies perfetto to start AOT given a trace event. This can be an expensive operation so
+     * only use it to record failures but not general trace events.
+     *
+     * @param triggerEvent name of Perfetto trigger event.
+     */
+    public static void triggerPerfetto(String triggerEvent) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(PERFETTO_TRIGGER_COMMAND, triggerEvent);
+            LogUtil.d("Triggering perfetto with " + triggerEvent);
+            pb.start();
+        } catch (IOException e) {
+            LogUtil.e("Failed to trigger perfetto with " + triggerEvent, e);
+        }
     }
 }

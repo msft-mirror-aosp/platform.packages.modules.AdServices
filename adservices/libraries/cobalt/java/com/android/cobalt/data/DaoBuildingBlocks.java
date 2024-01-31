@@ -39,7 +39,7 @@ import java.util.Optional;
  * complex work.
  */
 @Dao
-abstract class DaoBuildingBlocks {
+public abstract class DaoBuildingBlocks {
     /**
      * Inserts an entry into the system profiles table.
      *
@@ -419,6 +419,49 @@ abstract class DaoBuildingBlocks {
                 dayIndex,
                 stringBufferMax,
                 stringHashHint);
+    }
+
+    /**
+     * Returns the string hash list for a specific report and day.
+     *
+     * <p>Note, results do not have a guaranteed order.
+     *
+     * @param customerId the customer id to search under
+     * @param projectId the project id to search under
+     * @param metricId the metric id to search under
+     * @param reportId the report id to search under
+     * @param dayIndex the day to search under
+     * @return a list of string hashes and their respective indices
+     */
+    @Query(
+            "SELECT "
+                    + "list_index, "
+                    + "string_hash "
+                    + "FROM StringHashes "
+                    + "WHERE customer_id = :customerId "
+                    + "AND project_id = :projectId "
+                    + "AND metric_id = :metricId "
+                    + "AND report_id = :reportId "
+                    + "AND day_index = :dayIndex")
+    abstract List<StringListEntry> queryStringHashList(
+            long customerId, long projectId, long metricId, long reportId, int dayIndex);
+
+    /**
+     * Returns the string hash list for a specific report and day.
+     *
+     * <p>Note, results do not have a guaranteed order.
+     *
+     * @param reportKey the report
+     * @param dayIndex the day to search under
+     * @return a list of string hashes and their respective indices
+     */
+    public List<StringListEntry> queryStringHashList(ReportKey reportKey, int dayIndex) {
+        return queryStringHashList(
+                reportKey.customerId(),
+                reportKey.projectId(),
+                reportKey.metricId(),
+                reportKey.reportId(),
+                dayIndex);
     }
 
     /**
