@@ -15,11 +15,11 @@
   ~ limitations under the License.
   -->
 <configuration description="Config for Ad Services Jetpack tests">
-    <option name="test-tag" value="AdServicesJetpackTests-beta01" />
+    <option name="test-tag" value="AdServicesJetpackTests-1.0.0-beta05" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="AdServicesJetpackTests-beta01.apk"/>
+        <option name="test-file-name" value="AdServicesJetpackTests-1.0.0-beta05.apk"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
