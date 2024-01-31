@@ -4592,11 +4592,14 @@ public interface Flags extends CommonFlags {
     /** Default ttl of kanon-messages stored in the database */
     long FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS = 2 * 7 * 24 * 60 * 60; // 2 weeks
 
-    /** Default frequency of the KAnon Sign/Join background process */
-    int FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY = 2;
+    /** Default time period of the KAnon Sign/Join background process */
+    long FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     /** Default number of messages processed in a single background process */
     int FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS = 100;
+
+    /** Default value for kanon background process flag */
+    boolean FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED = false;
 
     /**
      * This is a feature flag for KAnon Sign/Join feature.
@@ -4604,7 +4607,7 @@ public interface Flags extends CommonFlags {
      * @return {@code true} if the feature is enabled, otherwise returns {@code false}.
      */
     default boolean getFledgeKAnonSignJoinFeatureEnabled() {
-        return FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
+        return getFledgeAuctionServerEnabled() && FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
     }
 
     /**
@@ -4673,8 +4676,8 @@ public interface Flags extends CommonFlags {
     }
 
     /** This method returns the number of k-anon sign/join background processes per day. */
-    default int getFledgeKAnonBackgroundProcessFrequencyPerDay() {
-        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY;
+    default long getFledgeKAnonBackgroundProcessTimePeriodInMs() {
+        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS;
     }
 
     /**
@@ -4682,6 +4685,15 @@ public interface Flags extends CommonFlags {
      */
     default int getFledgeKAnonMessagesPerBackgroundProcess() {
         return FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
+    }
+
+    /**
+     * This method returns {@code true} if the kanon background process is enabled, {@code false}
+     * otherwise
+     */
+    default boolean getFledgeKAnonBackgroundProcessEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
     }
 
     /*

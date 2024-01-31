@@ -386,6 +386,12 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- FLEDGE KAnon sign join background job -->
+        <service android:name=
+                     "com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Measurement Registration Job -->
         <service android:name=
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService"
