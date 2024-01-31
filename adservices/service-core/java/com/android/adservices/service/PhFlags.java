@@ -5595,6 +5595,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS
                         + " = "
                         + getFledgeKAnonMessagesPerBackgroundProcess());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
+                        + " = "
+                        + getAdServicesCommonStatesAllowList());
     }
 
     @VisibleForTesting
@@ -6653,5 +6658,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS,
                 /* defaultValue */ FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS);
+    }
+
+    @Override
+    public String getAdServicesCommonStatesAllowList() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
+                /* defaultValue */ GET_ADSERVICES_COMMON_STATES_ALLOW_LIST);
     }
 }
