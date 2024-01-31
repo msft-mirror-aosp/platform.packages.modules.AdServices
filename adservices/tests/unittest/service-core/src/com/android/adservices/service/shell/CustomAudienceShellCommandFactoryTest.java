@@ -18,6 +18,7 @@ package com.android.adservices.service.shell;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 
 import com.google.common.truth.Truth;
 
@@ -28,13 +29,14 @@ import org.mockito.Mock;
 public final class CustomAudienceShellCommandFactoryTest extends AdServicesMockitoTestCase {
     private static final boolean CUSTOM_AUDIENCE_CLI_ENABLED = true;
     @Mock private CustomAudienceDao mCustomAudienceDao;
+    @Mock private BackgroundFetchRunner mBackgroundFetchRunner;
     private ShellCommandFactory mFactory;
 
     @Before
     public void setup() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        CUSTOM_AUDIENCE_CLI_ENABLED, mCustomAudienceDao);
+                        CUSTOM_AUDIENCE_CLI_ENABLED, mBackgroundFetchRunner, mCustomAudienceDao);
     }
 
     @Test
@@ -47,6 +49,12 @@ public final class CustomAudienceShellCommandFactoryTest extends AdServicesMocki
     public void test_listCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(CustomAudienceListCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(CustomAudienceListCommand.class);
+    }
+
+    @Test
+    public void test_refreshCmd() {
+        ShellCommand shellCommand = mFactory.getShellCommand(CustomAudienceRefreshCommand.CMD);
+        Truth.assertThat(shellCommand).isInstanceOf(CustomAudienceRefreshCommand.class);
     }
 
     @Test
@@ -69,14 +77,18 @@ public final class CustomAudienceShellCommandFactoryTest extends AdServicesMocki
 
     @Test
     public void test_cliDisabled() {
-        mFactory = new CustomAudienceShellCommandFactory(false, mCustomAudienceDao);
+        mFactory =
+                new CustomAudienceShellCommandFactory(
+                        false, mBackgroundFetchRunner, mCustomAudienceDao);
         ShellCommand shellCommand = mFactory.getShellCommand(CustomAudienceListCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
     @Test
     public void test_invalidCmdCLIDisabled() {
-        mFactory = new CustomAudienceShellCommandFactory(false, mCustomAudienceDao);
+        mFactory =
+                new CustomAudienceShellCommandFactory(
+                        false, mBackgroundFetchRunner, mCustomAudienceDao);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
         Truth.assertThat(shellCommand).isNull();
     }
