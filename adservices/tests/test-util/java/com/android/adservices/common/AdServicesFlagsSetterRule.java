@@ -33,6 +33,7 @@ import android.os.Build;
 import com.android.adservices.experimental.AbstractFlagsRouletteRunner;
 import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagsRouletteState;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -148,7 +149,7 @@ public final class AdServicesFlagsSetterRule
     public float getAdIdRequestPerSecond() {
         try {
             return callWithDeviceConfigPermissions(
-                    () -> PhFlags.getInstance().getAdIdRequestPermitsPerSecond());
+                    () -> FlagsFactory.getFlags().getAdIdRequestPermitsPerSecond());
         } catch (Throwable t) {
             float defaultValue = Flags.ADID_REQUEST_PERMITS_PER_SECOND;
             mLog.e(

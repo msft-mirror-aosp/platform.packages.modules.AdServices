@@ -60,10 +60,10 @@ public class ConsentNotificationTrigger {
         UiStatsLogger.logRequestedNotification();
 
         boolean gaUxFeatureEnabled =
-                UxStatesManager.getInstance(context).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+                UxStatesManager.getInstance().getFlag(KEY_GA_UX_FEATURE_ENABLED);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        ConsentManager consentManager = ConsentManager.getInstance(context);
+        ConsentManager consentManager = ConsentManager.getInstance();
         if (!notificationManager.areNotificationsEnabled()) {
             recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled();
@@ -71,7 +71,7 @@ public class ConsentNotificationTrigger {
         }
 
         // Set OTA resources if it exists.
-        if (UxStatesManager.getInstance(context).getFlag(KEY_UI_OTA_STRINGS_FEATURE_ENABLED)) {
+        if (UxStatesManager.getInstance().getFlag(KEY_UI_OTA_STRINGS_FEATURE_ENABLED)) {
             OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
         }
 
@@ -87,7 +87,7 @@ public class ConsentNotificationTrigger {
 
     private static void recordNotificationDisplayed(
             @NonNull Context context, boolean gaUxFeatureEnabled, ConsentManager consentManager) {
-        if (UxStatesManager.getInstance(context).getFlag(KEY_RECORD_MANUAL_INTERACTION_ENABLED)
+        if (UxStatesManager.getInstance().getFlag(KEY_RECORD_MANUAL_INTERACTION_ENABLED)
                 && consentManager.getUserManualInteractionWithConsent()
                         != ConsentManager.MANUAL_INTERACTIONS_RECORDED) {
             consentManager.recordUserManualInteractionWithConsent(
@@ -241,7 +241,7 @@ public class ConsentNotificationTrigger {
                         .setContentIntent(pendingIntent);
         return notification.build();
     }
-    
+
     /**
      * Returns a {@link NotificationCompat.Builder} which can be used to display consent
      * notification to the user.

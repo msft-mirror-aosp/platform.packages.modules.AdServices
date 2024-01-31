@@ -57,7 +57,6 @@ public class ApkTestUtil {
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
     private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
     private static final int SCROLL_TIMEOUT = 500;
-    private static final int SCROLL_WAIT_TIME = 1000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1000;
 
     /**
@@ -139,8 +138,6 @@ public class ApkTestUtil {
             throws InterruptedException {
         UiObject2 obj = scrollTo(context, device, resId);
         clickTopLeft(obj);
-        // Force sleep to avoid android.support.test.uiautomator.StaleObjectException.
-        TimeUnit.MILLISECONDS.sleep(SCROLL_WAIT_TIME);
     }
 
     public static void click(UiDevice device, int resId) throws UiObjectNotFoundException {
@@ -155,8 +152,10 @@ public class ApkTestUtil {
     }
 
     public static void gentleSwipe(UiDevice device) {
-        UiObject2 scrollView =
-                device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
+        device.waitForWindowUpdate(null, WINDOW_LAUNCH_TIMEOUT);
+        UiObject2 scrollView = device.wait(
+                Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
+                PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
     }
 
@@ -171,17 +170,22 @@ public class ApkTestUtil {
         try {
             Thread.sleep(SCROLL_TIMEOUT);
         } catch (InterruptedException e) {
-            LogUtil.e("InterruptedException:", e.getMessage());
+            LogUtil.e("InterruptedException: %s", e.getMessage());
         }
         return obj;
     }
 
     public static UiObject2 scrollTo(Context context, UiDevice device, int resId) {
-        UiObject2 scrollView = device.findObject(
-                By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
+        device.waitForWindowUpdate(null, WINDOW_LAUNCH_TIMEOUT);
+        UiObject2 scrollView = device.wait(
+                Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
+                PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         String targetStr = getString(context, resId);
         scrollView.scrollUntil(
                 Direction.DOWN,
+                Until.findObject(By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        scrollView.scrollUntil(
+                Direction.UP,
                 Until.findObject(By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
         return getElement(context, device, resId);
     }

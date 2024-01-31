@@ -197,9 +197,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
         doReturn(killSwitchStatus).when(mMockFlags).getMeasurementKillSwitch();
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-
-        ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance(any()));
-
+        ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
         ExtendedMockito.doReturn(mDevContextFilter)
                 .when(() -> DevContextFilter.create(any(Context.class)));
 

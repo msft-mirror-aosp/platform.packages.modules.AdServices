@@ -28,6 +28,7 @@ import androidx.appsearch.platformstorage.PlatformStorage;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.measurement.rollback.MeasurementRollbackWorker;
@@ -59,7 +60,7 @@ public final class AppSearchMeasurementRollbackWorker implements MeasurementRoll
     private static final ReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock();
 
     // Timeout for AppSearch write query in milliseconds.
-    private static final int TIMEOUT_MS = 2000;
+    private final int mTimeoutMs;
 
     private final String mUserId;
     private final String mAdServicesPackageName;
@@ -75,6 +76,8 @@ public final class AppSearchMeasurementRollbackWorker implements MeasurementRoll
         mSearchSession =
                 PlatformStorage.createSearchSessionAsync(
                         new PlatformStorage.SearchContext.Builder(context, DATABASE_NAME).build());
+
+        mTimeoutMs = FlagsFactory.getFlags().getAppSearchWriteTimeout();
     }
 
     /** Return an instance of {@link AppSearchMeasurementRollbackWorker} */
@@ -98,11 +101,11 @@ public final class AppSearchMeasurementRollbackWorker implements MeasurementRoll
             // don't need to share it with the T package. Thus, we can send an empty list for the
             // packageIdentifiers parameter.
             dao.writeData(mSearchSession, List.of(), mExecutor)
-                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                    .get(mTimeoutMs, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote measurement rollback data to AppSearch: %s", dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             LogUtil.e(e, "Failed to write measurement rollback to AppSearch");
-            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE, e);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
         }
@@ -130,11 +133,11 @@ public final class AppSearchMeasurementRollbackWorker implements MeasurementRoll
                             mExecutor,
                             storageIdentifier,
                             AppSearchMeasurementRollbackDao.NAMESPACE)
-                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                    .get(mTimeoutMs, TimeUnit.MILLISECONDS);
             LogUtil.d("Deleted MeasurementRollback data from AppSearch for: %s", storageIdentifier);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             LogUtil.e(e, "Failed to delete MeasurementRollback data in AppSearch");
-            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE, e);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
         }

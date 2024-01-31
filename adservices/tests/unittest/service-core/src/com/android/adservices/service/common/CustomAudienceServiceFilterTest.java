@@ -34,11 +34,9 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
@@ -59,8 +57,6 @@ import org.mockito.Spy;
 public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-
-    @Spy private Context mContext = ApplicationProvider.getApplicationContext();
 
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
     private static final Flags FLAGS_WITH_ENROLLMENT_CHECK =
@@ -85,8 +81,9 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
     @Spy
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             new FledgeAuthorizationFilter(
-                    mContext.getPackageManager(),
-                    new EnrollmentDao(mContext, DbTestUtil.getSharedDbHelperForTest(), TEST_FLAGS),
+                    mSpyContext.getPackageManager(),
+                    new EnrollmentDao(
+                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), TEST_FLAGS),
                     mAdServicesLoggerMock);
 
     @Mock private Throttler mMockThrottler;
@@ -106,7 +103,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
     public void setUp() throws Exception {
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
-                        mContext,
+                        mSpyContext,
                         mConsentManagerMock,
                         TEST_FLAGS,
                         mAppImportanceFilter,
@@ -194,7 +191,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         // Create new CustomAudienceServiceFilter with new flags
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
-                        mContext,
+                        mSpyContext,
                         mConsentManagerMock,
                         FLAGS_WITH_ENROLLMENT_CHECK,
                         mAppImportanceFilter,
@@ -204,7 +201,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAdTechAllowed(mContext, CALLER_PACKAGE_NAME, SELLER_VALID, API_NAME);
+                .assertAdTechAllowed(mSpyContext, CALLER_PACKAGE_NAME, SELLER_VALID, API_NAME);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -224,7 +221,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
     public void testFilterRequest_withLocalhostDomain_doesNotPass() {
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
-                        mContext,
+                        mSpyContext,
                         mConsentManagerMock,
                         FLAGS_WITH_ENROLLMENT_CHECK,
                         mAppImportanceFilter,
@@ -269,7 +266,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
     public void testFilterRequest_withLocalhostDomainInDeveloperMode_skipCheck() {
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
-                        mContext,
+                        mSpyContext,
                         mConsentManagerMock,
                         FLAGS_WITH_ENROLLMENT_CHECK,
                         mAppImportanceFilter,
@@ -446,7 +443,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         doReturn(SELLER_VALID)
                 .when(mFledgeAuthorizationFilterSpy)
                 .getAndAssertAdTechFromUriAllowed(
-                        mContext,
+                        mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
                         API_NAME);
@@ -472,7 +469,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         doReturn(SELLER_VALID)
                 .when(mFledgeAuthorizationFilterSpy)
                 .getAndAssertAdTechFromUriAllowed(
-                        mContext,
+                        mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
                         API_NAME);
@@ -480,7 +477,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
                 .getAndAssertAdTechFromUriAllowed(
-                        mContext,
+                        mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
                         API_NAME);
@@ -521,7 +518,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         // Assert eTLD+1 extractions and the implied enrollment check is skipped.
         verify(mFledgeAuthorizationFilterSpy, never())
                 .getAndAssertAdTechFromUriAllowed(
-                        mContext,
+                        mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
                         API_NAME);
@@ -532,7 +529,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         doReturn(SELLER_VALID)
                 .when(mFledgeAuthorizationFilterSpy)
                 .getAndAssertAdTechFromUriAllowed(
-                        mContext,
+                        mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
                         API_NAME);
@@ -561,7 +558,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         doReturn(SELLER_VALID)
                 .when(mFledgeAuthorizationFilterSpy)
                 .getAndAssertAdTechFromUriAllowed(
-                        mContext,
+                        mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
                         API_NAME);
@@ -587,7 +584,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         doReturn(SELLER_VALID)
                 .when(mFledgeAuthorizationFilterSpy)
                 .getAndAssertAdTechFromUriAllowed(
-                        mContext,
+                        mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
                         API_NAME);
@@ -616,7 +613,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         doReturn(SELLER_VALID)
                 .when(mFledgeAuthorizationFilterSpy)
                 .getAndAssertAdTechFromUriAllowed(
-                        mContext,
+                        mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
                         API_NAME);

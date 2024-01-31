@@ -338,7 +338,7 @@ public class AsyncRegistrationQueueRunner {
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
         if (!publisher.isPresent()) {
             LoggerFactory.getMeasurementLogger()
-                    .d("insertSources: getTopLevelPublisher failed", topOrigin);
+                    .d("insertSources: getTopLevelPublisher failed, topOrigin: %s", topOrigin);
             return false;
         }
         if (flags.getMeasurementEnableDestinationRateLimit()) {

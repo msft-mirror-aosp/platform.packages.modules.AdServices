@@ -408,7 +408,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         }
     }
 
-    @Ignore("b/310160187")
     @Test
     public void testSdkSandboxProcessNameForSecondaryUser() throws Exception {
         assumeTrue(getDevice().isMultiUserSupported());

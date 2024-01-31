@@ -218,6 +218,10 @@ public class ContentValueFixtures {
         // Added in V20.
         public static final Uri AGGREGATION_COORDINATOR_ORIGIN =
                 ContentValueFixtures.AGGREGATION_COORDINATOR_ORIGIN;
+
+        // Added in V32
+        public static final String AGGREGATABLE_SOURCE_REGISTRATION_TIME =
+                Trigger.SourceRegistrationTimeConfig.INCLUDE.name();
     }
 
     public static class AttributionValues {
@@ -968,6 +972,21 @@ public class ContentValueFixtures {
 
     public static ContentValues generateTriggerContentValuesV21() {
         return generateTriggerContentValuesV20();
+    }
+
+    /** Get ContentValues for V31 */
+    public static ContentValues generateTriggerContentValuesV31() {
+        return generateTriggerContentValuesV21();
+    }
+
+    /** Get ContentValues for V32 */
+    public static ContentValues generateTriggerContentValuesV32() {
+        ContentValues values = generateTriggerContentValuesV20();
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
+                TriggerValues.AGGREGATABLE_SOURCE_REGISTRATION_TIME);
+
+        return values;
     }
 
     public static ContentValues generateAttributionContentValuesV1() {

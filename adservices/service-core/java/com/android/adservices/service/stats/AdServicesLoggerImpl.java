@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats;
 
+import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.internal.annotations.VisibleForTesting;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -216,5 +217,10 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     public void logInteractionReportingTableClearedStats(
             InteractionReportingTableClearedStats stats) {
         mStatsdAdServicesLogger.logInteractionReportingTableClearedStats(stats);
+    }
+
+    @Override
+    public void logAppManifestConfigCall(AppManifestConfigCall call) {
+        mStatsdAdServicesLogger.logAppManifestConfigCall(call);
     }
 }

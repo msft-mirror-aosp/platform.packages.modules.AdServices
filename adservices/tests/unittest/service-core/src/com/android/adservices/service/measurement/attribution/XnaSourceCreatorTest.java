@@ -86,7 +86,11 @@ public class XnaSourceCreatorTest {
                         .setSourceAdtech(enrollment1)
                         .setSourceFilters(mFilter.deserializeFilterSet(filters))
                         .setSourceNotFilters(null)
-                        .setFilterData(mFilter.deserializeFilterSet(filters))
+                        .setFilterData(
+                                new FilterMap.Builder()
+                                        .buildFilterData(
+                                                new JSONObject(buildMatchingFilterData(false)))
+                                        .build())
                         .setExpiry(50L)
                         .setPriority(50L)
                         .setPostInstallExclusivityWindow(5L)
@@ -112,7 +116,11 @@ public class XnaSourceCreatorTest {
                         .setSourceAdtech(enrollment1)
                         .setSourceFilters(mFilter.deserializeFilterSet(filters))
                         .setSourceNotFilters(null)
-                        .setFilterData(mFilter.deserializeFilterSet(filters))
+                        .setFilterData(
+                                new FilterMap.Builder()
+                                        .buildFilterData(
+                                                new JSONObject(buildMatchingFilterData(false)))
+                                        .build())
                         .setExpiry(60L)
                         .setPriority(70L)
                         .setPostInstallExclusivityWindow(50L)
@@ -161,7 +169,9 @@ public class XnaSourceCreatorTest {
                         .setEnrollmentId(enrollment1)
                         .setPriority(attributionConfig1.getPriority())
                         .setFilterData(
-                                mFilter.serializeFilterSet(attributionConfig1.getFilterData())
+                                attributionConfig1
+                                        .getFilterData()
+                                        .serializeAsJson(mFlags)
                                         .toString())
                         .setExpiryTime(source1Matches.getExpiryTime())
                         .setInstallCooldownWindow(
@@ -190,13 +200,16 @@ public class XnaSourceCreatorTest {
 
         JSONObject derivedAggregatableSource2 = new JSONObject();
         derivedAggregatableSource2.put("key1", "0x159");
-        Source expectedDerivedSource2 =
+        Source expectedDerivedSource2;
+        expectedDerivedSource2 =
                 createValidSourceBuilder()
                         .setId(UUID.randomUUID().toString())
                         .setEnrollmentId(enrollment1)
                         .setPriority(attributionConfig1.getPriority())
                         .setFilterData(
-                                mFilter.serializeFilterSet(attributionConfig1.getFilterData())
+                                attributionConfig1
+                                        .getFilterData()
+                                        .serializeAsJson(mFlags)
                                         .toString())
                         .setExpiryTime(source2Matches.getExpiryTime())
                         .setInstallCooldownWindow(
@@ -310,7 +323,11 @@ public class XnaSourceCreatorTest {
                         .setSourceAdtech(enrollment1)
                         .setSourceFilters(mFilter.deserializeFilterSet(filters))
                         .setSourceNotFilters(null)
-                        .setFilterData(mFilter.deserializeFilterSet(filters))
+                        .setFilterData(
+                                new FilterMap.Builder()
+                                        .buildFilterData(
+                                                new JSONObject(buildMatchingFilterData(false)))
+                                        .build())
                         .setExpiry(50L)
                         .setPriority(50L)
                         .setPostInstallExclusivityWindow(5L)
@@ -353,7 +370,9 @@ public class XnaSourceCreatorTest {
                         .setEnrollmentId(enrollment1)
                         .setPriority(attributionConfig1.getPriority())
                         .setFilterData(
-                                mFilter.serializeFilterSet(attributionConfig1.getFilterData())
+                                attributionConfig1
+                                        .getFilterData()
+                                        .serializeAsJson(mFlags)
                                         .toString())
                         .setExpiryTime(source1Matches.getExpiryTime())
                         .setInstallCooldownWindow(
@@ -397,7 +416,11 @@ public class XnaSourceCreatorTest {
                         .setSourceAdtech(enrollment1)
                         .setSourceFilters(mFilter.deserializeFilterSet(filters))
                         .setSourceNotFilters(null)
-                        .setFilterData(mFilter.deserializeFilterSet(filters))
+                        .setFilterData(
+                                new FilterMap.Builder()
+                                        .buildFilterData(
+                                                new JSONObject(buildMatchingSharedFilterData()))
+                                        .build())
                         .setExpiry(50L)
                         .setPriority(50L)
                         .setPostInstallExclusivityWindow(5L)
@@ -442,7 +465,9 @@ public class XnaSourceCreatorTest {
                         .setEnrollmentId(enrollment1)
                         .setPriority(attributionConfig1.getPriority())
                         .setFilterData(
-                                mFilter.serializeFilterSet(attributionConfig1.getFilterData())
+                                attributionConfig1
+                                        .getFilterData()
+                                        .serializeAsJson(mFlags)
                                         .toString())
                         .setExpiryTime(source1Matches.getExpiryTime())
                         .setInstallCooldownWindow(
@@ -491,7 +516,11 @@ public class XnaSourceCreatorTest {
                         .setSourceAdtech(enrollment1)
                         .setSourceFilters(mFilter.deserializeFilterSet(filters))
                         .setSourceNotFilters(null)
-                        .setFilterData(mFilter.deserializeFilterSet(sourceFilters))
+                        .setFilterData(
+                                new FilterMap.Builder()
+                                        .buildFilterDataV2(
+                                                new JSONObject(buildMatchingFilterData(false)))
+                                        .build())
                         .setExpiry(50L)
                         .setPriority(50L)
                         .setPostInstallExclusivityWindow(5L)
@@ -556,7 +585,7 @@ public class XnaSourceCreatorTest {
                         .setEnrollmentId(enrollment1)
                         .setPriority(attributionConfig1.getPriority())
                         .setEventTime(sourceWithinLookbackWindow.getEventTime())
-                        .setFilterData(sourceFilters.toString())
+                        .setFilterData(buildMatchingFilterData(false))
                         .setExpiryTime(86411000L)
                         .setInstallCooldownWindow(
                                 attributionConfig1.getPostInstallExclusivityWindow())
