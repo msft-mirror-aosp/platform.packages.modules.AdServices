@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 @RunWith(AndroidJUnit4.class)
 public final class DataServiceTest extends AdServicesMockitoTestCase {
@@ -104,6 +105,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     private TestOnlyDao mTestOnlyDao;
     private DataService mDataService;
     @Mock private ObservationGenerator mGenerator;
+    private Function<Integer, ObservationGenerator> mGeneratorSupplier;
 
     @Before
     public void setup() {
@@ -111,6 +113,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
         mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
         mTestOnlyDao = mCobaltDatabase.testOnlyDao();
         mDataService = new DataService(EXECUTOR, mCobaltDatabase);
+        mGeneratorSupplier = (unused) -> mGenerator;
     }
 
     @After
@@ -951,7 +954,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateCountObservations_oneEvent_oneObservationStored() throws Exception {
+    public void generateObservations_oneEvent_oneObservationStored() throws Exception {
         // Initialize a report as up to date for sending observations up to the previous day.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
 
@@ -974,7 +977,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
 
         // Generate and store the one observation for the current day.
         mDataService
-                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .generateObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGeneratorSupplier)
                 .get();
 
         // Check that the Obseration Generator was called correctly.
@@ -988,8 +991,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateCountObservations_multipleEventVectors_oneObservationStored()
-            throws Exception {
+    public void generateObservations_multipleEventVectors_oneObservationStored() throws Exception {
         // Initialize a report as up to date for sending observations up to the previous day.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
 
@@ -1023,7 +1025,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
 
         // Generate and store the one observation for the current day.
         mDataService
-                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .generateObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGeneratorSupplier)
                 .get();
 
         // Check that the Obseration Generator was called correctly.
@@ -1037,7 +1039,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateCountObservations_multipleSystemProfiles_twoObservationsStored()
+    public void generateObservations_multipleSystemProfiles_twoObservationsStored()
             throws Exception {
         // Initialize a report as up to date for sending observations up to the previous day.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
@@ -1071,7 +1073,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
 
         // Generate and store the one observation for the current day.
         mDataService
-                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .generateObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGeneratorSupplier)
                 .get();
 
         // Check that the Obseration Generator was called correctly.
@@ -1087,7 +1089,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateCountObservations_multipleSystemProfilesAndEventVectors_allStored()
+    public void generateObservations_multipleSystemProfilesAndEventVectors_allStored()
             throws Exception {
         // Initialize a report as up to date for sending observations up to the previous day.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
@@ -1147,7 +1149,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
 
         // Generate and store the one observation for the current day.
         mDataService
-                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .generateObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGeneratorSupplier)
                 .get();
 
         // Check that the Obseration Generator was called correctly.
@@ -1163,10 +1165,10 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateCountObservations_newReport_noInitialBackfill() throws Exception {
+    public void generateObservations_newReport_noInitialBackfill() throws Exception {
         // Generate and store the one observation for the current day.
         mDataService
-                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .generateObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGeneratorSupplier)
                 .get();
 
         // Check that the Obseration Generator was called correctly.
@@ -1178,7 +1180,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateCountObservations_initialBackfillAfterReenabled_onlySinceEnbaledTime()
+    public void generateObservations_initialBackfillAfterReenabled_onlySinceEnbaledTime()
             throws Exception {
         // Initialize a report as up to date for sending observations a week ago.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 8));
@@ -1193,7 +1195,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
 
         // Generate and store the one observation for the current day.
         mDataService
-                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_1 - 1, mGenerator)
+                .generateObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_1 - 1, mGeneratorSupplier)
                 .get();
 
         // Check that the Obseration Generator was called correctly.
@@ -1207,7 +1209,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateCountObservations_backfillDailyReport_twoDaysStored() throws Exception {
+    public void generateObservations_backfillDailyReport_twoDaysStored() throws Exception {
         // Initialize a report as up to date for sending observations a week ago.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 8));
 
@@ -1247,7 +1249,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
 
         // Generate and store the observations for the three days of backfill.
         mDataService
-                .generateCountObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGenerator)
+                .generateObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGeneratorSupplier)
                 .get();
 
         // Check that the Obseration Generator was called correctly.

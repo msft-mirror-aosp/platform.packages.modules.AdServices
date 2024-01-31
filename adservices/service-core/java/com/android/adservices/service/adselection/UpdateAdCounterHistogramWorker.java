@@ -160,8 +160,8 @@ public class UpdateAdCounterHistogramWorker {
         sLogger.v("Validating updateAdCounterHistogram request");
 
         if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            sLogger.v("Ad selection filtering disabled");
-            throw new IllegalStateException();
+            sLogger.v("Warning: Ad selection filtering disabled");
+            throw new IllegalStateException("Ad selection filtering disabled");
         }
 
         mAdSelectionServiceFilter.filterRequest(

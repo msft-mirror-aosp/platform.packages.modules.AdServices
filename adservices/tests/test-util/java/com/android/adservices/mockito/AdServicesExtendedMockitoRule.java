@@ -31,6 +31,7 @@ import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInli
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.testing.common.TestHelper;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
@@ -147,6 +148,27 @@ public class AdServicesExtendedMockitoRule
         mockBinderGetCallingUidOrThrow(uid);
     }
 
+    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
+    public final void mockIsAtLeastR(boolean isIt) {
+        logV("mockIsAtLeastR(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastR);
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
+    public final void mockIsAtLeastS(boolean isIt) {
+        logV("mockIsAtLeastS(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastS);
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
+    public final void mockIsAtLeastT(boolean isIt) {
+        logV("mockIsAtLeastT(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastT);
+    }
+
     /**
      * Statically spy on {@code Log.v} for that {@code tag}.
      *
@@ -217,7 +239,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     @Override
-    protected boolean getClearInlineMethodsAtTheEnd(Description description) {
+    protected final boolean getClearInlineMethodsAtTheEnd(Description description) {
         ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
         if (annotation != null) {
             boolean shouldClear = shouldClearInlineMocksAfterTest(description, annotation.value());

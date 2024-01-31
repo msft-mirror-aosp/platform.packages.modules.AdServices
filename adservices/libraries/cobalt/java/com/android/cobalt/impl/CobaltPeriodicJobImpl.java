@@ -66,6 +66,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /** Implementation of observation generation and upload for Cobalt. */
 public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
@@ -122,6 +123,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
                 new ObservationGeneratorFactory(
                         mProject,
                         Objects.requireNonNull(systemData),
+                        mDataService.getDaoBuildingBlocks(),
                         Objects.requireNonNull(privacyGenerator),
                         Objects.requireNonNull(secureRandom));
     }
@@ -183,11 +185,16 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
                 logInfo(
                         "Generating observations for day %s for report %s",
                         dayIndexToGenerate, reportKey);
-                ObservationGenerator generator =
-                        mObservationGeneratorFactory.getObservationGenerator(metric, report);
+                Function<Integer, ObservationGenerator> generatorSupplier =
+                        (dayIndex) ->
+                                mObservationGeneratorFactory.getObservationGenerator(
+                                        metric, report, dayIndex);
                 results.add(
-                        mDataService.generateCountObservations(
-                                reportKey, dayIndexToGenerate, dayIndexLoggerEnabled, generator));
+                        mDataService.generateObservations(
+                                reportKey,
+                                dayIndexToGenerate,
+                                dayIndexLoggerEnabled,
+                                generatorSupplier));
             }
         }
 

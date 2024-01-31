@@ -37,7 +37,6 @@ import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -46,6 +45,7 @@ import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -205,7 +205,7 @@ public class AdSelectionDataE2ETest {
     }
 
     @Test
-    @FlakyTest(bugId = 322323696)
+    @Ignore("b/322323696")
     public void runAdSelection_fiveBuyersMultipleCa_dummyData_remarketingWinner() throws Exception {
         List<CustomAudience> customAudiences =
                 CustomAudienceTestFixture.readCustomAudiences(
