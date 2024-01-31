@@ -38,4 +38,5 @@ interface ICtsSdkProviderApi {
     ParcelFileDescriptor createFileDescriptor(String valueToWrite);
     void waitForStateChangeDetection(int expectedForegroundValue, int expectedBackgroundValue);
     void unregisterSdkSandboxClientImportanceListener();
+    int getLauncherActivityCount();
 }
