@@ -84,7 +84,7 @@ public class TopicsService extends Service {
                     new TopicsServiceImpl(
                             this,
                             TopicsWorker.getInstance(this),
-                            ConsentManager.getInstance(this),
+                            ConsentManager.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),
@@ -107,7 +107,7 @@ public class TopicsService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(AdServicesApiType.TOPICS).isGiven();
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.TOPICS).isGiven();
     }
 
     @Override

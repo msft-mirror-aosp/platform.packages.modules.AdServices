@@ -428,6 +428,9 @@ public class DbState {
                 .setFilters(tJSON.optString("filters", null))
                 .setNotFilters(tJSON.optString("not_filters", null))
                 .setRegistrationOrigin(getRegistrationOrigin(tJSON))
+                .setAggregatableSourceRegistrationTimeConfig(
+                        Trigger.SourceRegistrationTimeConfig.valueOf(
+                                tJSON.getString("aggregatableSourceRegistrationTimeConfig")))
                 .build();
     }
 

@@ -148,7 +148,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
-    private Context mSpyContext;
     private CallerMetadata mCallerMetadata;
     private TopicsWorker mTopicsWorker;
     private TopicsWorker mSpyTopicsWorker;
@@ -176,7 +175,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Before
     public void setup() throws Exception {
         // TODO(b/310270746): Holly Hack, Batman! This class needs some serious refactoring :-(
-        mSpyContext = spy(appContext.get());
         appContext.set(mMockAppContext);
 
         extendedMockito.mockGetCallingUidOrThrow(); // expect to return test uid by default

@@ -21,6 +21,7 @@ import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptEngine.JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG;
+import static com.android.adservices.service.js.JSScriptEngine.JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -46,6 +48,8 @@ import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
 import androidx.javascriptengine.JavaScriptSandbox;
+import androidx.javascriptengine.MemoryLimitExceededException;
+import androidx.javascriptengine.SandboxDeadException;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
@@ -403,27 +407,21 @@ public class JSScriptEngineTest {
     }
 
     @Test
-    public void testConnectionIsResetIfJSProcessIsTerminated() {
+    public void testConnectionIsResetIfJSProcessIsTerminatedWithIllegalStateException() {
         when(mMockedSandbox.createIsolate())
                 .thenThrow(
                         new IllegalStateException(
                                 "simulating a failure caused by JavaScriptSandbox being"
-                                        + " disconnected"));
+                                        + " disconnected due to ISE"));
 
         ExecutionException executionException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                callJSEngine(
-                                        JSScriptEngine.createNewInstanceForTesting(
-                                                ApplicationProvider.getApplicationContext(),
-                                                mMockSandboxProvider,
-                                                sMockProfiler,
-                                                sLogger),
-                                        "function test() { return \"hello world\"; }",
-                                        ImmutableList.of(),
-                                        "test",
-                                        mDefaultIsolateSettings));
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
 
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
@@ -431,6 +429,108 @@ public class JSScriptEngineTest {
                 .hasMessageThat()
                 .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+        verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsResetIfCreateIsolateThrowsRuntimeException() {
+        when(mMockedSandbox.createIsolate())
+                .thenThrow(
+                        new RuntimeException(
+                                "simulating a failure caused by JavaScriptSandbox being"
+                                        + " disconnected"));
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause())
+                .isInstanceOf(JSScriptEngineConnectionException.class);
+        assertThat(executionException)
+                .hasMessageThat()
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
+        verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsResetIfEvaluateFailsWithSandboxDeadException() {
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(Mockito.anyString()))
+                .thenReturn(Futures.immediateFailedFuture(new SandboxDeadException()));
+        when(mMockSandboxProvider.destroyIfCurrentInstance(mMockedSandbox))
+                .thenReturn(Futures.immediateVoidFuture());
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause())
+                .isInstanceOf(JSScriptEngineConnectionException.class);
+        assertThat(executionException.getCause().getCause())
+                .isInstanceOf(SandboxDeadException.class);
+        assertThat(executionException).hasMessageThat().contains(JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsResetIfEvaluateFailsWithMemoryLimitExceedException() {
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        String expectedExceptionMessage = "Simulating Memory limit exceed exception from isolate";
+        when(mMockedIsolate.evaluateJavaScriptAsync(Mockito.anyString()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new MemoryLimitExceededException(expectedExceptionMessage)));
+        when(mMockSandboxProvider.destroyIfCurrentInstance(mMockedSandbox))
+                .thenReturn(Futures.immediateVoidFuture());
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(executionException.getCause().getCause())
+                .isInstanceOf(MemoryLimitExceededException.class);
+        assertThat(executionException).hasMessageThat().contains(expectedExceptionMessage);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsNotResetIfEvaluateFailsWithAnyOtherException() {
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(Mockito.anyString()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new IllegalStateException("this is not SDE")));
+        when(mMockSandboxProvider.destroyIfCurrentInstance(mMockedSandbox))
+                .thenReturn(Futures.immediateVoidFuture());
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
+        verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
     }
 
     @Test
@@ -446,19 +546,13 @@ public class JSScriptEngineTest {
                 IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
 
         ExecutionException executionException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                callJSEngine(
-                                        JSScriptEngine.createNewInstanceForTesting(
-                                                ApplicationProvider.getApplicationContext(),
-                                                mMockSandboxProvider,
-                                                sMockProfiler,
-                                                sLogger),
-                                        "function test() { return \"hello world\"; }",
-                                        ImmutableList.of(),
-                                        "test",
-                                        enforcedHeapIsolateSettings));
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        enforcedHeapIsolateSettings);
 
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
@@ -478,19 +572,14 @@ public class JSScriptEngineTest {
                 IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
 
         ExecutionException executionException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                callJSEngine(
-                                        JSScriptEngine.createNewInstanceForTesting(
-                                                ApplicationProvider.getApplicationContext(),
-                                                mMockSandboxProvider,
-                                                sMockProfiler,
-                                                sLogger),
-                                        "function test() { return \"hello world\"; }",
-                                        ImmutableList.of(),
-                                        "test",
-                                        enforcedHeapIsolateSettings));
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        enforcedHeapIsolateSettings);
+
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
@@ -778,7 +867,7 @@ public class JSScriptEngineTest {
                                 ImmutableList.of(),
                                 "test",
                                 mDefaultIsolateSettings));
-        verify(mMockSandboxProvider).destroyCurrentInstance();
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
     }
 
     @Test
@@ -832,6 +921,19 @@ public class JSScriptEngineTest {
                                         mDefaultIsolateSettings));
 
         assertThat(outer.getCause()).isInstanceOf(IllegalStateException.class);
+    }
+
+    private ExecutionException callJSEngineAndAssertExecutionException(
+            JSScriptEngine engine, IsolateSettings isolateSettings) {
+        return assertThrows(
+                ExecutionException.class,
+                () ->
+                        callJSEngine(
+                                engine,
+                                "function test() { return \"hello world\"; }",
+                                ImmutableList.of(),
+                                "test",
+                                isolateSettings));
     }
 
     private String callJSEngine(

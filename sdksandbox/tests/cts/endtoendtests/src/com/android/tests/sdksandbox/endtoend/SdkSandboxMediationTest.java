@@ -253,7 +253,7 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
                                 + "errorCode: 100, "
                                 + "errorMsg: "
                                 + nonExistingSdk
-                                + " not found for loading");
+                                + " not found");
     }
 
     @Test

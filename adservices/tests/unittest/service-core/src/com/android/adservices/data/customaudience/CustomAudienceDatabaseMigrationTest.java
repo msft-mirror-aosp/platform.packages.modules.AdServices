@@ -46,7 +46,7 @@ public class CustomAudienceDatabaseMigrationTest {
             new MigrationTestHelper(INSTRUMENTATION, CustomAudienceDatabase.class);
 
     @Test
-    public void testMigrate2To3() throws IOException {
+    public void testMigration2To3() throws IOException {
         final String customAudienceOverrideTable = "custom_audience_overrides";
         try (SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2)) {
             ContentValues contentValuesV2 = new ContentValues();

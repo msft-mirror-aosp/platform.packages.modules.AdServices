@@ -15,10 +15,13 @@
  */
 package com.android.adservices.common;
 
+import static android.os.Build.VERSION.SDK_INT;
+
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
 import android.provider.DeviceConfig;
 
+import com.android.adservices.common.AndroidSdk.Level;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -59,6 +62,11 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
         }
         // Use shell command instead
         return super.asyncDelete(name);
+    }
+
+    @Override
+    public Level getDeviceApiLevel() {
+        return Level.forLevel(SDK_INT);
     }
 
     @Override

@@ -38,7 +38,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
@@ -59,19 +59,25 @@ public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
-    public static void mockIsAtLeastR(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastR(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastR);
-    }
-
-    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
+    // TODO(b/314969513): remove once there is no more usage
+    /**
+     * Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}.
+     *
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastS(boolean)} instead
+     */
+    @Deprecated
     public static void mockIsAtLeastS(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
         doReturn(isIt).when(SdkLevel::isAtLeastS);
     }
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
+    // TODO(b/314969513): remove once there is no more usage
+    /**
+     * Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}.
+     *
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastT(boolean)} instead
+     */
+    @Deprecated
     public static void mockIsAtLeastT(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastT(" + isIt + ")");
         doReturn(isIt).when(SdkLevel::isAtLeastT);
@@ -178,13 +184,13 @@ public final class ExtendedMockitoExpectations {
                 .when(() -> invocation.run());
     }
 
-    /** Mocks {@link AdservicesJobServiceLogger} to not actually log the stats to server. */
-    public static AdservicesJobServiceLogger mockAdservicesJobServiceLogger(
+    /** Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server. */
+    public static AdServicesJobServiceLogger mockAdservicesJobServiceLogger(
             Context context, StatsdAdServicesLogger statsDLogger) {
-        AdservicesJobServiceLogger logger =
-                spy(new AdservicesJobServiceLogger(context, Clock.SYSTEM_CLOCK, statsDLogger));
+        AdServicesJobServiceLogger logger =
+                spy(new AdServicesJobServiceLogger(context, Clock.SYSTEM_CLOCK, statsDLogger));
 
-        mockGetAdservicesJobServiceLogger(logger);
+        mockGetAdServicesJobServiceLogger(logger);
         doNothing().when(logger).recordOnStartJob(anyInt());
         doNothing().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
         doNothing().when(logger).recordJobSkipped(anyInt(), anyInt());
@@ -193,9 +199,9 @@ public final class ExtendedMockitoExpectations {
         return logger;
     }
 
-    /** Mocks {@link AdservicesJobServiceLogger#getInstance(Context)} to return a mocked logger. */
-    public static void mockGetAdservicesJobServiceLogger(AdservicesJobServiceLogger logger) {
-        doReturn(logger).when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+    /** Mocks {@link AdServicesJobServiceLogger#getInstance(Context)} to return a mocked logger. */
+    public static void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
+        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance(any(Context.class)));
     }
 
     /**
