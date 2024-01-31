@@ -4683,4 +4683,21 @@ public interface Flags extends CommonFlags {
     default int getFledgeKAnonMessagesPerBackgroundProcess() {
         return FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
     }
+
+    /*
+     * The allow-list for PP APIs. This list has the list of app package names that we allow
+     * using PP APIs.
+     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
+     */
+    String GET_ADSERVICES_COMMON_STATES_ALLOW_LIST = "com.android.adservices.tests.ui.common";
+
+    /**
+     * Returns bypass List for Get AdServices Common States app signature check. Apps with package
+     * name on this list will bypass the signature check
+     */
+    default String getAdServicesCommonStatesAllowList() {
+        return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
+    }
 }
