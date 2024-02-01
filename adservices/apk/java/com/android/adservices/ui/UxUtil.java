@@ -39,10 +39,10 @@ public class UxUtil {
                 ? fragmentActivity
                         .getIntent()
                         .getBooleanExtra(
-                                "isEUDevice",
-                                /* default= */ UxStatesManager.getInstance(context).isEeaDevice())
-                : !ConsentManager.getInstance(context).isAdIdEnabled()
-                        || UxStatesManager.getInstance(context).isEeaDevice();
+                                  "isEUDevice",
+                                  UxStatesManager.getInstance().isEeaDevice())
+                : !ConsentManager.getInstance().isAdIdEnabled()
+                        || UxStatesManager.getInstance().isEeaDevice();
     }
 
     /** Returns if UXStates should be used. */
@@ -61,7 +61,7 @@ public class UxUtil {
                     .findFirst()
                     .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
         } else {
-            return UxStatesManager.getInstance(context).getUx();
+            return UxStatesManager.getInstance().getUx();
         }
     }
 }

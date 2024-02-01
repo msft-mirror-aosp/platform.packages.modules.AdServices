@@ -93,7 +93,7 @@ public class PeriodicEncodingJobService extends JobService {
 
         // Skip the execution and cancel the job if user consent is revoked.
         // Use the per-API consent with GA UX.
-        if (!ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven()) {
+        if (!ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven()) {
             LoggerFactory.getFledgeLogger()
                     .d("User Consent is revoked ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(

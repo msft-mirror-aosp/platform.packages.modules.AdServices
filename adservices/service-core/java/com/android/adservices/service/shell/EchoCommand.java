@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -30,7 +32,7 @@ final class EchoCommand extends AbstractShellCommand {
 
     static final String CMD_ECHO = "echo";
     static final String HELP_ECHO =
-            CMD_ECHO + " <message> - prints the given message (useful to check cmd is working).";
+            CMD_ECHO + " <message>\n    Prints the given message (useful to check cmd is working).";
 
     @Override
     public int run(PrintWriter out, PrintWriter err, String[] args) {

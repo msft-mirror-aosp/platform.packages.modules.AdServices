@@ -445,6 +445,25 @@ public class LoadSdkSessionUnitTest {
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
     }
 
+    @Test
+    public void testLoadSessionFailure_propertySdkProviderClassNameMissing() throws Exception {
+        PackageManager.NameNotFoundException exception =
+                assertThrows(
+                        PackageManager.NameNotFoundException.class,
+                        () ->
+                                new LoadSdkSession(
+                                        mContext,
+                                        /*service=*/ null,
+                                        mInjector,
+                                        "com.android.property_sdkprovider_classname_not_present",
+                                        mTestCallingInfo,
+                                        /*loadParams=*/ null,
+                                        /*loadCallback=*/ null));
+
+        assertThat(exception.getMessage())
+                .isEqualTo("android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME property");
+    }
+
     private LoadSdkSession loadSdk() throws Exception {
         // Create a new load session.
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();

@@ -1318,7 +1318,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
 
         String logPrefix = getClass().getSimpleName() + function.toString();
-        LogUtil.v(logPrefix + " called.", userIdentifier);
+        LogUtil.v("%s called. User identifier: %s", logPrefix, userIdentifier);
 
         try {
             return function.apply(userIdentifier);

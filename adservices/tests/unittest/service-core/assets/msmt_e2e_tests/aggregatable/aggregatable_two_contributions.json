@@ -1,5 +1,5 @@
 {
-  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with two contributions",
+  "description": "Given a trigger with aggregatable data that has two contributions, generate an aggregate report with two contributions",
   "input": {
     "sources": [{
       "registration_request": {

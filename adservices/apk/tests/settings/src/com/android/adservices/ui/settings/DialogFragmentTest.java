@@ -125,8 +125,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
 
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManager)
@@ -208,6 +207,8 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         consentSwitch.click();
         dialogTitle = ApkTestUtil.getElement(sContext, sDevice,
                 R.string.settingsUI_dialog_opt_out_title);
+        negativeText =
+                ApkTestUtil.getElement(sContext, sDevice, R.string.settingsUI_dialog_negative_text);
         UiObject2 positiveText =
                 ApkTestUtil.getElement(sContext, sDevice,
                         R.string.settingsUI_dialog_opt_out_positive_text);
