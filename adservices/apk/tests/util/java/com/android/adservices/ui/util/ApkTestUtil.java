@@ -47,7 +47,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /** Util class for APK tests. */
@@ -57,7 +56,7 @@ public class ApkTestUtil {
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
     private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
     private static final int SCROLL_TIMEOUT = 500;
-    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1000;
+    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 2000;
 
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.

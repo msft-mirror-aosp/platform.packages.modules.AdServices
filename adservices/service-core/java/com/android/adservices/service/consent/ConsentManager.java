@@ -74,6 +74,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
@@ -204,8 +205,8 @@ public class ConsentManager {
      * existing instance will be returned.
      */
     @NonNull
-    public static ConsentManager getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    public static ConsentManager getInstance() {
+        Context context = ApplicationContextSingleton.get();
 
         Trace.beginSection("ConsentManager#Initialization");
         if (sConsentManager == null) {
@@ -975,7 +976,7 @@ public class ConsentManager {
      */
     public Boolean wasNotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasNotificationDisplayed(),
@@ -1016,7 +1017,7 @@ public class ConsentManager {
      */
     public Boolean wasGaUxNotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasGaUxNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasGaUxNotificationDisplayed(),
@@ -2038,7 +2039,7 @@ public class ConsentManager {
      */
     public Boolean wasU18NotificationDisplayed() {
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ false,
+                /* defaultReturn= */ true,
                 () -> mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED),
                 () -> mAdServicesManager.wasU18NotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasU18NotificationDisplayed(),

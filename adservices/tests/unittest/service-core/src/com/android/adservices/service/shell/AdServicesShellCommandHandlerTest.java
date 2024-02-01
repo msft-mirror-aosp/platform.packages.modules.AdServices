@@ -33,7 +33,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertThrows;
 
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -281,7 +280,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
 
     private void assertHelpContents(String help) {
         expect.withMessage("help")
-                .that(help.split("\n"))
+                .that(help.split("\n\n"))
                 .asList()
                 .containsExactly(
                         HELP_ECHO,

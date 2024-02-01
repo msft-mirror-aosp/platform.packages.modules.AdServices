@@ -337,6 +337,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getAppNameApiErrorCobaltLoggingEnabled() {
+        // We check the getCobaltLoggingEnabled first.
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return getCobaltLoggingEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                        /* defaultValue */ APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
+    public int getAppNameApiErrorCobaltLoggingSamplingRate() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE,
+                /* defaultValue */ APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE);
+    }
+
+    @Override
     public String getCobaltAdservicesApiKeyHex() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
@@ -5575,6 +5595,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS
                         + " = "
                         + getFledgeKAnonMessagesPerBackgroundProcess());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
+                        + " = "
+                        + getAdServicesCommonStatesAllowList());
     }
 
     @VisibleForTesting
@@ -6633,5 +6658,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS,
                 /* defaultValue */ FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS);
+    }
+
+    @Override
+    public String getAdServicesCommonStatesAllowList() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
+                /* defaultValue */ GET_ADSERVICES_COMMON_STATES_ALLOW_LIST);
     }
 }

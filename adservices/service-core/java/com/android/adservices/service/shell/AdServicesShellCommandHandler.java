@@ -66,24 +66,26 @@ public final class AdServicesShellCommandHandler {
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_ATTRIBUTION_ACCESS =
             CMD_IS_ALLOWED_ATTRIBUTION_ACCESS
-                    + " <package_name> <enrollment_id> - checks if the given enrollment id is"
-                    + " allowed to use the Attribution APIs in the given app.";
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Attribution "
+                    + "APIs in the given app.";
 
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
             CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS
-                    + " <package_name> <enrollment_id> - checks if the given enrollment id is"
-                    + " allowed to use the Custom Audience APIs in the given app.";
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Custom "
+                    + "Audience APIs in the given app.";
 
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
             CMD_IS_ALLOWED_TOPICS_ACCESS
-                    + " <package_name> <enrollment_id> <using_sdk_sandbox>- checks if the given"
-                    + " enrollment id is allowed to use the Topics APIs in the given app, when"
-                    + " using SDK sandbox or not.";
+                    + " <package_name> <enrollment_id> <using_sdk_sandbox>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Topics APIs in"
+                    + " the given app, when using SDK sandbox or not.";
 
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    private static final String TAG = "AdServicesShellCmd";
+    static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
     // Add more per API shell factory implementations as we create them.
@@ -206,12 +208,12 @@ public final class AdServicesShellCommandHandler {
      ****************************************************************************/
 
     private static void onHelp(PrintWriter pw) {
-        pw.println(HELP_ECHO);
-        pw.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
-        pw.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
-        pw.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
-        pw.println(CustomAudienceListCommand.HELP);
-        pw.println(CustomAudienceViewCommand.HELP);
+        pw.printf("%s\n\n", HELP_ECHO);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_TOPICS_ACCESS);
+        pw.printf("%s\n\n", CustomAudienceListCommand.HELP);
+        pw.printf("%s\n\n", CustomAudienceViewCommand.HELP);
     }
 
     private int onCommand(String cmd) {
@@ -239,6 +241,7 @@ public final class AdServicesShellCommandHandler {
 
                 if (shellCommand == null) {
                     mErr.printf("Unknown command: %s\n", cmd);
+                    mErr.println("Use -h for help.");
                     return RESULT_GENERIC_ERROR;
                 }
                 return shellCommand.run(mOut, mErr, mArgs);

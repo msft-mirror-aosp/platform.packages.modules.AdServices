@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+
 import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
 
@@ -39,11 +41,11 @@ final class CustomAudienceViewCommand extends AbstractShellCommand {
             CMD
                     + " --"
                     + CustomAudienceArgs.OWNER
-                    + "=<owner> --"
+                    + " <owner> --"
                     + CustomAudienceArgs.BUYER
-                    + "=<buyer> --"
+                    + " <buyer> --"
                     + CustomAudienceArgs.NAME
-                    + "=<name>";
+                    + " <name>";
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final ArgParser mArgParser;

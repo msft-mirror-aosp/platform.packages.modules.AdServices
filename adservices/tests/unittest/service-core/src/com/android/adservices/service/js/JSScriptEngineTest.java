@@ -48,6 +48,7 @@ import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
 import androidx.javascriptengine.JavaScriptSandbox;
+import androidx.javascriptengine.MemoryLimitExceededException;
 import androidx.javascriptengine.SandboxDeadException;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
@@ -479,6 +480,33 @@ public class JSScriptEngineTest {
         assertThat(executionException.getCause().getCause())
                 .isInstanceOf(SandboxDeadException.class);
         assertThat(executionException).hasMessageThat().contains(JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsResetIfEvaluateFailsWithMemoryLimitExceedException() {
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        String expectedExceptionMessage = "Simulating Memory limit exceed exception from isolate";
+        when(mMockedIsolate.evaluateJavaScriptAsync(Mockito.anyString()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new MemoryLimitExceededException(expectedExceptionMessage)));
+        when(mMockSandboxProvider.destroyIfCurrentInstance(mMockedSandbox))
+                .thenReturn(Futures.immediateVoidFuture());
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(executionException.getCause().getCause())
+                .isInstanceOf(MemoryLimitExceededException.class);
+        assertThat(executionException).hasMessageThat().contains(expectedExceptionMessage);
         verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
     }
 

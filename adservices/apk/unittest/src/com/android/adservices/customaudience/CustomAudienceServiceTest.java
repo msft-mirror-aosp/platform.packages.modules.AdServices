@@ -87,7 +87,7 @@ public final class CustomAudienceServiceTest extends AdServicesExtendedMockitoTe
     public void testBindableCustomAudienceServiceKillSwitchOffGaUxEnabled() {
         doReturn(mMockCustomAudienceServiceImpl)
                 .when(() -> CustomAudienceServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(eq(AdServicesApiType.FLEDGE));

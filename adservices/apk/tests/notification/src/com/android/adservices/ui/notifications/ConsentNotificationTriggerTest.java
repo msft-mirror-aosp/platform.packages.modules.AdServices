@@ -116,9 +116,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
         extendedMockito.mockGetFlags(mMockFlags);
         doReturn(mAdServicesLogger).when(UiStatsLogger::getAdServicesLogger);
-        doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance(any(Context.class)));
+        doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance());
         doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(false).when(mMockUxStatesManager).isEeaDevice();
@@ -204,6 +204,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         Thread.sleep(LAUNCH_TIMEOUT);
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
     }
+
     @Test
     public void testNonEuNotifications_gaUxEnabled() throws InterruptedException {
         doReturn(false).when(mMockFlags).isEeaDevice();

@@ -60,12 +60,14 @@ public final class CustomAudienceListCommandTest extends ShellCommandTest {
                 run(
                         new CustomAudienceListCommand(mCustomAudienceDao),
                         CustomAudienceListCommand.CMD,
-                        "--owner=" + CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer=" + CUSTOM_AUDIENCE_1.getBuyer());
+                        "--owner",
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        "--buyer",
+                        CUSTOM_AUDIENCE_1.getBuyer().toString());
 
         expectSuccess(actualResult);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
-        assertWithMessage("Length of JSonArray (%s)", jsonArray)
+        assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
                 .isEqualTo(1);
         assertThat(fromJson(jsonArray.getJSONObject(0))).isEqualTo(CUSTOM_AUDIENCE_1);
@@ -77,7 +79,8 @@ public final class CustomAudienceListCommandTest extends ShellCommandTest {
                 new CustomAudienceListCommand(mCustomAudienceDao),
                 CustomAudienceListCommand.HELP,
                 CustomAudienceListCommand.CMD,
-                "--owner=valid-owner");
+                "--owner",
+                "valid-owner");
     }
 
     @Test
@@ -89,12 +92,14 @@ public final class CustomAudienceListCommandTest extends ShellCommandTest {
                 run(
                         new CustomAudienceListCommand(mCustomAudienceDao),
                         CustomAudienceListCommand.CMD,
-                        "--owner=" + CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer=" + CUSTOM_AUDIENCE_1.getBuyer());
+                        "--owner",
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        "--buyer",
+                        CUSTOM_AUDIENCE_1.getBuyer().toString());
 
         expectSuccess(actualResult);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
-        assertWithMessage("Length of JSonArray (%s)", jsonArray)
+        assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
                 .isEqualTo(0);
     }
@@ -109,12 +114,14 @@ public final class CustomAudienceListCommandTest extends ShellCommandTest {
                 run(
                         new CustomAudienceListCommand(mCustomAudienceDao),
                         CustomAudienceListCommand.CMD,
-                        "--owner=" + CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer=" + CUSTOM_AUDIENCE_1.getBuyer());
+                        "--owner",
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        "--buyer",
+                        CUSTOM_AUDIENCE_1.getBuyer().toString());
 
         expectSuccess(actualResult);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
-        assertWithMessage("Length of JSonArray (%s)", jsonArray)
+        assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
                 .isEqualTo(2);
         assertThat(fromJson(jsonArray.getJSONObject(0))).isEqualTo(CUSTOM_AUDIENCE_1);
