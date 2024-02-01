@@ -1323,6 +1323,31 @@ public interface Flags extends CommonFlags {
         return FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
     }
 
+    /** Flags related to Delayed Custom Audience Updates */
+
+    // Enable scheduleCustomAudienceUpdateApi()
+    boolean FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED = false;
+
+    long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
+    long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+    int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE = 30;
+
+    default boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+        return !getGlobalKillSwitch() && FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+    }
+
+    default long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS;
+    }
+
+    default long getFledgeScheduleCustomAudienceUpdateJobFlexMs() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS;
+    }
+
+    default int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** Returns whether to call trusted servers for off device ad selection. */

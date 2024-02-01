@@ -70,6 +70,12 @@
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+            "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Topics Epoch/Maintenance Service Job. Must be defined here in order to schedule them in
         job scheduler. -->
         <service android:name=
