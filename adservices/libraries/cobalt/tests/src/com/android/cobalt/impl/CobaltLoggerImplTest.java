@@ -169,7 +169,7 @@ public class CobaltLoggerImplTest {
     private DataService mDataService;
     private SystemData mSystemData;
     private FakeSystemClock mClock;
-    private CobaltLoggerImpl mLogger;
+    private CobaltLogger mLogger;
 
     @Before
     public void createDb() {
@@ -545,21 +545,6 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void noOpLogString_doesNothing() throws Exception {
-        // Log some data with the expectation nothing will be logged.
-        mLogger.noOpLogString(
-                        ONE_REPORT.metricId(),
-                        /* value= */ "Test",
-                        /* eventCodes= */ ImmutableList.of(1, 2))
-                .get();
-
-        // Check that no data was added to the DB.
-        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
-        assertThat(mTestOnlyDao.getInitialEnabledTime().isPresent()).isFalse();
-        assertThat(mTestOnlyDao.getStartDisabledTime().isPresent()).isFalse();
-    }
-
-    @Test
     public void logString_oneLog_storedInDb() throws Exception {
         // Log some data.
         mLogger.logString(
@@ -815,7 +800,7 @@ public class CobaltLoggerImplTest {
 
     @Test
     public void logString_loggerDisabled_loggedDataNotStoredInDb() throws Exception {
-        CobaltLoggerImpl logger =
+        CobaltLogger logger =
                 new CobaltLoggerImpl(
                         COBALT_REGISTRY,
                         ReleaseStage.DEBUG,
@@ -857,7 +842,7 @@ public class CobaltLoggerImplTest {
                         (int) ONE_REPORT.customerId(),
                         (int) ONE_REPORT.projectId(),
                         List.of(metric));
-        CobaltLoggerImpl logger =
+        CobaltLogger logger =
                 new CobaltLoggerImpl(
                         project,
                         ReleaseStage.DOGFOOD,
@@ -899,7 +884,7 @@ public class CobaltLoggerImplTest {
                         (int) ONE_REPORT.customerId(),
                         (int) ONE_REPORT.projectId(),
                         List.of(metric));
-        CobaltLoggerImpl logger =
+        CobaltLogger logger =
                 new CobaltLoggerImpl(
                         project,
                         ReleaseStage.DOGFOOD,

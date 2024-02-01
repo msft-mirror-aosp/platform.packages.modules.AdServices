@@ -22,6 +22,8 @@ import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.os.LimitExceededException;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.shared.common.ServiceUnavailableException;
@@ -68,6 +70,7 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 322812739)
     public void testAdIdCompatibleManager_verifyRateLimitReached() throws Exception {
         AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
         AdServicesOutcomeReceiverForTests<AdId> callback;
@@ -102,7 +105,8 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
     @RequiresLowRamDevice
     public void testAdIdCompatibleManagerTest_whenDeviceNotSupported() throws Exception {
         AdIdCompatibleManager adIdCompatibleManager = new AdIdCompatibleManager(sContext);
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
+        AdServicesOutcomeReceiverForTests<AdId> callback =
+                new AdServicesOutcomeReceiverForTests<>();
 
         adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
 

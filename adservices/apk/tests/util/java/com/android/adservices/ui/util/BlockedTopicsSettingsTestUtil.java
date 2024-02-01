@@ -197,9 +197,8 @@ public final class BlockedTopicsSettingsTestUtil {
                 AdServicesCommon.resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME);
         if (serviceInfo == null) {
             sLogger.e(
-                    LOG_TAG,
-                    "Failed to find serviceInfo for adServices service for intent %s",
-                    intent.getAction());
+                    "%s: Failed to find serviceInfo for adServices service for intent %s",
+                    LOG_TAG, intent.getAction());
             return null;
         }
 
