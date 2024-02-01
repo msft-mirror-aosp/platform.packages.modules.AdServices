@@ -31,6 +31,7 @@ import com.android.cobalt.data.CobaltDatabase;
 import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
+import com.android.cobalt.data.StringHashEntity;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 import com.android.cobalt.domain.Project;
@@ -38,6 +39,7 @@ import com.android.cobalt.system.SystemData;
 import com.android.cobalt.system.testing.FakeSystemClock;
 
 import com.google.cobalt.AggregateValue;
+import com.google.cobalt.LocalIndexHistogram;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.Metadata;
 import com.google.cobalt.MetricDefinition.MetricType;
@@ -81,6 +83,12 @@ public class CobaltLoggerImplTest {
                     ONE_REPORT.projectId(),
                     MULTIPLE_REPORTS_1.metricId(),
                     3);
+    private static final ReportKey STRING_REPORT =
+            ReportKey.create(ONE_REPORT.customerId(), ONE_REPORT.projectId(), 4, 4);
+    private static final ReportKey MULTIPLE_STRING_REPORTS_1 =
+            ReportKey.create(ONE_REPORT.customerId(), ONE_REPORT.projectId(), 5, 5);
+    private static final ReportKey MULTIPLE_STRING_REPORTS_2 =
+            ReportKey.create(ONE_REPORT.customerId(), ONE_REPORT.projectId(), 5, 6);
     private static final int WRONG_TYPE_METRIC_ID = 3;
     private static final String APP_VERSION = "0.1.2";
     private static final SystemProfile SYSTEM_PROFILE =
@@ -112,6 +120,33 @@ public class CobaltLoggerImplTest {
                                     .addSystemProfileField(SystemProfileField.APP_VERSION))
                     .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DEBUG))
                     .build();
+    private static final MetricDefinition STRING_METRIC =
+            MetricDefinition.newBuilder()
+                    .setId((int) STRING_REPORT.metricId())
+                    .setMetricType(MetricType.STRING)
+                    .addReports(
+                            ReportDefinition.newBuilder()
+                                    .setId((int) STRING_REPORT.reportId())
+                                    .setReportType(ReportType.STRING_COUNTS)
+                                    .addSystemProfileField(SystemProfileField.APP_VERSION))
+                    .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DEBUG))
+                    .build();
+    private static final MetricDefinition MULTIPLE_STRING_REPORTS_METRIC =
+            MetricDefinition.newBuilder()
+                    .setId((int) MULTIPLE_STRING_REPORTS_1.metricId())
+                    .setMetricType(MetricType.STRING)
+                    .addReports(
+                            ReportDefinition.newBuilder()
+                                    .setId((int) MULTIPLE_STRING_REPORTS_1.reportId())
+                                    .setReportType(ReportType.STRING_COUNTS)
+                                    .addSystemProfileField(SystemProfileField.APP_VERSION))
+                    .addReports(
+                            ReportDefinition.newBuilder()
+                                    .setId((int) MULTIPLE_STRING_REPORTS_2.reportId())
+                                    .setReportType(ReportType.STRING_COUNTS)
+                                    .addSystemProfileField(SystemProfileField.APP_VERSION))
+                    .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DEBUG))
+                    .build();
     private static final MetricDefinition WRONG_TYPE_METRIC =
             MetricDefinition.newBuilder()
                     .setId(WRONG_TYPE_METRIC_ID)
@@ -122,7 +157,12 @@ public class CobaltLoggerImplTest {
             Project.create(
                     (int) ONE_REPORT.customerId(),
                     (int) ONE_REPORT.projectId(),
-                    List.of(ONE_REPORT_METRIC, MULTIPLE_REPORT_METRIC, WRONG_TYPE_METRIC));
+                    List.of(
+                            ONE_REPORT_METRIC,
+                            MULTIPLE_REPORT_METRIC,
+                            STRING_METRIC,
+                            MULTIPLE_STRING_REPORTS_METRIC,
+                            WRONG_TYPE_METRIC));
 
     private CobaltDatabase mCobaltDatabase;
     private TestOnlyDao mTestOnlyDao;
@@ -505,17 +545,364 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void noOpLogString_doesNothing() throws Exception {
-        // Log some data with the expectation nothing will be logged.
-        mLogger.noOpLogString(
-                        ONE_REPORT.metricId(),
-                        /* value= */ "Test",
+    public void logString_oneLog_storedInDb() throws Exception {
+        // Log some data.
+        mLogger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING",
                         /* eventCodes= */ ImmutableList.of(1, 2))
                 .get();
 
-        // Check that no data was added to the DB.
+        // Check the string hash appears in the string hash list for the report.
+        assertThat(mTestOnlyDao.getStringHashes())
+                .containsExactly(StringHashEntity.create(STRING_REPORT, DAY_INDEX, 0, "STRING"));
+
+        // Check that only the one report has data in the DB.
+        assertThat(mTestOnlyDao.getAllAggregates())
+                .containsExactly(
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(STRING_REPORT)
+                                .setDayIndex(DAY_INDEX)
+                                .setEventVector(EventVector.create(1, 2))
+                                .setSystemProfile(SYSTEM_PROFILE)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder()
+                                                .setIndexHistogram(
+                                                        LocalIndexHistogram.newBuilder()
+                                                                .addBuckets(
+                                                                        LocalIndexHistogram.Bucket
+                                                                                .newBuilder()
+                                                                                .setIndex(0)
+                                                                                .setCount(1)))
+                                                .build())
+                                .build());
+    }
+
+    @Test
+    public void logString_multipleLogCalls_aggregatedInDb() throws Exception {
+        mLogger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING_A",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+        mLogger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING_A",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+        mLogger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING_A",
+                        /* eventCodes= */ ImmutableList.of(3, 4))
+                .get();
+        mLogger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING_B",
+                        /* eventCodes= */ ImmutableList.of(3, 4))
+                .get();
+
+        // Check the string hashes appears in the string hash list for the report.
+        assertThat(mTestOnlyDao.getStringHashes())
+                .containsExactly(
+                        StringHashEntity.create(STRING_REPORT, DAY_INDEX, 0, "STRING_A"),
+                        StringHashEntity.create(STRING_REPORT, DAY_INDEX, 1, "STRING_B"));
+
+        // Check that only the one report has data in the DB.
+        assertThat(mTestOnlyDao.getAllAggregates())
+                .containsExactly(
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(STRING_REPORT)
+                                .setDayIndex(DAY_INDEX)
+                                .setEventVector(EventVector.create(1, 2))
+                                .setSystemProfile(SYSTEM_PROFILE)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder()
+                                                .setIndexHistogram(
+                                                        LocalIndexHistogram.newBuilder()
+                                                                .addBuckets(
+                                                                        LocalIndexHistogram.Bucket
+                                                                                .newBuilder()
+                                                                                .setIndex(0)
+                                                                                .setCount(2)))
+                                                .build())
+                                .build(),
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(STRING_REPORT)
+                                .setDayIndex(DAY_INDEX)
+                                .setEventVector(EventVector.create(3, 4))
+                                .setSystemProfile(SYSTEM_PROFILE)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder()
+                                                .setIndexHistogram(
+                                                        LocalIndexHistogram.newBuilder()
+                                                                .addBuckets(
+                                                                        LocalIndexHistogram.Bucket
+                                                                                .newBuilder()
+                                                                                .setIndex(0)
+                                                                                .setCount(1))
+                                                                .addBuckets(
+                                                                        LocalIndexHistogram.Bucket
+                                                                                .newBuilder()
+                                                                                .setIndex(1)
+                                                                                .setCount(1)))
+                                                .build())
+                                .build());
+    }
+
+    @Test
+    public void logString_multipleReports_storedInDb() throws Exception {
+        // Log some data for a metric that has multiple reports.
+        mLogger.logString(
+                        MULTIPLE_STRING_REPORTS_METRIC.getId(),
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+
+        // Check that all reports for the metric have data in the DB.
+        // Check that they all have the same EventVector and strings marked as occurred.
+        assertThat(mTestOnlyDao.getStringHashes())
+                .containsExactly(
+                        StringHashEntity.create(MULTIPLE_STRING_REPORTS_1, DAY_INDEX, 0, "STRING"),
+                        StringHashEntity.create(MULTIPLE_STRING_REPORTS_2, DAY_INDEX, 0, "STRING"));
+
+        assertThat(mTestOnlyDao.getAllAggregates())
+                .containsExactly(
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(MULTIPLE_STRING_REPORTS_1)
+                                .setDayIndex(DAY_INDEX)
+                                .setEventVector(EventVector.create(1, 2))
+                                .setSystemProfile(
+                                        SystemProfile.newBuilder()
+                                                .setAppVersion(APP_VERSION)
+                                                .build())
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder()
+                                                .setIndexHistogram(
+                                                        LocalIndexHistogram.newBuilder()
+                                                                .addBuckets(
+                                                                        LocalIndexHistogram.Bucket
+                                                                                .newBuilder()
+                                                                                .setIndex(0)
+                                                                                .setCount(1)))
+                                                .build())
+                                .build(),
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(MULTIPLE_STRING_REPORTS_2)
+                                .setDayIndex(DAY_INDEX)
+                                .setEventVector(EventVector.create(1, 2))
+                                .setSystemProfile(SYSTEM_PROFILE)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder()
+                                                .setIndexHistogram(
+                                                        LocalIndexHistogram.newBuilder()
+                                                                .addBuckets(
+                                                                        LocalIndexHistogram.Bucket
+                                                                                .newBuilder()
+                                                                                .setIndex(0)
+                                                                                .setCount(1)))
+                                                .build())
+                                .build());
+    }
+
+    @Test
+    public void logString_emptyEventVector_storedInDb() throws Exception {
+        // Log some data.
+        mLogger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of())
+                .get();
+
+        // Check the string hash appears in the string hash list for the report.
+        assertThat(mTestOnlyDao.getStringHashes())
+                .containsExactly(StringHashEntity.create(STRING_REPORT, DAY_INDEX, 0, "STRING"));
+
+        // Check that only the one report has data in the DB.
+        assertThat(mTestOnlyDao.getAllAggregates())
+                .containsExactly(
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(STRING_REPORT)
+                                .setDayIndex(DAY_INDEX)
+                                .setEventVector(EventVector.create())
+                                .setSystemProfile(SYSTEM_PROFILE)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder()
+                                                .setIndexHistogram(
+                                                        LocalIndexHistogram.newBuilder()
+                                                                .addBuckets(
+                                                                        LocalIndexHistogram.Bucket
+                                                                                .newBuilder()
+                                                                                .setIndex(0)
+                                                                                .setCount(1)))
+                                                .build())
+                                .build());
+    }
+
+    @Test
+    public void logString_unsupportedMetricType_notStoredWithError() throws Exception {
+        // Log data for an INTEGER metric, and check it completed with the expected error.
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mLogger.logString(
+                                                WRONG_TYPE_METRIC_ID,
+                                                /* stringValue= */ "STRING",
+                                                /* eventCodes= */ ImmutableList.of(1, 2))
+                                        .get());
+        assertThat(exception).hasCauseThat().hasMessageThat().contains("wrong metric type");
+
+        // Check that no report data was added to the DB.
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
-        assertThat(mTestOnlyDao.getInitialEnabledTime().isPresent()).isFalse();
-        assertThat(mTestOnlyDao.getStartDisabledTime().isPresent()).isFalse();
+    }
+
+    @Test
+    public void logString_missingMetric_notStoredWithError() throws Exception {
+        // Log data for a metric that doesn't exist, and check it completed with the expected error.
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mLogger.logString(
+                                                /* metricId= */ 333,
+                                                /* stringValue= */ "STRING",
+                                                /* eventCodes= */ ImmutableList.of(1, 2))
+                                        .get());
+        assertThat(exception)
+                .hasCauseThat()
+                .hasMessageThat()
+                .contains("failed to find metric with ID: 333");
+
+        // Check that no report data was added to the DB.
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+    }
+
+    @Test
+    public void logString_negativeEventCode_notStoredWithError() throws Exception {
+        // Log a negative event code, and check it completed with the expected error.
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mLogger.logString(
+                                                STRING_REPORT.metricId(),
+                                                /* stringValue= */ "STRING",
+                                                /* eventCodes= */ ImmutableList.of(1, -2))
+                                        .get());
+        assertThat(exception)
+                .hasCauseThat()
+                .hasMessageThat()
+                .contains("event vectors can't contain negative event codes");
+
+        // Check that no report data was added to the DB.
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+    }
+
+    @Test
+    public void logString_loggerDisabled_loggedDataNotStoredInDb() throws Exception {
+        CobaltLogger logger =
+                new CobaltLoggerImpl(
+                        COBALT_REGISTRY,
+                        ReleaseStage.DEBUG,
+                        mDataService,
+                        mSystemData,
+                        sExecutor,
+                        mClock,
+                        /* enabled= */ false);
+
+        // Log some data.
+        logger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+
+        // Check that no reports have data in the DB.
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+        assertThat(mTestOnlyDao.getStartDisabledTime().get()).isEqualTo(WORKER_TIME);
+    }
+
+    @Test
+    public void logString_oneLogForMetricInLaterReleaseStage_dropped() throws Exception {
+        // Create a metric for FISHFOOD, and current release is DOGFOOD.
+        MetricDefinition metric =
+                MetricDefinition.newBuilder()
+                        .setId((int) STRING_REPORT.metricId())
+                        .setMetricType(MetricType.STRING)
+                        .addReports(
+                                ReportDefinition.newBuilder()
+                                        .setId((int) STRING_REPORT.reportId())
+                                        .setReportType(ReportType.STRING_COUNTS)
+                                        .addSystemProfileField(SystemProfileField.APP_VERSION))
+                        .setMetaData(
+                                Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.FISHFOOD))
+                        .build();
+        Project project =
+                Project.create(
+                        (int) ONE_REPORT.customerId(),
+                        (int) ONE_REPORT.projectId(),
+                        List.of(metric));
+        CobaltLogger logger =
+                new CobaltLoggerImpl(
+                        project,
+                        ReleaseStage.DOGFOOD,
+                        mDataService,
+                        mSystemData,
+                        sExecutor,
+                        mClock,
+                        /* enabled= */ true);
+
+        // Log some data.
+        logger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+
+        // Check that no report data was added to the DB.
+        assertThat(mTestOnlyDao.getStringHashes()).isEmpty();
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+    }
+
+    @Test
+    public void logString_oneLogForReportInLaterReleaseStage_dropped() throws Exception {
+        // Create a report for FISHFOOD, and current release is DOGFOOD.
+        MetricDefinition metric =
+                MetricDefinition.newBuilder()
+                        .setId((int) STRING_REPORT.metricId())
+                        .setMetricType(MetricType.STRING)
+                        .addReports(
+                                ReportDefinition.newBuilder()
+                                        .setId((int) STRING_REPORT.reportId())
+                                        .setReportType(ReportType.STRING_COUNTS)
+                                        .addSystemProfileField(SystemProfileField.APP_VERSION)
+                                        .setMaxReleaseStage(ReleaseStage.FISHFOOD))
+                        .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
+                        .build();
+        Project project =
+                Project.create(
+                        (int) ONE_REPORT.customerId(),
+                        (int) ONE_REPORT.projectId(),
+                        List.of(metric));
+        CobaltLogger logger =
+                new CobaltLoggerImpl(
+                        project,
+                        ReleaseStage.DOGFOOD,
+                        mDataService,
+                        mSystemData,
+                        sExecutor,
+                        mClock,
+                        /* enabled= */ true);
+
+        // Log some data.
+        logger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+
+        // Check that no report data was added to the DB.
+        assertThat(mTestOnlyDao.getStringHashes()).isEmpty();
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }
 }

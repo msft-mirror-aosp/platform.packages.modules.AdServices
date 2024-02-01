@@ -183,7 +183,7 @@
           "source_event_id": "2",
           "trigger_data": "2",
           "source_type": "navigation",
-          "randomized_trigger_rate": 0.0024263
+          "randomized_trigger_rate": 0.0008051
         }
       }
     ],
@@ -199,7 +199,8 @@
               "key": "0x559",
               "value": 32768
             }
-          ]
+          ],
+          "source_registration_time": "799977600"
         }
       }
     ]

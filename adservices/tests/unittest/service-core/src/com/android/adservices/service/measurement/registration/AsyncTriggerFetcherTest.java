@@ -40,11 +40,9 @@ import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.RegistrationRequestFixture;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
 
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
@@ -157,8 +155,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://subdomain.foo.test");
     private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
             new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
-    private static final Context CONTEXT =
-            InstrumentationRegistry.getInstrumentation().getContext();
     private static final String DEFAULT_EVENT_TRIGGER_DATA = "[]";
 
     private static final int UNKNOWN_SOURCE_TYPE = 0;
@@ -198,7 +194,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Before
     public void setup() {
         extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
-        mFetcher = spy(new AsyncTriggerFetcher(CONTEXT, mEnrollmentDao, mFlags));
+        mFetcher = spy(new AsyncTriggerFetcher(sContext, mEnrollmentDao, mFlags));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
         ExtendedMockito.doReturn(Optional.of(ENROLLMENT_ID))
@@ -1218,6 +1214,31 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void testTriggerRequest_eventTriggerData_filterMapIncludesReservedPrefix_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggers = "[{\"trigger_data\":\"2\",\"filters\":["
+                + "{\"_something_reserved\":[\"val1\", \"val2\"]}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggers + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void fetchTrigger_eventTriggerDataMissing_eventTriggerDataEqualsEmptyArray()
             throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -1287,6 +1308,31 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         }
         eventTriggers.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]}");
         eventTriggers.append("}]");
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + eventTriggers + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_eventTriggerData_notFilterMapIncludesReservedPrefix_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String eventTriggers = "[{\"trigger_data\":\"2\",\"not_filters\":["
+                + "{\"_something_reserved\":[\"val1\", \"val2\"]}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -2517,6 +2563,29 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void testTriggerRequest_filterMapIncludesReservedPrefix_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "[{\"_something_reserved\":[\"val1\", \"val2\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"filters\":" + filters + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void testTriggerRequest_filters_invalidJson() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters =
@@ -3050,6 +3119,29 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void testTriggerRequest_notFilterMapIncludesReservedPrefix_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "[{\"_something_reserved\":[\"val1\", \"val2\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"not_filters\":" + filters + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void testTriggerRequest_notFilters_invalidJson() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String notFilters =
@@ -3386,7 +3478,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 RegistrationRequestFixture.getInvalidRegistrationRequest(
                         RegistrationRequest.REGISTER_TRIGGER,
                         WebUtil.validUri("http://foo.test"),
-                        CONTEXT.getPackageName(),
+                        sContext.getPackageName(),
                         SDK_PACKAGE_NAME);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -3402,21 +3494,22 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testBadTriggerUrl() throws Exception {
-        AsyncRegistration registration = createAsyncRegistration(
-                UUID.randomUUID().toString(),
-                WebUtil.validUri("bad-schema://foo.test"),
-                null,
-                null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
-                null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
-                AsyncRegistration.RegistrationType.APP_SOURCE,
-                null,
-                System.currentTimeMillis(),
-                0,
-                false,
-                false,
-                null);
+        AsyncRegistration registration =
+                createAsyncRegistration(
+                        UUID.randomUUID().toString(),
+                        WebUtil.validUri("bad-schema://foo.test"),
+                        null,
+                        null,
+                        Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
+                        null,
+                        Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
+                        AsyncRegistration.RegistrationType.APP_SOURCE,
+                        null,
+                        System.currentTimeMillis(),
+                        0,
+                        false,
+                        false,
+                        null);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3759,6 +3852,40 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void basicTriggerRequestWithAggregateTriggerData_filterMapIncludesReservedPrefix_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "[{\"key-1\":[\"val1\", \"val2\"]},"
+                + "{\"_reserved_prefix\":[\"val1\", \"val2\"]}]";
+        String aggregateTriggerData =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"filters\":" + filters + "},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_trigger_data\":"
+                                                + aggregateTriggerData
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void testBasicTriggerRequestWithAggregateTriggerData_tooManyNotFilterMaps()
             throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -3769,6 +3896,41 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         }
         notFilters.append("{\"key-" + i + "\":[\"val1" + i + "\", \"val2" + i + "\"]}");
         notFilters.append("]");
+        String aggregateTriggerData =
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"not_filters\":" + notFilters + "},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_trigger_data\":"
+                                                + aggregateTriggerData
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void
+            basicTriggerRequestWithAggregateTriggerData_notFilterMapIncludesReservedPrefix_fails()
+                    throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String notFilters = "[{\"key-1\":[\"val1\", \"val2\"]},"
+                + "{\"_reserved_prefix\":[\"val1\", \"val2\"]}]";
         String aggregateTriggerData =
                 "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
                         + "\"not_filters\":" + notFilters + "},"
@@ -5285,14 +5447,11 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 .setAttributionFilterMap(
                                         Map.of("product", Collections.singletonList("prod1")))
                                 .build());
-        List<FilterMap> filterData =
-                Collections.singletonList(
-                        new FilterMap.Builder()
-                                .setAttributionFilterMap(
-                                        Map.of(
-                                                "campaign_type",
-                                                Collections.singletonList("install")))
-                                .build());
+        FilterMap filterData =
+                new FilterMap.Builder()
+                        .setAttributionFilterMap(
+                                Map.of("campaign_type", Collections.singletonList("install")))
+                        .build();
         AttributionConfig attributionConfig1 =
                 new AttributionConfig.Builder()
                         .setSourceAdtech("AdTech1-Ads")
@@ -5341,7 +5500,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mFlags.getWebContextClientAppAllowList())
-                .thenReturn(CONTEXT.getPackageName() + ",some_other_package");
+                .thenReturn(sContext.getPackageName() + ",some_other_package");
         String originalAttributionConfigString =
                 "[{\n"
                         + "\"source_network\": \"AdTech1-Ads\",\n"
@@ -5392,14 +5551,11 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 .setAttributionFilterMap(
                                         Map.of("product", Collections.singletonList("prod1")))
                                 .build());
-        List<FilterMap> filterData =
-                Collections.singletonList(
-                        new FilterMap.Builder()
-                                .setAttributionFilterMap(
-                                        Map.of(
-                                                "campaign_type",
-                                                Collections.singletonList("install")))
-                                .build());
+        FilterMap filterData =
+                new FilterMap.Builder()
+                        .setAttributionFilterMap(
+                                Map.of("campaign_type", Collections.singletonList("install")))
+                        .build();
         AttributionConfig attributionConfig1 =
                 new AttributionConfig.Builder()
                         .setSourceAdtech("AdTech1-Ads")
@@ -5684,6 +5840,168 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
         assertNull(result.getAdtechKeyMapping());
         assertNull(result.getAttributionConfig());
+    }
+
+    @Test
+    public void fetchWebTriggers_withoutSourceRegistrationTimeConfig_defaultToExclude()
+            throws IOException, JSONException {
+        // Setup
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mFlags.getWebContextClientAppAllowList()).thenReturn("");
+        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
+                .thenReturn(true);
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of("{" + "\"event_trigger_data\": " + EVENT_TRIGGERS_1 + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        webTriggerRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(
+                Trigger.SourceRegistrationTimeConfig.EXCLUDE,
+                result.getAggregatableSourceRegistrationTimeConfig());
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebTriggers_withSourceRegistrationTimeConfig_excludeValue_getsParsed()
+            throws IOException, JSONException {
+        // Setup
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mFlags.getWebContextClientAppAllowList()).thenReturn("");
+        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
+                .thenReturn(true);
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"aggregatable_source_registration_time\": \""
+                                + Trigger.SourceRegistrationTimeConfig.EXCLUDE.name()
+                                + "\""
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        webTriggerRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(
+                Trigger.SourceRegistrationTimeConfig.EXCLUDE,
+                result.getAggregatableSourceRegistrationTimeConfig());
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebTriggers_withSourceRegistrationTimeConfig_includeValue_getsParsed()
+            throws IOException, JSONException {
+        // Setup
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mFlags.getWebContextClientAppAllowList()).thenReturn("");
+        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
+                .thenReturn(true);
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"aggregatable_source_registration_time\": \""
+                                + Trigger.SourceRegistrationTimeConfig.INCLUDE.name()
+                                + "\""
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        webTriggerRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(
+                Trigger.SourceRegistrationTimeConfig.INCLUDE,
+                result.getAggregatableSourceRegistrationTimeConfig());
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebTrigger_withInvalidSourceRegistrationTime_returnsEmpty()
+            throws IOException {
+        // Setup
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mFlags.getWebContextClientAppAllowList()).thenReturn("");
+        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
+                .thenReturn(true);
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"aggregatable_source_registration_time\": \""
+                                + "INVALID"
+                                + "\""
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        webTriggerRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirects);
+        assertTrue(fetch.isEmpty());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
     }
 
     @Test
@@ -6345,7 +6663,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_TRIGGER,
                         Uri.parse(triggerUri),
-                        CONTEXT.getPackageName(),
+                        sContext.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .build();
     }
@@ -6354,7 +6672,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_TRIGGER,
                         Uri.parse(triggerUri),
-                        CONTEXT.getPackageName(),
+                        sContext.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(true)
                 .setAdIdValue(PLATFORM_AD_ID_VALUE)
@@ -6374,9 +6692,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 registrationRequest.getRegistrationUri(),
                 null,
                 null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                         ? AsyncRegistration.RegistrationType.APP_SOURCE
                         : AsyncRegistration.RegistrationType.APP_TRIGGER,
@@ -6395,9 +6713,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 registrationRequest.getRegistrationUri(),
                 null,
                 null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 null,
-                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                 registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                         ? AsyncRegistration.RegistrationType.APP_SOURCE
                         : AsyncRegistration.RegistrationType.APP_TRIGGER,
@@ -6420,7 +6738,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                     webTriggerParams.getRegistrationUri(),
                     null,
                     null,
-                    Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                    Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + sContext.getPackageName()),
                     null,
                     webTriggerRegistrationRequest.getDestination(),
                     AsyncRegistration.RegistrationType.WEB_TRIGGER,

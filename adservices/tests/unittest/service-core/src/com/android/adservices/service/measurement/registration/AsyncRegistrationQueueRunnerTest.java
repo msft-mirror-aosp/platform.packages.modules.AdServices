@@ -37,7 +37,6 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -45,7 +44,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
@@ -111,7 +109,6 @@ import javax.net.ssl.HttpsURLConnection;
 @SpyStatic(FlagsFactory.class)
 public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
     private static final boolean DEFAULT_AD_ID_PERMISSION = false;
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment_id";
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
@@ -119,7 +116,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     private static final String DEFAULT_SOURCE_ID = UUID.randomUUID().toString();
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri APP_TOP_ORIGIN =
-            Uri.parse("android-app://" + sDefaultContext.getPackageName());
+            Uri.parse("android-app://" + sContext.getPackageName());
     private static final Uri WEB_TOP_ORIGIN = WebUtil.validUri("https://example.test");
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test/bar?ad=134");
     private static final String LIST_TYPE_REDIRECT_URI_1 = WebUtil.validUrl("https://foo.test");
@@ -169,7 +166,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     private AsyncSourceFetcher mAsyncSourceFetcher;
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
     private Source mMockedSource;
-    private Context mContext;
 
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Trigger mMockedTrigger;
@@ -221,8 +217,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void before() throws Exception {
         extendedMockito.mockGetFlags(mFlags);
 
-        mAsyncSourceFetcher = spy(new AsyncSourceFetcher(sDefaultContext));
-        mAsyncTriggerFetcher = spy(new AsyncTriggerFetcher(sDefaultContext));
+        mAsyncSourceFetcher = spy(new AsyncSourceFetcher(sContext));
+        mAsyncTriggerFetcher = spy(new AsyncTriggerFetcher(sContext));
         mMockedSource = spy(SourceFixture.getValidSource());
 
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
@@ -269,9 +265,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
                 .thenReturn(Flags
                         .MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
+        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+        when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
         when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
-        mContext = spy(sDefaultContext);
-        when(mContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
     }
 
     @Test
@@ -942,7 +943,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         setUpApplicationStatus(List.of("com.destination", "com.destination2"), List.of());
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
-                        mContext,
+                        mSpyContext,
                         mContentResolver,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
@@ -1010,7 +1011,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         setUpApplicationStatus(List.of(), List.of("com.destination", "com.destination2"));
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
-                        mContext,
+                        mSpyContext,
                         mContentResolver,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
@@ -1077,7 +1078,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         setUpApplicationStatus(List.of("com.destination2"), List.of("com.destination"));
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
-                        mContext,
+                        mSpyContext,
                         mContentResolver,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
@@ -1145,7 +1146,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         setUpApplicationStatus(List.of("com.destination"), List.of("com.destination2"));
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
-                        mContext,
+                        mSpyContext,
                         mContentResolver,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
@@ -3013,8 +3014,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void testRegisterWebSource_failsWebAndOsDestinationVerification()
             throws DatastoreException, IOException {
         // Setup
-        AsyncSourceFetcher mFetcher =
-                spy(new AsyncSourceFetcher(sDefaultContext, mEnrollmentDao, mFlags));
+        AsyncSourceFetcher mFetcher = spy(new AsyncSourceFetcher(sContext, mEnrollmentDao, mFlags));
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
                         Collections.singletonList(DEFAULT_REGISTRATION_PARAM_LIST),
@@ -3046,7 +3046,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 spy(
                         new AsyncRegistrationQueueRunner(
-                                sDefaultContext,
+                                sContext,
                                 mContentResolver,
                                 mFetcher,
                                 mAsyncTriggerFetcher,
@@ -3641,7 +3641,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
                                         new EventReportWindowCalcDelegate(mFlags)
-                                                .getReportingTimeForNoising(source, 0, false),
+                                                .getReportingTimeForNoising(source, 0),
                                         destinations))
                 .collect(Collectors.toList());
     }
@@ -3725,7 +3725,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     private AsyncRegistrationQueueRunner getSpyAsyncRegistrationQueueRunner() {
         return spy(
                 new AsyncRegistrationQueueRunner(
-                        sDefaultContext,
+                        sContext,
                         mContentResolver,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,

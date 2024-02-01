@@ -112,7 +112,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -249,7 +249,7 @@ public class ReportAndRegisterEventE2ETest {
                         .spyStatic(DatastoreManagerFactory.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
+                        .spyStatic(AdServicesJobServiceLogger.class)
                         .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)

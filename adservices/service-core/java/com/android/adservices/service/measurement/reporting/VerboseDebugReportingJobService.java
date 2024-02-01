@@ -17,7 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.VERBOSE_DEBUG_REPORTING;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -37,7 +37,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -66,7 +66,7 @@ public final class VerboseDebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(VERBOSE_DEBUG_REPORT_JOB_ID);
+        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(VERBOSE_DEBUG_REPORT_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
             LoggerFactory.getMeasurementLogger().e("VerboseDebugReportingJobService is disabled");
@@ -78,7 +78,7 @@ public final class VerboseDebugReportingJobService extends JobService {
                 sBlockingExecutor.submit(
                         () -> {
                             sendReports();
-                            AdservicesJobServiceLogger.getInstance(
+                            AdServicesJobServiceLogger.getInstance(
                                             VerboseDebugReportingJobService.this)
                                     .recordJobFinished(
                                             VERBOSE_DEBUG_REPORT_JOB_ID,
@@ -96,7 +96,7 @@ public final class VerboseDebugReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, VERBOSE_DEBUG_REPORT_JOB_ID, shouldRetry);
         return shouldRetry;
     }

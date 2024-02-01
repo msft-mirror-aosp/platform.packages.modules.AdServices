@@ -91,7 +91,6 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     private static final int SANDBOX_UID = 25000;
 
     private final AdServicesLogger mSpyAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
-    private Context mSpyContext;
     private CallerMetadata mCallerMetadata;
     private AdIdWorker mAdIdWorker;
     private GetAdIdParam mRequest;
@@ -106,10 +105,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
 
     @Before
     public void setup() throws Exception {
-        Context context = appContext.get();
-        mSpyContext = spy(context);
-
-        AdIdCacheManager adIdCacheManager = spy(new AdIdCacheManager(context));
+        AdIdCacheManager adIdCacheManager = spy(new AdIdCacheManager(mContext));
         mAdIdWorker = new AdIdWorker(adIdCacheManager);
         Mockito.doReturn(null).when(adIdCacheManager).getService();
 
