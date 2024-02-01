@@ -207,6 +207,8 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         consentSwitch.click();
         dialogTitle = ApkTestUtil.getElement(sContext, sDevice,
                 R.string.settingsUI_dialog_opt_out_title);
+        negativeText =
+                ApkTestUtil.getElement(sContext, sDevice, R.string.settingsUI_dialog_negative_text);
         UiObject2 positiveText =
                 ApkTestUtil.getElement(sContext, sDevice,
                         R.string.settingsUI_dialog_opt_out_positive_text);
