@@ -109,7 +109,8 @@ public abstract class FledgeScenarioTest {
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
+                    .setPpapiAppAllowList(sContext.getPackageName())
+                    .setAdIdKillSwitchForTests(false);
 
     @Rule(order = 5)
     public MockWebServerRule mMockWebServerRule =
