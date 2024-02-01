@@ -85,7 +85,7 @@ public final class AdServicesShellCommandHandler {
                     + " the given app, when using SDK sandbox or not.";
 
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    private static final String TAG = "AdServicesShellCmd";
+    static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
     // Add more per API shell factory implementations as we create them.
