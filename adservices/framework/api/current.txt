@@ -112,7 +112,8 @@ package android.adservices.adselection {
 
   public final class GetAdSelectionDataOutcome {
     method @Nullable public byte[] getAdSelectionData();
-    method public long getAdSelectionId();
+    method @FlaggedApi("com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled") public long getAdSelectionDataId();
+    method @Deprecated public long getAdSelectionId();
   }
 
   public final class GetAdSelectionDataRequest {
@@ -126,7 +127,8 @@ package android.adservices.adselection {
   }
 
   public final class PersistAdSelectionResultRequest {
-    method public long getAdSelectionId();
+    method @FlaggedApi("com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled") public long getAdSelectionDataId();
+    method @Deprecated public long getAdSelectionId();
     method @Nullable public byte[] getAdSelectionResult();
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
   }
@@ -134,7 +136,8 @@ package android.adservices.adselection {
   public static final class PersistAdSelectionResultRequest.Builder {
     ctor public PersistAdSelectionResultRequest.Builder();
     method @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest build();
-    method @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setAdSelectionId(long);
+    method @FlaggedApi("com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled") @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setAdSelectionDataId(long);
+    method @Deprecated @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setAdSelectionId(long);
     method @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setAdSelectionResult(@Nullable byte[]);
     method @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setSeller(@Nullable android.adservices.common.AdTechIdentifier);
   }
