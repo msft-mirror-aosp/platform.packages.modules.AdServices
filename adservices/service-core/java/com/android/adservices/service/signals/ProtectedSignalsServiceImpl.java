@@ -108,7 +108,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME),
                         Clock.systemUTC()),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
-                ConsentManager.getInstance(context),
+                ConsentManager.getInstance(),
                 DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
@@ -116,7 +116,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 CallingAppUidSupplierBinderImpl.create(),
                 new CustomAudienceServiceFilter(
                         context,
-                        ConsentManager.getInstance(context),
+                        ConsentManager.getInstance(),
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,

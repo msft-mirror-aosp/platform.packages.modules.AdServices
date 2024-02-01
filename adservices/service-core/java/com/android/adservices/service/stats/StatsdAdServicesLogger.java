@@ -34,6 +34,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
@@ -50,6 +51,7 @@ import android.util.proto.ProtoOutputStream;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -126,7 +128,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     /** log method for UI stats. */
     public void logUIStats(UIStats uiStats) {
-        AdServicesStatsLog.write(uiStats.getCode(), uiStats.getRegion(), uiStats.getAction());
+        AdServicesStatsLog.write(
+                uiStats.getCode(),
+                uiStats.getRegion(),
+                uiStats.getAction(),
+                uiStats.getDefaultConsent(),
+                uiStats.getDefaultAdIdState(),
+                /* @deprecated feature_type= */ 0,
+                uiStats.getUx(),
+                uiStats.getEnrollmentChannel());
     }
 
     @Override
@@ -432,7 +442,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                     stats.getMsmtConsent(),
                     stats.getTopicsConsent(),
                     stats.getFledgeConsent(),
-                    stats.getDefaultConsent(),
+                    true,
                     stats.getMigrationType().getMigrationTypeValue(),
                     stats.getRegion(),
                     stats.getMigrationStatus().getMigrationStatusValue());
@@ -532,6 +542,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 INTERACTION_REPORTING_TABLE_CLEARED,
                 stats.getNumUrisCleared(),
                 stats.getNumUnreportedUris());
+    }
+
+    @Override
+    public void logAppManifestConfigCall(AppManifestConfigCall call) {
+        AdServicesStatsLog.write(
+                APP_MANIFEST_CONFIG_HELPER_CALLED, call.packageName, call.api, call.result);
     }
 
     @NonNull

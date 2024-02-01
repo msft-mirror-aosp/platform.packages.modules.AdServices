@@ -16,13 +16,14 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+
 import android.adservices.shell.IShellCommand;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
 import android.os.RemoteException;
-
-import com.android.adservices.LogUtil;
+import android.util.Log;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -53,7 +54,10 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
                             .build();
             callback.onResult(response);
         } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send result to the callback for request: %s", param);
+            Log.e(
+                    TAG,
+                    String.format("Unable to send result to the callback for request: %s", param),
+                    e);
         }
     }
 }

@@ -23,9 +23,9 @@ import com.android.adservices.common.SyncCallback;
 /**
  * A synchronized callback used for logging {@link JobService} on testing purpose.
  *
- * <p>The logging methods in {@link com.android.adservices.spe.AdservicesJobServiceLogger} are
- * offloaded to a separate thread. In order to make the test result deterministic, use this callback
- * to help wait for the completion of such logging methods.
+ * <p>The logging methods in {@link AdServicesJobServiceLogger} are offloaded to a separate thread.
+ * In order to make the test result deterministic, use this callback to help wait for the completion
+ * of such logging methods.
  */
 public class JobServiceLoggingCallback extends SyncCallback<Boolean, Void> {
     /**

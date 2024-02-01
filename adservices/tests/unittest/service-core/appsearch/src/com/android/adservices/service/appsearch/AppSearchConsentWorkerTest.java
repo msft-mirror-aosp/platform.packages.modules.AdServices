@@ -61,9 +61,10 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +73,9 @@ import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @SpyStatic(FlagsFactory.class)
 @RequiresSdkLevelAtLeastS
@@ -87,8 +90,11 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     private static final Topic TOPIC1 = Topic.create(0, 1, 11);
     private static final Topic TOPIC2 = Topic.create(12, 2, 22);
     private static final Topic TOPIC3 = Topic.create(123, 3, 33);
-    private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
+    private static final int APPSEARCH_TIMEOUT_MS = 1000;
 
+    private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
+    private final ListeningExecutorService mExecutorService =
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     @Mock private Flags mMockFlags;
 
     @Before
@@ -97,6 +103,9 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         when(mMockFlags.getAdservicesApkShaCertificate())
                 .thenReturn(Flags.ADSERVICES_APK_SHA_CERTIFICATE);
         when(mMockFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
+        // Reduce AppSearch write timeout to speed up the tests.
+        when(mMockFlags.getAppSearchWriteTimeout()).thenReturn(APPSEARCH_TIMEOUT_MS);
+        when(mMockFlags.getAppSearchReadTimeout()).thenReturn(APPSEARCH_TIMEOUT_MS);
     }
 
     @Test
@@ -140,6 +149,21 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                         RuntimeException.class,
                         () -> AppSearchConsentWorker.getInstance().setConsent(API_TYPE, CONSENTED));
         assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testSetConsent_failure_timeout() {
+        initTimeoutResponse();
+
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> AppSearchConsentWorker.getInstance().setConsent(API_TYPE, CONSENTED));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
     }
 
     @Test
@@ -272,11 +296,8 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @Test
     @SpyStatic(AppSearchDao.class)
     public void testClearAppsWithConsent_failure() {
-        FluentFuture future =
-                FluentFuture.from(
-                        Futures.immediateFailedFuture(new ExecutionException("test", null)));
-
-        ExtendedMockito.doReturn(future)
+        Exception exception = new IllegalStateException("test exception");
+        ExtendedMockito.doThrow(exception)
                 .when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
@@ -284,16 +305,14 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                 assertThrows(
                         RuntimeException.class,
                         () -> appSearchConsentWorker.clearAppsWithConsent(TEST));
-        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).isSameInstanceAs(exception);
     }
 
     @Test
     @SpyStatic(AppSearchDao.class)
     public void testClearAppsWithConsent() {
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
-
-        ExtendedMockito.doReturn(future)
+        ExtendedMockito.doReturn(result)
                 .when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
@@ -332,11 +351,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                                 AppSearchAppConsentDao.readConsentData(
                                         any(), any(), any(), eq(consentType), any()));
         when(dao.getApps()).thenReturn(List.of());
-
-        FluentFuture future =
-                FluentFuture.from(
-                        Futures.immediateFailedFuture(new ExecutionException("test", null)));
-        when(dao.writeData(any(), any(), any())).thenReturn(future);
+        when(dao.writeData(any(), any(), any())).thenThrow(new IllegalStateException("test", null));
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         assertThat(appSearchConsentWorker.addAppWithConsent(consentType, TEST)).isFalse();
@@ -355,8 +370,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                                         any(), any(), any(), eq(consentType), any()));
         when(dao.getApps()).thenReturn(List.of());
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
-        when(dao.writeData(any(), any(), any())).thenReturn(future);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
 
@@ -389,6 +403,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     public void testRemoveAppWithConsent_failure() {
         String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
         AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
+        Exception exception = new IllegalStateException("test");
 
         ExtendedMockito.doReturn(dao)
                 .when(
@@ -396,18 +411,14 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                                 AppSearchAppConsentDao.readConsentData(
                                         any(), any(), any(), eq(consentType), any()));
         when(dao.getApps()).thenReturn(List.of(TEST));
-
-        FluentFuture future =
-                FluentFuture.from(
-                        Futures.immediateFailedFuture(new ExecutionException("test", null)));
-        when(dao.writeData(any(), any(), any())).thenReturn(future);
+        when(dao.writeData(any(), any(), any())).thenThrow(exception);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         RuntimeException e =
                 assertThrows(
                         RuntimeException.class,
                         () -> appSearchConsentWorker.removeAppWithConsent(consentType, TEST));
-        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).isSameInstanceAs(exception);
     }
 
     @Test
@@ -424,8 +435,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
 
         when(dao.getApps()).thenReturn(List.of(TEST));
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
-        when(dao.writeData(any(), any(), any())).thenReturn(future);
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         // No exceptions are thrown.
@@ -488,7 +498,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
 
     @Test
     @SpyStatic(PlatformStorage.class)
-    public void testRecordGaUxNotificationDisplayed_faiure() {
+    public void testRecordGaUxNotificationDisplayed_failure() {
         runRecordNotificationDisplayedTestFailure(/* isBetaUx= */ false);
     }
 
@@ -496,18 +506,49 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         initFailureResponse();
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
 
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        isBetaUx
+                                ? () -> worker.recordNotificationDisplayed(true)
+                                : () -> worker.recordGaUxNotificationDisplayed(true));
+
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordNotificationDisplayed_failure_timeout() {
+        runRecordNotificationDisplayedTestFailureTimeout(/* isBetaUx= */ true);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordGaUxNotificationDisplayed_failure_timeout() {
+        runRecordNotificationDisplayedTestFailureTimeout(/* isBetaUx= */ false);
+    }
+
+    private void runRecordNotificationDisplayedTestFailureTimeout(boolean isBetaUx) {
+        initTimeoutResponse();
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+
+        RuntimeException e;
         if (isBetaUx) {
-            RuntimeException e =
+            e =
                     assertThrows(
                             RuntimeException.class, () -> worker.recordNotificationDisplayed(true));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         } else {
-            RuntimeException e =
+            e =
                     assertThrows(
                             RuntimeException.class,
                             () -> worker.recordGaUxNotificationDisplayed(true));
-            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         }
+
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
     }
 
     @Test
@@ -574,6 +615,24 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @Test
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
+    public void testSetCurrentPrivacySandboxFeature_failure_timeout() {
+        initTimeoutResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                worker.setCurrentPrivacySandboxFeature(
+                                        PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void testSetCurrentPrivacySandboxFeature() {
         initSuccessResponse();
 
@@ -616,6 +675,27 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @MockStatic(AppSearchInteractionsDao.class)
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
+    public void testRecordUserManualInteractionWithConsent_failure_timeout() {
+        initTimeoutResponse();
+
+        when(AppSearchInteractionsDao.getRowId(any(), any())).thenReturn("" + UID);
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        int interactions = ConsentManager.MANUAL_INTERACTIONS_RECORDED;
+
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> worker.recordUserManualInteractionWithConsent(interactions));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    @MockStatic(AppSearchInteractionsDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
     public void testRecordUserManualInteractionWithConsent() {
         initSuccessResponse();
 
@@ -638,7 +718,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
 
     @Test
     @SpyStatic(PlatformStorage.class)
-    public void testRecordBlockedTopics_failure() {
+    public void testRecordBlockedTopic_failure() {
         initFailureResponse();
 
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
@@ -651,7 +731,27 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @MockStatic(AppSearchTopicsConsentDao.class)
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void testRecordBlockedTopics_new() {
+    public void testRecordBlockedTopic_failure_timeout() {
+        initTimeoutResponse();
+
+        String query = "" + UID;
+        ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e =
+                assertThrows(RuntimeException.class, () -> worker.recordBlockedTopic(TOPIC1));
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
+    }
+
+    @Test
+    @MockStatic(AppSearchTopicsConsentDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordBlockedTopic_new() {
         initSuccessResponse();
 
         String query = "" + UID;
@@ -667,15 +767,14 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @MockStatic(AppSearchTopicsConsentDao.class)
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void testRecordBlockedTopics() throws Exception {
+    public void testRecordBlockedTopic() {
         String query = "" + UID;
         ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
         AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        when(dao.writeData(any(), any(), any()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         appSearchConsentWorker.recordBlockedTopic(TOPIC1);
@@ -686,29 +785,27 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @Test
     @MockStatic(AppSearchTopicsConsentDao.class)
     @SpyStatic(PlatformStorage.class)
-    public void testRecordUnblockedTopics_failure() throws Exception {
+    public void testRecordUnblockedTopic_failure() {
         AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
 
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-        when(dao.writeData(any(), any(), any()))
-                .thenReturn(
-                        FluentFuture.from(
-                                Futures.immediateFailedFuture(new InterruptedException())));
+        IllegalStateException exception = new IllegalStateException("test exception");
+        when(dao.writeData(any(), any(), any())).thenThrow(exception);
 
         RuntimeException e =
                 assertThrows(RuntimeException.class, () -> worker.recordUnblockedTopic(TOPIC1));
         verify(dao).removeBlockedTopic(TOPIC1);
         verify(dao).writeData(any(), any(), any());
-        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).isSameInstanceAs(exception);
     }
 
     @Test
     @MockStatic(AppSearchTopicsConsentDao.class)
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void testRecordUnblockedTopics_new() {
+    public void testRecordUnblockedTopic_new() {
         String query = "" + UID;
         ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
         ExtendedMockito.doReturn(null)
@@ -722,15 +819,14 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @MockStatic(AppSearchTopicsConsentDao.class)
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void testRecordUnblockedTopics() {
+    public void testRecordUnblockedTopic() {
         String query = "" + UID;
         ExtendedMockito.doReturn(query).when(() -> AppSearchTopicsConsentDao.getQuery(any()));
         AppSearchTopicsConsentDao dao = Mockito.mock(AppSearchTopicsConsentDao.class);
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any(), any()));
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        when(dao.writeData(any(), any(), any()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         appSearchConsentWorker.recordUnblockedTopic(TOPIC1);
@@ -745,9 +841,21 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         initFailureResponse();
 
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
-        RuntimeException e =
-                assertThrows(RuntimeException.class, () -> worker.clearBlockedTopics());
+        RuntimeException e = assertThrows(RuntimeException.class, worker::clearBlockedTopics);
         assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+    }
+
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testClearBlockedTopics_failure_timeout() {
+        initTimeoutResponse();
+
+        AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
+        RuntimeException e = assertThrows(RuntimeException.class, worker::clearBlockedTopics);
+        assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e.getCause()).isNotNull();
+        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);
     }
 
     @Test
@@ -781,6 +889,26 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         when(mockResponse.getMigrationFailures()).thenReturn(List.of());
     }
 
+    private void initTimeoutResponse() {
+        AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
+        UserHandle mockUserHandle = Mockito.mock(UserHandle.class);
+        Mockito.when(UserHandle.getUserHandleForUid(Binder.getCallingUid()))
+                .thenReturn(mockUserHandle);
+        Mockito.when(mockUserHandle.getIdentifier()).thenReturn(UID);
+        ExtendedMockito.doReturn(Futures.immediateFuture(mockSession))
+                .when(() -> PlatformStorage.createSearchSessionAsync(any()));
+        verify(mockSession, atMost(1)).setSchemaAsync(any(SetSchemaRequest.class));
+
+        SetSchemaResponse mockResponse = Mockito.mock(SetSchemaResponse.class);
+        when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
+                .thenReturn(Futures.immediateFuture(mockResponse));
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(mockSession.putAsync(any())).thenReturn(getLongRunningOperation(result));
+
+        verify(mockResponse, atMost(1)).getMigrationFailures();
+        when(mockResponse.getMigrationFailures()).thenReturn(List.of());
+    }
+
     private void initFailureResponse() {
         AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
         ExtendedMockito.doReturn(Futures.immediateFuture(mockSession))
@@ -791,7 +919,8 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
                 .thenReturn(Futures.immediateFuture(mockResponse));
 
-        AppSearchResult mockResult = Mockito.mock(AppSearchResult.class);
+        AppSearchResult<String> mockResult =
+                AppSearchResult.newFailedResult(AppSearchResult.RESULT_INVALID_ARGUMENT, "test");
         SetSchemaResponse.MigrationFailure failure =
                 new SetSchemaResponse.MigrationFailure(
                         /* namespace= */ TEST,
@@ -799,6 +928,15 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                         /* schemaType= */ TEST,
                         /* appSearchResult= */ mockResult);
         when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
+    }
+
+    private <T> ListenableFuture<T> getLongRunningOperation(T result) {
+        // Wait for a time that's longer than the AppSearch write timeout, then return the result.
+        return mExecutorService.submit(
+                () -> {
+                    TimeUnit.MILLISECONDS.sleep(APPSEARCH_TIMEOUT_MS + 1000);
+                    return result;
+                });
     }
 
     @Test
@@ -826,16 +964,13 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
     public void setAdIdEnabledTest_success() {
-        initSuccessResponse();
-
         String query = "" + UID;
         ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        when(dao.writeData(any(), any(), any()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         appSearchConsentWorker.setAdIdEnabled(true);
@@ -845,17 +980,17 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
 
     @Test
     @SpyStatic(PlatformStorage.class)
-    public void setAdIdEnabledTest_trueBit() {
-        setAdIdEnabledTest(true);
+    public void setAdIdEnabledTest_failure_trueBit() {
+        setAdIdEnabledTestFailure(true);
     }
 
     @Test
     @SpyStatic(PlatformStorage.class)
-    public void setAdIdEnabledTest_falseBit() {
-        setAdIdEnabledTest(false);
+    public void setAdIdEnabledTest_failure_falseBit() {
+        setAdIdEnabledTestFailure(false);
     }
 
-    private void setAdIdEnabledTest(boolean isAdIdEnabled) {
+    private void setAdIdEnabledTestFailure(boolean isAdIdEnabled) {
         initFailureResponse();
 
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
@@ -889,16 +1024,13 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
     public void setU18AccountTest_success() {
-        initSuccessResponse();
-
         String query = "" + UID;
         ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
         AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        when(dao.writeData(any(), any(), any()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         appSearchConsentWorker.setU18Account(true);
@@ -963,8 +1095,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        when(dao.writeData(any(), any(), any()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         appSearchConsentWorker.setEntryPointEnabled(true);
@@ -1040,7 +1171,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @MockStatic(AppSearchUxStatesDao.class)
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void setU18AdultAccountTest_success() {
+    public void setAdultAccountTest_success() {
         initSuccessResponse();
 
         String query = "" + UID;
@@ -1049,8 +1180,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        when(dao.writeData(any(), any(), any()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         appSearchConsentWorker.setAdultAccount(true);
@@ -1118,8 +1248,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
         AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-        when(dao.writeData(any(), any(), any()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+        when(dao.writeData(any(), any(), any())).thenReturn(result);
 
         AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
         appSearchConsentWorker.setU18NotificationDisplayed(true);
@@ -1155,8 +1284,6 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
     public void setUxTest_allUxsSuccess() {
-        initSuccessResponse();
-
         for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
             String query = "" + UID;
             ExtendedMockito.doReturn(query).when(() -> AppSearchUxStatesDao.getQuery(any()));
@@ -1164,9 +1291,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
             ExtendedMockito.doReturn(dao)
                     .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeData(any(), any(), any()))
-                    .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
-
+            when(dao.writeData(any(), any(), any())).thenReturn(result);
             AppSearchConsentWorker appSearchConsentWorker = AppSearchConsentWorker.getInstance();
             appSearchConsentWorker.setUx(ux);
             verify(dao).setUx(ux.toString());
@@ -1217,8 +1342,6 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
     public void setEnrollmentChannelTest_allUxsAllEnrollmentChannelsSuccess() {
-        initSuccessResponse();
-
         for (PrivacySandboxUxCollection ux : PrivacySandboxUxCollection.values()) {
             for (PrivacySandboxEnrollmentChannelCollection channel :
                     ux.getEnrollmentChannelCollection()) {
@@ -1229,8 +1352,7 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
                         .when(() -> AppSearchUxStatesDao.readData(any(), any(), any(), any()));
                 AppSearchBatchResult<String, Void> result =
                         Mockito.mock(AppSearchBatchResult.class);
-                when(dao.writeData(any(), any(), any()))
-                        .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
+                when(dao.writeData(any(), any(), any())).thenReturn(result);
 
                 AppSearchConsentWorker appSearchConsentWorker =
                         AppSearchConsentWorker.getInstance();

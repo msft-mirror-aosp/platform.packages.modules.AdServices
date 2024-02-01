@@ -128,7 +128,7 @@ public final class AggregateReportTest {
         assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
         assertEquals(Uri.parse("https://example.test/aS"),
                 attributionReport.getAttributionDestination());
-        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(Long.valueOf(5L), attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
         assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
@@ -156,7 +156,7 @@ public final class AggregateReportTest {
         assertEquals(
                 Uri.parse("https://example.test/aS"),
                 attributionReport.getAttributionDestination());
-        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(Long.valueOf(5L), attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
         assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
@@ -183,7 +183,7 @@ public final class AggregateReportTest {
         assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
         assertEquals(Uri.parse("https://example.test/aS"),
                 attributionReport.getAttributionDestination());
-        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(Long.valueOf(5L), attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
         assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
@@ -210,7 +210,7 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getId());
         assertNull(attributionReport.getPublisher());
         assertNull(attributionReport.getAttributionDestination());
-        assertEquals(0L, attributionReport.getSourceRegistrationTime());
+        assertNull(attributionReport.getSourceRegistrationTime());
         assertEquals(0L, attributionReport.getScheduledReportTime());
         assertNull(attributionReport.getEnrollmentId());
         assertNull(attributionReport.getDebugCleartextPayload());

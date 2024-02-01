@@ -516,7 +516,7 @@ public class GetAdSelectionDataRunnerTest {
                     DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
                             .build();
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                    thisCustomAudience, Uri.EMPTY, /*debuggable=*/ false);
+                    thisCustomAudience, Uri.EMPTY, false);
         }
     }
 

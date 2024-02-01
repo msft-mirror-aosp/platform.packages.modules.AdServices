@@ -19,7 +19,6 @@ package android.adservices.test.scenario.adservices.ui;
 import android.content.Context;
 import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
-import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -40,7 +39,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Crystalball test for Topics API to collect System Heath metrics. */
 @Scenario
 @RunWith(JUnit4.class)
 public class NotificationLandingPage {
@@ -59,7 +57,7 @@ public class NotificationLandingPage {
 
     @Before
     public void setup() throws Exception {
-        UiUtils.setFlipFlow(false);
+        UiUtils.setFlipFlow(true);
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -75,19 +73,15 @@ public class NotificationLandingPage {
 
     @Test
     public void testNotificationLandingPage() throws Exception {
-        final long start = System.currentTimeMillis();
-
-        Trace.beginSection("NotificationTriggerEvent");
         UiConstants.UX ux = UiConstants.UX.GA_UX;
         if( SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS() ) {
             ux = UiConstants.UX.RVC_UX;
         }
+
+        Trace.beginSection("NotificationTriggerEvent");
         AdservicesWorkflows.testNotificationActivityFlow(
                 sContext, sDevice, true, ux, true, false, true);
         Trace.endSection();
-
-        final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "(" + UI_NOTIFICATION_LATENCY_METRIC + ": " + duration + ")");
     }
 
 }

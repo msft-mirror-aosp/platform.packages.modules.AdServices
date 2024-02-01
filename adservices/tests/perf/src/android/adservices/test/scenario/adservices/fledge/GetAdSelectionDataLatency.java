@@ -345,6 +345,7 @@ public class GetAdSelectionDataLatency {
 
     @Test
     public void test_withoutFiltering_varyingCAs_500() throws Exception {
+        increaseMaxCAsPerApp();
         List<CustomAudience> customAudiences =
                 CustomAudienceFixture.getNValidCustomAudiences(
                         /* nBuyers= */ 4, /* nCAsPerBuyer= */ 500, /* nAdsPerCA= */ 5);
@@ -368,10 +369,13 @@ public class GetAdSelectionDataLatency {
                         (endTime - startTime) / NANO_TO_MILLISECONDS));
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetMaxCAsPerApp();
     }
 
     @Test
     public void test_withoutFiltering_varyingCAs_1000() throws Exception {
+        increaseMaxCAsPerApp();
+        increasePayloadBucketSize();
         List<CustomAudience> customAudiences =
                 CustomAudienceFixture.getNValidCustomAudiences(
                         /* nBuyers= */ 4, /* nCAsPerBuyer= */ 1000, /* nAdsPerCA= */ 5);
@@ -395,6 +399,8 @@ public class GetAdSelectionDataLatency {
                         (endTime - startTime) / NANO_TO_MILLISECONDS));
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetPayloadBucketSize();
+        resetMaxCAsPerApp();
     }
 
     @Test
@@ -512,6 +518,7 @@ public class GetAdSelectionDataLatency {
     @Test
     public void test_withoutFiltering_varyingAds_1000() throws Exception {
         increaseMaximumAds();
+        increasePayloadBucketSize();
         List<CustomAudience> customAudiences =
                 CustomAudienceFixture.getNValidCustomAudiences(
                         /* nBuyers= */ 4, /* nCAsPerBuyer= */ 10, /* nAdsPerCA= */ 1000);
@@ -535,7 +542,22 @@ public class GetAdSelectionDataLatency {
                         (endTime - startTime) / NANO_TO_MILLISECONDS));
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+        resetPayloadBucketSize();
         resetMaximumAds();
+    }
+
+    void increaseMaxCAsPerApp() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_max_count 10000");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_per_app_max_count 10000");
+    }
+
+    void resetMaxCAsPerApp() {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_max_count 4000");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_custom_audience_per_app_max_count 1000");
     }
 
     void increaseMaximumAds() {

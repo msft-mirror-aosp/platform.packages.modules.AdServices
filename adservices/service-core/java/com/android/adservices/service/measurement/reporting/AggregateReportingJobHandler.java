@@ -356,13 +356,16 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
             AggregateEncryptionKey key) throws JSONException {
+        String sourceRegistrationTimeStr =
+                aggregateReport.getSourceRegistrationTime() == null
+                        ? null
+                        : String.valueOf(
+                                TimeUnit.MILLISECONDS.toSeconds(
+                                        aggregateReport.getSourceRegistrationTime()));
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
-                .setSourceRegistrationTime(
-                        String.valueOf(
-                                TimeUnit.MILLISECONDS.toSeconds(
-                                        aggregateReport.getSourceRegistrationTime())))
+                .setSourceRegistrationTime(sourceRegistrationTimeStr)
                 .setScheduledReportTime(
                         String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(
@@ -374,13 +377,12 @@ public class AggregateReportingJobHandler {
                 .setTriggerDebugKey(aggregateReport.getTriggerDebugKey())
                 .setAggregationCoordinatorOrigin(aggregateReport.getAggregationCoordinatorOrigin())
                 .setDebugMode(
-                        mIsDebugInstance
-                                        && aggregateReport.getSourceDebugKey() != null
+                        aggregateReport.getSourceDebugKey() != null
                                         && aggregateReport.getTriggerDebugKey() != null
                                 ? "enabled"
                                 : null)
                 .build()
-                .toJson(key);
+                .toJson(key, mFlags);
     }
 
     /**
