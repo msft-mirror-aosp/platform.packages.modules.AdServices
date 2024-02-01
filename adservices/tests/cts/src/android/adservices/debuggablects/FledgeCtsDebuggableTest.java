@@ -41,10 +41,10 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
-import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.DecisionLogic;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
 import android.adservices.adselection.GetAdSelectionDataRequest;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
@@ -950,17 +950,18 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
-        BuyersDecisionLogic buyersDecisionLogic =
-                new BuyersDecisionLogic(ImmutableMap.of(CommonFixture.VALID_BUYER_2,
-                        new DecisionLogic(
-                                "function reportWin(ad_selection_signals, per_buyer_signals,"
-                                        + " signals_for_buyer, contextual_signals, "
-                                        + "custom_audience_signals) { \n"
-                                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                                        + BUYER_2_REPORTING_URI
-                                        + "' } };\n"
-                                        + "}"))
-                );
+        PerBuyerDecisionLogic perBuyerDecisionLogic =
+                new PerBuyerDecisionLogic(
+                        ImmutableMap.of(
+                                CommonFixture.VALID_BUYER_2,
+                                new DecisionLogic(
+                                        "function reportWin(ad_selection_signals,"
+                                            + " per_buyer_signals, signals_for_buyer,"
+                                            + " contextual_signals, custom_audience_signals) { \n"
+                                            + " return {'status': 0, 'results': {'reporting_uri': '"
+                                                + BUYER_2_REPORTING_URI
+                                                + "' } };\n"
+                                                + "}")));
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception.
@@ -969,7 +970,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         AD_SELECTION_CONFIG,
                         DEFAULT_DECISION_LOGIC_JS,
                         TRUSTED_SCORING_SIGNALS,
-                        buyersDecisionLogic);
+                        perBuyerDecisionLogic);
 
         mTestAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
@@ -1022,7 +1023,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                 "https://%s%s",
                                                 AdSelectionConfigFixture.SELLER,
                                                 SELLER_TRUSTED_SIGNAL_URI_PATH)))
-                        .setBuyerSignedContextualAds(createAuthenticatedContextualAds())
+                        .setPerBuyerSignedContextualAds(createAuthenticatedContextualAds())
                         .build();
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
         AdSelectionOutcome outcome =
@@ -1068,27 +1069,28 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                 "https://%s%s",
                                                 AdSelectionConfigFixture.SELLER,
                                                 SELLER_TRUSTED_SIGNAL_URI_PATH)))
-                        .setBuyerSignedContextualAds(createAuthenticatedContextualAds())
+                        .setPerBuyerSignedContextualAds(createAuthenticatedContextualAds())
                         .build();
 
-        BuyersDecisionLogic buyersDecisionLogic =
-                new BuyersDecisionLogic(ImmutableMap.of(CommonFixture.VALID_BUYER_2,
-                        new DecisionLogic(
-                                "function reportWin(ad_selection_signals, per_buyer_signals,"
-                                        + " signals_for_buyer, contextual_signals, "
-                                        + "custom_audience_signals) { \n"
-                                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                                        + BUYER_2_REPORTING_URI
-                                        + "' } };\n"
-                                        + "}"))
-                );
+        PerBuyerDecisionLogic perBuyerDecisionLogic =
+                new PerBuyerDecisionLogic(
+                        ImmutableMap.of(
+                                CommonFixture.VALID_BUYER_2,
+                                new DecisionLogic(
+                                        "function reportWin(ad_selection_signals,"
+                                            + " per_buyer_signals, signals_for_buyer,"
+                                            + " contextual_signals, custom_audience_signals) { \n"
+                                            + " return {'status': 0, 'results': {'reporting_uri': '"
+                                                + BUYER_2_REPORTING_URI
+                                                + "' } };\n"
+                                                + "}")));
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         adSelectionConfigOnlyContextualAds, DEFAULT_DECISION_LOGIC_JS,
-                        TRUSTED_SCORING_SIGNALS, buyersDecisionLogic);
+                        TRUSTED_SCORING_SIGNALS, perBuyerDecisionLogic);
 
         mTestAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
