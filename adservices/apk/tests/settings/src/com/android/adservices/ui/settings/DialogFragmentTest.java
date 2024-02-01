@@ -29,7 +29,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -41,6 +40,7 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
@@ -74,7 +74,6 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
 
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static UiDevice sDevice;
 
     @Mock
@@ -89,6 +88,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         // UiDialogFragmentEnable flag should be on for this test
         doReturn(true).when(mMockFlags).getUiDialogFragmentEnabled();
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
+        doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(10001, 1, 1));
         tempList.add(Topic.create(10002, 1, 1));
@@ -125,8 +125,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
 
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManager)
@@ -176,6 +175,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     @After
     public void teardown() {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + getTestName() + "_");
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @Test
@@ -207,6 +207,8 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         consentSwitch.click();
         dialogTitle = ApkTestUtil.getElement(sContext, sDevice,
                 R.string.settingsUI_dialog_opt_out_title);
+        negativeText =
+                ApkTestUtil.getElement(sContext, sDevice, R.string.settingsUI_dialog_negative_text);
         UiObject2 positiveText =
                 ApkTestUtil.getElement(sContext, sDevice,
                         R.string.settingsUI_dialog_opt_out_positive_text);

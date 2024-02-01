@@ -43,15 +43,12 @@ import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.RegistrationRequestFixture;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
 import android.view.InputDevice;
 import android.view.InputEvent;
 import android.view.MotionEvent.PointerCoords;
 import android.view.MotionEvent.PointerProperties;
-
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
@@ -150,8 +147,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
     private static final WebSourceParams SOURCE_REGISTRATION_2 =
             new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
     private static final String SHARED_AGGREGATION_KEYS =
             "[\"GoogleCampaignCounts\",\"GoogleGeo\"]";
     private static final String DEBUG_JOIN_KEY = "SAMPLE_DEBUG_JOIN_KEY";
@@ -235,6 +230,12 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .thenReturn(Flags.MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW);
         when(mFlags.getMeasurementMinInstallAttributionWindow())
                 .thenReturn(Flags.MEASUREMENT_MIN_INSTALL_ATTRIBUTION_WINDOW);
+        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
+        when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
+        when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+                .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
     }
 
     @Test
@@ -2956,6 +2957,40 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         String filterData =
                 "\"filter_data\":{\"product\":[\"1234\",\"2345\"],\"source_type\":[\"event\"]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"432000\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + filterData
+                                            + "}\n")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void sourceRequest_filterDataIncludesReservedPrefix_fails() throws Exception {
+        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        String filterData =
+                "\"filter_data\":{\"product\":[\"1234\",\"2345\"],\"_abc_reserved\":[\"event\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
