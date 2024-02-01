@@ -4199,11 +4199,38 @@ public interface Flags extends CommonFlags {
     /**
      * Returns whether the topics cobalt logging feature is enabled.
      *
-     * <p>The topics cobalt logging will be disabled either the getCobaltLoggingEnabled or {@code
-     * TOPICS_COBALT_LOGGING_ENABLED} is {@code false}.
+     * <p>The topics cobalt logging will be disabled either the {@code getCobaltLoggingEnabled} or
+     * {@code TOPICS_COBALT_LOGGING_ENABLED} is {@code false}.
      */
     default boolean getTopicsCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled() && TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /** Default value of whether app name and api error cobalt logging feature is enabled. */
+    boolean APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the app name and api error cobalt logging feature is enabled.
+     *
+     * <p>The app name and api error cobalt logging will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED} is {@code
+     * false}.
+     */
+    default boolean getAppNameApiErrorCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of {@link AppNameApiErrorLogger} logging sampling rate.
+     *
+     * <p>The value should be an integer in the range of {@code [0, 100]}, where {@code 100} is to
+     * log all events and {@code 0} is to log no events.
+     */
+    int APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE = 100;
+
+    /** Returns the {@link AppNameApiErrorLogger} logging sampling rate. */
+    default int getAppNameApiErrorCobaltLoggingSamplingRate() {
+        return APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
     }
 
     /** Default value of Cobalt Adservices Api key. */
@@ -4655,5 +4682,22 @@ public interface Flags extends CommonFlags {
      */
     default int getFledgeKAnonMessagesPerBackgroundProcess() {
         return FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
+    }
+
+    /*
+     * The allow-list for PP APIs. This list has the list of app package names that we allow
+     * using PP APIs.
+     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
+     */
+    String GET_ADSERVICES_COMMON_STATES_ALLOW_LIST = "com.android.adservices.tests.ui.common";
+
+    /**
+     * Returns bypass List for Get AdServices Common States app signature check. Apps with package
+     * name on this list will bypass the signature check
+     */
+    default String getAdServicesCommonStatesAllowList() {
+        return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
     }
 }

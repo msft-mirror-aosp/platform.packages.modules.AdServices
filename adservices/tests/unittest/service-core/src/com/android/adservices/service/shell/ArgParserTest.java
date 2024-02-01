@@ -22,7 +22,6 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-// TODO(b/322395593): Refactor ArgParserTest to use expect.withMessage().
 public final class ArgParserTest extends AdServicesUnitTestCase {
 
     private static final String CMD = "not-relevant-command";
@@ -31,19 +30,25 @@ public final class ArgParserTest extends AdServicesUnitTestCase {
     public void testParse_happyPath_success() {
         ArgParser argParser = new ArgParser();
 
-        argParser.parse(CMD, "--hello=world");
+        argParser.parse(CMD, "--hello", "world");
 
-        expect.that(argParser.getValue("hello")).isEqualTo("world");
+        expect.withMessage("`--hello world` argument parses")
+                .that(argParser.getValue("hello"))
+                .isEqualTo("world");
     }
 
     @Test
     public void testParse_multipleArguments_success() {
         ArgParser argParser = new ArgParser();
 
-        argParser.parse(CMD, "--hello=world", "--another=argument");
+        argParser.parse(CMD, "--hello", "world", "--another", "argument");
 
-        expect.that(argParser.getValue("hello")).isEqualTo("world");
-        expect.that(argParser.getValue("another")).isEqualTo("argument");
+        expect.withMessage("`--hello world` argument parses")
+                .that(argParser.getValue("hello"))
+                .isEqualTo("world");
+        expect.withMessage("`--another argument` argument parses")
+                .that(argParser.getValue("another"))
+                .isEqualTo("argument");
     }
 
     @Test
@@ -51,18 +56,25 @@ public final class ArgParserTest extends AdServicesUnitTestCase {
         ArgParser argParser = new ArgParser();
 
         // Same as above test, but with order swapped.
-        argParser.parse(CMD, "--another=argument", "--hello=world");
+        argParser.parse(CMD, "--another", "argument", "--hello", "world");
 
-        expect.that(argParser.getValue("hello")).isEqualTo("world");
-        expect.that(argParser.getValue("another")).isEqualTo("argument");
+        expect.withMessage("`--hello world` parses")
+                .that(argParser.getValue("hello"))
+                .isEqualTo("world");
+        expect.withMessage("`--another argument` parses")
+                .that(argParser.getValue("another"))
+                .isEqualTo("argument");
     }
 
     @Test
     public void testParse_withRequired_success() {
         ArgParser argParser = new ArgParser("hello");
 
-        argParser.parse(CMD, "--hello=world");
-        expect.that(argParser.getValue("hello")).isEqualTo("world");
+        argParser.parse(CMD, "--hello", "world");
+
+        expect.withMessage("`--hello world` parses")
+                .that(argParser.getValue("hello"))
+                .isEqualTo("world");
     }
 
     @Test
@@ -71,8 +83,8 @@ public final class ArgParserTest extends AdServicesUnitTestCase {
 
         ArgParser argParser = new ArgParser("uri");
 
-        argParser.parse(CMD, "--uri=" + uri);
-        expect.that(argParser.getValue("uri")).isEqualTo(uri);
+        argParser.parse(CMD, "--uri", uri);
+        expect.withMessage("`--uri` parses").that(argParser.getValue("uri")).isEqualTo(uri);
     }
 
     @Test
@@ -88,7 +100,7 @@ public final class ArgParserTest extends AdServicesUnitTestCase {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> argParser.parse(new String[] {CMD, "--hello=world", "--hello=world"}));
+                () -> argParser.parse(new String[] {CMD, "--hello", "world", "--hello", "world"}));
     }
 
     @Test
@@ -111,7 +123,7 @@ public final class ArgParserTest extends AdServicesUnitTestCase {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> argParser.parse(new String[] {CMD, "--=world"}));
+                () -> argParser.parse(new String[] {CMD, "--world"}));
     }
 
     @Test
@@ -120,7 +132,7 @@ public final class ArgParserTest extends AdServicesUnitTestCase {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> argParser.parse(new String[] {CMD, "--hello="}));
+                () -> argParser.parse(new String[] {CMD, "--hello"}));
     }
 
     @Test
@@ -129,6 +141,6 @@ public final class ArgParserTest extends AdServicesUnitTestCase {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> argParser.parse(new String[] {CMD, "--something=else"}));
+                () -> argParser.parse(new String[] {CMD, "--something", "else"}));
     }
 }

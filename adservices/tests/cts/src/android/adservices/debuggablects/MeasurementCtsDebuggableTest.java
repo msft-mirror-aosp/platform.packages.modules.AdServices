@@ -127,6 +127,7 @@ public class MeasurementCtsDebuggableTest {
     public void setup() throws Exception {
         mMeasurementManager = MeasurementManager.get(sContext);
         Objects.requireNonNull(mMeasurementManager);
+        executeDeleteRegistrations();
     }
 
     @Test
