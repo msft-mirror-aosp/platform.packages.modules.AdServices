@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Contains a buyer supplied {@link AdWithBid} bundle and its signature.
+ * Contains a list of buyer supplied {@link AdWithBid} bundle and its signature.
  *
  * <p>Instances of this class are created by SDKs to be injected as part of {@link
  * AdSelectionConfig} and passed to {@link AdSelectionManager#selectAds}

@@ -357,7 +357,9 @@ public class AdSelectionConfigValidatorTest {
                         .build();
         buyerContextualAds.put(buyer2, contextualAds2);
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder
+                        .setPerBuyerSignedContextualAds(buyerContextualAds)
+                        .build();
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(
                         mPrebuiltLogicGenerator, new FrequencyCapAdDataValidatorImpl());
@@ -395,7 +397,9 @@ public class AdSelectionConfigValidatorTest {
         // Creating ads which have a render Uri with a different buyer
         buyerContextualAds.put(buyer2, contextualAds2);
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder
+                        .setPerBuyerSignedContextualAds(buyerContextualAds)
+                        .build();
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(
                         mPrebuiltLogicGenerator, new FrequencyCapAdDataValidatorImpl());
@@ -450,7 +454,9 @@ public class AdSelectionConfigValidatorTest {
                         .build());
 
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder
+                        .setPerBuyerSignedContextualAds(buyerContextualAds)
+                        .build();
 
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(
