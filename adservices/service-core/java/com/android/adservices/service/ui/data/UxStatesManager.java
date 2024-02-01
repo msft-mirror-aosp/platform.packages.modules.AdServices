@@ -34,6 +34,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import java.util.Map;
 
@@ -61,6 +62,8 @@ public class UxStatesManager {
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull ConsentManager consentManager) {
+        LogUtil.d("Instantiating lazy UxStatesManager instance.");
+
         mUxFlags = flags.getUxFlags();
         mConsentManager = consentManager;
         mIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
@@ -68,23 +71,18 @@ public class UxStatesManager {
                 context.getSharedPreferences("UX_SHARED_PREFERENCES", Context.MODE_PRIVATE);
     }
 
+    private static class UxStatesManagerLazyInstanceHolder {
+        static final UxStatesManager LAZY_INSTANCE =
+                new UxStatesManager(
+                        ApplicationContextSingleton.get(),
+                        FlagsFactory.getFlags(),
+                        ConsentManager.getInstance());
+    }
+
     /** Returns an instance of the UxStatesManager. */
     @NonNull
-    public static UxStatesManager getInstance(Context context) {
-        LogUtil.d("UxStates getInstance() called.");
-        if (sUxStatesManager == null) {
-            synchronized (LOCK) {
-                if (sUxStatesManager == null) {
-                    LogUtil.d("Creaeting new UxStatesManager.");
-                    sUxStatesManager =
-                            new UxStatesManager(
-                                    context,
-                                    FlagsFactory.getFlags(),
-                                    ConsentManager.getInstance(context));
-                }
-            }
-        }
-        return sUxStatesManager;
+    public static UxStatesManager getInstance() {
+        return UxStatesManagerLazyInstanceHolder.LAZY_INSTANCE;
     }
 
     /** Saves the AdServices states into data stores. */
@@ -102,7 +100,7 @@ public class UxStatesManager {
     /** Returns process statble UX flags. */
     public boolean getFlag(String uxFlagKey) {
         if (!mUxFlags.containsKey(uxFlagKey)) {
-            LogUtil.e("Key not found in cached UX flags: ", uxFlagKey);
+            LogUtil.e("Key not found in cached UX flags: %s", uxFlagKey);
         }
         Boolean value = mUxFlags.get(uxFlagKey);
         return value != null ? value : false;

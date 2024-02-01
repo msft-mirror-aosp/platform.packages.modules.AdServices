@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.os.RemoteException;
 
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
@@ -38,7 +39,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +60,26 @@ import java.util.function.Supplier;
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
+    // The following keys are to JSON fields that should be interpreted in milliseconds.
+    public static final Set<String> TIMESTAMP_KEYS_IN_MILLIS =
+            new HashSet<>(
+                    Arrays.asList(
+                            TestFormatJsonMapping.TIMESTAMP_KEY,
+                            TestFormatJsonMapping.REPORT_TIME_KEY,
+                            UnparsableRegistrationKeys.TIME));
+    // The following keys are to JSON fields that should be interpreted in seconds.
+    public static final Set<String> TIMESTAMP_KEYS_IN_SECONDS =
+            new HashSet<>(
+                    Arrays.asList(
+                            TestFormatJsonMapping.SCHEDULED_REPORT_TIME,
+                            TestFormatJsonMapping.SOURCE_REGISTRATION_TIME));
+    // All interop tests are specified with timestamps that are offsets, so we establish a start
+    // time for those offsets to add to. There are two IMPORTANT conditions for this start time:
+    // 1.) The time must be recent so that the timestamp is large enough to work with the temporary
+    //    "inline migration" we have for event_report_window.
+    // 2.) The time must be at the start of a day because there are operations that round timestamps
+    //     down to the day, e.g. in populating the source_registration_time for aggregatable reports
+    private static final long START_TIME = 1674000000000L;
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final List<AsyncFetchStatus.EntityStatus> sParsingErrors = List.of(
@@ -101,17 +124,20 @@ public class E2EInteropMockTest extends E2EMockTest {
         // TODO(b/290098169): Cleanup anchorTime when this bug is addressed. Handling cases where
         // Source event report window is already stored as mEventTime + mEventReportWindow.
         return anchorTime(
-            json.replaceAll("\\.test(?=[\"\\/])", ".com")
-                    // Remove comments
-                    .replaceAll("^\\s*\\/\\/.+\\n", "")
-                    .replaceAll("\"destination\":", "\"web_destination\":"),
-            System.currentTimeMillis() / 1000L * 1000L);
+                json.replaceAll("\\.test(?=[\"\\/])", ".com")
+                        // Remove comments
+                        .replaceAll("^\\s*\\/\\/.+\\n", "")
+                        .replaceAll("\"destination\":", "\"web_destination\":"),
+                START_TIME);
     }
 
-    private static Map<String, String> sPhFlagsForInterop = Map.of(
-            // TODO (b/295382171): remove this after the flag is removed.
-            "measurement_enable_max_aggregate_reports_per_source", "true",
-            "measurement_min_event_report_delay_millis", "0");
+    private static Map<String, String> sPhFlagsForInterop =
+            Map.of(
+                    // TODO (b/295382171): remove this after the flag is removed.
+                    "measurement_enable_max_aggregate_reports_per_source", "true",
+                    "measurement_min_event_report_delay_millis", "0",
+                    "measurement_source_registration_time_optional_for_agg_reports_enabled",
+                            "true");
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -175,7 +201,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
         }
     }
 
@@ -201,7 +227,26 @@ public class E2EInteropMockTest extends E2EMockTest {
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(triggerRegistration.mTimestamp);
+        }
+    }
+
+    @Override
+    void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
+        super.processAction(reportingJob);
+        // Test json files for interop tests come verbatim from chromium, so they don't have
+        // source_registration_time as a field. Remove them from the actual reports so that
+        // comparisons don't fail.
+        removeSourceRegistrationTime(mActualOutput.mAggregateReportObjects);
+        removeSourceRegistrationTime(mActualOutput.mDebugAggregateReportObjects);
+    }
+
+    private void removeSourceRegistrationTime(List<JSONObject> aggregateReportObjects)
+            throws JSONException {
+        for (JSONObject jsonObject : aggregateReportObjects) {
+            jsonObject
+                    .getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY)
+                    .remove(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME);
         }
     }
 
@@ -338,16 +383,16 @@ public class E2EInteropMockTest extends E2EMockTest {
             JSONObject newJson = new JSONObject();
             JSONObject jsonObj = (JSONObject) obj;
             Set<String> keys = jsonObj.keySet();
+
             for (String key : keys) {
-                if (key.equals(TestFormatJsonMapping.TIMESTAMP_KEY)
-                        || key.equals(TestFormatJsonMapping.REPORT_TIME_KEY)
-                        || key.equals(UnparsableRegistrationKeys.TIME)) {
+                if (TIMESTAMP_KEYS_IN_MILLIS.contains(key)) {
                     long time = jsonObj.getLong(key);
                     newJson.put(key, String.valueOf(time - t0 + anchor));
-                } else if (key.equals("scheduled_report_time")) {
+                } else if (TIMESTAMP_KEYS_IN_SECONDS.contains(key)) {
                     long time = TimeUnit.SECONDS.toMillis(jsonObj.getLong(key));
-                    newJson.put(key, String.valueOf(
-                            TimeUnit.MILLISECONDS.toSeconds(time - t0 + anchor)));
+                    newJson.put(
+                            key,
+                            String.valueOf(TimeUnit.MILLISECONDS.toSeconds(time - t0 + anchor)));
                 } else {
                     newJson.put(key, anchorTime(jsonObj.get(key), t0, anchor));
                 }

@@ -83,7 +83,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
-    private Context mContext;
     private CallerMetadata mCallerMetadata;
     private AppSetIdWorker mAppSetIdWorker;
     private GetAppSetIdParam mRequest;
@@ -98,8 +97,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() throws Exception {
-        mContext = appContext.get();
-
         mAppSetIdWorker = Mockito.spy(AppSetIdWorker.getInstance());
         doReturn(null).when(mAppSetIdWorker).getService();
 

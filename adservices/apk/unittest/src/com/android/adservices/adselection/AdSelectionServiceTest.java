@@ -90,7 +90,7 @@ public final class AdSelectionServiceTest extends AdServicesExtendedMockitoTestC
     public void testBindableAdSelectionServiceKillSwitchOffGaUxEnabled() {
         doReturn(mMockAdSelectionServiceImpl)
                 .when(() -> AdSelectionServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(eq(AdServicesApiType.FLEDGE));

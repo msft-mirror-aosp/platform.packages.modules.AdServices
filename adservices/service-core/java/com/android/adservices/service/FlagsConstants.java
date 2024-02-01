@@ -109,8 +109,12 @@ public final class FlagsConstants {
     public static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
             "classifier_force_use_bundled_files";
 
-    // Topics Cobalt keys
+    // Cobalt keys
     public static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
+    public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED =
+            "app_name_api_error_cobalt_logging_enabled";
+    public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE =
+            "app_name_api_error_cobalt_logging_sampling_rate";
     public static final String KEY_COBALT_ADSERVICES_API_KEY_HEX = "cobalt_adservices_api_key_hex";
     public static final String KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT =
             "adservices_release_stage_for_cobalt";
@@ -149,6 +153,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_incl_source_registration_time";
 
+    public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME =
+            "measurement_null_agg_report_rate_excl_source_registration_time";
+
+    public static final String
+            KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED =
+                    "measurement_source_registration_time_optional_for_agg_reports_enabled";
     public static final String KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS =
             "measurement_network_connect_timeout_ms";
     public static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
@@ -163,6 +173,12 @@ public final class FlagsConstants {
             "measurement_is_click_verification_enabled";
     public static final String KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT =
             "measurement_is_click_verified_by_input_event";
+    public static final String KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED =
+            "measurement_is_click_deduplication_enabled";
+    public static final String KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED =
+            "measurement_is_click_deduplication_enforced";
+    public static final String KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK =
+            "measurement_max_sources_per_click";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE =
             "measurement_enforce_foreground_status_register_source";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER =
@@ -666,6 +682,8 @@ public final class FlagsConstants {
             "fledge_auction_server_ad_render_id_max_length";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED =
             "fledge_auction_server_ad_render_id_enabled";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED =
+            "fledge_auction_server_omit_ads_enabled";
 
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
@@ -810,6 +828,8 @@ public final class FlagsConstants {
     public static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST =
             "ppapi_app_signature_allow_list";
 
+    public static final String KEY_APPSEARCH_WRITE_TIMEOUT_MS = "appsearch_write_timeout_ms";
+    public static final String KEY_APPSEARCH_READ_TIMEOUT_MS = "appsearch_read_timeout_ms";
     public static final String KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE =
             "appsearch_writer_allow_list_override";
 
@@ -915,8 +935,15 @@ public final class FlagsConstants {
     // Max response payload size allowed per source/trigger registration
     public static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
             "max_response_based_registration_size_bytes";
+    public static final String KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES =
+            "max_trigger_registration_header_size_bytes";
+
+    public static final String KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT =
+            "enable_update_trigger_registration_header_limit";
 
     // UI keys
+    public static final String KEY_PAS_UX_ENABLED = "pas_ux_enabled";
+
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =
             "ui_feature_type_logging_enabled";
 
@@ -1020,11 +1047,13 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION =
             "measurement_flex_api_max_information_gain_navigation";
 
-    public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT =
-            "measurement_flex_api_max_information_gain_dual_destination_event";
+    public static final String
+            KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT =
+                    "measurement_flex_api_max_information_gain_dual_destination_event";
 
-    public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
-            "measurement_flex_api_max_information_gain_dual_destination_navigation";
+    public static final String
+            KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
+                    "measurement_flex_api_max_information_gain_dual_destination_navigation";
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS =
             "measurement_flex_api_max_event_reports";
@@ -1146,7 +1175,8 @@ public final class FlagsConstants {
 
     public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
 
-    public static final String KEY_RVC_NOTIFICATION_ENABLED = "rvc_notification_enabled";
+    public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
+            "rvc_post_ota_notification_enabled";
 
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 
@@ -1176,4 +1206,47 @@ public final class FlagsConstants {
 
     public static final String KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE =
             "key_background_job_sampling_logging_rate";
+
+    public static final String KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED =
+            "is_get_ad_services_common_states_enabled";
+
+    /** Key for kanon sign join feature flag */
+    public static final String KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE =
+            "fledge_kanon_sign_join_enabled";
+
+    /** Key for kanon fetch parameters url. */
+    public static final String KEY_KANON_FETCH_PARAMETERS_URL = "kanon_fetch_parameters_url";
+
+    /** Key for kanon register client parameters url. */
+    public static final String KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL =
+            "fledge_kanon_register_client_parameters_url";
+
+    /** Key for kanon get tokens url. */
+    public static final String KEY_FLEDGE_KANON_GET_TOKENS_URL = "fledge_kanon_get_tokens_url";
+
+    /** Key for kanon join url. */
+    public static final String KEY_FLEDGE_KANON_JOIN_URL = "fledge_kanon_join_url";
+
+    /** Key for kanon sign batch size. */
+    public static final String KEY_FLEDGE_KANON_SIGN_BATCH_SIZE = "fledge_kanon_sign_batch_size";
+
+    /** Key for kanon percentage immediate sign/join calls. */
+    public static final String KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS =
+            "fledge_kanon_percentage_immediate_sign_join_calls";
+
+    /** Key for KAnon Message ttl in seconds. */
+    public static final String KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS =
+            "fledge_kanon_message_ttl_seconds";
+
+    /** Key for kanon background job frequency per day. */
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY =
+            "fledge_kanon_background_frequency_per_day";
+
+    /** Key for number of messages processes in a single background process. */
+    public static final String KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS =
+            "fledge_kanon_number_of_messages_per_background_process";
+
+    /** key for allow list of get adservices common states. */
+    public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
+            "get_adservices_common_states_allow_list";
 }
