@@ -33,7 +33,8 @@ import java.util.concurrent.TimeoutException;
  *
  * @hide
  */
-public class AdServicesStatusUtils {
+public final class AdServicesStatusUtils {
+
     /**
      * The status code has not been set. Keep unset status code the lowest value of the status
      * codes.
@@ -370,6 +371,30 @@ public class AdServicesStatusUtils {
     public @interface StatusCode {}
 
     /**
+     * Failure reason codes that are common across various APIs.
+     *
+     * @hide
+     */
+    @IntDef(
+            prefix = {"FAILURE_REASON_"},
+            value = {
+                FAILURE_REASON_UNSET,
+                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST,
+                FAILURE_REASON_PACKAGE_BLOCKLISTED,
+                FAILURE_REASON_ENROLLMENT_BLOCKLISTED,
+                FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND,
+                FAILURE_REASON_ENROLLMENT_INVALID_ID,
+                FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND,
+                FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION,
+                FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
+                FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND,
+                FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface FailureReason {}
+
+    /**
      * Api name codes used for app name api error logging.
      *
      * @hide
@@ -407,4 +432,8 @@ public class AdServicesStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ApiNameCode {}
+
+    private AdServicesStatusUtils() {
+        throw new UnsupportedOperationException();
+    }
 }
