@@ -22,6 +22,9 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.ReportEventRequest;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class DBRegisteredAdInteractionTest {
@@ -34,6 +37,9 @@ public class DBRegisteredAdInteractionTest {
 
     private static final String BASE_URI = "https://www.seller.com/";
     public static final Uri EVENT_REPORTING_URI = Uri.parse(BASE_URI + INTERACTION_KEY_CLICK);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBRegisteredAdInteraction() {

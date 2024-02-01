@@ -21,8 +21,11 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 
@@ -44,6 +47,9 @@ public class AddAdSelectionOverrideRequestTest {
                             DECISION_LOGIC,
                             CommonFixture.VALID_BUYER_2,
                             DECISION_LOGIC));
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() throws Exception {

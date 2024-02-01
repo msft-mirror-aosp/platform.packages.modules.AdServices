@@ -42,6 +42,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
@@ -90,6 +91,9 @@ public class BackgroundKeyFetchWorkerTest {
     private EncryptionKeyDao mEncryptionKeyDaoSpy;
     private AdSelectionEncryptionKeyManager mKeyManagerSpy;
     private BackgroundKeyFetchWorker mBackgroundKeyFetchWorker;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {

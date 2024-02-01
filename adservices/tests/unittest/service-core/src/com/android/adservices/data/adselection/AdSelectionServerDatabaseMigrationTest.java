@@ -27,6 +27,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +45,10 @@ public class AdSelectionServerDatabaseMigrationTest {
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public MigrationTestHelper helper =
             new MigrationTestHelper(INSTRUMENTATION, AdSelectionServerDatabase.class);
 

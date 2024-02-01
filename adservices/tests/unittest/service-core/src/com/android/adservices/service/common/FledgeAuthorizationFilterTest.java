@@ -43,8 +43,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -61,6 +61,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+@RequiresSdkLevelAtLeastS()
 @MockStatic(PermissionHelper.class)
 @MockStatic(AppManifestConfigHelper.class)
 @MockStatic(FlagsFactory.class)
