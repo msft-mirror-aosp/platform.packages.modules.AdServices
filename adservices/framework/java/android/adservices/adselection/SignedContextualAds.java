@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -52,9 +53,8 @@ import java.util.Objects;
  *   <li>{@code Lists} keep the same order
  *   <li>{@code Strings} get encoded into byte[] using UTF-8 encoding
  * </ul>
- *
- * @hide
  */
+@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
 public final class SignedContextualAds implements Parcelable {
     private static final String BUYER_CANNOT_BE_NULL = "Buyer cannot be null.";
     private static final String DECISION_LOGIC_URI_CANNOT_BE_NULL =
@@ -133,7 +133,6 @@ public final class SignedContextualAds implements Parcelable {
 
     /**
      * @return a new builder from this SignedContextualAds instance
-     * @hide
      */
     @NonNull
     public SignedContextualAds.Builder cloneToBuilder() {

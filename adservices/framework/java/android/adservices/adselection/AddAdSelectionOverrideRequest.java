@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdSelectionSignals;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
@@ -41,11 +42,8 @@ public class AddAdSelectionOverrideRequest {
 
     @NonNull private final BuyersDecisionLogic mBuyersDecisionLogic;
 
-    /**
-     * Builds a {@link AddAdSelectionOverrideRequest} instance.
-     *
-     * @hide
-     */
+    /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
+    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
@@ -100,8 +98,8 @@ public class AddAdSelectionOverrideRequest {
     /**
      * @return The override for the decision logic for each buyer that is used by contextual ads for
      *     reporting, which may be extended to updating bid values for contextual ads in the future
-     * @hide
      */
+    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
     @NonNull
     public BuyersDecisionLogic getBuyersDecisionLogic() {
         return mBuyersDecisionLogic;
