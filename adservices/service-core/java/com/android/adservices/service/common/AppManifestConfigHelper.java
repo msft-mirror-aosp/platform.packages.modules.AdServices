@@ -28,10 +28,7 @@ import static com.android.adservices.service.common.AppManifestConfigCall.RESULT
 import static com.android.adservices.service.common.AppManifestConfigCall.isAllowed;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -55,7 +52,8 @@ import java.util.Objects;
 /** Helper class for parsing and checking the app manifest config (<ad-services-config>). */
 // TODO(b/213488783): Add persistence, so that lookup/parse is not on every request.
 // Also consider if this should execute in the background.
-public class AppManifestConfigHelper {
+public final class AppManifestConfigHelper {
+
     public static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";
     private static final String ANDROID_MANIFEST_FILE = "AndroidManifest.xml";
@@ -64,14 +62,13 @@ public class AppManifestConfigHelper {
      * Parses the app's manifest config to determine whether this sdk is permitted to use the
      * Attribution API.
      *
-     * <p>If there is a parse error, it returns false.
      * @param appPackageName the package name of the app whose manifest config will be read.
      * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
      *     manifest config.
+     * @return {@code true} if API access is allowed, {@code false} if it's not or if there was an
+     *     error parsing the app manifest config.
      */
-    public static boolean isAllowedAttributionAccess(
-            @NonNull String appPackageName,
-            @NonNull String enrollmentId) {
+    public static boolean isAllowedAttributionAccess(String appPackageName, String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedAttributionAccess()",
                 API_ATTRIBUTION,
@@ -84,13 +81,13 @@ public class AppManifestConfigHelper {
      * Parses the app's manifest config to determine whether the given {@code enrollmentId}
      * associated with an ad tech is permitted to use the Custom Audience API.
      *
-     * <p>If there is a parse error, it returns {@code false}.
      * @param appPackageName the package name of the app whose manifest config will be read
      * @param enrollmentId the enrollment ID associate with the ad tech
+     * @return {@code true} if API access is allowed, {@code false} if it's not or if there was an
+     *     error parsing the app manifest config.
      */
     public static boolean isAllowedCustomAudiencesAccess(
-            @NonNull String appPackageName,
-            @NonNull String enrollmentId) {
+            String appPackageName, String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedCustomAudiencesAccess()",
                 API_CUSTOM_AUDIENCES,
@@ -103,16 +100,15 @@ public class AppManifestConfigHelper {
      * Parses the app's manifest config to determine whether this sdk is permitted to use the Topics
      * API.
      *
-     * <p>If there is a parse error, it returns false.
      * @param useSandboxCheck whether to use the sandbox check.
      * @param appPackageName the package name of the app whose manifest config will be read.
      * @param enrollmentId the enrollment ID of the sdk that will be checked against the app's
      *     manifest config.
+     * @return {@code true} if API access is allowed, {@code false} if it's not or if there was an
+     *     error parsing the app manifest config.
      */
     public static boolean isAllowedTopicsAccess(
-            @NonNull boolean useSandboxCheck,
-            @NonNull String appPackageName,
-            @NonNull String enrollmentId) {
+            boolean useSandboxCheck, String appPackageName, String enrollmentId) {
         return isAllowedApiAccess(
                 "isAllowedTopicsAccess()",
                 API_TOPICS,
@@ -155,7 +151,7 @@ public class AppManifestConfigHelper {
 
     @Nullable
     private static Integer getAdServicesConfigResourceIdOnExistingPackageOnSPlus(
-            @NonNull Context context, @NonNull String appPackageName) {
+            Context context, String appPackageName) {
         PackageManager pm = context.getPackageManager();
         try {
             PackageManager.Property property =
@@ -169,7 +165,7 @@ public class AppManifestConfigHelper {
 
     @Nullable
     private static Integer getAdServicesConfigResourceIdOnRMinus(
-            @NonNull Context context, @NonNull Resources resources, @NonNull String appPackageName)
+            Context context, Resources resources, String appPackageName)
             throws NameNotFoundException, XmlPullParserException, IOException {
         // PackageManager::getProperty(..) API is only available on S+. For R-, we will need to load
         // app's manifest and parse. See go/rbp-manifest.
@@ -225,5 +221,9 @@ public class AppManifestConfigHelper {
 
     private interface ApiAccessChecker {
         int isAllowedAccess(AppManifestConfig config);
+    }
+
+    private AppManifestConfigHelper() {
+        throw new UnsupportedOperationException("provides only static methods");
     }
 }

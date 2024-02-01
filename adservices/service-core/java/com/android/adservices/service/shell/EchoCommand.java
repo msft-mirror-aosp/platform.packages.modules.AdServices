@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+
 import android.text.TextUtils;
 import android.util.Log;
 
