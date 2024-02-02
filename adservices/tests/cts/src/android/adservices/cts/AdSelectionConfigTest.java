@@ -30,6 +30,9 @@ import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
@@ -64,6 +67,9 @@ public class AdSelectionConfigTest {
                 config.getTrustedScoringSignalsUri(),
                 AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
     }
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testParcelValidAdDataSuccess() {

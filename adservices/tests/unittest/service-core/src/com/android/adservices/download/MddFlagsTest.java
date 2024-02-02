@@ -35,6 +35,7 @@ import android.provider.DeviceConfig;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.android.libraries.mobiledatadownload.Flags;
@@ -45,7 +46,10 @@ import org.junit.Test;
 /** Unit tests for {@link MddFlags} */
 @SmallTest
 public class MddFlagsTest {
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 

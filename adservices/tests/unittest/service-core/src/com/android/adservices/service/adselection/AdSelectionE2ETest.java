@@ -113,6 +113,7 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -197,6 +198,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 // Test applications don't have the required permissions to read config P/H flags, and
 // injecting mocked flags everywhere is annoying and non-trivial for static methods
+@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(WebView.class)
 public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase {

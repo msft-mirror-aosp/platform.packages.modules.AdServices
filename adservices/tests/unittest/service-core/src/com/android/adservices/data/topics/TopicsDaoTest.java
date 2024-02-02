@@ -37,6 +37,7 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.MediumTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -44,6 +45,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -80,6 +82,9 @@ public final class TopicsDaoTest {
 
     private final DbHelper mDBHelper = DbTestUtil.getDbHelperForTest();
     private final TopicsDao mTopicsDao = new TopicsDao(mDBHelper);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
