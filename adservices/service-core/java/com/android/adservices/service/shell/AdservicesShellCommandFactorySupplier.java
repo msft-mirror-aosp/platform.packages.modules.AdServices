@@ -16,16 +16,19 @@
 
 package com.android.adservices.service.shell;
 
-import java.io.PrintWriter;
+import com.android.adservices.service.FlagsFactory;
 
-/** Base interface to run the shell commands. */
-interface ShellCommand {
+import com.google.common.collect.ImmutableList;
 
-    /** Runs the shell command and returns the result. */
-    int run(PrintWriter out, PrintWriter err, String[] args);
+/** Default implementation for {@link ShellCommandFactorySupplier} */
+public final class AdservicesShellCommandFactorySupplier extends ShellCommandFactorySupplier {
+    private static final ImmutableList<ShellCommandFactory> sDefaultFactories =
+            ImmutableList.of(
+                    CommonShellCommandFactory.getInstance(),
+                    CustomAudienceShellCommandFactory.getInstance(FlagsFactory.getFlags()));
 
-    /**
-     * @return the name of the command.
-     */
-    String getCommandName();
+    @Override
+    public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
+        return sDefaultFactories;
+    }
 }

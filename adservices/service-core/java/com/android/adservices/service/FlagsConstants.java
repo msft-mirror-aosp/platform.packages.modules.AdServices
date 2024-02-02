@@ -1258,4 +1258,8 @@ public final class FlagsConstants {
     /** key for allow list of get adservices common states. */
     public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
             "get_adservices_common_states_allow_list";
+
+    /** Key for feature flagging custom audiences CLI. */
+    public static final String KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED =
+            "fledge_is_custom_audience_cli_enabled";
 }

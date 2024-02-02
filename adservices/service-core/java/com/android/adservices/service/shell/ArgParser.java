@@ -53,6 +53,7 @@ final class ArgParser {
     Map<String, String> parse(String... args) {
         checkArgument(args.length > 0, "No argument was passed to ArgParser.");
         Log.v(TAG, "Parsing command line arguments: " + Arrays.toString(args));
+        mParsedArgs.clear();
         for (int i = 1; i < args.length; i += 2) {
             checkArgument(
                     i + 1 < args.length,
