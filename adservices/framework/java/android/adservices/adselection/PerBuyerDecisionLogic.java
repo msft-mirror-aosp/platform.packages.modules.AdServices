@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.customaudience.CustomAudience;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.Parcel;
@@ -30,8 +31,14 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * @return The override for the decision logic for each buyer that is used by contextual ads for
- *     reporting, which may be extended to updating bid values for contextual ads in the future
+ * The override object for decision logic JS per buyer for {@link SignedContextualAds}.
+ *
+ * <p>This decision logic is used for reporting when an ad wins from a buyer's bundle of {@link
+ * SignedContextualAds}.
+ *
+ * <p>This JS code may be extended to updating bid values for contextual ads in the future.
+ *
+ * <p>See {@link CustomAudience#getBiddingLogicUri()}.
  */
 @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class PerBuyerDecisionLogic implements Parcelable {
