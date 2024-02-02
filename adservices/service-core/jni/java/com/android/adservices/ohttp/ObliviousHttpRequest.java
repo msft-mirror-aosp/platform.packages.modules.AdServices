@@ -59,6 +59,9 @@ public abstract class ObliviousHttpRequest {
      */
     public byte[] serialize() throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        if (requestContext().hasMediaTypeChanged()) {
+            outputStream.write((byte) 0); // version byte
+        }
         outputStream.write(requestContext().keyConfig().serializeOhttpPayloadHeader());
         outputStream.write(requestContext().encapsulatedSharedSecret().getBytes());
         outputStream.write(cipherText());
