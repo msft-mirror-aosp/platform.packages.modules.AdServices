@@ -28,6 +28,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
@@ -54,6 +55,9 @@ public class UpdateEncoderEventHandlerTest {
     @Captor private ArgumentCaptor<DBEncoderEndpoint> mEndpointCaptor;
 
     private UpdateEncoderEventHandler mHandler;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

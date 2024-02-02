@@ -36,6 +36,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -95,6 +96,9 @@ public class AdOutcomeSelectorImplTest {
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
 
     private DevContext mDevContext = DevContext.createForDevOptionsDisabled();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

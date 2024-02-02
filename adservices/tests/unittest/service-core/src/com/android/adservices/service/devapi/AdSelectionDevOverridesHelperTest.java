@@ -29,6 +29,7 @@ import android.adservices.common.CommonFixture;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
@@ -37,6 +38,7 @@ import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AdSelectionDevOverridesHelperTest {
@@ -69,6 +71,9 @@ public class AdSelectionDevOverridesHelperTest {
                     .build();
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdServicesStatusUtils;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link UpdateCustomAudienceProcessReportedStats}. */
@@ -28,6 +31,9 @@ public class UpdateCustomAudienceProcessReportedStatsTest {
     static final int RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int DATA_SIZE_OF_ADS_IN_BYTES = 10;
     static final int NUM_OF_ADS = 5;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuilderCreateSuccess() {
