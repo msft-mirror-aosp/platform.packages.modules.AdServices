@@ -15,7 +15,6 @@
  */
 package com.android.server.adservices.consent;
 
-
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
@@ -49,6 +48,8 @@ public final class ConsentManager {
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
     static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
+
+    static final String PAS_NOTIFICATION_DISPLAYED_ONCE = "PAS_NOTIFICATION_DISPLAYED_ONCE";
 
     static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
 
@@ -223,6 +224,26 @@ public final class ConsentManager {
      */
     public boolean wasGaUxNotificationDisplayed() {
         return getValueWithLock(GA_UX_NOTIFICATION_DISPLAYED_ONCE);
+    }
+
+    /**
+     * Saves information to the storage that PAS notification was displayed for the first time to
+     * the user.
+     */
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        setValueWithLock(
+                PAS_NOTIFICATION_DISPLAYED_ONCE,
+                wasNotificationDisplayed,
+                "recordPasNotificationDisplayed");
+    }
+
+    /**
+     * Returns information whether PAS Consent Notification was displayed or not.
+     *
+     * @return true if PAS Consent Notification was displayed, otherwise false.
+     */
+    public boolean wasPasNotificationDisplayed() {
+        return getValueWithLock(PAS_NOTIFICATION_DISPLAYED_ONCE);
     }
 
     /** Saves the default consent of a user. */

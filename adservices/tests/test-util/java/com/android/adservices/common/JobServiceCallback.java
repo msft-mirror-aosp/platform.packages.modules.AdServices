@@ -45,9 +45,4 @@ public final class JobServiceCallback extends NoFailureSyncCallback<Boolean> {
     public void assertJobFinished() throws InterruptedException {
         assertResultReceived();
     }
-
-    /** Sets a method as expected result. */
-    public void insertJobScheduledResult(Boolean result) {
-        super.injectResult(result);
-    }
 }

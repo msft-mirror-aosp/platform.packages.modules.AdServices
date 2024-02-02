@@ -427,11 +427,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
         Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
         when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
         DBAdSelectionEntry expectedAdSelectionResult =
@@ -534,11 +534,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
         Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
         when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
 
@@ -708,11 +708,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
         Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
         when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
         DBAdSelectionEntry expectedAdSelectionResult =
@@ -835,11 +835,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
         Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
         when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
         DBAdSelectionEntry expectedAdSelectionResult =
@@ -984,11 +984,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudienceNoFilterBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudienceNoFilterBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
         Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
         when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
         DBAdSelectionEntry expectedAdSelectionResult =
@@ -1073,11 +1073,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -1248,11 +1248,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
@@ -1324,11 +1324,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -1671,11 +1671,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
         when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
@@ -1756,11 +1756,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         // In this case assuming bidding fails for one of ads and return partial result
@@ -1888,11 +1888,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         // In this case assuming bidding fails and returns null
@@ -1983,11 +1983,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -2080,11 +2080,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -2185,11 +2185,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -2323,11 +2323,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -2485,11 +2485,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -2598,11 +2598,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         Callable<AdBiddingOutcome> delayedBiddingOutcomeForBuyer1 =
                 () -> {
@@ -2863,11 +2863,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 caWithFilterAd,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mMockAdFilterer.filterCustomAudiences(
                         Arrays.asList(caWithFilterAd, mDBCustomAudienceForBuyer2)))
@@ -2940,11 +2940,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 caWithFilterAd,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         when(mMockAdFilterer.filterCustomAudiences(
                         Arrays.asList(caWithFilterAd, mDBCustomAudienceForBuyer2)))
@@ -3081,7 +3081,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build()
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
-                        .setBuyerSignedContextualAds(signedContextualAdsMap)
+                        .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
 
         final Flags flags =
@@ -3143,7 +3143,7 @@ public class OnDeviceAdSelectionRunnerTest {
         assertEquals(
                 "The contextual ads should have reached scoring as is",
                 signedContextualAdsMap,
-                mAdSelectionConfigArgumentCaptor.getValue().getBuyerSignedContextualAds());
+                mAdSelectionConfigArgumentCaptor.getValue().getPerBuyerSignedContextualAds());
     }
 
     @Test
@@ -3155,7 +3155,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
                         // Despite populating Contextual Ads, they will be removed
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
         final Flags flags =
                 new OnDeviceAdSelectionRunnerTestFlags() {
@@ -3226,7 +3226,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build()
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         final Flags flags =
@@ -3296,7 +3296,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 contextualAdsMap.get(CommonFixture.VALID_BUYER_1).getAdsWithBid(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
-                        .getBuyerSignedContextualAds()
+                        .getPerBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_1)
                         .getAdsWithBid());
         assertEquals(
@@ -3304,7 +3304,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 Collections.emptyList(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
-                        .getBuyerSignedContextualAds()
+                        .getPerBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_2)
                         .getAdsWithBid());
     }
@@ -3344,11 +3344,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         DBAdSelection.Builder dbAdSelectionBuilder =
                 new DBAdSelection.Builder()
@@ -3435,11 +3435,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         DBAdSelection.Builder dbAdSelectionBuilder =
                 new DBAdSelection.Builder()
@@ -3519,11 +3519,11 @@ public class OnDeviceAdSelectionRunnerTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                /*debuggable=*/ false);
+                false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 mDBCustomAudienceForBuyer2,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                /*debuggable=*/ false);
+                false);
 
         doThrow(new RuntimeException("Failing ad counter histogram update for test"))
                 .when(mAdCounterHistogramUpdaterMock)

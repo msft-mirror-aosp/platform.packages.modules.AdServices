@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.stats;
 
+import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.common.AppManifestConfigHelper;
+
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
     /** log method for MeasurementReportsStats. */
@@ -139,4 +142,7 @@ public interface AdServicesLogger {
 
     /** Logs beacon level reporting for clearing interaction reporting table stats. */
     void logInteractionReportingTableClearedStats(InteractionReportingTableClearedStats stats);
+
+    /** Logs call to {@link AppManifestConfigHelper} to check if app is allowed to access an API. */
+    void logAppManifestConfigCall(AppManifestConfigCall call);
 }

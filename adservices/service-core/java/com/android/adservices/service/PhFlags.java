@@ -20,8 +20,18 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_T
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -89,7 +99,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
-    public static PhFlags getInstance() {
+    static PhFlags getInstance() {
         return sSingleton;
     }
 
@@ -324,6 +334,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         FlagsConstants.NAMESPACE_ADSERVICES,
                         /* flagName */ FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
                         /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean getAppNameApiErrorCobaltLoggingEnabled() {
+        // We check the getCobaltLoggingEnabled first.
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return getCobaltLoggingEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                        /* defaultValue */ APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
+    public int getAppNameApiErrorCobaltLoggingSamplingRate() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE,
+                /* defaultValue */ APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE);
     }
 
     @Override
@@ -609,6 +639,33 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementIsClickDeduplicationEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED,
+                /* defaultValue */ MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED);
+    }
+
+    @Override
+    public boolean getMeasurementIsClickDeduplicationEnforced() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED,
+                /* defaultValue */ MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED);
+    }
+
+    @Override
+    public long getMeasurementMaxSourcesPerClick() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK,
+                /* defaultValue */ MEASUREMENT_MAX_SOURCES_PER_CLICK);
+    }
+
+    @Override
     public boolean getMeasurementEnableXNA() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -877,7 +934,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW,
                 /* defaultValue */
-                        MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW);
+                MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW);
     }
 
     @Override
@@ -900,10 +957,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementEnableDestinationRateLimit() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
                 /* defaultValue */
-                        MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT);
+                MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT);
     }
 
     @Override
@@ -913,7 +969,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW,
                 /* defaultValue */
-                        MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW);
+                MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW);
     }
 
     @Override
@@ -923,7 +979,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* flagName */ FlagsConstants
                         .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW,
                 /* defaultValue */
-                        MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
+                MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
     }
 
     @Override
@@ -2525,6 +2581,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerOmitAdsEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED);
+    }
+
+    @Override
     public String getFledgeAuctionServerJoinKeyFetchUri() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -2963,8 +3027,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getFledgeBeaconReportingMetricsEnabled() {
-        return getFledgeRegisterAdBeaconEnabled() &&
-                DeviceConfig.getBoolean(
+        return getFledgeRegisterAdBeaconEnabled()
+                && DeviceConfig.getBoolean(
                         FlagsConstants.NAMESPACE_ADSERVICES,
                         /* flagName */ FlagsConstants.KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED,
                         /* defaultValue */ FLEDGE_BEACON_REPORTING_METRICS_ENABLED);
@@ -3186,6 +3250,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
     }
 
+    @Override
+    public long getMaxTriggerRegistrationHeaderSizeBytes() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES,
+                /* defaultValue */ MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES);
+    }
+
+    @Override
+    public boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
+                MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
@@ -3344,7 +3424,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public float getMeasurementFlexApiMaxInformationGainDualDestinationEvent() {
         return DeviceConfig.getFloat(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT,
                 /* defaultValue */ MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
     }
 
@@ -3597,6 +3678,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         super.dump(writer, args); // common flags
 
+        writer.println("\t" + FlagsConstants.KEY_PAS_UX_ENABLED + " = " + getPasUxEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED
@@ -4108,12 +4190,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementFlexApiMaxInformationGainNavigation());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT
+                        + FlagsConstants
+                        .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT
                         + " = "
                         + getMeasurementFlexApiMaxInformationGainDualDestinationEvent());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
+                        + FlagsConstants
+                        .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
                         + " = "
                         + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
         writer.println(
@@ -4360,8 +4444,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementMaxAttributionPerRateLimitWindow());
         writer.println(
                 "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxEventAttributionPerRateLimitWindow());
         writer.println(
@@ -4381,23 +4464,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + " = "
                         + getMeasurementMaxDistinctDestinationsInActiveSource());
         writer.println(
-                "\t" + FlagsConstants
+                "\t"
+                        + FlagsConstants
                         .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW
                         + " = "
                         + getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow());
         writer.println(
-                "\t" + FlagsConstants
-                        .KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT
                         + " = "
                         + getMeasurementEnableDestinationRateLimit());
         writer.println(
-                "\t" + FlagsConstants
-                        .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
+                "\t"
+                        + FlagsConstants
+                               .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow());
         writer.println(
-                "\t" + FlagsConstants
-                        .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
+                "\t"
+                        + FlagsConstants
+                          .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow());
         writer.println(
@@ -4765,6 +4851,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION
                         + " = "
                         + getFledgeAuctionServerEnabledForReportImpression());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerOmitAdsEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT
@@ -5458,6 +5549,57 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getMeasurementEnableSessionStableKillSwitches());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED
+                        + " = "
+                        + isGetAdServicesCommonStatesEnabled());
+        writer.println("=== Fledge KAnon related flags ===");
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE
+                        + " = "
+                        + getFledgeKAnonSignJoinFeatureEnabled());
+        writer.println(
+                "\t"
+                        + KEY_KANON_FETCH_PARAMETERS_URL
+                        + " = "
+                        + getFledgeKAnonFetchServerParamsUrl());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL
+                        + " = "
+                        + getFledgeKAnonRegisterClientParametersUrl());
+        writer.println(
+                "\t" + KEY_FLEDGE_KANON_GET_TOKENS_URL + " = " + getFledgeKAnonGetTokensUrl());
+        writer.println("\t" + KEY_FLEDGE_KANON_JOIN_URL + " = " + getFledgeKAnonGetTokensUrl());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS
+                        + " = "
+                        + getFledgeKAnonMessageTtlSeconds());
+        writer.println(
+                "\t" + KEY_FLEDGE_KANON_SIGN_BATCH_SIZE + " = " + getFledgeKAnonSignBatchSize());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS
+                        + " = "
+                        + getFledgeKAnonPercentageImmediateSignJoinCalls());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY
+                        + " = "
+                        + getFledgeKAnonBackgroundProcessFrequencyPerDay());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS
+                        + " = "
+                        + getFledgeKAnonMessagesPerBackgroundProcess());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
+                        + " = "
+                        + getAdServicesCommonStatesAllowList());
     }
 
     @VisibleForTesting
@@ -5668,6 +5810,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getPasUxEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PAS_UX_ENABLED,
+                /* defaultValue */ DEFAULT_PAS_UX_ENABLED);
+    }
+
+    @Override
     public Map<String, Boolean> getUxFlags() {
         Map<String, Boolean> uxMap = new HashMap<>();
         uxMap.put(FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED, getUIDialogsFeatureEnabled());
@@ -5707,6 +5857,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         uxMap.put(
                 FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
                 getConsentAlreadyInteractedEnableMode());
+        uxMap.put(
+                FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
+                isGetAdServicesCommonStatesEnabled());
+        uxMap.put(FlagsConstants.KEY_PAS_UX_ENABLED, getPasUxEnabled());
         return uxMap;
     }
 
@@ -5860,8 +6014,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementEnableScopedAttributionRateLimit() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants
-                        .KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT,
+                /* flagName */ FlagsConstants.KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT,
                 /* defaultValue */ MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT);
     }
 
@@ -6316,14 +6469,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getAppConfigReturnsEnabledByDefault() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
-                /* defaultValue */ Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
-    }
-
-    @Override
     public boolean getMeasurementNullAggregateReportEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -6340,6 +6485,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
                 /* defaultValue */
                 MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME);
+    }
+
+    @Override
+    public float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
+        return DeviceConfig.getFloat(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
+                /* defaultValue */
+                MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
+    }
+
+    @Override
+    public boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants
+                        .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
+                /* defaultValue */
+                MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED);
     }
 
     @Override
@@ -6405,5 +6570,101 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* name= */ FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS,
                 /* defaultValue= */ DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public boolean isGetAdServicesCommonStatesEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
+                /* defaultValue */ DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonSignJoinFeatureEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /*flagName */ FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
+                /*defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
+    }
+
+    @Override
+    public String getFledgeKAnonFetchServerParamsUrl() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL);
+    }
+
+    @Override
+    public String getFledgeKAnonRegisterClientParametersUrl() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL);
+    }
+
+    @Override
+    public String getFledgeKAnonGetTokensUrl() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_GET_TOKENS_URL);
+    }
+
+    @Override
+    public String getFledgeKAnonJoinUrl() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_JOIN_URL);
+    }
+
+    @Override
+    public int getFledgeKAnonSignBatchSize() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE);
+    }
+
+    @Override
+    public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS);
+    }
+
+    @Override
+    public long getFledgeKAnonMessageTtlSeconds() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS);
+    }
+
+    @Override
+    public int getFledgeKAnonBackgroundProcessFrequencyPerDay() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY);
+    }
+
+    @Override
+    public int getFledgeKAnonMessagesPerBackgroundProcess() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS);
+    }
+
+    @Override
+    public String getAdServicesCommonStatesAllowList() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
+                /* defaultValue */ GET_ADSERVICES_COMMON_STATES_ALLOW_LIST);
     }
 }

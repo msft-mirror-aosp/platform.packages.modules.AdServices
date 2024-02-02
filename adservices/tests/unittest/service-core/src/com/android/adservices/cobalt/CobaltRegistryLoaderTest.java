@@ -32,6 +32,7 @@ import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
+import com.google.cobalt.ReportDefinition.PrivacyLevel;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
 import com.google.cobalt.StringSketchParameters;
@@ -62,7 +63,7 @@ public class CobaltRegistryLoaderTest {
     public void getRegistry_unsupportedFeaturesNotInRegistry() throws Exception {
         Project registry = CobaltRegistryLoader.getRegistry(CONTEXT);
         for (MetricDefinition metric : registry.getMetrics()) {
-            assertThat(metric.getMetricType()).isEqualTo(MetricType.OCCURRENCE);
+            assertThat(metric.getMetricType()).isAnyOf(MetricType.OCCURRENCE, MetricType.STRING);
         }
 
         List<ReportDefinition> reports =
@@ -70,11 +71,14 @@ public class CobaltRegistryLoaderTest {
                         .flatMap(m -> m.getReportsList().stream())
                         .collect(toList());
         for (ReportDefinition report : reports) {
-            assertThat(report.getReportType()).isEqualTo(ReportType.FLEETWIDE_OCCURRENCE_COUNTS);
+            assertThat(report.getReportType())
+                    .isAnyOf(ReportType.FLEETWIDE_OCCURRENCE_COUNTS, ReportType.STRING_COUNTS);
+            if (report.getReportType() == ReportType.STRING_COUNTS) {
+                assertThat(report.getPrivacyLevel()).isEqualTo(PrivacyLevel.NO_ADDED_PRIVACY);
+            }
             assertThat(report.getReportingInterval()).isEqualTo(ReportingInterval.DAYS_1);
             assertThat(report.getLocalAggregationProcedure())
                     .isEqualTo(LocalAggregationProcedure.LOCAL_AGGREGATION_PROCEDURE_UNSET);
-            assertThat(report.getSystemProfileFieldList()).isEmpty();
             assertThat(report.getExperimentIdList()).isEmpty();
             assertThat(report.getSystemProfileSelection())
                     .isEqualTo(SystemProfileSelectionPolicy.REPORT_ALL);
@@ -83,7 +87,6 @@ public class CobaltRegistryLoaderTest {
             assertThat(report.getIntBuckets()).isEqualTo(IntegerBuckets.getDefaultInstance());
             assertThat(report.getLocalAggregationProcedurePercentileN()).isEqualTo(0);
             assertThat(report.getLocalAggregationPeriod()).isEqualTo(WindowSize.UNSET);
-            assertThat(report.getStringBufferMax()).isEqualTo(0);
             assertThat(report.getExpeditedSending()).isFalse();
             assertThat(report.getExperimentIdList()).isEmpty();
         }

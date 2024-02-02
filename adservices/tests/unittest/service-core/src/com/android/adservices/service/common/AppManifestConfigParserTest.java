@@ -26,7 +26,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
 import android.content.res.XmlResourceParser;
 
 import androidx.test.filters.SmallTest;
@@ -35,21 +34,11 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.adservices.servicecoretest.R;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
 @SmallTest
 public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
-
-    private Context mContext;
-    private String mPackageName;
-
-    @Before
-    public void setContext() {
-        mContext = appContext.get();
-        mPackageName = mContext.getPackageName();
-    }
 
     @Test
     public void testValidXml() throws Exception {

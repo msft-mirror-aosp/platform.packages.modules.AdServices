@@ -275,13 +275,26 @@ public class AdServicesHttpsClient {
             @NonNull AdServicesHttpClientRequest request) {
         Objects.requireNonNull(request.getUri());
 
-        LogUtil.v(
-                "Fetching payload for request: uri: "
-                        + request.getUri()
-                        + " use cache: "
-                        + request.getUseCache()
-                        + " dev context: "
-                        + request.getDevContext().getDevOptionsEnabled());
+        StringBuilder logBuilder =
+                new StringBuilder(
+                        "Fetching payload for request: uri: "
+                                + request.getUri()
+                                + " use cache: "
+                                + request.getUseCache()
+                                + " dev context: "
+                                + request.getDevContext().getDevOptionsEnabled());
+        if (request.getRequestProperties() != null) {
+            logBuilder
+                    .append(" request properties: ")
+                    .append(request.getRequestProperties().toString());
+        }
+        if (request.getResponseHeaderKeys() != null) {
+            logBuilder
+                    .append(" response headers keys to be read in response: ")
+                    .append(request.getResponseHeaderKeys().toString());
+        }
+
+        LogUtil.v(logBuilder.toString());
         return ClosingFuture.from(
                         mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
                 .transformAsync(
@@ -363,12 +376,18 @@ public class AdServicesHttpsClient {
 
     private Map<String, List<String>> pickRequiredHeaderFields(
             Map<String, List<String>> allHeaderFields, ImmutableSet<String> requiredHeaderKeys) {
-        Map<String, List<String>> result = new HashMap<>();
+        HashMap<String, List<String>> result = new HashMap<>();
         for (String headerKey : requiredHeaderKeys) {
             if (allHeaderFields.containsKey(headerKey)) {
-                result.put(headerKey, new ArrayList<>(allHeaderFields.get(headerKey)));
+                List<String> headerValues = new ArrayList<>(allHeaderFields.get(headerKey));
+                LogUtil.v(
+                        String.format(
+                                "Found header: %s in response headers with value as %s",
+                                headerKey, String.join(", ", headerValues)));
+                result.put(headerKey, headerValues);
             }
         }
+        LogUtil.v("requiredHeaderFields: " + result);
         return result;
     }
 
@@ -412,7 +431,9 @@ public class AdServicesHttpsClient {
             @NonNull ClosingFuture.DeferredCloser closer,
             @NonNull DevContext devContext)
             throws IOException, AdServicesNetworkException {
-        LogUtil.v("Reporting to: \"%s\"", url.toString());
+        LogUtil.v(
+                "doGetAndReadNothing to: \"%s\", dev context: %s",
+                url.toString(), devContext.getDevOptionsEnabled());
         HttpsURLConnection urlConnection;
 
         try {

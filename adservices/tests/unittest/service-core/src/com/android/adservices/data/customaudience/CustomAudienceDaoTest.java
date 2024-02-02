@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -26,6 +28,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -399,6 +402,23 @@ public class CustomAudienceDaoTest {
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
 
+    private static final DBCustomAudience CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
+            new DBCustomAudience.Builder()
+                    .setOwner(OWNER_1)
+                    .setBuyer(BUYER_1)
+                    .setName(NAME_1)
+                    .setActivationTime(ACTIVATION_TIME_1)
+                    .setCreationTime(CREATION_TIME_1)
+                    .setExpirationTime(EXPIRATION_TIME_1)
+                    .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_1)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                    .setAds(List.of(ADS_1))
+                    .setTrustedBiddingData(
+                            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(BUYER_1).build())
+                    .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                    .build();
+
     private static final DBCustomAudienceBackgroundFetchData
             CUSTOM_AUDIENCE_BGF_DATA_NO_USER_BIDDING_SIGNALS =
                     DBCustomAudienceBackgroundFetchData.builder()
@@ -570,6 +590,24 @@ public class CustomAudienceDaoTest {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
+    }
+
+    @Test
+    public void testPersistCustomAudienceWithAuctionServerFlags() {
+        // Assert table is empty
+        assertNull(mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
+
+        mCustomAudienceDao.persistCustomAudience(CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS);
+
+        // Assert only first object is persisted
+
+        DBCustomAudience customAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1);
+
+        assertNotNull(customAudience);
+        assertEquals(
+                CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS.getAuctionServerRequestFlags(),
+                customAudience.getAuctionServerRequestFlags());
     }
 
     @Test
@@ -751,6 +789,144 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
+    public void testListDebuggableCustomAudiences_happyPath() {
+        DBCustomAudience.Builder ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1);
+        DBCustomAudience ca1 = ca.setName("ca1").build();
+        DBCustomAudience ca2 = ca.setName("ca2").build();
+        DBCustomAudienceBackgroundFetchData.Builder builder =
+                DBCustomAudienceBackgroundFetchData.builder()
+                        .setBuyer(ca1.getBuyer())
+                        .setOwner(ca1.getOwner())
+                        .setIsDebuggable(true)
+                        .setDailyUpdateUri(ca1.getBiddingLogicUri())
+                        .setEligibleUpdateTime(Instant.now().truncatedTo(ChronoUnit.SECONDS));
+        DBCustomAudienceBackgroundFetchData backgroundFetchData1 =
+                builder.setName(ca1.getName()).build();
+        DBCustomAudienceBackgroundFetchData backgroundFetchData2 =
+                builder.setName(ca2.getName()).build();
+        mCustomAudienceDao.persistCustomAudience(ca1);
+        mCustomAudienceDao.persistCustomAudience(ca2);
+        mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(
+                backgroundFetchData1, CUSTOM_AUDIENCE_UPDATABLE_DATA);
+        mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(
+                backgroundFetchData2, CUSTOM_AUDIENCE_UPDATABLE_DATA);
+
+        List<DBCustomAudienceBackgroundFetchData> caList =
+                mCustomAudienceDao.listDebuggableCustomAudienceBackgroundFetchData(
+                        ca1.getOwner(), ca1.getBuyer());
+
+        assertThat(caList).containsExactly(backgroundFetchData1, backgroundFetchData2);
+    }
+
+    @Test
+    public void testListDebuggableCustomAudiences_withNoResult_returnsEmpty() {
+        List<DBCustomAudience> caList =
+                mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(
+                        "", AdTechIdentifier.fromString(""));
+
+        assertThat(caList).isEmpty();
+    }
+
+    @Test
+    public void testListBackgroundDebuggableCustomAudiences_happyPath() {
+        DBCustomAudience ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setName("ca1")
+                        .setDebuggable(true)
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(ca);
+        DBCustomAudience ca2 =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setName("ca2")
+                        .setDebuggable(true)
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(ca2);
+
+        List<DBCustomAudience> caList =
+                mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(
+                        ca.getOwner(), ca.getBuyer());
+
+        assertThat(caList).containsExactly(ca, ca2);
+    }
+
+    @Test
+    public void testListBackgroundDebuggableCustomAudiences_withNoResult_returnsEmpty() {
+        List<DBCustomAudienceBackgroundFetchData> caList =
+                mCustomAudienceDao.listDebuggableCustomAudienceBackgroundFetchData(
+                        "", AdTechIdentifier.fromString(""));
+
+        assertThat(caList).isEmpty();
+    }
+
+    @Test
+    public void testViewDebuggableCustomAudiences_happyPath() {
+        DBCustomAudience expected =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setDebuggable(true)
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(expected);
+
+        DBCustomAudience actual =
+                mCustomAudienceDao.getDebuggableCustomAudienceByPrimaryKey(
+                        expected.getOwner(), expected.getBuyer(), expected.getName());
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void testViewBackgroundDebuggableCustomAudiences_happyPath() {
+        DBCustomAudience ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setDebuggable(true)
+                        .build();
+        DBCustomAudienceBackgroundFetchData expected =
+                DBCustomAudienceBackgroundFetchData.builder()
+                        .setBuyer(ca.getBuyer())
+                        .setName(ca.getName())
+                        .setOwner(ca.getOwner())
+                        .setIsDebuggable(true)
+                        .setDailyUpdateUri(ca.getBiddingLogicUri())
+                        .setEligibleUpdateTime(Instant.now().truncatedTo(ChronoUnit.SECONDS))
+                        .build();
+        mCustomAudienceDao.persistCustomAudience(ca);
+        mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(
+                expected, CUSTOM_AUDIENCE_UPDATABLE_DATA);
+
+        DBCustomAudienceBackgroundFetchData actual =
+                mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        ca.getOwner(), ca.getBuyer(), ca.getName());
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    public void testViewDebuggableCustomAudiences_withNoResult_returnsNull() {
+        DBCustomAudience ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        mCustomAudienceDao.persistCustomAudience(ca);
+
+        DBCustomAudience actual =
+                mCustomAudienceDao.getDebuggableCustomAudienceByPrimaryKey(
+                        ca.getOwner(), ca.getBuyer(), ca.getName());
+
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    public void testViewBackgroundDebuggableCustomAudiences_withNoResult_throwsException() {
+        DBCustomAudience ca =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        mCustomAudienceDao.persistCustomAudience(ca);
+
+        DBCustomAudienceBackgroundFetchData actual =
+                mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        ca.getOwner(), ca.getBuyer(), ca.getName());
+
+        assertThat(actual).isNull();
+    }
+
+    @Test
     public void testDoesNotDeleteCustomAudienceOverrideWithIncorrectPackageName() {
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
 
@@ -892,7 +1068,7 @@ public class CustomAudienceDaoTest {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         assertNull(mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_2, BUYER_2, NAME_2));
         assertNull(
                 mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
@@ -928,7 +1104,7 @@ public class CustomAudienceDaoTest {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         assertEquals(
@@ -965,7 +1141,7 @@ public class CustomAudienceDaoTest {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         assertEquals(
@@ -1016,13 +1192,13 @@ public class CustomAudienceDaoTest {
         verifyCustomAudienceStats(
                 mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 0, 0, 0);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         verifyCustomAudienceStats(
                 mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 1, 1, 1);
         verifyCustomAudienceStats(
                 mCustomAudienceDao.getCustomAudienceStats(OWNER_2), OWNER_2, 1, 0, 1);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_1, false);
         verifyCustomAudienceStats(
                 mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 2, 1, 2);
         verifyCustomAudienceStats(
@@ -1046,7 +1222,7 @@ public class CustomAudienceDaoTest {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
@@ -1056,7 +1232,7 @@ public class CustomAudienceDaoTest {
                         OWNER_1, BUYER_1, NAME_1));
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1_1, DAILY_UPDATE_URI_1, false);
         assertEquals(
                 CUSTOM_AUDIENCE_1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
@@ -1069,11 +1245,11 @@ public class CustomAudienceDaoTest {
     @Test
     public void testCreateOrUpdate_immediatelyEligibleForUpdate() {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_NO_ADS, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_NO_ADS, DAILY_UPDATE_URI_1, false);
 
         assertEquals(
                 CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS,
@@ -1120,7 +1296,7 @@ public class CustomAudienceDaoTest {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
@@ -1145,7 +1321,7 @@ public class CustomAudienceDaoTest {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
@@ -1192,7 +1368,7 @@ public class CustomAudienceDaoTest {
 
         List<AdTechIdentifier> buyers = Arrays.asList(BUYER_1);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_INACTIVE, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_INACTIVE, DAILY_UPDATE_URI_1, false);
         assertEquals(
                 CUSTOM_AUDIENCE_INACTIVE,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
@@ -1224,9 +1400,9 @@ public class CustomAudienceDaoTest {
                         .build();
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_ACTIVE, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_ACTIVE, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                caWithNullUserBiddingSignals, DAILY_UPDATE_URI_2, /*debuggable=*/ false);
+                caWithNullUserBiddingSignals, DAILY_UPDATE_URI_2, false);
         List<DBCustomAudience> result =
                 mCustomAudienceDao.getAllActiveCustomAudienceForServerSideAuction(
                         CURRENT_TIME, TEST_FLAGS.getFledgeCustomAudienceActiveTimeWindowInMs());
@@ -1240,9 +1416,9 @@ public class CustomAudienceDaoTest {
         List<AdTechIdentifier> buyers = Arrays.asList(BUYER_1, BUYER_2);
         List<DBCustomAudience> expectedCAs = Arrays.asList(CUSTOM_AUDIENCE_ACTIVE);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_ACTIVE, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_ACTIVE, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
         List<DBCustomAudience> result =
                 mCustomAudienceDao.getActiveCustomAudienceByBuyers(
                         buyers,
@@ -1258,9 +1434,9 @@ public class CustomAudienceDaoTest {
         List<AdTechIdentifier> buyers = Arrays.asList(BUYER_1, BUYER_2);
         List<DBCustomAudience> expectedCAs = Arrays.asList(CUSTOM_AUDIENCE_UPDATED);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_UPDATED, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_UPDATED, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_OUTDATED, DAILY_UPDATE_URI_2, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_OUTDATED, DAILY_UPDATE_URI_2, false);
         List<DBCustomAudience> result =
                 mCustomAudienceDao.getActiveCustomAudienceByBuyers(
                         buyers,
@@ -1273,11 +1449,11 @@ public class CustomAudienceDaoTest {
     public void testGetActiveCustomAudienceByBuyersInvalidCAs() {
         List<AdTechIdentifier> buyers = Arrays.asList(BUYER_1, BUYER_2, BUYER_3);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_NO_ADS, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_NO_ADS, DAILY_UPDATE_URI_1, false);
         List<DBCustomAudience> result =
                 mCustomAudienceDao.getActiveCustomAudienceByBuyers(
                         buyers,
@@ -1292,11 +1468,11 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with three CAs, only one of which is eligible for update
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_UPDATED, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_UPDATED, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
@@ -1350,11 +1526,11 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with three CAs belonging to two owners
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
@@ -1404,11 +1580,11 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with three CAs, only one of which is expired
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
@@ -1505,7 +1681,7 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         assertEquals(
@@ -1592,7 +1768,7 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         assertEquals(
@@ -1677,7 +1853,7 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         assertEquals(
@@ -1758,7 +1934,7 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         assertEquals(
@@ -1836,7 +2012,7 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         assertEquals(
@@ -1911,9 +2087,9 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
@@ -1979,9 +2155,9 @@ public class CustomAudienceDaoTest {
         mCustomAudienceDao.deleteAllCustomAudienceData();
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
@@ -2020,7 +2196,7 @@ public class CustomAudienceDaoTest {
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /*debuggable=*/ false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);

@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  *
  * @hide
  */
-class FetcherUtil {
+public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
@@ -231,12 +231,18 @@ class FetcherUtil {
                     > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
             }
+            // Process known reserved keys that start with underscore first, then invalidate on
+            // catch-all.
             if (flags.getMeasurementEnableLookbackWindowFilter()
                     && FilterMap.LOOKBACK_WINDOW.equals(key)) {
                 if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
                     return false;
                 }
                 continue;
+            }
+            // Invalidate catch-all reserved prefix.
+            if (key.startsWith(FilterMap.RESERVED_PREFIX)) {
+                return false;
             }
             JSONArray values = filtersObj.optJSONArray(key);
             if (values == null

@@ -25,6 +25,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -75,6 +76,7 @@ public class Trigger {
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
     @Nullable private Uri mAggregationCoordinatorOrigin;
+    private SourceRegistrationTimeConfig mAggregatableSourceRegistrationTimeConfig;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -83,6 +85,11 @@ public class Trigger {
         int IGNORED = 1;
         int ATTRIBUTED = 2;
         int MARKED_TO_DELETE = 3;
+    }
+
+    public enum SourceRegistrationTimeConfig {
+        INCLUDE,
+        EXCLUDE
     }
 
     private Trigger() {
@@ -109,6 +116,8 @@ public class Trigger {
                 && mIsDebugReporting == trigger.mIsDebugReporting
                 && mAdIdPermission == trigger.mAdIdPermission
                 && mArDebugPermission == trigger.mArDebugPermission
+                && mAggregatableSourceRegistrationTimeConfig
+                        == trigger.mAggregatableSourceRegistrationTimeConfig
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
@@ -149,7 +158,8 @@ public class Trigger {
                 mDebugJoinKey,
                 mPlatformAdId,
                 mDebugAdId,
-                mRegistrationOrigin);
+                mRegistrationOrigin,
+                mAggregatableSourceRegistrationTimeConfig);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -359,6 +369,14 @@ public class Trigger {
         return mAggregationCoordinatorOrigin;
     }
 
+    /**
+     * Return {@link SourceRegistrationTimeConfig#EXCLUDE} if the {@link AggregateReport} should not
+     * include the attributed {@link Source} registration time during attribution reporting. Returns
+     * {@link SourceRegistrationTimeConfig#INCLUDE} otherwise.
+     */
+    public SourceRegistrationTimeConfig getAggregatableSourceRegistrationTimeConfig() {
+        return mAggregatableSourceRegistrationTimeConfig;
+    }
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -724,6 +742,14 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getAggregatableSourceRegistrationTimeConfig()}. */
+        @NonNull
+        public Builder setAggregatableSourceRegistrationTimeConfig(
+                SourceRegistrationTimeConfig config) {
+            mBuilding.mAggregatableSourceRegistrationTimeConfig = config;
+            return this;
+        }
+
         /** Build the {@link Trigger}. */
         @NonNull
         public Trigger build() {
@@ -731,7 +757,8 @@ public class Trigger {
                     mBuilding.mAttributionDestination,
                     mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
-                    mBuilding.mRegistrationOrigin);
+                    mBuilding.mRegistrationOrigin,
+                    mBuilding.mAggregatableSourceRegistrationTimeConfig);
 
             return mBuilding;
         }

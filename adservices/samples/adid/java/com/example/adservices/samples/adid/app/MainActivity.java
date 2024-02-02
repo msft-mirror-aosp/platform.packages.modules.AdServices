@@ -17,10 +17,9 @@ package com.example.adservices.samples.adid.app;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
-import android.annotation.TargetApi;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.OutcomeReceiver;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -47,12 +46,6 @@ public class MainActivity extends AppCompatActivity {
         mAdIdTextView = findViewById(R.id.adIdTextView);
         mAdIdButton = findViewById(R.id.adIdButton);
 
-        // AdIdManager can not be called on R until OutcomeReceiver dependencies are removed.
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-            setAdIdText("Device not supported.");
-            return;
-        }
-
         mAdIdManager =
                 (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                         ? this.getSystemService(AdIdManager.class)
@@ -60,9 +53,10 @@ public class MainActivity extends AppCompatActivity {
         registerAdIdButton();
     }
 
+    @SuppressWarnings("NewApi")
     private void registerAdIdButton() {
-        OutcomeReceiver<AdId, Exception> adIdCallback =
-                new OutcomeReceiver<AdId, Exception>() {
+        AdServicesOutcomeReceiver<AdId, Exception> adIdCallback =
+                new AdServicesOutcomeReceiver<AdId, Exception>() {
                     @Override
                     public void onResult(@NonNull AdId adId) {
                         setAdIdText(getAdIdDisplayString(adId));
@@ -77,9 +71,8 @@ public class MainActivity extends AppCompatActivity {
         mAdIdButton.setOnClickListener(v -> getAdId(mExecutor, adIdCallback));
     }
 
-    @TargetApi(Build.VERSION_CODES.S)
     @SuppressWarnings("NewApi")
-    private void getAdId(Executor executor, OutcomeReceiver<AdId, Exception> callback) {
+    private void getAdId(Executor executor, AdServicesOutcomeReceiver<AdId, Exception> callback) {
         // getService() in AdIdManager throws on main thread and doesn't offload the error to the
         // callback. Catch it to avoid app to crash.
         try {

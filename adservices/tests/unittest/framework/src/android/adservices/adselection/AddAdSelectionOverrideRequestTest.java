@@ -37,8 +37,8 @@ public class AddAdSelectionOverrideRequestTest {
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
     private static final DecisionLogic DECISION_LOGIC = new DecisionLogic(DECISION_LOGIC_JS);
-    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
-            new BuyersDecisionLogic(
+    private static final PerBuyerDecisionLogic BUYERS_DECISION_LOGIC =
+            new PerBuyerDecisionLogic(
                     ImmutableMap.of(
                             CommonFixture.VALID_BUYER_1,
                             DECISION_LOGIC,
@@ -57,6 +57,6 @@ public class AddAdSelectionOverrideRequestTest {
         assertThat(request.getDecisionLogicJs()).isEqualTo(DECISION_LOGIC_JS);
         assertThat(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
         assertThat(request.getTrustedScoringSignals()).isEqualTo(TRUSTED_SCORING_SIGNALS);
-        assertThat(request.getBuyersDecisionLogic()).isEqualTo(BUYERS_DECISION_LOGIC);
+        assertThat(request.getPerBuyerDecisionLogic()).isEqualTo(BUYERS_DECISION_LOGIC);
     }
 }

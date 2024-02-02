@@ -77,9 +77,9 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.DecisionLogic;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -224,8 +224,8 @@ public class AdSelectionServiceImplTest {
                             + "}");
     private static final AdSelectionSignals DUMMY_SELECTION_SIGNALS =
             AdSelectionSignals.fromString("{\"selection\": \"signal_1\"}");
-    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
-            new BuyersDecisionLogic(
+    private static final PerBuyerDecisionLogic BUYERS_DECISION_LOGIC =
+            new PerBuyerDecisionLogic(
                     ImmutableMap.of(
                             CommonFixture.VALID_BUYER_1, new DecisionLogic("reportWin()"),
                             CommonFixture.VALID_BUYER_2, new DecisionLogic("reportWin()")));
@@ -403,7 +403,7 @@ public class AdSelectionServiceImplTest {
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
                         DevContext.createForDevOptionsDisabled());
 
-        when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
+        when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
         doNothing()
@@ -9340,7 +9340,7 @@ public class AdSelectionServiceImplTest {
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS,
             AdSelectionSignals trustedScoringSignals,
-            BuyersDecisionLogic buyersDecisionLogic)
+            PerBuyerDecisionLogic perBuyerDecisionLogic)
             throws Exception {
         // Counted down in 1) callback and 2) logApiCall
         CountDownLatch resultLatch = new CountDownLatch(2);
@@ -9360,7 +9360,7 @@ public class AdSelectionServiceImplTest {
                 adSelectionConfig,
                 decisionLogicJS,
                 trustedScoringSignals,
-                buyersDecisionLogic,
+                perBuyerDecisionLogic,
                 callback);
         resultLatch.await();
         return callback;
