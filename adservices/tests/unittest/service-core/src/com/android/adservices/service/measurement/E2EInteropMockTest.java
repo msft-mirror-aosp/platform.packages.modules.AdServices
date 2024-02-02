@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.os.RemoteException;
 
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
@@ -130,10 +131,13 @@ public class E2EInteropMockTest extends E2EMockTest {
                 START_TIME);
     }
 
-    private static Map<String, String> sPhFlagsForInterop = Map.of(
-            // TODO (b/295382171): remove this after the flag is removed.
-            "measurement_enable_max_aggregate_reports_per_source", "true",
-            "measurement_min_event_report_delay_millis", "0");
+    private static Map<String, String> sPhFlagsForInterop =
+            Map.of(
+                    // TODO (b/295382171): remove this after the flag is removed.
+                    "measurement_enable_max_aggregate_reports_per_source", "true",
+                    "measurement_min_event_report_delay_millis", "0",
+                    "measurement_source_registration_time_optional_for_agg_reports_enabled",
+                            "true");
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -224,6 +228,25 @@ public class E2EInteropMockTest extends E2EMockTest {
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
             processActualDebugReportApiJob(triggerRegistration.mTimestamp);
+        }
+    }
+
+    @Override
+    void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
+        super.processAction(reportingJob);
+        // Test json files for interop tests come verbatim from chromium, so they don't have
+        // source_registration_time as a field. Remove them from the actual reports so that
+        // comparisons don't fail.
+        removeSourceRegistrationTime(mActualOutput.mAggregateReportObjects);
+        removeSourceRegistrationTime(mActualOutput.mDebugAggregateReportObjects);
+    }
+
+    private void removeSourceRegistrationTime(List<JSONObject> aggregateReportObjects)
+            throws JSONException {
+        for (JSONObject jsonObject : aggregateReportObjects) {
+            jsonObject
+                    .getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY)
+                    .remove(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME);
         }
     }
 

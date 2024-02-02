@@ -22,6 +22,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -51,6 +52,7 @@ final class CustomAudienceHelper {
     private static final String BIDDING_LOGIC_URI = "bidding_logic_uri";
     private static final String USER_BIDDING_SIGNALS = "user_bidding_signals";
     private static final String TRUSTED_BIDDING_DATA = "trusted_bidding_data";
+    private static final String DAILY_UPDATE_URI = "daily_update_uri";
     private static final String ADS = "ads";
     private static final String ADS_URI = "uri";
     private static final String ADS_AD_COUNTER_KEYS = "ad_counter_keys";
@@ -67,29 +69,37 @@ final class CustomAudienceHelper {
                 .put(BUYER, customAudience.getBuyer())
                 .put(IS_DEBUGGABLE, customAudience.isDebuggable())
                 .put(CREATION_TIME, customAudience.getCreationTime())
+                // TODO(b/323023421): Update to check for nullable activation and expirations.
                 .put(ACTIVATION_TIME, customAudience.getActivationTime())
                 .put(EXPIRATION_TIME, customAudience.getExpirationTime())
                 .put(UPDATED_TIME, customAudience.getLastAdsAndBiddingDataUpdatedTime())
                 .put(BIDDING_LOGIC_URI, customAudience.getBiddingLogicUri().toString())
                 .put(USER_BIDDING_SIGNALS, customAudience.getUserBiddingSignals())
+                .put(DAILY_UPDATE_URI, Uri.EMPTY) // TODO(b/322976190): Remove call to Uri.EMPTY.
                 .put(
                         TRUSTED_BIDDING_DATA,
-                        getJsonFromTrustedBiddingData(
-                                Objects.requireNonNull(customAudience.getTrustedBiddingData())))
-                .put(ADS, getJsonArrayFromAdsList(Objects.requireNonNull(customAudience.getAds())));
+                        getJsonFromTrustedBiddingData(customAudience.getTrustedBiddingData()))
+                .put(ADS, getJsonArrayFromAdsList(customAudience.getAds()));
     }
 
-    private static JSONObject getJsonFromTrustedBiddingData(DBTrustedBiddingData trustedBiddingData)
-            throws JSONException {
-        JSONObject jsonObject =
-                new JSONObject().put(ADS_URI, trustedBiddingData.getUri().toString());
+    private static JSONObject getJsonFromTrustedBiddingData(
+            @Nullable DBTrustedBiddingData trustedBiddingData) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        if (Objects.isNull(trustedBiddingData)) {
+            return jsonObject;
+        }
+        jsonObject.put(ADS_URI, trustedBiddingData.getUri().toString());
         JSONArray keys = new JSONArray();
         trustedBiddingData.getKeys().forEach(keys::put);
         return jsonObject.put(ADS_KEYS, keys);
     }
 
-    private static JSONArray getJsonArrayFromAdsList(List<DBAdData> ads) throws JSONException {
+    private static JSONArray getJsonArrayFromAdsList(@Nullable List<DBAdData> ads)
+            throws JSONException {
         JSONArray array = new JSONArray();
+        if (Objects.isNull(ads)) {
+            return array;
+        }
         for (DBAdData ad : ads) {
             array.put(getJsonFromAd(ad));
         }

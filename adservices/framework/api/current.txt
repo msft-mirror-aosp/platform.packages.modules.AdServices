@@ -147,12 +147,14 @@ package android.adservices.adselection {
   }
 
   public final class GetAdSelectionDataRequest {
+    method @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled") @Nullable public android.net.Uri getCoordinatorOriginUri();
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
   }
 
   public static final class GetAdSelectionDataRequest.Builder {
     ctor public GetAdSelectionDataRequest.Builder();
     method @NonNull public android.adservices.adselection.GetAdSelectionDataRequest build();
+    method @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled") @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setCoordinatorOriginUri(@Nullable android.net.Uri);
     method @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setSeller(@Nullable android.adservices.common.AdTechIdentifier);
   }
 
