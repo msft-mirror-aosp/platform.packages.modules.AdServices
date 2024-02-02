@@ -22,6 +22,7 @@ import static com.android.adservices.service.consent.ConsentConstants.DEFAULT_CO
 import static com.android.adservices.service.consent.ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.adservices.service.consent.ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED;
 import static com.android.adservices.service.consent.ConsentConstants.NOTIFICATION_DISPLAYED_ONCE;
+import static com.android.adservices.service.consent.ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_CONSENT;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED;
@@ -4623,5 +4624,72 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         verify(mAppSearchConsentManagerMock, times(20)).getEnrollmentChannel(any());
         verify(mAppSearchConsentManagerMock, times(20)).setEnrollmentChannel(any(), any());
+    }
+
+    @Test
+    public void testPasNotificationDisplayedRecorded_PpApiOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.wasPasNotificationDisplayed()).isFalse();
+
+        verify(mMockIAdServicesManager, never()).wasPasNotificationDisplayed();
+
+        spyConsentManager.recordPasNotificationDisplayed(true);
+
+        assertThat(spyConsentManager.wasPasNotificationDisplayed()).isTrue();
+
+        verify(mMockIAdServicesManager, never()).wasPasNotificationDisplayed();
+        verify(mMockIAdServicesManager, never()).recordPasNotificationDisplayed(true);
+    }
+
+    @Test
+    public void testPasNotificationDisplayedRecorded_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.wasPasNotificationDisplayed()).isFalse();
+
+        verify(mMockIAdServicesManager).wasPasNotificationDisplayed();
+
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        spyConsentManager.recordPasNotificationDisplayed(true);
+
+        assertThat(spyConsentManager.wasPasNotificationDisplayed()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).wasPasNotificationDisplayed();
+        verify(mMockIAdServicesManager).recordPasNotificationDisplayed(true);
+
+        // Verify notificationDisplayed is not set in PPAPI
+        assertThat(mConsentDatastore.get(PAS_NOTIFICATION_DISPLAYED_ONCE)).isFalse();
+    }
+
+    @Test
+    public void testPasNotificationDisplayedRecorded_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean wasPasNotificationDisplayed = spyConsentManager.wasPasNotificationDisplayed();
+
+        assertThat(wasPasNotificationDisplayed).isFalse();
+
+        verify(mMockIAdServicesManager).wasPasNotificationDisplayed();
+
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        spyConsentManager.recordPasNotificationDisplayed(true);
+
+        assertThat(spyConsentManager.wasPasNotificationDisplayed()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).wasPasNotificationDisplayed();
+        verify(mMockIAdServicesManager).recordPasNotificationDisplayed(true);
+
+        // Verify notificationDisplayed is also set in PPAPI
+        assertThat(mConsentDatastore.get(PAS_NOTIFICATION_DISPLAYED_ONCE)).isTrue();
     }
 }

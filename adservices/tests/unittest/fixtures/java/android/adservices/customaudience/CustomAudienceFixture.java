@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** Utility class supporting custom audience API unit tests */
 public final class CustomAudienceFixture {
@@ -179,12 +180,12 @@ public final class CustomAudienceFixture {
                 for (int a = 0; a < nAdsPerCA; a++) {
                     ads.add(
                             getValidFilterAdDataWithAdRenderIdByBuyer(
-                                    buyer, /* sequenceNumber= */ a));
+                                    buyer, /* sequenceString= */ generateHash(a, b, c)));
                 }
                 CustomAudience customAudience =
                         new CustomAudience.Builder()
                                 .setBuyer(buyer)
-                                .setName(VALID_NAME)
+                                .setName("testCustomAudience_%s".formatted(generateHash(b, c)))
                                 .setActivationTime(VALID_ACTIVATION_TIME)
                                 .setExpirationTime(VALID_EXPIRATION_TIME)
                                 .setDailyUpdateUri(getValidDailyUpdateUriByBuyer(buyer))
@@ -197,5 +198,9 @@ public final class CustomAudienceFixture {
             }
         }
         return customAudiences;
+    }
+
+    private static String generateHash(int... vargs) {
+        return Arrays.stream(vargs).mapToObj(String::valueOf).collect(Collectors.joining("-"));
     }
 }

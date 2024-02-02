@@ -50,7 +50,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentConstants;
 
-import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -68,6 +67,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @SmallTest
 public class AppSearchDaoTest {
@@ -310,16 +310,27 @@ public class AppSearchDaoTest {
         // We can't use the base class instance since writing will fail without the necessary
         // Document fields defined on the class, so we use a subclass instance.
         AppSearchConsentDao dao = new AppSearchConsentDao(ID, ID, NAMESPACE, API_TYPE, CONSENT);
-        FluentFuture<AppSearchBatchResult<String, Void>> result =
-                dao.writeData(
-                        Futures.immediateFuture(mockSession),
-                        List.of(PACKAGE_IDENTIFIER),
-                        mExecutor);
-        ExecutionException e = assertThrows(ExecutionException.class, result::get);
-        assertThat(e.getMessage())
+        Exception e =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                dao.writeData(
+                                        Futures.immediateFuture(mockSession),
+                                        List.of(PACKAGE_IDENTIFIER),
+                                        mExecutor));
+        // Schema migration throws a RuntimeException, which gets wrapped into an ExecutionException
+        // by the get() call. The catch block then wraps this into another RuntimeException.
+        assertThat(e).hasMessageThat().isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).hasCauseThat().isNotNull();
+        assertThat(e).hasCauseThat().isInstanceOf(ExecutionException.class);
+        assertThat(e).hasCauseThat().hasCauseThat().isNotNull();
+        assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(RuntimeException.class);
+        assertThat(e)
+                .hasCauseThat()
+                .hasCauseThat()
+                .hasMessageThat()
                 .isEqualTo(
-                        "java.lang.RuntimeException: "
-                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE
+                        ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE
                                 + " Migration failure: [FAILURE(3)]: test");
     }
 
@@ -341,12 +352,43 @@ public class AppSearchDaoTest {
         when(mockSession.putAsync(any())).thenReturn(Futures.immediateFuture(result));
 
         // Verify that no exception is thrown.
-        FluentFuture future =
+        AppSearchBatchResult<String, Void> output =
                 dao.writeData(
                         Futures.immediateFuture(mockSession),
                         List.of(PACKAGE_IDENTIFIER),
                         mExecutor);
-        assertThat(future.get()).isNotNull();
+        assertThat(output).isNotNull();
+    }
+
+    @Test
+    public void testWriteConsentData_timeout() throws Exception {
+        AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
+        verify(mockSession, atMost(1)).setSchemaAsync(any(SetSchemaRequest.class));
+
+        SetSchemaResponse mockResponse = Mockito.mock(SetSchemaResponse.class);
+        when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
+                .thenReturn(Futures.immediateFuture(mockResponse));
+
+        verify(mockResponse, atMost(1)).getMigrationFailures();
+        when(mockResponse.getMigrationFailures()).thenReturn(List.of());
+        // We can't use the base class instance since writing will fail without the necessary
+        // Document fields defined on the class, so we use a subclass instance.
+        AppSearchConsentDao dao = new AppSearchConsentDao(ID, ID, NAMESPACE, API_TYPE, CONSENT);
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(mockSession.putAsync(any())).thenReturn(getLongRunningOperation(result));
+
+        // Verify exception due to timeout
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                dao.writeData(
+                                        Futures.immediateFuture(mockSession),
+                                        List.of(PACKAGE_IDENTIFIER),
+                                        mExecutor));
+        assertThat(e).hasMessageThat().isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).hasCauseThat().isNotNull();
+        assertThat(e).hasCauseThat().isInstanceOf(TimeoutException.class);
     }
 
     @Test
@@ -369,18 +411,30 @@ public class AppSearchDaoTest {
         when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
         // We can't use the base class instance since writing will fail without the necessary
         // Document fields defined on the class, so we use a subclass instance.
-        FluentFuture<AppSearchBatchResult<String, Void>> result =
-                AppSearchDao.deleteData(
-                        AppSearchConsentDao.class,
-                        Futures.immediateFuture(mockSession),
-                        mExecutor,
-                        TEST,
-                        NAMESPACE);
-        ExecutionException e = assertThrows(ExecutionException.class, result::get);
-        assertThat(e.getMessage())
+        Exception e =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                AppSearchDao.deleteData(
+                                        AppSearchConsentDao.class,
+                                        Futures.immediateFuture(mockSession),
+                                        mExecutor,
+                                        TEST,
+                                        NAMESPACE));
+
+        // Schema migration throws a RuntimeException, which gets wrapped into an ExecutionException
+        // by the get() call. The catch block then wraps this into another RuntimeException.
+        assertThat(e).hasMessageThat().isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).hasCauseThat().isNotNull();
+        assertThat(e).hasCauseThat().isInstanceOf(ExecutionException.class);
+        assertThat(e).hasCauseThat().hasCauseThat().isNotNull();
+        assertThat(e).hasCauseThat().hasCauseThat().isInstanceOf(RuntimeException.class);
+        assertThat(e)
+                .hasCauseThat()
+                .hasCauseThat()
+                .hasMessageThat()
                 .isEqualTo(
-                        "java.lang.RuntimeException: "
-                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE
+                        ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE
                                 + " Migration failure: [FAILURE(3)]: test");
     }
 
@@ -401,13 +455,45 @@ public class AppSearchDaoTest {
         when(mockSession.removeAsync(any())).thenReturn(Futures.immediateFuture(result));
 
         // Verify that no exception is thrown.
-        FluentFuture future =
+        AppSearchBatchResult<String, Void> output =
                 AppSearchDao.deleteData(
                         AppSearchConsentDao.class,
                         Futures.immediateFuture(mockSession),
                         mExecutor,
                         TEST,
                         NAMESPACE);
-        assertThat(future.get()).isNotNull();
+        assertThat(output).isNotNull();
+    }
+
+    @Test
+    public void testDeleteConsentData_timeout() throws Exception {
+        AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
+        verify(mockSession, atMost(1)).setSchemaAsync(any(SetSchemaRequest.class));
+
+        SetSchemaResponse mockResponse = Mockito.mock(SetSchemaResponse.class);
+        when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
+                .thenReturn(Futures.immediateFuture(mockResponse));
+
+        verify(mockResponse, atMost(1)).getMigrationFailures();
+        when(mockResponse.getMigrationFailures()).thenReturn(List.of());
+        // We can't use the base class instance since writing will fail without the necessary
+        // Document fields defined on the class, so we use a subclass instance.
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(mockSession.removeAsync(any())).thenReturn(getLongRunningOperation(result));
+
+        // Verify exception due to timeout
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                AppSearchDao.deleteData(
+                                        AppSearchConsentDao.class,
+                                        Futures.immediateFuture(mockSession),
+                                        mExecutor,
+                                        TEST,
+                                        NAMESPACE));
+        assertThat(e).hasMessageThat().isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).hasCauseThat().isNotNull();
+        assertThat(e).hasCauseThat().isInstanceOf(TimeoutException.class);
     }
 }

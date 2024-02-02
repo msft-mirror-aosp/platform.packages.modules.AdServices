@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -30,38 +31,39 @@ import java.util.Objects;
 /**
  * @return The override for the decision logic for each buyer that is used by contextual ads for
  *     reporting, which may be extended to updating bid values for contextual ads in the future
- * @hide
  */
-public final class BuyersDecisionLogic implements Parcelable {
+@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+public final class PerBuyerDecisionLogic implements Parcelable {
 
     @NonNull
-    public static final BuyersDecisionLogic EMPTY = new BuyersDecisionLogic(Collections.emptyMap());
+    public static final PerBuyerDecisionLogic EMPTY =
+            new PerBuyerDecisionLogic(Collections.emptyMap());
 
     @NonNull private final Map<AdTechIdentifier, DecisionLogic> mPerBuyerLogicMap;
 
-    public BuyersDecisionLogic(@NonNull Map<AdTechIdentifier, DecisionLogic> perBuyerLogicMap) {
+    public PerBuyerDecisionLogic(@NonNull Map<AdTechIdentifier, DecisionLogic> perBuyerLogicMap) {
         Objects.requireNonNull(perBuyerLogicMap);
         mPerBuyerLogicMap = perBuyerLogicMap;
     }
 
-    private BuyersDecisionLogic(@NonNull Parcel in) {
+    private PerBuyerDecisionLogic(@NonNull Parcel in) {
         mPerBuyerLogicMap =
                 AdServicesParcelableUtil.readMapFromParcel(
                         in, AdTechIdentifier::fromString, DecisionLogic.class);
     }
 
     @NonNull
-    public static final Creator<BuyersDecisionLogic> CREATOR =
-            new Creator<BuyersDecisionLogic>() {
+    public static final Creator<PerBuyerDecisionLogic> CREATOR =
+            new Creator<PerBuyerDecisionLogic>() {
                 @Override
-                public BuyersDecisionLogic createFromParcel(Parcel in) {
+                public PerBuyerDecisionLogic createFromParcel(Parcel in) {
                     Objects.requireNonNull(in);
-                    return new BuyersDecisionLogic(in);
+                    return new PerBuyerDecisionLogic(in);
                 }
 
                 @Override
-                public BuyersDecisionLogic[] newArray(int size) {
-                    return new BuyersDecisionLogic[size];
+                public PerBuyerDecisionLogic[] newArray(int size) {
+                    return new PerBuyerDecisionLogic[size];
                 }
             };
 
@@ -84,8 +86,8 @@ public final class BuyersDecisionLogic implements Parcelable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BuyersDecisionLogic)) return false;
-        BuyersDecisionLogic logicMap = (BuyersDecisionLogic) o;
+        if (!(o instanceof PerBuyerDecisionLogic)) return false;
+        PerBuyerDecisionLogic logicMap = (PerBuyerDecisionLogic) o;
         return mPerBuyerLogicMap.equals(logicMap.getPerBuyerLogicMap());
     }
 

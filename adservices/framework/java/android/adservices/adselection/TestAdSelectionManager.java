@@ -83,7 +83,7 @@ public class TestAdSelectionManager {
                     request.getAdSelectionConfig(),
                     request.getDecisionLogicJs(),
                     request.getTrustedScoringSignals(),
-                    request.getBuyersDecisionLogic(),
+                    request.getPerBuyerDecisionLogic(),
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
