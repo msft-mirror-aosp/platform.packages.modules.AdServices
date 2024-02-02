@@ -23,6 +23,8 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.verification.VerificationMode;
 
 import java.util.Map;
 
@@ -46,6 +49,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
     private static final int METRIC_ID = 2;
     private static final int FIRST_API_NAME_CODE = 1;
     private static final int LAST_API_NAME_CODE = 28;
+    private static final int SUCCESS_RESULT_CODE = 0;
     private static final int FIRST_ERROR_CODE = 1;
     private static final int LAST_ERROR_CODE = 19;
     private static final int UNKNOWN_EVENT_CODE = 0;
@@ -108,7 +112,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
         mAppNameApiErrorLogger.logErrorOccurrence(
                 APP_PACKAGE_NAME, FIRST_ERROR_CODE - 1, FIRST_ERROR_CODE);
 
-        verifyLoggedEvent(APP_PACKAGE_NAME, UNKNOWN_EVENT_CODE, FIRST_ERROR_CODE);
+        verifyLoggedEvent(APP_PACKAGE_NAME, UNKNOWN_EVENT_CODE, FIRST_ERROR_CODE, times(1));
     }
 
     @Test
@@ -116,15 +120,15 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
         mAppNameApiErrorLogger.logErrorOccurrence(
                 APP_PACKAGE_NAME, LAST_API_NAME_CODE + 1, LAST_ERROR_CODE);
 
-        verifyLoggedEvent(APP_PACKAGE_NAME, UNKNOWN_EVENT_CODE, LAST_ERROR_CODE);
+        verifyLoggedEvent(APP_PACKAGE_NAME, UNKNOWN_EVENT_CODE, LAST_ERROR_CODE, times(1));
     }
 
     @Test
     public void testLogErrorOccurrence_errorCodeBelowLimit() {
         mAppNameApiErrorLogger.logErrorOccurrence(
-                APP_PACKAGE_NAME, FIRST_API_NAME_CODE, FIRST_ERROR_CODE - 1);
+                APP_PACKAGE_NAME, FIRST_API_NAME_CODE, SUCCESS_RESULT_CODE - 1);
 
-        verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, UNKNOWN_EVENT_CODE);
+        verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, UNKNOWN_EVENT_CODE, times(1));
     }
 
     @Test
@@ -132,7 +136,15 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
         mAppNameApiErrorLogger.logErrorOccurrence(
                 APP_PACKAGE_NAME, LAST_API_NAME_CODE, LAST_ERROR_CODE + 1);
 
-        verifyLoggedEvent(APP_PACKAGE_NAME, LAST_API_NAME_CODE, UNKNOWN_EVENT_CODE);
+        verifyLoggedEvent(APP_PACKAGE_NAME, LAST_API_NAME_CODE, UNKNOWN_EVENT_CODE, times(1));
+    }
+
+    @Test
+    public void testLogErrorOccurrence_successApiCode() {
+        mAppNameApiErrorLogger.logErrorOccurrence(
+                APP_PACKAGE_NAME, FIRST_API_NAME_CODE, SUCCESS_RESULT_CODE);
+
+        verifyLoggedEvent(APP_PACKAGE_NAME, LAST_API_NAME_CODE, UNKNOWN_EVENT_CODE, never());
     }
 
     @Test
@@ -140,7 +152,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
         mAppNameApiErrorLogger.logErrorOccurrence(
                 APP_PACKAGE_NAME, FIRST_API_NAME_CODE, LAST_ERROR_CODE);
 
-        verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, LAST_ERROR_CODE);
+        verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, LAST_ERROR_CODE, times(1));
     }
 
     @Test
@@ -209,8 +221,9 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
                 .isEqualTo(FIRST_ERROR_CODE);
     }
 
-    private void verifyLoggedEvent(String appPackageName, int loggedApiCode, int loggedErrorCode) {
-        verify(mMockCobaltLogger)
+    private void verifyLoggedEvent(
+            String appPackageName, int loggedApiCode, int loggedErrorCode, VerificationMode mode) {
+        verify(mMockCobaltLogger, mode)
                 .logString(
                         METRIC_ID,
                         appPackageName,
