@@ -33,13 +33,11 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.ApplicationInfoFlags;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.os.UserHandle;
 import android.util.ArraySet;
 import android.util.Log;
 import android.view.SurfaceControlViewHost;
@@ -51,11 +49,10 @@ import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
+import com.android.server.sdksandbox.helpers.PackageManagerHelper;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Represents the lifecycle of a single request to load an SDK for a specific app.
@@ -705,32 +702,19 @@ class LoadSdkSession {
     }
 
     private SdkProviderInfo createSdkProviderInfo() throws PackageManager.NameNotFoundException {
-        UserHandle userHandle = UserHandle.getUserHandleForUid(mCallingInfo.getUid());
-        Context userContext = mContext.createContextAsUser(userHandle, /* flags= */ 0);
-        PackageManager pm = userContext.getPackageManager();
-        ApplicationInfo info =
-                pm.getApplicationInfo(
-                        mCallingInfo.getPackageName(),
-                        ApplicationInfoFlags.of(PackageManager.GET_SHARED_LIBRARY_FILES));
-        List<SharedLibraryInfo> sharedLibraries =
-                info.getSharedLibraryInfos().stream()
-                        .filter(
-                                sharedLibraryInfo ->
-                                        ((sharedLibraryInfo.getType()
-                                                        == SharedLibraryInfo.TYPE_SDK_PACKAGE)
-                                                && sharedLibraryInfo.getName().equals(mSdkName)))
-                        .collect(Collectors.toList());
-
-        if (sharedLibraries.size() == 0) {
-            throw new PackageManager.NameNotFoundException(mSdkName);
-        }
+        PackageManagerHelper packageManagerHelper =
+                new PackageManagerHelper(mContext, mCallingInfo.getUid());
+        SharedLibraryInfo sharedLibrary =
+                packageManagerHelper.getSdkSharedLibraryInfoForSdk(
+                        mCallingInfo.getPackageName(), mSdkName);
 
         String sdkProviderClassName;
         try {
             sdkProviderClassName =
-                    pm.getProperty(
+                    packageManagerHelper
+                            .getProperty(
                                     PROPERTY_SDK_PROVIDER_CLASS_NAME,
-                                    sharedLibraries.get(0).getDeclaringPackage().getPackageName())
+                                    sharedLibrary.getDeclaringPackage().getPackageName())
                             .getString();
         } catch (PackageManager.NameNotFoundException e) {
             throw new PackageManager.NameNotFoundException(
@@ -738,12 +722,12 @@ class LoadSdkSession {
         }
 
         ApplicationInfo applicationInfo =
-                pm.getPackageInfo(
-                                sharedLibraries.get(0).getDeclaringPackage(),
-                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
-                                        | PackageManager.MATCH_ANY_USER)
-                        .applicationInfo;
-        return new SdkProviderInfo(applicationInfo, sharedLibraries.get(0), sdkProviderClassName);
+                packageManagerHelper.getApplicationInfoForSharedLibrary(
+                        sharedLibrary,
+                        PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
+                                | PackageManager.MATCH_ANY_USER);
+
+        return new SdkProviderInfo(applicationInfo, sharedLibrary, sdkProviderClassName);
     }
 
     ApplicationInfo getApplicationInfo() {

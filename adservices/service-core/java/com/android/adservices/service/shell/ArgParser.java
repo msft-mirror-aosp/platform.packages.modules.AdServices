@@ -16,12 +16,11 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 import static com.android.internal.util.Preconditions.checkArgument;
 
 import android.util.ArrayMap;
 import android.util.Log;
-
-import androidx.annotation.NonNull;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +30,6 @@ import java.util.Map;
 
 // TODO(b/322395593): Refactor ArgParser to work better after M-04 release.
 final class ArgParser {
-    private static final String TAG = ArgParser.class.getSimpleName();
 
     private final ImmutableList<String> mRequiredArgs;
     private final Map<String, String> mParsedArgs = new ArrayMap<>();

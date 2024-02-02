@@ -17,6 +17,7 @@
 package com.android.adservices.shell;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shell.AdServicesShellCommandService.TAG;
 
 import static org.mockito.Mockito.when;
 
@@ -86,14 +87,13 @@ public final class AdServicesShellCommandServiceTest extends AdServicesExtendedM
     public void testDump_shellCommandThroughDumpsys_flagDisabled() throws Exception {
         mockGetAdServicesShellCommandEnabled(/* enabled= */ false);
         String[] args = new String[] {"cmd", "echo", "hello"};
-        String tag = "adservices";
-        LogInterceptor logInterceptor = extendedMockito.interceptLogE(tag);
+        LogInterceptor logInterceptor = extendedMockito.interceptLogE(TAG);
 
         expect.withMessage("cmd: echo")
                 .that(dump(pw -> mShellService.dump(/* fd= */ null, pw, args)))
                 .isEmpty();
-        expect.withMessage("Log.e() calls to tag %s", tag)
-                .that(logInterceptor.getPlainMessages(tag, Level.ERROR))
+        expect.withMessage("Log.e() calls to tag %s", TAG)
+                .that(logInterceptor.getPlainMessages(TAG, Level.ERROR))
                 .contains(
                         String.format(
                                 "dump(%s) called on AdServicesShellCommandService when shell"

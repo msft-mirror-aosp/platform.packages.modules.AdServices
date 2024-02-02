@@ -19,6 +19,7 @@ package android.adservices.adselection;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdTechIdentifier;
+import android.net.Uri;
 
 import org.junit.Test;
 
@@ -26,10 +27,24 @@ public class GetAdSelectionDataRequestTest {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
 
     @Test
-    public void testGetAdSelectionDataRequest_validInput_success() {
+    public void testGetAdSelectionDataRequest_validInputWithoutUri_success() {
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
 
         assertThat(request.getSeller()).isEqualTo(SELLER);
+        assertThat(request.getCoordinatorOriginUri()).isNull();
+    }
+
+    @Test
+    public void testGetAdSelectionDataRequest_validInputWithUri_success() {
+        Uri expectedUri = Uri.parse("https://example.com");
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(SELLER)
+                        .setCoordinatorOriginUri(expectedUri)
+                        .build();
+
+        assertThat(request.getSeller()).isEqualTo(SELLER);
+        assertThat(request.getCoordinatorOriginUri()).isEqualTo(expectedUri);
     }
 }

@@ -15,7 +15,6 @@
  */
 package com.android.server.adservices;
 
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.server.adservices.AdServicesShellCommand.CMD_IS_SYSTEM_SERVICE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -40,7 +39,7 @@ import android.os.RemoteException;
 import android.os.UserHandle;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.server.adservices.AdServicesShellCommand.Injector;
 
 import org.junit.After;
@@ -52,7 +51,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-@MockStatic(ActivityManager.class)
+@SpyStatic(ActivityManager.class)
 public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String HELP_ADSERVICES_SERVICE_CMDS =
@@ -100,7 +99,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
                         return mErr;
                     }
                 };
-        doReturn(SYSTEM_USER).when(ActivityManager::getCurrentUser);
+        extendedMockito.mockGetCurrentUser(SYSTEM_USER);
         when(mMockContext.getUser()).thenReturn(UserHandle.SYSTEM);
     }
 
@@ -425,7 +424,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
         when(mMockContext.createContextAsUser(eq(UserHandle.SYSTEM), anyInt()))
                 .thenReturn(mMockContext);
         int secondaryUser = 10;
-        doReturn(secondaryUser).when(ActivityManager::getCurrentUser);
+        extendedMockito.mockGetCurrentUser(secondaryUser);
         String cmd = "CMD_XYZ";
         String out = "hello";
         ShellCommandResult response =
