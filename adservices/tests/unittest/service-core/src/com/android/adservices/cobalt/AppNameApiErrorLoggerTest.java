@@ -16,18 +16,21 @@
 
 package com.android.adservices.cobalt;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.service.Flags;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.cobalt.MetricDefinition;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +41,8 @@ import org.mockito.Mock;
 
 import java.util.Map;
 
-public final class AppNameApiErrorLoggerTest extends AdServicesMockitoTestCase {
+@SpyStatic(CobaltFactory.class)
+public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTestCase {
     private static final int METRIC_ID = 2;
     private static final int FIRST_API_NAME_CODE = 1;
     private static final int LAST_API_NAME_CODE = 28;
@@ -50,11 +54,44 @@ public final class AppNameApiErrorLoggerTest extends AdServicesMockitoTestCase {
     private AppNameApiErrorLogger mAppNameApiErrorLogger;
 
     @Mock private CobaltLogger mMockCobaltLogger;
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setUp() {
         mAppNameApiErrorLogger = new AppNameApiErrorLogger(mMockCobaltLogger);
-        mockLogErrorOccurrence();
+    }
+
+    @Test
+    public void testGetInstance_cobaltDisabled() {
+        mockCobaltLoggingEnabled(false);
+
+        assertThat(AppNameApiErrorLogger.getInstance(mContext, mMockFlags)).isNull();
+    }
+
+    @Test
+    public void testGetInstance_appNameApiErrorCobaltLoggingDisabled() {
+        mockAppNameApiErrorCobaltLoggingEnabled(false);
+
+        assertThat(AppNameApiErrorLogger.getInstance(mContext, mMockFlags)).isNull();
+    }
+
+    @Test
+    public void testGetInstance_notNull() {
+        mockCobaltLoggingEnabled(true);
+        mockAppNameApiErrorCobaltLoggingEnabled(true);
+        mockAdservicesReleaseStageForCobalt();
+
+        AppNameApiErrorLogger instance = AppNameApiErrorLogger.getInstance(mContext, mMockFlags);
+        assertThat(instance).isNotNull();
+        assertThat(instance)
+                .isSameInstanceAs(AppNameApiErrorLogger.getInstance(mContext, mMockFlags));
+    }
+
+    @Test
+    public void testGetInstance_cobaltInitializationException() {
+        mockThrowExceptionOnGetCobaltLogger();
+
+        assertThat(AppNameApiErrorLogger.getInstance(mContext, mMockFlags)).isNull();
     }
 
     @Test
@@ -172,15 +209,28 @@ public final class AppNameApiErrorLoggerTest extends AdServicesMockitoTestCase {
                 .isEqualTo(FIRST_ERROR_CODE);
     }
 
-    private void mockLogErrorOccurrence() {
-        when(mMockCobaltLogger.logString(anyLong(), anyString(), any())).thenReturn(null);
-    }
-
     private void verifyLoggedEvent(String appPackageName, int loggedApiCode, int loggedErrorCode) {
         verify(mMockCobaltLogger)
                 .logString(
                         METRIC_ID,
                         appPackageName,
                         ImmutableList.of(loggedApiCode, loggedErrorCode));
+    }
+
+    private void mockCobaltLoggingEnabled(boolean enabled) {
+        when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    private void mockAppNameApiErrorCobaltLoggingEnabled(boolean enabled) {
+        when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    private void mockAdservicesReleaseStageForCobalt() {
+        when(mMockFlags.getAdservicesReleaseStageForCobalt()).thenReturn("DEBUG");
+    }
+
+    private static void mockThrowExceptionOnGetCobaltLogger() {
+        doThrow(new CobaltInitializationException())
+                .when(() -> CobaltFactory.getCobaltLogger(any(), any()));
     }
 }
