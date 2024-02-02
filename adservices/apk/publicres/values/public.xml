@@ -792,4 +792,15 @@
     <public type="string" name="settingsUI_pas_apps_view_footer" id="0x7f017cf8" />
     <public type="string" name="settingsUI_pas_msmt_view_footer" id="0x7f017cf7" />
     <public type="string" name="settingsUI_pas_topics_view_footer" id="0x7f017cf6" />
+    <public type="string" name="notificationUI_pas_combined_header_title" id="0x7f017cf5" />
+    <public type="string" name="notificationUI_pas_combined_body_1" id="0x7f017cf4" />
+    <public type="string" name="notificationUI_pas_combined_body_2" id="0x7f017cf3" />
+    <public type="string" name="notificationUI_pas_combined_body_3" id="0x7f017cf2" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_subtitle1" id="0x7f017cf1" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body1" id="0x7f017cf0" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body2" id="0x7f017cef" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body3" id="0x7f017cee" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body4" id="0x7f017ced" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_subtitle2" id="0x7f017cec" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body5" id="0x7f017ceb" />
 </resources>
