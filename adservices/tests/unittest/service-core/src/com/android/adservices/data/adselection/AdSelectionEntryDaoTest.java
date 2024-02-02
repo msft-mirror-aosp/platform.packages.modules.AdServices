@@ -1700,10 +1700,10 @@ public class AdSelectionEntryDaoTest {
 
     @Test
     public void testPersistBuyerDecisionLogicOverrides() {
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
 
         List<DBBuyerDecisionOverride> overrides =
-                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                mAdSelectionEntryDao.getPerBuyerDecisionLogicOverride(
                         AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
 
         assertThat(overrides).containsExactlyElementsIn(DB_BUYER_DECISION_OVERRIDES);
@@ -1711,10 +1711,10 @@ public class AdSelectionEntryDaoTest {
 
     @Test
     public void testRemoveBuyerDecisionLogicOverrides() {
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
 
         List<DBBuyerDecisionOverride> overrides =
-                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                mAdSelectionEntryDao.getPerBuyerDecisionLogicOverride(
                         AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
 
         assertThat(overrides).containsExactlyElementsIn(DB_BUYER_DECISION_OVERRIDES);
@@ -1723,7 +1723,7 @@ public class AdSelectionEntryDaoTest {
                 AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
 
         assertThat(
-                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        mAdSelectionEntryDao.getPerBuyerDecisionLogicOverride(
                                 AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
                 .isEmpty();
     }
@@ -2205,10 +2205,10 @@ public class AdSelectionEntryDaoTest {
 
     @Test
     public void testRemoveAllBuyerDecisionLogicOverrides() {
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
 
         List<DBBuyerDecisionOverride> overrides =
-                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                mAdSelectionEntryDao.getPerBuyerDecisionLogicOverride(
                         AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
 
         assertThat(overrides).containsExactlyElementsIn(DB_BUYER_DECISION_OVERRIDES);
@@ -2216,7 +2216,7 @@ public class AdSelectionEntryDaoTest {
         mAdSelectionEntryDao.removeAllBuyerDecisionOverrides(CALLER_PACKAGE_NAME_1);
 
         assertThat(
-                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        mAdSelectionEntryDao.getPerBuyerDecisionLogicOverride(
                                 AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
                 .isEmpty();
     }
