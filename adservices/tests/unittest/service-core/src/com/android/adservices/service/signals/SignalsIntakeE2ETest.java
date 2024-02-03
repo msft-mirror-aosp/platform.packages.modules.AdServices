@@ -52,6 +52,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -148,6 +149,9 @@ public class SignalsIntakeE2ETest {
     private EncoderPersistenceDao mEncoderPersistenceDao;
     private ExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

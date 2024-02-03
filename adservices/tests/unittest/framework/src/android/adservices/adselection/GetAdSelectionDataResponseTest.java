@@ -26,8 +26,10 @@ import android.adservices.common.CommonFixture;
 import android.content.res.AssetFileDescriptor;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
@@ -38,6 +40,9 @@ public class GetAdSelectionDataResponseTest {
     private static final long TEST_AD_SELECTION_ID = 12345;
     private static final ExecutorService BLOCKING_EXECUTOR =
             AdServicesExecutors.getBlockingExecutor();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildGetAdSelectionDataResponse() {

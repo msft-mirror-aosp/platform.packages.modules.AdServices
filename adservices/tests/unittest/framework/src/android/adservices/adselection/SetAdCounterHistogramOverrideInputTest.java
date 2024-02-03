@@ -28,8 +28,11 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -41,6 +44,9 @@ public class SetAdCounterHistogramOverrideInputTest {
                     CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                     CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusMillis(500));
     private static final String NAME = "test_ca_name";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidInput_success() {

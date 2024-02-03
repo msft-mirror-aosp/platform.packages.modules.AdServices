@@ -25,6 +25,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
@@ -35,6 +36,7 @@ import com.android.adservices.service.customaudience.CustomAudienceUpdatableData
 
 import com.google.common.collect.ImmutableSet;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -50,6 +52,9 @@ public class DBCustomAudienceTest {
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
             AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testFromServiceObject_success() {
