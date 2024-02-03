@@ -81,14 +81,10 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     private static final String ASSET_FILE = "test-asset.txt";
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
 
-    private final ClientImportanceListener mClientImportanceListener =
-            new ClientImportanceListener();
+    private ClientImportanceListener mClientImportanceListener;
 
     CtsSdkProviderApiImpl(Context context) {
         mContext = context;
-        SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
-        controller.registerSdkSandboxClientImportanceListener(
-                Runnable::run, mClientImportanceListener);
     }
 
     @Override
@@ -329,6 +325,21 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
+    public void createAndRegisterSdkSandboxClientImportanceListener() {
+        if (mClientImportanceListener != null) {
+            throw new IllegalStateException("ClientImportanceListener already created");
+        }
+        try {
+            mClientImportanceListener = new ClientImportanceListener();
+            SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
+            controller.registerSdkSandboxClientImportanceListener(
+                    Runnable::run, mClientImportanceListener);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
     public void waitForStateChangeDetection(
             int expectedForegroundValue, int expectedBackgroundValue) {
         final int waitIntervalMs = 200;
@@ -349,12 +360,18 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
 
     private boolean verifyStateChangeCountValue(
             int expectedForegroundValue, int expectedBackgroundValue) {
+        if (mClientImportanceListener == null) {
+            throw new IllegalStateException("ClientImportanceListener not created");
+        }
         return mClientImportanceListener.mForegroundDetectionCount == expectedForegroundValue
                 && mClientImportanceListener.mBackgroundDetectionCount == expectedBackgroundValue;
     }
 
     @Override
     public void unregisterSdkSandboxClientImportanceListener() {
+        if (mClientImportanceListener == null) {
+            throw new IllegalStateException("ClientImportanceListener not created");
+        }
         mContext.getSystemService(SdkSandboxController.class)
                 .unregisterSdkSandboxClientImportanceListener(mClientImportanceListener);
     }

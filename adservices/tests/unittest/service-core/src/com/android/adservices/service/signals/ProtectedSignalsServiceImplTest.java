@@ -43,6 +43,7 @@ import android.os.LimitExceededException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
@@ -59,6 +60,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -96,6 +98,9 @@ public class ProtectedSignalsServiceImplTest {
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     private DevContext mDevContext;
     private UpdateSignalsInput mInput;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

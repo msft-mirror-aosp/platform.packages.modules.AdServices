@@ -24,6 +24,9 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class GetAdSelectionDataInputTest {
@@ -32,6 +35,9 @@ public class GetAdSelectionDataInputTest {
 
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final AdTechIdentifier ANOTHER_SELLER = AdSelectionConfigFixture.SELLER_1;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildGetAdSelectionDataInput() {

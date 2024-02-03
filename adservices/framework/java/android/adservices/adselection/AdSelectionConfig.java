@@ -17,6 +17,7 @@ package android.adservices.adselection;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Parcel;
@@ -171,7 +172,7 @@ public final class AdSelectionConfig implements Parcelable {
     public AdSelectionConfig.Builder cloneToBuilder() {
         return new AdSelectionConfig.Builder()
                 .setSeller(this.getSeller())
-                .setBuyerSignedContextualAds(this.getBuyerSignedContextualAds())
+                .setPerBuyerSignedContextualAds(this.getPerBuyerSignedContextualAds())
                 .setAdSelectionSignals(this.getAdSelectionSignals())
                 .setCustomAudienceBuyers(this.getCustomAudienceBuyers())
                 .setDecisionLogicUri(this.getDecisionLogicUri())
@@ -239,10 +240,10 @@ public final class AdSelectionConfig implements Parcelable {
     /**
      * @return a Map of buyers and corresponding Contextual Ads, these ads are expected to be
      *     pre-downloaded from the contextual path and injected into Ad Selection.
-     * @hide
      */
+    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
     @NonNull
-    public Map<AdTechIdentifier, SignedContextualAds> getBuyerSignedContextualAds() {
+    public Map<AdTechIdentifier, SignedContextualAds> getPerBuyerSignedContextualAds() {
         return mBuyerSignedContextualAds;
     }
 
@@ -384,12 +385,11 @@ public final class AdSelectionConfig implements Parcelable {
          *
          * <p>If not set, defaults to an empty map.
          *
-         * <p>See {@link #getBuyerSignedContextualAds()} ()} for more details.
-         *
-         * @hide
+         * <p>See {@link #getPerBuyerSignedContextualAds()} for more details.
          */
+        @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
         @NonNull
-        public AdSelectionConfig.Builder setBuyerSignedContextualAds(
+        public AdSelectionConfig.Builder setPerBuyerSignedContextualAds(
                 @NonNull Map<AdTechIdentifier, SignedContextualAds> buyerSignedContextualAds) {
             Objects.requireNonNull(buyerSignedContextualAds);
 

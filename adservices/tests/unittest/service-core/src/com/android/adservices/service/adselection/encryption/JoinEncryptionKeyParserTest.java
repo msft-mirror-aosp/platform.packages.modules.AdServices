@@ -27,6 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
@@ -37,6 +38,7 @@ import com.google.common.io.BaseEncoding;
 
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -48,6 +50,9 @@ public class JoinEncryptionKeyParserTest {
 
     private Flags mFlags = new JoinEncryptionKeyParserTestFlags();
     private JoinEncryptionKeyParser mJoinEncryptionKeyParser;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

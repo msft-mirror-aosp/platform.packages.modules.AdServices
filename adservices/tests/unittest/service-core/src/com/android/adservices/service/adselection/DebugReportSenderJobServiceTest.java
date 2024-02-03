@@ -55,6 +55,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -81,6 +82,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ConsentManager.class)
 @SpyStatic(DebugReportSenderJobService.class)

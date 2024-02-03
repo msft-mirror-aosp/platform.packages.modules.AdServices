@@ -29,6 +29,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
@@ -36,6 +37,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 
 import org.json.JSONException;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -45,6 +47,9 @@ public class CustomAudienceUpdatableDataTest {
             DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildUpdatableDataSuccess() throws JSONException {
