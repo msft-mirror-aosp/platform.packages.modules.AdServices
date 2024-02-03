@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.topics.cobalt;
+package com.android.adservices.cobalt;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.cobalt.CobaltLogger;
@@ -77,7 +77,7 @@ public final class TopicsCobaltLogger {
      *
      * @param topic the {@link Topic} which occurred
      */
-    void logTopicOccurrences(Topic topic, int count) {
+    public void logTopicOccurrences(Topic topic, int count) {
         if (count < 1) {
             return;
         }
