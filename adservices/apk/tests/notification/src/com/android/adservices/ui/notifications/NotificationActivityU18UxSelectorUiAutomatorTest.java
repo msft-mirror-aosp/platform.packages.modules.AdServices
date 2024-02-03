@@ -24,7 +24,6 @@ import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.os.Build;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
@@ -114,13 +113,6 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
         UiObject2 measurementTitle =
                 ApkTestUtil.getElement(
                         mSpyContext, mDevice, R.string.settingsUI_u18_measurement_view_title);
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-            ApkTestUtil.scrollToAndClick(
-                    mSpyContext, mDevice, R.string.settingsUI_u18_measurement_view_title);
-        } else {
-            ApkTestUtil.scrollTo(
-                    mSpyContext, mDevice, R.string.settingsUI_u18_measurement_view_title);
-        }
         assertThat(measurementTitle).isNotNull();
     }
 

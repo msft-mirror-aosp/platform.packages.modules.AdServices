@@ -34,6 +34,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockRandom;
+import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
@@ -47,7 +48,6 @@ import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
-import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 
 import com.google.common.collect.ImmutableList;
 
