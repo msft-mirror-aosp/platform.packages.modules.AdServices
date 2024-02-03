@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.topics.cobalt;
+package com.android.adservices.cobalt;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,7 +29,6 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.cobalt.CobaltRegistryLoader;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.cobalt.CobaltLogger;
