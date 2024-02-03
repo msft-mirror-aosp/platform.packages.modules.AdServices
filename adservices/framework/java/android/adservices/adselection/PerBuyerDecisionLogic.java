@@ -16,6 +16,7 @@
 
 package android.adservices.adselection;
 
+import android.adservices.FlagsConstants.Flags;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.FlaggedApi;
@@ -39,7 +40,7 @@ import java.util.Objects;
  *
  * <p>See {@link CustomAudience#getBiddingLogicUri()}.
  */
-@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class PerBuyerDecisionLogic implements Parcelable {
 
     @NonNull
