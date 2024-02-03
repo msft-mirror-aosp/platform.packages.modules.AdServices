@@ -3461,6 +3461,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
     }
 
+    // Fledge auction server API usage metrics flag.
+    boolean FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge B&A API usage metrics is enabled */
+    default boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
+        return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.

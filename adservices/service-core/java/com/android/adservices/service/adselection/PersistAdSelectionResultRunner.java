@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
@@ -58,6 +60,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
+import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -127,6 +130,8 @@ public class PersistAdSelectionResultRunner {
 
     @NonNull private AuctionResultValidator mAuctionResultValidator;
 
+    @NonNull private final FledgeAuctionServerExecutionLogger mFledgeAuctionServerExecutionLogger;
+
     public PersistAdSelectionResultRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
@@ -143,7 +148,8 @@ public class PersistAdSelectionResultRunner {
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AuctionResultValidator auctionResultValidator,
             @NonNull final Flags flags,
-            @NonNull final AdServicesLogger adServicesLogger) {
+            @NonNull final AdServicesLogger adServicesLogger,
+            @NonNull final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -157,6 +163,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(auctionResultValidator);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -174,6 +181,7 @@ public class PersistAdSelectionResultRunner {
         mAuctionResultValidator = auctionResultValidator;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
+        mFledgeAuctionServerExecutionLogger = fledgeAuctionServerExecutionLogger;
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */
@@ -183,8 +191,10 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        int apiName =
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
         long adSelectionId = inputParams.getAdSelectionId();
+
         try {
             ListenableFuture<Void> filteredRequest =
                     Futures.submit(
@@ -768,8 +778,8 @@ public class PersistAdSelectionResultRunner {
 
     private void notifySuccessToCaller(
             Uri renderUri, long adSelectionId, PersistAdSelectionResultCallback callback) {
+        int resultCode = STATUS_SUCCESS;
         try {
-            // TODO(b/288370270): Collect API metrics
             callback.onSuccess(
                     new PersistAdSelectionResultResponse.Builder()
                             .setAdSelectionId(adSelectionId)
@@ -777,17 +787,20 @@ public class PersistAdSelectionResultRunner {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Attempted notifying success");
+            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
+
         }
     }
 
     private void notifyEmptySuccessToCaller(
             @NonNull PersistAdSelectionResultCallback callback, long adSelectionId) {
+        int resultCode = STATUS_SUCCESS;
         try {
             // TODO(b/288368908): Determine what is an appropriate empty response for revoked
             //  consent
-            // TODO(b/288370270): Collect API metrics
             callback.onSuccess(
                     new PersistAdSelectionResultResponse.Builder()
                             .setAdSelectionId(adSelectionId)
@@ -795,18 +808,20 @@ public class PersistAdSelectionResultRunner {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v(
                     "Persist Ad Selection Result completed, attempted notifying success for a"
                             + " silent failure");
+            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
         }
     }
 
     private void notifyFailureToCaller(Throwable t, PersistAdSelectionResultCallback callback) {
+        int resultCode = STATUS_UNSET;
         try {
-            // TODO(b/288370270): Collect API metrics
             sLogger.e("Notify caller of error: " + t);
-            int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+            resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
 
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
@@ -817,8 +832,10 @@ public class PersistAdSelectionResultRunner {
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Persist Ad Selection Result failed");
+            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
         }
     }
 
