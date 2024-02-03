@@ -20,8 +20,8 @@ filegroup {
     name: "framework-adservices-sources",
     defaults: ["framework-sources-module-defaults"],
     srcs: [
-      "java/**/*.aidl",
-      "java/**/*.java"
+        "java/**/*.aidl",
+        "java/**/*.java",
     ],
     visibility: [
         "//packages/modules/AdServices/adservices:__subpackages__",
@@ -49,7 +49,10 @@ java_sdk_library {
     impl_library_visibility: [
         "//packages/modules/AdServices:__subpackages__",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
 }
 
 java_library {
@@ -62,15 +65,6 @@ java_library {
     ],
     min_sdk_version: "30",
     defaults: ["framework-module-defaults"],
-}
-
-java_api_contribution {
-    name: "framework-adservices-public-stubs",
-    api_surface: "public",
-    api_file: "api/current.txt",
-    visibility: [
-        "//build/orchestrator/apis",
-    ],
 }
 
 java_library {

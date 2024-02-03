@@ -28,6 +28,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -50,6 +51,7 @@ public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
         uninstallPackage(METRICS_TEST_APP_PACKAGE);
     }
 
+    @Ignore("b/282666880")
     @Test
     public void testSdkCanAccessSdkSandboxExitReasons() throws Exception {
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());

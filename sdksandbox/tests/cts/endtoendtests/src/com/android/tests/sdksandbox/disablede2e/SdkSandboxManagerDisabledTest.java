@@ -21,6 +21,7 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ActivityScenario;
@@ -29,6 +30,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,8 +49,10 @@ public class SdkSandboxManagerDisabledTest {
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
-    public void setup() {
-        final Context context = InstrumentationRegistry.getInstrumentation().getContext();
+    public void setup() throws Exception {
+        // Sandbox is enabled on emulators irrespective of the killswitch
+        Assume.assumeFalse(isEmulator());
+        Context context = InstrumentationRegistry.getInstrumentation().getContext();
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
@@ -68,5 +72,9 @@ public class SdkSandboxManagerDisabledTest {
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
+    }
+
+    private static boolean isEmulator() {
+        return SystemProperties.getBoolean("ro.boot.qemu", false);
     }
 }

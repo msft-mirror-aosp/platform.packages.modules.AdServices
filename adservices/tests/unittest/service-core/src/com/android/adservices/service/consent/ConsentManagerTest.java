@@ -2563,6 +2563,7 @@ public class ConsentManagerTest {
         editor.putBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, false);
         editor.putBoolean(SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED, false);
         editor.commit();
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.migratePpApiConsentToSystemService(
                 mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger);
@@ -2606,6 +2607,7 @@ public class ConsentManagerTest {
         ExtendedMockito.doNothing()
                 .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         doNothing().when(mStatsdAdServicesLogger).logConsentMigrationStats(any());
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.migratePpApiConsentToSystemService(
                 mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger);
@@ -2640,6 +2642,7 @@ public class ConsentManagerTest {
         ExtendedMockito.doNothing()
                 .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         doNothing().when(mStatsdAdServicesLogger).logConsentMigrationStats(any());
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.migratePpApiConsentToSystemService(
                 mContextSpy, mConsentDatastore, mAdServicesManager, mStatsdAdServicesLogger);
@@ -2964,6 +2967,7 @@ public class ConsentManagerTest {
         when(mAppSearchConsentManager.getUserManualInteractionWithConsent())
                 .thenReturn(MANUAL_INTERACTIONS_RECORDED);
         when(mockEditor.commit()).thenReturn(true);
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
                 mContextSpy,
@@ -3002,6 +3006,7 @@ public class ConsentManagerTest {
         assertThat(mConsentDatastore.get(AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey()))
                 .isTrue();
         verify(mockAdServicesManager, atLeast(4)).setConsent(any());
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentMigrationStats consentMigrationStats =
                 ConsentMigrationStats.builder()
@@ -3039,6 +3044,7 @@ public class ConsentManagerTest {
                 .thenReturn(MANUAL_INTERACTIONS_RECORDED);
         when(mockEditor.commit()).thenReturn(false);
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
                 mContextSpy,
@@ -3074,7 +3080,6 @@ public class ConsentManagerTest {
 
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLogger).logConsentMigrationStats(any());
-
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(

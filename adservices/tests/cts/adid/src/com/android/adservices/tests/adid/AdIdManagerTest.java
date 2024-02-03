@@ -30,10 +30,12 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,13 +50,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RunWith(AndroidJUnit4.class)
 public class AdIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final int DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND = 5;
+    private static final float DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND = 25f;
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
     private String mPreviousAppAllowList;
 
     @Before
     public void setup() throws Exception {
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         overrideAdIdKillSwitch(true);
         overridePpapiAppAllowList();
         // Cool-off rate limiter in case it was initialized by another test
@@ -115,7 +119,7 @@ public class AdIdManagerTest {
 
         // Rate limit hasn't reached yet
         final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getAdIdRequestPerSecond();
+        final float requestPerSecond = getAdIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
             assertFalse(getAdIdAndVerifyRateLimitReached(adIdManager));
         }
@@ -166,19 +170,19 @@ public class AdIdManagerTest {
         };
     }
 
-    private int getAdIdRequestPerSecond() {
+    private float getAdIdRequestPerSecond() {
         try {
             String permitString =
                     SystemProperties.get("debug.adservices.adid_request_permits_per_second");
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
 
             permitString =
                     ShellUtils.runShellCommand(
                             "device_config get adservices adid_request_permits_per_second");
             if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
+                return Float.parseFloat(permitString);
             }
             return DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND;
         } catch (Exception e) {

@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ຍົກເລີກການບລັອກ"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ຄວາມສົນໃຈທີ່ທ່ານໄດ້ບລັອກ"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ຣີເຊັດຄວາມສົນໃຈທັງໝົດ"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"ບໍ່ມີຄວາມສົນໃຈທີ່ຈະສະແດງໃນຕອນນີ້."</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"ບໍ່ມີຫົວຂໍ້ທີ່ຈະສະແດງໃນຕອນນີ້.\nສຶກສາເພີ່ມເຕີມກ່ຽວກັບ "<a href="https://support.google.com/android?p=ad_privacy">"ຫົວຂໍ້ໂຄສະນາ"</a></string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"ບໍ່ມີຄວາມໃຈເພື່ອສະແດງຂຶ້ນໃນຕອນນີ້"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"ບໍ່ມີຫົວຂໍ້ທີ່ຈະສະແດງໃນຕອນນີ້"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"ເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android ມີຄຸນສົມບັດໃໝ່ໆທີ່ແອັບສາມາດໃຊ້ເພື່ອສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານ. ເທັກໂນໂລຢີເຫຼົ່ານີ້ບໍ່ໄດ້ໃຊ້ຕົວລະບຸອຸປະກອນ.\n\nAndroid ສາມາດຄາດການປະເພດຂອງໂຄສະນາທີ່ທ່ານອາດສົນໃຈ ແລະ ບັນທຶກຄວາມສົນໃຈເຫຼົ່ານີ້ໄວ້ຢູ່ອຸປະກອນຂອງທ່ານຊົ່ວຄາວ. ສິ່ງນີ້ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ແກ່ທ່ານໂດຍທີ່ບໍ່ຕ້ອງຕິດຕາມການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ທ່ານບໍ່ມີຄວາມສົນໃຈໃດຖືກບລັອກ"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ເບິ່ງແອັບທີ່ຖືກບລັອກ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ຣີເຊັດຄວາມສົນໃຈທີ່ຄາດການໂດຍແອັບ"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ບໍ່ມີແອັບໃດຄາດການຄວາມສົນໃຈຂອງທ່ານໃນຕອນນີ້"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"ບໍ່ມີແອັບທີ່ຈະສະແດງໃນຕອນນີ້. \nສຶກສາເພີ່ມເຕີມກ່ຽວກັບ "<a href="https://support.google.com/android?p=ad_privacy">"ໂຄສະນາແນະນຳແອັບ"</a></string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"ບໍ່ມີແອັບທີ່ຈະສະແດງໃນຕອນນີ້"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"ເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android ມີຄຸນສົມບັດໃໝ່ໆທີ່ແອັບສາມາດໃຊ້ເພື່ອສະແດງໂຄສະນາທີ່ທ່ານອາດມັກໃຫ້ແກ່ທ່ານ. ເທັກໂນໂລຢີເຫຼົ່ານີ້ບໍ່ໄດ້ໃຊ້ຕົວລະບຸອຸປະກອນ.\n\nແອັບສາມາດຄາດການປະເພດຂອງໂຄສະນາທີ່ທ່ານອາດສົນໃຈ ແລະ ບັນທຶກຄວາມສົນໃຈເຫຼົ່ານີ້ໄວ້ຢູ່ອຸປະກອນຂອງທ່ານຊົ່ວຄາວ. ສິ່ງນີ້ຊ່ວຍໃຫ້ແອັບຕ່າງໆສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ແກ່ທ່ານໂດຍທີ່ບໍ່ຕ້ອງຕິດຕາມການເຄື່ອນໄຫວຂອງທ່ານຢູ່ເວັບໄຊ ແລະ ແອັບຈາກນັກພັດທະນາອື່ນໆ."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ທ່ານບໍ່ມີແອັບໃດຖືກບລັອກ"</string>
@@ -187,25 +187,14 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"ຣີເຊັດໂຄສະນາທີ່ແອັບແນະນຳບໍ?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"ຂໍ້ມູນການແນະນຳໂຄສະນາຈາກແອັບໃນລາຍການຂອງທ່ານຈະຖືກລຶບອອກ ແລະ ແອັບຈະແນະນຳໂຄສະນາໃໝ່ໃນອະນາຄົດ. ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງບາງຢ່າງຢູ່."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ຣີເຊັດຂໍ້ມູນແອັບແລ້ວ"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"ຫົວຂໍ້ໂຄສະນາເປີດຢູ່"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Android ຈະເລີ່ມບັນທຶກຫົວຂໍ້ທີ່ໜ້າສົນໃຈ, ແຕ່ມັນອາດຈະໃຊ້ເວລາໄລຍະໜຶ່ງເພື່ອໃຫ້ຫົວຂໍ້ທຳອິດຂອງທ່ານປາກົດ."</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"ປິດຫົວຂໍ້ໂຄສະນາບໍ?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"ຫົວຂໍ້ໂຄສະນານີ້ຈະຖືກລຶບ. Android ຈະບໍ່ບັນທຶກຫົວຂໍ້ທີ່ໜ້າສົນໃຈອີກຕໍ່ໄປ, ແຕ່ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງຢູ່."</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"ໂຄສະນາແນະນຳແອັບເປີດຢູ່"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"ແອັບອາດຈະເລີ່ມການແນະນຳໂຄສະນາ. ທ່ານຈະເຫັນລາຍຊື່ຂອງແອັບເມື່ອພວກມັນເລີ່ມການແນະນຳໂຄສະນາ."</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"ປິດໂຄສະນາແນະນຳແອັບບໍ?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"ຂໍ້ມູນການແນະນຳໂຄສະນາທັງໝົດຈະຖືກລຶບ. ແອັບຈະບໍ່ສາມາດແນະນຳໂຄສະນາໄດ້ອີກຕໍ່ໄປ, ແຕ່ທ່ານອາດຈະຍັງເຫັນໂຄສະນາທີ່ກ່ຽວຂ້ອງຢູ່."</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"ການວັດແທກຜົນຂອງໂຄສະນາເປີດຢູ່"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"Android ສາມາດແບ່ງປັນສະເພາະຂໍ້ມູນຈໍາກັດຫຼາຍກັບແອັບ ເພື່ອຊ່ວຍໃຫ້ແອັບສາມາດວັດແທກປະສິດທິພາບຂອງໂຄສະນາຂອງເຂົາເຈົ້າໄດ້."</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"ປິດການວັດແທກຜົນຂອງໂຄສະນາບໍ?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"ລາຍງານການວັດແທກຜົນຂອງໂຄສະນາທີ່ຄ້າງຢູ່ຈະຖືກລຶບ ແລະ ຈະບໍ່ມີການສ້າງລາຍງານ ຫຼື ການແບ່ງປັນໃໝ່."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"ຣີເຊັດຫົວຂໍ້ທັງໝົດບໍ?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"ຣີເຊັດໂຄສະນາທີ່ແອັບແນະນຳບໍ?"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ຄວາມເປັນສ່ວນກ່ຽວກັບຕົວໂຄສະນາ"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"ຫົວຂໍ້ໂຄສະນາ"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ໂຄສະນາທີ່ແອັບແນະນຳ"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android ຈະບັນທຶກຫົວຂໍ້ທີ່ສົນໃຈໂດຍອີງຕາມແອັບທີ່ທ່ານໃຊ້ຫຼ້າສຸດ ແລະ ຄວາມຖີ່ທີ່ທ່ານໃຊ້ແອັບເຫຼົ່ານີ້."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ນອກຈາກນັ້ນ, ແອັບທີ່ທ່ານໃຊ້ຍັງສາມາດລະບຸໄດ້ວ່າທ່ານມັກຫຍັງໂດຍອີງຕາມວິທີທີ່ທ່ານໃຊ້ແອັບ."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ແອັບທີ່ທ່ານໃຊ້ສາມາດຂໍຂໍ້ມູນຈາກ Android ໄດ້ເພື່ອຊ່ວຍໃຫ້ແອັບວັດແທກປະສິດທິພາບໂຄສະນາຂອງພວກມັນ. Android ອະນຸຍາດໃຫ້ແອັບເກັບຮວບຮວມຂໍ້ມູນບາງປະເພດ."</string>
-    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"ສຶກສາເພີ່ມເຕີມກ່ຽວກັບ "<a href="https://support.google.com/android?p=ad_privacy">"ຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາຢູ່ Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ເປີດ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ຫົວຂໍ້"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ເປີດ / # ຫົວ​ຂໍ້}other{ເປີດ / # ຫົວຂໍ້}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ເປີດ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ແອັບ"</string>
@@ -222,11 +211,6 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ແອັບທີ່ທ່ານບລັອກ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ຣີເຊັດຂໍ້ມູນທີ່ແອັບແນະນຳ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ມັນເປັນສິ່ງປົກກະຕິທີ່ແອັບທີ່ທ່ານໃຊ້ຈະຈື່ສິ່ງທີ່ທ່ານສົນໃຈເພື່ອປັບແຕ່ງປະສົບການນຳໃຊ້ຂອງທ່ານໃຫ້ເປັນແບບສ່ວນຕົວ. ນອກຈາກນັ້ນ, ແອັບຍັງສາມາດຈັດເກັບຂໍ້ມູນກ່ຽວກັບຫົວຂໍ້ຂອງທ່ານກັບ Android ໄດ້ນຳ.\n\nຕົວຢ່າງ: ຫາກທ່ານໃຊ້ແອັບກ່ຽວກັບການຊ້ອມແລ່ນມາຣາທອນ, ແອັບດັ່ງກ່າວອາດເຂົ້າໃຈວ່າທ່ານສົນໃຈເກີບແລ່ນ. ຕໍ່ມາ, ຖ້າທ່ານໃຊ້ແອັບອື່ນ, ແອັບນັ້ນກໍອາດສະແດງໂຄສະນາເກີບແລ່ນທີ່ແນະນຳໂດຍແອັບທຳອິດໃຫ້ທ່ານເຫັນ.\n\nAndroid ຈະລຶບຂໍ້ມູນການແນະນຳແອັບໂດຍອັດຕະໂນມັດເປັນປະຈຳ. ແອັບທີ່ທ່ານໃຊ້ຄືນອາດກັບມາປາກົດຢູ່ໃນລາຍຊື່ອີກຄັ້ງ. ຫຼື ທ່ານສາມາດບລັອກແອັບບໍ່ໃຫ້ແນະນຳໂຄສະນາໃຫ້ທ່ານ.\n\nໃນແອັບຂອງທ່ານ, ໂຄສະນາທີ່ທ່ານເຫັນອາດຖືກປັບແຕ່ງສ່ວນຕົວໂດຍອີງຕາມການຕັ້ງຄ່ານີ້, ການຕັ້ງຄ່າຫົວຂໍ້ໂຄສະນາ, ການຕັ້ງຄ່າ Advertising ID ຂອງທ່ານ ແລະ ແອັບທີ່ທ່ານກຳລັງໃຊ້ປັບແຕ່ງໂຄສະນາໃຫ້ເປັນແບບສ່ວນຕົວຫຼືບໍ່."</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"ຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາໃໝ່ພ້ອມໃຫ້ນຳໃຊ້ແລ້ວ"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"ລະບົບຈະແບ່ງປັນຂໍ້ມູນລະຫວ່າງແອັບຕ່າງໆແບບຈຳກັດເທົ່ານັ້ນເພື່ອຊ່ວຍວັດແທກປະສິດທິພາບໂຄສະນາ"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"ພວກເຮົາກຳລັງເປີດໃຊ້ຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາໃໝ່ທີ່ເອີ້ນວ່າການວັດແທກຜົນຂອງໂຄສະນາ. Android ຈະແບ່ງປັນຂໍ້ມູນລະຫວ່າງແອັບຕ່າງໆແບບຈຳກັດເທົ່ານັ້ນ, ເຊັ່ນ: ເມື່ອສະແດງໂຄສະນາໃຫ້ທ່ານເຫັນ, ເພື່ອຊ່ວຍໃຫ້ແອັບວັດແທກປະສິດທິພາບຂອງໂຄສະນາໄດ້."</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"ທ່ານສາມາດດຳເນີນການປ່ຽນແປງໄດ້ໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາ."</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"ແອັບທີ່ທ່ານໃຊ້ສາມາດຂໍຂໍ້ມູນຈາກ Android ໄດ້ເພື່ອຊ່ວຍໃຫ້ແອັບວັດແທກປະສິດທິພາບໂຄສະນາຂອງພວກມັນ. Android ອະນຸຍາດໃຫ້ແອັບເກັບຮວບຮວມຂໍ້ມູນພຽງບາງປະເພດເທົ່ານັ້ນ."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"ການ​ອະ​ທິ​ບາຍປະ​ກອບ​ຮູບ​ສັນ​ຍາ​ລັກ​ເປັນ​ສີ​ສັນ​ແທນ​ໃຫ້​ຫົວ​ຂໍ້​ທີ່​ສົນ​ໃຈ​ເຊັ່ນ: ​ເພງ, ຂາວ ແລະ ກິ​ລາ"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"ການ​ອະ​ທິ​ບາຍ​ປະ​ກອບ​ຮູບເປັນ​ສີ​ສັນ​ຂອງ​ລັອກ​ຢູ່​ດ້ານ​ໃນ​ວົງ​ມົນ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ການ​ອະ​ທິ​ບາຍ​ປະ​ກອບ​ຮູບຂາວ​ດຳ​ນ້ອຍ​ຂອງ​ເກົ້າ​ຈ້ຳ​ປະ​ກອບ​ເປັນ​ຮູບ​ຈະ​ຕຸ​ລັດ"</string>

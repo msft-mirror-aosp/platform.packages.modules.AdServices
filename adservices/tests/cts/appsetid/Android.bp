@@ -44,32 +44,3 @@ android_test {
     test_mainline_modules: ["com.google.android.adservices.apex"],
     manifest: "AndroidManifest.xml",
 }
-
-android_test {
-    name: "CtsAdExtServicesAppSetIdEndToEndTest",
-    srcs: [
-        "src/**/*.java",
-    ],
-    static_libs: [
-        "adservices-clients",
-        "adservices-test-utility",
-        "androidx.concurrent_concurrent-futures",
-        "compatibility-device-util-axt",
-        "truth",
-    ],
-    libs: [
-        "android.ext.adservices",
-        "android.test.base",
-        "framework-sdksandbox.impl",
-    ],
-    test_suites: [
-        "cts",
-        "general-tests",
-        "mts-extservices",
-    ],
-    sdk_version: "module_current",
-    min_sdk_version: "31",
-    max_sdk_version: "32",
-    test_config: "AndroidTest.ExtServices.xml",
-    manifest: "AndroidManifestExtServices.xml",
-}

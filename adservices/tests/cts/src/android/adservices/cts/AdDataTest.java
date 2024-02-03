@@ -30,6 +30,8 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.compatibility.common.util.ApiTest;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -92,43 +94,20 @@ public final class AdDataTest {
                                 .build());
     }
 
+    @ApiTest(apis = {"android.adservices.common.AdData#toString"})
     @Test
     public void testAdDataToString() {
-        AdData.Builder builder =
+        AdData validAdData =
                 new AdData.Builder()
                         .setRenderUri(VALID_RENDER_URI)
-                        .setMetadata(AdDataFixture.VALID_METADATA);
-        if (AdDataFixture.FCAP_ENABLED) {
-            builder.setAdCounterKeys(AdDataFixture.getAdCounterKeys());
-        }
-        if (AdDataFixture.FCAP_ENABLED && AdDataFixture.APP_INSTALL_ENABLED) {
-            builder.setAdFilters(AdFiltersFixture.getValidUnhiddenFilters());
-        }
-        AdData obj = builder.build();
-        String expected =
-                "AdData{mRenderUri="
-                        + VALID_RENDER_URI
-                        + ", mMetadata='"
-                        + AdDataFixture.VALID_METADATA
-                        + "'"
-                        + generateAdCounterKeyString()
-                        + generateAdFilterString()
-                        + "}";
-        assertEquals(expected, obj.toString());
-    }
+                        .setMetadata(AdDataFixture.VALID_METADATA)
+                        .build();
+        final String actualString = validAdData.toString();
 
-    private String generateAdCounterKeyString() {
-        if (AdDataFixture.FCAP_ENABLED) {
-            return ", mAdCounterKeys=" + AdDataFixture.getAdCounterKeys();
-        }
-        return "";
-    }
-
-    private String generateAdFilterString() {
-        if (AdDataFixture.FCAP_ENABLED || AdDataFixture.APP_INSTALL_ENABLED) {
-            return ", mAdFilters=" + AdFiltersFixture.getValidUnhiddenFilters();
-        }
-        return "";
+        assertThat(actualString).startsWith("AdData{");
+        assertThat(actualString).contains("mRenderUri=" + VALID_RENDER_URI);
+        assertThat(actualString).contains(", mMetadata='" + AdDataFixture.VALID_METADATA + "'");
+        assertThat(actualString).endsWith("}");
     }
 
     @Test

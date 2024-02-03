@@ -31,6 +31,10 @@
         <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
 
+        <!-- Defaulting the API rate limit -->
+        <option name="run-command"
+                value="device_config put adservices adid_request_permits_per_second 25.0" />
+
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />

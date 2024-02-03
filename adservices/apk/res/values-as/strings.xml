@@ -143,8 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"আনব্লক কৰক"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"আপুনি অৱৰোধ কৰা আগ্ৰহ"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"আটাইবোৰ আগ্ৰহ ৰিছেট কৰক"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"এই মুহূৰ্তত দেখুৱাবলৈ কোনো আগ্ৰহ নাই।"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"এই মুহূৰ্তত দেখুৱাবলৈ কোনো বিষয়বস্তু নাই।\n"<a href="https://support.google.com/android?p=ad_privacy">"বিজ্ঞাপনৰ বিষয়বস্তু"</a>"ৰ বিষয়ে অধিক জানক"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"এই মুহূৰ্তত দেখুৱাবলৈ কোনো আগ্ৰহ নাই"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"এই মুহূৰ্তত দেখুৱাবলৈ কোনো বিষয়বস্তু নাই"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"প্ৰাইভেচি ছেণ্ডবক্স"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Androidৰ বিজ্ঞাপনৰ গোপনীয়তা বিটাই নতুন সুবিধাসমূহ দিয়ে, যিসমূহ সুবিধা এপে আপোনাক আপুনি পচন্দ কৰিব পৰা ধৰণৰ বিজ্ঞাপন দেখুৱাবলৈ ব্যৱহাৰ কৰিব পাৰে। এই প্ৰযুক্তিসমূহে ডিভাইচ চিনাক্তকাৰী ব্যৱহাৰ নকৰে।\n\nAndroidএ আপুনি আগ্ৰহী হ’ব পৰা ধৰণৰ বিজ্ঞাপন অনুমান কৰিব পাৰে আৰু আপোনাৰ ডিভাইচত অস্থায়ীভাৱে আগ্ৰহসমূহ ছেভ কৰিব পাৰে। এইটোৱে সমগ্ৰ ৱেবছাইট আৰু অন্য বিকাশকৰ্তাৰ এপত আপোনাৰ কাৰ্যকলাপ ট্ৰেক নকৰাকৈয়ে আপোনাৰ বাবে প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ এপক অনুমতি দিয়ে।"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"আপোনাৰ ওচৰত অৱৰোধ কৰি থোৱা কোনো আগ্ৰহ নাই"</string>
@@ -157,7 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"অৱৰোধ কৰা এপ্‌ চাওক"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"এপে অনুমান কৰা আগ্ৰহ ৰিছেট কৰক"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"এই মুহূৰ্তত আপোনাৰ বাবে কোনো এপে আগ্ৰহ সৃষ্টি কৰা নাই"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"এই মুহূৰ্তত দেখুৱাবলৈ কোনো এপ্‌ নাই। \n"<a href="https://support.google.com/android?p=ad_privacy">"এপে পৰামৰ্শ দিয়া বিজ্ঞাপন"</a>"ৰ বিষয়ে অধিক জানক"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"এই মুহূৰ্তত দেখুৱাবলৈ কোনো এপ্‌ নাই"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"প্ৰাইভেচি ছেণ্ডবক্স"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Androidৰ বিজ্ঞাপনৰ গোপনীয়তা বিটাই নতুন সুবিধাসমূহ দিয়ে, যিসমূহ সুবিধা এপে আপোনাক আপুনি পচন্দ কৰিব পৰা ধৰণৰ বিজ্ঞাপন দেখুৱাবলৈ ব্যৱহাৰ কৰিব পাৰে। এই প্ৰযুক্তিসমূহে ডিভাইচ চিনাক্তকাৰী ব্যৱহাৰ নকৰে।\n\nএপে আপুনি আগ্ৰহী হ’ব পৰা ধৰণৰ বিজ্ঞাপন অনুমান কৰিব পাৰে আৰু আপোনাৰ ডিভাইচত অস্থায়ীভাৱে আগ্ৰহসমূহ ছেভ কৰিব পাৰে। এইটোৱে সমগ্ৰ ৱেবছাইট আৰু অন্য বিকাশকৰ্তাৰ এপত আপোনাৰ কাৰ্যকলাপ ট্ৰেক নকৰাকৈয়ে আপোনাৰ বাবে প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ এপক অনুমতি দিয়ে।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"আপোনাৰ ওচৰত কোনো অৱৰোধিত এপ্ নাই"</string>
@@ -187,25 +187,14 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"এপে পৰামৰ্শ দিয়া বিজ্ঞাপন ৰিছেট কৰিবনে?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"আপোনাৰ সূচীত থকা এপ্‌সমূহৰ পৰা বিজ্ঞাপন পৰামৰ্শৰ লগত জড়িত ডেটা মচা হ’ব আৰু এপ্‌সমূহে ভৱিষ্যতে নতুন বিজ্ঞাপনৰ পৰামৰ্শ দিব। আপুনি তথাপি কিছুমান প্ৰাসংগিক বিজ্ঞাপন দেখা পাব পাৰে।"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"এপৰ ডেটা ৰিছেট কৰা হৈছে"</string>
-    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"বিজ্ঞাপনৰ বিষয়বস্তু অন আছে"</string>
-    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"Androidএ আগ্ৰহৰ বিষয়বস্তুৰ প্ৰতি লক্ষ্য ৰাখিবলৈ আৰম্ভ কৰিব, কিন্তু আপোনাৰ প্ৰথম বিষয়বস্তুটো দেখা পাবলৈ কিছু সময় লাগিব পাৰে।"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"বিজ্ঞাপনৰ বিষয়বস্তু অফ কৰিবনে?"</string>
-    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"বিষয়বস্তুৰ এই সূচীখন মচি পেলোৱা হ’ব। Androidএ আৰু আগ্ৰহৰ বিষয়বস্তুৰ প্ৰতি লক্ষ্য নাৰাখিব, কিন্তু আপুনি তথাপি প্ৰাসংগিক বিজ্ঞাপন দেখা পাব পাৰে।"</string>
-    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"এপে পৰামৰ্শ দিয়া বিজ্ঞাপন অন আছে"</string>
-    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"এপ্‌সমূহে বিজ্ঞাপনৰ পৰামৰ্শ আগবঢ়াবলৈ আৰম্ভ কৰিব পাৰে। এপ্‌সমূহে বিজ্ঞাপনৰ পৰামৰ্শ আগবঢ়াবলৈ আৰম্ভ কৰিলে আপুনি সেইবিলাকৰ এখন সূচী দেখা পাব।"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"এপে পৰামৰ্শ দিয়া বিজ্ঞাপন অফ কৰিবনে?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"আটাইবোৰ বিজ্ঞাপনৰ পৰামৰ্শৰ ডেটা মচা হ’ব। এপ্‌সমূহে আৰু বিজ্ঞাপনৰ পৰামৰ্শ দিব নোৱাৰিব, কিন্তু আপুনি তথাপি প্ৰাসংগিক বিজ্ঞাপন দেখা পাব পাৰে।"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"বিজ্ঞাপনৰ জোখ-মাখ অন আছে"</string>
-    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"এপ্‌সমূহক নিজৰ বিজ্ঞাপনৰ পাৰদৰ্শিতা জোখ-মাখ কৰাত সহায় কৰিবলৈ Androidএ সেইবিলাকৰ সৈতে অতি সীমিত তথ্য শ্বেয়াৰ কৰিব পাৰে।"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"বিজ্ঞাপনৰ জোখ-মাখ অফ কৰিবনে?"</string>
-    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"আটাইবোৰ বিবেচনাধীন বিজ্ঞাপনৰ জোখ-মাখৰ ৰিপ’ৰ্ট মচি পেলোৱা হ’ব আৰু কোনো নতুন ৰিপ’ৰ্ট সৃষ্টি অথবা শ্বেয়াৰ কৰা নহ’ব।"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"আটাইবোৰ বিষয়বস্তু ৰিছেট কৰিবনে?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"এপে পৰামৰ্শ দিয়া বিজ্ঞাপন ৰিছেট কৰিবনে?"</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"বিজ্ঞাপনৰ গোপনীয়তা"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"বিজ্ঞাপনৰ বিষয়বস্তু"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"এপে পৰামৰ্শ দিয়া বিজ্ঞাপন"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"আপুনি শেহতীয়াকৈ ব্যৱহাৰ কৰা এপ্‌সমূহ আৰু আপুনি সেইবোৰ কিমান সঘনাই ব্যৱহাৰ কৰে তাৰ ওপৰত ভিত্তি কৰি Androidএ আগ্ৰহৰ বিষয়বস্তুৰ লক্ষ্য় ৰাখে।"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"আপুনি ব্যৱহাৰ কৰা এপ্‌সমূহেও আপুনি সেইবিলাক কেনেকৈ ব্যৱহাৰ কৰে তাৰ ওপৰত ভিত্তি কৰি আপুনি কি ভাল পায় সেইটো নিৰ্ধাৰণ কৰিব পাৰে।"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"আপুনি ব্যৱহাৰ কৰা এপ্‌সমূহে দেখুওৱা বিজ্ঞাপনৰ পাৰদৰ্শিতাৰ জোখ-মাখ কৰাত সহায় কৰিবলৈ সেইসমূহে Androidৰ পৰা তথ্য বিচাৰিব পাৰে। Androidএ এপ্‌সমূহক সীমিত ধৰণৰ ডেটা সংগ্ৰহ কৰিবলৈ দিয়ে।"</string>
-    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Androidত বিজ্ঞাপনৰ গোপনীয়তা"</a>"ৰ বিষয়ে অধিক জানক"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"অন আছে / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> টা বিষয়বস্তু"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{অন আছে / # টা বিষয়বস্তু}one{অন আছে / # টা বিষয়বস্তু}other{অন আছে / # টা বিষয়বস্তু}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"অন আছে / <xliff:g id="APPS_COUNT">%1$d</xliff:g> টা এপ্‌"</string>
@@ -222,11 +211,6 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"আপুনি অৱৰোধ কৰা এপ্‌"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"এপে পৰামৰ্শ দিয়া ডেটা ৰিছেট কৰক"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"আপোনাৰ অভিজ্ঞতা ব্যক্তিগতকৰণ কৰিবলৈ আপুনি ব্যৱহাৰ কৰা এপ্‌সমূহে আপুনি আগ্ৰহ দেখুওৱা বস্তুৰ বিষয়ে মনত ৰখাটো সাধাৰণ কথা। এপ্‌সমূহে আপোনাৰ বিষয়বস্তু সম্পৰ্কে Androidৰ সহায়ত তথ্য ষ্ট’ৰো কৰিব পাৰে।\n\nউদাহৰণস্বৰূপে, আপুনি যদি মাৰাথন প্ৰশিক্ষণৰ সৈতে জড়িত কোনো এপ্‌ ব্যৱহাৰ কৰে, এপ্‌টোৱে সিদ্ধান্ত ল’ব পাৰে যে আপুনি দৌৰোঁতে পিন্ধা জোতাৰ প্ৰতি আগ্ৰহী হ’ব পাৰে। পাছত, আপুনি যদি অন্য কোনো এপ্‌ ব্যৱহাৰ কৰে, সেই এপ্‌টোৱে আপোনাক প্ৰথমটো এপে পৰামৰ্শ আগবঢ়োৱা দৌৰোঁতে পিন্ধা জোতাৰ বিজ্ঞাপন দেখুৱাব পাৰে।\n\nএপে পৰামৰ্শ হিচাপে আগবঢ়োৱা ডেটা Androidএ নিয়মীয়াকৈ স্বয়ংক্ৰিয়ভাৱে মচে। আপুনি পুনৰ ব্যৱহাৰ কৰিব পৰা কোনো এপ্‌ সূচীখনত পুনৰ ওলাব পাৰে। অথবা আপুনি কোনো এপক আপোনাৰ বাবে বিজ্ঞাপনৰ পৰামৰ্শ আগবঢ়োৱাৰ ক্ষেত্ৰত বাধা দিব পাৰে।\n\nআপোনাৰ এপ্‌সমূহত আপুনি দেখা কোনো বিজ্ঞাপন এইটো ছেটিং, বিজ্ঞাপনৰ বিষয়বস্তুৰ ছেটিং, আপোনাৰ বিজ্ঞাপন IDৰ ছেটিং আৰু আপুনি ব্যৱহাৰ কৰি থকা এপ্‌টোৱে বিজ্ঞাপন ব্যক্তিগতকৰণ কৰেনে নকৰে তাৰ ওপৰত ভিত্তি কৰি ব্যক্তিগতকৰণ কৰা হ’ব পাৰে।"</string>
-    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"বিজ্ঞাপনৰ গোপনীয়তা সম্পৰ্কীয় নতুন সুবিধা উপলব্ধ"</string>
-    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"বিজ্ঞাপনৰ পাৰদৰ্শিতা জোখ-মাখ কৰাত সহায় কৰিবলৈ এপ্‌সমূহৰ মাজত অতি সীমিত তথ্য শ্বেয়াৰ কৰা হয়"</string>
-    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"আমি বিজ্ঞাপনৰ জোখ-মাখ নামৰ এটা নতুন বিজ্ঞাপনৰ গোপনীয়তা সম্পৰ্কীয় সুবিধা লঞ্চ কৰিবলৈ লৈছোঁ। Androidএ বিজ্ঞাপনৰ পাৰদৰ্শিতা জোখ-মাখ কৰাত সহায় কৰিবলৈ এপ্‌সমূহৰ মাজত অতি সীমিত তথ্য শ্বেয়াৰ কৰে, যেনে, আপোনাক বিজ্ঞাপনটো দেখুওৱা হৈছিল।"</string>
-    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"আপুনি বিজ্ঞাপনৰ গোপনীয়তাৰ ছেটিঙত সালসলনি কৰিব পাৰে।"</string>
-    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"আপুনি ব্যৱহাৰ কৰা এপ্‌সমূহে দেখুওৱা বিজ্ঞাপনৰ পাৰদৰ্শিতাৰ জোখ-মাখ কৰাত সহায় কৰিবলৈ সেইসমূহে Androidৰ পৰা তথ্য বিচাৰিব পাৰে। Androidএ এপ্‌সমূহক কেৱল সীমিত ধৰণৰ ডেটা সংগ্ৰহ কৰিবলৈ দিয়ে।"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"সংগীত, বাতৰি আৰু ক্ৰীড়াৰ দৰে আগ্ৰহৰ বিষয়সমূহ প্ৰতিনিধিত্ব কৰা চিহ্নবোৰৰ ৰঙীন চিত্ৰণ"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"এটা বৃত্তৰ ভিতৰত থকা এটা তলাৰ ৰঙীন চিত্ৰণ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"এটা বৰ্গ গঠন কৰা নটা বিন্দুৰ সৰু ক’লা আৰু বগা চিত্ৰণ"</string>
