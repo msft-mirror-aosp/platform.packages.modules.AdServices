@@ -30,6 +30,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.KeyedFrequencyCap;
 import android.content.pm.PackageManager;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -43,6 +44,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -62,6 +64,9 @@ public class FledgeMaintenanceTasksWorkerTests {
     private MockitoSession mMockitoSession;
 
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

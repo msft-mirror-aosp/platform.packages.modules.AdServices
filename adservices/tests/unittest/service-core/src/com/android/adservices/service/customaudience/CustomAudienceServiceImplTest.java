@@ -67,8 +67,8 @@ import android.adservices.customaudience.ICustomAudienceCallback;
 import android.os.Process;
 import android.os.RemoteException;
 
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -102,6 +102,7 @@ import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
 
+@RequiresSdkLevelAtLeastS()
 @MockStatic(BackgroundFetchJobService.class)
 public final class CustomAudienceServiceImplTest extends AdServicesExtendedMockitoTestCase {
 

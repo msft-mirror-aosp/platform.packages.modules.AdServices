@@ -40,6 +40,7 @@ import android.adservices.common.FrequencyCapFilters;
 import android.os.Parcel;
 import android.os.RemoteException;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -79,6 +80,9 @@ public class UpdateAdCounterHistogramWorkerTest {
 
     private UpdateAdCounterHistogramWorker mUpdateWorker;
     private UpdateAdCounterHistogramInput mInputParams;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

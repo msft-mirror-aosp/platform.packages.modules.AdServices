@@ -102,6 +102,7 @@ import android.os.RemoteException;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -184,6 +185,9 @@ public class FetchCustomAudienceImplTest {
     private FetchCustomAudienceImpl mFetchCustomAudienceImpl;
     private FetchAndJoinCustomAudienceInput.Builder mInputBuilder;
     private MockitoSession mStaticMockSession = null;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

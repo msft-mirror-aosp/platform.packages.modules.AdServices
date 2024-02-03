@@ -19,6 +19,9 @@ package com.android.adservices.data.adselection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class DBAdSelectionOverrideTest {
@@ -30,6 +33,9 @@ public class DBAdSelectionOverrideTest {
                     + "\t\"render_uri_1\": \"signals_for_1\",\n"
                     + "\t\"render_uri_2\": \"signals_for_2\"\n"
                     + "}";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBAdSelectionOverride() {

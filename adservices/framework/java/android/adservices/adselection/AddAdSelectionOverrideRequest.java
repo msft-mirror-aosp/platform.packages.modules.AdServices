@@ -42,7 +42,7 @@ public class AddAdSelectionOverrideRequest {
 
     @NonNull private final AdSelectionSignals mTrustedScoringSignals;
 
-    @NonNull private final BuyersDecisionLogic mBuyersDecisionLogic;
+    @NonNull private final PerBuyerDecisionLogic mPerBuyerDecisionLogic;
 
     /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
     @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
@@ -50,23 +50,27 @@ public class AddAdSelectionOverrideRequest {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull BuyersDecisionLogic buyersDecisionLogic) {
+            @NonNull PerBuyerDecisionLogic perBuyerDecisionLogic) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJs);
         Objects.requireNonNull(trustedScoringSignals);
-        Objects.requireNonNull(buyersDecisionLogic);
+        Objects.requireNonNull(perBuyerDecisionLogic);
 
         mAdSelectionConfig = adSelectionConfig;
         mDecisionLogicJs = decisionLogicJs;
         mTrustedScoringSignals = trustedScoringSignals;
-        mBuyersDecisionLogic = buyersDecisionLogic;
+        mPerBuyerDecisionLogic = perBuyerDecisionLogic;
     }
 
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
             @NonNull AdSelectionSignals trustedScoringSignals) {
-        this(adSelectionConfig, decisionLogicJs, trustedScoringSignals, BuyersDecisionLogic.EMPTY);
+        this(
+                adSelectionConfig,
+                decisionLogicJs,
+                trustedScoringSignals,
+                PerBuyerDecisionLogic.EMPTY);
     }
 
     /**
@@ -103,7 +107,7 @@ public class AddAdSelectionOverrideRequest {
      */
     @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @NonNull
-    public BuyersDecisionLogic getBuyersDecisionLogic() {
-        return mBuyersDecisionLogic;
+    public PerBuyerDecisionLogic getPerBuyerDecisionLogic() {
+        return mPerBuyerDecisionLogic;
     }
 }

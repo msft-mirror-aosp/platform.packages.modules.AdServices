@@ -114,6 +114,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -290,6 +291,9 @@ public class OnDeviceAdSelectionRunnerTest {
             new AdCounterHistogramUpdaterNoOpImpl();
 
     @Mock AdSelectionServiceFilter mAdSelectionServiceFilterMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -3081,7 +3085,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build()
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
-                        .setBuyerSignedContextualAds(signedContextualAdsMap)
+                        .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
 
         final Flags flags =
@@ -3143,7 +3147,7 @@ public class OnDeviceAdSelectionRunnerTest {
         assertEquals(
                 "The contextual ads should have reached scoring as is",
                 signedContextualAdsMap,
-                mAdSelectionConfigArgumentCaptor.getValue().getBuyerSignedContextualAds());
+                mAdSelectionConfigArgumentCaptor.getValue().getPerBuyerSignedContextualAds());
     }
 
     @Test
@@ -3155,7 +3159,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
                         // Despite populating Contextual Ads, they will be removed
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
         final Flags flags =
                 new OnDeviceAdSelectionRunnerTestFlags() {
@@ -3226,7 +3230,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         .build()
                         .cloneToBuilder()
                         .setCustomAudienceBuyers(Collections.emptyList())
-                        .setBuyerSignedContextualAds(contextualAdsMap)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
 
         final Flags flags =
@@ -3296,7 +3300,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 contextualAdsMap.get(CommonFixture.VALID_BUYER_1).getAdsWithBid(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
-                        .getBuyerSignedContextualAds()
+                        .getPerBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_1)
                         .getAdsWithBid());
         assertEquals(
@@ -3304,7 +3308,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 Collections.emptyList(),
                 mAdSelectionConfigArgumentCaptor
                         .getValue()
-                        .getBuyerSignedContextualAds()
+                        .getPerBuyerSignedContextualAds()
                         .get(CommonFixture.VALID_BUYER_2)
                         .getAdsWithBid());
     }
