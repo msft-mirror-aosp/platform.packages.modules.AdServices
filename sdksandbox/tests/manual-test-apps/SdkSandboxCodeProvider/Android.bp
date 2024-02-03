@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -33,16 +34,16 @@ android_test_helper_app {
     name: "SdkSandboxCodeProvider",
     defaults: [
         "platform_app_defaults",
-        "SdkSandboxCodeDefaults"
+        "SdkSandboxCodeDefaults",
     ],
     srcs: [
-       "src/**/sdksandboxcode_1/*.java",
-       "src/**/apiimplementation/*.java",
+        "src/**/sdksandboxcode_1/*.java",
+        "src/**/apiimplementation/*.java",
     ],
     static_libs: [
-       "androidx.media3.media3-common",
-       "androidx.media3.media3-exoplayer",
-       "androidx.media3.media3-ui",
+        "androidx.media3.media3-common",
+        "androidx.media3.media3-exoplayer",
+        "androidx.media3.media3-ui",
     ],
     manifest: "AndroidManifest.xml",
     test_suites: ["general-tests"],
@@ -52,11 +53,11 @@ android_test_helper_app {
     name: "SdkSandboxWebViewProvider",
     defaults: [
         "platform_app_defaults",
-        "SdkSandboxCodeDefaults"
+        "SdkSandboxCodeDefaults",
     ],
     srcs: [
-       "src/**/sdksandboxcode_webview/*.java",
-       "src/**/apiimplementation/*.java"
+        "src/**/sdksandboxcode_webview/*.java",
+        "src/**/apiimplementation/*.java",
     ],
     manifest: "AndroidManifest_WebViewProvider.xml",
     test_suites: ["general-tests"],
@@ -66,11 +67,11 @@ android_test_helper_app {
     name: "SdkSandboxMediateeProvider",
     defaults: [
         "platform_app_defaults",
-        "SdkSandboxCodeDefaults"
+        "SdkSandboxCodeDefaults",
     ],
     srcs: [
-       "src/**/sdksandboxcode_mediatee/*.java",
-       "src/**/apiimplementation/*.java"
+        "src/**/sdksandboxcode_mediatee/*.java",
+        "src/**/apiimplementation/*.java",
     ],
     manifest: "AndroidManifest_MediateeProvider.xml",
     test_suites: ["general-tests"],
