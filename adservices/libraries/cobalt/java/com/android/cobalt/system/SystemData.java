@@ -18,8 +18,6 @@ package com.android.cobalt.system;
 
 import android.os.Build;
 
-import com.android.internal.annotations.VisibleForTesting;
-
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.SystemProfileField;
@@ -44,7 +42,6 @@ public final class SystemData {
         this(/* cobaltAppVersion= */ null);
     }
 
-    @VisibleForTesting
     public SystemData(String cobaltAppVersion) {
         SystemProfile.Builder systemProfile =
                 SystemProfile.newBuilder()
