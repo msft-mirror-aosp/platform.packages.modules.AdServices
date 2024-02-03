@@ -22,6 +22,9 @@ import android.adservices.common.AdTechIdentifier;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -36,6 +39,9 @@ public class SetAppInstallAdvertisersRequestTest {
                     Arrays.asList(
                             AdTechIdentifier.fromString("example1.com"),
                             AdTechIdentifier.fromString("example2.com")));
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildsSetAppInstallAdvertisersRequest() {

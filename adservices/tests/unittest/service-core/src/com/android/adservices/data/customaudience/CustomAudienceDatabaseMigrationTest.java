@@ -31,6 +31,8 @@ import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -41,7 +43,10 @@ public class CustomAudienceDatabaseMigrationTest {
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public MigrationTestHelper helper =
             new MigrationTestHelper(INSTRUMENTATION, CustomAudienceDatabase.class);
 

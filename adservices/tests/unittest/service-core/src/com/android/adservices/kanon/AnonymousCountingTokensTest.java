@@ -21,6 +21,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.ActJniUtility;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.kanon.AnonymousCountingTokens;
 import com.android.adservices.service.kanon.AnonymousCountingTokensImpl;
 
@@ -29,7 +30,12 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
 import private_join_and_compute.anonymous_counting_tokens.ClientPrivateParameters;
@@ -45,10 +51,6 @@ import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-
 public class AnonymousCountingTokensTest {
     private SchemeParameters mSchemeParameters;
     private ServerPublicParameters mServerPublicParameters;
@@ -57,6 +59,9 @@ public class AnonymousCountingTokensTest {
     private ClientParameters mClientParameters;
     private Transcript mTranscript;
     private AnonymousCountingTokens mAnonymousCountingTokens;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws IOException {
