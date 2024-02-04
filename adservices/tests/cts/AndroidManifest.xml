@@ -25,6 +25,7 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS" />
     <application android:usesCleartextTraffic="true">
         <uses-library android:name="android.test.runner"/>
 

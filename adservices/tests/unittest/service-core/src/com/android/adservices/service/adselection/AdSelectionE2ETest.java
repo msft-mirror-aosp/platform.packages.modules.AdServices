@@ -90,6 +90,7 @@ import android.adservices.adselection.SignedContextualAds;
 import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallerMetadata;
@@ -7004,7 +7005,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .assertAppDeclaredPermission(
                         mSpyContext,
                         invalidPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7074,7 +7076,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .assertAppDeclaredPermission(
                         mSpyContext,
                         invalidPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     @Test
