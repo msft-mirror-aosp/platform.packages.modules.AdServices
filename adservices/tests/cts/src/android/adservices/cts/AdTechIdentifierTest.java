@@ -22,7 +22,10 @@ import static org.junit.Assert.assertNotEquals;
 import android.adservices.common.AdTechIdentifier;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AdTechIdentifierTest {
@@ -31,6 +34,9 @@ public class AdTechIdentifierTest {
     private static final String DIFFERENT_AD_TECH_ID_STRING = "example.org";
     private static final int ARRAY_SIZE = 10;
     private static final int DESCRIBE_CONTENTS_EXPECTATION = 0;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testAdTechIdentifierCreatorArray() {

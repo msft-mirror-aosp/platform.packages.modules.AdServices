@@ -517,6 +517,33 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                         .wasGaUxNotificationDisplayed());
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordPasNotificationDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordPasNotificationDisplayed(wasNotificationDisplayed);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record PAS Notification Displayed.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationDisplayed() {
+        return executeGetter(
+                /* defaultReturn= */ true,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .wasPasNotificationDisplayed());
+    }
+
     /** retrieves the default consent of a user. */
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getDefaultConsent() {

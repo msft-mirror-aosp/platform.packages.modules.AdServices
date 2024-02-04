@@ -43,6 +43,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
@@ -94,24 +95,28 @@ public abstract class FledgeScenarioTest {
     private int mCacheBuster;
 
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final SupportedByConditionRule devOptionsEnabled =
             DevContextUtils.createDevOptionsAvailableRule(sContext, TAG);
 
-    @Rule(order = 4)
+    @Rule(order = 5)
     public final AdServicesDeviceSupportedRule deviceSupported =
             new AdServicesDeviceSupportedRule();
 
-    @Rule(order = 2)
+    @Rule(order = 3)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             CtsWebViewSupportUtil.createJSSandboxAvailableRule(CONTEXT);
 
-    @Rule(order = 1)
+    @Rule(order = 2)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
+                    .setPpapiAppAllowList(sContext.getPackageName())
+                    .setAdIdKillSwitchForTests(false);
 
-    @Rule(order = 5)
+    @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");

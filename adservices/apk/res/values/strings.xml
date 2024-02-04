@@ -752,6 +752,30 @@
     <!-- Text for button to acknowledge and dismiss PAS re-notification activity.  [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_renotify_right_control_button_text" translatable="false">@string/notificationUI_right_control_button_text</string>
 
+    <!-- PAS Combined Notification Activity & dropdown ***********************************************************-->
+    <!-- Text for the title of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_header_title" translatable="false">@string/notificationUI_pas_notification_title</string>
+    <!-- Text for the body 1 of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_body_1" translatable="false">@string/notificationUI_pas_body_main</string>
+    <!-- Text for the body 2 of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_body_2">Android notes topics of interest based on apps you’ve used recently. Also, apps and their advertising partners can use your activity across other apps on this device to personalize ads while still helping keep your identity private and secure.</string>
+    <!-- Text for explanation of ad measurement of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_body_3" translatable="false">@string/notificationUI_container3_ga_introduction</string>
+    <!-- Text for subtitle in the dropdown info about ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_subtitle1" translatable="false">@string/notificationUI_how_it_works_row_subtitle1</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body1" translatable="false">@string/notificationUI_how_it_works_row_body1</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body2">&#8226;&#160;&#160;Apps you use can also determine what you like based on your app activity. For example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.\n\nApps can securely store this information so that it can only be used by their advertising partners to personalize ads on other apps.</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body3">Later, an app you use can ask for this information – either your ad topics or ads suggested by the apps you’ve used.</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body4" translatable="false">@string/notificationUI_how_it_works_row_body5</string>
+    <!-- Text for subtitle in the dropdown info about ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_subtitle2" translatable="false">@string/notificationUI_how_it_works_subtitle2</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body5">Apps you use can ask Android for information to help them measure the performance of their ads. Android helps protect your privacy by limiting the information apps can share with one another.</string>
+
     <!-- PAS Additional Info Dropdown Sections **************************************************-->
     <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_msmt_dropdown_subtitle1">What data is used?</string>

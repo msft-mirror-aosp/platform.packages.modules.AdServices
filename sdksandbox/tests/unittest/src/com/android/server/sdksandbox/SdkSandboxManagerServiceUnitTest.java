@@ -1575,24 +1575,30 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testHandleShellCommandExecutesCommand() {
-        final FileDescriptor in = FileDescriptor.in;
-        final FileDescriptor out = FileDescriptor.out;
-        final FileDescriptor err = FileDescriptor.err;
-
-        final SdkSandboxShellCommand command = Mockito.mock(SdkSandboxShellCommand.class);
-        Mockito.when(mInjector.createShellCommand(mService, mSpyContext)).thenReturn(command);
-
+    public void testHandleShellCommandExecutesCommand() throws Exception {
+        SdkSandboxShellCommand command = Mockito.mock(SdkSandboxShellCommand.class);
+        Mockito.when(
+                        mInjector.createShellCommand(
+                                mService, mSpyContext, /* supportsAdServicesShellCmd= */ true))
+                .thenReturn(command);
         final String[] args = new String[] {"start"};
+        try (ParcelFileDescriptor pfdIn = ParcelFileDescriptor.dup(FileDescriptor.in);
+                ParcelFileDescriptor pfdOut = ParcelFileDescriptor.dup(FileDescriptor.out);
+                ParcelFileDescriptor pfdErr = ParcelFileDescriptor.dup(FileDescriptor.err)) {
 
-        mService.handleShellCommand(
-                new ParcelFileDescriptor(in),
-                new ParcelFileDescriptor(out),
-                new ParcelFileDescriptor(err),
-                args);
+            mService.handleShellCommand(pfdIn, pfdOut, pfdErr, args);
 
-        Mockito.verify(mInjector).createShellCommand(mService, mSpyContext);
-        Mockito.verify(command).exec(mService, in, out, err, args);
+            Mockito.verify(mInjector)
+                    .createShellCommand(
+                            mService, mSpyContext, /* supportsAdServicesShellCmd= */ true);
+            Mockito.verify(command)
+                    .exec(
+                            mService,
+                            pfdIn.getFileDescriptor(),
+                            pfdOut.getFileDescriptor(),
+                            pfdErr.getFileDescriptor(),
+                            args);
+        }
     }
 
     @Test

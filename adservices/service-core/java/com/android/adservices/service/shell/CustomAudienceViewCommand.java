@@ -111,7 +111,14 @@ final class CustomAudienceViewCommand extends AbstractShellCommand {
                                     + " %s.",
                             owner, buyer, name));
             return Optional.empty();
+        } else {
+            Log.d(
+                    TAG,
+                    String.format(
+                            "Debuggable custom audience found with owner %s, buyer %s and name"
+                                    + " %s.",
+                            owner, buyer, name));
+            return Optional.of(customAudience);
         }
-        return Optional.of(customAudience);
     }
 }

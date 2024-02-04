@@ -21,10 +21,16 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class GetAdSelectionDataRequestTest {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetAdSelectionDataRequest_validInputWithoutUri_success() {

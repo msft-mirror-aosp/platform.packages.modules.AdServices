@@ -49,6 +49,7 @@ import android.content.Context;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.BooleanSyncCallback;
 import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -68,6 +69,7 @@ import org.mockito.Spy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@RequiresSdkLevelAtLeastS(reason = "Cobalt is not launching for Android R")
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(CobaltFactory.class)

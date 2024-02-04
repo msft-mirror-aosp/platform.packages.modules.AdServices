@@ -26,6 +26,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdDataValidator;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -38,6 +39,7 @@ import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.common.ValidatorUtil;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -53,6 +55,9 @@ public class CustomAudienceValidatorTest {
                     FlagsFactory.getFlagsForTest(),
                     new FrequencyCapAdDataValidatorNoOpImpl(),
                     AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testValidCustomAudience() {

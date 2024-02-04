@@ -44,6 +44,7 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -79,7 +80,7 @@ public class AdSelectionDataE2ETest {
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
     private static final String SFE_ADDRESS =
-            "https://seller1-patest.sfe.bas-gcp.pstest.dev/v1/selectAd";
+            "https://seller1-patest.sfe.ppapi.gcp.pstest.dev/v1/selectAd";
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
@@ -112,6 +113,34 @@ public class AdSelectionDataE2ETest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+    }
+
+    @Before
+    public void warmup() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        FakeAdExchangeServer.runServerAuction(
+                CONTEXTUAL_SIGNALS_ONE_BUYER,
+                outcome.getAdSelectionData(),
+                SFE_ADDRESS,
+                SERVER_RESPONSE_LOGGING_ENABLED);
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+
+        // Wait for a couple of seconds before test execution
+        Thread.sleep(2000L);
     }
 
     @Test
