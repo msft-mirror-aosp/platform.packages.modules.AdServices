@@ -44,6 +44,7 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -112,6 +113,34 @@ public class AdSelectionDataE2ETest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+    }
+
+    @Before
+    public void warmup() throws Exception {
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        FakeAdExchangeServer.runServerAuction(
+                CONTEXTUAL_SIGNALS_ONE_BUYER,
+                outcome.getAdSelectionData(),
+                SFE_ADDRESS,
+                SERVER_RESPONSE_LOGGING_ENABLED);
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+
+        // Wait for a couple of seconds before test execution
+        Thread.sleep(2000L);
     }
 
     @Test
