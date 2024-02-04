@@ -36,4 +36,5 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
             "fledge_ad_selection_filtering_enabled";
+    public static final String KEY_PROTECTED_SIGNALS_ENABLED = "protected_signals_enabled";
 }
