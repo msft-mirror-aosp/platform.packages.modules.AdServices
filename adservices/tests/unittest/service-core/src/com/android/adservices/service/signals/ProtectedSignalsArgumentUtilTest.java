@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.js.JSScriptArgument;
 
 import com.google.gson.JsonParser;
@@ -31,6 +32,7 @@ import com.google.gson.JsonSyntaxException;
 
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -45,6 +47,9 @@ public class ProtectedSignalsArgumentUtilTest {
     public static final String SIGNAL_FIELD_NAME = "signals";
     public static final Instant FIXED_NOW = CommonFixture.FIXED_NOW;
     private Map<String, List<ProtectedSignal>> mSignals;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

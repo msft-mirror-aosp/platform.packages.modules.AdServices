@@ -20,11 +20,17 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class ProtectedSignalTest {
 
     private static final String VALUE = "A5";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testCreateProtectedSignal() {

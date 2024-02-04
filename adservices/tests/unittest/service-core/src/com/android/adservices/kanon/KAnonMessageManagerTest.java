@@ -25,6 +25,7 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.kanon.DBKAnonMessage;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.data.kanon.KAnonMessageConstants;
@@ -34,6 +35,7 @@ import com.android.adservices.service.kanon.KAnonMessageEntity;
 import com.android.adservices.service.kanon.KAnonMessageManager;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -92,6 +94,9 @@ public class KAnonMessageManagerTest {
                     .setCreatedAt(FIXED_TIME)
                     .setStatus(KAnonMessageConstants.MessageStatus.SIGNED)
                     .build();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

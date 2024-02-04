@@ -25,8 +25,11 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
@@ -37,6 +40,9 @@ public class PerBuyerDecisionLogicTest {
     private static final AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final DecisionLogic DECISION_LOGIC = new DecisionLogic(DECISION_LOGIC_JS);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidSuccess() {

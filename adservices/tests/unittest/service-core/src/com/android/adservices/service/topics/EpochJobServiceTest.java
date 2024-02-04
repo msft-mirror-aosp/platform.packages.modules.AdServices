@@ -58,6 +58,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
@@ -105,7 +106,10 @@ public class EpochJobServiceTest {
     @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule extendedMockito =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(EpochJobService.class)

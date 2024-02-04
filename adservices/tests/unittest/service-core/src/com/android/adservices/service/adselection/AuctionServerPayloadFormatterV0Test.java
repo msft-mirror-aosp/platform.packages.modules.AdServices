@@ -24,10 +24,12 @@ import static com.android.adservices.service.adselection.AuctionServerPayloadFor
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
@@ -50,6 +52,9 @@ public class AuctionServerPayloadFormatterV0Test {
         secureRandom.nextBytes(result);
         return result;
     }
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

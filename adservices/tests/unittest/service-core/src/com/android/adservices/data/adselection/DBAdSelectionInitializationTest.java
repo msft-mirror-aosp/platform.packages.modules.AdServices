@@ -22,6 +22,9 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -31,6 +34,9 @@ public class DBAdSelectionInitializationTest {
 
     private static final long AD_SELECTION_ID_1 = 1L;
     private static final Instant CREATION_INSTANT_1 = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuild_unsetAdSelectionId_throwsISE() {

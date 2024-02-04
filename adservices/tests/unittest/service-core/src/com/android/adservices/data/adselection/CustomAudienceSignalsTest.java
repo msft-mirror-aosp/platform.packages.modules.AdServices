@@ -22,11 +22,16 @@ import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CustomAudienceSignalsTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildCustomAudienceSignals() {
         CustomAudienceSignals customAudienceSignals =

@@ -55,6 +55,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -83,6 +84,7 @@ import java.util.concurrent.TimeoutException;
 // The actual scheduling of the job needs to be mocked out because the test application does
 // not have the required permissions to schedule the job with the constraints requested by
 // the BackgroundFetchJobService, and adding them is non-trivial.
+@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ConsentManager.class)
 @SpyStatic(BackgroundFetchJobService.class)
