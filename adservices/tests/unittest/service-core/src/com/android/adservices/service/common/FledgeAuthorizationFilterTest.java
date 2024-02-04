@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
@@ -34,6 +35,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -163,8 +165,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testAssertAppHasPermission_appHasPermission()
-            throws PackageManager.NameNotFoundException {
+    public void testAssertAppHasCaPermission_appHasPermission() throws Exception {
         PackageInfo packageInfoGrant = new PackageInfo();
         packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_CUSTOM_AUDIENCE};
         doReturn(packageInfoGrant)
@@ -172,23 +173,57 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .getPackageInfo(
                         eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
 
-        when(PermissionHelper.hasCustomAudiencesPermission(sContext, sContext.getPackageName()))
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sPackageName,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
                 .thenReturn(true);
 
         mChecker.assertAppDeclaredPermission(
-                sContext, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID);
+                sContext,
+                CustomAudienceFixture.VALID_OWNER,
+                API_NAME_LOGGING_ID,
+                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
     @Test
-    public void testAssertAppHasPermission_appDoesNotHavePermission_throwSecurityException()
+    public void testAssertAppHasPasPermission_appHasPermission()
+            throws PackageManager.NameNotFoundException {
+        PackageInfo packageInfoGrant = new PackageInfo();
+        packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_PROTECTED_SIGNALS};
+        doReturn(packageInfoGrant)
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sContext.getPackageName(),
+                        AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS))
+                .thenReturn(true);
+
+        mChecker.assertAppDeclaredPermission(
+                sContext,
+                CustomAudienceFixture.VALID_OWNER,
+                API_NAME_LOGGING_ID,
+                AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
+
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testAssertAppHasCaPermission_appDoesNotHavePermission_throwSecurityException()
             throws PackageManager.NameNotFoundException {
         doReturn(new PackageInfo())
                 .when(mPackageManagerMock)
                 .getPackageInfo(
                         eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
-        when(PermissionHelper.hasCustomAudiencesPermission(sContext, sContext.getPackageName()))
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sPackageName,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
                 .thenReturn(false);
 
         SecurityException exception =
@@ -198,7 +233,8 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 mChecker.assertAppDeclaredPermission(
                                         sContext,
                                         CustomAudienceFixture.VALID_OWNER,
-                                        API_NAME_LOGGING_ID));
+                                        API_NAME_LOGGING_ID,
+                                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
@@ -211,13 +247,16 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testAssertAppHasPermission_mismatchedAppPackageName_throwSecurityException()
+    public void testAssertAppHasCaPermission_mismatchedAppPackageName_throwSecurityException()
             throws PackageManager.NameNotFoundException {
         doReturn(new PackageInfo())
                 .when(mPackageManagerMock)
                 .getPackageInfo(
                         eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
-        when(PermissionHelper.hasCustomAudiencesPermission(sContext, sContext.getPackageName()))
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sPackageName,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
                 .thenReturn(false);
 
         SecurityException exception =
@@ -225,7 +264,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         SecurityException.class,
                         () ->
                                 mChecker.assertAppDeclaredPermission(
-                                        sContext, "mismatchedAppPackageName", API_NAME_LOGGING_ID));
+                                        sContext,
+                                        "mismatchedAppPackageName",
+                                        API_NAME_LOGGING_ID,
+                                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
@@ -238,12 +280,62 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testAssertAppHasPermission_nullContext_throwNpe() {
+    public void testAssertAppHasPasPermission_mismatchedAppPackageName_throwSecurityException()
+            throws PackageManager.NameNotFoundException {
+        doReturn(new PackageInfo())
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sContext.getPackageName(),
+                        AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS))
+                .thenReturn(false);
+
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mChecker.assertAppDeclaredPermission(
+                                        sContext,
+                                        "mismatchedAppPackageName",
+                                        API_NAME_LOGGING_ID,
+                                        AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS));
+
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
+                exception.getMessage());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAppHasCaPermission_nullContext_throwNpe() {
         assertThrows(
                 NullPointerException.class,
                 () ->
                         mChecker.assertAppDeclaredPermission(
-                                null, CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID));
+                                null,
+                                CustomAudienceFixture.VALID_OWNER,
+                                API_NAME_LOGGING_ID,
+                                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE));
+
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testAssertAppHasPasPermission_nullContext_throwNpe() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mChecker.assertAppDeclaredPermission(
+                                null,
+                                CustomAudienceFixture.VALID_OWNER,
+                                API_NAME_LOGGING_ID,
+                                AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
