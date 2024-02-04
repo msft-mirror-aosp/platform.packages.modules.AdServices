@@ -109,8 +109,12 @@ public final class FlagsConstants {
     public static final String KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES =
             "classifier_force_use_bundled_files";
 
-    // Topics Cobalt keys
+    // Cobalt keys
     public static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
+    public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED =
+            "app_name_api_error_cobalt_logging_enabled";
+    public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE =
+            "app_name_api_error_cobalt_logging_sampling_rate";
     public static final String KEY_COBALT_ADSERVICES_API_KEY_HEX = "cobalt_adservices_api_key_hex";
     public static final String KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT =
             "adservices_release_stage_for_cobalt";
@@ -452,16 +456,22 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT =
             "fledge_custom_audience_max_owner_count";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS =
+            // Flag key is in days, but the flag is used functionally as milliseconds; DO NOT FIX
             "fledge_custom_audience_default_expire_in_days";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
+            // Flag key is in days, but the flag is used functionally as milliseconds; DO NOT FIX
             "fledge_custom_audience_max_activate_in_days";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS =
+            // Flag key is in days, but the flag is used functionally as milliseconds; DO NOT FIX
             "fledge_custom_audience_max_expire_in_days";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B =
+            // Flag key is prefixed `key_`; DO NOT FIX
             "key_fledge_custom_audience_max_name_size_b";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B =
+            // Flag key is prefixed `key_`; DO NOT FIX
             "key_fledge_custom_audience_max_daily_update_uri_size_b";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B =
+            // Flag key is prefixed `key_`; DO NOT FIX
             "key_fledge_custom_audience_max_bidding_logic_uri_size_b";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B =
             "fledge_custom_audience_max_user_bidding_signals_size_b";
@@ -1241,4 +1251,8 @@ public final class FlagsConstants {
     /** Key for number of messages processes in a single background process. */
     public static final String KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS =
             "fledge_kanon_number_of_messages_per_background_process";
+
+    /** key for allow list of get adservices common states. */
+    public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
+            "get_adservices_common_states_allow_list";
 }

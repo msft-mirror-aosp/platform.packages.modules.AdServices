@@ -27,6 +27,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -39,6 +40,7 @@ import org.junit.Test;
 
 import java.time.Instant;
 
+@RequiresSdkLevelAtLeastS()
 public final class DBCustomAudienceBackgroundFetchDataTest
         extends AdServicesExtendedMockitoTestCase {
 

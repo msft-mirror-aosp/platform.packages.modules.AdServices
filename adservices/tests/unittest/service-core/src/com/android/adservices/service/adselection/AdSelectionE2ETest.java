@@ -90,6 +90,7 @@ import android.adservices.adselection.SignedContextualAds;
 import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallerMetadata;
@@ -113,6 +114,7 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -197,6 +199,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 // Test applications don't have the required permissions to read config P/H flags, and
 // injecting mocked flags everywhere is annoying and non-trivial for static methods
+@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(WebView.class)
 public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase {
@@ -2904,7 +2907,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3000,7 +3003,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3051,7 +3054,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         .setDecisionLogic(fakeDecisionLogicForBuyer)
                         .setBuyer(BUYER_2)
                         .build();
-        mAdSelectionEntryDaoSpy.persistBuyersDecisionLogicOverride(
+        mAdSelectionEntryDaoSpy.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(buyerDecisionOverride));
 
         // Set dev override for custom audience
@@ -3175,7 +3178,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3292,7 +3295,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3347,7 +3350,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerSignedContextualAds(createUnauthenticatedContextualAds())
+                        .setPerBuyerSignedContextualAds(createUnauthenticatedContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3398,7 +3401,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -3486,7 +3489,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         .setCustomAudienceBuyers(Collections.emptyList())
                         .setSeller(mSeller)
                         .setDecisionLogicUri(prebuiltUri)
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .setTrustedScoringSignalsUri(Uri.EMPTY)
                         .build();
 
@@ -3565,7 +3568,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -7002,7 +7005,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .assertAppDeclaredPermission(
                         mSpyContext,
                         invalidPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7072,7 +7076,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .assertAppDeclaredPermission(
                         mSpyContext,
                         invalidPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     @Test

@@ -54,9 +54,12 @@ public final class CustomAudienceViewCommandTest extends ShellCommandTest {
                 run(
                         new CustomAudienceViewCommand(mCustomAudienceDao),
                         CustomAudienceViewCommand.CMD,
-                        "--owner=" + CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer=" + CUSTOM_AUDIENCE_1.getBuyer().toString(),
-                        "--name=" + CUSTOM_AUDIENCE_1.getName());
+                        "--owner",
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        "--buyer",
+                        CUSTOM_AUDIENCE_1.getBuyer().toString(),
+                        "--name",
+                        CUSTOM_AUDIENCE_1.getName());
 
         expectSuccess(actualResult);
         assertThat(fromJson(new JSONObject(actualResult.mOut))).isEqualTo(CUSTOM_AUDIENCE_1);
@@ -72,9 +75,12 @@ public final class CustomAudienceViewCommandTest extends ShellCommandTest {
                 run(
                         new CustomAudienceViewCommand(mCustomAudienceDao),
                         CustomAudienceViewCommand.CMD,
-                        "--owner=" + CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer=" + CUSTOM_AUDIENCE_1.getBuyer().toString(),
-                        "--name=" + CUSTOM_AUDIENCE_1.getName());
+                        "--owner",
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        "--buyer",
+                        CUSTOM_AUDIENCE_1.getBuyer().toString(),
+                        "--name",
+                        CUSTOM_AUDIENCE_1.getName());
 
         expectSuccess(actualResult, "{}");
     }
@@ -90,9 +96,12 @@ public final class CustomAudienceViewCommandTest extends ShellCommandTest {
                 run(
                         new CustomAudienceViewCommand(mCustomAudienceDao),
                         CustomAudienceViewCommand.CMD,
-                        "--owner=" + CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer=" + CUSTOM_AUDIENCE_1.getBuyer().toString(),
-                        "--name=" + CUSTOM_AUDIENCE_1.getName());
+                        "--owner",
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        "--buyer",
+                        CUSTOM_AUDIENCE_1.getBuyer().toString(),
+                        "--name",
+                        CUSTOM_AUDIENCE_1.getName());
 
         expectSuccess(actualResult, "{}");
     }

@@ -132,7 +132,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
                         // TO-DO (b/286664178): remove the block after API is fully ramped up.
                         if (mFlags.getEnableAdServicesSystemApi()
-                                && ConsentManager.getInstance(mContext).getUx() != null) {
+                                && ConsentManager.getInstance().getUx() != null) {
                             LogUtil.d(ENABLE_AD_SERVICES_API_ENABLED_MESSAGE);
                             // PS entry point should be hidden from unenrolled users.
                             isAdServicesEnabled &= mUxStatesManager.isEnrolledUser(mContext);
@@ -207,7 +207,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         + mFlags.getAdServicesEnabled());
                         LogUtil.d("entry point: " + adServicesEntryPointEnabled);
 
-                        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+                        ConsentManager consentManager = ConsentManager.getInstance();
                         consentManager.setAdIdEnabled(adIdEnabled);
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             // Check if it is reconsent for ROW.
@@ -219,7 +219,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         mContext, adIdEnabled, false);
                             }
 
-                            if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
+                            if (ConsentManager.getInstance().getConsent().isGiven()) {
                                 PackageChangedReceiver.enableReceiver(mContext, mFlags);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
@@ -246,7 +246,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 && mFlags.getGaUxFeatureEnabled()
                 && DeviceRegionProvider.isEuDevice(mContext, mFlags)) {
             // Check if GA UX was notice before
-            ConsentManager consentManager = ConsentManager.getInstance(mContext);
+            ConsentManager consentManager = ConsentManager.getInstance();
             if (!consentManager.wasGaUxNotificationDisplayed()) {
                 // Check Beta notification displayed and user opt-in, we will re-consent
                 SharedPreferences preferences =
@@ -263,7 +263,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     /** Check if user is first time consent */
     public boolean getFirstConsentStatus() {
-        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+        ConsentManager consentManager = ConsentManager.getInstance();
         return (!consentManager.wasGaUxNotificationDisplayed()
                         && !consentManager.wasNotificationDisplayed())
                 || mFlags.getConsentNotificationDebugMode();
@@ -271,7 +271,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     /** Check ROW device and see if it fit reconsent */
     public boolean reconsentIfNeededForROW() {
-        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+        ConsentManager consentManager = ConsentManager.getInstance();
         return mFlags.getGaUxFeatureEnabled()
                 && !DeviceRegionProvider.isEuDevice(mContext, mFlags)
                 && !consentManager.wasGaUxNotificationDisplayed()

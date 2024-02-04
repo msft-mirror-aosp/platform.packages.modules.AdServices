@@ -16,20 +16,18 @@
 
 package android.adservices.adselection;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.Objects;
 
-/**
- * Generic Decision logic that could be provided by the buyer or seller.
- *
- * @hide
- */
+/** Generic Decision logic that could be provided by the buyer or seller. */
+@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
 public final class DecisionLogic implements Parcelable {
 
-    @NonNull private String mDecisionLogic;
+    @NonNull private final String mDecisionLogic;
 
     public DecisionLogic(@NonNull String buyerDecisionLogic) {
         Objects.requireNonNull(buyerDecisionLogic);

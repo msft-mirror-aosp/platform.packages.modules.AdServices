@@ -304,7 +304,11 @@ public class ConcurrentRunner extends BlockJUnit4ClassRunner {
         } finally {
             sCurrentRuleContainer.remove();
         }
-        return ruleContainer.apply(method, describeChild(method), target, statement);
+        return ruleContainer.apply(
+                method,
+                Description.createTestDescription(testClass.getJavaClass(), method.getName()),
+                target,
+                statement);
     }
 
     /* Copied from {@link BlockJUnit4ClassRunner} class */

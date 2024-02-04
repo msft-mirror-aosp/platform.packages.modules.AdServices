@@ -51,6 +51,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -99,10 +100,13 @@ public class BackgroundFetchWorkerTest {
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule deviceSupportRule =
             new AdServicesDeviceSupportedRule();
 
-    @Rule(order = 1)
+    @Rule(order = 2)
     public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock private PackageManager mPackageManagerMock;

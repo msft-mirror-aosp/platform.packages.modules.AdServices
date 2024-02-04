@@ -44,11 +44,13 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -95,6 +97,9 @@ public class CustomAudienceBlobTest {
     private CustomAudienceBlob mCustomAudienceBlob;
 
     public CustomAudienceBlobTest() throws JSONException {}
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws JSONException {

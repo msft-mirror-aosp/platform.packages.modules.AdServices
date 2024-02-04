@@ -34,9 +34,11 @@ import static com.android.adservices.service.signals.SignalsFixture.createSignal
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
 
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -58,6 +60,9 @@ public class PutIfNotPresentTest {
     private static final String PUT_IF_NOT_PRESENT = "put_if_not_present";
 
     private PutIfNotPresent mPutIfNotPresent = new PutIfNotPresent();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testGetName() {

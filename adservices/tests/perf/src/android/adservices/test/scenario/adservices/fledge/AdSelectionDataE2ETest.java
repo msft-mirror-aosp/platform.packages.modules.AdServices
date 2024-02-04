@@ -37,7 +37,6 @@ import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -46,6 +45,7 @@ import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -79,7 +79,7 @@ public class AdSelectionDataE2ETest {
     private static final String CUSTOM_AUDIENCE_NO_AD_RENDER_ID = "CustomAudienceNoAdRenderId.json";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
     private static final String SFE_ADDRESS =
-            "https://seller1-patest.sfe.bas-gcp.pstest.dev/v1/selectAd";
+            "https://seller1-patest.sfe.ppapi.gcp.pstest.dev/v1/selectAd";
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
@@ -205,7 +205,7 @@ public class AdSelectionDataE2ETest {
     }
 
     @Test
-    @FlakyTest(bugId = 322323696)
+    @Ignore("b/322323696")
     public void runAdSelection_fiveBuyersMultipleCa_dummyData_remarketingWinner() throws Exception {
         List<CustomAudience> customAudiences =
                 CustomAudienceTestFixture.readCustomAudiences(

@@ -20,12 +20,18 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdTechIdentifier;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class PersistAdSelectionResultRequestTest {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final long AD_SELECTION_ID = 123456789L;
     private static final byte[] AD_SELECTION_RESULT = new byte[10];
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testPersistAdSelectionResultRequest_validInput_success() {

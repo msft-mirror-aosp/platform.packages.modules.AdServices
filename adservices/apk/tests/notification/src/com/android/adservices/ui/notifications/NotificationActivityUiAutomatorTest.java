@@ -87,10 +87,8 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
         doReturn("BETA_UX").when(mMockFlags).getDebugUx();
 
         extendedMockito.mockGetFlags(mMockFlags);
-        ExtendedMockito.doReturn(mUxStatesManager)
-                .when(() -> UxStatesManager.getInstance(any(Context.class)));
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
 

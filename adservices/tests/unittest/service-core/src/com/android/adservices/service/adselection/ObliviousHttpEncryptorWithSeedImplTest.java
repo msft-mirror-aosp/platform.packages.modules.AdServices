@@ -29,6 +29,7 @@ import android.adservices.adselection.ObliviousHttpEncryptorWithSeedImpl;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -58,6 +59,9 @@ public class ObliviousHttpEncryptorWithSeedImplTest {
     @Mock AdSelectionEncryptionKeyManager mEncryptionKeyManagerMock;
     private ExecutorService mLightweightExecutor;
     private EncryptionContextDao mEncryptionContextDao;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

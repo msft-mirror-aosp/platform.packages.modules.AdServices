@@ -67,9 +67,8 @@ public class ConsentNotificationU18Fragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
         ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
-        if (ConsentManager.getInstance(requireContext()).getUx() == RVC_UX) {
-            ConsentManager.getInstance(requireContext())
-                    .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+        if (ConsentManager.getInstance().getUx() == RVC_UX) {
+            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
         }
     }
 
@@ -184,7 +183,7 @@ public class ConsentNotificationU18Fragment extends Fragment {
                 ConsentNotificationActivity.handleAction(LANDING_PAGE_GOT_IT_CLICKED, getContext());
 
                 if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                    ConsentManager.getInstance(requireContext())
+                    ConsentManager.getInstance()
                             .recordUserManualInteractionWithConsent(
                                     ConsentManager.MANUAL_INTERACTIONS_RECORDED);
 
