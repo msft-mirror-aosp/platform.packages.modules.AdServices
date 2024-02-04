@@ -331,6 +331,7 @@ package android.adservices.common {
     field public static final String ACCESS_ADSERVICES_AD_ID = "android.permission.ACCESS_ADSERVICES_AD_ID";
     field public static final String ACCESS_ADSERVICES_ATTRIBUTION = "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
     field public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE = "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
+    field @FlaggedApi("protected_signals_enabled") public static final String ACCESS_ADSERVICES_PROTECTED_SIGNALS = "android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS";
     field public static final String ACCESS_ADSERVICES_TOPICS = "android.permission.ACCESS_ADSERVICES_TOPICS";
   }
 
@@ -667,7 +668,7 @@ package android.adservices.signals {
 
   @FlaggedApi("com.android.adservices.flags.protected_signals_enabled") public class ProtectedSignalsManager {
     method @NonNull public static android.adservices.signals.ProtectedSignalsManager get(@NonNull android.content.Context);
-    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void updateSignals(@NonNull android.adservices.signals.UpdateSignalsRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS) public void updateSignals(@NonNull android.adservices.signals.UpdateSignalsRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
   }
 
   @FlaggedApi("com.android.adservices.flags.protected_signals_enabled") public final class UpdateSignalsRequest {
