@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -79,7 +80,7 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     certificate: ":sdksandbox-test",
     srcs: [
-       "provider/src/**/dataisolationtest/*.java",
+        "provider/src/**/dataisolationtest/*.java",
     ],
     static_libs: [
         "CtsDataIsolationTestSdkApi",
@@ -102,7 +103,7 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     certificate: ":sdksandbox-test",
     srcs: [
-       "provider/src/**/storagetest/*.java",
+        "provider/src/**/storagetest/*.java",
     ],
     static_libs: [
         "CtsStorageTestSdkApi",

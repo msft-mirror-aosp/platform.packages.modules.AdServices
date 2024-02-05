@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -95,7 +96,7 @@ java_sdk_library {
     ],
     java_resources: [
         ":platform_api_allowlist_per_target_sdk_version_current.binarypb",
-        ],
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
     ],
