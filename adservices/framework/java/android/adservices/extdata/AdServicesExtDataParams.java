@@ -16,7 +16,7 @@
 
 package android.adservices.extdata;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
