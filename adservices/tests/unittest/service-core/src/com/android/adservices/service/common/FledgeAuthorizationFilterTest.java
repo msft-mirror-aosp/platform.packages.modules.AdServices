@@ -67,6 +67,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 @RequiresSdkLevelAtLeastS()
 @MockStatic(PermissionHelper.class)
 @MockStatic(AppManifestConfigHelper.class)
@@ -218,6 +221,108 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    public void testAssertAppHasAnyPermission_appHasAllPermissions() throws Exception {
+        PackageInfo packageInfoGrant = new PackageInfo();
+        packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_PROTECTED_SIGNALS};
+        doReturn(packageInfoGrant)
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+
+        when(PermissionHelper.hasPermission(
+                        sContext, sPackageName, ACCESS_ADSERVICES_PROTECTED_SIGNALS))
+                .thenReturn(true);
+        when(PermissionHelper.hasPermission(
+                        sContext, sPackageName, ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
+                .thenReturn(true);
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sPackageName,
+                        AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION))
+                .thenReturn(true);
+
+        mChecker.assertAppDeclaredAnyPermission(
+                sContext,
+                CustomAudienceFixture.VALID_OWNER,
+                API_NAME_LOGGING_ID,
+                new HashSet<>(
+                        Arrays.asList(
+                                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                                AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION,
+                                AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS)));
+
+        verifyZeroInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testAssertAppHasAnyPermission_appHasOnePermission() throws Exception {
+        PackageInfo packageInfoGrant = new PackageInfo();
+        packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_PROTECTED_SIGNALS};
+        doReturn(packageInfoGrant)
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+
+        when(PermissionHelper.hasPermission(
+                        sContext, sPackageName, ACCESS_ADSERVICES_PROTECTED_SIGNALS))
+                .thenReturn(false);
+        when(PermissionHelper.hasPermission(
+                        sContext, sPackageName, ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
+                .thenReturn(false);
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sPackageName,
+                        AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION))
+                .thenReturn(true);
+
+        mChecker.assertAppDeclaredAnyPermission(
+                sContext,
+                CustomAudienceFixture.VALID_OWNER,
+                API_NAME_LOGGING_ID,
+                new HashSet<>(
+                        Arrays.asList(
+                                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                                AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION,
+                                AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS)));
+
+        verifyZeroInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testAssertAppHasAnyPermission_appHasTwoPermissions() throws Exception {
+        PackageInfo packageInfoGrant = new PackageInfo();
+        packageInfoGrant.requestedPermissions = new String[] {ACCESS_ADSERVICES_PROTECTED_SIGNALS};
+        doReturn(packageInfoGrant)
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+
+        when(PermissionHelper.hasPermission(
+                        sContext, sPackageName, ACCESS_ADSERVICES_PROTECTED_SIGNALS))
+                .thenReturn(true);
+        when(PermissionHelper.hasPermission(
+                        sContext, sPackageName, ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
+                .thenReturn(false);
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sPackageName,
+                        AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION))
+                .thenReturn(true);
+
+        mChecker.assertAppDeclaredAnyPermission(
+                sContext,
+                CustomAudienceFixture.VALID_OWNER,
+                API_NAME_LOGGING_ID,
+                new HashSet<>(
+                        Arrays.asList(
+                                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                                AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION,
+                                AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS)));
+
+        verifyZeroInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
     public void testAssertAppHasCaPermission_appDoesNotHavePermission_throwSecurityException()
             throws PackageManager.NameNotFoundException {
         doReturn(new PackageInfo())
@@ -239,6 +344,52 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                         CustomAudienceFixture.VALID_OWNER,
                                         API_NAME_LOGGING_ID,
                                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE));
+
+        assertEquals(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
+                exception.getMessage());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAppHasAnyPermission_appDoesNotHaveAnyPermissions_throwSecurityException()
+            throws Exception {
+        doReturn(new PackageInfo())
+                .when(mPackageManagerMock)
+                .getPackageInfo(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(PackageManager.GET_PERMISSIONS));
+        when(PermissionHelper.hasPermission(
+                        sContext, sPackageName, ACCESS_ADSERVICES_PROTECTED_SIGNALS))
+                .thenReturn(false);
+        when(PermissionHelper.hasPermission(
+                        sContext, sPackageName, ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
+                .thenReturn(false);
+        when(PermissionHelper.hasPermission(
+                        sContext,
+                        sPackageName,
+                        AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION))
+                .thenReturn(false);
+
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mChecker.assertAppDeclaredAnyPermission(
+                                        sContext,
+                                        CustomAudienceFixture.VALID_OWNER,
+                                        API_NAME_LOGGING_ID,
+                                        new HashSet<>(
+                                                Arrays.asList(
+                                                        AdServicesPermissions
+                                                                .ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                                                        AdServicesPermissions
+                                                                .ACCESS_ADSERVICES_AD_SELECTION,
+                                                        AdServicesPermissions
+                                                                .ACCESS_ADSERVICES_PROTECTED_SIGNALS))));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
