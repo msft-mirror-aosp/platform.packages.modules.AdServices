@@ -86,9 +86,13 @@ public class CobaltRegistryLoaderTest {
                     .isEqualTo(StringSketchParameters.getDefaultInstance());
             assertThat(report.getIntBuckets()).isEqualTo(IntegerBuckets.getDefaultInstance());
             assertThat(report.getLocalAggregationProcedurePercentileN()).isEqualTo(0);
-            assertThat(report.getLocalAggregationPeriod()).isEqualTo(WindowSize.UNSET);
             assertThat(report.getExpeditedSending()).isFalse();
             assertThat(report.getExperimentIdList()).isEmpty();
+
+            // Sme parts of the code always assume a local aggregation period of 1 day independent
+            // of the values in reports, e.g. database clean. Supporting larger windows in reports
+            // must be done with a careful check of existing code.
+            assertThat(report.getLocalAggregationPeriod()).isEqualTo(WindowSize.UNSET);
         }
     }
 }
