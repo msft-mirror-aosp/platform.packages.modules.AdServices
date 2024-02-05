@@ -71,6 +71,9 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initRvc() {}
 
+    @Override
+    public void initGaUxWithPas() {}
+
     private void configureSharedElements(Boolean isGA) {
         // no blocked apps message
         configureElement(
