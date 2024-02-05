@@ -1200,7 +1200,7 @@ public final class FlagsConstants {
             "app_config_returns_enabled_by_detault";
 
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
-            "enable_adext_data_service_apis";
+            "adext_data_service_apis_enabled";
 
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY =
             "enable_adext_data_service_debug_proxy";
