@@ -32,6 +32,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
@@ -47,7 +48,10 @@ import java.nio.charset.StandardCharsets;
 public final class HpkeEncrypterTest {
     private HpkeEncrypter mHpkeEncrypter = new HpkeEncrypter();
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
 

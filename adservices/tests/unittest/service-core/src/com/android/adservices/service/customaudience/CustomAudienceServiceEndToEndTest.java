@@ -54,6 +54,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierFailureImpl;
@@ -76,6 +77,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -191,6 +193,9 @@ public class CustomAudienceServiceEndToEndTest {
 
     private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
     private CustomAudienceValidator mCustomAudienceValidator;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -362,7 +367,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         otherOwnerPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(
@@ -384,7 +390,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         otherOwnerPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     @Test
@@ -755,7 +762,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         otherOwnerPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 otherOwnerPackageName, CommonFixture.VALID_BUYER_1, VALID_NAME, callback);
@@ -769,7 +777,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         otherOwnerPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     @Test
@@ -974,7 +983,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         MY_APP_PACKAGE_NAME,
-                        AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
+                        AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
@@ -998,7 +1008,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         MY_APP_PACKAGE_NAME,
-                        AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
+                        AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     @Test
@@ -1110,7 +1121,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         incorrectPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE);
+                        AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
@@ -1138,7 +1150,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         incorrectPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE);
+                        AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     @Test
@@ -1292,7 +1305,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         incorrectPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
+                        AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
@@ -1337,7 +1351,8 @@ public class CustomAudienceServiceEndToEndTest {
                 .assertAppDeclaredPermission(
                         CONTEXT,
                         incorrectPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
+                        AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     @Test

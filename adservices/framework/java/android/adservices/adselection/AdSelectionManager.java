@@ -28,6 +28,7 @@ import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
@@ -792,9 +793,8 @@ public class AdSelectionManager {
      *
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
-     *
-     * @hide
      */
+    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void setAppInstallAdvertisers(
             @NonNull SetAppInstallAdvertisersRequest request,

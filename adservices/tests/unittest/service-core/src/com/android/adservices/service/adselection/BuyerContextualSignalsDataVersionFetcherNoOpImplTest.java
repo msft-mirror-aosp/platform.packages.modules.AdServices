@@ -26,11 +26,13 @@ import static junit.framework.Assert.assertNull;
 import android.adservices.common.AdSelectionSignals;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -70,6 +72,9 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImplTest {
                     new BuyerContextualSignalsDataVersionFetcherNoOpImpl();
 
     private static final AdCost AD_COST = new AdCost(1.0, 8);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetContextualSignalsGenerateBidWithDataVersionHeaderReturnsEmpty() {

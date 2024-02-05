@@ -25,23 +25,29 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
 
-public class BuyersDecisionLogicTest {
+public class PerBuyerDecisionLogicTest {
 
     private static final AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
     private static final AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final DecisionLogic DECISION_LOGIC = new DecisionLogic(DECISION_LOGIC_JS);
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildValidSuccess() {
-        BuyersDecisionLogic obj =
-                new BuyersDecisionLogic(
+        PerBuyerDecisionLogic obj =
+                new PerBuyerDecisionLogic(
                         ImmutableMap.of(BUYER_1, DECISION_LOGIC, BUYER_2, DECISION_LOGIC));
         assertThat(obj.getPerBuyerLogicMap()).containsEntry(BUYER_1, DECISION_LOGIC);
         assertThat(obj.getPerBuyerLogicMap()).containsEntry(BUYER_2, DECISION_LOGIC);
@@ -49,15 +55,15 @@ public class BuyersDecisionLogicTest {
 
     @Test
     public void testParcelValid_Success() {
-        BuyersDecisionLogic valid =
-                new BuyersDecisionLogic(
+        PerBuyerDecisionLogic valid =
+                new PerBuyerDecisionLogic(
                         ImmutableMap.of(BUYER_1, DECISION_LOGIC, BUYER_2, DECISION_LOGIC));
 
         Parcel p = Parcel.obtain();
         valid.writeToParcel(p, 0);
         p.setDataPosition(0);
 
-        BuyersDecisionLogic fromParcel = BuyersDecisionLogic.CREATOR.createFromParcel(p);
+        PerBuyerDecisionLogic fromParcel = PerBuyerDecisionLogic.CREATOR.createFromParcel(p);
         Map<AdTechIdentifier, DecisionLogic> mapFromParcel = fromParcel.getPerBuyerLogicMap();
         assertNotNull(mapFromParcel);
         assertThat(mapFromParcel.get(BUYER_1)).isEqualTo(DECISION_LOGIC);
@@ -66,23 +72,23 @@ public class BuyersDecisionLogicTest {
 
     @Test
     public void testDescribeContents() {
-        BuyersDecisionLogic obj = new BuyersDecisionLogic(ImmutableMap.of());
+        PerBuyerDecisionLogic obj = new PerBuyerDecisionLogic(ImmutableMap.of());
         assertEquals(0, obj.describeContents());
     }
 
     @Test
     public void testDefaultEmpty() {
-        BuyersDecisionLogic empty = BuyersDecisionLogic.EMPTY;
+        PerBuyerDecisionLogic empty = PerBuyerDecisionLogic.EMPTY;
         assertEquals(0, empty.getPerBuyerLogicMap().size());
     }
 
     @Test
     public void testAssertEquals() {
-        BuyersDecisionLogic obj =
-                new BuyersDecisionLogic(
+        PerBuyerDecisionLogic obj =
+                new PerBuyerDecisionLogic(
                         ImmutableMap.of(BUYER_1, DECISION_LOGIC, BUYER_2, DECISION_LOGIC));
-        BuyersDecisionLogic obj2 =
-                new BuyersDecisionLogic(
+        PerBuyerDecisionLogic obj2 =
+                new PerBuyerDecisionLogic(
                         ImmutableMap.of(BUYER_1, DECISION_LOGIC, BUYER_2, DECISION_LOGIC));
         assertEquals(obj, obj2);
     }

@@ -31,6 +31,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -43,6 +44,7 @@ import android.os.LimitExceededException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
@@ -59,6 +61,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -96,6 +99,9 @@ public class ProtectedSignalsServiceImplTest {
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     private DevContext mDevContext;
     private UpdateSignalsInput mInput;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -170,7 +176,11 @@ public class ProtectedSignalsServiceImplTest {
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredPermission(eq(CONTEXT), eq(PACKAGE), eq(API_NAME));
+                .assertAppDeclaredPermission(
+                        eq(CONTEXT),
+                        eq(PACKAGE),
+                        eq(API_NAME),
+                        eq(AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS));
         verify(mCallingAppUidSupplierMock).getCallingAppUid();
         verify(mDevContextFilterMock).createDevContext();
         verify(mFlagsMock).getDisableFledgeEnrollmentCheck();
