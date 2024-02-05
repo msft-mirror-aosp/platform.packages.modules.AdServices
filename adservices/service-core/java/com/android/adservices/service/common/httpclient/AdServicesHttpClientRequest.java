@@ -46,6 +46,7 @@ public abstract class AdServicesHttpClientRequest {
     public abstract HttpMethodType getHttpMethodType();
 
     /** @return The byte array that will be used as a request body for this request.  */
+    @SuppressWarnings("mutable")
     public abstract byte[] getBodyInBytes();
 
     /** @return DevContext associated with this call. */
