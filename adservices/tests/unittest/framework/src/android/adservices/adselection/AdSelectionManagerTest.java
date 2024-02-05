@@ -42,12 +42,14 @@ import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.security.SecureRandom;
@@ -78,6 +80,9 @@ public class AdSelectionManagerTest {
     private static final int TYPICAL_PAYLOAD_SIZE_BYTES = 1024; // 1kb
     private static final int EXCESSIVE_PAYLOAD_SIZE_BYTES =
             TYPICAL_PAYLOAD_SIZE_BYTES * 2 * 1024; // 2Mb
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
@@ -422,7 +427,7 @@ public class AdSelectionManagerTest {
                 AdSelectionConfig adSelectionConfig,
                 String s,
                 AdSelectionSignals adSelectionSignals,
-                BuyersDecisionLogic buyersDecisionLogic,
+                PerBuyerDecisionLogic perBuyerDecisionLogic,
                 AdSelectionOverrideCallback adSelectionOverrideCallback)
                 throws RemoteException {
             throw new UnsupportedOperationException();

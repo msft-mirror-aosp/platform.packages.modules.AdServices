@@ -32,6 +32,7 @@ package android.adservices.adselection {
     method @NonNull public java.util.List<android.adservices.common.AdTechIdentifier> getCustomAudienceBuyers();
     method @NonNull public android.net.Uri getDecisionLogicUri();
     method @NonNull public java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.common.AdSelectionSignals> getPerBuyerSignals();
+    method @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") @NonNull public java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.adselection.SignedContextualAds> getPerBuyerSignedContextualAds();
     method @NonNull public android.adservices.common.AdTechIdentifier getSeller();
     method @NonNull public android.adservices.common.AdSelectionSignals getSellerSignals();
     method @NonNull public android.net.Uri getTrustedScoringSignalsUri();
@@ -46,6 +47,7 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setCustomAudienceBuyers(@NonNull java.util.List<android.adservices.common.AdTechIdentifier>);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setDecisionLogicUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setPerBuyerSignals(@NonNull java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.common.AdSelectionSignals>);
+    method @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setPerBuyerSignedContextualAds(@NonNull java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.adselection.SignedContextualAds>);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSeller(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSellerSignals(@NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setTrustedScoringSignalsUri(@NonNull android.net.Uri);
@@ -79,6 +81,7 @@ package android.adservices.adselection {
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void reportImpression(@NonNull android.adservices.adselection.ReportImpressionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void selectAds(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adselection.AdSelectionOutcome,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void selectAds(@NonNull android.adservices.adselection.AdSelectionFromOutcomesConfig, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adselection.AdSelectionOutcome,java.lang.Exception>);
+    method @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void setAppInstallAdvertisers(@NonNull android.adservices.adselection.SetAppInstallAdvertisersRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void updateAdCounterHistogram(@NonNull android.adservices.adselection.UpdateAdCounterHistogramRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
   }
 
@@ -96,6 +99,15 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setRenderUri(@NonNull android.net.Uri);
   }
 
+  @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public final class AdWithBid implements android.os.Parcelable {
+    ctor public AdWithBid(@NonNull android.adservices.common.AdData, double);
+    method public int describeContents();
+    method @NonNull public android.adservices.common.AdData getAdData();
+    method public double getBid();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.AdWithBid> CREATOR;
+  }
+
   public class AddAdSelectionFromOutcomesOverrideRequest {
     ctor public AddAdSelectionFromOutcomesOverrideRequest(@NonNull android.adservices.adselection.AdSelectionFromOutcomesConfig, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public android.adservices.adselection.AdSelectionFromOutcomesConfig getAdSelectionFromOutcomesConfig();
@@ -104,10 +116,20 @@ package android.adservices.adselection {
   }
 
   public class AddAdSelectionOverrideRequest {
+    ctor @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals, @NonNull android.adservices.adselection.PerBuyerDecisionLogic);
     ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method @NonNull public String getDecisionLogicJs();
+    method @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") @NonNull public android.adservices.adselection.PerBuyerDecisionLogic getPerBuyerDecisionLogic();
     method @NonNull public android.adservices.common.AdSelectionSignals getTrustedScoringSignals();
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public final class DecisionLogic implements android.os.Parcelable {
+    ctor public DecisionLogic(@NonNull String);
+    method public int describeContents();
+    method @NonNull public String getLogic();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.DecisionLogic> CREATOR;
   }
 
   public final class GetAdSelectionDataOutcome {
@@ -116,13 +138,24 @@ package android.adservices.adselection {
   }
 
   public final class GetAdSelectionDataRequest {
+    method @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled") @Nullable public android.net.Uri getCoordinatorOriginUri();
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
   }
 
   public static final class GetAdSelectionDataRequest.Builder {
     ctor public GetAdSelectionDataRequest.Builder();
     method @NonNull public android.adservices.adselection.GetAdSelectionDataRequest build();
+    method @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled") @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setCoordinatorOriginUri(@Nullable android.net.Uri);
     method @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setSeller(@Nullable android.adservices.common.AdTechIdentifier);
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public final class PerBuyerDecisionLogic implements android.os.Parcelable {
+    ctor public PerBuyerDecisionLogic(@NonNull java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.adselection.DecisionLogic>);
+    method public int describeContents();
+    method @NonNull public java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.adselection.DecisionLogic> getPerBuyerLogicMap();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.PerBuyerDecisionLogic> CREATOR;
+    field @NonNull public static final android.adservices.adselection.PerBuyerDecisionLogic EMPTY;
   }
 
   public final class PersistAdSelectionResultRequest {
@@ -174,6 +207,31 @@ package android.adservices.adselection {
     ctor public ReportImpressionRequest(long);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method public long getAdSelectionId();
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public class SetAppInstallAdvertisersRequest {
+    ctor public SetAppInstallAdvertisersRequest(@NonNull java.util.Set<android.adservices.common.AdTechIdentifier>);
+    method @NonNull public java.util.Set<android.adservices.common.AdTechIdentifier> getAdvertisers();
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public final class SignedContextualAds implements android.os.Parcelable {
+    method @NonNull public android.adservices.adselection.SignedContextualAds.Builder cloneToBuilder();
+    method public int describeContents();
+    method @NonNull public java.util.List<android.adservices.adselection.AdWithBid> getAdsWithBid();
+    method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
+    method @NonNull public android.net.Uri getDecisionLogicUri();
+    method @NonNull public byte[] getSignature();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.SignedContextualAds> CREATOR;
+  }
+
+  public static final class SignedContextualAds.Builder {
+    ctor public SignedContextualAds.Builder();
+    method @NonNull public android.adservices.adselection.SignedContextualAds build();
+    method @NonNull public android.adservices.adselection.SignedContextualAds.Builder setAdsWithBid(@NonNull java.util.List<android.adservices.adselection.AdWithBid>);
+    method @NonNull public android.adservices.adselection.SignedContextualAds.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
+    method @NonNull public android.adservices.adselection.SignedContextualAds.Builder setDecisionLogicUri(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.adselection.SignedContextualAds.Builder setSignature(@NonNull byte[]);
   }
 
   public class TestAdSelectionManager {
@@ -243,6 +301,7 @@ package android.adservices.common {
 
   public final class AdFilters implements android.os.Parcelable {
     method public int describeContents();
+    method @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") @Nullable public android.adservices.common.AppInstallFilters getAppInstallFilters();
     method @Nullable public android.adservices.common.FrequencyCapFilters getFrequencyCapFilters();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdFilters> CREATOR;
@@ -251,6 +310,7 @@ package android.adservices.common {
   public static final class AdFilters.Builder {
     ctor public AdFilters.Builder();
     method @NonNull public android.adservices.common.AdFilters build();
+    method @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") @NonNull public android.adservices.common.AdFilters.Builder setAppInstallFilters(@Nullable android.adservices.common.AppInstallFilters);
     method @NonNull public android.adservices.common.AdFilters.Builder setFrequencyCapFilters(@Nullable android.adservices.common.FrequencyCapFilters);
   }
 
@@ -271,6 +331,7 @@ package android.adservices.common {
     field public static final String ACCESS_ADSERVICES_AD_ID = "android.permission.ACCESS_ADSERVICES_AD_ID";
     field public static final String ACCESS_ADSERVICES_ATTRIBUTION = "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
     field public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE = "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
+    field @FlaggedApi("protected_signals_enabled") public static final String ACCESS_ADSERVICES_PROTECTED_SIGNALS = "android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS";
     field public static final String ACCESS_ADSERVICES_TOPICS = "android.permission.ACCESS_ADSERVICES_TOPICS";
   }
 
@@ -279,6 +340,19 @@ package android.adservices.common {
     method @NonNull public static android.adservices.common.AdTechIdentifier fromString(@NonNull String);
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdTechIdentifier> CREATOR;
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public final class AppInstallFilters implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public java.util.Set<java.lang.String> getPackageNames();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AppInstallFilters> CREATOR;
+  }
+
+  public static final class AppInstallFilters.Builder {
+    ctor public AppInstallFilters.Builder();
+    method @NonNull public android.adservices.common.AppInstallFilters build();
+    method @NonNull public android.adservices.common.AppInstallFilters.Builder setPackageNames(@NonNull java.util.Set<java.lang.String>);
   }
 
   public final class FrequencyCapFilters implements android.os.Parcelable {
@@ -328,6 +402,7 @@ package android.adservices.customaudience {
   public class AddCustomAudienceOverrideRequest {
     ctor public AddCustomAudienceOverrideRequest(@NonNull android.adservices.common.AdTechIdentifier, @NonNull String, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public String getBiddingLogicJs();
+    method @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public long getBiddingLogicJsVersion();
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public String getName();
     method @NonNull public android.adservices.common.AdSelectionSignals getTrustedBiddingSignals();
@@ -337,6 +412,7 @@ package android.adservices.customaudience {
     ctor public AddCustomAudienceOverrideRequest.Builder();
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest build();
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBiddingLogicJs(@NonNull String);
+    method @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBiddingLogicJsVersion(long);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setName(@NonNull String);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setTrustedBiddingSignals(@NonNull android.adservices.common.AdSelectionSignals);
@@ -584,6 +660,25 @@ package android.adservices.measurement {
   public static final class WebTriggerRegistrationRequest.Builder {
     ctor public WebTriggerRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebTriggerParams>, @NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest build();
+  }
+
+}
+
+package android.adservices.signals {
+
+  @FlaggedApi("com.android.adservices.flags.protected_signals_enabled") public class ProtectedSignalsManager {
+    method @NonNull public static android.adservices.signals.ProtectedSignalsManager get(@NonNull android.content.Context);
+    method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS) public void updateSignals(@NonNull android.adservices.signals.UpdateSignalsRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+  }
+
+  @FlaggedApi("com.android.adservices.flags.protected_signals_enabled") public final class UpdateSignalsRequest {
+    method @NonNull public android.net.Uri getUpdateUri();
+  }
+
+  public static final class UpdateSignalsRequest.Builder {
+    ctor public UpdateSignalsRequest.Builder(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.signals.UpdateSignalsRequest build();
+    method @NonNull public android.adservices.signals.UpdateSignalsRequest.Builder setUpdateUri(@NonNull android.net.Uri);
   }
 
 }

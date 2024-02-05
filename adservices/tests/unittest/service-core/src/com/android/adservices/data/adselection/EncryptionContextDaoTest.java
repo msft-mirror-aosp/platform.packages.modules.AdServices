@@ -26,6 +26,7 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 
 import com.google.common.io.BaseEncoding;
@@ -64,6 +65,9 @@ public class EncryptionContextDaoTest {
 
     private ObliviousHttpKeyConfig mObliviousHttpKeyConfig;
     private static final Instant CREATION_TIME = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws InvalidKeySpecException {

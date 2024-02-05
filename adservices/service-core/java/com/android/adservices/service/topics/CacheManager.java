@@ -30,6 +30,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.cobalt.CobaltFactory;
 import com.android.adservices.cobalt.CobaltInitializationException;
+import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.data.topics.CombinedTopic;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
@@ -40,7 +41,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
-import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 

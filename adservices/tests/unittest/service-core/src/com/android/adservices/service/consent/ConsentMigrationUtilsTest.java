@@ -274,7 +274,6 @@ public class ConsentMigrationUtilsTest {
                         .setTopicsConsent(false)
                         .setFledgeConsent(false)
                         .setMsmtConsent(false)
-                        .setDefaultConsent(true)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_UPDATED)
@@ -342,7 +341,6 @@ public class ConsentMigrationUtilsTest {
                         .setTopicsConsent(false)
                         .setFledgeConsent(false)
                         .setMsmtConsent(true)
-                        .setDefaultConsent(false)
                         .setMigrationStatus(
                                 ConsentMigrationStats.MigrationStatus
                                         .SUCCESS_WITH_SHARED_PREF_NOT_UPDATED)

@@ -27,6 +27,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -39,6 +40,7 @@ import org.junit.Test;
 
 import java.time.Instant;
 
+@RequiresSdkLevelAtLeastS()
 public final class DBCustomAudienceBackgroundFetchDataTest
         extends AdServicesExtendedMockitoTestCase {
 
@@ -117,7 +119,7 @@ public final class DBCustomAudienceBackgroundFetchDataTest
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         NUM_VALIDATION_FAILURES_POSITIVE,
                         NUM_TIMEOUT_FAILURES_POSITIVE,
-                        /*debuggable=*/ false);
+                        false);
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
         assertEquals(CommonFixture.VALID_BUYER_1, fetchData.getBuyer());

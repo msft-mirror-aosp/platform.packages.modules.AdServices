@@ -59,7 +59,6 @@ public class AggregateReportingJobHandlerWrapper {
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
         AggregateEncryptionKeyManager mockEncryptionManager =
                 Mockito.mock(AggregateEncryptionKeyManager.class);
-        Flags mockFlags = Mockito.mock(Flags.class);
         AdServicesLogger mockLogger = Mockito.mock(AdServicesLogger.class);
         when(mockEncryptionManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
                 .thenAnswer(
@@ -78,7 +77,7 @@ public class AggregateReportingJobHandlerWrapper {
                                         enrollmentDao,
                                         datastoreManager,
                                         mockEncryptionManager,
-                                        mockFlags,
+                                        flags,
                                         mockLogger,
                                         ApplicationProvider.getApplicationContext())
                                 .setIsDebugInstance(isDebugInstance));

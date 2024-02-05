@@ -29,6 +29,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -84,6 +85,9 @@ public class EncoderLogicHandlerTest {
 
     private ExecutorService mService = Executors.newFixedThreadPool(5);
     private EncoderLogicHandler mEncoderLogicHandler;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

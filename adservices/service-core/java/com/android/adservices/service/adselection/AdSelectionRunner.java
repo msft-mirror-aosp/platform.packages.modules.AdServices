@@ -584,7 +584,9 @@ public abstract class AdSelectionRunner {
                 () -> {
                     boolean atLeastOnePresent =
                             !(adSelectionConfig.getCustomAudienceBuyers().isEmpty()
-                                    && adSelectionConfig.getBuyerSignedContextualAds().isEmpty());
+                                    && adSelectionConfig
+                                            .getPerBuyerSignedContextualAds()
+                                            .isEmpty());
 
                     Preconditions.checkArgument(
                             atLeastOnePresent, ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE);
@@ -597,7 +599,7 @@ public abstract class AdSelectionRunner {
                                     mClock.instant(),
                                     mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
                     if ((buyerCustomAudience == null || buyerCustomAudience.isEmpty())
-                            && adSelectionConfig.getBuyerSignedContextualAds().isEmpty()) {
+                            && adSelectionConfig.getPerBuyerSignedContextualAds().isEmpty()) {
                         IllegalStateException exception =
                                 new IllegalStateException(ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE);
                         mAdSelectionExecutionLogger.endBiddingProcess(
@@ -751,7 +753,7 @@ public abstract class AdSelectionRunner {
                 new ProtectedAudienceSignatureManager(
                         mEnrollmentDao, mEncryptionKeyDao, isEnrollmentCheckEnabled);
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
-                adSelectionConfig.getBuyerSignedContextualAds().entrySet()) {
+                adSelectionConfig.getPerBuyerSignedContextualAds().entrySet()) {
             if (!signatureManager.isVerified(entry.getKey(), entry.getValue())) {
                 sLogger.v(
                         "Contextual ads for buyer: '%s' have an invalid signature and will be"
@@ -770,7 +772,7 @@ public abstract class AdSelectionRunner {
         }
         return adSelectionConfig
                 .cloneToBuilder()
-                .setBuyerSignedContextualAds(filteredContextualAdsMap)
+                .setPerBuyerSignedContextualAds(filteredContextualAdsMap)
                 .build();
     }
 
@@ -779,7 +781,7 @@ public abstract class AdSelectionRunner {
         sLogger.v("Emptying contextual ads in Ad Selection Config");
         return adSelectionConfig
                 .cloneToBuilder()
-                .setBuyerSignedContextualAds(Collections.EMPTY_MAP)
+                .setPerBuyerSignedContextualAds(Collections.EMPTY_MAP)
                 .build();
     }
 

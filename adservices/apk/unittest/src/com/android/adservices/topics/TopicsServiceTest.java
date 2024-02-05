@@ -85,8 +85,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));
 
             TopicsService spyTopicsService = spy(new TopicsService());
-            ExtendedMockito.doReturn(mMockConsentManager)
-                    .when(() -> ConsentManager.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
             doReturn(true).when(mMockAdServicesApiConsent).isGiven();
             doReturn(mMockAdServicesApiConsent)
                     .when(mMockConsentManager)
@@ -150,8 +149,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));
 
             TopicsService spyTopicsService = spy(new TopicsService());
-            ExtendedMockito.doReturn(mMockConsentManager)
-                    .when(() -> ConsentManager.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
             doReturn(true).when(mMockAdServicesApiConsent).isGiven();
             doReturn(mMockAdServicesApiConsent)
                     .when(mMockConsentManager)

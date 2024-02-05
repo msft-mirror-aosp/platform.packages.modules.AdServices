@@ -235,7 +235,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
                         .setExpirationTime(Instant.now().plus(5, ChronoUnit.SECONDS))
                         .build();
 
-        mCustomAudienceClient.joinCustomAudience(customAudience).get(5, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience);
         Log.d(TAG, "Joined custom audience");
         // Make a call to verify ad selection succeeds before timing out.
         mAdSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS);

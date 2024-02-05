@@ -64,8 +64,8 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.DecisionLogic;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -111,6 +111,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -261,8 +262,8 @@ public class FledgeE2ETest {
                             + "\t\"render_uri_1\": \"signals_for_1\",\n"
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
-    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
-            new BuyersDecisionLogic(
+    private static final PerBuyerDecisionLogic BUYERS_DECISION_LOGIC =
+            new PerBuyerDecisionLogic(
                     ImmutableMap.of(
                             CommonFixture.VALID_BUYER_1, new DecisionLogic("reportWin()"),
                             CommonFixture.VALID_BUYER_2, new DecisionLogic("reportWin()")));
@@ -297,6 +298,9 @@ public class FledgeE2ETest {
     private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
 
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule deviceSupportRule =
             new AdServicesDeviceSupportedRule();
 
@@ -439,7 +443,7 @@ public class FledgeE2ETest {
                         anyInt(),
                         any(),
                         any());
-        when(ConsentManager.getInstance(CONTEXT_SPY)).thenReturn(mConsentManagerMock);
+        when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
         doNothing()
@@ -3049,7 +3053,7 @@ public class FledgeE2ETest {
                                         AdTechIdentifier.fromString(
                                                 mLocalhostBuyerDomain.getHost()),
                                         AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         String decisionLogicJs =
@@ -4445,7 +4449,7 @@ public class FledgeE2ETest {
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS,
             AdSelectionSignals trustedScoringSignals,
-            BuyersDecisionLogic buyerDecisionLogicMap)
+            PerBuyerDecisionLogic buyerDecisionLogicMap)
             throws Exception {
         // Counted down in 1) callback
         CountDownLatch resultLatch = new CountDownLatch(1);
