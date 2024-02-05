@@ -79,12 +79,24 @@ java_library {
     srcs: [
         "java/com/android/adservices/shared/common/*.java",
     ],
+    exclude_srcs : ["java/com/android/adservices/shared/common/ServiceUnavailableException.java"],
     static_libs: [
+        "adservices-shared-proto-lite",
         "modules-utils-preconditions",
     ],
     libs: [
         "framework-annotations-lib",
         "jsr305", // for @ThreadSafe",
+    ],
+    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+}
+
+java_library {
+    name: "adservices-shared-exceptions",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/common/ServiceUnavailableException.java",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
 }

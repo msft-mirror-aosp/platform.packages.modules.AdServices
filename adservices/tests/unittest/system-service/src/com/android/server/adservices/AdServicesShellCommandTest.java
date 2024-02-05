@@ -15,29 +15,35 @@
  */
 package com.android.server.adservices;
 
+import static com.android.server.adservices.AdServicesShellCommand.CMD_IS_SYSTEM_SERVICE_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.shell.IShellCommand;
 import android.adservices.shell.IShellCommandCallback;
+import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.UserHandle;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.server.adservices.AdServicesShellCommand.Injector;
-
-import com.google.common.truth.Expect;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -45,11 +51,14 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase {
+@SpyStatic(ActivityManager.class)
+public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final String[] ALL_COMMANDS = new String[] {"help", "is-system-service-enabled"};
-
-    @Rule public final Expect expect = Expect.create();
+    private static final String HELP_ADSERVICES_SERVICE_CMDS =
+            "echo <message> - prints the given message (useful to check cmd is working).";
+    private static final String[] ALL_COMMANDS =
+            new String[] {"help", CMD_IS_SYSTEM_SERVICE_ENABLED};
+    private static final int SYSTEM_USER = UserHandle.SYSTEM.getIdentifier();
 
     private final StringWriter mOutStringWriter = new StringWriter();
     private final StringWriter mErrStringWriter = new StringWriter();
@@ -58,8 +67,6 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
     private final PrintWriter mErr = new PrintWriter(mErrStringWriter);
 
     @Mock private Flags mFlags;
-    @Mock private Context mContext;
-
     @Mock private IShellCommand mIShellCommand;
 
     private AdServicesShellCommand mShellCmd;
@@ -81,7 +88,7 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
                     }
                 };
         mShellCmd =
-                new AdServicesShellCommand(mInjector, mFlags, mContext) {
+                new AdServicesShellCommand(mInjector, mFlags, mMockContext) {
                     @Override
                     public PrintWriter getOutPrintWriter() {
                         return mOut;
@@ -92,6 +99,8 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
                         return mErr;
                     }
                 };
+        extendedMockito.mockGetCurrentUser(SYSTEM_USER);
+        when(mMockContext.getUser()).thenReturn(UserHandle.SYSTEM);
     }
 
     @After
@@ -104,9 +113,8 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
     }
 
     @Test
-    public void testOnHelp() {
+    public void testOnHelp() throws Exception {
         mShellCmd.onHelp();
-
         expectHelpOutputHasAllCommands(getOut());
         expect.withMessage("err").that(getErr()).isEmpty();
     }
@@ -125,7 +133,7 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
                                                     }
                                                 },
                                                 mFlags,
-                                                mContext)
+                                                mMockContext)
                                         .onCommand("D'OH"));
         assertThat(e)
                 .hasMessageThat()
@@ -133,72 +141,66 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
     }
 
     @Test
-    public void testExec_nullShowsHelp() {
-        int result = runCmd((String[]) null);
-        expect.withMessage("result").that(result).isEqualTo(0);
+    public void testExec_nullShowsHelp() throws Exception {
+        mockHelpShellCommand();
 
+        int result = runCmd((String[]) null);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
         expectHelpOutputHasAllCommands(getOut());
+        expectHelpOutputHasMessages(getOut(), HELP_ADSERVICES_SERVICE_CMDS);
         expect.withMessage("err").that(getErr()).isEmpty();
     }
 
     @Test
-    public void testExec_emptyShowsHelp() {
+    public void testExec_emptyShowsHelp() throws Exception {
+        mockHelpShellCommand();
         int result = runCmd("");
         expect.withMessage("result").that(result).isEqualTo(0);
 
         expectHelpOutputHasAllCommands(getOut());
+        expectHelpOutputHasMessages(getOut(), HELP_ADSERVICES_SERVICE_CMDS);
         expect.withMessage("err").that(getErr()).isEmpty();
     }
 
     @Test
-    public void testExec_help() {
+    public void testExec_help() throws Exception {
+        mockHelpShellCommand();
         int result = runCmd("help");
         expect.withMessage("result").that(result).isEqualTo(0);
 
         expectHelpOutputHasAllCommands(getOut());
+        expectHelpOutputHasMessages(getOut(), HELP_ADSERVICES_SERVICE_CMDS);
         expect.withMessage("err").that(getErr()).isEmpty();
     }
 
     @Test
-    public void testExec_helpShort() {
+    public void testExec_helpShort() throws Exception {
+        mockHelpShellCommand();
         int result = runCmd("-h");
         expect.withMessage("result").that(result).isEqualTo(0);
 
         expectHelpOutputHasAllCommands(getOut());
+        expectHelpOutputHasMessages(getOut(), HELP_ADSERVICES_SERVICE_CMDS);
         expect.withMessage("err").that(getErr()).isEmpty();
     }
 
     @Test
     public void testExec_invalidCommand() throws Exception {
         String cmd = "D'OH!";
+        String helpMsg = "Use -h for help.";
         ShellCommandResult responseInvalidShellCommand =
                 new ShellCommandResult.Builder()
-                        .setErr(String.format("Unsupported command: %s", cmd))
+                        .setErr(String.format("Unsupported command: %s\n%s", cmd, helpMsg))
                         .setResultCode(-1)
                         .build();
-        mockRunShellCommand(responseInvalidShellCommand);
+        mockRunShellCommand(responseInvalidShellCommand, cmd);
 
         int result = runCmd(cmd);
 
         expect.withMessage("result").that(result).isEqualTo(-1);
         expect.withMessage("out").that(getOut()).isEmpty();
-        String err = getErr();
-        expectHelpOutputHasAllCommands(err);
-        expectHelpOutputHasMessages(err, cmd);
-    }
-
-    @Test
-    public void testExec_validAdServicesShellCommand() throws Exception {
-        String cmd = "echo";
-        ShellCommandResult response =
-                new ShellCommandResult.Builder().setOut(cmd).setResultCode(0).build();
-        mockRunShellCommand(response);
-
-        int result = runCmd(cmd);
-
-        expect.withMessage("result").that(result).isEqualTo(0);
-        expect.withMessage("out").that(getOut()).contains(cmd);
-        expect.withMessage("err").that(getErr()).isEmpty();
+        expectHelpOutputHasMessages(getErr(), cmd, helpMsg);
     }
 
     @Test
@@ -332,9 +334,109 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
 
         expect.withMessage("out").that(getOut()).isEmpty();
         String err = getErr();
-        expectHelpOutputHasAllCommands(err);
+        expectHelpOutputHasMessages(err, CMD_IS_SYSTEM_SERVICE_ENABLED);
         expectHelpOutputHasMessages(err, "Invalid option");
         expectHelpOutputHasMessages(err, "--D'OH!");
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommand_noArgs() throws Exception {
+        String cmd = "CMD_XYZ";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd);
+
+        int result = runCmd(cmd);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommand_withArgs() throws Exception {
+        String cmd = "CMD_XYZ";
+        String arg1 = "ARG1";
+        String arg2 = "ARG2";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd, arg1, arg2);
+
+        int result = runCmd(cmd, arg1, arg2);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommandWithTimeout() throws Exception {
+        String cmd = "CMD_XYZ";
+        String arg1 = "ARG1";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd, arg1);
+
+        int result = runCmd(cmd, arg1, "--timeout", "1000");
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommandWithTimeoutInAnyOrder() throws Exception {
+        String cmd = "CMD_XYZ";
+        String arg1 = "ARG1";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd, arg1);
+
+        int result = runCmd(cmd, "--timeout", "1000", arg1);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+    }
+
+    @Test
+    public void testExec_invalidTimeoutArgPresent() {
+        // timeout value missing
+        int result = runCmd("CMD_XYZ", "hello", "--timeout");
+        expect.withMessage("timeout").that(result).isEqualTo(-1);
+        expect.withMessage("out").that(getOut()).isEmpty();
+        expect.withMessage("err").that(getErr()).contains("Argument expected after");
+
+        // timeout value not an integer
+        result = runCmd("CMD_XYZ", "hello", "--timeout", "abc");
+        expect.withMessage("timeout").that(result).isEqualTo(-1);
+        expect.withMessage("out").that(getOut()).isEmpty();
+        expect.withMessage("err").that(getErr()).contains("Bad timeout value");
+    }
+
+    @Test
+    public void testExec_validAdServicesShellCommand_secondaryUser_noArgs() throws Exception {
+        when(mMockContext.getUser()).thenReturn(UserHandle.SYSTEM);
+        when(mMockContext.createContextAsUser(eq(UserHandle.SYSTEM), anyInt()))
+                .thenReturn(mMockContext);
+        int secondaryUser = 10;
+        extendedMockito.mockGetCurrentUser(secondaryUser);
+        String cmd = "CMD_XYZ";
+        String out = "hello";
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
+        mockRunShellCommand(response, cmd);
+
+        int result = runCmd(cmd);
+
+        expect.withMessage("result").that(result).isEqualTo(0);
+        expect.withMessage("out").that(getOut()).contains(out);
+        expect.withMessage("err").that(getErr()).isEmpty();
+        verify(mMockContext).createContextAsUser(eq(UserHandle.of(secondaryUser)), anyInt());
     }
 
     private void expectHelpOutputHasAllCommands(String helpOutput) {
@@ -371,13 +473,20 @@ public final class AdServicesShellCommandTest extends AdServicesMockitoTestCase 
         when(mFlags.getAdServicesSystemServiceEnabled()).thenReturn(value);
     }
 
-    private void mockRunShellCommand(ShellCommandResult response) throws Exception {
+    private void mockRunShellCommand(ShellCommandResult response, String... args) throws Exception {
+        ShellCommandParam param = new ShellCommandParam(args);
         doAnswer(
                         invocation -> {
                             ((IShellCommandCallback) invocation.getArgument(1)).onResult(response);
                             return null;
                         })
                 .when(mIShellCommand)
-                .runShellCommand(any(), any());
+                .runShellCommand(eq(param), any());
+    }
+
+    private void mockHelpShellCommand() throws Exception {
+        ShellCommandResult response =
+                new ShellCommandResult.Builder().setOut(HELP_ADSERVICES_SERVICE_CMDS).build();
+        mockRunShellCommand(response, "help");
     }
 }

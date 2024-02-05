@@ -33,7 +33,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
@@ -117,26 +117,33 @@ public class FledgeAuthorizationFilter {
     }
 
     /**
-     * Check if the app had declared custom audience permission.
+     * Check if the app had declared a permission, and throw an error if it has not
      *
      * @param context api service context
      * @param apiNameLoggingId the id of the api being called
      * @throws SecurityException if the package did not declare custom audience permission
      */
     public void assertAppDeclaredPermission(
-            @NonNull Context context, @NonNull String appPackageName, int apiNameLoggingId)
+            @NonNull Context context,
+            @NonNull String appPackageName,
+            int apiNameLoggingId,
+            @NonNull String permission)
             throws SecurityException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appPackageName);
+        Objects.requireNonNull(permission);
 
-        if (!PermissionHelper.hasCustomAudiencesPermission(context, appPackageName)) {
-            sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
-            throw new SecurityException(
-                    AdServicesStatusUtils
-                            .SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
+        if (!PermissionHelper.hasPermission(context, appPackageName, permission)) {
+            logAndThrowPermissionFailure(apiNameLoggingId, permission);
         }
+    }
+
+    private void logAndThrowPermissionFailure(int apiNameLoggingId, String permission) {
+        sLogger.v("Permission %s not declared by caller in API %d", permission, apiNameLoggingId);
+        mAdServicesLogger.logFledgeApiCallStats(
+                apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
+        throw new SecurityException(
+                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
     }
 
     /**
@@ -204,7 +211,7 @@ public class FledgeAuthorizationFilter {
         }
 
         // Check if enrollment is in blocklist.
-        if (PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+        if (FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
             sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
@@ -275,7 +282,7 @@ public class FledgeAuthorizationFilter {
                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                         appPackageName, enrollmentData.getEnrollmentId());
         boolean isEnrollmentBlocklisted =
-                PhFlags.getInstance().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
+                FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
         int errorCause = EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue();
         if (isAllowedCustomAudiencesAccess && isEnrollmentBlocklisted) {
             errorCause = EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue();

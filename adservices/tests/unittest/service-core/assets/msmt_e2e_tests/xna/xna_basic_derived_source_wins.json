@@ -60,18 +60,6 @@
                 "destination": "android-app://example.2d1.test",
                 "priority": "50",
                 "expiry": "172801",
-                "filter_data": {
-                  "conversion_subdomain": [
-                    "electronics.megastore"
-                  ],
-                  "product": [
-                    "1234",
-                    "234"
-                  ],
-                  "ctid": [
-                    "id"
-                  ]
-                },
                 "aggregation_keys": {
                   "campaignCounts": "0x159",
                   "geoValue": "0x5"
@@ -100,6 +88,18 @@
             "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
+                "filters": [{
+                  "conversion_subdomain": [
+                    "electronics.megastore"
+                  ],
+                  "product": [
+                    "1234",
+                    "234"
+                  ],
+                  "ctid": [
+                    "id"
+                  ]
+                }],
                 "event_trigger_data": [
                   {
                     "trigger_data": "2",
@@ -159,6 +159,18 @@
                 "attribution_config": [
                   {
                     "source_network": "enrollment-id-ad-tech2.test",
+                    "filter_data": {
+                      "conversion_subdomain": [
+                        "electronics.megastore"
+                      ],
+                      "product": [
+                        "1234",
+                        "234"
+                      ],
+                      "ctid": [
+                        "id"
+                      ]
+                    },
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000
@@ -200,7 +212,8 @@
               "key": "0xb85",
               "value": 1664
             }
-          ]
+          ],
+          "source_registration_time": "799977600"
         }
       }
     ]

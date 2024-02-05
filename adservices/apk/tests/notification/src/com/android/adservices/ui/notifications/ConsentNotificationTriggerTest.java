@@ -40,7 +40,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 
 import android.app.Notification;
@@ -102,7 +101,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
     private AdServicesManager mAdServicesManager;
     private NotificationManager mNotificationManager;
-    private Context mContext;
 
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
@@ -112,16 +110,15 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
     @Before
     public void setUp() {
-        mContext = spy(appContext.get());
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        mNotificationManager = mContext.getSystemService(NotificationManager.class);
+        mNotificationManager = mSpyContext.getSystemService(NotificationManager.class);
 
         extendedMockito.mockGetFlags(mMockFlags);
         doReturn(mAdServicesLogger).when(UiStatsLogger::getAdServicesLogger);
-        doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance(any(Context.class)));
-        doReturn(mAdServicesManager).when(mContext).getSystemService(AdServicesManager.class);
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance());
+        doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(false).when(mMockUxStatesManager).isEeaDevice();
@@ -135,7 +132,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     public void tearDown() throws IOException {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + getTestName() + "_");
 
-        AdservicesTestHelper.killAdservicesProcess(mContext);
+        AdservicesTestHelper.killAdservicesProcess(mSpyContext);
     }
 
     @Test
@@ -146,11 +143,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
+                mSpyContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
+                mSpyContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
 
-        ConsentNotificationTrigger.showConsentNotification(mContext, true);
+        ConsentNotificationTrigger.showConsentNotification(mSpyContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
         verify(mAdServicesLogger, times(2)).logUIStats(any());
@@ -160,9 +157,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager).recordTopicsDefaultConsent(false);
         verify(mConsentManager).recordFledgeDefaultConsent(false);
         verify(mConsentManager).recordMeasurementDefaultConsent(false);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.FLEDGE);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.TOPICS);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         verify(mConsentManager).recordNotificationDisplayed(true);
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
@@ -207,6 +204,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         Thread.sleep(LAUNCH_TIMEOUT);
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
     }
+
     @Test
     public void testNonEuNotifications_gaUxEnabled() throws InterruptedException {
         doReturn(false).when(mMockFlags).isEeaDevice();
@@ -214,18 +212,18 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_ga_title_v2);
+                mSpyContext.getString(R.string.notificationUI_notification_ga_title_v2);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_ga_content_v2);
+                mSpyContext.getString(R.string.notificationUI_notification_ga_content_v2);
 
-        ConsentNotificationTrigger.showConsentNotification(mContext, false);
+        ConsentNotificationTrigger.showConsentNotification(mSpyContext, false);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
         verify(mAdServicesLogger, times(2)).logUIStats(any());
 
-        verify(mConsentManager).enable(mContext, AdServicesApiType.TOPICS);
-        verify(mConsentManager).enable(mContext, AdServicesApiType.FLEDGE);
-        verify(mConsentManager).enable(mContext, AdServicesApiType.MEASUREMENTS);
+        verify(mConsentManager).enable(mSpyContext, AdServicesApiType.TOPICS);
+        verify(mConsentManager).enable(mSpyContext, AdServicesApiType.FLEDGE);
+        verify(mConsentManager).enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
 
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
@@ -259,11 +257,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
+                mSpyContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
+                mSpyContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
 
-        ConsentNotificationTrigger.showConsentNotification(mContext, true);
+        ConsentNotificationTrigger.showConsentNotification(mSpyContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
         verify(mAdServicesLogger, times(2)).logUIStats(any());
@@ -273,9 +271,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager).recordTopicsDefaultConsent(false);
         verify(mConsentManager).recordFledgeDefaultConsent(false);
         verify(mConsentManager).recordMeasurementDefaultConsent(false);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.FLEDGE);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.TOPICS);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         verify(mConsentManager).recordNotificationDisplayed(true);
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
@@ -343,11 +341,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
+                mSpyContext.getString(R.string.notificationUI_notification_ga_title_eu_v2);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
+                mSpyContext.getString(R.string.notificationUI_notification_ga_content_eu_v2);
 
-        ConsentNotificationTrigger.showConsentNotification(mContext, true);
+        ConsentNotificationTrigger.showConsentNotification(mSpyContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
         verify(mAdServicesLogger, times(2)).logUIStats(any());
@@ -357,9 +355,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager).recordTopicsDefaultConsent(false);
         verify(mConsentManager).recordFledgeDefaultConsent(false);
         verify(mConsentManager).recordMeasurementDefaultConsent(false);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
-        verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.FLEDGE);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.TOPICS);
+        verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
@@ -432,10 +430,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(BETA_UX).when(mMockUxStatesManager).getUx();
 
-        doReturn(mNotificationManagerCompat).when(() -> NotificationManagerCompat.from(mContext));
+        doReturn(mNotificationManagerCompat)
+                .when(() -> NotificationManagerCompat.from(mSpyContext));
         doReturn(false).when(mNotificationManagerCompat).areNotificationsEnabled();
 
-        ConsentNotificationTrigger.showConsentNotification(mContext, true);
+        ConsentNotificationTrigger.showConsentNotification(mSpyContext, true);
 
         verify(mAdServicesLogger, times(2)).logUIStats(any());
 
@@ -467,11 +466,11 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .getEnrollmentChannel();
 
         final String expectedTitle =
-                mContext.getString(R.string.notificationUI_u18_notification_title);
+                mSpyContext.getString(R.string.notificationUI_u18_notification_title);
         final String expectedContent =
-                mContext.getString(R.string.notificationUI_u18_notification_content);
+                mSpyContext.getString(R.string.notificationUI_u18_notification_content);
 
-        ConsentNotificationTrigger.showConsentNotification(mContext, isEeaDevice);
+        ConsentNotificationTrigger.showConsentNotification(mSpyContext, isEeaDevice);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
         ArgumentCaptor<UIStats> argument = ArgumentCaptor.forClass(UIStats.class);
@@ -504,10 +503,10 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager, times(2)).getDefaultAdIdState();
         if (isEeaDevice) {
             verify(mConsentManager).recordMeasurementDefaultConsent(false);
-            verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
+            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         } else {
             verify(mConsentManager).recordMeasurementDefaultConsent(true);
-            verify(mConsentManager).enable(mContext, AdServicesApiType.MEASUREMENTS);
+            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         }
         verify(mConsentManager).setU18NotificationDisplayed(true);
 
@@ -572,17 +571,17 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 .getEnrollmentChannel();
 
         final String expectedTitle =
-                mContext.getString(
+                mSpyContext.getString(
                         isEeaDevice
                                 ? R.string.notificationUI_notification_ga_title_eu_v2
                                 : R.string.notificationUI_notification_ga_title_v2);
         final String expectedContent =
-                mContext.getString(
+                mSpyContext.getString(
                         isEeaDevice
                                 ? R.string.notificationUI_notification_ga_content_eu_v2
                                 : R.string.notificationUI_notification_ga_content_v2);
 
-        ConsentNotificationTrigger.showConsentNotification(mContext, isEeaDevice);
+        ConsentNotificationTrigger.showConsentNotification(mSpyContext, isEeaDevice);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
         ArgumentCaptor<UIStats> argument = ArgumentCaptor.forClass(UIStats.class);
@@ -617,16 +616,16 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
             verify(mConsentManager).recordTopicsDefaultConsent(false);
             verify(mConsentManager).recordFledgeDefaultConsent(false);
             verify(mConsentManager).recordMeasurementDefaultConsent(false);
-            verify(mConsentManager).disable(mContext, AdServicesApiType.FLEDGE);
-            verify(mConsentManager).disable(mContext, AdServicesApiType.TOPICS);
-            verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
+            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.FLEDGE);
+            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.TOPICS);
+            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
         } else {
             verify(mConsentManager).recordTopicsDefaultConsent(true);
             verify(mConsentManager).recordFledgeDefaultConsent(true);
             verify(mConsentManager).recordMeasurementDefaultConsent(true);
-            verify(mConsentManager).enable(mContext, AdServicesApiType.MEASUREMENTS);
-            verify(mConsentManager).enable(mContext, AdServicesApiType.TOPICS);
-            verify(mConsentManager).enable(mContext, AdServicesApiType.FLEDGE);
+            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
+            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.TOPICS);
+            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.FLEDGE);
         }
         verify(mConsentManager).recordGaUxNotificationDisplayed(true);
 

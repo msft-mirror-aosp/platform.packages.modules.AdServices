@@ -39,10 +39,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -66,6 +68,9 @@ public class AppendTest {
     private static final String APPEND = "append";
 
     private Append mAppend = new Append();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testGetName() {

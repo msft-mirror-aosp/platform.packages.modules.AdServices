@@ -15,6 +15,9 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.common.AndroidSdk.Level.S;
+
+import com.android.adservices.common.AndroidSdk.Level;
 import com.android.adservices.common.Logger.RealLogger;
 
 import java.util.ArrayList;
@@ -166,11 +169,16 @@ final class DeviceConfigHelper {
             mLog = new Logger(Objects.requireNonNull(logger), DeviceConfigHelper.class);
         }
 
-        // TODO(b/294423183): should check for SDK version as it doesn't existing on R
         public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
             String value = mode.name().toLowerCase();
             mLog.v("SyncDisabledModeForTest(%s)", value);
-            runShellCommand("device_config set_sync_disabled_for_tests %s", value);
+
+            // TODO(b/294423183): figure out a solution for R when needed
+            if (getDeviceApiLevel().isAtLeast(S)) {
+                // Command supported only on S+.
+                runShellCommand("device_config set_sync_disabled_for_tests %s", value);
+                return;
+            }
         }
 
         /** Gets the value of a property. */
@@ -338,6 +346,9 @@ final class DeviceConfigHelper {
         public String toString() {
             return getClass().getSimpleName();
         }
+
+        /** Gets the device API level. */
+        public abstract Level getDeviceApiLevel();
     }
 
     /** Factory for {@link Interface} objects. */

@@ -20,6 +20,7 @@ import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_S
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
@@ -108,7 +109,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME),
                         Clock.systemUTC()),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
-                ConsentManager.getInstance(context),
+                ConsentManager.getInstance(),
                 DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
@@ -116,7 +117,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 CallingAppUidSupplierBinderImpl.create(),
                 new CustomAudienceServiceFilter(
                         context,
-                        ConsentManager.getInstance(context),
+                        ConsentManager.getInstance(),
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,
@@ -190,7 +191,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext, updateSignalsInput.getCallerPackageName(), apiName);
+                mContext,
+                updateSignalsInput.getCallerPackageName(),
+                apiName,
+                AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
 
         final int callerUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();

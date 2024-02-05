@@ -87,6 +87,14 @@ public class ProtoUtil {
         return res;
     }
 
+    /** Encode intent actions for startActivity Allowlist */
+    public static String encodeActivityAllowlist(ArraySet<String> actions) {
+        AllowedActivities allowedActivitiesBuilder =
+                AllowedActivities.newBuilder().addAllActions(actions).build();
+        return Base64.encodeToString(
+                allowedActivitiesBuilder.toByteArray(), Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
     /** Encode intent actions for broadcastReceivers Allowlist */
     public static String encodeBroadcastReceiverAllowlist(
             ArrayMap<Integer, List<String>> intentActions) {
@@ -129,25 +137,30 @@ public class ProtoUtil {
         services.entrySet().stream()
                 .forEach(
                         x -> {
-                            AllowedServices.Builder allowedServicesBuilder =
-                                    AllowedServices.newBuilder();
-                            if (x.getValue().size() == 0) {
-                                allowedServicesBuilder.addAllowedServices(
-                                        AllowedService.newBuilder().build());
-                            } else {
-                                x.getValue()
-                                        .forEach(
-                                                service -> {
-                                                    allowedServicesBuilder.addAllowedServices(
-                                                            getAllowedService(service));
-                                                });
-                            }
                             serviceAllowlistsBuilder.putAllowlistPerTargetSdk(
-                                    x.getKey(), allowedServicesBuilder.build());
+                                    x.getKey(), encodeAllowedServices(x.getValue()));
                         });
         ServiceAllowlists serviceAllowlists = serviceAllowlistsBuilder.build();
         return Base64.encodeToString(
                 serviceAllowlists.toByteArray(), Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    /**
+     * Encode intent action, packageName, component className, component packageName for Service
+     * Allowlist
+     */
+    public static String encodeServiceAllowlist(List<ArrayMap<String, String>> services) {
+        return Base64.encodeToString(
+                encodeAllowedServices(services).toByteArray(), Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    private static AllowedServices encodeAllowedServices(List<ArrayMap<String, String>> services) {
+        AllowedServices.Builder allowedServicesBuilder = AllowedServices.newBuilder();
+        services.forEach(
+                service -> {
+                    allowedServicesBuilder.addAllowedServices(getAllowedService(service));
+                });
+        return allowedServicesBuilder.build();
     }
 
     private static AllowedService getAllowedService(ArrayMap<String, String> service) {

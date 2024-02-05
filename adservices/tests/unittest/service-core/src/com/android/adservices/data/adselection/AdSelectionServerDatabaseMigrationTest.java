@@ -27,6 +27,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,12 +45,15 @@ public class AdSelectionServerDatabaseMigrationTest {
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public MigrationTestHelper helper =
             new MigrationTestHelper(INSTRUMENTATION, AdSelectionServerDatabase.class);
 
     @Test
-    public void testMigrate1To2() throws IOException {
+    public void testMigration1To2() throws IOException {
         String reportingUrisTable = "auction_server_ad_selection";
 
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 1);
@@ -64,7 +69,7 @@ public class AdSelectionServerDatabaseMigrationTest {
     }
 
     @Test
-    public void testMigrate2to3() throws IOException {
+    public void testMigration2To3() throws IOException {
         String auctionServerAdSelection = "auction_server_ad_selection";
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2);
         Cursor cursor =

@@ -25,6 +25,9 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CustomAudienceRequestTest {
@@ -32,6 +35,9 @@ public class CustomAudienceRequestTest {
             CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     private static final String NAME = CustomAudienceFixture.VALID_NAME;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildJoinCustomAudienceRequestSuccess() {

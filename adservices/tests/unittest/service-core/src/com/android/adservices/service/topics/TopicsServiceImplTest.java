@@ -68,6 +68,7 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.common.NoFailureSyncCallback;
@@ -97,7 +98,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -148,7 +148,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
-    private Context mSpyContext;
     private CallerMetadata mCallerMetadata;
     private TopicsWorker mTopicsWorker;
     private TopicsWorker mSpyTopicsWorker;
@@ -176,7 +175,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Before
     public void setup() throws Exception {
         // TODO(b/310270746): Holly Hack, Batman! This class needs some serious refactoring :-(
-        mSpyContext = spy(appContext.get());
         appContext.set(mMockAppContext);
 
         extendedMockito.mockGetCallingUidOrThrow(); // expect to return test uid by default

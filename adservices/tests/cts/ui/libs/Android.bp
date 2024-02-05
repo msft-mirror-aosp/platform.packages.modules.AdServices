@@ -34,7 +34,7 @@ android_library {
     libs: [
         "android.test.base",
     ],
-    visibility: ["//packages/modules/AdServices/adservices:__subpackages__"],
+    visibility: ["//packages/modules/AdServices/adservices:__subpackages__", "//vendor:__subpackages__"],
     sdk_version: "module_current",
     min_sdk_version: "30",
 }
