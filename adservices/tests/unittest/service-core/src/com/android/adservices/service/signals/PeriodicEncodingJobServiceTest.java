@@ -273,8 +273,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -296,8 +296,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         Flags flagsWithKillSwitchOn =
                 new Flags() {
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return true;
+                    public boolean getProtectedSignalsEnabled() {
+                        return false;
                     }
 
                     @Override
@@ -337,8 +337,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -395,8 +395,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -433,8 +433,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -469,8 +469,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -509,8 +509,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -562,8 +562,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -657,8 +657,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -690,8 +690,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -724,8 +724,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override
@@ -766,8 +766,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
 
                     @Override
-                    public boolean getProtectedSignalsServiceKillSwitch() {
-                        return false;
+                    public boolean getProtectedSignalsEnabled() {
+                        return true;
                     }
 
                     @Override

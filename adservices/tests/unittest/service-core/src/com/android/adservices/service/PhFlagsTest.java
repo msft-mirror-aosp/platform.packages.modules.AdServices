@@ -439,7 +439,7 @@ import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_FETCH_SIGNA
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
-import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.Flags.RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOGGLE_SPEED_BUMP_ENABLED;
@@ -855,7 +855,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK;
@@ -6003,6 +6003,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(phOverridingValue);
     }
 
+    // NOTE: method under test changed, but we're keeping the test name to preserve test history
     @Test
     public void testGetProtectedSignalsServiceKillSwitch() {
         // Disable global_kill_switch so that this flag can be tested.
@@ -6010,31 +6011,32 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         // without any overrides the Protected Signals Service kill switch should be equal to the
         // set constant.
-        boolean defaultValue = PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
-        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isEqualTo(defaultValue);
+        boolean defaultValue = PROTECTED_SIGNALS_ENABLED;
+        assertThat(mPhFlags.getProtectedSignalsEnabled()).isEqualTo(defaultValue);
 
         // Now overriding with the value from PH.
         boolean phOverridingValue = !defaultValue;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
+                KEY_PROTECTED_SIGNALS_ENABLED,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isEqualTo(phOverridingValue);
+        assertThat(mPhFlags.getProtectedSignalsEnabled()).isEqualTo(phOverridingValue);
     }
 
+    // NOTE: method under test changed, but we're keeping the test name to preserve test history
     @Test
     public void testGlobalKillSwitchOverridesProtectedSignalsKillSwitch() {
         enableGlobalKillSwitch();
 
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
-                "false",
+                KEY_PROTECTED_SIGNALS_ENABLED,
+                "true",
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isTrue();
+        assertThat(mPhFlags.getProtectedSignalsEnabled()).isFalse();
     }
 
     @Test
