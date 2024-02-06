@@ -20,7 +20,7 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesStatusUtils;

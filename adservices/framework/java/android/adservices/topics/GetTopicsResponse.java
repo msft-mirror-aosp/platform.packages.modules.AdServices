@@ -15,7 +15,7 @@
  */
 package android.adservices.topics;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 

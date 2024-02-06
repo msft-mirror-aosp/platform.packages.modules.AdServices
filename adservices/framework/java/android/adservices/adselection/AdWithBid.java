@@ -16,7 +16,7 @@
 
 package android.adservices.adselection;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.adservices.common.AdData;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
