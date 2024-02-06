@@ -18,6 +18,7 @@ package android.adservices.signals;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 
+import android.adservices.Flags;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
@@ -42,7 +43,7 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /** ProtectedSignalsManager provides APIs for apps and ad-SDKs to manage their protected signals. */
-@FlaggedApi("com.android.adservices.flags.protected_signals_enabled")
+@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

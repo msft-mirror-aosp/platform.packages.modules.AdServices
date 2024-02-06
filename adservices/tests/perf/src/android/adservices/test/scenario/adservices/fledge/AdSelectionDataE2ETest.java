@@ -44,7 +44,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -115,11 +114,19 @@ public class AdSelectionDataE2ETest {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
     }
 
-    @Before
-    public void warmup() throws Exception {
+    /**
+     * Warm up servers to reduce flakiness.
+     *
+     * <p>B&A servers often send responses if contacted after a while. Warming up with a couple of
+     * calls should greatly reduce this flakiness.
+     */
+    @BeforeClass
+    public static void warmup() throws Exception {
+
+        // The first warm up call brings ups the sfe
         List<CustomAudience> customAudiences =
                 CustomAudienceTestFixture.readCustomAudiences(
-                        CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD);
+                        CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA);
         CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
 
         GetAdSelectionDataRequest request =
@@ -132,7 +139,17 @@ public class AdSelectionDataE2ETest {
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         FakeAdExchangeServer.runServerAuction(
-                CONTEXTUAL_SIGNALS_ONE_BUYER,
+                CONTEXTUAL_SIGNALS_TWO_BUYERS,
+                outcome.getAdSelectionData(),
+                SFE_ADDRESS,
+                SERVER_RESPONSE_LOGGING_ENABLED);
+
+        // Wait for a couple of seconds before test execution
+        Thread.sleep(2000L);
+
+        // The second warm up call will bring up both the BFEs
+        FakeAdExchangeServer.runServerAuction(
+                CONTEXTUAL_SIGNALS_TWO_BUYERS,
                 outcome.getAdSelectionData(),
                 SFE_ADDRESS,
                 SERVER_RESPONSE_LOGGING_ENABLED);

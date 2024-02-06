@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data.knaon;
+package com.android.adservices.data.kanon;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -22,10 +22,6 @@ import android.content.Context;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.data.kanon.DBServerParameters;
-import com.android.adservices.data.kanon.KAnonDatabase;
-import com.android.adservices.data.kanon.ServerParametersDao;
 
 import org.junit.Before;
 import org.junit.Test;

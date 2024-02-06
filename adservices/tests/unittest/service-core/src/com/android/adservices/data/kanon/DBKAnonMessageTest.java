@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data.knaon;
+package com.android.adservices.data.kanon;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
-
-import com.android.adservices.data.kanon.DBKAnonMessage;
-import com.android.adservices.data.kanon.KAnonMessageConstants;
 
 import org.junit.Test;
 

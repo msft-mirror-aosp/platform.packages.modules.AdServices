@@ -16,6 +16,7 @@
 
 package android.adservices.signals;
 
+import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -28,7 +29,7 @@ import java.util.Objects;
  * <p>{@code updateUri} is the only parameter. It represents the URI that the service will reach out
  * to retrieve the signals updates.
  */
-@FlaggedApi("com.android.adservices.flags.protected_signals_enabled")
+@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
 public final class UpdateSignalsRequest {
     @NonNull private final Uri mUpdateUri;
 
