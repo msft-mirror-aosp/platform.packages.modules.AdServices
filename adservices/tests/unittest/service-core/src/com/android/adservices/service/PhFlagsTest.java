@@ -6008,11 +6008,11 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         // without any overrides the Protected Signals Service kill switch should be equal to the
         // set constant.
-        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch())
-                .isEqualTo(PROTECTED_SIGNALS_SERVICE_KILL_SWITCH);
+        boolean defaultValue = PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
+        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isEqualTo(defaultValue);
 
         // Now overriding with the value from PH.
-        boolean phOverridingValue = !PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
+        boolean phOverridingValue = !defaultValue;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
@@ -6020,6 +6020,19 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGlobalKillSwitchOverridesProtectedSignalsKillSwitch() {
+        enableGlobalKillSwitch();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
+                "false",
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isFalse();
     }
 
     @Test
@@ -6149,22 +6162,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(phOverridingValue);
         assertThat(mPhFlags.getFledgeAuctionServerKillSwitch()).isEqualTo(phOverridingValue);
         assertThat(mPhFlags.getFledgeOnDeviceAuctionKillSwitch()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGlobalKillSwitchOverridesProtectedSignalsKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the protected signals API kill switch equal to the constant
-        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch())
-                .isEqualTo(PROTECTED_SIGNALS_SERVICE_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -7251,7 +7248,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void disableGlobalKillSwitch() {
-        // Override the global_kill_switch to test other flag values.
+        overrideGlobalKillSwitch(false);
+    }
+
+    private void enableGlobalKillSwitch() {
         overrideGlobalKillSwitch(false);
     }
 
