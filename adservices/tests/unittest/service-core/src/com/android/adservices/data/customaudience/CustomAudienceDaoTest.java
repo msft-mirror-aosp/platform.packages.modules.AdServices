@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -26,6 +28,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -41,6 +44,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
@@ -59,6 +63,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
@@ -399,6 +404,23 @@ public class CustomAudienceDaoTest {
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
 
+    private static final DBCustomAudience CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
+            new DBCustomAudience.Builder()
+                    .setOwner(OWNER_1)
+                    .setBuyer(BUYER_1)
+                    .setName(NAME_1)
+                    .setActivationTime(ACTIVATION_TIME_1)
+                    .setCreationTime(CREATION_TIME_1)
+                    .setExpirationTime(EXPIRATION_TIME_1)
+                    .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_1)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                    .setAds(List.of(ADS_1))
+                    .setTrustedBiddingData(
+                            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(BUYER_1).build())
+                    .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                    .build();
+
     private static final DBCustomAudienceBackgroundFetchData
             CUSTOM_AUDIENCE_BGF_DATA_NO_USER_BIDDING_SIGNALS =
                     DBCustomAudienceBackgroundFetchData.builder()
@@ -547,6 +569,9 @@ public class CustomAudienceDaoTest {
     private MockitoSession mStaticMockSession = null;
     private CustomAudienceDao mCustomAudienceDao;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
         // Test applications don't have the required permissions to read config P/H flags, and
@@ -570,6 +595,24 @@ public class CustomAudienceDaoTest {
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
+    }
+
+    @Test
+    public void testPersistCustomAudienceWithAuctionServerFlags() {
+        // Assert table is empty
+        assertNull(mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
+
+        mCustomAudienceDao.persistCustomAudience(CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS);
+
+        // Assert only first object is persisted
+
+        DBCustomAudience customAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1);
+
+        assertNotNull(customAudience);
+        assertEquals(
+                CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS.getAuctionServerRequestFlags(),
+                customAudience.getAuctionServerRequestFlags());
     }
 
     @Test

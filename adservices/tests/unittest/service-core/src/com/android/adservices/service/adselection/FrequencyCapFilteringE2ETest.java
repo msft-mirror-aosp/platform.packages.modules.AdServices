@@ -36,6 +36,7 @@ import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
@@ -49,6 +50,7 @@ import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.DbTestUtil;
@@ -111,6 +113,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
@@ -376,7 +379,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                 .assertAppDeclaredPermission(
                         mSpyContext,
                         CommonFixture.TEST_PACKAGE_NAME_1,
-                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
+                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
@@ -400,7 +404,8 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                 .assertAppDeclaredPermission(
                         mSpyContext,
                         CommonFixture.TEST_PACKAGE_NAME_1,
-                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM);
+                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM,
+                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
     }
 
     @Test

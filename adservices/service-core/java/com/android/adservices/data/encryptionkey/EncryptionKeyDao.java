@@ -435,7 +435,7 @@ public class EncryptionKeyDao implements IEncryptionKeyDao {
                     MethodName.DELETE_KEY);
         } catch (SQLException e) {
             sLogger.e(
-                    "Failed to delete EncryptionKey in DB with id %s, error : ",
+                    "Failed to delete EncryptionKey in DB with id %s, error: %s ",
                     id, e.getMessage());
             logEncryptionKeyDbTransactionEndedStats(
                     DbTransactionType.WRITE_TRANSACTION_TYPE,

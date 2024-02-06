@@ -376,6 +376,30 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
     }
 
+    /** Returns whether measurement click deduplication is enabled. */
+    default boolean getMeasurementIsClickDeduplicationEnabled() {
+        return MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED;
+    }
+
+    /** Default whether measurement click deduplication is enabled. */
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = true;
+
+    /** Returns whether measurement click deduplication is enforced. */
+    default boolean getMeasurementIsClickDeduplicationEnforced() {
+        return MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED;
+    }
+
+    /** Default whether measurement click deduplication is enforced. */
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = true;
+
+    /** Returns the number of sources that can be registered with a single click. */
+    default long getMeasurementMaxSourcesPerClick() {
+        return MEASUREMENT_MAX_SOURCES_PER_CLICK;
+    }
+
+    /** Default max number of sources that can be registered with single click. */
+    long MEASUREMENT_MAX_SOURCES_PER_CLICK = 1;
+
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
@@ -1652,6 +1676,13 @@ public interface Flags extends CommonFlags {
     /** Returns the max length of Ad Render Id. */
     default long getFledgeAuctionServerAdRenderIdMaxLength() {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED = false;
+
+    /** Returns whether the omit-ads flag is enabled for the server auction. */
+    default boolean getFledgeAuctionServerOmitAdsEnabled() {
+        return FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -3059,6 +3090,7 @@ public interface Flags extends CommonFlags {
     }
 
     boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
+
     /** Returns true when the new trigger registration header size limitation are applied. */
     default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
         return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
@@ -4167,11 +4199,38 @@ public interface Flags extends CommonFlags {
     /**
      * Returns whether the topics cobalt logging feature is enabled.
      *
-     * <p>The topics cobalt logging will be disabled either the getCobaltLoggingEnabled or {@code
-     * TOPICS_COBALT_LOGGING_ENABLED} is {@code false}.
+     * <p>The topics cobalt logging will be disabled either the {@code getCobaltLoggingEnabled} or
+     * {@code TOPICS_COBALT_LOGGING_ENABLED} is {@code false}.
      */
     default boolean getTopicsCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled() && TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /** Default value of whether app name and api error cobalt logging feature is enabled. */
+    boolean APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the app name and api error cobalt logging feature is enabled.
+     *
+     * <p>The app name and api error cobalt logging will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED} is {@code
+     * false}.
+     */
+    default boolean getAppNameApiErrorCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of {@link AppNameApiErrorLogger} logging sampling rate.
+     *
+     * <p>The value should be an integer in the range of {@code [0, 100]}, where {@code 100} is to
+     * log all events and {@code 0} is to log no events.
+     */
+    int APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE = 100;
+
+    /** Returns the {@link AppNameApiErrorLogger} logging sampling rate. */
+    default int getAppNameApiErrorCobaltLoggingSamplingRate() {
+        return APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
     }
 
     /** Default value of Cobalt Adservices Api key. */
@@ -4380,13 +4439,19 @@ public interface Flags extends CommonFlags {
         return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
     }
 
-    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = false;
+    /**
+     * @deprecated TODO(b/314962688): remove (will always be true)
+     */
+    @Deprecated boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
 
     /**
      * Returns whether the API access checked by the AdServices XML config returns {@code true} by
      * default (i.e., when the app doesn't define the config XML file or if the given API access is
      * missing from that file).
+     *
+     * @deprecated TODO(b/314962688): remove
      */
+    @Deprecated
     default boolean getAppConfigReturnsEnabledByDefault() {
         return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
@@ -4497,5 +4562,142 @@ public interface Flags extends CommonFlags {
     /** Returns whether features related to the PAS Ux are enabled */
     default boolean getPasUxEnabled() {
         return DEFAULT_PAS_UX_ENABLED;
+    }
+
+    /** Default value of the KAnon Sign/join feature flag */
+    boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED = false;
+
+    /** Default value of k-anon fetch server parameters url. */
+    String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getServerPublicParams";
+
+    /** Default value of k-anon register client parameters url. */
+    String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/registerClient";
+
+    /** Default value of k-anon get tokens url. */
+    String FLEDGE_DEFAULT_KANON_GET_TOKENS_URL =
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getTokens";
+
+    /** Default value of k-anon get tokens url. */
+    String FLEDGE_DEFAULT_KANON_JOIN_URL =
+            "https://staging-chromekanonymity-pa.sandbox.googleapis.com/v1/proxy/req";
+
+    /** Default size of batch in a kanon sign call */
+    int FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE = 32;
+
+    /** Default percentage of messages to be signed/joined immediately. */
+    int FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS = 10;
+
+    /** Default ttl of kanon-messages stored in the database */
+    long FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS = 2 * 7 * 24 * 60 * 60; // 2 weeks
+
+    /** Default frequency of the KAnon Sign/Join background process */
+    int FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY = 2;
+
+    /** Default number of messages processed in a single background process */
+    int FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS = 100;
+
+    /**
+     * This is a feature flag for KAnon Sign/Join feature.
+     *
+     * @return {@code true} if the feature is enabled, otherwise returns {@code false}.
+     */
+    default boolean getFledgeKAnonSignJoinFeatureEnabled() {
+        return FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch server parameters during k-anon
+     * sign call
+     *
+     * @return kanon fetch server params url.
+     */
+    default String getFledgeKAnonFetchServerParamsUrl() {
+        return FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to register client parameters during k-anon
+     * sign call.
+     *
+     * @return register client params url
+     */
+    default String getFledgeKAnonRegisterClientParametersUrl() {
+        return FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch Tokens during k-anon sign call.
+     *
+     * @return default value of get tokens url
+     */
+    default String getFledgeKAnonGetTokensUrl() {
+        return FLEDGE_DEFAULT_KANON_GET_TOKENS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to make k-anon JOIN join call.
+     *
+     * @return default value of get tokens url
+     */
+    default String getFledgeKAnonJoinUrl() {
+        return FLEDGE_DEFAULT_KANON_JOIN_URL;
+    }
+
+    /**
+     * This method returns the value of batch size in a batch kanon sign call
+     *
+     * @return k-anon sign batch size
+     */
+    default int getFledgeKAnonSignBatchSize() {
+        return FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE;
+    }
+
+    /**
+     * This method returns an integer tha represents the percentage of the messages that needs to be
+     * signed/joined immediately.
+     */
+    default int getFledgeKAnonPercentageImmediateSignJoinCalls() {
+        return FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
+    }
+
+    /**
+     * This method returns the max ttl of a KAnonMessage in the Database. This is used to determine
+     * when to clean up the old KAnonMessages from the database
+     *
+     * @return kanon max ttl for a kano message
+     */
+    default long getFledgeKAnonMessageTtlSeconds() {
+        return FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS;
+    }
+
+    /** This method returns the number of k-anon sign/join background processes per day. */
+    default int getFledgeKAnonBackgroundProcessFrequencyPerDay() {
+        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY;
+    }
+
+    /**
+     * This method returns the number of k-anon messages to be processed per background process run.
+     */
+    default int getFledgeKAnonMessagesPerBackgroundProcess() {
+        return FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
+    }
+
+    /*
+     * The allow-list for PP APIs. This list has the list of app package names that we allow
+     * using PP APIs.
+     * App Package Name that does not belong to this allow-list will not be able to use PP APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
+     */
+    String GET_ADSERVICES_COMMON_STATES_ALLOW_LIST = "com.android.adservices.tests.ui.common";
+
+    /**
+     * Returns bypass List for Get AdServices Common States app signature check. Apps with package
+     * name on this list will bypass the signature check
+     */
+    default String getAdServicesCommonStatesAllowList() {
+        return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
     }
 }

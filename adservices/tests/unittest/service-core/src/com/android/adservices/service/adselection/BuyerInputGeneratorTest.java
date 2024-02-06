@@ -40,6 +40,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -62,6 +63,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
@@ -93,6 +95,9 @@ public class BuyerInputGeneratorTest {
     private BuyerInputGenerator mBuyerInputGenerator;
     private AuctionServerDataCompressor mDataCompressor;
     private MockitoSession mStaticMockSession = null;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws Exception {
@@ -131,7 +136,8 @@ public class BuyerInputGeneratorTest {
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
                         ENABLE_AD_FILTER,
                         ENABLE_PERIODIC_SIGNALS,
-                        mDataCompressor);
+                        mDataCompressor,
+                        false);
 
         // Required by CustomAudienceDao.
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
@@ -182,7 +188,137 @@ public class BuyerInputGeneratorTest {
                 DBCustomAudience deviceCA = namesAndCustomAudiences.get(buyerInputsCAName);
                 Assert.assertEquals(deviceCA.getName(), buyerInputsCAName);
                 Assert.assertEquals(deviceCA.getBuyer(), buyer);
-                assertEqual(buyerInputsCA, deviceCA);
+                assertEqual(buyerInputsCA, deviceCA, true);
+            }
+        }
+        verify(mAdFiltererMock).filterCustomAudiences(any());
+    }
+
+    @Test
+    public void testBuyerInputGenerator_returnsBuyerInputsWithoutRenderIdForSpecifiedCA()
+            throws ExecutionException, InterruptedException, TimeoutException,
+                    InvalidProtocolBufferException {
+        // Set AdFiltering to return all custom audiences in the input argument.
+        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "Shoes CA of Buyer 1", BUYER_1,
+                        "Shirts CA of Buyer 1", BUYER_1,
+                        "Shoes CA Of Buyer 2", BUYER_2);
+        Set<AdTechIdentifier> buyers = new HashSet<>(nameAndBuyersMap.values());
+        Map<String, DBCustomAudience> namesAndCustomAudiences =
+                createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
+
+        String buyer2ShirtsName = "Shirts CA of Buyer 2";
+        // Insert a CA with omit ads enabled
+        DBCustomAudience dbCustomAudienceOmitAdsEnabled =
+                createAndPersistDBCustomAudienceWithOmitAdsEnabled(buyer2ShirtsName, BUYER_2);
+        namesAndCustomAudiences.put(buyer2ShirtsName, dbCustomAudienceOmitAdsEnabled);
+
+        // Re init buyer input generator to enable omit ads feature
+        mBuyerInputGenerator =
+                new BuyerInputGenerator(
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mAdFiltererMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
+                        ENABLE_AD_FILTER,
+                        ENABLE_PERIODIC_SIGNALS,
+                        mDataCompressor,
+                        true);
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
+                mBuyerInputGenerator
+                        .createCompressedBuyerInputs()
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
+
+        Assert.assertEquals(buyers, buyerAndBuyerInputs.keySet());
+
+        for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
+            BuyerInput buyerInput =
+                    BuyerInput.parseFrom(
+                            mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
+            for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                assertTrue(namesAndCustomAudiences.containsKey(buyerInputsCAName));
+                DBCustomAudience deviceCA = namesAndCustomAudiences.get(buyerInputsCAName);
+                Assert.assertEquals(deviceCA.getName(), buyerInputsCAName);
+                Assert.assertEquals(deviceCA.getBuyer(), buyer);
+                assertEqual(buyerInputsCA, deviceCA, false);
+
+                // Buyer 2 shirts ca should not have ad render ids list
+                if (deviceCA.getBuyer().equals(BUYER_2)
+                        && deviceCA.getName().equals(buyer2ShirtsName)) {
+                    assertTrue(buyerInputsCA.getAdRenderIdsList().isEmpty());
+                } else {
+                    // All other CAs should still have ad render ids
+                    assertFalse(buyerInputsCA.getAdRenderIdsList().isEmpty());
+                    assertAdsEqual(buyerInputsCA, deviceCA);
+                }
+            }
+        }
+        verify(mAdFiltererMock).filterCustomAudiences(any());
+    }
+
+    @Test
+    public void testBuyerInputGenerator_returnsBuyerInputsWithRenderIdIfFlagFalse()
+            throws ExecutionException, InterruptedException, TimeoutException,
+                    InvalidProtocolBufferException {
+        // Set AdFiltering to return all custom audiences in the input argument.
+        when(mAdFiltererMock.filterCustomAudiences(any())).thenAnswer(i -> i.getArguments()[0]);
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "Shoes CA of Buyer 1", BUYER_1,
+                        "Shirts CA of Buyer 1", BUYER_1,
+                        "Shoes CA Of Buyer 2", BUYER_2);
+        Set<AdTechIdentifier> buyers = new HashSet<>(nameAndBuyersMap.values());
+        Map<String, DBCustomAudience> namesAndCustomAudiences =
+                createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
+
+        String buyer2ShirtsName = "Shirts CA of Buyer 2";
+        // Insert a CA with omit ads enabled
+        DBCustomAudience dbCustomAudienceOmitAdsEnabled =
+                createAndPersistDBCustomAudienceWithOmitAdsEnabled(buyer2ShirtsName, BUYER_2);
+        namesAndCustomAudiences.put(buyer2ShirtsName, dbCustomAudienceOmitAdsEnabled);
+
+        // Re init buyer input generator to disable omit ads feature
+        mBuyerInputGenerator =
+                new BuyerInputGenerator(
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mAdFiltererMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
+                        ENABLE_AD_FILTER,
+                        ENABLE_PERIODIC_SIGNALS,
+                        mDataCompressor,
+                        false);
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
+                mBuyerInputGenerator
+                        .createCompressedBuyerInputs()
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
+
+        Assert.assertEquals(buyers, buyerAndBuyerInputs.keySet());
+
+        for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
+            BuyerInput buyerInput =
+                    BuyerInput.parseFrom(
+                            mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
+            for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                assertTrue(namesAndCustomAudiences.containsKey(buyerInputsCAName));
+                DBCustomAudience deviceCA = namesAndCustomAudiences.get(buyerInputsCAName);
+                Assert.assertEquals(deviceCA.getName(), buyerInputsCAName);
+                Assert.assertEquals(deviceCA.getBuyer(), buyer);
+                // Even though one of the CAs indicated that it wants to omit ads, the flag is false
+                // so we expect the ads to stay
+                assertEqual(buyerInputsCA, deviceCA, true);
             }
         }
         verify(mAdFiltererMock).filterCustomAudiences(any());
@@ -266,7 +402,7 @@ public class BuyerInputGeneratorTest {
             DBCustomAudience deviceCA = namesAndCustomAudiences.get(buyerInputsCAName);
             Assert.assertEquals(deviceCA.getName(), buyerInputsCAName);
             Assert.assertEquals(deviceCA.getBuyer(), BUYER_1);
-            assertEqual(buyerInputsCA, deviceCA);
+            assertEqual(buyerInputsCA, deviceCA, true);
         }
 
         verify(mAdFiltererMock).filterCustomAudiences(any());
@@ -296,7 +432,8 @@ public class BuyerInputGeneratorTest {
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
                         ENABLE_AD_FILTER,
                         false,
-                        mDataCompressor);
+                        mDataCompressor,
+                        false);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 buyerInputGeneratorSignalsDisabled
@@ -325,7 +462,7 @@ public class BuyerInputGeneratorTest {
             DBCustomAudience deviceCA = namesAndCustomAudiences.get(buyerInputsCAName);
             Assert.assertEquals(deviceCA.getName(), buyerInputsCAName);
             Assert.assertEquals(deviceCA.getBuyer(), BUYER_1);
-            assertEqual(buyerInputsCA, deviceCA);
+            assertEqual(buyerInputsCA, deviceCA, true);
         }
 
         verify(mAdFiltererMock).filterCustomAudiences(any());
@@ -346,7 +483,8 @@ public class BuyerInputGeneratorTest {
                         FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
                         false,
                         ENABLE_PERIODIC_SIGNALS,
-                        mDataCompressor);
+                        mDataCompressor,
+                        false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "testCA")
                         .build(),
@@ -402,7 +540,9 @@ public class BuyerInputGeneratorTest {
      * equal.
      */
     private void assertEqual(
-            BuyerInput.CustomAudience buyerInputCA, DBCustomAudience dbCustomAudience) {
+            BuyerInput.CustomAudience buyerInputCA,
+            DBCustomAudience dbCustomAudience,
+            boolean compareAds) {
         Assert.assertEquals(buyerInputCA.getName(), dbCustomAudience.getName());
         Assert.assertEquals(buyerInputCA.getOwner(), dbCustomAudience.getOwner());
         Assert.assertNotNull(dbCustomAudience.getTrustedBiddingData());
@@ -414,6 +554,21 @@ public class BuyerInputGeneratorTest {
                 buyerInputCA.getUserBiddingSignals(),
                 dbCustomAudience.getUserBiddingSignals().toString());
         Assert.assertNotNull(dbCustomAudience.getAds());
+        if (compareAds) {
+            Assert.assertEquals(
+                    buyerInputCA.getAdRenderIdsList(),
+                    dbCustomAudience.getAds().stream()
+                            .filter(
+                                    ad ->
+                                            ad.getAdRenderId() != null
+                                                    && !ad.getAdRenderId().isEmpty())
+                            .map(ad -> ad.getAdRenderId())
+                            .collect(Collectors.toList()));
+        }
+    }
+
+    private void assertAdsEqual(
+            BuyerInput.CustomAudience buyerInputCA, DBCustomAudience dbCustomAudience) {
         Assert.assertEquals(
                 buyerInputCA.getAdRenderIdsList(),
                 dbCustomAudience.getAds().stream()
@@ -436,6 +591,15 @@ public class BuyerInputGeneratorTest {
                     thisCustomAudience, Uri.EMPTY, false);
         }
         return customAudiences;
+    }
+
+    private DBCustomAudience createAndPersistDBCustomAudienceWithOmitAdsEnabled(
+            String name, AdTechIdentifier buyer) {
+        DBCustomAudience thisCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(buyer, name)
+                        .build();
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY, false);
+        return thisCustomAudience;
     }
 
     private Map<AdTechIdentifier, DBEncodedPayload> generateAndPersistEncodedPayload(

@@ -24,10 +24,7 @@ import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.os.Build;
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.FlakyTest;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
@@ -93,7 +90,6 @@ public final class NotificationActivityRvcUxSelectorUiAutomatorTest extends AdSe
         assertThat(u18NotificationTitle).isNull();
     }
 
-    @FlakyTest(bugId = 309468369)
     @Test
     public void clickSettingsTest() throws Exception {
         NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
@@ -118,13 +114,6 @@ public final class NotificationActivityRvcUxSelectorUiAutomatorTest extends AdSe
         UiObject2 measurementTitle =
                 ApkTestUtil.getElement(
                         mSpyContext, mDevice, R.string.settingsUI_u18_measurement_view_title);
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-            ApkTestUtil.scrollToAndClick(
-                    mSpyContext, mDevice, R.string.settingsUI_u18_measurement_view_title);
-        } else {
-            ApkTestUtil.scrollTo(
-                    mSpyContext, mDevice, R.string.settingsUI_u18_measurement_view_title);
-        }
         assertThat(measurementTitle).isNotNull();
     }
 }

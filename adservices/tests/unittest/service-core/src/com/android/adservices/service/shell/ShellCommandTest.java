@@ -16,40 +16,51 @@
 
 package com.android.adservices.service.shell;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
+
+import com.android.adservices.common.AdServicesMockitoTestCase;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 
-abstract class ShellCommandTest<T extends ShellCommand> extends AdServicesUnitTestCase {
-    private final T mCmd;
+abstract class ShellCommandTest<T extends ShellCommand> extends AdServicesMockitoTestCase {
 
-    ShellCommandTest(T cmd) {
-        mCmd = cmd;
-    }
-
-    Result run(String... args) {
+    Result run(T cmd, String... args) {
         StringWriter outStringWriter = new StringWriter();
         PrintWriter outPw = new PrintWriter(outStringWriter);
         StringWriter errStringWriter = new StringWriter();
         PrintWriter errPw = new PrintWriter(errStringWriter);
 
-        int status = mCmd.run(outPw, errPw, args);
+        int status = cmd.run(outPw, errPw, args);
         String out = getResultAndClosePrintWriter(outPw, outStringWriter);
         String err = getResultAndClosePrintWriter(errPw, errStringWriter);
         return new Result(out, err, status);
     }
 
     void expectSuccess(Result actual, String expectedOut) {
-        expect.withMessage("result").that(actual.mStatus).isAtLeast(0);
+        expect.withMessage("result").that(actual.mStatus).isEqualTo(0);
         expect.withMessage("out").that(actual.mOut).isEqualTo(expectedOut);
+        expect.withMessage("err").that(actual.mErr).isEmpty();
+    }
+
+    void expectSuccess(Result actual) {
+        expect.withMessage("result").that(actual.mStatus).isEqualTo(0);
         expect.withMessage("err").that(actual.mErr).isEmpty();
     }
 
     void expectFailure(Result actual, String expectedErr) {
         expect.withMessage("result").that(actual.mStatus).isLessThan(0);
         expect.withMessage("out").that(actual.mOut).isEmpty();
-        expect.withMessage("err").that(actual.mErr).isEqualTo(expectedErr);
+        expect.withMessage("err").that(actual.mErr).endsWith(expectedErr);
+    }
+
+    void runAndExpectInvalidArgument(T cmd, String syntax, String... args) throws Exception {
+        Result actualResult = run(cmd, args);
+        String expectedErr =
+                String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
+
+        expectFailure(actualResult, expectedErr);
     }
 
     private String getResultAndClosePrintWriter(PrintWriter pw, StringWriter sw) {

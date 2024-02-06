@@ -280,13 +280,15 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
 
     private void assertHelpContents(String help) {
         expect.withMessage("help")
-                .that(help.split("\n"))
+                .that(help.split("\n\n"))
                 .asList()
                 .containsExactly(
                         HELP_ECHO,
                         HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
                         HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                        HELP_IS_ALLOWED_TOPICS_ACCESS);
+                        HELP_IS_ALLOWED_TOPICS_ACCESS,
+                        CustomAudienceListCommand.HELP,
+                        CustomAudienceViewCommand.HELP);
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {

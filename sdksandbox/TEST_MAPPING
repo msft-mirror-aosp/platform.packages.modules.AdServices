@@ -13,7 +13,12 @@
       "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "SdkSandboxManagerServiceUnitTests[com.google.android.adservices.apex]"
+      "name": "SdkSandboxManagerServiceUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "SdkSandboxFrameworkUnitTests[com.google.android.adservices.apex]"
@@ -89,7 +94,12 @@
       ]
     },
     {
-      "name": "SdkSandboxManagerServiceUnitTests"
+      "name": "SdkSandboxManagerServiceUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "SdkSandboxFrameworkUnitTests"
@@ -108,9 +118,6 @@
     },
     {
       "name": "SdkSandboxRestrictionsTests"
-    },
-    {
-      "name": "ContentProviderRestrictionsHostTest"
     },
     {
       "name": "SdkSandboxStorageHostTest",

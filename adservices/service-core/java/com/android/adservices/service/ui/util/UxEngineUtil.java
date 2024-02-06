@@ -80,13 +80,13 @@ public class UxEngineUtil {
         // TODO(b/308520219): Properly start measurement background jobs for U18 users
             switch (ux) {
                 case GA_UX, BETA_UX -> {
-                if (ConsentManager.getInstance(context).getConsent().isGiven()) {
+                if (ConsentManager.getInstance().getConsent().isGiven()) {
                     PackageChangedReceiver.enableReceiver(context, flags);
                     BackgroundJobsManager.scheduleAllBackgroundJobs(context);
                 }
             }
                 case U18_UX, RVC_UX -> {
-                if (ConsentManager.getInstance(context)
+                if (ConsentManager.getInstance()
                         .getConsent(AdServicesApiType.MEASUREMENTS)
                         .isGiven()) {
                     PackageChangedReceiver.enableReceiver(context, flags);

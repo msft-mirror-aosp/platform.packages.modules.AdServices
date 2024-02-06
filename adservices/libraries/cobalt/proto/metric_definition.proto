@@ -50,20 +50,15 @@ option java_package = "com.google.cobalt";
 //
 // Next ID: 27
 message MetricDefinition {
-  reserved 6, 7, 9, 13, 17, 21, 23, 24;
-  reserved "event_codes", "event_code_buffer_max", "max_event_code", "parts",
-      "proto_name", "string_buffer_max", "replacement_metric_id",
-      "no_replacement_metric";
+  reserved 6, 7, 9, 13, 14, 15, 17, 21, 23, 24;
+  reserved "event_codes", "event_code_buffer_max", "max_event_code", "parts", "proto_name",
+      "string_buffer_max", "replacement_metric_id", "no_replacement_metric", "customer_name",
+      "project_name";
 
   // Unique name for this Metric within its owning project.
   // The name must obey the syntax of a C variable name and must have length
   // at most 64.
   string metric_name = 1;
-
-  // The Cobalt registry YAML parser will automatically set the values of
-  // customer_name and project_name based on the context of the YAML file.
-  string customer_name = 14;
-  string project_name = 15;
 
   // These three numbers form this Metric's unique numerical ID in Cobalt. The
   // Cobalt registry YAML parser will automatically set the value of
@@ -78,8 +73,8 @@ message MetricDefinition {
   // Next ID: 12
   enum MetricType {
     reserved 1, 2, 3, 4, 5, 6, 7, 9999;
-    reserved "CUSTOM", "ELAPSED_TIME", "EVENT_COUNT", "EVENT_OCCURRED",
-        "FRAME_RATE", "INT_HISTOGRAM", "MEMORY_USAGE", "STRING_USED";
+    reserved "CUSTOM", "ELAPSED_TIME", "EVENT_COUNT", "EVENT_OCCURRED", "FRAME_RATE",
+        "INT_HISTOGRAM", "MEMORY_USAGE", "STRING_USED";
 
     UNSET = 0;
 
@@ -230,11 +225,14 @@ message MetricDefinition {
   // The TimeZonePolicy for this Metric (Optional. Defaults to UTC)
   TimeZonePolicy time_zone_policy = 10;
 
-  // An IANA time zone identifier (https://iana.org/time-zones). Should be set
-  // if and only if the metric's `time_zone_policy` is OTHER_TIME_ZONE.
+  // An IANA time zone identifier (https://iana.org/time-zones). Should be set if
+  // and only if the metric's `time_zone_policy` is OTHER_TIME_ZONE.
   string other_time_zone = 25;
 
   message Metadata {
+    reserved 2;
+    reserved "owner";
+
     // The date after which this metric is no longer valid. If this field is not
     // supplied, the metric is considered currently expired, and is not
     // guaranteed to be reported by cobalt.
@@ -242,11 +240,6 @@ message MetricDefinition {
     // The date must be expressed in yyyy/mm/dd form.
     // It may be at most one year in the future.
     string expiration_date = 1;
-
-    // Primary contacts for questions/bugs regarding this metric (may be a
-    // group). This should be a fully qualified email address (e.g.
-    // my-group@test.com)
-    repeated string owner = 2;
 
     // Maximum ReleaseStage for which this Metric is allowed to be collected.
     ReleaseStage max_release_stage = 4;

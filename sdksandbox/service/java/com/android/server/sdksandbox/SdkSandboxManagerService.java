@@ -28,7 +28,6 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_A
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
@@ -78,7 +77,6 @@ import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
@@ -107,7 +105,6 @@ import com.android.server.sdksandbox.proto.Services.AllowedService;
 import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
-
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -275,8 +272,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         SdkSandboxShellCommand createShellCommand(
-                SdkSandboxManagerService service, Context context) {
-            return new SdkSandboxShellCommand(service, context);
+                SdkSandboxManagerService service,
+                Context context,
+                boolean supportsAdServicesShellCmd) {
+            return new SdkSandboxShellCommand(service, context, supportsAdServicesShellCmd);
         }
 
         boolean isEmulator() {
@@ -715,22 +714,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             Bundle params,
             ILoadSdkCallback callback,
             SandboxLatencyInfo sandboxLatencyInfo) {
-        LoadSdkSession loadSdkSession =
-                new LoadSdkSession(
-                        mContext, this, mInjector, sdkName, callingInfo, params, callback);
-        // SDK provider was invalid. This load request should fail.
-        String errorMsg = loadSdkSession.getSdkProviderErrorIfExists();
-        if (!TextUtils.isEmpty(errorMsg)) {
-            Log.w(TAG, errorMsg);
+        LoadSdkSession loadSdkSession;
+
+        try {
+            loadSdkSession =
+                    new LoadSdkSession(
+                            mContext, this, mInjector, sdkName, callingInfo, params, callback);
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w(TAG, e.getMessage(), e);
             sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
-            loadSdkSession.handleLoadFailure(
-                    new LoadSdkException(SdkSandboxManager.LOAD_SDK_NOT_FOUND, errorMsg),
-                    /*startTimeOfErrorStage=*/ -1,
-                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ false,
-                    sandboxLatencyInfo);
+
+            LoadSdkException loadSdkException =
+                    new LoadSdkException(
+                            SdkSandboxManager.LOAD_SDK_NOT_FOUND, e.getMessage() + " not found");
+            sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
+            try {
+                callback.onLoadSdkFailure(loadSdkException, sandboxLatencyInfo);
+            } catch (RemoteException remoteException) {
+                Log.w(TAG, "Failed to send onLoadSdkFailure", remoteException);
+            }
             return;
         }
 
@@ -749,15 +753,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
                 sandboxLatencyInfo.setSandboxStatus(
                         SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
-                // TODO(b/296844050): only take LoadSdkException and SandboxLatencyInfo as
-                // parameters.
                 loadSdkSession.handleLoadFailure(
                         new LoadSdkException(
                                 SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
                                 sdkName + " has been loaded already"),
-                        /*startTimeOfErrorStage=*/ -1,
-                        SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                        /*successAtStage=*/ false,
                         sandboxLatencyInfo);
                 return;
             }
@@ -772,9 +771,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         new LoadSdkException(
                                 SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
                                 sdkName + " is currently being loaded"),
-                        /*startTimeOfErrorStage=*/ -1,
-                        SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                        /*successAtStage=*/ false,
                         sandboxLatencyInfo);
                 return;
             }
@@ -822,9 +818,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_LOAD_SANDBOX);
                 loadSdkSession.handleLoadFailure(
                         exception,
-                        /*startTimeOfErrorStage=*/ -1,
-                        /*stage*/ SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                        /*successAtStage=*/ false,
                         sandboxLatencyInfo);
             }
         };
@@ -1741,8 +1734,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @Override
     public int handleShellCommand(ParcelFileDescriptor in, ParcelFileDescriptor out,
             ParcelFileDescriptor err, String[] args) {
+        boolean supportsAdServicesShellCmd = !mAdServicesManagerPublished;
         return mInjector
-                .createShellCommand(this, mContext)
+                .createShellCommand(this, mContext, supportsAdServicesShellCmd)
                 .exec(
                         this,
                         in.getFileDescriptor(),

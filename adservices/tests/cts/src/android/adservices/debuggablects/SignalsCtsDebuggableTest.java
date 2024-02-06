@@ -16,8 +16,11 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -30,7 +33,6 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -62,9 +64,9 @@ public class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private ProtectedSignalsClient mProtectedSignalsClient;
 
-    // Ignore tests when device is not at least S
+    // Ignore tests when device is not at least T
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -78,7 +80,8 @@ public class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
+                    .setPpapiAppAllowList(sContext.getPackageName())
+                    .setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, false);
 
     @Rule(order = 4)
     public MockWebServerRule mMockWebServerRule =
@@ -120,7 +123,6 @@ public class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Test
-    @FlakyTest(bugId = 320688231)
     public void testUpdateSignals_badUri_failure() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario("scenarios/signals-default.json", "");
@@ -131,7 +133,7 @@ public class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mProtectedSignalsClient.updateSignals(request).get());
-        assertTrue(e.getCause() instanceof SecurityException);
+        assertEquals("SecurityException", e.getCause().getClass().getSimpleName());
     }
 
     @Test

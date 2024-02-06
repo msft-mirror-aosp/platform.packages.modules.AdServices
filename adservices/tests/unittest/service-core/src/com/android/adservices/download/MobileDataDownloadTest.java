@@ -34,6 +34,7 @@ import android.os.SystemClock;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -79,6 +80,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
+@RequiresSdkLevelAtLeastS
 @SpyStatic(MddLogger.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MobileDataDownloadFactory.class)
@@ -163,9 +165,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance(any(Context.class)));
-
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
         overridingMddLoggingLevel("VERBOSE");
     }
 

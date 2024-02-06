@@ -202,6 +202,9 @@ class AppSearchDao {
                                     executor)
                             .transform(result -> ((T) result), executor);
 
+            // Currently all read operations have the same timeout, so reading it directly from the
+            // flags here. In the future, if we want these operations to have independent timeouts,
+            // we should add the timeout value as a parameter to this function.
             int timeout = FlagsFactory.getFlags().getAppSearchReadTimeout();
             return future.get(timeout, TimeUnit.MILLISECONDS);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
@@ -218,7 +221,7 @@ class AppSearchDao {
      *
      * @return the result of the write operation.
      */
-    FluentFuture<AppSearchBatchResult<String, Void>> writeData(
+    AppSearchBatchResult<String, Void> writeData(
             @NonNull ListenableFuture<AppSearchSession> appSearchSession,
             @NonNull List<PackageIdentifier> packageIdentifiers,
             @NonNull Executor executor) {
@@ -265,12 +268,18 @@ class AppSearchDao {
                                                 executor);
                                     },
                                     executor);
-            return putFuture;
+
+            // Currently all write operations have the same timeout, so reading it directly from the
+            // flags here. In the future, if we want these operations to have independent timeouts,
+            // we should add the timeout value as a parameter to this function.
+            int timeout = FlagsFactory.getFlags().getAppSearchWriteTimeout();
+            return putFuture.get(timeout, TimeUnit.MILLISECONDS);
         } catch (AppSearchException e) {
             LogUtil.e(e, "Cannot instantiate AppSearch database");
-            return FluentFuture.from(
-                    Futures.immediateFailedFuture(
-                            new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e)));
+            throw new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            LogUtil.e(e, "Failed to write data to AppSearch database");
+            throw new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e);
         }
     }
 
@@ -279,7 +288,7 @@ class AppSearchDao {
      *
      * @return the result of the delete operation.
      */
-    protected static <T> FluentFuture<AppSearchBatchResult<String, Void>> deleteData(
+    protected static <T> AppSearchBatchResult<String, Void> deleteData(
             @NonNull Class<T> cls,
             @NonNull ListenableFuture<AppSearchSession> appSearchSession,
             @NonNull Executor executor,
@@ -325,12 +334,18 @@ class AppSearchDao {
                                                 executor);
                                     },
                                     executor);
-            return deleteFuture;
+
+            // Currently all write operations have the same timeout, so reading it directly from the
+            // flags here. In the future, if we want these operations to have independent timeouts,
+            // we should add the timeout value as a parameter to this function.
+            int timeout = FlagsFactory.getFlags().getAppSearchWriteTimeout();
+            return deleteFuture.get(timeout, TimeUnit.MILLISECONDS);
         } catch (AppSearchException e) {
             LogUtil.e(e, "Cannot instantiate AppSearch database");
-            return FluentFuture.from(
-                    Futures.immediateFailedFuture(
-                            new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e)));
+            throw new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            LogUtil.e(e, "Failed to delete data from AppSearch");
+            throw new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e);
         }
     }
 }

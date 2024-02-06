@@ -28,8 +28,11 @@ import android.adservices.adselection.ReportEventRequest;
 import android.view.InputEvent;
 import android.view.KeyEvent;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class ReportEventRequestTest {
@@ -39,6 +42,9 @@ public class ReportEventRequestTest {
     private String mInteractionData;
     private static final int DESTINATIONS =
             FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {

@@ -25,13 +25,20 @@ package android.adservices;
  */
 // TODO(b/302041492): Extend FlagsConstants class to framework package.
 public final class FlagsConstants {
-    public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
-    public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
+    public static final String KEY_AD_ID_CACHE_ENABLED =
+            "com.android.adservices.flags.ad_id_cache_enabled";
+    public static final String KEY_ENABLE_ADSERVICES_API_ENABLED =
+            "com.android.adservices.flags.enable_adservices_api_enabled";
     public static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
-            "adservices_enablement_check_enabled";
+            "com.android.adservices.flags.adservices_enablement_check_enabled";
     public static final String KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED =
-            "adservices_outcomereceiver_r_api_enabled";
+            "com.android.adservices.flags.adservices_outcomereceiver_r_api_enabled";
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
-            "enable_adext_data_service_apis";
-    public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
+            "com.android.adservices.flags.adext_data_service_apis_enabled";
+    public static final String KEY_TOPICS_ENCRYPTION_ENABLED =
+            "com.android.adservices.flags.topics_encryption_enabled";
+    public static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
+            "com.android.adservices.flags.fledge_ad_selection_filtering_enabled";
+    public static final String KEY_PROTECTED_SIGNALS_ENABLED =
+            "com.android.adservices.flags.protected_signals_enabled";
 }

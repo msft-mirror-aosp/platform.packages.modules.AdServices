@@ -33,6 +33,7 @@ java_library {
             "external/protobuf/java",
             "external/protobuf/src",
         ],
+        canonical_path_from_root: false, // Use relative path instead of Android root
     },
     srcs: [
         ":adservices-shared-proto",

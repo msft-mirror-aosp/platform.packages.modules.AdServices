@@ -112,6 +112,7 @@ filegroup {
     srcs: [
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
         "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
+        "java/com/android/adservices/mockito/LogInterceptor.java",
     ],
     path: "java",
     visibility: [

@@ -21,7 +21,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.truth.Expect;
 
-import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,6 +55,8 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
     public void setup() {
         mAdServicesDeviceSupportedRule =
                 new FakeAdServicesDeviceSupportedRule(mRealLogger, mAbstractDeviceSupportHelper);
+        mockIsGoDevice(false);
+        mockIsLowRamDevice(false);
     }
 
     @Test
@@ -73,17 +74,31 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
     }
 
     @Test
-    public void testIsLowRamDevice_returnsTrue() throws Exception {
+    public void testIsLowRamDevice_returnsTrue() {
         mockIsLowRamDevice(true);
 
         expect.that(mAdServicesDeviceSupportedRule.isLowRamDevice()).isTrue();
     }
 
     @Test
-    public void testIsLowRamDevice_returnsFalse() throws Exception {
+    public void testIsLowRamDevice_returnsFalse() {
         mockIsLowRamDevice(false);
 
         expect.that(mAdServicesDeviceSupportedRule.isLowRamDevice()).isFalse();
+    }
+
+    @Test
+    public void testIsGoDevice_returnsTrue() {
+        mockIsGoDevice(true);
+
+        expect.that(mAdServicesDeviceSupportedRule.isGoDevice()).isTrue();
+    }
+
+    @Test
+    public void testIsGoDevice_returnsFalse() {
+        mockIsGoDevice(false);
+
+        expect.that(mAdServicesDeviceSupportedRule.isGoDevice()).isFalse();
     }
 
     @Test
@@ -91,21 +106,10 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
         mockIsLowRamDevice(false);
         Description description = createTestMethod(TestAnnotations.requiresLowRamDevice());
 
-        AssumptionViolatedException e =
-                assertThrows(
-                        AssumptionViolatedException.class,
-                        () ->
-                                mAdServicesDeviceSupportedRule
-                                        .apply(mBaseStatement, description)
-                                        .evaluate());
-
-        expect.withMessage("exception message")
-                .that(e)
-                .hasMessageThat()
-                .contains(
-                        AbstractAdServicesDeviceSupportedRule
-                                .REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE);
-        mBaseStatement.assertNotEvaluated();
+        assertTestThrowsAssumptionsViolatedException(
+                description,
+                AbstractAdServicesDeviceSupportedRule
+                        .REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE);
     }
 
     @Test
@@ -116,6 +120,99 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
         mAdServicesDeviceSupportedRule.apply(mBaseStatement, description).evaluate();
 
         mBaseStatement.assertEvaluated();
+    }
+
+    @Test
+    public void testAnnotatedWithRequiresGoDevice_deviceNotGoDevice() {
+        mockIsGoDevice(false);
+        Description description = createTestMethod(TestAnnotations.requiresGoDevice());
+
+        assertTestThrowsAssumptionsViolatedException(
+                description,
+                AbstractAdServicesDeviceSupportedRule
+                        .REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testAnnotatedWithRequiresGoDevice_deviceGoDevice() throws Throwable {
+        mockIsGoDevice(true);
+        Description description = createTestMethod(TestAnnotations.requiresGoDevice());
+
+        mAdServicesDeviceSupportedRule.apply(mBaseStatement, description).evaluate();
+
+        mBaseStatement.assertEvaluated();
+    }
+
+    @Test
+    public void testAnnotatedWithRequiresGoDeviceAndRequiresLowRamDevice_onlyGoDevice() {
+        mockIsGoDevice(true);
+        Description description =
+                createTestMethod(
+                        TestAnnotations.requiresGoDevice(), TestAnnotations.requiresLowRamDevice());
+
+        assertTestThrowsAssumptionsViolatedException(
+                description,
+                AbstractAdServicesDeviceSupportedRule
+                        .REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testAnnotatedWithRequiresGoDeviceAndRequiresLowMemoryDevice_onlyLowRamDevice() {
+        mockIsLowRamDevice(true);
+        Description description =
+                createTestMethod(
+                        TestAnnotations.requiresGoDevice(), TestAnnotations.requiresLowRamDevice());
+
+        assertTestThrowsAssumptionsViolatedException(
+                description,
+                AbstractAdServicesDeviceSupportedRule
+                        .REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testAnnotatedWithRequiresGoDeviceAndRequiresLowMemoryDevice_deviceNone() {
+        mockIsLowRamDevice(false);
+        mockIsGoDevice(false);
+        Description description =
+                createTestMethod(
+                        TestAnnotations.requiresGoDevice(), TestAnnotations.requiresLowRamDevice());
+
+        assertTestThrowsAssumptionsViolatedException(
+                description,
+                AbstractAdServicesDeviceSupportedRule
+                        .REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE,
+                AbstractAdServicesDeviceSupportedRule
+                        .REQUIRES_LOW_RAM_ASSUMPTION_FAILED_ERROR_MESSAGE);
+    }
+
+    @Test
+    public void testAnnotatedWithRequiresGoDeviceAndRequiresLowMemoryDevice_deviceBoth()
+            throws Throwable {
+        mockIsLowRamDevice(true);
+        mockIsGoDevice(true);
+        Description description =
+                createTestMethod(
+                        TestAnnotations.requiresGoDevice(), TestAnnotations.requiresLowRamDevice());
+
+        mAdServicesDeviceSupportedRule.apply(mBaseStatement, description).evaluate();
+
+        mBaseStatement.assertEvaluated();
+    }
+
+    private void assertTestThrowsAssumptionsViolatedException(
+            Description description, String... expectedReasons) {
+        DeviceConditionsViolatedException e =
+                assertThrows(
+                        DeviceConditionsViolatedException.class,
+                        () ->
+                                mAdServicesDeviceSupportedRule
+                                        .apply(mBaseStatement, description)
+                                        .evaluate());
+
+        expect.withMessage("exception message")
+                .that(e.getConditionsViolatedReasons())
+                .containsExactlyElementsIn(expectedReasons);
+        mBaseStatement.assertNotEvaluated();
     }
 
     /** Bogus implementation of {@link AbstractAdServicesDeviceSupportedRule}. */
@@ -135,5 +232,9 @@ public class AbstractAdServicesDeviceSupportedRuleTest {
 
     private void mockIsLowRamDevice(boolean isLowRam) {
         when(mAbstractDeviceSupportHelper.isLowRamDevice()).thenReturn(isLowRam);
+    }
+
+    private void mockIsGoDevice(boolean isGoDevice) {
+        when(mAbstractDeviceSupportHelper.isGoDevice()).thenReturn(isGoDevice);
     }
 }
