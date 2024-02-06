@@ -64,9 +64,9 @@ public class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private ProtectedSignalsClient mProtectedSignalsClient;
 
-    // Ignore tests when device is not at least S
+    // Ignore tests when device is not at least T
     @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
