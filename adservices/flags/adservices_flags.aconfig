@@ -60,3 +60,10 @@ flag {
     bug: "303727027"
     description: "Enables encrypted Topics feature for Topics API."
 }
+
+flag {
+    name: "get_adservices_common_states_api_enabled"
+    namespace: "adservices"
+    bug: "322635374"
+    description: "Enables Get Adservices common states API."
+}
