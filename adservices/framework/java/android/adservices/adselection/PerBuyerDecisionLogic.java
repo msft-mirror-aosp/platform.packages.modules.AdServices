@@ -49,6 +49,12 @@ public final class PerBuyerDecisionLogic implements Parcelable {
 
     @NonNull private final Map<AdTechIdentifier, DecisionLogic> mPerBuyerLogicMap;
 
+    /**
+     * Builds a {@link PerBuyerDecisionLogic} instance.
+     *
+     * @param perBuyerLogicMap map of buyers and their decision logic to be fetched during ad
+     *     selection
+     */
     public PerBuyerDecisionLogic(@NonNull Map<AdTechIdentifier, DecisionLogic> perBuyerLogicMap) {
         Objects.requireNonNull(perBuyerLogicMap);
         mPerBuyerLogicMap = perBuyerLogicMap;
