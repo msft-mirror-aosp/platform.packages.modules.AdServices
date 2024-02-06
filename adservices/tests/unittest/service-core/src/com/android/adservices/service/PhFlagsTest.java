@@ -6034,7 +6034,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 "false",
                 /* makeDefault */ false);
 
-        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isFalse();
+        assertThat(mPhFlags.getProtectedSignalsServiceKillSwitch()).isTrue();
     }
 
     @Test
@@ -7254,7 +7254,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void enableGlobalKillSwitch() {
-        overrideGlobalKillSwitch(false);
+        overrideGlobalKillSwitch(true);
     }
 
     private void disableSelectAdsKillSwitch() {
