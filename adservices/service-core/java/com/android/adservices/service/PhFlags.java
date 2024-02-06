@@ -115,15 +115,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getTopicsEpochJobPeriodMs() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
+        // The priority of applying the flag values: PH (DeviceConfig), then hard-coded value.
         long topicsEpochJobPeriodMs =
-                SystemProperties.getLong(
-                        getSystemPropertyName(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
-                        /* defaultValue */ DeviceConfig.getLong(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
-                                /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS));
+                DeviceConfig.getLong(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
+                        /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS);
         if (topicsEpochJobPeriodMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobPeriodMs should > 0");
         }

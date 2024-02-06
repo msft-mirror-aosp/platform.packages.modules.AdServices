@@ -110,7 +110,7 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setTopicsEpochJobPeriodMs(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
         flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);

@@ -66,7 +66,7 @@ public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest extends AdServ
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
-                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
+                    .setTopicsEpochJobPeriodMs(TEST_EPOCH_JOB_PERIOD_MS)
                     .setCompatModeFlags();
 
     @Ignore("b/296642754")
