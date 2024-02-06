@@ -15,6 +15,7 @@
 aconfig_declarations {
     name: "adservices_flags",
     package: "com.android.adservices.flags",
+    container: "com.android.adservices",
     srcs: ["adservices_flags.aconfig"],
 }
 

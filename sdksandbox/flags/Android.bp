@@ -15,10 +15,11 @@
 aconfig_declarations {
     name: "sdk_sandbox_flags",
     package: "com.android.sdksandbox.flags",
+    container: "com.android.adservices",
     srcs: ["sandbox_flags.aconfig"],
     visibility: [
         "//frameworks/base/api",
-    ]
+    ],
 }
 
 java_aconfig_library {

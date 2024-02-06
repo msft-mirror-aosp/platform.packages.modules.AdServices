@@ -1,4 +1,5 @@
 package: "com.android.adservices.flags"
+container: "com.android.adservices"
 
 flag {
     # NOTE: at runtime, it reads enable_adext_service_consent_data
