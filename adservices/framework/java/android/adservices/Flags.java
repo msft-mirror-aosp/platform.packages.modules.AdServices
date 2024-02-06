@@ -50,6 +50,8 @@ public final class Flags {
             ACONFIG_PREFIX + "fledge_ad_selection_filtering_enabled";
     public static final String FLAG_PROTECTED_SIGNALS_ENABLED =
             ACONFIG_PREFIX + "protected_signals_enabled";
+    public static final String FLAG_GET_ADSERVICES_COMMON_STATES_API_ENABLED =
+            ACONFIG_PREFIX + "get_adservices_common_states_api_enabled";
 
     private Flags() {
         throw new UnsupportedOperationException("provides only constants");
