@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import android.adservices.FlagsConstants.Flags;
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesStatusUtils;
@@ -794,7 +795,7 @@ public class AdSelectionManager {
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
      */
-    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void setAppInstallAdvertisers(
             @NonNull SetAppInstallAdvertisersRequest request,

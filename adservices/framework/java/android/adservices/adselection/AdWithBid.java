@@ -16,6 +16,7 @@
 
 package android.adservices.adselection;
 
+import android.adservices.FlagsConstants.Flags;
 import android.adservices.common.AdData;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
@@ -33,7 +34,7 @@ import java.util.Objects;
  * initiating the selection process and not specified in this class. The seller can provide the
  * currency via AdSelectionSignals. The currency is opaque to FLEDGE for now.
  */
-@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class AdWithBid implements Parcelable {
     @NonNull
     private final AdData mAdData;
