@@ -66,7 +66,7 @@ public class ForegroundEnforcementAccessResolverTest {
         // Execute
         new ForegroundEnforcementAccessResolver(
                         1, 1, mAppImportanceFilter, () -> /* enforced */ true)
-                .isAllowed(mContext);
+                .getAccessInfo(mContext);
 
         // Validation
         verify(mAppImportanceFilter, times(1))
@@ -78,7 +78,7 @@ public class ForegroundEnforcementAccessResolverTest {
         // Execute
         new ForegroundEnforcementAccessResolver(
                         1, 1, mAppImportanceFilter, () -> /* not enforced */ false)
-                .isAllowed(mContext);
+                .getAccessInfo(mContext);
 
         // Validation
         verify(mAppImportanceFilter, never()).assertCallerIsInForeground(anyInt(), anyInt(), any());
@@ -91,10 +91,10 @@ public class ForegroundEnforcementAccessResolverTest {
             ExtendedMockito.doReturn(false)
                     .when(() -> ProcessCompatUtils.isSdkSandboxUid(anyInt()));
 
-            // Execute
-            new ForegroundEnforcementAccessResolver(
-                            1, 1, mAppImportanceFilter, () -> /* enforced */ true)
-                    .isAllowed(mContext);
+        // Execute
+        new ForegroundEnforcementAccessResolver(
+                        1, 1, mAppImportanceFilter, () -> /* enforced */ true)
+                .getAccessInfo(mContext);
 
             // Validation
             verify(mAppImportanceFilter, times(1))
@@ -106,10 +106,10 @@ public class ForegroundEnforcementAccessResolverTest {
             // Is Sandbox
             ExtendedMockito.doReturn(true).when(() -> ProcessCompatUtils.isSdkSandboxUid(anyInt()));
 
-            // Execute
-            new ForegroundEnforcementAccessResolver(
-                            1, 1, mAppImportanceFilter, () -> /* enforced */ true)
-                    .isAllowed(mContext);
+        // Execute
+        new ForegroundEnforcementAccessResolver(
+                        1, 1, mAppImportanceFilter, () -> /* enforced */ true)
+                .getAccessInfo(mContext);
 
             // Validation
             verify(mAppImportanceFilter, never())
@@ -124,13 +124,13 @@ public class ForegroundEnforcementAccessResolverTest {
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
 
         // Execute
-        final boolean result =
+        AccessInfo result =
                 new ForegroundEnforcementAccessResolver(
                                 1, 1, mAppImportanceFilter, () -> /* enforced */ true)
-                        .isAllowed(mContext);
+                        .getAccessInfo(mContext);
 
         // Validation
-        assertTrue(result);
+        assertTrue(result.isAllowedAccess());
         verify(mAppImportanceFilter, times(1))
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
     }
@@ -143,13 +143,16 @@ public class ForegroundEnforcementAccessResolverTest {
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
 
         // Execute
-        final boolean result =
+        ForegroundEnforcementAccessResolver foregroundEnforcementAccessResolver =
                 new ForegroundEnforcementAccessResolver(
-                                1, 1, mAppImportanceFilter, () -> /* enforced */ true)
-                        .isAllowed(mContext);
+                        1, 1, mAppImportanceFilter, () -> /* enforced */ true);
+        final AccessInfo result = foregroundEnforcementAccessResolver.getAccessInfo(mContext);
 
         // Validation
-        assertFalse(result);
+        assertFalse(result.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND,
+                result.getDeniedAccessReason());
         verify(mAppImportanceFilter, times(1))
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
     }
@@ -163,12 +166,16 @@ public class ForegroundEnforcementAccessResolverTest {
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
 
         // Execute
-        final boolean result =
+        ForegroundEnforcementAccessResolver foregroundEnforcementAccessResolver =
                 new ForegroundEnforcementAccessResolver(
-                                1, 1, mAppImportanceFilter, () -> /* enforced */ true)
-                        .isAllowed(mContext);
+                        1, 1, mAppImportanceFilter, () -> /* enforced */ true);
+        final AccessInfo result = foregroundEnforcementAccessResolver.getAccessInfo(mContext);
+
         // Validation
-        assertFalse(result);
+        assertFalse(result.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION,
+                result.getDeniedAccessReason());
         verify(mAppImportanceFilter, times(1))
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
     }

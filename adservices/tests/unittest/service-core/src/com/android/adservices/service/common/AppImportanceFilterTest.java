@@ -376,7 +376,9 @@ public final class AppImportanceFilterTest {
         }
 
         public ApiCallStatsSubject hasResultCode(int resultCode) {
-            check("getResultCode()").that(mActual.getResultCode()).isEqualTo(resultCode);
+            check("getResultCode()")
+                    .that(mActual.getResult().getResultCode())
+                    .isEqualTo(resultCode);
             return this;
         }
 
