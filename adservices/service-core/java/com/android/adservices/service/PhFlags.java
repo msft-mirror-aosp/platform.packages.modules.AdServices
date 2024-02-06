@@ -21,7 +21,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
@@ -4477,13 +4478,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println(
                 "\t"
                         + FlagsConstants
-                               .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
+                        .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow());
         writer.println(
                 "\t"
                         + FlagsConstants
-                          .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
+                        .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow());
         writer.println(
@@ -5587,14 +5588,19 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonPercentageImmediateSignJoinCalls());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY
+                        + KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS
                         + " = "
-                        + getFledgeKAnonBackgroundProcessFrequencyPerDay());
+                        + getFledgeKAnonBackgroundProcessTimePeriodInMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS
                         + " = "
                         + getFledgeKAnonMessagesPerBackgroundProcess());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
+                        + " = "
+                        + getFledgeKAnonBackgroundProcessEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
@@ -6582,10 +6588,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getFledgeKAnonSignJoinFeatureEnabled() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /*flagName */ FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
-                /*defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /*flagName */ FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
+                        /*defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
     }
 
     @Override
@@ -6645,11 +6652,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public int getFledgeKAnonBackgroundProcessFrequencyPerDay() {
-        return DeviceConfig.getInt(
+    public long getFledgeKAnonBackgroundProcessTimePeriodInMs() {
+        return DeviceConfig.getLong(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY,
-                /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY);
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS);
     }
 
     @Override
@@ -6666,5 +6673,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
                 /* defaultValue */ GET_ADSERVICES_COMMON_STATES_ALLOW_LIST);
+    }
+
+    public boolean getFledgeKAnonBackgroundProcessEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
+                        /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
     }
 }
