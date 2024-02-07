@@ -21,21 +21,42 @@ import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
 import android.os.IBinder;
 
+import androidx.room.Room;
+
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.NoFailureSyncCallback;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.Flags;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
+    private final Flags mFlags = new ShellCommandFlags();
+    private ShellCommandServiceImpl mShellCommandService;
+    private SyncIShellCommandCallback mSyncIShellCommandCallback;
+
+    @Before
+    public void setup() {
+        CustomAudienceDao customAudienceDao =
+                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .build()
+                        .customAudienceDao();
+        ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
+                new TestShellCommandFactorySupplier(mFlags, customAudienceDao);
+        mShellCommandService = new ShellCommandServiceImpl(adServicesShellCommandHandlerFactory);
+        mSyncIShellCommandCallback = new SyncIShellCommandCallback();
+    }
 
     @Test
     public void testRunShellCommand() throws Exception {
-        ShellCommandServiceImpl service = new ShellCommandServiceImpl();
-        SyncIShellCommandCallback callback = new SyncIShellCommandCallback();
+        mShellCommandService.runShellCommand(
+                new ShellCommandParam("echo", "xxx"), mSyncIShellCommandCallback);
 
-        service.runShellCommand(new ShellCommandParam("echo", "xxx"), callback);
-
-        ShellCommandResult response = callback.assertResultReceived();
+        ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
         expect.withMessage("result").that(response.getResultCode()).isEqualTo(0);
         expect.withMessage("out").that(response.getOut()).contains("xxx");
         expect.withMessage("err").that(response.getErr()).isEmpty();
@@ -43,12 +64,10 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunShellCommand_invalidCommand() throws Exception {
-        ShellCommandServiceImpl service = new ShellCommandServiceImpl();
-        SyncIShellCommandCallback callback = new SyncIShellCommandCallback();
+        mShellCommandService.runShellCommand(
+                new ShellCommandParam("invalid-cmd"), mSyncIShellCommandCallback);
 
-        service.runShellCommand(new ShellCommandParam("invalid-cmd"), callback);
-
-        ShellCommandResult response = callback.assertResultReceived();
+        ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
         expect.withMessage("result").that(response.getResultCode()).isEqualTo(-1);
         expect.withMessage("out").that(response.getOut()).isEmpty();
         expect.withMessage("err").that(response.getErr()).contains("Unknown command");
@@ -65,6 +84,13 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         @Override
         public IBinder asBinder() {
             return null;
+        }
+    }
+
+    private static final class ShellCommandFlags implements Flags {
+        @Override
+        public boolean getFledgeCustomAudienceCLIEnabledStatus() {
+            return true;
         }
     }
 }
