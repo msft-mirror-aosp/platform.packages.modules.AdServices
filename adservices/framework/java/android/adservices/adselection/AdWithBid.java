@@ -16,12 +16,13 @@
 
 package android.adservices.adselection;
 
-import android.adservices.Flags;
 import android.adservices.common.AdData;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 
@@ -32,7 +33,7 @@ import java.util.Objects;
  * <p>The ads and their bids are fed into an ad scoring process which will inform the final ad
  * selection. The currency unit for the bid is expected to be the same requested by the seller when
  * initiating the selection process and not specified in this class. The seller can provide the
- * currency via AdSelectionSignals. The currency is opaque to FLEDGE for now.
+ * currency via AdSelectionSignals. The currency is opaque to FLEDGE.
  */
 @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class AdWithBid implements Parcelable {

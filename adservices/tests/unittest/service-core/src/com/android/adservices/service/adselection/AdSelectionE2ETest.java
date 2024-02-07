@@ -91,7 +91,6 @@ import android.adservices.adselection.SignedContextualAds;
 import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
-import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallerMetadata;
@@ -7004,11 +7003,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredAnyPermission(
                         mSpyContext,
                         invalidPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                        AdSelectionServiceImpl.PERMISSIONS_SET);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7075,11 +7074,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         geq(0));
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredAnyPermission(
                         mSpyContext,
                         invalidPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                        AdSelectionServiceImpl.PERMISSIONS_SET);
     }
 
     @Test

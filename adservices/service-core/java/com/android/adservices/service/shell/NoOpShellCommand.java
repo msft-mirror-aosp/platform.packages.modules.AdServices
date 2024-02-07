@@ -18,39 +18,34 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 
-import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.io.PrintWriter;
+import java.util.Objects;
 
-/**
- * This class implements echo shell command.
- *
- * <p>It just prints the given message.
- */
-final class EchoCommand extends AbstractShellCommand {
+public final class NoOpShellCommand extends AbstractShellCommand {
+    public static final String RESPONSE_MSG = "%s is disabled.";
+    private final String mCommandName;
 
-    static final String CMD_ECHO = "echo";
-    static final String HELP_ECHO =
-            CMD_ECHO + " <message>\n    Prints the given message (useful to check cmd is working).";
+    NoOpShellCommand(@NonNull final String commandName) {
+        Objects.requireNonNull(commandName, "commandName should be provided");
+        mCommandName = commandName;
+    }
 
     @Override
     public int run(PrintWriter out, PrintWriter err, String[] args) {
-        if (args.length != 2) {
-            return invalidArgsError(HELP_ECHO, err, args);
-        }
-        String message = args[1];
-        if (TextUtils.isEmpty(message)) {
-            return invalidArgsError(HELP_ECHO, err, args);
-        }
-
-        Log.i(TAG, CMD_ECHO + " message='" + message + "'");
-        out.println(message);
-        return RESULT_OK;
+        Log.d(
+                TAG,
+                String.format(
+                        "CustomAudience CLI is disabled %s cannot be executed.", mCommandName));
+        out.print(String.format(RESPONSE_MSG, mCommandName));
+        return 0;
     }
 
     @Override
     public String getCommandName() {
-        return CMD_ECHO;
+        return null;
     }
 }

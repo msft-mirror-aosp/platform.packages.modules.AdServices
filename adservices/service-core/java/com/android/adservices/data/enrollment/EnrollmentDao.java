@@ -18,6 +18,7 @@ package com.android.adservices.data.enrollment;
 
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
@@ -634,7 +635,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         try {
             insertToDb(enrollmentData, db);
         } catch (SQLException e) {
-            LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
+            LogUtil.e(e, "Failed to insert EnrollmentData.");
             return false;
         }
         return true;
@@ -675,6 +676,10 @@ public class EnrollmentDao implements IEnrollmentDao {
         } catch (SQLException e) {
             int buildId = mEnrollmentUtil.getBuildId();
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             throw e;
         }
         int buildId = mEnrollmentUtil.getBuildId();
@@ -697,7 +702,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                     EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " = ?",
                     new String[] {enrollmentId});
         } catch (SQLException e) {
-            LogUtil.e("Failed to delete EnrollmentData." + e.getMessage());
+            LogUtil.e(e, "Failed to delete EnrollmentData.");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
@@ -729,7 +734,7 @@ public class EnrollmentDao implements IEnrollmentDao {
             // Mark the transaction successful.
             db.setTransactionSuccessful();
         } catch (SQLiteException e) {
-            LogUtil.e("Failed to perform delete all on EnrollmentData" + e.getMessage());
+            LogUtil.e(e, "Failed to perform delete all on EnrollmentData.");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
@@ -751,17 +756,26 @@ public class EnrollmentDao implements IEnrollmentDao {
 
         boolean success = false;
         db.beginTransaction();
+        String[] ids =
+                newEnrollments.stream().map(EnrollmentData::getEnrollmentId).toArray(String[]::new);
         try {
-            String[] ids =
-                    newEnrollments.stream()
-                            .map(EnrollmentData::getEnrollmentId)
-                            .toArray(String[]::new);
-
             db.delete(
                     EnrollmentTables.EnrollmentDataContract.TABLE,
                     EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " NOT IN (?)",
                     new String[] {String.join(",", ids)});
+            db.setTransactionSuccessful();
+        } catch (SQLException e) {
+            LogUtil.e(e, "Failed to delete EnrollmentData during overwriting.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        } finally {
+            db.endTransaction();
+        }
 
+        db.beginTransaction();
+        try {
             for (EnrollmentData enrollmentData : newEnrollments) {
                 insertToDb(enrollmentData, db);
             }
@@ -770,7 +784,7 @@ public class EnrollmentDao implements IEnrollmentDao {
             unSeed();
             success = true;
         } catch (SQLException e) {
-            LogUtil.e("Failed to overwrite EnrollmentData." + e.getMessage());
+            LogUtil.e(e, "Failed to overwrite EnrollmentData.");
         } finally {
             db.endTransaction();
         }
