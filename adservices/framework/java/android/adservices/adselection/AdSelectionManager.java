@@ -22,7 +22,6 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import android.adservices.Flags;
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesStatusUtils;
@@ -51,6 +50,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.IOException;

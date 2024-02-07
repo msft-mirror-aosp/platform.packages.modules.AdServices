@@ -16,11 +16,12 @@
 
 package android.adservices.adselection;
 
-import android.adservices.Flags;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;

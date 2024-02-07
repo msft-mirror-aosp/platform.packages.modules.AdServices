@@ -15,7 +15,6 @@
  */
 package android.adservices.adselection;
 
-import android.adservices.Flags;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.FlaggedApi;
@@ -25,6 +24,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.util.ArrayList;
 import java.util.Collections;
