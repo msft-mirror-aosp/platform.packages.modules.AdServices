@@ -21,12 +21,9 @@ import static com.android.adservices.service.shell.AdServicesShellCommandHandler
 import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
 
-import androidx.annotation.VisibleForTesting;
-
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,7 +36,7 @@ import java.util.List;
 // TODO(b/318496217): Merge with background fetch data in follow-up CL.
 final class CustomAudienceListCommand extends AbstractShellCommand {
 
-    public static final String CMD = "list-custom-audiences";
+    @VisibleForTesting public static final String CMD = "list-custom-audiences";
     public static final String HELP =
             CMD
                     + " --"
@@ -51,16 +48,14 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
     private final CustomAudienceDao mCustomAudienceDao;
     private final ArgParser mArgParser;
 
-    CustomAudienceListCommand() {
-        this(
-                CustomAudienceDatabase.getInstance(ApplicationContextSingleton.get())
-                        .customAudienceDao());
-    }
-
-    @VisibleForTesting
     CustomAudienceListCommand(CustomAudienceDao customAudienceDao) {
         mCustomAudienceDao = customAudienceDao;
         mArgParser = new ArgParser(CustomAudienceArgs.OWNER, CustomAudienceArgs.BUYER);
+    }
+
+    @Override
+    public String getCommandName() {
+        return CMD;
     }
 
     @Override

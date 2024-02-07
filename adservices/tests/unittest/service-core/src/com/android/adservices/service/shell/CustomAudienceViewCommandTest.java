@@ -39,7 +39,6 @@ public final class CustomAudienceViewCommandTest extends ShellCommandTest {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     private static final DBCustomAudience CUSTOM_AUDIENCE_1 =
             DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER).setDebuggable(true).build();
-
     @Mock private CustomAudienceDao mCustomAudienceDao;
 
     @Test

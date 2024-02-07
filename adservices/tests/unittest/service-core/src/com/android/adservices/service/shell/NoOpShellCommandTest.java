@@ -16,16 +16,19 @@
 
 package com.android.adservices.service.shell;
 
-import java.io.PrintWriter;
+import static com.google.common.truth.Truth.assertThat;
 
-/** Base interface to run the shell commands. */
-interface ShellCommand {
+import org.junit.Test;
 
-    /** Runs the shell command and returns the result. */
-    int run(PrintWriter out, PrintWriter err, String[] args);
+public final class NoOpShellCommandTest extends ShellCommandTest<NoOpShellCommand> {
 
-    /**
-     * @return the name of the command.
-     */
-    String getCommandName();
+    @Test
+    public void test_success() {
+        String commandName = "test";
+        NoOpShellCommand command = new NoOpShellCommand(commandName);
+        Result actualResult = run(command, commandName);
+        expectSuccess(actualResult);
+        assertThat(actualResult.mOut)
+                .isEqualTo(String.format(NoOpShellCommand.RESPONSE_MSG, commandName));
+    }
 }

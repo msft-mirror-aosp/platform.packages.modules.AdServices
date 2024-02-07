@@ -124,15 +124,18 @@ public class CustomAudienceImpl {
         mCustomAudienceValidator.validate(customAudience);
 
         boolean adSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        sLogger.v("Ad Selection filtering enabled flag is %s", adSelectionFilteringEnabled);
         boolean adRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         sLogger.v("Ad render id enabled flag is %s", adRenderIdEnabled);
         AdDataConversionStrategy dataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
                         adSelectionFilteringEnabled, adRenderIdEnabled);
 
+        boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+        sLogger.v("Is debuggable custom audience: %b", isDebuggableCustomAudience);
+
         Duration customAudienceDefaultExpireIn =
                 Duration.ofMillis(mFlags.getFledgeCustomAudienceDefaultExpireInMs());
-
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
                         customAudience,
@@ -140,13 +143,11 @@ public class CustomAudienceImpl {
                         currentTime,
                         customAudienceDefaultExpireIn,
                         dataConversionStrategy,
-                        devContext.getDevOptionsEnabled());
+                        isDebuggableCustomAudience);
 
         sLogger.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dbCustomAudience,
-                customAudience.getDailyUpdateUri(),
-                devContext.getDevOptionsEnabled());
+                dbCustomAudience, customAudience.getDailyUpdateUri(), isDebuggableCustomAudience);
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */
