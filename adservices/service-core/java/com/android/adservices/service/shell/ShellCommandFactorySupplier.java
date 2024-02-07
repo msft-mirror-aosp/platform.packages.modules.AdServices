@@ -18,6 +18,10 @@ package com.android.adservices.service.shell;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Class to provide Supplier for {@link ShellCommandFactory} required by {@link
@@ -30,4 +34,13 @@ public abstract class ShellCommandFactorySupplier {
      * @return {@link Supplier} with Array of {@link ShellCommandFactory}
      */
     public abstract ImmutableList<ShellCommandFactory> getAllShellCommandFactories();
+
+    public ImmutableMap<String, ShellCommandFactory> getShellCommandFactories() {
+        return ImmutableMap.copyOf(
+                getAllShellCommandFactories().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        ShellCommandFactory::getCommandPrefix,
+                                        Function.identity())));
+    }
 }
