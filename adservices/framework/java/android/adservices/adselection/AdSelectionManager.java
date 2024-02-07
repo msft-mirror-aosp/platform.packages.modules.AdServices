@@ -17,6 +17,8 @@
 package android.adservices.adselection;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -48,6 +50,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.IOException;
@@ -216,7 +219,12 @@ public class AdSelectionManager {
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void getAdSelectionData(
             @NonNull GetAdSelectionDataRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -305,7 +313,12 @@ public class AdSelectionManager {
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void persistAdSelectionResult(
             @NonNull PersistAdSelectionResultRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -406,7 +419,12 @@ public class AdSelectionManager {
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull @CallbackExecutor Executor executor,
@@ -511,7 +529,12 @@ public class AdSelectionManager {
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void selectAds(
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
             @NonNull @CallbackExecutor Executor executor,
@@ -646,7 +669,12 @@ public class AdSelectionManager {
      *
      * <p>Impressions will be reported at most once as a best-effort attempt.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void reportImpression(
             @NonNull ReportImpressionRequest request,
             @NonNull Executor executor,
@@ -720,7 +748,12 @@ public class AdSelectionManager {
      *
      * <p>Events will be reported at most once as a best-effort attempt.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void reportEvent(
             @NonNull ReportEventRequest request,
             @NonNull Executor executor,
@@ -794,8 +827,13 @@ public class AdSelectionManager {
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
      */
-    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void setAppInstallAdvertisers(
             @NonNull SetAppInstallAdvertisersRequest request,
             @NonNull Executor executor,
@@ -865,7 +903,12 @@ public class AdSelectionManager {
      * Object}. Note that to protect user privacy, internal errors will not be sent back via an
      * exception.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void updateAdCounterHistogram(
             @NonNull UpdateAdCounterHistogramRequest updateAdCounterHistogramRequest,
             @NonNull @CallbackExecutor Executor executor,

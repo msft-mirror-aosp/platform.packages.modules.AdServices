@@ -37,12 +37,13 @@ import android.os.RemoteException;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /** ProtectedSignalsManager provides APIs for apps and ad-SDKs to manage their protected signals. */
-@FlaggedApi("com.android.adservices.flags.protected_signals_enabled")
+@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

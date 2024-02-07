@@ -90,7 +90,7 @@ public class KAnonSignJoinManager {
      */
     private boolean shouldMakeKAnonCallsNow() {
         Random random = new Random();
-        return mFlags.getFledgeKAnonPercentageImmediateSignJoinCalls() >= random.nextInt(100);
+        return mFlags.getFledgeKAnonPercentageImmediateSignJoinCalls() > random.nextInt(100);
     }
 
     /**

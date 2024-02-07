@@ -196,7 +196,7 @@ class ReportAndRegisterEventImpl extends EventReporter {
                         mFlags.getMsmtApiAppAllowList(),
                         mFlags.getMsmtApiAppBlockList(),
                         input.getCallerPackageName());
-        if (!appPackageAccessResolver.isAllowed(mContext)) {
+        if (!appPackageAccessResolver.getAccessInfo(mContext).isAllowedAccess()) {
             sLogger.v("Skipping event registration: App is not allowlisted to use ARA.");
             return false;
         }

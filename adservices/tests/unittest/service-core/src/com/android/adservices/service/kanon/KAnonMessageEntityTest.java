@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.adservices.kanon;
+package com.android.adservices.service.kanon;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.service.kanon.KAnonMessageEntity;
 import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus;
 
 import org.junit.Rule;

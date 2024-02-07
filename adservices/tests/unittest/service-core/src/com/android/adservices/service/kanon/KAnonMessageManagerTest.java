@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.kanon;
+package com.android.adservices.service.kanon;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -31,8 +31,6 @@ import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.data.kanon.KAnonMessageConstants;
 import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.kanon.KAnonMessageEntity;
-import com.android.adservices.service.kanon.KAnonMessageManager;
 
 import org.junit.Before;
 import org.junit.Rule;

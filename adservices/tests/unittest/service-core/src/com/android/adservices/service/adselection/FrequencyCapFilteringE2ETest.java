@@ -36,7 +36,6 @@ import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
-import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
@@ -376,11 +375,11 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredAnyPermission(
                         mSpyContext,
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM,
-                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                        AdSelectionServiceImpl.PERMISSIONS_SET);
 
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
@@ -401,11 +400,11 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
         verifyNoMoreInteractions(mFrequencyCapDaoSpy);
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredAnyPermission(
                         mSpyContext,
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM,
-                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                        AdSelectionServiceImpl.PERMISSIONS_SET);
     }
 
     @Test

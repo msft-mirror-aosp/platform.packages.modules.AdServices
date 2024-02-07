@@ -24,6 +24,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 
 import java.util.Collections;
 import java.util.Map;
@@ -39,7 +40,7 @@ import java.util.Objects;
  *
  * <p>See {@link CustomAudience#getBiddingLogicUri()}.
  */
-@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class PerBuyerDecisionLogic implements Parcelable {
 
     @NonNull
@@ -48,6 +49,12 @@ public final class PerBuyerDecisionLogic implements Parcelable {
 
     @NonNull private final Map<AdTechIdentifier, DecisionLogic> mPerBuyerLogicMap;
 
+    /**
+     * Builds a {@link PerBuyerDecisionLogic} instance.
+     *
+     * @param perBuyerLogicMap map of buyers and their decision logic to be fetched during ad
+     *     selection
+     */
     public PerBuyerDecisionLogic(@NonNull Map<AdTechIdentifier, DecisionLogic> perBuyerLogicMap) {
         Objects.requireNonNull(perBuyerLogicMap);
         mPerBuyerLogicMap = perBuyerLogicMap;
