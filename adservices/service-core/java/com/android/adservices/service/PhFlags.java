@@ -2149,19 +2149,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getProtectedSignalsServiceKillSwitch() {
+    public boolean getProtectedSignalsEnabled() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(
-                                FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH),
+                ? false
+                : SystemProperties.getBoolean(
+                        getSystemPropertyName(FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
-                                /* defaultValue */ PROTECTED_SIGNALS_SERVICE_KILL_SWITCH));
+                                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED,
+                                /* defaultValue */ PROTECTED_SIGNALS_ENABLED));
     }
 
     @Override
@@ -5182,9 +5181,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED
                         + " = "
-                        + getProtectedSignalsServiceKillSwitch());
+                        + getProtectedSignalsEnabled());
 
         writer.println("==== AdServices PH Flags Throttling Related Flags ====");
         writer.println(

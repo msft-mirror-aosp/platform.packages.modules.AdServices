@@ -17,7 +17,7 @@ package android.adservices.measurement;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.annotation.CallbackExecutor;

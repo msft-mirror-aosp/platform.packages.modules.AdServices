@@ -16,7 +16,7 @@
 
 package android.adservices.adselection;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
@@ -43,7 +43,17 @@ public class AddAdSelectionOverrideRequest {
 
     @NonNull private final PerBuyerDecisionLogic mPerBuyerDecisionLogic;
 
-    /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
+    /**
+     * Builds a {@link AddAdSelectionOverrideRequest} instance.
+     *
+     * @param adSelectionConfig configuration for ad selection. See {@link AdSelectionConfig}
+     * @param decisionLogicJs override for scoring logic. See {@link
+     *     AdSelectionConfig#getDecisionLogicUri()}
+     * @param trustedScoringSignals override for trusted seller signals. See {@link
+     *     AdSelectionConfig#getTrustedScoringSignalsUri()}
+     * @param perBuyerDecisionLogic override for buyer's reporting logic for contextual ads. See
+     *     {@link SignedContextualAds#getDecisionLogicUri()}
+     */
     @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
@@ -61,6 +71,15 @@ public class AddAdSelectionOverrideRequest {
         mPerBuyerDecisionLogic = perBuyerDecisionLogic;
     }
 
+    /**
+     * Builds a {@link AddAdSelectionOverrideRequest} instance.
+     *
+     * @param adSelectionConfig configuration for ad selection. See {@link AdSelectionConfig}
+     * @param decisionLogicJs override for scoring logic. See {@link
+     *     AdSelectionConfig#getDecisionLogicUri()}
+     * @param trustedScoringSignals override for trusted seller signals. See {@link
+     *     AdSelectionConfig#getTrustedScoringSignalsUri()}
+     */
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,

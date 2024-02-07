@@ -15,7 +15,7 @@
  */
 package android.adservices.adselection;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.FlaggedApi;
@@ -26,7 +26,9 @@ import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -203,8 +205,9 @@ public final class AdSelectionConfig implements Parcelable {
      */
     @NonNull
     public List<AdTechIdentifier> getCustomAudienceBuyers() {
-        return mCustomAudienceBuyers;
+        return new ArrayList<>(mCustomAudienceBuyers);
     }
+
 
     /**
      * @return JSON in an AdSelectionSignals object, fetched from the AdSelectionConfig and consumed
@@ -235,8 +238,9 @@ public final class AdSelectionConfig implements Parcelable {
      */
     @NonNull
     public Map<AdTechIdentifier, AdSelectionSignals> getPerBuyerSignals() {
-        return mPerBuyerSignals;
+        return new HashMap<>(mPerBuyerSignals);
     }
+
 
     /**
      * @return a Map of buyers and corresponding Contextual Ads, these ads are expected to be
@@ -245,7 +249,7 @@ public final class AdSelectionConfig implements Parcelable {
     @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @NonNull
     public Map<AdTechIdentifier, SignedContextualAds> getPerBuyerSignedContextualAds() {
-        return mBuyerSignedContextualAds;
+        return new HashMap<>(mBuyerSignedContextualAds);
     }
 
     /**

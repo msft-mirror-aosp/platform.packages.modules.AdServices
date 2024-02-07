@@ -23,7 +23,7 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.adservices.adid.AdId;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;

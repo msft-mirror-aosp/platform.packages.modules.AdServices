@@ -16,7 +16,7 @@
 
 package android.adservices.common;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.SystemApi;
 
@@ -41,6 +41,12 @@ public class AdServicesPermissions {
     @FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
     public static final String ACCESS_ADSERVICES_PROTECTED_SIGNALS =
             "android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS";
+
+    /** This permission needs to be declared by the caller of Protected Signals APIs. */
+    @SuppressWarnings("FlaggedApi") // aconfig not available on this branch
+    @FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
+    public static final String ACCESS_ADSERVICES_AD_SELECTION =
+            "android.permission.ACCESS_ADSERVICES_AD_SELECTION";
 
     /** This permission needs to be declared by the caller of Advertising ID APIs. */
     public static final String ACCESS_ADSERVICES_AD_ID =

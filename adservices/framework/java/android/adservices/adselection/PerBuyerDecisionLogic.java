@@ -16,7 +16,7 @@
 
 package android.adservices.adselection;
 
-import android.adservices.FlagsConstants.Flags;
+import android.adservices.Flags;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.FlaggedApi;
@@ -49,6 +49,12 @@ public final class PerBuyerDecisionLogic implements Parcelable {
 
     @NonNull private final Map<AdTechIdentifier, DecisionLogic> mPerBuyerLogicMap;
 
+    /**
+     * Builds a {@link PerBuyerDecisionLogic} instance.
+     *
+     * @param perBuyerLogicMap map of buyers and their decision logic to be fetched during ad
+     *     selection
+     */
     public PerBuyerDecisionLogic(@NonNull Map<AdTechIdentifier, DecisionLogic> perBuyerLogicMap) {
         Objects.requireNonNull(perBuyerLogicMap);
         mPerBuyerLogicMap = perBuyerLogicMap;

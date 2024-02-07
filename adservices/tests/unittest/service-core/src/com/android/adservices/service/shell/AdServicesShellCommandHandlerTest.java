@@ -246,9 +246,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                 .when(
                         () ->
                                 AppManifestConfigHelper.isAllowedTopicsAccess(
-                                        /* useSandboxCheck= */ true,
-                                        PKG_NAME,
-                                        ENROLLMENT_ID));
+                                        /* useSandboxCheck= */ true, PKG_NAME, ENROLLMENT_ID));
 
         expect.withMessage(
                         "result of %s %s %s %s",
