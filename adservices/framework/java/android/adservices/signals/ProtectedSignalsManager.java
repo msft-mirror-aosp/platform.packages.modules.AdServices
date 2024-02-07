@@ -160,6 +160,9 @@ public class ProtectedSignalsManager {
      * <p>The sub-key for providing an encoder endpoint is "endpoint" and the value is the URI
      * string for the endpoint.
      *
+     * <p>On success, the onResult method of the provided OutcomeReceiver will be called with an
+     * empty Object. This Object has no significance and is used merely as a placeholder.
+     *
      * <p>Key may only be operated on by one command per JSON. If two command attempt to operate on
      * the same key, this method will through an {@link IllegalArgumentException}
      *
