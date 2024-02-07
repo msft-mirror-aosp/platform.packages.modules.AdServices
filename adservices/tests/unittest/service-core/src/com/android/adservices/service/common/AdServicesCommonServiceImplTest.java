@@ -707,7 +707,7 @@ public class AdServicesCommonServiceImplTest {
 
         ExtendedMockito.verify(
                 () -> PermissionHelper.hasAccessAdServicesCommonStatePermission(any(), any()));
-        verify(mFlags, never()).isGetAdServicesCommonStatesEnabled();
+        verify(mFlags, never()).isGetAdServicesCommonStatesApiEnabled();
         ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
@@ -739,7 +739,7 @@ public class AdServicesCommonServiceImplTest {
 
         ExtendedMockito.verify(
                 () -> PermissionHelper.hasAccessAdServicesCommonStatePermission(any(), any()));
-        verify(mFlags, never()).isGetAdServicesCommonStatesEnabled();
+        verify(mFlags, never()).isGetAdServicesCommonStatesApiEnabled();
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getResult().getResultCode()).isEqualTo(STATUS_CALLER_NOT_ALLOWED);
         assertThat(apiCallStats.getResult().getFailureReason())
@@ -755,7 +755,7 @@ public class AdServicesCommonServiceImplTest {
                         () ->
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
-        doReturn(true).when(mFlags).isGetAdServicesCommonStatesEnabled();
+        doReturn(true).when(mFlags).isGetAdServicesCommonStatesApiEnabled();
         doReturn("com.android.adservices.servicecoretest")
                 .when(mFlags)
                 .getAdServicesCommonStatesAllowList();
@@ -798,7 +798,7 @@ public class AdServicesCommonServiceImplTest {
                         () ->
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
-        doReturn(false).when(mFlags).isGetAdServicesCommonStatesEnabled();
+        doReturn(false).when(mFlags).isGetAdServicesCommonStatesApiEnabled();
         doReturn("com.android.adservices.servicecoretest")
                 .when(mFlags)
                 .getAdServicesCommonStatesAllowList();
