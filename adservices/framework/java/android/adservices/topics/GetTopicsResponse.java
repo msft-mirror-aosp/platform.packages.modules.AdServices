@@ -15,9 +15,10 @@
  */
 package android.adservices.topics;
 
-import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.ArrayList;
 import java.util.List;

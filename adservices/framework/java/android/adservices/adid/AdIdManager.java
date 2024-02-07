@@ -17,7 +17,6 @@ package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 
-import android.adservices.Flags;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.annotation.CallbackExecutor;
@@ -30,6 +29,8 @@ import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.annotation.RequiresApi;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.concurrent.Executor;
 

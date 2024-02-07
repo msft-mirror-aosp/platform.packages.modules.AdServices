@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices;
+package com.android.adservices.flags;
 
 /**
  * This class is not auto-merged into {@code main} - to add a new constant here, you <b>MUST</b>
