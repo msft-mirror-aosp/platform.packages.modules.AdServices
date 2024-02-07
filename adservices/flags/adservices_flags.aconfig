@@ -1,11 +1,11 @@
 package: "com.android.adservices.flags"
 
 flag {
+    # NOTE: at runtime, it reads enable_adext_service_consent_data
     name: "adext_data_service_apis_enabled"
     namespace: "adservices"
-    # TODO(b/320156647): Add bug number and description
-    bug: "320156647"
-    description: "Enter a description per b/320156647"
+    bug: "303511619"
+    description: "Add AIDL and system APIs for AdServicesExtDataService"
 }
 
 flag {
