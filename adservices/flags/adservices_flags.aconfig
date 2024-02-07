@@ -55,6 +55,13 @@ flag {
 }
 
 flag {
+    name: "fledge_server_auction_multi_cloud_enabled"
+    namespace: "adservices"
+    bug: "323888604"
+    description: "Enable multi cloud support for unified flow APIs "
+}
+
+flag {
     name: "protected_signals_enabled"
     namespace: "adservices"
     bug: "299946888"
