@@ -48,6 +48,8 @@ public final class Flags {
             ACONFIG_PREFIX + "topics_encryption_enabled";
     public static final String FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
             ACONFIG_PREFIX + "fledge_ad_selection_filtering_enabled";
+    public static final String FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED =
+            ACONFIG_PREFIX + "fledge_schedule_custom_audience_update_enabled";
     public static final String FLAG_PROTECTED_SIGNALS_ENABLED =
             ACONFIG_PREFIX + "protected_signals_enabled";
     public static final String FLAG_GET_ADSERVICES_COMMON_STATES_API_ENABLED =
