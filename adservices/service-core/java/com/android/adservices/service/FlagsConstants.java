@@ -1200,7 +1200,7 @@ public final class FlagsConstants {
             "app_config_returns_enabled_by_detault";
 
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
-            "enable_adext_data_service_apis";
+            "adext_data_service_apis_enabled";
 
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY =
             "enable_adext_data_service_debug_proxy";
@@ -1245,12 +1245,16 @@ public final class FlagsConstants {
             "fledge_kanon_message_ttl_seconds";
 
     /** Key for kanon background job frequency per day. */
-    public static final String KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY =
-            "fledge_kanon_background_frequency_per_day";
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS =
+            "fledge_kanon_background_time_period_in_ms";
 
     /** Key for number of messages processes in a single background process. */
     public static final String KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS =
             "fledge_kanon_number_of_messages_per_background_process";
+
+    /** Key for kanon background processed enabled. */
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED =
+            "fledge_kanon_background_process_enabled";
 
     /** key for allow list of get adservices common states. */
     public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
