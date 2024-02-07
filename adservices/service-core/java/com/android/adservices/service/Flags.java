@@ -4713,4 +4713,14 @@ public interface Flags extends CommonFlags {
     default String getAdServicesCommonStatesAllowList() {
         return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
     }
+
+    /** Default value for status of custom audiences CLI feature */
+    boolean FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED = false;
+
+    /**
+     * @return the enabled status for custom audiences CLI feature.
+     */
+    default boolean getFledgeCustomAudienceCLIEnabledStatus() {
+        return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
+    }
 }

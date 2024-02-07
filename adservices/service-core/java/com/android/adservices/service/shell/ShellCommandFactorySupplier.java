@@ -16,16 +16,18 @@
 
 package com.android.adservices.service.shell;
 
-import java.io.PrintWriter;
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 
-/** Base interface to run the shell commands. */
-interface ShellCommand {
-
-    /** Runs the shell command and returns the result. */
-    int run(PrintWriter out, PrintWriter err, String[] args);
-
+/**
+ * Class to provide Supplier for {@link ShellCommandFactory} required by {@link
+ * AdServicesShellCommandHandler}
+ */
+public abstract class ShellCommandFactorySupplier {
     /**
-     * @return the name of the command.
+     * Add more per API shell factory implementations as we create them.
+     *
+     * @return {@link Supplier} with Array of {@link ShellCommandFactory}
      */
-    String getCommandName();
+    public abstract ImmutableList<ShellCommandFactory> getAllShellCommandFactories();
 }

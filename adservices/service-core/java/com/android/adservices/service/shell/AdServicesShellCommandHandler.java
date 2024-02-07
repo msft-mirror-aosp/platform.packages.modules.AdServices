@@ -28,7 +28,7 @@ import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
-import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -87,40 +87,28 @@ public final class AdServicesShellCommandHandler {
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
     static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
-
-    // Add more per API shell factory implementations as we create them.
-    @VisibleForTesting
-    static final Supplier<ShellCommandFactory[]> DEFAULT_FACTORIES_SUPPLIER =
-            () ->
-                    new ShellCommandFactory[] {
-                        CommonShellCommandFactory.getInstance(),
-                        CustomAudienceShellCommandFactory.getInstance(),
-                    };
-
     private final PrintWriter mOut;
     private final PrintWriter mErr;
-    private final Supplier<ShellCommandFactory[]> mFactoriesSupplier;
-
+    private final ImmutableList<ShellCommandFactory> mShellCommandFactories;
     private String[] mArgs;
     private int mArgPos;
     private String mCurArgData;
 
     /** If PrintWriter {@code err} is not provided, we use {@code out} for the {@code err}. */
-    public AdServicesShellCommandHandler(PrintWriter out) {
-        this(out, /* err= */ out);
+    public AdServicesShellCommandHandler(
+            PrintWriter out, ShellCommandFactorySupplier shellCommandFactorySupplier) {
+        this(out, /* err= */ out, shellCommandFactorySupplier);
     }
 
-    public AdServicesShellCommandHandler(PrintWriter out, PrintWriter err) {
-        this(out, err, DEFAULT_FACTORIES_SUPPLIER);
-    }
-
-    @VisibleForTesting
-    AdServicesShellCommandHandler(
-            PrintWriter out, PrintWriter err, Supplier<ShellCommandFactory[]> factoriesSupplier) {
+    public AdServicesShellCommandHandler(
+            PrintWriter out,
+            PrintWriter err,
+            ShellCommandFactorySupplier shellCommandFactorySupplier) {
         mOut = Objects.requireNonNull(out, "out cannot be null");
         mErr = Objects.requireNonNull(err, "err cannot be null");
-        mFactoriesSupplier =
-                Objects.requireNonNull(factoriesSupplier, "factoriesSupplier cannot be null");
+        Objects.requireNonNull(
+                shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
+        mShellCommandFactories = shellCommandFactorySupplier.getAllShellCommandFactories();
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
@@ -160,7 +148,6 @@ public final class AdServicesShellCommandHandler {
     /******************
      * Helper methods *
      ******************/
-
     @Nullable
     private String getNextArg() {
         if (mArgs == null) {
@@ -232,7 +219,7 @@ public final class AdServicesShellCommandHandler {
             default:
                 // TODO (b/308009734): Move other shell commands implement ICommand interface.
                 ShellCommand shellCommand = null;
-                for (ShellCommandFactory factory : mFactoriesSupplier.get()) {
+                for (ShellCommandFactory factory : mShellCommandFactories) {
                     shellCommand = factory.getShellCommand(cmd);
                     if (shellCommand != null) {
                         break;
