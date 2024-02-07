@@ -16,9 +16,10 @@
 
 package android.adservices.common;
 
-import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.SystemApi;
+
+import com.android.adservices.flags.Flags;
 
 /** Permissions used by the AdServices APIs. */
 public class AdServicesPermissions {

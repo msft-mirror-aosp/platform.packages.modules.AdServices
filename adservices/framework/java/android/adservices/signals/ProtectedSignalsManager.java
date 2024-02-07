@@ -18,7 +18,6 @@ package android.adservices.signals;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 
-import android.adservices.Flags;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
@@ -38,6 +37,7 @@ import android.os.RemoteException;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;

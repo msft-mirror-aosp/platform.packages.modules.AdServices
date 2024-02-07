@@ -16,13 +16,13 @@
 
 package android.adservices.common;
 
-import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
