@@ -813,8 +813,7 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH =
             "fledge_on_device_auction_kill_switch";
 
-    public static final String KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH =
-            "protected_signals_service_kill_switch";
+    public static final String KEY_PROTECTED_SIGNALS_ENABLED = "protected_signals_enabled";
     public static final String KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH =
             "encryption_key_new_enrollment_fetch_kill_switch";
     public static final String KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH =

@@ -784,8 +784,8 @@ public class SignalsEncodingE2ETest {
         }
 
         @Override
-        public boolean getProtectedSignalsServiceKillSwitch() {
-            return false;
+        public boolean getProtectedSignalsEnabled() {
+            return true;
         }
 
         @Override
