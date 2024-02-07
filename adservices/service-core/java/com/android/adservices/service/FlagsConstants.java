@@ -15,11 +15,6 @@
  */
 package com.android.adservices.service;
 
-
-import com.google.common.annotations.VisibleForTesting;
-
-import java.util.Objects;
-
 /**
  * Defines constants used by {@code Flags}, {@code PhFlags} and testing infra (both device and host
  * side).
@@ -30,19 +25,6 @@ public final class FlagsConstants {
 
     private FlagsConstants() {
         throw new UnsupportedOperationException("Contains only static constants");
-    }
-
-    @VisibleForTesting static final String ACONFIG_PREFIX = "com.android.adservices.flags.";
-
-    /**
-     * This method should be used when adding new flags that have an aconfig counterpart (typically
-     * used on {@code @FlaggedApi} annotations.
-     */
-    @VisibleForTesting
-    static String aconfigToDeviceConfig(String flag) {
-        return Objects.requireNonNull(flag).startsWith(ACONFIG_PREFIX)
-                ? flag.substring(ACONFIG_PREFIX.length())
-                : flag;
     }
 
     // ********************************************
