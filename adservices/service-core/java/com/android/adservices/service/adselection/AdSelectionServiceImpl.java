@@ -116,7 +116,10 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
@@ -131,6 +134,14 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @VisibleForTesting
     static final String AUCTION_SERVER_API_IS_NOT_AVAILABLE =
             "Auction Server API is not available!";
+
+    @VisibleForTesting
+    public static final Set<String> PERMISSIONS_SET =
+            new HashSet<>(
+                    Arrays.asList(
+                            AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                            AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                            AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION));
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -333,11 +344,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                inputParams.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
@@ -374,11 +382,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                inputParams.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
@@ -480,11 +485,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                inputParams.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
 
@@ -772,11 +774,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                inputParams.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
 
@@ -818,11 +817,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                requestParams.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, requestParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
@@ -887,11 +883,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                inputParams.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
 
         int callerUid = getCallingUid(apiName);
         DevContext devContext = mDevContextFilter.createDevContext();
@@ -947,11 +940,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                request.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, request.getCallerPackageName(), apiName, PERMISSIONS_SET);
 
         AppInstallAdvertisersSetter setter =
                 new AppInstallAdvertisersSetter(
@@ -982,11 +972,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked in the binder thread, before anything else
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                inputParams.getCallerPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, inputParams.getCallerPackageName(), apiName, PERMISSIONS_SET);
 
         final int callingUid = getCallingUid(apiName);
         final int adCounterHistogramAbsoluteMaxTotalEventCount =
@@ -1058,11 +1045,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
 
@@ -1128,11 +1112,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
 
@@ -1181,11 +1162,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
 
@@ -1239,11 +1217,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
 
@@ -1293,11 +1268,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
 
@@ -1345,11 +1317,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         int callingUid = getCallingUid(apiName);
 
@@ -1398,11 +1367,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         // TODO(b/265204820): Implement service
         int status = STATUS_SUCCESS;
@@ -1439,11 +1405,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         // TODO(b/265204820): Implement service
         int status = STATUS_SUCCESS;
@@ -1477,11 +1440,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         // Caller permissions must be checked with a non-null callingAppPackageName
-        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
-                mContext,
-                devContext.getCallingAppPackageName(),
-                apiName,
-                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+        mFledgeAuthorizationFilter.assertAppDeclaredAnyPermission(
+                mContext, devContext.getCallingAppPackageName(), apiName, PERMISSIONS_SET);
 
         // TODO(b/265204820): Implement service
         int status = STATUS_SUCCESS;

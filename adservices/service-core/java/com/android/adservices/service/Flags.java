@@ -2514,15 +2514,16 @@ public interface Flags extends CommonFlags {
     }
 
     /**
-     * Protected signals API kill switch. The default value is false which means that protected
-     * signals are enabled by default. This flag should be should as emergency andon cord.
+     * Protected signals API feature flag. The default value is {@code false}, which means that
+     * protected signals is disabled by default.
      */
-    boolean PROTECTED_SIGNALS_SERVICE_KILL_SWITCH = false;
+    // TODO(b/323972771): change to false after developer preview
+    boolean PROTECTED_SIGNALS_ENABLED = true;
 
-    /** Returns value of the protected signals API kill switch. */
-    default boolean getProtectedSignalsServiceKillSwitch() {
+    /** Returns value of the protected signals feature flag. */
+    default boolean getProtectedSignalsEnabled() {
         // Check for global kill switch first, as it should override all other kill switches
-        return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
+        return getGlobalKillSwitch() ? false : PROTECTED_SIGNALS_ENABLED;
     }
 
     // Encryption key Kill switches
@@ -4711,5 +4712,15 @@ public interface Flags extends CommonFlags {
      */
     default String getAdServicesCommonStatesAllowList() {
         return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
+    }
+
+    /** Default value for status of custom audiences CLI feature */
+    boolean FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED = false;
+
+    /**
+     * @return the enabled status for custom audiences CLI feature.
+     */
+    default boolean getFledgeCustomAudienceCLIEnabledStatus() {
+        return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
     }
 }

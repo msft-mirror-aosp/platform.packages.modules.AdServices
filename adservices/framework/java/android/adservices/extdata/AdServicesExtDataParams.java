@@ -16,7 +16,6 @@
 
 package android.adservices.extdata;
 
-import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -24,6 +23,8 @@ import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

@@ -48,4 +48,9 @@ final class EchoCommand extends AbstractShellCommand {
         out.println(message);
         return RESULT_OK;
     }
+
+    @Override
+    public String getCommandName() {
+        return CMD_ECHO;
+    }
 }

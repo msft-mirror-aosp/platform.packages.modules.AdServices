@@ -16,13 +16,14 @@
 
 package android.adservices.common;
 
-import android.adservices.Flags;
 import android.adservices.adid.AdId;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 

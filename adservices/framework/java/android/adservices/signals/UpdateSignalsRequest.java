@@ -16,10 +16,11 @@
 
 package android.adservices.signals;
 
-import android.adservices.Flags;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 

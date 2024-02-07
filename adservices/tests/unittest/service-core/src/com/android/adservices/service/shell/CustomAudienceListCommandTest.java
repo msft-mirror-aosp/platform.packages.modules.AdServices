@@ -49,7 +49,6 @@ public final class CustomAudienceListCommandTest extends ShellCommandTest {
                     .build();
 
     @Mock private CustomAudienceDao mCustomAudienceDao;
-
     @Test
     public void testRun_simpleCase_returnsSuccess() throws Exception {
         when(mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(

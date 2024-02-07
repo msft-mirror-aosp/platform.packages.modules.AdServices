@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
@@ -71,6 +73,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -235,6 +238,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+        int failureReason = AdServicesStatusUtils.FAILURE_REASON_UNSET;
         // The filters log internally, so don't accidentally log again
         boolean shouldLog = false;
         try {
@@ -267,6 +271,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             } catch (Exception exception) {
                 sLogger.d(exception, "Error encountered in joinCustomAudience, notifying caller");
                 resultCode = notifyFailure(callback, exception);
+                failureReason =
+                        resultCode == AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED
+                                ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
+                                : FAILURE_REASON_UNSET;
                 return;
             }
 
@@ -276,7 +284,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
-                mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
+                mAdServicesLogger.logFledgeApiCallStats(
+                        apiName,
+                        /* latencyMs= */ 0,
+                        new ApiCallStats.Result(resultCode, failureReason));
             }
         }
     }
@@ -423,6 +434,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+        int failureReason = AdServicesStatusUtils.FAILURE_REASON_UNSET;
         // The filters log internally, so don't accidentally log again
         boolean shouldLog = false;
         try {
@@ -457,6 +469,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 // Catch these specific exceptions, but report them back to the caller
                 sLogger.d(exception, "Error encountered in leaveCustomAudience, notifying caller");
                 resultCode = notifyFailure(callback, exception);
+                failureReason =
+                        resultCode == AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED
+                                ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
+                                : FAILURE_REASON_UNSET;
                 return;
             } catch (Exception exception) {
                 // For all other exceptions, report success
@@ -470,7 +486,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
-                mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
+                mAdServicesLogger.logFledgeApiCallStats(
+                        apiName,
+                        /* latencyMs= */ 0,
+                        new ApiCallStats.Result(resultCode, failureReason));
             }
         }
     }
