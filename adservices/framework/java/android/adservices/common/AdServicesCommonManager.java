@@ -29,10 +29,12 @@ import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
@@ -365,5 +367,68 @@ public class AdServicesCommonManager {
                 updateAdIdRequest,
                 executor,
                 OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
+    }
+
+    /**
+     * Get the AdService's common states.
+     *
+     * @param executor the executor for the callback.
+     * @param callback the callback in type {@link AdServicesOutcomeReceiver}, available on Android
+     *     R and above.
+     * @throws IllegalStateException if there is any {@code Binder} invocation error.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_GET_ADSERVICES_COMMON_STATES_API_ENABLED)
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdservicesCommonStates(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull
+                    AdServicesOutcomeReceiver<AdServicesCommonStatesResponse, Exception> callback) {
+        final IAdServicesCommonService service = getService();
+        CallerMetadata callerMetadata =
+                new CallerMetadata.Builder()
+                        .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                        .build();
+        String appPackageName = "";
+        String sdkPackageName = "";
+        // First check if context is SandboxedSdkContext or not
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        if (sandboxedSdkContext != null) {
+            // This is the case with the Sandbox.
+            sdkPackageName = sandboxedSdkContext.getSdkPackageName();
+            appPackageName = sandboxedSdkContext.getClientPackageName();
+        } else {
+            // This is the case without the Sandbox.
+            appPackageName = mContext.getPackageName();
+        }
+        try {
+            service.getAdServicesCommonStates(
+                    new GetAdServicesCommonStatesParams.Builder(appPackageName, sdkPackageName)
+                            .build(),
+                    callerMetadata,
+                    new IAdServicesCommonStatesCallback.Stub() {
+                        @Override
+                        public void onResult(AdServicesCommonStatesResponse result) {
+                            executor.execute(
+                                    () -> {
+                                        callback.onResult(result);
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(statusCode)));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
     }
 }
