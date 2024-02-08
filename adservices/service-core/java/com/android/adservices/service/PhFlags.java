@@ -20,6 +20,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_T
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
@@ -2149,19 +2150,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getProtectedSignalsServiceKillSwitch() {
+    public boolean getProtectedSignalsEnabled() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(
-                                FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH),
+                ? false
+                : SystemProperties.getBoolean(
+                        getSystemPropertyName(FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
-                                /* defaultValue */ PROTECTED_SIGNALS_SERVICE_KILL_SWITCH));
+                                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED,
+                                /* defaultValue */ PROTECTED_SIGNALS_ENABLED));
     }
 
     @Override
@@ -5182,9 +5182,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED
                         + " = "
-                        + getProtectedSignalsServiceKillSwitch());
+                        + getProtectedSignalsEnabled());
 
         writer.println("==== AdServices PH Flags Throttling Related Flags ====");
         writer.println(
@@ -5606,6 +5606,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
                         + " = "
                         + getAdServicesCommonStatesAllowList());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED
+                        + " = "
+                        + getFledgeCustomAudienceCLIEnabledStatus());
     }
 
     @VisibleForTesting
@@ -6681,5 +6686,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         FlagsConstants.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
                         /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeCustomAudienceCLIEnabledStatus() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
+                /* defaultValue */ FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED);
     }
 }

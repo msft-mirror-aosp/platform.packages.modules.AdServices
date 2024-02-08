@@ -21,12 +21,9 @@ import static com.android.adservices.service.shell.AdServicesShellCommandHandler
 import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
 
-import androidx.annotation.VisibleForTesting;
-
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 
@@ -36,7 +33,7 @@ import java.util.Optional;
 /** Command to view custom audiences created in Protected Audience. */
 final class CustomAudienceViewCommand extends AbstractShellCommand {
 
-    public static final String CMD = "view-custom-audience";
+    @VisibleForTesting public static final String CMD = "view-custom-audience";
     public static final String HELP =
             CMD
                     + " --"
@@ -50,13 +47,6 @@ final class CustomAudienceViewCommand extends AbstractShellCommand {
     private final CustomAudienceDao mCustomAudienceDao;
     private final ArgParser mArgParser;
 
-    CustomAudienceViewCommand() {
-        this(
-                CustomAudienceDatabase.getInstance(ApplicationContextSingleton.get())
-                        .customAudienceDao());
-    }
-
-    @VisibleForTesting
     CustomAudienceViewCommand(CustomAudienceDao customAudienceDao) {
         mCustomAudienceDao = customAudienceDao;
         mArgParser =
@@ -64,6 +54,11 @@ final class CustomAudienceViewCommand extends AbstractShellCommand {
                         CustomAudienceArgs.OWNER,
                         CustomAudienceArgs.BUYER,
                         CustomAudienceArgs.NAME);
+    }
+
+    @Override
+    public String getCommandName() {
+        return CMD;
     }
 
     @Override

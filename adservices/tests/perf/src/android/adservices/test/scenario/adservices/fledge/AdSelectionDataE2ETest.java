@@ -44,6 +44,7 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -120,8 +121,8 @@ public class AdSelectionDataE2ETest {
      * <p>B&A servers often send responses if contacted after a while. Warming up with a couple of
      * calls should greatly reduce this flakiness.
      */
-    @BeforeClass
-    public static void warmup() throws Exception {
+    @Before
+    public void warmup() throws Exception {
 
         // The first warm up call brings ups the sfe
         List<CustomAudience> customAudiences =

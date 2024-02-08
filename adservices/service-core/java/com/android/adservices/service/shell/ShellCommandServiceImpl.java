@@ -25,8 +25,13 @@ import android.adservices.shell.ShellCommandResult;
 import android.os.RemoteException;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.android.internal.annotations.VisibleForTesting;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Objects;
 
 /**
  * Implements a service which runs shell command in the AdServices process.
@@ -37,6 +42,21 @@ import java.io.StringWriter;
  * @hide
  */
 public final class ShellCommandServiceImpl extends IShellCommand.Stub {
+
+    @NonNull ShellCommandFactorySupplier mShellCommandFactorySupplier;
+
+    @VisibleForTesting
+    public ShellCommandServiceImpl(
+            @NonNull ShellCommandFactorySupplier shellCommandFactorySupplier) {
+        mShellCommandFactorySupplier =
+                Objects.requireNonNull(
+                        shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
+    }
+
+    public ShellCommandServiceImpl() {
+        this(new AdservicesShellCommandFactorySupplier());
+    }
+
     @Override
     public void runShellCommand(ShellCommandParam param, IShellCommandCallback callback) {
         StringWriter outStringWriter = new StringWriter();
@@ -44,7 +64,8 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
 
         try (PrintWriter outPw = new PrintWriter(outStringWriter);
                 PrintWriter errPw = new PrintWriter(ErrStringWriter); ) {
-            AdServicesShellCommandHandler handler = new AdServicesShellCommandHandler(outPw, errPw);
+            AdServicesShellCommandHandler handler =
+                    new AdServicesShellCommandHandler(outPw, errPw, mShellCommandFactorySupplier);
             int resultCode = handler.run(param.getCommandArgs());
             ShellCommandResult response =
                     new ShellCommandResult.Builder()
