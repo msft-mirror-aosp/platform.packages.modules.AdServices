@@ -3270,25 +3270,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getUIDialogsFeatureEnabled() {
+    public boolean getUiDialogsFeatureEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED,
-                        /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED));
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED,
+                /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED);
     }
 
     @Override
     public boolean getUiDialogFragmentEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED,
-                        /* defaultValue */ UI_DIALOG_FRAGMENT));
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED,
+                /* defaultValue */ UI_DIALOG_FRAGMENT);
     }
 
     @Override
@@ -5211,7 +5207,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 "\t"
                         + FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED
                         + " = "
-                        + getUIDialogsFeatureEnabled());
+                        + getUiDialogsFeatureEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED
@@ -5828,7 +5824,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public Map<String, Boolean> getUxFlags() {
         Map<String, Boolean> uxMap = new HashMap<>();
-        uxMap.put(FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED, getUIDialogsFeatureEnabled());
+        uxMap.put(FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED, getUiDialogsFeatureEnabled());
         uxMap.put(FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED, getUiDialogFragmentEnabled());
         uxMap.put(FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED, isEeaDeviceFeatureEnabled());
         uxMap.put(FlagsConstants.KEY_IS_EEA_DEVICE, isEeaDevice());
