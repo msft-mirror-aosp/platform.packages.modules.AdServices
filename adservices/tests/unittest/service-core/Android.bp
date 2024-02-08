@@ -55,6 +55,7 @@ java_defaults {
         "framework-configinfrastructure",
         "framework-sdksandbox.impl",
         "auto_value_annotations",
+        "adservices_flags_lib", // Used by FlagsConstantsTest
     ],
     test_suites: [
         "general-tests",
@@ -205,6 +206,7 @@ java_defaults {
         "framework-annotations-lib",
         "framework-configinfrastructure",
         "framework-sdksandbox.impl",
+        "adservices_flags_lib", // Used by FlagsConstantsTest
     ],
     test_suites: [
         "general-tests",
