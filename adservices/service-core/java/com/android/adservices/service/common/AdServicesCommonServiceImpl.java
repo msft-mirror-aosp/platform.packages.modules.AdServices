@@ -486,8 +486,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         .setSdkPackageName(sdkName)
                                         .setLatencyMillisecond(
                                                 getLatency(callerMetadata, serviceStartTime))
-                                        .setResult(
-                                                new ApiCallStats.Result(resultCode, failureReason))
+                                        .setResult(resultCode, failureReason)
                                         .build());
                     }
                 });

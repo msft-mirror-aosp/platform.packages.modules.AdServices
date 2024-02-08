@@ -225,7 +225,9 @@ public class OutcomeSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         anyInt(),
-                        eq(new ApiCallStats.Result(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -272,7 +274,7 @@ public class OutcomeSelectionRunnerTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         anyInt(),
                         eq(
-                                new ApiCallStats.Result(
+                                ApiCallStats.failureResult(
                                         STATUS_USER_CONSENT_REVOKED, FAILURE_REASON_UNSET)));
     }
 
@@ -344,7 +346,7 @@ public class OutcomeSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         anyInt(),
-                        eq(new ApiCallStats.Result(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
+                        eq(ApiCallStats.failureResult(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
     }
 
     private void persistAdSelectionEntry(

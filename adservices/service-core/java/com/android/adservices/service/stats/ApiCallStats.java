@@ -198,29 +198,27 @@ public final class ApiCallStats {
         }
     }
 
+    private static final Result SUCCESS = new Result(STATUS_SUCCESS, FAILURE_REASON_UNSET);
+
+    /** Creates a result for successful calls */
+    public static Result successResult() {
+        return SUCCESS;
+    }
+
+    // TODO(b/324488816): throws IAE (or log warning) on FAILURE_REASON_UNSET
+    // (need to fix all callers first)
+    /** Creates a result for failed calls */
+    public static Result failureResult(
+            @StatusCode int resultCode, @FailureReason int failureReason) {
+        return new Result(resultCode, failureReason);
+    }
+
     public static final class Result {
-        private static final Result SUCCESS = new Result(STATUS_SUCCESS, FAILURE_REASON_UNSET);
 
         private final @AdServicesStatusUtils.StatusCode int mResultCode;
         private final @FailureReason int mFailureReason;
 
-        /** Creates a result for successful calls */
-        public static Result forSuccess() {
-            return SUCCESS;
-        }
-
-        /** Creates a result for failed calls */
-        public static Result forFailure(
-                @StatusCode int resultCode, @FailureReason int failureReason) {
-            return new Result(resultCode, failureReason);
-        }
-
-        // TODO(b/270974848): refactor callers, make private, and deprecated
-        /**
-         * @deprecated should call {@link #forSuccess()} or {@link #forFailure(int, int)}.
-         */
-        @Deprecated
-        public Result(@StatusCode int resultCode, @FailureReason int failureReason) {
+        private Result(@StatusCode int resultCode, @FailureReason int failureReason) {
             mResultCode = resultCode;
             mFailureReason = failureReason;
         }

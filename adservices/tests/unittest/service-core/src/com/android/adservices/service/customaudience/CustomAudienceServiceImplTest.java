@@ -2000,7 +2000,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 .logFledgeApiCallStats(
                         eq(apiName),
                         anyInt(),
-                        eq(new ApiCallStats.Result(statusCode, failureReason)));
+                        eq(ApiCallStats.failureResult(statusCode, failureReason)));
     }
 
     private static class FlagsWithCheckEnabledSwitch implements Flags {

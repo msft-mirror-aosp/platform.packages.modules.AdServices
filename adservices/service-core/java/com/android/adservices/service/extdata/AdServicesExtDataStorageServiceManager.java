@@ -457,7 +457,7 @@ public final class AdServicesExtDataStorageServiceManager {
                             .setAppPackageName(mPackageName)
                             .setSdkPackageName(UNKNOWN_PACKAGE_NAME)
                             .setLatencyMillisecond(apiLatency)
-                            .setResult(new ApiCallStats.Result(resultCode, FAILURE_REASON_UNSET))
+                            .setResult(resultCode, FAILURE_REASON_UNSET)
                             .build());
         }
     }
