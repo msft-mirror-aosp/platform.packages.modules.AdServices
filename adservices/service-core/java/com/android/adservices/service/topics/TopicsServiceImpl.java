@@ -156,6 +156,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                             if (!validateRequest(topicsParam, callback)) {
                                 // Return early if the request is invalid.
                                 sLogger.e("Invalid request %s", topicsParam);
+                                result =
+                                        new ApiCallStats.Result(
+                                                STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET);
                                 return;
                             }
                         }
