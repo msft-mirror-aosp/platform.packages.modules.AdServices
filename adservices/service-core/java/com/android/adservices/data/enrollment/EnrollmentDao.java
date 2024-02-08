@@ -646,8 +646,10 @@ public class EnrollmentDao implements IEnrollmentDao {
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
                 enrollmentData.getEnrollmentId());
+        // Deprecating company_id, temporarily being reused by enrolled_apis
         values.put(
-                EnrollmentTables.EnrollmentDataContract.COMPANY_ID, enrollmentData.getCompanyId());
+                EnrollmentTables.EnrollmentDataContract.COMPANY_ID,
+                enrollmentData.getEnrolledAPIsString());
         values.put(
                 EnrollmentTables.EnrollmentDataContract.SDK_NAMES,
                 String.join(" ", enrollmentData.getSdkNames()));

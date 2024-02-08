@@ -489,7 +489,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getFetchStatus().getValue(),
                 stats.getIsFirstTimeFetch(),
                 stats.getAdtechEnrollmentId(),
-                stats.getCompanyId(),
+                "",
                 stats.getEncryptionKeyUrl());
     }
 

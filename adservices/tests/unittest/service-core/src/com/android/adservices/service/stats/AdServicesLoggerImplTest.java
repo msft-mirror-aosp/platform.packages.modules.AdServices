@@ -677,7 +677,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     @Test
     public void testLogEncryptionKeyFetchedStats() {
         String enrollmentId = "enrollmentId";
-        String companyId = "companyId";
         String encryptionKeyUrl = "https://www.adtech1.com/.well-known/encryption-keys";
 
         AdServicesEncryptionKeyFetchedStats stats =
@@ -686,7 +685,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setFetchStatus(IO_EXCEPTION)
                         .setIsFirstTimeFetch(false)
                         .setAdtechEnrollmentId(enrollmentId)
-                        .setCompanyId(companyId)
                         .setEncryptionKeyUrl(encryptionKeyUrl)
                         .build();
 

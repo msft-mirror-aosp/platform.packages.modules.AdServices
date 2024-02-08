@@ -37,7 +37,9 @@ public class SqliteObjectMapper {
                 EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
         setTextColumn(
-                cursor, EnrollmentTables.EnrollmentDataContract.COMPANY_ID, builder::setCompanyId);
+                cursor,
+                EnrollmentTables.EnrollmentDataContract.COMPANY_ID,
+                builder::setEnrolledAPIs);
         setTextColumn(
                 cursor, EnrollmentTables.EnrollmentDataContract.SDK_NAMES, builder::setSdkNames);
         setTextColumn(

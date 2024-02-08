@@ -107,7 +107,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
     private static final EnrollmentData ENROLLMENT =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E1")
-                    .setCompanyId("1001")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setSdkNames("sdk1")
                     .setAttributionSourceRegistrationUrl(List.of("https://test.com/source"))
                     .setAttributionTriggerRegistrationUrl(List.of("https://test.com/trigger"))
