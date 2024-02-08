@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -37,8 +41,17 @@ public class AppPackageAccessResolver implements IAccessResolver {
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return AllowLists.isPackageAllowListed(mAllowList, mPackageName) && !isBlocked();
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        boolean isInAllowList = AllowLists.isPackageAllowListed(mAllowList, mPackageName);
+        boolean isInBlockList = isBlocked();
+        if (isInAllowList && !isInBlockList) {
+            return new AccessInfo(true, FAILURE_REASON_UNSET);
+        }
+        return new AccessInfo(
+                false,
+                !isInAllowList
+                        ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
+                        : FAILURE_REASON_PACKAGE_BLOCKLISTED);
     }
 
     @NonNull

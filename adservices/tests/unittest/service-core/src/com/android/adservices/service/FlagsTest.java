@@ -58,13 +58,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetProtectedSignalsServiceKillSwitch() {
         expect.withMessage(
                         "getProtectedSignalsServiceKillSwitch() when global kill_switch is enabled")
-                .that(mGlobalKsEnabled.getProtectedSignalsServiceKillSwitch())
-                .isTrue();
+                .that(mGlobalKsEnabled.getProtectedSignalsEnabled())
+                .isFalse();
 
         expect.withMessage(
                         "getProtectedSignalsServiceKillSwitch() when global kill_switch is"
                                 + " disabled")
-                .that(mGlobalKsDisabled.getProtectedSignalsServiceKillSwitch())
-                .isEqualTo(Flags.PROTECTED_SIGNALS_SERVICE_KILL_SWITCH);
+                .that(mGlobalKsDisabled.getProtectedSignalsEnabled())
+                .isEqualTo(Flags.PROTECTED_SIGNALS_ENABLED);
     }
 }

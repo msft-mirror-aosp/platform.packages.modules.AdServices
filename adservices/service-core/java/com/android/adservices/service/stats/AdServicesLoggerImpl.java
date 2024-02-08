@@ -69,6 +69,11 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result) {
+        mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, latencyMs, result);
+    }
+
+    @Override
     public void logMeasurementRegistrationsResponseSize(
             MeasurementRegistrationResponseStats stats) {
         mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats);
