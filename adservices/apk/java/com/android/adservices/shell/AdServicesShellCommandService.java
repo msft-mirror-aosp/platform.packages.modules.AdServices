@@ -24,6 +24,7 @@ import android.util.Log;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
+import com.android.adservices.service.shell.AdservicesShellCommandFactorySupplier;
 import com.android.adservices.service.shell.ShellCommandServiceImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -79,7 +80,8 @@ public final class AdServicesShellCommandService extends Service {
                     TAG,
                     "Using dump to call AdServicesShellCommandHandler - should NOT happen on"
                             + " production");
-            new AdServicesShellCommandHandler(pw).run(realArgs);
+            new AdServicesShellCommandHandler(pw, new AdservicesShellCommandFactorySupplier())
+                    .run(realArgs);
             return;
         }
         // TODO(b/308009734): Add service and flag info to the dump.

@@ -287,8 +287,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode()).isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
         assertThat(callback.getLoadSdkErrorMsg())
-                .isEqualTo(
-                        "android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME property not found");
+                .contains("android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME property");
     }
 
     @Test

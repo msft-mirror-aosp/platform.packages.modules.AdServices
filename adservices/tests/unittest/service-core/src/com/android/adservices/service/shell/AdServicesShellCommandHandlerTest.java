@@ -22,7 +22,6 @@ import static com.android.adservices.service.shell.AdServicesShellCommandHandler
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_SHORT_HELP;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.DEFAULT_FACTORIES_SUPPLIER;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.ERROR_EMPTY_COMMAND;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
@@ -34,12 +33,16 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.truth.Expect;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -52,23 +55,35 @@ import java.util.Map;
 
 @SpyStatic(AppManifestConfigHelper.class)
 public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
-
     private static final String PKG_NAME = "d.h.a.r.m.a";
     private static final String ENROLLMENT_ID = "42";
     private static final String USES_SDK = "true";
+    private final Flags mFlags = new ShellCommandFlags();
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
-    private final OneTimeCommand mCmd = new OneTimeCommand(expect);
+    private OneTimeCommand mCmd;
+    @Mock private CustomAudienceDao mCustomAudienceDao;
+    private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
-    @Test
-    public void testInvalidConstructor() throws Exception {
-        assertThrows(
-                NullPointerException.class,
-                () -> new AdServicesShellCommandHandler((PrintWriter) null));
+    @Before
+    public void setup() {
+        mShellCommandFactorySupplier =
+                new TestShellCommandFactorySupplier(mFlags, mCustomAudienceDao);
+        mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier);
     }
 
     @Test
-    public void testRun_invalidArgs() throws Exception {
+    public void testInvalidConstructor() {
+        assertThrows(
+                NullPointerException.class,
+                () -> new AdServicesShellCommandHandler(null, mShellCommandFactorySupplier));
+        assertThrows(
+                NullPointerException.class,
+                () -> new AdServicesShellCommandHandler(new PrintWriter(new StringWriter()), null));
+    }
+
+    @Test
+    public void testRun_invalidArgs() {
         assertThrows(NullPointerException.class, () -> mCmd.run(/* args...= */ (String[]) null));
         assertThrows(IllegalArgumentException.class, () -> mCmd.run(/* args...= */ new String[0]));
     }
@@ -260,7 +275,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Test
     public void testUniqueCommandsInShellCommandFactory() {
         Map<String, List<String>> commandToFactories = new HashMap<>();
-        for (ShellCommandFactory factory : DEFAULT_FACTORIES_SUPPLIER.get()) {
+        for (ShellCommandFactory factory :
+                mShellCommandFactorySupplier.getAllShellCommandFactories()) {
             for (String cmd : factory.getAllCommands()) {
                 commandToFactories
                         .computeIfAbsent(cmd, unused -> new ArrayList<>())
@@ -275,7 +291,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                     .hasSize(1);
         }
     }
-
     private void assertHelpContents(String help) {
         expect.withMessage("help")
                 .that(help.split("\n\n"))
@@ -290,7 +305,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {
-        OneTimeCommand cmd = new OneTimeCommand(expect);
+        OneTimeCommand cmd = new OneTimeCommand(expect, mShellCommandFactorySupplier);
 
         String expectedResult =
                 String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
@@ -309,13 +324,14 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         private final PrintWriter mOut = new PrintWriter(mOutStringWriter);
         private final StringWriter mErrStringWriter = new StringWriter();
         private final PrintWriter mErr = new PrintWriter(mErrStringWriter);
-        public final AdServicesShellCommandHandler cmd =
-                new AdServicesShellCommandHandler(mOut, mErr);
+        public final AdServicesShellCommandHandler cmd;
 
         private boolean mOutCalled;
 
-        private OneTimeCommand(Expect expect) {
+        private OneTimeCommand(
+                Expect expect, ShellCommandFactorySupplier shellCommandFactorySupplier) {
             this.expect = expect;
+            cmd = new AdServicesShellCommandHandler(mOut, mErr, shellCommandFactorySupplier);
         }
 
         /**
@@ -370,6 +386,13 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
             pw.close();
             mOutCalled = true;
             return out;
+        }
+    }
+
+    private static final class ShellCommandFlags implements Flags {
+        @Override
+        public boolean getFledgeCustomAudienceCLIEnabledStatus() {
+            return true;
         }
     }
 }
