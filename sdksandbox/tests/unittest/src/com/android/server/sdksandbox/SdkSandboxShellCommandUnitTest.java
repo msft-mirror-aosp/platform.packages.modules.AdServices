@@ -32,7 +32,6 @@ import android.os.IBinder;
 import android.os.Process;
 import android.os.UserHandle;
 
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -377,7 +376,6 @@ public class SdkSandboxShellCommandUnitTest {
                 .stopSdkSandboxService(callingInfo, "Shell command 'sdk_sandbox stop' issued");
     }
 
-    @FlakyTest(bugId = 322822651)
     @Test
     public void testRunAdServicesShellCommand_supportsAdServicesShellCmd() throws Exception {
         String[] args = new String[] {ADSERVICES_CMD, "echo", "hello"};
@@ -396,7 +394,6 @@ public class SdkSandboxShellCommandUnitTest {
         assertThat(cmd.exec(mService, mIn, mOut, mErr, args)).isEqualTo(1);
     }
 
-    @FlakyTest(bugId = 322822651)
     @Test
     public void testRunAdServicesShellCommand_doesNotSupportAdServicesShellCmd() throws Exception {
         String[] args = new String[] {ADSERVICES_CMD, "echo", "hello"};
