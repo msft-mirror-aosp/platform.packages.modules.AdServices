@@ -20,11 +20,13 @@ import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_TRUE;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_UNKNOWN;
 import static android.adservices.extdata.AdServicesExtDataParams.STATE_MANUAL_INTERACTIONS_RECORDED;
 
+import static com.android.adservices.AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX;
 import static com.android.adservices.service.consent.ConsentManager.getConsentManagerStatsForLogging;
 
 import android.adservices.extdata.AdServicesExtDataParams;
 import android.annotation.NonNull;
 import android.annotation.TargetApi;
+import android.app.adservices.AdServicesManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -43,72 +45,84 @@ import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Objects;
 
-/** Utility class for consent migration related tasks. */
+/**
+ * Utility methods for consent migration from AdExtDataStorage (Android R) to AppSearch (Android S)
+ * and System Server (Android T+)
+ */
+// TODO(b/324479645): Refactor by renaming this class to include AdExtData reference.
 public final class ConsentMigrationUtils {
     private ConsentMigrationUtils() {
         // prevent instantiation
     }
 
     /**
-     * This method handles migration of consent data to AppSearch post-OTA R -> S. Consent data is
-     * written to AdServicesExtDataStorageService on R and ported over to AppSearch after OTA to S
-     * as it's the new consent source of truth. If any new data is written for consent, we need to
-     * make sure it is migrated correctly post-OTA in this method.
+     * This method handles migration of consent data from AdExtDataStorageService to either
+     * AppSearch or System Server based on SDK level. If any new data is written for consent, we
+     * need to make sure it is migrated correctly post-OTA in this method.
      */
     @TargetApi(Build.VERSION_CODES.S)
-    public static void handleConsentMigrationToAppSearchIfNeeded(
+    public static void handleConsentMigrationFromAdExtDataIfNeeded(
             @NonNull Context context,
             @NonNull BooleanFileDatastore datastore,
             @Nullable AppSearchConsentManager appSearchConsentManager,
             @Nullable AdServicesExtDataStorageServiceManager adExtDataManager,
-            @Nullable StatsdAdServicesLogger statsdAdServicesLogger) {
+            @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
+            @Nullable AdServicesManager adServicesManager) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(statsdAdServicesLogger);
-        LogUtil.d("Check if consent migration to AppSearch is needed.");
+
         AppConsents appConsents = null;
         try {
             SharedPreferences sharedPreferences =
                     FileCompatUtils.getSharedPreferencesHelper(
                             context, ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
 
-            if (!isMigrationToAppSearchNeeded(
-                    context, sharedPreferences, appSearchConsentManager, adExtDataManager)) {
-                LogUtil.d("Skipping consent migration to AppSearch");
+            LogUtil.d("Check if consent migration from AdExtData is needed.");
+            if (!isMigrationFromAdExtDataNeeded(
+                    context,
+                    sharedPreferences,
+                    appSearchConsentManager,
+                    adExtDataManager,
+                    adServicesManager)) {
+                LogUtil.d("Skipping consent migration from AdExtData");
                 return;
             }
 
             // Reduce number of read calls by fetching all the AdExt data at once.
             AdServicesExtDataParams dataFromR = adExtDataManager.getAdServicesExtData();
-            if (dataFromR.getIsNotificationDisplayed() != BOOLEAN_TRUE) {
-                LogUtil.d("Skipping consent migration to AppSearch; notification not shown on R");
+            if (dataFromR == null || dataFromR.getIsNotificationDisplayed() != BOOLEAN_TRUE) {
+                LogUtil.d("Skipping consent migration from AdExtData; notification not shown on R");
                 return;
             }
 
-            appConsents = migrateDataToAppSearch(appSearchConsentManager, dataFromR, datastore);
+            appConsents =
+                    migrateAdExtData(
+                            appSearchConsentManager, adServicesManager, datastore, dataFromR);
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH, true);
+            editor.putBoolean(getSharedPrefMigrationKey(), true);
             if (editor.commit()) {
-                LogUtil.d("Finished migrating consent to AppSearch.");
-                logMigrationToAppSearch(
+                LogUtil.d("Finished migrating consent from AdExtData.");
+                logMigrationStatus(
                         statsdAdServicesLogger,
                         appConsents,
                         ConsentMigrationStats.MigrationStatus.SUCCESS_WITH_SHARED_PREF_UPDATED,
                         context);
             } else {
-                LogUtil.e("Finished migrating consent to AppSearch. Shared prefs not updated.");
-                logMigrationToAppSearch(
+                LogUtil.e("Finished migrating consent from AdExtData. Shared prefs not updated.");
+                logMigrationStatus(
                         statsdAdServicesLogger,
                         appConsents,
                         ConsentMigrationStats.MigrationStatus.SUCCESS_WITH_SHARED_PREF_NOT_UPDATED,
                         context);
             }
+
             // No longer need access to Android R data. Safe to clear here.
             adExtDataManager.clearDataOnOtaAsync();
         } catch (Exception e) {
-            LogUtil.e("Consent migration to AppSearch failed: ", e);
-            logMigrationToAppSearch(
+            LogUtil.e("Consent migration from AdExtData failed: ", e);
+            logMigrationStatus(
                     statsdAdServicesLogger,
                     appConsents,
                     ConsentMigrationStats.MigrationStatus.FAILURE,
@@ -122,6 +136,8 @@ public final class ConsentMigrationUtils {
      * as it's the new consent source of truth. If any new data is written for consent, we need to
      * make sure it is migrated correctly post-OTA in this method.
      */
+    // TODO(b/324273438, b/324479886): Move V2 methods to different file and support R->T+
+    //  consent migration for Consent Manager V2 project.
     public static void handleConsentMigrationToAppSearchIfNeededV2(
             @NonNull Context context,
             @NonNull BooleanFileDatastore datastore,
@@ -159,14 +175,14 @@ public final class ConsentMigrationUtils {
             editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH, true);
             if (editor.commit()) {
                 LogUtil.d("Finished migrating consent to AppSearch.");
-                logMigrationToAppSearch(
+                logMigrationStatus(
                         statsdAdServicesLogger,
                         appConsents,
                         ConsentMigrationStats.MigrationStatus.SUCCESS_WITH_SHARED_PREF_UPDATED,
                         context);
             } else {
                 LogUtil.e("Finished migrating consent to AppSearch. Shared prefs not updated.");
-                logMigrationToAppSearch(
+                logMigrationStatus(
                         statsdAdServicesLogger,
                         appConsents,
                         ConsentMigrationStats.MigrationStatus.SUCCESS_WITH_SHARED_PREF_NOT_UPDATED,
@@ -177,7 +193,7 @@ public final class ConsentMigrationUtils {
             adExtDataManager.clearDataOnOtaAsync();
         } catch (Exception e) {
             LogUtil.e("Consent migration to AppSearch failed: ", e);
-            logMigrationToAppSearch(
+            logMigrationStatus(
                     statsdAdServicesLogger,
                     appConsents,
                     ConsentMigrationStats.MigrationStatus.FAILURE,
@@ -185,52 +201,54 @@ public final class ConsentMigrationUtils {
         }
     }
 
-    private static boolean isMigrationToAppSearchNeeded(
+    private static boolean isMigrationFromAdExtDataNeeded(
             Context context,
             SharedPreferences sharedPreferences,
             AppSearchConsentManager appSearchConsentManager,
-            AdServicesExtDataStorageServiceManager adExtDataManager) {
-        if (SdkLevel.isAtLeastT() || !SdkLevel.isAtLeastS()) {
-            LogUtil.d("Not S device. Consent migration to AppSearch not needed");
+            AdServicesExtDataStorageServiceManager adExtDataManager,
+            AdServicesManager adServicesManager) {
+        if (!SdkLevel.isAtLeastS()) {
+            LogUtil.d("Not S+ device. Consent migration from AdExtData not needed");
             return false;
         }
 
-        // Cannot be null on S since the consent source of truth has to be APPSEARCH_ONLY.
-        Objects.requireNonNull(appSearchConsentManager);
+        // Ensure appropriate source of truth data store is non-null.
+        Objects.requireNonNull(SdkLevel.isAtLeastT() ? adServicesManager : appSearchConsentManager);
 
         // There could be a case where we may need to ramp down enable_adext_service_consent_data
-        // flag on S, in which case we should gracefully handle consent migration by skipping.
+        // flag on S+, in which case we should gracefully handle consent migration by skipping.
         if (adExtDataManager == null) {
             LogUtil.d("AdExtDataManager is null. Consent migration to AppSearch not needed");
             return false;
         }
 
-        boolean isMigrationToAppSearchDone =
-                sharedPreferences.getBoolean(
-                        ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH,
-                        /* defValue= */ false);
-        if (isMigrationToAppSearchDone) {
+        // On T+, this migration should only execute if it's within the AdServices APK and not
+        // ExtServices. So check if it's within ExtServices, and bail out if that's the case on
+        // any platform.
+        if (SdkLevel.isAtLeastT() && !isValidAdServicesPackage(context)) {
+            LogUtil.d("Aborting attempt to migrate AdExtData to System Server in ExtServices");
+            return false;
+        }
+
+        // If any migration was marked as being done, this migration no longer needs to take place.
+        if (isMigrationDone(sharedPreferences)) {
             LogUtil.d(
-                    "Consent migration to AppSearch is already done for user %d.",
+                    "Consent migration already done for user %d.",
                     context.getUser().getIdentifier());
             return false;
         }
 
-        // Just in case, check all notification types to ensure notification is not shown. We do not
-        // want to override consent if notification is already shown.
-        boolean isNotificationDisplayedOnS =
-                appSearchConsentManager.wasU18NotificationDisplayed()
-                        || appSearchConsentManager.wasNotificationDisplayed()
-                        || appSearchConsentManager.wasGaUxNotificationDisplayed();
-        LogUtil.d(
-                "Notification shown status on S for migrating consent to AppSearch: "
-                        + isNotificationDisplayedOnS);
+        // Just in case, check all notification types to ensure notification is not shown on
+        // current SDK version. We do not want to override consent if notification is already shown.
+        boolean isNotificationDisplayed =
+                isNotificationShownOnCurrentSdk(appSearchConsentManager, adServicesManager);
+        LogUtil.d("Notification shown status on current SDK version: " + isNotificationDisplayed);
 
         // If notification is not shown, we will need to perform another check to ensure
         // notification was shown on R before performing migration. This check will be performed
         // later in order to reduce number of calls to AdExtDataService in the consent migration
         // process.
-        return !isNotificationDisplayedOnS;
+        return !isNotificationDisplayed;
     }
 
     private static boolean isMigrationToAppSearchNeededV2(
@@ -282,39 +300,71 @@ public final class ConsentMigrationUtils {
     }
 
     @TargetApi(Build.VERSION_CODES.S)
-    private static AppConsents migrateDataToAppSearch(
+    private static AppConsents migrateAdExtData(
             AppSearchConsentManager appSearchConsentManager,
-            AdServicesExtDataParams dataFromR,
-            BooleanFileDatastore datastore) {
-        // Default measurement consent is stored using PPAPI_ONLY source on R.
-        Boolean measurementDefaultConsent =
-                datastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT);
-        if (measurementDefaultConsent != null) {
-            appSearchConsentManager.setConsent(
-                    ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, measurementDefaultConsent);
+            AdServicesManager adServicesManager,
+            BooleanFileDatastore datastore,
+            AdServicesExtDataParams dataFromR) {
+        // Default measurement consent is stored using PPAPI_ONLY source on R which will only be
+        // available on S because both are powered by ExtServices. For T, this information will
+        // be lost. This data is not critical and therefore optional to migrate as UX engine will
+        // set this field after daily ping.
+        if (!SdkLevel.isAtLeastT()) {
+            Boolean measurementDefaultConsent =
+                    datastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT);
+            if (measurementDefaultConsent != null) {
+                appSearchConsentManager.setConsent(
+                        ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, measurementDefaultConsent);
+            }
         }
 
+        // Migrate measurement consent
         boolean isMeasurementConsented = dataFromR.getIsMeasurementConsented() == BOOLEAN_TRUE;
-        appSearchConsentManager.setConsent(
-                AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey(), isMeasurementConsented);
+        migrateBasedOnSdk(
+                () ->
+                        appSearchConsentManager.setConsent(
+                                AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey(),
+                                isMeasurementConsented),
+                () ->
+                        ConsentManager.setPerApiConsentToSystemServer(
+                                adServicesManager,
+                                AdServicesApiType.MEASUREMENTS.toConsentApiType(),
+                                isMeasurementConsented));
 
-        appSearchConsentManager.setU18NotificationDisplayed(
-                dataFromR.getIsNotificationDisplayed() == BOOLEAN_TRUE);
+        // Migrate U18 notification displayed status
+        boolean u18NotificationDisplayed = dataFromR.getIsNotificationDisplayed() == BOOLEAN_TRUE;
+        migrateBasedOnSdk(
+                () -> appSearchConsentManager.setU18NotificationDisplayed(u18NotificationDisplayed),
+                () -> adServicesManager.setU18NotificationDisplayed(u18NotificationDisplayed));
 
-        // Record interaction data only if we recorded an interaction in
-        // AdServicesExtDataStorageService.
+        // Migrate isU18Account
+        int isU18AccountRawValue = dataFromR.getIsU18Account();
+        if (isU18AccountRawValue != BOOLEAN_UNKNOWN) {
+            boolean isU18Account = isU18AccountRawValue == BOOLEAN_TRUE;
+            migrateBasedOnSdk(
+                    () -> appSearchConsentManager.setU18Account(isU18Account),
+                    () -> adServicesManager.setU18Account(isU18Account));
+        }
+
+        // Migrate isAdultAccount
+        int isAdultAccountRawValue = dataFromR.getIsAdultAccount();
+        if (isAdultAccountRawValue != BOOLEAN_UNKNOWN) {
+            boolean isAdultAccount = isAdultAccountRawValue == BOOLEAN_TRUE;
+            migrateBasedOnSdk(
+                    () -> appSearchConsentManager.setAdultAccount(isAdultAccount),
+                    () -> adServicesManager.setAdultAccount(isAdultAccount));
+        }
+
+        // Migrate interaction data only if we recorded an interaction
         int manualInteractionRecorded = dataFromR.getManualInteractionWithConsentStatus();
         if (manualInteractionRecorded == STATE_MANUAL_INTERACTIONS_RECORDED) {
-            appSearchConsentManager.recordUserManualInteractionWithConsent(
-                    manualInteractionRecorded);
-        }
-
-        if (dataFromR.getIsU18Account() != BOOLEAN_UNKNOWN) {
-            appSearchConsentManager.setU18Account(dataFromR.getIsU18Account() == BOOLEAN_TRUE);
-        }
-
-        if (dataFromR.getIsAdultAccount() != BOOLEAN_UNKNOWN) {
-            appSearchConsentManager.setAdultAccount(dataFromR.getIsAdultAccount() == BOOLEAN_TRUE);
+            migrateBasedOnSdk(
+                    () ->
+                            appSearchConsentManager.recordUserManualInteractionWithConsent(
+                                    manualInteractionRecorded),
+                    () ->
+                            adServicesManager.recordUserManualInteractionWithConsent(
+                                    manualInteractionRecorded));
         }
 
         // Logging false for fledge and topics consent by default because only measurement is
@@ -329,7 +379,7 @@ public final class ConsentMigrationUtils {
     }
 
     @TargetApi(Build.VERSION_CODES.S)
-    private static void logMigrationToAppSearch(
+    private static void logMigrationStatus(
             StatsdAdServicesLogger statsdAdServicesLogger,
             AppConsents appConsents,
             ConsentMigrationStats.MigrationStatus migrationStatus,
@@ -338,7 +388,10 @@ public final class ConsentMigrationUtils {
                 getConsentManagerStatsForLogging(
                         appConsents,
                         migrationStatus,
-                        ConsentMigrationStats.MigrationType.ADEXT_SERVICE_TO_APPSEARCH,
+                        SdkLevel.isAtLeastT()
+                                ? ConsentMigrationStats.MigrationType
+                                        .ADEXT_SERVICE_TO_SYSTEM_SERVICE
+                                : ConsentMigrationStats.MigrationType.ADEXT_SERVICE_TO_APPSEARCH,
                         context));
     }
 
@@ -379,5 +432,60 @@ public final class ConsentMigrationUtils {
                         .setTopicsConsent(false)
                         .build();
         return appConsents;
+    }
+
+    private static boolean isValidAdServicesPackage(Context context) {
+        String packageName = context.getPackageName();
+        return packageName != null && packageName.endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX);
+    }
+
+    private static boolean isMigrationDone(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean(
+                        ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED,
+                        /* defValue= */ false)
+                || sharedPreferences.getBoolean(
+                        ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue= */ false)
+                || sharedPreferences.getBoolean(
+                        ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH,
+                        /* defValue= */ false)
+                || sharedPreferences.getBoolean(
+                        ConsentConstants.SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER,
+                        /* defValue= */ false);
+    }
+
+    private static boolean isNotificationShownOnCurrentSdk(
+            AppSearchConsentManager appSearchConsentManager, AdServicesManager adServicesManager) {
+        return SdkLevel.isAtLeastT()
+                ? isNotificationShownOnTPlus(adServicesManager)
+                : isNotificationShownOnS(appSearchConsentManager);
+    }
+
+    @TargetApi(Build.VERSION_CODES.S)
+    private static boolean isNotificationShownOnTPlus(AdServicesManager adServicesManager) {
+        return adServicesManager.wasU18NotificationDisplayed()
+                || adServicesManager.wasNotificationDisplayed()
+                || adServicesManager.wasGaUxNotificationDisplayed();
+    }
+
+    @TargetApi(Build.VERSION_CODES.S)
+    private static boolean isNotificationShownOnS(AppSearchConsentManager appSearchConsentManager) {
+        return appSearchConsentManager.wasU18NotificationDisplayed()
+                || appSearchConsentManager.wasNotificationDisplayed()
+                || appSearchConsentManager.wasGaUxNotificationDisplayed();
+    }
+
+    private static String getSharedPrefMigrationKey() {
+        return SdkLevel.isAtLeastT()
+                ? ConsentConstants.SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER
+                : ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH;
+    }
+
+    private static void migrateBasedOnSdk(
+            Runnable migrateToAppSearch, Runnable migrateToSystemServer) {
+        if (SdkLevel.isAtLeastT()) {
+            migrateToSystemServer.run();
+        } else {
+            migrateToAppSearch.run();
+        }
     }
 }
