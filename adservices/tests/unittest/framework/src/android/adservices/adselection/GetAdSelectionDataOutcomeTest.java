@@ -39,6 +39,7 @@ public class GetAdSelectionDataOutcomeTest {
                         .build();
 
         assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
         assertThat(request.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
     }
 
