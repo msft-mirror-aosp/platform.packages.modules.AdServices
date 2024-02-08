@@ -17,7 +17,9 @@
 package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
@@ -72,20 +74,10 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                 .isEqualTo(LATENCY_MS);
 
         expect.withMessage("%s.getResultCode()", stats)
-                .that(stats.getResult().getResultCode())
+                .that(stats.getResultCode())
                 .isEqualTo(STATUS_INVALID_ARGUMENT);
         expect.withMessage("%s.getFailureReason()", stats)
-                .that(stats.getResult().getFailureReason())
-                .isEqualTo(FAILURE_REASON_ENROLLMENT_BLOCKLISTED);
-
-        Result result = stats.getResult();
-        expect.withMessage("%s.getResult()", stats).that(result).isNotNull();
-
-        expect.withMessage("%s.getResult().getResultCode()", stats)
-                .that(result.getResultCode())
-                .isEqualTo(STATUS_INVALID_ARGUMENT);
-        expect.withMessage("%s.getResult().getFailureReason()", stats)
-                .that(result.getFailureReason())
+                .that(stats.getFailureReason())
                 .isEqualTo(FAILURE_REASON_ENROLLMENT_BLOCKLISTED);
     }
 
@@ -115,6 +107,18 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
         assertThrows(
                 IllegalStateException.class,
                 () -> new ApiCallStats.Builder().setAppPackageName("package.I.am").build());
+    }
+
+    @Test
+    public void testBuild_nullResult() {
+        ApiCallStats stats = newCanonicalBuilder().setResult(null).build();
+        // TODO(b/324416499): should throw instead
+        expect.withMessage("%s.getResultCode()", stats)
+                .that(stats.getResultCode())
+                .isEqualTo(STATUS_UNKNOWN_ERROR);
+        expect.withMessage("%s.getFailureReason()", stats)
+                .that(stats.getFailureReason())
+                .isEqualTo(FAILURE_REASON_UNSET);
     }
 
     @Test
