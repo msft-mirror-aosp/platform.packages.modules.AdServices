@@ -71,6 +71,9 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initRvc() {}
 
+    @Override
+    public void initGaUxWithPas() {}
+
     private void configureSharedElements(Boolean isGA) {
         // no blocked topics message
         configureElement(
