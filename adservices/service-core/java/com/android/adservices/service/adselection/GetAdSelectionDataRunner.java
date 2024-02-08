@@ -44,7 +44,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.internal.annotations.VisibleForTesting;
@@ -77,8 +77,6 @@ public class GetAdSelectionDataRunner {
     @VisibleForTesting
     static final String GET_AD_SELECTION_DATA_TIMED_OUT =
             "GetAdSelectionData exceeded allowed time limit";
-
-    static final String GET_AD_ID_TIMED_OUT = "Get Ad Id exceeded allowed time limit";
 
     @VisibleForTesting static final int REVOKED_CONSENT_RANDOM_DATA_SIZE = 1024;
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
@@ -369,13 +367,13 @@ public class GetAdSelectionDataRunner {
             long adSelectionId) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.CREATE_GET_AD_SELECTION_DATA_PAYLOAD);
 
-        ProtectedAudienceInput protectedAudienceInput =
-                composeProtectedAudienceInputBytes(
+        ProtectedAuctionInput protectedAudienceInput =
+                composeProtectedAuctionInputBytes(
                         mCompressedBuyerInput,
                         packageName,
                         adSelectionId,
                         mAuctionServerDebugReporting.isEnabled());
-        sLogger.v("ProtectedAudienceInput composed");
+        sLogger.v("ProtectedAuctionInput composed");
         AuctionServerPayloadFormattedData formattedData =
                 applyPayloadFormatter(protectedAudienceInput);
 
@@ -405,13 +403,13 @@ public class GetAdSelectionDataRunner {
     }
 
     @VisibleForTesting
-    ProtectedAudienceInput composeProtectedAudienceInputBytes(
+    ProtectedAuctionInput composeProtectedAuctionInputBytes(
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInputs,
             String packageName,
             long adSelectionId,
             boolean isDebugReportingEnabled) {
-        sLogger.v("Composing ProtectedAudienceInput with buyer inputs and publisher");
-        return ProtectedAudienceInput.newBuilder()
+        sLogger.v("Composing ProtectedAuctionInput with buyer inputs and publisher");
+        return ProtectedAuctionInput.newBuilder()
                 .putAllBuyerInput(
                         compressedBuyerInputs.entrySet().parallelStream()
                                 .collect(
@@ -427,7 +425,7 @@ public class GetAdSelectionDataRunner {
     }
 
     private AuctionServerPayloadFormattedData applyPayloadFormatter(
-            ProtectedAudienceInput protectedAudienceInput) {
+            ProtectedAuctionInput protectedAudienceInput) {
         int version = mFlags.getFledgeAuctionServerCompressionAlgorithmVersion();
         sLogger.v("Applying formatter V" + version + " on protected audience input bytes");
         AuctionServerPayloadUnformattedData unformattedData =
