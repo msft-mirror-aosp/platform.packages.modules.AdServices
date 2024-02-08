@@ -134,7 +134,8 @@ package android.adservices.adselection {
 
   public final class GetAdSelectionDataOutcome {
     method @Nullable public byte[] getAdSelectionData();
-    method public long getAdSelectionId();
+    method @FlaggedApi("com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled") public long getAdSelectionDataId();
+    method @Deprecated public long getAdSelectionId();
   }
 
   public final class GetAdSelectionDataRequest {
@@ -159,7 +160,8 @@ package android.adservices.adselection {
   }
 
   public final class PersistAdSelectionResultRequest {
-    method public long getAdSelectionId();
+    method @FlaggedApi("com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled") public long getAdSelectionDataId();
+    method @Deprecated public long getAdSelectionId();
     method @Nullable public byte[] getAdSelectionResult();
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
   }
@@ -167,7 +169,8 @@ package android.adservices.adselection {
   public static final class PersistAdSelectionResultRequest.Builder {
     ctor public PersistAdSelectionResultRequest.Builder();
     method @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest build();
-    method @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setAdSelectionId(long);
+    method @FlaggedApi("com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled") @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setAdSelectionDataId(long);
+    method @Deprecated @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setAdSelectionId(long);
     method @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setAdSelectionResult(@Nullable byte[]);
     method @NonNull public android.adservices.adselection.PersistAdSelectionResultRequest.Builder setSeller(@Nullable android.adservices.common.AdTechIdentifier);
   }
@@ -423,6 +426,7 @@ package android.adservices.customaudience {
     method public int describeContents();
     method @Nullable public java.time.Instant getActivationTime();
     method @NonNull public java.util.List<android.adservices.common.AdData> getAds();
+    method @FlaggedApi("com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled") public int getAuctionServerRequestFlags();
     method @NonNull public android.net.Uri getBiddingLogicUri();
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public android.net.Uri getDailyUpdateUri();
@@ -432,6 +436,7 @@ package android.adservices.customaudience {
     method @Nullable public android.adservices.common.AdSelectionSignals getUserBiddingSignals();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.customaudience.CustomAudience> CREATOR;
+    field @FlaggedApi("com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled") public static final int FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS = 1; // 0x1
   }
 
   public static final class CustomAudience.Builder {
@@ -439,6 +444,7 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.CustomAudience build();
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setActivationTime(@Nullable java.time.Instant);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setAds(@Nullable java.util.List<android.adservices.common.AdData>);
+    method @FlaggedApi("com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled") @NonNull public android.adservices.customaudience.CustomAudience.Builder setAuctionServerRequestFlags(int);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBiddingLogicUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setDailyUpdateUri(@NonNull android.net.Uri);
@@ -454,6 +460,7 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.TestCustomAudienceManager getTestCustomAudienceManager();
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void joinCustomAudience(@NonNull android.adservices.customaudience.JoinCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void leaveCustomAudience(@NonNull android.adservices.customaudience.LeaveCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @FlaggedApi("com.android.adservices.flags.fledge_schedule_custom_audience_update_enabled") @RequiresPermission(android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE) public void scheduleCustomAudienceUpdate(@NonNull android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest, @NonNull java.util.concurrent.Executor, @NonNull android.adservices.common.AdServicesOutcomeReceiver<java.lang.Object,java.lang.Exception>);
   }
 
   public final class FetchAndJoinCustomAudienceRequest {
@@ -496,6 +503,24 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setName(@NonNull String);
   }
 
+  @FlaggedApi("com.android.adservices.flags.fledge_schedule_custom_audience_update_enabled") public final class PartialCustomAudience implements android.os.Parcelable {
+    method public int describeContents();
+    method @Nullable public java.time.Instant getActivationTime();
+    method @Nullable public java.time.Instant getExpirationTime();
+    method @NonNull public String getName();
+    method @Nullable public android.adservices.common.AdSelectionSignals getUserBiddingSignals();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.customaudience.PartialCustomAudience> CREATOR;
+  }
+
+  public static final class PartialCustomAudience.Builder {
+    ctor public PartialCustomAudience.Builder(@NonNull String);
+    method @NonNull public android.adservices.customaudience.PartialCustomAudience build();
+    method @NonNull public android.adservices.customaudience.PartialCustomAudience.Builder setActivationTime(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.customaudience.PartialCustomAudience.Builder setExpirationTime(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.customaudience.PartialCustomAudience.Builder setUserBiddingSignals(@Nullable android.adservices.common.AdSelectionSignals);
+  }
+
   public class RemoveCustomAudienceOverrideRequest {
     ctor public RemoveCustomAudienceOverrideRequest(@NonNull android.adservices.common.AdTechIdentifier, @NonNull String);
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
@@ -507,6 +532,20 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest build();
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setName(@NonNull String);
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_schedule_custom_audience_update_enabled") public final class ScheduleCustomAudienceUpdateRequest {
+    method @NonNull public java.time.Duration getMinDelay();
+    method @NonNull public java.util.List<android.adservices.customaudience.PartialCustomAudience> getPartialCustomAudienceList();
+    method @NonNull public android.net.Uri getUpdateUri();
+  }
+
+  public static final class ScheduleCustomAudienceUpdateRequest.Builder {
+    ctor public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration, @NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
+    method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest build();
+    method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setMinDelay(@NonNull java.time.Duration);
+    method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setPartialCustomAudienceList(@NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
+    method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setUpdateUri(@NonNull android.net.Uri);
   }
 
   public class TestCustomAudienceManager {
