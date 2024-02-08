@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android では、ユーザーの最近のアプリ使用に基づいて興味 / 関心のあるトピックが記録されます。また、アプリとその広告パートナーも、個人のプライバシーとセキュリティを確保しながら、広告をパーソナライズするためにこのデバイス上の他のアプリでのユーザーのアクティビティを使用できます。"</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• 使用するアプリでは、アプリのアクティビティに基づいてユーザーの好みが特定される場合もあります。たとえば、料理アプリを定期的に使用している場合、食料品の宅配サービスや関連コンテンツの広告が他のアプリに表示される可能性があります。\n\nこの情報は、広告パートナーが他のアプリで広告をパーソナライズする目的以外で使用できないようアプリで安全に保管することができます。"</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"その後、使用するアプリから、この情報（広告のトピックまたは使用するアプリによる広告の提案）を求められることがあります。"</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"使用するアプリが、広告のパフォーマンスを測定するための情報を Android に求めることがあります。Android は、アプリ間で共有される情報を限定することで、ユーザーのプライバシーを保護できます。"</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
