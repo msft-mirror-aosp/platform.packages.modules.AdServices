@@ -4550,11 +4550,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** default value for get adservices common states enabled */
-    boolean DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED = false;
+    boolean DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED = false;
 
     /** Returns if the get adservices common states service enabled. */
-    default boolean isGetAdServicesCommonStatesEnabled() {
-        return DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
+    default boolean isGetAdServicesCommonStatesApiEnabled() {
+        return DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
     }
 
     /** Default value to determine whether ux related to the PAS Ux are enabled. */
