@@ -45,4 +45,7 @@ public class DebugMessages {
 
     public static String NO_ENROLLMENT_CHANNEL_AVAILABLE_MESSAGE =
             "No enrollment channel available";
+
+    public static String CALLER_NOT_ALLOWED_MESSAGE =
+            "Caller is not authorized in the allowed list";
 }

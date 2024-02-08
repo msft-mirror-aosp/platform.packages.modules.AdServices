@@ -80,6 +80,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -1956,6 +1957,65 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
+    public void test_runAsyncRegistrationQueueWorker_networkError_logRetryCount()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
+        validAsyncRegistration.incrementRetryCount();
+
+        Answer<?> answerAsyncSourceFetcher =
+                invocation -> {
+                    AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
+                    return Optional.empty();
+                };
+        doAnswer(answerAsyncSourceFetcher)
+                .when(mAsyncSourceFetcher)
+                .fetchSource(any(), any(), any());
+
+        Source.FakeReport sf =
+                new Source.FakeReport(
+                        new UnsignedLong(1L),
+                        1L,
+                        List.of(WebUtil.validUri("https://example.test/sF")));
+        List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
+                .thenReturn(eventReportList);
+
+        when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
+
+        // Execution
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+
+        // Assertions
+        MeasurementRegistrationResponseStats measurementRegistrationResponseStats =
+                getMeasurementRegistrationResponseStats();
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
+        verify(mAsyncSourceFetcher, times(1))
+                .fetchSource(any(AsyncRegistration.class), any(), any());
+
+        ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
+                ArgumentCaptor.forClass(AsyncRegistration.class);
+        verify(mMeasurementDao, times(1))
+                .updateRetryCount(asyncRegistrationArgumentCaptor.capture());
+        Assert.assertEquals(1, asyncRegistrationArgumentCaptor.getAllValues().size());
+        Assert.assertEquals(
+                2, asyncRegistrationArgumentCaptor.getAllValues().get(0).getRetryCount());
+        Assert.assertEquals(2, measurementRegistrationResponseStats.getRetryCount());
+
+        verify(mMeasurementDao, never()).insertEventReport(any(EventReport.class));
+        verify(mMeasurementDao, never()).insertSource(any(Source.class));
+        verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
+        verify(mMeasurementDao, never()).deleteAsyncRegistration(any(String.class));
+    }
+
+    @Test
     public void test_runAsyncRegistrationQueueWorker_webSource_success() throws DatastoreException {
         // Setup
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -3805,5 +3865,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
         db.delete("msmt_async_registration_contract", null, null);
+    }
+
+    private MeasurementRegistrationResponseStats getMeasurementRegistrationResponseStats() {
+        ArgumentCaptor<MeasurementRegistrationResponseStats> statsArg =
+                ArgumentCaptor.forClass(MeasurementRegistrationResponseStats.class);
+        verify(mLogger).logMeasurementRegistrationsResponseSize(statsArg.capture());
+        MeasurementRegistrationResponseStats measurementRegistrationResponseStats =
+                statsArg.getValue();
+        return measurementRegistrationResponseStats;
     }
 }
