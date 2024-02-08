@@ -92,7 +92,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                     .setEnrollmentId("1")
                     .setEnrolledAPIs(
                             "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING"
-                                    + " PRIVACY_SANDBOX_API_TOPICS")
+                                    + " PRIVACY_SANDBOX_API_TOPICS"
+                                    + " PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
                     .setSdkNames("1sdk")
                     .setAttributionSourceRegistrationUrl(Arrays.asList("https://1test.com/source"))
                     .setAttributionTriggerRegistrationUrl(
@@ -143,7 +144,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
             new EnrollmentData.Builder()
                     .setEnrollmentId("4")
                     .setEnrolledAPIs(
-                            "PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS")
+                            "PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS"
+                                    + " PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
                     .setSdkNames("4sdk 41sdk")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList("https://4test.com", "https://prefix.test-prefix.com"))
@@ -1419,5 +1421,172 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
         assertEquals(3, enrollmentData3.getEnrolledAPIs().size());
         assertThat(enrollmentData3.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIs3);
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsMatch() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Pair<AdTechIdentifier, EnrollmentData> paired =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://4test.com/"));
+
+        assertEquals(paired.first, AdTechIdentifier.fromString("4test.com"));
+        assertEquals(paired.second, ENROLLMENT_DATA4);
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsNotMatch() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://2test.com/"));
+        assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsMatchWithSubdomain() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        Uri subdomainMatchUri = Uri.parse("https://example.abc.4test.com/path/for/resource");
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(subdomainMatchUri);
+
+        assertEquals(enrollmentResult.first, AdTechIdentifier.fromString("4test.com"));
+        assertEquals(enrollmentResult.second, ENROLLMENT_DATA4);
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsMatchNoPASEnrollments() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://2test.com"));
+        assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsNotMatchPASEnrollments() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://test2.com"));
+        assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByAdTechIdentifier_isMatch() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        AdTechIdentifier adTechIdentifier = AdTechIdentifier.fromString("1test.com");
+        EnrollmentData enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(adTechIdentifier);
+        assertEquals(ENROLLMENT_DATA1, enrollmentResult);
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByAdTechIdentifier_isNotMatch() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        AdTechIdentifier adTechIdentifier = AdTechIdentifier.fromString("2test.com");
+        EnrollmentData enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(adTechIdentifier);
+        assertNull(enrollmentResult);
+    }
+
+    @Test
+    public void getAllPASEnrolledAdTechs_multipleEntries() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(4))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Set<AdTechIdentifier> enrolledPASAdTechIdentifiers =
+                mEnrollmentDao.getAllPASEnrolledAdTechs();
+
+        assertThat(enrolledPASAdTechIdentifiers).hasSize(2);
+        assertThat(enrolledPASAdTechIdentifiers)
+                .containsExactly(
+                        AdTechIdentifier.fromString("1test.com"),
+                        AdTechIdentifier.fromString("4test.com"));
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+    }
+
+    @Test
+    public void getAllPASEnrolledAdTechs_noEntries() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Set<AdTechIdentifier> enrolledPASAdTechIdentifiers =
+                mEnrollmentDao.getAllPASEnrolledAdTechs();
+
+        assertThat(enrolledPASAdTechIdentifiers).isEmpty();
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
     }
 }

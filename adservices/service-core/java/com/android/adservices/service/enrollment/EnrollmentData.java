@@ -172,6 +172,7 @@ public class EnrollmentData {
     /**
      * Returns the given {@code enrolledAPI} to corresponding {@link PrivacySandboxApi} enum value
      */
+    // LINT.IfChange(enrolledApiToEnum)
     private static PrivacySandboxApi enrolledApiToEnum(String enrolledAPI) {
         return switch (enrolledAPI) {
             case ("PRIVACY_SANDBOX_API_TOPICS") -> PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS;
@@ -183,9 +184,12 @@ public class EnrollmentData {
                     .PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING;
             case ("PRIVACY_SANDBOX_API_SHARED_STORAGE") -> PrivacySandboxApi
                     .PRIVACY_SANDBOX_API_SHARED_STORAGE;
+            case ("PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS") -> PrivacySandboxApi
+                    .PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS;
             default -> PrivacySandboxApi.PRIVACY_SANDBOX_API_UNKNOWN;
         };
     }
+    // LINT.ThenChange(/adservices/service-core/proto/rb_enrollment.proto:PrivacySandboxApi)
 
     /** Returns the builder for the instance */
     @NonNull

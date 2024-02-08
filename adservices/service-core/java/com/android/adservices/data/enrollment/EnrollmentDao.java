@@ -600,6 +600,219 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
+    @Nullable
+    public Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForPASByMatchingAdTechIdentifier(
+            Uri originalUri) {
+        if (originalUri == null) {
+            return null;
+        }
+
+        Optional<Uri> topDomainUri = WebAddresses.topPrivateDomainAndScheme(originalUri);
+        if (topDomainUri.isEmpty()) {
+            return null;
+        }
+        String originalUriHost = topDomainUri.get().getHost();
+
+        int buildId = mEnrollmentUtil.getBuildId();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(
+                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(
+                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
+
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract.COMPANY_ID
+                                + " LIKE '%"
+                                + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
+                                + "%'"
+                                + " AND "
+                                + EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
+                                + " LIKE '%"
+                                + originalUriHost
+                                + "%'",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d("Failed to match enrollment for PAS URI \"%s\" ", originalUri);
+                mEnrollmentUtil.logEnrollmentMatchStats(
+                        mLogger, /* isSuccessful= */ false, buildId);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching URI \"%s\".",
+                    cursor.getCount(), originalUri);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                // EncryptionKeyUrl contains adtech site
+                String pasUriString = potentialMatch.getEncryptionKeyUrl();
+                try {
+                    // Make sure the URI can be parsed and the parsed host matches the ad tech
+                    String pasUriHost = Uri.parse(pasUriString).getHost();
+                    if (originalUriHost.equalsIgnoreCase(pasUriHost)
+                            || originalUriHost
+                                    .toLowerCase(Locale.ENGLISH)
+                                    .endsWith("." + pasUriHost.toLowerCase(Locale.ENGLISH))) {
+                        LogUtil.v(
+                                "Found positive match PAS URL \"%s\" for given URI \"%s\"",
+                                pasUriString, originalUri);
+                        mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
+
+                        // AdTechIdentifiers are currently expected to only contain eTLD+1
+                        return new Pair<>(
+                                AdTechIdentifier.fromString(originalUriHost), potentialMatch);
+                    }
+                } catch (IllegalArgumentException exception) {
+                    LogUtil.v(
+                            "Error while matching URI %s to PAS URI %s; skipping URI. "
+                                    + "Error message: %s",
+                            originalUri, pasUriString, exception.getMessage());
+                }
+            }
+
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+    }
+
+    @Override
+    @Nullable
+    // TODO (b/325661647): Remove if not used in PAS implementation
+    public EnrollmentData getEnrollmentDataForPASByAdTechIdentifier(
+            AdTechIdentifier adTechIdentifier) {
+        int buildId = mEnrollmentUtil.getBuildId();
+        String adTechIdentifierString = adTechIdentifier.toString();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(
+                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(
+                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
+
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract.COMPANY_ID
+                                + " LIKE '%"
+                                + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
+                                + "%'"
+                                + " AND "
+                                + EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
+                                + " LIKE '%"
+                                + adTechIdentifierString
+                                + "%'",
+                        null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match enrollment for ad tech identifier \"%s\"",
+                        adTechIdentifierString);
+                mEnrollmentUtil.logEnrollmentMatchStats(
+                        mLogger, /* isSuccessful= */ false, buildId);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching ad tech identifier \"%s\"",
+                    cursor.getCount(), adTechIdentifierString);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                // EncryptionKeyUrl contains adtech site
+                String pasUriString = potentialMatch.getEncryptionKeyUrl();
+                try {
+                    // Make sure the URI can be parsed and the parsed host matches the ad tech
+                    if (adTechIdentifierString.equalsIgnoreCase(
+                            Uri.parse(pasUriString).getHost())) {
+                        LogUtil.v(
+                                "Found positive match PAS URL \"%s\" for ad tech identifier"
+                                        + " \"%s\"",
+                                pasUriString, adTechIdentifierString);
+                        mEnrollmentUtil.logEnrollmentMatchStats(
+                                mLogger, /* isSuccessful= */ true, buildId);
+
+                        return potentialMatch;
+                    }
+                } catch (IllegalArgumentException exception) {
+                    LogUtil.v(
+                            "Error while matching ad tech %s to PAS URI %s; skipping"
+                                    + " URI. Error message: %s",
+                            adTechIdentifierString, pasUriString, exception.getMessage());
+                }
+            }
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+    }
+
+    @Override
+    @NonNull
+    public Set<AdTechIdentifier> getAllPASEnrolledAdTechs() {
+        int buildId = mEnrollmentUtil.getBuildId();
+        Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(
+                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
+            return enrolledAdTechIdentifiers;
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(
+                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
+
+        try (Cursor cursor =
+                db.query(
+                        /*distinct=*/ true,
+                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ new String[] {
+                            EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
+                        },
+                        /*selection=*/ EnrollmentTables.EnrollmentDataContract.COMPANY_ID
+                                + " LIKE '%"
+                                + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
+                                + "%'",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d("Failed to find any PAS-enrolled ad techs");
+                return enrolledAdTechIdentifiers;
+            }
+
+            LogUtil.v("Found %d PAS enrollment entries", cursor.getCount());
+
+            while (cursor.moveToNext()) {
+                enrolledAdTechIdentifiers.add(
+                        SqliteObjectMapper.getAdTechIdentifierFromPASCursor(cursor));
+            }
+
+            LogUtil.v(
+                    "Found %d PAS enrolled ad tech identifiers", enrolledAdTechIdentifiers.size());
+
+            return enrolledAdTechIdentifiers;
+        }
+    }
+
+    @Override
     public Long getEnrollmentRecordsCount() {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
