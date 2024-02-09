@@ -171,7 +171,7 @@ public class SdkSandboxTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
-                        .mockStatic(Process.class)
+                        .spyStatic(Process.class)
                         .startMocking();
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
 
