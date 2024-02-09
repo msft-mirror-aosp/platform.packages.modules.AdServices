@@ -109,7 +109,8 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
         assertThat(noTopicsText).isNotNull();
 
         // Click viewBlockedTopicsButton to view topics being blocked.
-        ApkTestUtil.scrollToAndClick(mDevice, R.string.settingsUI_view_blocked_topics_title);
+        ApkTestUtil.scrollToAndClick(
+                mSpyContext, mDevice, R.string.settingsUI_view_blocked_topics_title);
 
         // There is 1 topic being blocked and "Unblock" button should be visible. Unblock it.
         BlockedTopicsSettingsTestUtil.unblockATopicWithDialog(mDevice);

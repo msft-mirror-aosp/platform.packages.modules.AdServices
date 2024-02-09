@@ -33,8 +33,6 @@ import androidx.test.uiautomator.Direction;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObject2;
-import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
@@ -74,25 +72,6 @@ public class ApkTestUtil {
                 && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
     }
 
-    public static UiObject getConsentSwitch(UiDevice device) throws UiObjectNotFoundException {
-        UiObject consentSwitch =
-                device.findObject(new UiSelector().className("android.widget.Switch"));
-        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-
-        // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
-        // devices.
-        if (device.getDisplayHeight() - consentSwitch.getVisibleBounds().centerY() < 100) {
-            device.swipe(
-                    consentSwitch.getVisibleBounds().centerX(),
-                    500,
-                    consentSwitch.getVisibleBounds().centerX(),
-                    0,
-                    100);
-        }
-
-        return consentSwitch;
-    }
-
     public static UiObject2 getConsentSwitch2(UiDevice device) {
         UiObject2 consentSwitch =
                 device.wait(
@@ -112,16 +91,6 @@ public class ApkTestUtil {
         return consentSwitch;
     }
 
-    /** Returns the UiObject corresponding to a resource ID. */
-    public static UiObject getElement(UiDevice device, int resId) {
-        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
-        obj.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        if (!obj.exists()) {
-            obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
-        }
-        return obj;
-    }
-
     /** Returns the string corresponding to a resource ID. */
     public static String getString(int resourceId) {
         return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
@@ -132,24 +101,15 @@ public class ApkTestUtil {
         return context.getResources().getString(resourceId);
     }
 
-    /** Click the top left of the UiObject corresponding to a resource ID after scrolling. */
-    public static void scrollToAndClick(UiDevice device, int resId)
-            throws UiObjectNotFoundException {
-        UiObject obj = scrollTo(device, resId);
-        // objects may be partially hidden by the status bar and nav bars.
-        obj.clickTopLeft();
-    }
-
-    public static void scrollToAndClick(Context context, UiDevice device, int resId)
-            throws InterruptedException {
+    public static void scrollToAndClick(Context context, UiDevice device, int resId) {
         UiObject2 obj = scrollTo(context, device, resId);
         clickTopLeft(obj);
     }
 
-    public static void click(UiDevice device, int resId) throws UiObjectNotFoundException {
-        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+    public static void click(UiDevice device, int resId) {
+        UiObject2 obj = device.findObject(By.text(getString(resId)));
         // objects may be partially hidden by the status bar and nav bars.
-        obj.clickTopLeft();
+        clickTopLeft(obj);
     }
 
     public static void clickTopLeft(UiObject2 obj) {
@@ -166,22 +126,6 @@ public class ApkTestUtil {
                 Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
                 PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
-    }
-
-    /** Returns the UiObject corresponding to a resource ID after scrolling. */
-    public static UiObject scrollTo(UiDevice device, int resId) throws UiObjectNotFoundException {
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-
-        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
-        scrollView.scrollIntoView(obj);
-        try {
-            Thread.sleep(SCROLL_TIMEOUT);
-        } catch (InterruptedException e) {
-            LogUtil.e("InterruptedException: %s", e.getMessage());
-        }
-        return obj;
     }
 
     public static UiObject2 scrollTo(Context context, UiDevice device, int resId) {
@@ -212,17 +156,6 @@ public class ApkTestUtil {
                 Direction.UP,
                 Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
         return getElement(device, regexStr);
-    }
-
-    /** Returns the string corresponding to a resource ID and index. */
-    public static UiObject getElement(UiDevice device, int resId, int index) {
-        UiObject obj = device.findObject(new UiSelector().text(getString(resId)).instance(index));
-        if (!obj.exists()) {
-            obj =
-                    device.findObject(
-                            new UiSelector().text(getString(resId).toUpperCase()).instance(index));
-        }
-        return obj;
     }
 
     /** Returns the UiObject corresponding to a resource ID. */
