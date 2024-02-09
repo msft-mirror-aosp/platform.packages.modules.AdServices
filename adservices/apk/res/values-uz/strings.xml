@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android yaqinda ochilgan ilovalar asosida qiziq mavzularni qayd qiladi. Shuningdek, ilovalar va reklama hamkorlari bu qurilmada oʻrnatilgan boshqa ilovalardagi faoliyatingiz axborotidan shaxsingizni oshkor qilmagan holda reklamani moslashtirish maqsadida foydalanishi mumkin."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Shuningdek, ilovalar ham ulardagi faoliyat asosida qiziqishlarni aniqlashi mumkin. Masalan, oshpazlik ilovalaridan muntazam foydalansangiz, boshqa ilovalarda oziq-ovqat yetkazib berish xizmatlari reklamasi chiqishi mumkin.\n\nIlovalar bu maʼlumotlarni xavfsiz saqlaydi va reklama hamkorlari ulardan faqatgina boshqa ilovalardagi reklamani moslashtirish maqsadida foydalanishi mumkin."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Keyinchalik, siz foydalanadigan ilova reklama mavzularingiz yoki siz foydalangan ilovalar tomonidan taklif qilingan reklamalar kabi maʼlumotlarni soʻrashi mumkin."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Siz foydalanadigan ilovalar oʻz reklamalari unumdorligini hisoblashda yordam berishi uchun Androiddan maʼlumot soʻrashi mumkin. Android ilovalar ulashishi mumkin boʻlgan maʼlumotlarni cheklash orqali maxfiyligingizni himoyalashga yordam beradi."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

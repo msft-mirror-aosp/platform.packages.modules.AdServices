@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android zaznamenáva témy záujmu na základe nedávno použitých aplikácií. Aplikácie a ich reklamní partneri môžu navyše pomocou vašej aktivity v iných aplikáciách tohto zariadenia prispôsobovať reklamy a zároveň pomáhať zachovať vašu totožnosť v súkromí a bezpečí."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Aplikácie, ktoré používate, môžu navyše určovať, čo sa vám páči, na základe vašej aktivity s nimi. Ak napríklad pravidelne používate aplikácie na varenie, môžu sa vám zobrazovať reklamy na služby poskytujúce donášku potravín.\n\nAplikácie môžu tieto informácie zabezpečene uchovať, aby ich mohli použiť iba ich reklamní partneri na účely prispôsobenia reklám v iných aplikáciách."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Neskôr môže aplikácia, ktorú používate, o tieto údaje požiadať (buď témy reklamy, alebo reklamy navrhované aplikáciami, ktoré ste použili)."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Aplikácie, ktoré používate, môžu Android požiadať o informácie, ktoré im pomôžu merať výkonnosť ich reklám. Android obmedzuje informácie, ktoré môžu aplikácie medzi sebou zdieľať, čím pomáha chrániť vaše súkromie."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

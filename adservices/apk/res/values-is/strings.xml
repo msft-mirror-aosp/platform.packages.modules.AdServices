@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android skráir áhugasvið umfjöllunarefna í samræmi við forritin sem þú hefur notað nýlega. Forrit og auglýsingasamstarfsaðilar þeirra geta einnig notað virkni í öðrum forritum í þessu tæki til að sérsníða auglýsingar á sama tíma og þau gæta persónuverndar og öryggis þíns."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Forrit sem þú notar geta einnig áætlað hvað höfðar til þín út frá forritavirkninni þinni. Ef þú notar til dæmis matreiðsluforrit reglulega gætirðu séð auglýsingar fyrir þjónustur sem senda matvörur heim eða tengt efni í öðrum forritum.\n\nForrit geta vistað þessar upplýsingar á öruggan hátt þannig að eingöngu auglýsingasamstarfsaðilar geti notað þær til að sérsníða auglýsingar í öðrum forritum."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Seinna getur forrit sem þú notar óskað eftir þessum upplýsingum – annað hvort um umfjöllunarefni auglýsinga eða auglýsingatillögur frá forritum sem þú hefur notað."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Forrit sem þú notar geta beðið Android um upplýsingar til að hjálpa þeim að mæla árangur auglýsinga sinna. Android hjálpar til við að gæta að persónuvernd þinni með því að takmarka upplýsingarnar sem forrit geta deilt sín á milli."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
