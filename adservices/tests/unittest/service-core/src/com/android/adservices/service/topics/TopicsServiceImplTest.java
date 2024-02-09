@@ -35,6 +35,9 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
@@ -66,6 +69,7 @@ import android.adservices.topics.IGetTopicsCallback;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -178,6 +182,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Mock private AdServicesManager mMockAdServicesManager;
     @Mock private AppSearchConsentManager mAppSearchConsentManager;
     @Mock private TopicsCobaltLogger mTopicsCobaltLogger;
+    @Mock private SharedPreferences mEnrollmentSharedPreferences;
 
     @Before
     public void setup() throws Exception {
@@ -290,6 +295,18 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // stuff in a bg thread - chances are the test is done by the time the thread runs,
         // which could cause test failures (like lack of permission when calling Flags)
         ExtendedMockito.doNothing().when(() -> AppManifestConfigMetricsLogger.logUsage(any()));
+
+        // Mock shared preferences behavior for enrollment build id and file group status
+        when(mMockAppContext.getSharedPreferences(
+                        eq(ENROLLMENT_SHARED_PREF), eq(Context.MODE_PRIVATE)))
+                .thenReturn(mEnrollmentSharedPreferences);
+        when(mMockSdkContext.getSharedPreferences(
+                        eq(ENROLLMENT_SHARED_PREF), eq(Context.MODE_PRIVATE)))
+                .thenReturn(mEnrollmentSharedPreferences);
+        when(mEnrollmentSharedPreferences.getInt(eq(BUILD_ID), eq(/* defaultValue */ -1)))
+                .thenReturn(1000);
+        when(mEnrollmentSharedPreferences.getInt(eq(FILE_GROUP_STATUS), eq(/* defaultValue */ 0)))
+                .thenReturn(2);
     }
     @Test
     public void checkEmptySdkNameRequests() throws Exception {
@@ -304,7 +321,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         invokeGetTopicsAndVerifyError(
-                mSpyContext, STATUS_INVALID_ARGUMENT, request, false, FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_INVALID_ARGUMENT, request, true, FAILURE_REASON_UNSET);
         ExtendedMockito.verify(
                 () ->
                         ErrorLogUtil.e(
@@ -321,7 +338,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 new GetTopicsParam.Builder().setAppPackageName(TEST_APP_PACKAGE_NAME).build();
 
         invokeGetTopicsAndVerifyError(
-                mSpyContext, STATUS_INVALID_ARGUMENT, request, false, FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_INVALID_ARGUMENT, request, true, FAILURE_REASON_UNSET);
     }
 
     @Test

@@ -296,7 +296,10 @@ public class AdSelectionManager {
      *
      * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
      * for a successful run, or an {@link Exception} includes the type of the exception thrown and
-     * the corresponding error message.
+     * the corresponding error message. The {@link AdSelectionOutcome#getAdSelectionId()} is not
+     * guaranteed to be the same as the {@link
+     * PersistAdSelectionResultRequest#getAdSelectionDataId()} or the deprecated {@link
+     * PersistAdSelectionResultRequest#getAdSelectionId()}.
      *
      * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
      * the API received to run the ad selection.

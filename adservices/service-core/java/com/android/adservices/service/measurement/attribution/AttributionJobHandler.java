@@ -1758,6 +1758,11 @@ class AttributionJobHandler {
                         .setInstallAttribution(attributionStatus.isInstallAttribution())
                         .setAttributionDelay(attributionStatus.getAttributionDelay())
                         .setSourceRegistrant(attributionStatus.getSourceRegistrant())
+                        .setAggregateReportCount(attributionStatus.getAggregateReportCount())
+                        .setAggregateDebugReportCount(
+                                attributionStatus.getAggregateDebugReportCount())
+                        .setEventReportCount(attributionStatus.getEventReportCount())
+                        .setEventDebugReportCount(attributionStatus.getEventDebugReportCount())
                         .build());
     }
 

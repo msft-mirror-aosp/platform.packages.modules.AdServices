@@ -158,4 +158,16 @@ public final class PermissionHelper {
             return false;
         }
     }
+
+    /**
+     * Returns if the caller has the permission to invoke the API of {@link
+     * getAdServicesCommonStates}
+     *
+     * @return {@code true} if the caller has the permission.
+     */
+    public static boolean hasAccessAdServicesCommonStatePermission(
+            @NonNull Context context, @NonNull String appPackageName) {
+        return hasPermission(
+                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_STATE);
+    }
 }

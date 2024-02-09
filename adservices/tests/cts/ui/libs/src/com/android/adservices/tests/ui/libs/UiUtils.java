@@ -19,7 +19,6 @@ import static android.Manifest.permission.POST_NOTIFICATIONS;
 
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABLED;
-import static com.android.adservices.tests.ui.libs.UiConstants.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -40,9 +39,7 @@ import androidx.test.uiautomator.BySelector;
 import androidx.test.uiautomator.Direction;
 import androidx.test.uiautomator.SearchCondition;
 import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObject2;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
@@ -61,7 +58,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class UiUtils {
@@ -662,6 +658,18 @@ public class UiUtils {
     public static void setFlipFlow(boolean isFlip) {
         ShellUtils.runShellCommand(
                 "device_config put adservices eu_notif_flow_change_enabled " + isFlip);
+    }
+
+    /** set get adservices common states services enabled */
+    public static void setGetAdservicesCommonStatesServiceEnable(boolean enable) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices is_get_ad_services_common_states_enabled " + enable);
+    }
+
+    /** set get adservices common states services enabled */
+    public static void setGetAdservicesCommonStatesAllowList(String list) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices get_adservices_common_states_allow_list " + list);
     }
 
     public static String getString(Context context, int resourceId) {
