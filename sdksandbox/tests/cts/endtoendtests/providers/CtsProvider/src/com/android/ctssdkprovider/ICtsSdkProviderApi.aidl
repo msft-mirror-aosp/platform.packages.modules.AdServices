@@ -24,6 +24,7 @@ interface ICtsSdkProviderApi {
     void checkResourcesAndAssets();
     boolean isPermissionGranted (String permissionName, boolean useApplicationContext);
     int getContextHashCode(boolean useApplicationContext);
+    int getContextUserId();
     void testStoragePaths();
     int getProcessImportance();
     void startSandboxActivityDirectlyByAction(String sandboxPackageName);
