@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
+import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.RESPONSE_PROPERTIES_CONTENT_TYPE;
+
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import android.net.Uri;
@@ -30,6 +33,7 @@ import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
@@ -38,6 +42,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.security.spec.InvalidKeySpecException;
 import java.time.Clock;
@@ -226,16 +231,13 @@ public class AdSelectionEncryptionKeyManager {
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Instant keyExpiryInstant,
             long timeoutMs) {
-
         Uri fetchUri = getKeyFetchUriForKeyType(adSelectionKeyType);
         if (fetchUri == null) {
             throw new IllegalStateException(
                     "Uri to fetch active key of type " + adSelectionKeyType + " is null.");
         }
 
-        return FluentFuture.from(
-                        mAdServicesHttpsClient.fetchPayload(
-                                fetchUri, DevContext.createForDevOptionsDisabled()))
+        return FluentFuture.from(fetchKeyPayload(adSelectionKeyType, fetchUri))
                 .transform(
                         response -> parseKeyResponse(response, adSelectionKeyType),
                         mLightweightExecutor)
@@ -250,6 +252,32 @@ public class AdSelectionEncryptionKeyManager {
                         },
                         mLightweightExecutor)
                 .withTimeout(timeoutMs, TimeUnit.MILLISECONDS, AdServicesExecutors.getScheduler());
+    }
+
+    private ListenableFuture<AdServicesHttpClientResponse> fetchKeyPayload(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
+            Uri fetchUri) {
+        switch (adSelectionKeyType) {
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
+                return mAdServicesHttpsClient.fetchPayload(
+                        fetchUri, DevContext.createForDevOptionsDisabled());
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
+                AdServicesHttpClientRequest fetchKeyRequest =
+                        AdServicesHttpClientRequest.builder()
+                                .setUri(fetchUri)
+                                .setRequestProperties(REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                                .setResponseHeaderKeys(RESPONSE_PROPERTIES_CONTENT_TYPE)
+                                .setDevContext(DevContext.createForDevOptionsDisabled())
+                                .build();
+                return mAdServicesHttpsClient.performRequestGetResponseInBase64String(
+                        fetchKeyRequest);
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
+            default:
+                throw new IllegalStateException(
+                        "AdSelectionEncryptionKeyType: "
+                                + adSelectionKeyType
+                                + " is not supported.");
+        }
     }
 
     /** Returns the AdSelectionEncryptionKeyType which are expired at the given instant. */
