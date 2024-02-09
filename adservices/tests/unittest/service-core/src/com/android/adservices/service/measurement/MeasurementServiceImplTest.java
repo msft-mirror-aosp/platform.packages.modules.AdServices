@@ -2005,7 +2005,7 @@ public final class MeasurementServiceImplTest {
     private void assertFailureReasonLogged(int failureReason) {
         ArgumentCaptor<ApiCallStats> captorStatus = ArgumentCaptor.forClass(ApiCallStats.class);
         verify(mMockAdServicesLogger, timeout(TIMEOUT)).logApiCallStats(captorStatus.capture());
-        assertEquals(failureReason, captorStatus.getValue().getResult().getFailureReason());
+        assertEquals(failureReason, captorStatus.getValue().getFailureReason());
     }
 
     private MeasurementServiceImpl createServiceWithMocks() {
