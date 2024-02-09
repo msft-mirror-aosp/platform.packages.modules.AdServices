@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"I-Android iyaziqaphela izihloko ongaba nentshisekelo kuzo ngokusekelwe kuma-app osanda kuwasebenzisa. Futhi, ama-app nozakwethu bawo bokukhangisa bangasebenzisa umsebenzi wakho kuwo wonke amanye ama-app kule divayisi ukwenza izikhangiso eziqondene nomuntu siqu kuyilapho esiza ukugcina ubuwena bugodliwe futhi buvikelekile."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Ama-app owasebenzisayo angase futhi anqume ukuthi yini oyithandayo ngokusekelwe kumsebenzi wakho we-app. Isibonelo, uma usebenzisa ama-app okupheka njalo, ungase ubone izikhangiso zamasevisi okudilivwa kwegrosa noma okuqukethwe okuhlobene kwamanye amanye ama-app\n\nAma-app angalugcina ngokuphephile lolu lwazi ukuze lusetshenziswe ozakwabo bokukhangisa kuphela ukwenza izikhangiso eziqondene nomuntu siqu kwamanye ama-app."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Kamuva, i-app oyisebenzisayo ingacela lolu lwazi – kungaba yizihloko zesikhangiso sakho noma izikhangiso eziphakanyiswe ama-app owasebenzisile."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Ama-app owasebenzisayo angacela i-Android ulwazi oluzowasiza ukuthi alinganisele ukusebenza kwezikhangiso zawo. I-Android isiza ngokuvikela ubumfihlo bakho ngokukhawulela ulwazi ama-app angabelana ngalo wodwa."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

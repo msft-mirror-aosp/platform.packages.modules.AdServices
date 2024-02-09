@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Az Android feljegyzi az Önt érdeklő témákat az Ön nemrégiben használt alkalmazásai alapján. Emellett az alkalmazások és hirdetési partnereik felhasználhatják az Önnek az eszközön található más alkalmazásokban végzett tevékenységeit a hirdetések személyre szabásához, miközben az Ön személyazonossága továbbra is privát és biztonságos marad."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Az Ön által használt alkalmazások az Ön alkalmazástevékenységei alapján azt is meghatározhatják, hogy mi tetszik Önnek. Ha például rendszeresen használ receptalkalmazásokat, előfordulhat, hogy más alkalmazásokban élelmiszer-kiszállítási szolgáltatások vagy kapcsolódó tartalmak hirdetései jelennek meg.\n\nAz alkalmazások biztonságosan tárolhatják ezeket az információkat, hogy csak a hirdetési partnereik használhassák fel őket a hirdetések személyre szabására más alkalmazásokban."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"A későbbiekben az Ön által használt alkalmazások lekérhetik ezeket az információkat – akár az Önre vonatkozó hirdetéstémákat, akár a használt alkalmazások által javasolt hirdetéseket."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Az Ön által használt alkalmazások információkat kérhetnek az Android rendszertől, amelyek segítenek a hirdetéseik teljesítményének mérésében. Az Android az alkalmazások egymás között megosztható információinak korlátozásával segíti az Ön adatainak védelmét."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

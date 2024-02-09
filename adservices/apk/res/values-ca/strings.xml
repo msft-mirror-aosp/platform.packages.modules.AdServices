@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android pren nota dels temes d\'interès segons les aplicacions que has utilitzat recentment. Les aplicacions i els seus partners publicitaris també poden utilitzar la teva activitat en altres aplicacions d\'aquest dispositiu per personalitzar anuncis, alhora que ajuden a mantenir la teva identitat privada i segura."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Les aplicacions que fas servir també poden determinar què t\'agrada en funció de la teva activitat. Per exemple, si normalment utilitzes aplicacions de cuina, és possible que vegis anuncis de serveis d\'entrega d\'aliments a domicili o continguts relacionats en altres aplicacions.\n\nLes aplicacions poden emmagatzemar aquesta informació de manera segura perquè només l\'utilitzin els partners publicitaris amb l\'objectiu de personalitzar anuncis en altres aplicacions."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Més tard, una aplicació que utilitzes pot demanar aquesta informació, ja siguin els temes d\'anunci o els anuncis suggerits per les aplicacions que has utilitzat."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Les aplicacions que utilitzes poden demanar a Android informació per ajudar-les a mesurar el rendiment dels seus anuncis. Android ajuda a protegir la teva privadesa limitant la informació que les aplicacions poden compartir entre elles."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
