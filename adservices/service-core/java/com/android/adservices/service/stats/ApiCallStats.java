@@ -18,7 +18,6 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdServicesStatusUtils.FailureReason;
@@ -173,9 +172,7 @@ public final class ApiCallStats {
          * ApiCallStats#getFailureReason()}.
          */
         public Builder setResult(Result result) {
-            if (result == null) {
-                return setResult(STATUS_UNKNOWN_ERROR, FAILURE_REASON_UNSET);
-            }
+            Objects.requireNonNull(result, "result cannot be null");
             return setResult(result.getResultCode(), result.getFailureReason());
         }
 
