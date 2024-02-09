@@ -22,6 +22,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
@@ -130,6 +131,8 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                 .thenReturn(true);
 
         extendedMockito.mockGetFlags(mMockFlags);
+
+        mockCobaltLoggingFlags(mMockFlags, false);
     }
 
     @Test
