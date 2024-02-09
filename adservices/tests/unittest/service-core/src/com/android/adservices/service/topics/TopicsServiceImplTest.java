@@ -1011,7 +1011,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
     private void assertApiCallStats(ApiCallStats apiCallStats, int apiName) {
         expect.withMessage("%s.getResultCode()", apiCallStats)
-                .that(apiCallStats.getResult().getResultCode())
+                .that(apiCallStats.getResultCode())
                 .isEqualTo(STATUS_SUCCESS);
         expect.withMessage("%s.getAppPackageName()", apiCallStats)
                 .that(apiCallStats.getAppPackageName())
@@ -1065,7 +1065,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
 
             expect.withMessage("%s.getResultCode()", apiCallStats)
-                    .that(apiCallStats.getResult().getResultCode())
+                    .that(apiCallStats.getResultCode())
                     .isEqualTo(expectedResultCode);
             expect.withMessage("%s.getApiClass()", apiCallStats)
                     .that(apiCallStats.getApiName())
@@ -1079,8 +1079,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             expect.withMessage("%s.getSdkPackageName()", apiCallStats)
                     .that(apiCallStats.getSdkPackageName())
                     .isEqualTo(request.getSdkName());
-            assertThat(apiCallStats.getResult().getFailureReason())
-                    .isEqualTo(expectedFailureReason);
+            assertThat(apiCallStats.getFailureReason()).isEqualTo(expectedFailureReason);
         }
     }
 

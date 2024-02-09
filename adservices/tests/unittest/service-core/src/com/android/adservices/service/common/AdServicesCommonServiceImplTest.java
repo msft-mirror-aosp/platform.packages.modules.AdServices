@@ -711,8 +711,8 @@ public class AdServicesCommonServiceImplTest {
         ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
-        assertThat(apiCallStats.getResult().getResultCode()).isEqualTo(STATUS_UNAUTHORIZED);
-        assertThat(apiCallStats.getResult().getFailureReason())
+        assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_UNAUTHORIZED);
+        assertThat(apiCallStats.getFailureReason())
                 .isEqualTo(FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION);
         assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(350);
     }
@@ -741,8 +741,8 @@ public class AdServicesCommonServiceImplTest {
                 () -> PermissionHelper.hasAccessAdServicesCommonStatePermission(any(), any()));
         verify(mFlags, never()).isGetAdServicesCommonStatesApiEnabled();
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
-        assertThat(apiCallStats.getResult().getResultCode()).isEqualTo(STATUS_CALLER_NOT_ALLOWED);
-        assertThat(apiCallStats.getResult().getFailureReason())
+        assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_CALLER_NOT_ALLOWED);
+        assertThat(apiCallStats.getFailureReason())
                 .isEqualTo(FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
@@ -784,8 +784,8 @@ public class AdServicesCommonServiceImplTest {
         ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
-        assertThat(apiCallStats.getResult().getResultCode()).isEqualTo(STATUS_SUCCESS);
-        assertThat(apiCallStats.getResult().getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
+        assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
+        assertThat(apiCallStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
         assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(350);
     }
 
@@ -817,8 +817,8 @@ public class AdServicesCommonServiceImplTest {
         ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
-        assertThat(apiCallStats.getResult().getResultCode()).isEqualTo(STATUS_SUCCESS);
-        assertThat(apiCallStats.getResult().getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
+        assertThat(apiCallStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
+        assertThat(apiCallStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
         assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(350);
     }
 

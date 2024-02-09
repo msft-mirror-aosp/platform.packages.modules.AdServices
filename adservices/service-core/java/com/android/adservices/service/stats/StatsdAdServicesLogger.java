@@ -124,8 +124,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 apiCallStats.getAppPackageName(),
                 apiCallStats.getSdkPackageName(),
                 apiCallStats.getLatencyMillisecond(),
-                apiCallStats.getResult().getResultCode(),
-                apiCallStats.getResult().getFailureReason());
+                apiCallStats.getResultCode(),
+                apiCallStats.getFailureReason());
     }
 
     /** log method for UI stats. */

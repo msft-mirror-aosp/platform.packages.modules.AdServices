@@ -373,13 +373,12 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                     .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__ADID);
             assertThat(argument.getValue().getApiName())
                     .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_ADID);
-            assertThat(argument.getValue().getResult().getResultCode())
-                    .isEqualTo(expectedResultCode);
+            assertThat(argument.getValue().getResultCode()).isEqualTo(expectedResultCode);
             assertThat(argument.getValue().getAppPackageName())
                     .isEqualTo(request.getAppPackageName());
             assertThat(argument.getValue().getSdkPackageName())
                     .isEqualTo(request.getSdkPackageName());
-            assertThat(argument.getValue().getResult().getFailureReason()).isEqualTo(failureReason);
+            assertThat(argument.getValue().getFailureReason()).isEqualTo(failureReason);
         }
     }
 

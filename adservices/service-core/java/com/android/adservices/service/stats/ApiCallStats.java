@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdServicesStatusUtils.FailureReason;
@@ -33,7 +34,9 @@ public final class ApiCallStats {
     private String mAppPackageName;
     private String mSdkPackageName;
     private int mLatencyMillisecond;
-    private Result mResult;
+
+    private @StatusCode int mResultCode;
+    private @FailureReason int mFailureReason;
 
     private ApiCallStats() {}
 
@@ -49,7 +52,8 @@ public final class ApiCallStats {
                 && Objects.equals(mAppPackageName, apiCallStats.mAppPackageName)
                 && Objects.equals(mSdkPackageName, apiCallStats.mSdkPackageName)
                 && mLatencyMillisecond == apiCallStats.mLatencyMillisecond
-                && Objects.equals(mResult, apiCallStats.mResult);
+                && mResultCode == apiCallStats.mResultCode
+                && mFailureReason == apiCallStats.mFailureReason;
     }
 
     @Override
@@ -61,7 +65,8 @@ public final class ApiCallStats {
                 mAppPackageName,
                 mSdkPackageName,
                 mLatencyMillisecond,
-                mResult);
+                mResultCode,
+                mFailureReason);
     }
 
     public int getCode() {
@@ -88,8 +93,12 @@ public final class ApiCallStats {
         return mLatencyMillisecond;
     }
 
-    public Result getResult() {
-        return mResult;
+    public @StatusCode int getResultCode() {
+        return mResultCode;
+    }
+
+    public @FailureReason int getFailureReason() {
+        return mFailureReason;
     }
 
     @Override
@@ -109,8 +118,10 @@ public final class ApiCallStats {
                 + '\''
                 + ", mLatencyMillisecond="
                 + mLatencyMillisecond
-                + ", mResult="
-                + mResult
+                + ", mResultCode="
+                + mResultCode
+                + ", mFailureReason="
+                + mFailureReason
                 + '}';
     }
 
@@ -157,9 +168,20 @@ public final class ApiCallStats {
             return this;
         }
 
-        /** See {@link ApiCallStats#getResult()}. */
+        /**
+         * Sets the {@link ApiCallStats#getResultCode()} and {@link
+         * ApiCallStats#getFailureReason()}.
+         */
         public Builder setResult(Result result) {
-            mBuilding.mResult = result;
+            if (result == null) {
+                return setResult(STATUS_UNKNOWN_ERROR, FAILURE_REASON_UNSET);
+            }
+            return setResult(result.getResultCode(), result.getFailureReason());
+        }
+
+        private Builder setResult(@StatusCode int resultCode, @FailureReason int failureReason) {
+            mBuilding.mResultCode = resultCode;
+            mBuilding.mFailureReason = failureReason;
             return this;
         }
 
