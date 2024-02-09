@@ -80,6 +80,20 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testBuilder_resultThatTakesIntegers() {
+        ApiCallStats stats =
+                newCanonicalBuilder()
+                        .setResult(STATUS_INVALID_ARGUMENT, FAILURE_REASON_ENROLLMENT_BLOCKLISTED)
+                        .build();
+        expect.withMessage("%s.getResultCode()", stats)
+                .that(stats.getResultCode())
+                .isEqualTo(STATUS_INVALID_ARGUMENT);
+        expect.withMessage("%s.getFailureReason()", stats)
+                .that(stats.getFailureReason())
+                .isEqualTo(FAILURE_REASON_ENROLLMENT_BLOCKLISTED);
+    }
+
+    @Test
     public void testNullSdkPackageName_throwsNPE() {
         assertThrows(
                 NullPointerException.class,
