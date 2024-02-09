@@ -92,7 +92,7 @@ public class TopicsManagerMddTest {
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
+                    .setTopicsEpochJobPeriodMs(TEST_EPOCH_JOB_PERIOD_MS)
                     // We need to turn off random topic so that we can verify the returned topic.
                     .setTopicsPercentageForRandomTopicForTests(
                             TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)

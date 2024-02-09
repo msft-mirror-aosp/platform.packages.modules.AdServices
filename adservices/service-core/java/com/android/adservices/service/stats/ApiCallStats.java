@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.stats;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdServicesStatusUtils.FailureReason;
+import android.adservices.common.AdServicesStatusUtils.StatusCode;
 
 import java.util.Objects;
 
@@ -40,13 +43,13 @@ public final class ApiCallStats {
             return false;
         }
         ApiCallStats apiCallStats = (ApiCallStats) obj;
-        return mCode == apiCallStats.getCode()
-                && mApiClass == apiCallStats.getApiClass()
-                && mApiName == apiCallStats.getApiName()
-                && Objects.equals(mAppPackageName, apiCallStats.getAppPackageName())
-                && Objects.equals(mSdkPackageName, apiCallStats.getSdkPackageName())
-                && mLatencyMillisecond == apiCallStats.getLatencyMillisecond()
-                && Objects.equals(mResult, apiCallStats.getResult());
+        return mCode == apiCallStats.mCode
+                && mApiClass == apiCallStats.mApiClass
+                && mApiName == apiCallStats.mApiName
+                && Objects.equals(mAppPackageName, apiCallStats.mAppPackageName)
+                && Objects.equals(mSdkPackageName, apiCallStats.mSdkPackageName)
+                && mLatencyMillisecond == apiCallStats.mLatencyMillisecond
+                && Objects.equals(mResult, apiCallStats.mResult);
     }
 
     @Override
@@ -173,10 +176,28 @@ public final class ApiCallStats {
     }
 
     public static final class Result {
-        private final @AdServicesStatusUtils.StatusCode int mResultCode;
-        private final int mFailureReason;
+        private static final Result SUCCESS = new Result(STATUS_SUCCESS, FAILURE_REASON_UNSET);
 
-        public Result(int resultCode, int failureReason) {
+        private final @AdServicesStatusUtils.StatusCode int mResultCode;
+        private final @FailureReason int mFailureReason;
+
+        /** Creates a result for successful calls */
+        public static Result forSuccess() {
+            return SUCCESS;
+        }
+
+        /** Creates a result for failed calls */
+        public static Result forFailure(
+                @StatusCode int resultCode, @FailureReason int failureReason) {
+            return new Result(resultCode, failureReason);
+        }
+
+        // TODO(b/270974848): refactor callers, make private, and deprecated
+        /**
+         * @deprecated should call {@link #forSuccess()} or {@link #forFailure(int, int)}.
+         */
+        @Deprecated
+        public Result(@StatusCode int resultCode, @FailureReason int failureReason) {
             mResultCode = resultCode;
             mFailureReason = failureReason;
         }
@@ -187,8 +208,7 @@ public final class ApiCallStats {
                 return false;
             }
             Result result = (Result) obj;
-            return mResultCode == result.getResultCode()
-                    && mFailureReason == result.getFailureReason();
+            return mResultCode == result.mResultCode && mFailureReason == result.mFailureReason;
         }
 
         @Override
@@ -196,11 +216,11 @@ public final class ApiCallStats {
             return Objects.hash(mResultCode, mFailureReason);
         }
 
-        public int getResultCode() {
+        public @StatusCode int getResultCode() {
             return mResultCode;
         }
 
-        public int getFailureReason() {
+        public @FailureReason int getFailureReason() {
             return mFailureReason;
         }
 

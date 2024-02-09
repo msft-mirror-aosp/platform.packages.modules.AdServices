@@ -108,7 +108,7 @@ public final class AdServicesFlagsSetterRule
                 .setTopicsKillSwitch(false)
                 .setConsentManagerDebugMode(true)
                 .setDisableTopicsEnrollmentCheckForTests(true)
-                .setTopicsEpochJobPeriodMsForTests(epochPeriodMs)
+                .setTopicsEpochJobPeriodMs(epochPeriodMs)
                 .setTopicsPercentageForRandomTopicForTests(pctRandomTopic)
                 .setCompatModeFlags();
     }

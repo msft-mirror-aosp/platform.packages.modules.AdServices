@@ -52,7 +52,7 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
+                    .setTopicsEpochJobPeriodMs(TEST_EPOCH_JOB_PERIOD_MS)
                     .setTopicsKillSwitch(false)
                     .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 2)

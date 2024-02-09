@@ -114,11 +114,11 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     /**
-     * Overrides the system property that sets max time period between each epoch computation job
+     * Overrides the device config flag that sets max time period between each epoch computation job
      * run.
      */
-    public T setTopicsEpochJobPeriodMsForTests(long value) {
-        return setSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
+    public T setTopicsEpochJobPeriodMs(long value) {
+        return setFlag(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
     }
 
     /** Overrides the system property that defines the percentage for random topic. */

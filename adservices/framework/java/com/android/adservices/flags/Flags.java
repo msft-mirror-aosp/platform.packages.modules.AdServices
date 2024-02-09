@@ -50,10 +50,16 @@ public final class Flags {
             ACONFIG_PREFIX + "fledge_ad_selection_filtering_enabled";
     public static final String FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED =
             ACONFIG_PREFIX + "fledge_schedule_custom_audience_update_enabled";
+    public static final String FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED =
+            ACONFIG_PREFIX + "fledge_server_auction_multi_cloud_enabled";
     public static final String FLAG_PROTECTED_SIGNALS_ENABLED =
             ACONFIG_PREFIX + "protected_signals_enabled";
     public static final String FLAG_GET_ADSERVICES_COMMON_STATES_API_ENABLED =
             ACONFIG_PREFIX + "get_adservices_common_states_api_enabled";
+    public static final String FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED =
+            ACONFIG_PREFIX + "fledge_auction_server_get_ad_selection_data_id_enabled";
+    public static final String FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED =
+            ACONFIG_PREFIX + "fledge_custom_audience_auction_server_request_flags_enabled";
 
     private Flags() {
         throw new UnsupportedOperationException("provides only constants");

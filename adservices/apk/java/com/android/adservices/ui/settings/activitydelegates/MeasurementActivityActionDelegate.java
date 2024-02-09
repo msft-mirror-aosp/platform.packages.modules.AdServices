@@ -69,6 +69,9 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
         initU18();
     }
 
+    @Override
+    public void initGaUxWithPas() {}
+
     private void configureSharedElements() {
         // consent switch
         configureElement(

@@ -437,7 +437,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             callback.onFailure(STATUS_CALLER_NOT_ALLOWED);
                             return;
                         }
-                        if (mFlags.isGetAdServicesCommonStatesEnabled()) {
+                        if (mFlags.isGetAdServicesCommonStatesApiEnabled()) {
                             LogUtil.d("start getting states");
                             ConsentManager consentManager = ConsentManager.getInstance();
                             AdServicesCommonStates adservicesCommonStates =
