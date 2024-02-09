@@ -1814,15 +1814,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public void loadSdk(
                 String callingPackageName,
                 String sdkName,
-                long timeAppCalledSystemServer,
+                SandboxLatencyInfo sandboxLatencyInfo,
                 Bundle params,
                 ILoadSdkCallback callback)
                 throws RemoteException {
-            // TODO(b/294216354): create SandboxLatencyInfo object in SdkSandboxController and set
-            // LOAD_SDK_VIA_CONTROLLER method instead of LOAD_SDK.
-            SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK);
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(timeAppCalledSystemServer);
             // The process token is only used to kill the app process when the
             // sandbox dies (for U+, not available on T), so a sandbox process token
             // is not needed here. This is taken care of when the first SDK is loaded
@@ -1837,32 +1832,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         @Override
-        public void logLatenciesFromSandbox(
-                int latencyFromSystemServerToSandboxMillis,
-                int latencySandboxMillis,
-                int method,
-                boolean success) {
-            final int appUid = Process.getAppUidForSdkSandboxUid(Binder.getCallingUid());
-            /**
-             * In case system server is not involved and the API call is just concerned with sandbox
-             * process, there will be no call to system server, and we will not log that information
-             */
-            if (latencyFromSystemServerToSandboxMillis != -1) {
-                SdkSandboxStatsLog.write(
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                        method,
-                        latencyFromSystemServerToSandboxMillis,
-                        success,
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
-                        appUid);
-            }
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    method,
-                    latencySandboxMillis,
-                    /*success=*/ true,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX,
-                    appUid);
+        public void logLatenciesFromSandbox(SandboxLatencyInfo sandboxLatencyInfo) {
+            logSandboxApiLatency(sandboxLatencyInfo);
         }
     }
 
