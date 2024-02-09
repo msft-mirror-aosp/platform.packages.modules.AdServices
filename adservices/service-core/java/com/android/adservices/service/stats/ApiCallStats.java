@@ -176,7 +176,11 @@ public final class ApiCallStats {
             return setResult(result.getResultCode(), result.getFailureReason());
         }
 
-        private Builder setResult(@StatusCode int resultCode, @FailureReason int failureReason) {
+        /**
+         * Sets the {@link ApiCallStats#getResultCode()} and {@link
+         * ApiCallStats#getFailureReason()}.
+         */
+        public Builder setResult(@StatusCode int resultCode, @FailureReason int failureReason) {
             mBuilding.mResultCode = resultCode;
             mBuilding.mFailureReason = failureReason;
             return this;
