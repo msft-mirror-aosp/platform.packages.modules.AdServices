@@ -555,6 +555,11 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 APP_MANIFEST_CONFIG_HELPER_CALLED, call.packageName, call.api, call.result);
     }
 
+    @Override
+    public void logKAnonSignJoinStatus() {
+        // TODO(b/324564459): add logging for KAnon Sign Join
+    }
+
     @NonNull
     private byte[] toBytes(long fieldId, @NonNull int[] values) {
         ProtoOutputStream protoOutputStream = new ProtoOutputStream();

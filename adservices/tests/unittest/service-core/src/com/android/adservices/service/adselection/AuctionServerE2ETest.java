@@ -127,6 +127,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
@@ -276,6 +277,7 @@ public class AuctionServerE2ETest {
     private AdSelectionDebugReportDao mAdSelectionDebugReportDaoSpy;
     private AdIdFetcher mAdIdFetcher;
     private MockAdIdWorker mMockAdIdWorker;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     @Before
     public void setUp() {
@@ -876,6 +878,7 @@ public class AuctionServerE2ETest {
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         GetAdSelectionDataInput input =
@@ -1520,6 +1523,7 @@ public class AuctionServerE2ETest {
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         GetAdSelectionDataInput input =
@@ -1639,6 +1643,7 @@ public class AuctionServerE2ETest {
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         GetAdSelectionDataInput input =
@@ -1702,6 +1707,7 @@ public class AuctionServerE2ETest {
                 mObliviousHttpEncryptorMock,
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
+                mUnusedKAnonSignJoinFactory,
                 false);
     }
 

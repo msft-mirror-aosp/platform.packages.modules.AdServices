@@ -156,6 +156,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -624,6 +625,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Mock private File mMockDBAdSelectionFile;
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             spy(
@@ -733,6 +735,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
@@ -984,6 +987,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1110,6 +1114,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1256,6 +1261,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1398,6 +1404,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1521,6 +1528,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1738,6 +1746,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1837,6 +1846,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2025,6 +2035,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2149,6 +2160,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -2294,6 +2306,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -2435,6 +2448,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2557,6 +2571,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -3110,6 +3125,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallback =
@@ -3248,6 +3264,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallback =
@@ -4008,6 +4025,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallbackNoCache =
@@ -4127,6 +4145,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallbackNoCache =
@@ -4247,6 +4266,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // We call selectAds again to verify that scoring logic was also cached
@@ -4370,6 +4390,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // We call selectAds again to verify that scoring logic was also cached
@@ -4494,6 +4515,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Populating the Custom Audience DB
@@ -4633,6 +4655,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Populating the Custom Audience DB
@@ -5828,6 +5851,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
@@ -6080,6 +6104,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallback =
@@ -6156,6 +6181,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         resultsCallback =
@@ -6349,6 +6375,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallback =
@@ -6425,6 +6452,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         resultsCallback =
@@ -6543,6 +6571,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         String jsWaitMoreThanAllowedForScoring =
@@ -7238,6 +7267,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -7372,6 +7402,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -7507,6 +7538,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -7618,6 +7650,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             mObliviousHttpEncryptor,
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
+                            mUnusedKAnonSignJoinFactory,
                             false);
 
             mMockWebServerRule.startMockWebServer(mDispatcher);
