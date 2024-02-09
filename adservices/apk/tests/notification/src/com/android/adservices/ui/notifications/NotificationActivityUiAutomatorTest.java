@@ -79,7 +79,7 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesExtende
 
     @Before
     public void setup() throws Exception {
-        doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
+        doReturn(true).when(mMockFlags).getUiDialogsFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();

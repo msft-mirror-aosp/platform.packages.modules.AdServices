@@ -3155,7 +3155,7 @@ public interface Flags extends CommonFlags {
     boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
     /** Returns if the UI Dialogs feature is enabled. */
-    default boolean getUIDialogsFeatureEnabled() {
+    default boolean getUiDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
