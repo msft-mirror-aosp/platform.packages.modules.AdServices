@@ -321,7 +321,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         invokeGetTopicsAndVerifyError(
-                mSpyContext, STATUS_INVALID_ARGUMENT, request, false, FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_INVALID_ARGUMENT, request, true, FAILURE_REASON_UNSET);
         ExtendedMockito.verify(
                 () ->
                         ErrorLogUtil.e(
@@ -338,7 +338,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 new GetTopicsParam.Builder().setAppPackageName(TEST_APP_PACKAGE_NAME).build();
 
         invokeGetTopicsAndVerifyError(
-                mSpyContext, STATUS_INVALID_ARGUMENT, request, false, FAILURE_REASON_UNSET);
+                mSpyContext, STATUS_INVALID_ARGUMENT, request, true, FAILURE_REASON_UNSET);
     }
 
     @Test
