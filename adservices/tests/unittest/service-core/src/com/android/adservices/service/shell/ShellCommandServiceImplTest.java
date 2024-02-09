@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.shell;
 
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
@@ -71,6 +72,24 @@ public final class ShellCommandServiceImplTest extends AdServicesUnitTestCase {
         expect.withMessage("result").that(response.getResultCode()).isEqualTo(-1);
         expect.withMessage("out").that(response.getOut()).isEmpty();
         expect.withMessage("err").that(response.getErr()).contains("Unknown command");
+    }
+
+    @Test
+    public void testRunShellCommand_customAudienceList() throws Exception {
+        mShellCommandService.runShellCommand(
+                new ShellCommandParam(
+                        CustomAudienceShellCommandFactory.COMMAND_PREFIX,
+                        CustomAudienceListCommand.CMD,
+                        "--owner",
+                        CustomAudienceFixture.VALID_OWNER,
+                        "--buyer",
+                        "example-dsp.com"),
+                mSyncIShellCommandCallback);
+
+        ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
+        expect.withMessage("result").that(response.getResultCode()).isEqualTo(0);
+        expect.withMessage("out").that(response.getOut()).contains("{\"custom_audiences\":[]}");
+        expect.withMessage("err").that(response.getErr()).isEmpty();
     }
 
     private static final class SyncIShellCommandCallback
