@@ -25,16 +25,19 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -53,9 +56,11 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
+import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.Throttler;
@@ -63,12 +68,10 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
@@ -77,6 +80,7 @@ import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
 @MockStatic(Binder.class)
+@SpyStatic(FlagsFactory.class)
 @SpyStatic(ErrorLogUtil.class)
 public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
@@ -85,7 +89,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
-    private static final int LOGGER_EVENT_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String APPSETID_API_ALLOW_LIST =
             "com.android.adservices.servicecoreappsetidtest";
@@ -128,6 +131,8 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
         when(mMockThrottler.tryAcquire(
                         eq(Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
+
+        extendedMockito.mockGetFlags(mMockFlags);
     }
 
     @Test
@@ -316,7 +321,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                                     return null;
                                 })
                 .when(mAdServicesLogger)
-                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+                .logApiCallStats(any(ApiCallStats.class));
 
         mAppSetIdServiceImpl =
                 new AppSetIdServiceImpl(
@@ -342,13 +347,12 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                     .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__APPSETID);
             assertThat(argument.getValue().getApiName())
                     .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID);
-            assertThat(argument.getValue().getResult().getResultCode())
-                    .isEqualTo(expectedResultCode);
+            assertThat(argument.getValue().getResultCode()).isEqualTo(expectedResultCode);
             assertThat(argument.getValue().getAppPackageName())
                     .isEqualTo(request.getAppPackageName());
             assertThat(argument.getValue().getSdkPackageName())
                     .isEqualTo(request.getSdkPackageName());
-            assertThat(argument.getValue().getResult().getFailureReason()).isEqualTo(failureReason);
+            assertThat(argument.getValue().getFailureReason()).isEqualTo(failureReason);
         }
     }
 
@@ -360,10 +364,15 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .setAppSetIdScope(0)
                         .build();
 
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);
 
         assertThat(getAppSetIdResult.getAppSetId())
                 .isEqualTo(expectedGetAppSetIdResult.getAppSetId());
+
+        logApiCallStatsCallback.assertResultReceived();
     }
 
     @NonNull

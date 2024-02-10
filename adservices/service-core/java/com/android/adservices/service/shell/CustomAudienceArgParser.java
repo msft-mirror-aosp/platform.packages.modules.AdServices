@@ -29,16 +29,16 @@ import java.util.Arrays;
 import java.util.Map;
 
 // TODO(b/322395593): Refactor ArgParser to work better after M-04 release.
-final class ArgParser {
+final class CustomAudienceArgParser {
 
     private final ImmutableList<String> mRequiredArgs;
     private final Map<String, String> mParsedArgs = new ArrayMap<>();
 
-    ArgParser() {
+    CustomAudienceArgParser() {
         mRequiredArgs = ImmutableList.of();
     }
 
-    ArgParser(String... requiredArgs) {
+    CustomAudienceArgParser(String... requiredArgs) {
         mRequiredArgs = ImmutableList.copyOf(requiredArgs);
     }
 
@@ -54,7 +54,7 @@ final class ArgParser {
         checkArgument(args.length > 0, "No argument was passed to ArgParser.");
         Log.v(TAG, "Parsing command line arguments: " + Arrays.toString(args));
         mParsedArgs.clear();
-        for (int i = 1; i < args.length; i += 2) {
+        for (int i = 2; i < args.length; i += 2) {
             checkArgument(
                     i + 1 < args.length,
                     "Required value for argument `%s` is not present",

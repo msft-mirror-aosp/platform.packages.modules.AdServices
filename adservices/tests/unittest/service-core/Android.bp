@@ -46,6 +46,7 @@ java_defaults {
         "tflite_support_classifiers_java",
         "opencensus-java-api",
         "opencensus-java-contrib-grpc-metrics",
+        "adservices_flags_lib", // Used by FlagsConstantsTest
     ],
     libs: [
         "android.test.base",
@@ -55,7 +56,6 @@ java_defaults {
         "framework-configinfrastructure",
         "framework-sdksandbox.impl",
         "auto_value_annotations",
-        "adservices_flags_lib", // Used by FlagsConstantsTest
     ],
     test_suites: [
         "general-tests",
@@ -198,6 +198,7 @@ java_defaults {
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
         "truth",
+        "adservices_flags_lib", // Used by FlagsConstantsTest
     ],
     libs: [
         "android.ext.adservices",
@@ -206,7 +207,6 @@ java_defaults {
         "framework-annotations-lib",
         "framework-configinfrastructure",
         "framework-sdksandbox.impl",
-        "adservices_flags_lib", // Used by FlagsConstantsTest
     ],
     test_suites: [
         "general-tests",
