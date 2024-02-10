@@ -967,6 +967,31 @@ public class AdServicesHttpsClientTest {
                 .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
     }
 
+    @Test
+    public void testPerformRequestAndGetResponseInString_shouldReturnResponseString()
+            throws Exception {
+        String stringResponse = "This is a plain String response which could be a JSON String";
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(stringResponse)));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBodyInBytes = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBodyInBytes)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        AdServicesHttpClientResponse response =
+                mClient.performRequestGetResponseInPlainString(request).get();
+
+        assertThat(response.getResponseBody()).isEqualTo(stringResponse);
+    }
+
     private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)
             throws Exception {
         return mClient.fetchPayload(uri, devContext).get();

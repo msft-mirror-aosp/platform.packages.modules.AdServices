@@ -397,6 +397,13 @@
                  android:process=".adservices">
         </service>
 
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
         <!-- FLEDGE Ad selection debug report sender Job -->
         <service android:name=
                      "com.android.adservices.service.adselection.DebugReportSenderJobService"
