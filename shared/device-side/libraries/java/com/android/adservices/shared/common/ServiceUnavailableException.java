@@ -18,7 +18,12 @@ package com.android.adservices.shared.common;
 
 /** Exception class to indicate that AdServices isn't available. */
 public class ServiceUnavailableException extends IllegalStateException {
+
     public ServiceUnavailableException(String message) {
         super(message);
+    }
+
+    public ServiceUnavailableException() {
+        super();
     }
 }

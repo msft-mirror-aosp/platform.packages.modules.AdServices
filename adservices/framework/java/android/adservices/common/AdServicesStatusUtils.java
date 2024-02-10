@@ -20,6 +20,8 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.os.LimitExceededException;
 
+import com.android.adservices.shared.common.ServiceUnavailableException;
+
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.lang.annotation.Retention;
@@ -202,9 +204,6 @@ public final class AdServicesStatusUtils {
      */
     public static final int STATUS_ENCRYPTION_FAILURE = 19;
 
-    /** The error message to be returned along with {@link IllegalStateException}. */
-    public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
-
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
 
@@ -276,7 +275,7 @@ public final class AdServicesStatusUtils {
             case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
-                return new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                return new ServiceUnavailableException();
             case STATUS_PERMISSION_NOT_REQUESTED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
