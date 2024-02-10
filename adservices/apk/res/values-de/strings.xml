@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android schließt aufgrund der in letzter Zeit von dir genutzten Apps auf Themen, die dich interessieren könnten. Außerdem können Apps und deren Werbepartner deine Aktivitäten in anderen Apps auf diesem Gerät verwenden, um dir personalisierte Werbung anzuzeigen, und trotzdem dazu beitragen, dass deine Identität vertraulich und geschützt bleibt."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Von dir genutzte Apps können auch aufgrund deiner App-Aktivitäten feststellen, was dir gefällt. Wenn du beispielsweise regelmäßig Koch-Apps verwendest, siehst du möglicherweise Werbung von Lebensmittellieferanten oder relevante Inhalte aus anderen Apps.\n\n Apps können diese Informationen so speichern, dass sie nur von den Werbepartnern dazu verwendet werden können, in anderen Apps personalisierte Werbung zu schalten."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Apps, die du verwendest, fragen dich später womöglich nach diesen Informationen – entweder nach deinen bevorzugten Werbethemen oder nach der Werbung, die andere Apps dir vorgeschlagen haben."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Von dir genutzte Apps können von Android Informationen abfragen, die dazu beitragen, die Leistung ihrer Anzeigen zu messen. Android trägt zum Schutz deiner Daten bei, indem der Austausch von Informationen zwischen den Apps eingeschränkt wird."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
@@ -571,7 +575,7 @@
     <string name="topic10288" msgid="4197272921112835157">"Web-Apps und Onlinetools"</string>
     <string name="topic10289" msgid="5361961713593805925">"Webdienste"</string>
     <string name="topic10290" msgid="1030690821237195132">"Cloud Storage"</string>
-    <string name="topic10291" msgid="4049265350889304495">"Web-Design und -Entwicklung"</string>
+    <string name="topic10291" msgid="4049265350889304495">"Webdesign und -entwicklung"</string>
     <string name="topic10292" msgid="3386329227033265361">"Webhosting"</string>
     <string name="topic10293" msgid="5737650187548034975">"Beruf und Ausbildung"</string>
     <string name="topic10294" msgid="4134169605040294646">"Bildung"</string>

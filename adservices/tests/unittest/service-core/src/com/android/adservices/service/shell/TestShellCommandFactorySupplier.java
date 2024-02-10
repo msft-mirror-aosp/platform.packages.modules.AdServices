@@ -44,7 +44,6 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     @Override
     public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
         return ImmutableList.of(
-                CommonShellCommandFactory.getInstance(),
                 new CustomAudienceShellCommandFactory(
                         mFlags.getFledgeCustomAudienceCLIEnabledStatus(), mCustomAudienceDao));
     }

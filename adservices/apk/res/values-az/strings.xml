@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android son vaxtlar istifadə etdiyiniz tətbiqlər əsasında maraq doğuran mövzuları qeydə alır. Tətbiqlər və reklam partnyorları kimliyinizi məxfi və təhlükəsiz saxlamaqla yanaşı, reklamları fərdiləşdirmək üçün bu cihazdakı digər tətbiqlər üzrə fəaliyyətinizdən də istifadə edə bilər."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  İstifadə etdiyiniz tətbiqlər tətbiq fəaliyyətinə əsasən bəyəndiklərinizi də müəyyən edə bilər. Məsələn, yemək bişirmə tətbiqlərindən müntəzəm istifadə edirsinizsə, digər tətbiqlərdə ərzaq çatdırılması xidmətləri və ya əlaqədar kontent ilə bağlı reklamlar görə bilərsiniz.\n\nBu məlumatların yalnız reklam partnyorları tərəfindən digər tətbiqlərdəki reklamları fərdiləşdirmək üçün istifadə olunması üçün tətbiqlər onları təhlükəsiz saxlaya bilər."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Daha sonra istifadə etdiyiniz tətbiq bu məlumatları – reklam mövzuları və ya istifadə etdiyiniz tətbiqlərin təklif etdiyi reklamlar – tələb edə bilər."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"İstifadə etdiyiniz tətbiqlər reklam performansını ölçmək üçün Android-dən məlumat istəyə bilər. Android tətbiqlərin bir-biri ilə paylaşa biləcəyi məlumatları məhdudlaşdırmaqla məxfiliyi qoruyur."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

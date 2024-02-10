@@ -467,7 +467,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
         expect.that(stats.getApiClass())
                 .isEqualTo(AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE);
         expect.that(stats.getApiName()).isEqualTo(apiName);
-        expect.that(stats.getResult().getResultCode()).isEqualTo(expectedResultCode);
+        expect.that(stats.getResultCode()).isEqualTo(expectedResultCode);
         expect.that(stats.getAppPackageName()).isEqualTo(mContext.getPackageName());
         expect.that(stats.getSdkPackageName()).isEqualTo(UNKNOWN_PACKAGE_NAME);
     }

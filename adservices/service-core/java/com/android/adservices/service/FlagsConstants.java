@@ -15,10 +15,6 @@
  */
 package com.android.adservices.service;
 
-import com.google.common.annotations.VisibleForTesting;
-
-import java.util.Objects;
-
 /**
  * Defines constants used by {@code Flags}, {@code PhFlags} and testing infra (both device and host
  * side).
@@ -29,19 +25,6 @@ public final class FlagsConstants {
 
     private FlagsConstants() {
         throw new UnsupportedOperationException("Contains only static constants");
-    }
-
-    @VisibleForTesting static final String ACONFIG_PREFIX = "com.android.adservices.flags.";
-
-    /**
-     * This method should be used when adding new flags that have an aconfig counterpart (typically
-     * used on {@code @FlaggedApi} annotations.
-     */
-    @VisibleForTesting
-    static String aconfigToDeviceConfig(String flag) {
-        return Objects.requireNonNull(flag).startsWith(ACONFIG_PREFIX)
-                ? flag.substring(ACONFIG_PREFIX.length())
-                : flag;
     }
 
     // ********************************************
@@ -1229,8 +1212,8 @@ public final class FlagsConstants {
     public static final String KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE =
             "key_background_job_sampling_logging_rate";
 
-    public static final String KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED =
-            "is_get_ad_services_common_states_enabled";
+    public static final String KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED =
+            "get_adservices_common_states_api_enabled";
 
     /** Key for kanon sign join feature flag */
     public static final String KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE =

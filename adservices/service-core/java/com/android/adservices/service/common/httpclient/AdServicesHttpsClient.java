@@ -590,6 +590,9 @@ public class AdServicesHttpsClient {
 
             if (isSuccessfulResponse(responseCode)) {
                 LogUtil.d(" request succeeded for URL: " + url);
+                Map<String, List<String>> responseHeadersMap =
+                        pickRequiredHeaderFields(
+                                urlConnection.getHeaderFields(), request.getResponseHeaderKeys());
                 return AdServicesHttpClientResponse.builder()
                         .setResponseBody(
                                 BaseEncoding.base64()
@@ -597,6 +600,10 @@ public class AdServicesHttpsClient {
                                                 getByteArray(
                                                         urlConnection.getInputStream(),
                                                         urlConnection.getContentLengthLong())))
+                        .setResponseHeaders(
+                                ImmutableMap.<String, List<String>>builder()
+                                        .putAll(responseHeadersMap.entrySet())
+                                        .build())
                         .build();
             } else {
                 LogUtil.d(" request failed for URL: " + url);

@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"„Android“ pažymi jus dominančias temas pagal neseniai naudotas programas. Be to, programos ir jų reklamavimo partneriai gali naudoti jūsų veiklos duomenis kitose programose šiame įrenginyje, kad galėtų suasmeninti skelbimus, kartu užtikrinant jūsų tapatybės privatumą ir saugą."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Naudojamos programos taip pat gali nustatyti, ką mėgstate, pagal jūsų programų veiklą. Pavyzdžiui, jei nuolat naudojate maisto gaminimo programas, kitose programose galite matyti maisto prekių pristatymo paslaugų skelbimų ar susijusio turinio.\n\nProgramos gali patikimai saugoti šią informaciją, kad ją naudotų tik jų reklamavimo partneriai siekdami suasmeninti skelbimus savo programose."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Vėliau naudojamoje programoje gali būti prašoma šios informacijos: skelbimų temų arba naudojamų programų siūlomų skelbimų."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Naudojamos programos gali prašyti „Android“ informacijos, kad galėtų lengviau įvertinti savo skelbimų našumą. „Android“ padeda apsaugoti jūsų privatumą ribodama programų bendrinamą informaciją."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

@@ -20,7 +20,6 @@ import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
 
 import androidx.annotation.Nullable;
 
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Factory class which handles common shell commands. API specific shell commands should be part of
@@ -43,7 +42,7 @@ final class CommonShellCommandFactory implements ShellCommandFactory {
     }
 
     @Override
-    public ImmutableSet<String> getAllCommands() {
-        return ImmutableSet.of(CMD_ECHO);
+    public String getCommandPrefix() {
+        return "";
     }
 }
