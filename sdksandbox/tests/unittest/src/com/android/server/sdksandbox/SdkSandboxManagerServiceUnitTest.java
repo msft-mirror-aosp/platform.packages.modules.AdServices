@@ -378,7 +378,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         LoadSdkException thrown = callback.getLoadSdkException();
         assertEquals(LOAD_SDK_INTERNAL_ERROR, thrown.getLoadSdkErrorCode());
-        assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
+        assertThat(thrown).hasMessageThat().contains("does.not.exist");
     }
 
     @Test
@@ -406,7 +406,7 @@ public class SdkSandboxManagerServiceUnitTest {
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
-        assertThat(callback.getLoadSdkErrorMsg()).contains("does.not.exist not found");
+        assertThat(callback.getLoadSdkErrorMsg()).contains("does.not.exist");
     }
 
     @Test
@@ -1389,7 +1389,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.syncDataFromClient("does.not.exist", mSandboxLatencyInfo, TEST_UPDATE, callback);
 
         assertEquals(PREFERENCES_SYNC_INTERNAL_ERROR, callback.getErrorCode());
-        assertThat(callback.getErrorMsg()).contains("does.not.exist not found");
+        assertThat(callback.getErrorMsg()).contains("does.not.exist");
     }
 
     @Test

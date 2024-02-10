@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -37,33 +38,24 @@ import org.mockito.Mock;
 
 import java.util.List;
 
-public final class CustomAudienceListCommandTest extends ShellCommandTest {
+public final class CustomAudienceListCommandTest
+        extends ShellCommandTest<CustomAudienceListCommand> {
 
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
+    public static final String OWNER = CustomAudienceFixture.VALID_OWNER;
     private static final DBCustomAudience CUSTOM_AUDIENCE_1 =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER).setName("ca1").build();
+            DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER, "ca1").setOwner(OWNER).build();
     private static final DBCustomAudience CUSTOM_AUDIENCE_2 =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER)
-                    .setName("ca2")
-                    .setOwner(CUSTOM_AUDIENCE_1.getOwner())
-                    .build();
+            DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER, "ca2").setOwner(OWNER).build();
 
     @Mock private CustomAudienceDao mCustomAudienceDao;
-
     @Test
     public void testRun_simpleCase_returnsSuccess() throws Exception {
         when(mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(
                         CUSTOM_AUDIENCE_1.getOwner(), CUSTOM_AUDIENCE_1.getBuyer()))
                 .thenReturn(List.of(CUSTOM_AUDIENCE_1));
 
-        Result actualResult =
-                run(
-                        new CustomAudienceListCommand(mCustomAudienceDao),
-                        CustomAudienceListCommand.CMD,
-                        "--owner",
-                        CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer",
-                        CUSTOM_AUDIENCE_1.getBuyer().toString());
+        Result actualResult = runCommandAndGetResult();
 
         expectSuccess(actualResult);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
@@ -88,14 +80,7 @@ public final class CustomAudienceListCommandTest extends ShellCommandTest {
         when(mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(any(), any()))
                 .thenReturn(List.of());
 
-        Result actualResult =
-                run(
-                        new CustomAudienceListCommand(mCustomAudienceDao),
-                        CustomAudienceListCommand.CMD,
-                        "--owner",
-                        CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer",
-                        CUSTOM_AUDIENCE_1.getBuyer().toString());
+        Result actualResult = runCommandAndGetResult();
 
         expectSuccess(actualResult);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
@@ -110,14 +95,7 @@ public final class CustomAudienceListCommandTest extends ShellCommandTest {
                         CUSTOM_AUDIENCE_1.getOwner(), CUSTOM_AUDIENCE_1.getBuyer()))
                 .thenReturn(List.of(CUSTOM_AUDIENCE_1, CUSTOM_AUDIENCE_2));
 
-        Result actualResult =
-                run(
-                        new CustomAudienceListCommand(mCustomAudienceDao),
-                        CustomAudienceListCommand.CMD,
-                        "--owner",
-                        CUSTOM_AUDIENCE_1.getOwner(),
-                        "--buyer",
-                        CUSTOM_AUDIENCE_1.getBuyer().toString());
+        Result actualResult = runCommandAndGetResult();
 
         expectSuccess(actualResult);
         JSONArray jsonArray = new JSONObject(actualResult.mOut).getJSONArray("custom_audiences");
@@ -126,5 +104,16 @@ public final class CustomAudienceListCommandTest extends ShellCommandTest {
                 .isEqualTo(2);
         assertThat(fromJson(jsonArray.getJSONObject(0))).isEqualTo(CUSTOM_AUDIENCE_1);
         assertThat(fromJson(jsonArray.getJSONObject(1))).isEqualTo(CUSTOM_AUDIENCE_2);
+    }
+
+    private Result runCommandAndGetResult() {
+        return run(
+                new CustomAudienceListCommand(mCustomAudienceDao),
+                CustomAudienceShellCommandFactory.COMMAND_PREFIX,
+                CustomAudienceListCommand.CMD,
+                "--owner",
+                OWNER,
+                "--buyer",
+                BUYER.toString());
     }
 }

@@ -82,7 +82,7 @@ public class PeriodicEncodingJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
-        if (FlagsFactory.getFlags().getProtectedSignalsServiceKillSwitch()) {
+        if (!FlagsFactory.getFlags().getProtectedSignalsEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .d("FLEDGE Protected Signals API is disabled ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
@@ -166,7 +166,7 @@ public class PeriodicEncodingJobService extends JobService {
             return;
         }
 
-        if (flags.getProtectedSignalsServiceKillSwitch()) {
+        if (!flags.getProtectedSignalsEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .d("FLEDGE Protected Signals API is disabled ; skipping and cancelling job");
             return;

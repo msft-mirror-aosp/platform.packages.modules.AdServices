@@ -27,18 +27,22 @@ import java.util.List;
 
 public class JoinEncryptionKeyTestUtil {
 
-    static final String CONTENT_TYPE_HEADER_LABEL = "content-type";
+    static final String CONTENT_TYPE_HEADER_LABEL = "Content-Type";
     static final String CONTENT_TYPE = "application/ohttp-keys";
     private static final Long EXPIRY_TTL_1SEC = 1L;
 
-    public static final String JOIN_PUBLIC_KEY_1 =
+    public static final String JOIN_PUBLIC_KEY_1_BASE_16 =
             "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e"
                     + "79815500080001000100010003";
+    public static final String JOIN_PUBLIC_KEY_2_BASE_64 =
+            "aMbHJuvvZ4qroxfl/WmLdLITQ4linmPqd7WXvd2WJt8yAAQAAQAC";
+    public static final String JOIN_PUBLIC_KEY_2_BASE_16 =
+            "68c6c726ebef678aaba317e5fd698b74b2134389629e63ea77b597bddd9626df32000400010002";
 
     static final DBEncryptionKey ENCRYPTION_KEY_JOIN =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("key_id_2")
-                    .setPublicKey("public_key_2")
+                    .setPublicKey(JOIN_PUBLIC_KEY_1_BASE_16)
                     .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_JOIN)
                     .setExpiryTtlSeconds(1000L)
                     .build();
@@ -46,7 +50,7 @@ public class JoinEncryptionKeyTestUtil {
     static final DBEncryptionKey ENCRYPTION_KEY_JOIN_TTL_1SECS =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("key_id_5")
-                    .setPublicKey("public_key_5")
+                    .setPublicKey(JOIN_PUBLIC_KEY_1_BASE_16)
                     .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_JOIN)
                     .setExpiryTtlSeconds(EXPIRY_TTL_1SEC)
                     .build();
@@ -55,7 +59,7 @@ public class JoinEncryptionKeyTestUtil {
             ImmutableMap.of(CONTENT_TYPE_HEADER_LABEL, List.of(CONTENT_TYPE));
 
     static String getDefaultJoinResponseBody() {
-        return JOIN_PUBLIC_KEY_1;
+        return JOIN_PUBLIC_KEY_2_BASE_64;
     }
 
     static AdServicesHttpClientResponse mockJoinKeyFetchResponse() {

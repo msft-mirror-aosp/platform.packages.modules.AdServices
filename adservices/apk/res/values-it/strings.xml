@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android rileva argomenti di interesse in base alle app usate di recente. Inoltre, le app e i loro partner pubblicitari possono usare la tua attività su altre app di questo dispositivo per personalizzare gli annunci, contribuendo sempre a mantenere la tua identità privata e al sicuro."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Le app che usi possono anche stabilire i tuoi interessi in base alla tua attività nelle app. Per esempio, se usi regolarmente app di cucina, nelle altre app potresti visualizzare annunci per i servizi di consegna della spesa o per contenuti correlati.\n\nLe app possono archiviare in modo sicuro queste informazioni, così solo i partner pubblicitari potranno utilizzarle per personalizzare gli annunci nelle altre app."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"In seguito, un\'app che utilizzi può chiedere queste informazioni: gli argomenti degli annunci o gli annunci suggeriti dalle app utilizzate."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Le app che usi possono chiedere ad Android informazioni che le aiutino a misurare il rendimento dei loro annunci. Android protegge la tua privacy limitando le informazioni condivisibili tra le app."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

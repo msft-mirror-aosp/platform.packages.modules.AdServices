@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android mencatat topik minat berdasarkan aplikasi yang Anda gunakan baru-baru ini. Selain itu, aplikasi dan partner iklan aplikasi dapat menggunakan aktivitas Anda di berbagai aplikasi lain di perangkat ini untuk mempersonalisasi iklan dengan tetap membantu menjaga kerahasiaan dan keamanan identitas Anda."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Aplikasi yang Anda gunakan juga dapat menentukan hal-hal yang Anda sukai berdasarkan aktivitas aplikasi Anda. Misalnya, jika Anda rutin menggunakan aplikasi memasak, Anda akan melihat iklan untuk layanan pengiriman bahan makanan atau konten terkait di aplikasi lain.\n\nAplikasi dapat menyimpan informasi ini dengan aman agar informasi tersebut hanya dapat digunakan oleh partner iklannya untuk mempersonalisasi iklan di aplikasi lain."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Nantinya, aplikasi yang Anda gunakan dapat meminta informasi ini — baik topik iklan atau iklan yang disarankan oleh aplikasi yang telah Anda gunakan."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Aplikasi yang Anda gunakan dapat meminta informasi dari Android untuk membantu mereka mengukur performa iklan. Android membantu melindungi privasi Anda dengan membatasi informasi yang dapat dibagikan antar-aplikasi."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
