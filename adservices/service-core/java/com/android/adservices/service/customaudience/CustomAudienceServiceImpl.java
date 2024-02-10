@@ -28,6 +28,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesPermissions;
@@ -40,6 +41,8 @@ import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceService;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateCallback;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateInput;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
@@ -376,6 +379,48 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         .setErrorMessage(exception.getMessage())
                         .build());
         return resultCode;
+    }
+
+    @Override
+    public void scheduleCustomAudienceUpdate(
+            ScheduleCustomAudienceUpdateInput input,
+            ScheduleCustomAudienceUpdateCallback callback) {
+        final int apiName = AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
+        try {
+            Objects.requireNonNull(input);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(
+                mContext,
+                input.getCallerPackageName(),
+                apiName,
+                AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+
+        final int callerUid = getCallingUid(apiName);
+        final DevContext devContext = mDevContextFilter.createDevContext();
+
+        mExecutorService.execute(
+                () -> {
+                    ScheduleCustomAudienceUpdateImpl impl =
+                            new ScheduleCustomAudienceUpdateImpl(
+                                    mContext,
+                                    mConsentManager,
+                                    callerUid,
+                                    mFlags,
+                                    mAdServicesLogger,
+                                    AdServicesExecutors.getBackgroundExecutor(),
+                                    mCustomAudienceServiceFilter,
+                                    mCustomAudienceImpl.getCustomAudienceDao());
+
+                    impl.doScheduleCustomAudienceUpdate(input, callback, devContext);
+                });
     }
 
     /**
