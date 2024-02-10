@@ -25,6 +25,13 @@ public class ServiceUnavailableExceptionTest extends AdServicesUnitTestCase {
     public static final String ERROR_MESSAGE = "error_message";
 
     @Test
+    public void testAdServicesUnavailableException_default() {
+        ServiceUnavailableException exception = new ServiceUnavailableException();
+
+        expect.that(exception).hasMessageThat().isNull();
+    }
+
+    @Test
     public void testAdServicesUnavailableException_correctErrorMsg() {
         ServiceUnavailableException exception = new ServiceUnavailableException(ERROR_MESSAGE);
 
