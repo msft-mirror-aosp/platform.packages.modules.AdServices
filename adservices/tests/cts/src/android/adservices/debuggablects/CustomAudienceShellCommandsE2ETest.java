@@ -120,14 +120,14 @@ public class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsT
 
         JSONArray customAudiences =
                 runAndParseShellCommand(
-                                "cmd adservices_manager %s --owner %s --buyer %s",
-                                "list-custom-audiences", OWNER, BUYER.toString())
+                                "cmd adservices_manager %s %s --owner %s --buyer %s",
+                                "custom-audience", "list", OWNER, BUYER.toString())
                         .getJSONArray("custom_audiences");
         mCustomAudienceTestFixture.leaveCustomAudience(mShirtsCustomAudience);
         JSONArray customAudiencesAfterLeaving =
                 runAndParseShellCommand(
-                                "cmd adservices_manager %s --owner %s --buyer %s",
-                                "list-custom-audiences", OWNER, BUYER.toString())
+                                "cmd adservices_manager %s %s --owner %s --buyer %s",
+                                "custom-audience", "list", OWNER, BUYER.toString())
                         .getJSONArray("custom_audiences");
 
         assertThat(
@@ -148,8 +148,9 @@ public class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsT
 
         JSONObject customAudience =
                 runAndParseShellCommand(
-                        "cmd adservices_manager %s --owner %s --buyer %s --name %s",
-                        "view-custom-audience",
+                        "cmd adservices_manager %s %s --owner %s --buyer %s --name %s",
+                        "custom-audience",
+                        "view",
                         OWNER,
                         BUYER.toString(),
                         mShirtsCustomAudience.getName());

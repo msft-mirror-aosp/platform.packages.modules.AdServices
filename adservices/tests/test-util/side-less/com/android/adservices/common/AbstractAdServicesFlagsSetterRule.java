@@ -113,14 +113,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
-    /**
-     * Overrides the device config flag that sets max time period between each epoch computation job
-     * run.
-     */
-    public T setTopicsEpochJobPeriodMs(long value) {
-        return setFlag(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
-    }
-
     /** Overrides the system property that defines the percentage for random topic. */
     public T setTopicsPercentageForRandomTopicForTests(long value) {
         return setSystemProperty(FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);

@@ -36,9 +36,11 @@ import java.util.List;
 // TODO(b/318496217): Merge with background fetch data in follow-up CL.
 final class CustomAudienceListCommand extends AbstractShellCommand {
 
-    @VisibleForTesting public static final String CMD = "list-custom-audiences";
+    @VisibleForTesting public static final String CMD = "list";
     public static final String HELP =
-            CMD
+            CustomAudienceShellCommandFactory.COMMAND_PREFIX
+                    + " "
+                    + CMD
                     + " --"
                     + CustomAudienceArgs.OWNER
                     + " <owner> --"
@@ -46,11 +48,12 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
                     + " <buyer>";
 
     private final CustomAudienceDao mCustomAudienceDao;
-    private final ArgParser mArgParser;
+    private final CustomAudienceArgParser mCustomAudienceArgParser;
 
     CustomAudienceListCommand(CustomAudienceDao customAudienceDao) {
         mCustomAudienceDao = customAudienceDao;
-        mArgParser = new ArgParser(CustomAudienceArgs.OWNER, CustomAudienceArgs.BUYER);
+        mCustomAudienceArgParser =
+                new CustomAudienceArgParser(CustomAudienceArgs.OWNER, CustomAudienceArgs.BUYER);
     }
 
     @Override
@@ -61,16 +64,17 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
     @Override
     public int run(PrintWriter out, PrintWriter err, String[] args) {
         try {
-            mArgParser.parse(args);
+            mCustomAudienceArgParser.parse(args);
         } catch (IllegalArgumentException e) {
             err.printf("Failed to parse arguments: %s\n", e.getMessage());
             Log.e(TAG, "Failed to parse arguments: " + e.getMessage());
             return invalidArgsError(HELP, err, args);
         }
 
-        String owner = mArgParser.getValue(CustomAudienceArgs.OWNER);
+        String owner = mCustomAudienceArgParser.getValue(CustomAudienceArgs.OWNER);
         AdTechIdentifier buyer =
-                AdTechIdentifier.fromString(mArgParser.getValue(CustomAudienceArgs.BUYER));
+                AdTechIdentifier.fromString(
+                        mCustomAudienceArgParser.getValue(CustomAudienceArgs.BUYER));
         try {
             out.print(createOutputJson(queryForCustomAudiences(owner, buyer)));
         } catch (JSONException e) {

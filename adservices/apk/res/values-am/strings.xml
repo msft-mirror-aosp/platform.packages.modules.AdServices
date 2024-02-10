@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android በቅርብ በተጠቀሙት መተግበሪያ ላይ በመመሥረት የዝንባሌ ርዕሶች ያስተውላል። እንዲሁም መተግበሪያዎች እና የማስታወቂያ አጋራቸው የእርስዎን ማንነት የግል እና ደህንነቱ የተጠበቀ አድርጎ መቆየት ላይ እያገዙ ሳለ ማስታወቂያዎችን ግላዊ ለማድረግ በዚህ መሣሪያ ላይ ሌሎች መተግበሪያዎች ላይ እንቅስቃሴዎን መጠቀም ይችላሉ።"</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  እንዲሁም እርስዎ የሚጠቀሟቸው መተግበሪያዎች በመተግበሪያ እንቅስቃሴዎ ላይ በመመስረ እርስዎ የሚወዱትን ማወቅ ይችላሉ። ለምሳሌ፣ በመደበኛው የምግብ ማዘጋጃ መተግበሪያዎችን የሚጠቀሙ ከሆነ ሌሎች መተግበሪያዎች ውስጥ የሸቀጣ ሸቀጥ ማድረስ አገልግሎቶች ወይም የተዛማጅ ይዘት ማስታወቂያዎችን ሊመለከቱ ይችላሉ።\n\nሌሎች መተግበሪያዎች ላይ ማስታወቂያን ግላዊ ለማድረግ በማስታወቂያ አጋሮቻቸው ብቻ ጥቅም ላይ እንዲውል መተግበሪያዎች ይህን መረጃ ደህንነቱን ጠብቀው ማከማቸት ይቻላሉ።"</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"በኋላ፣ የሚጠቀሙበት መተግበሪያ ይህን መረጃ ሊጠይቅ ይችላል – የእርስዎን የማስታወቂያ ርዕሶች ወይም በተጠቀሟቸው መተግበሪያዎች የተጠቆሙ ማስታወቂያዎችን።"</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች እርስበርስ ማጋራት የሚችሉትን መረጃ በመገደብ ግላዊነትዎን ለመጠበቅ ያግዛል።"</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

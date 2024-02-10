@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android lưu ý các chủ đề bạn quan tâm dựa trên những ứng dụng bạn dùng gần đây. Ngoài ra, ứng dụng và đối tác quảng cáo của những ứng dụng này có thể sử dụng hoạt động của bạn trên các ứng dụng khác trên thiết bị này để cá nhân hoá quảng cáo, trong khi vẫn đảm bảo an toàn và riêng tư cho danh tính của bạn."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Các ứng dụng bạn dùng cũng có thể xác định những điều bạn thích dựa trên hoạt động của bạn trong ứng dụng. Ví dụ: nếu thường xuyên dùng các ứng dụng nấu ăn, có thể bạn sẽ thấy quảng cáo về dịch vụ giao hàng tạp hóa hoặc nội dung có liên quan trong các ứng dụng khác.\n\nCác ứng dụng có thể lưu trữ thông tin này một cách an toàn sao cho chỉ các đối tác quảng cáo của họ mới sử dụng được thông tin này để cá nhân hoá quảng cáo trên các ứng dụng khác."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Sau đó, một ứng dụng bạn dùng có thể yêu cầu cấp thông tin này, có thể là chủ đề quảng cáo hoặc quảng cáo do các ứng dụng bạn dùng đề xuất."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Các ứng dụng bạn dùng có thể yêu cầu Android cung cấp thông tin để giúp những ứng dụng đó đo lường hiệu suất của quảng cáo của họ. Android giúp bạn bảo vệ quyền riêng tư của mình bằng cách giới hạn thông tin các ứng dụng có thể chia sẻ với nhau."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

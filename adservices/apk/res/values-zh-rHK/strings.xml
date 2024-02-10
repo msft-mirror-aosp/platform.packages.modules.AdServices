@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android 會根據你最近使用過的應用程式，記住你感興趣的主題。此外，應用程式及其廣告合作夥伴可根據此裝置上其他應用程式的活動放送個人化廣告，同時保護你的身分私隱和安全。"</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  你使用的應用程式亦可以根據你的應用程式活動，判斷你喜歡的內容。例如，如果你定期使用烹飪應用程式，可能會在其他應用程式中看到雜貨送貨服務或相關內容。\n\n應用程式會安全儲存這類資料，只有廣告合作夥伴才能使用這類資料在應用程式中放送個人化廣告。"</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"你日後使用的應用程式可要求取得此資料，包括廣告主題或你使用過的應用程式建議的廣告。"</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"你使用的應用程式可要求 Android 提供相關資料，以評估廣告成效。Android 限制應用程式之間可分享的資料，從而保護你的私隱。"</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

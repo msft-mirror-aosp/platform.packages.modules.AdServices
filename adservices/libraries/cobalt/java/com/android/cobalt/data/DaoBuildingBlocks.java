@@ -595,6 +595,16 @@ public abstract class DaoBuildingBlocks {
     @Query("DELETE FROM AggregateStore WHERE day_index < :oldestDayIndex")
     abstract Void deleteOldAggregates(int oldestDayIndex);
 
+    /** Deletes string hashes that don't have corresponding values in the aggregate store. */
+    @Query(
+            "DELETE FROM StringHashes "
+                    + "WHERE (customer_id, project_id, metric_id, report_id, day_index) "
+                    + "NOT IN ( "
+                    + "SELECT DISTINCT customer_id, project_id, metric_id, report_id, day_index "
+                    + "FROM AggregateStore "
+                    + ")")
+    abstract void deleteUnusedStringHashes();
+
     /** Delete system profiles which don't appear in the aggregate store. */
     @Query(
             "DELETE FROM SystemProfiles "
