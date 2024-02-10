@@ -21,12 +21,9 @@ import static com.android.adservices.service.shell.AdServicesShellCommandHandler
 import android.adservices.common.AdTechIdentifier;
 import android.util.Log;
 
-import androidx.annotation.VisibleForTesting;
-
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,9 +36,11 @@ import java.util.List;
 // TODO(b/318496217): Merge with background fetch data in follow-up CL.
 final class CustomAudienceListCommand extends AbstractShellCommand {
 
-    public static final String CMD = "list-custom-audiences";
+    @VisibleForTesting public static final String CMD = "list";
     public static final String HELP =
-            CMD
+            CustomAudienceShellCommandFactory.COMMAND_PREFIX
+                    + " "
+                    + CMD
                     + " --"
                     + CustomAudienceArgs.OWNER
                     + " <owner> --"
@@ -49,33 +48,33 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
                     + " <buyer>";
 
     private final CustomAudienceDao mCustomAudienceDao;
-    private final ArgParser mArgParser;
+    private final CustomAudienceArgParser mCustomAudienceArgParser;
 
-    CustomAudienceListCommand() {
-        this(
-                CustomAudienceDatabase.getInstance(ApplicationContextSingleton.get())
-                        .customAudienceDao());
-    }
-
-    @VisibleForTesting
     CustomAudienceListCommand(CustomAudienceDao customAudienceDao) {
         mCustomAudienceDao = customAudienceDao;
-        mArgParser = new ArgParser(CustomAudienceArgs.OWNER, CustomAudienceArgs.BUYER);
+        mCustomAudienceArgParser =
+                new CustomAudienceArgParser(CustomAudienceArgs.OWNER, CustomAudienceArgs.BUYER);
+    }
+
+    @Override
+    public String getCommandName() {
+        return CMD;
     }
 
     @Override
     public int run(PrintWriter out, PrintWriter err, String[] args) {
         try {
-            mArgParser.parse(args);
+            mCustomAudienceArgParser.parse(args);
         } catch (IllegalArgumentException e) {
             err.printf("Failed to parse arguments: %s\n", e.getMessage());
             Log.e(TAG, "Failed to parse arguments: " + e.getMessage());
             return invalidArgsError(HELP, err, args);
         }
 
-        String owner = mArgParser.getValue(CustomAudienceArgs.OWNER);
+        String owner = mCustomAudienceArgParser.getValue(CustomAudienceArgs.OWNER);
         AdTechIdentifier buyer =
-                AdTechIdentifier.fromString(mArgParser.getValue(CustomAudienceArgs.BUYER));
+                AdTechIdentifier.fromString(
+                        mCustomAudienceArgParser.getValue(CustomAudienceArgs.BUYER));
         try {
             out.print(createOutputJson(queryForCustomAudiences(owner, buyer)));
         } catch (JSONException e) {

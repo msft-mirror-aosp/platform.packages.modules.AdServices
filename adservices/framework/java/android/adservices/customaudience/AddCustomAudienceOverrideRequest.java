@@ -23,6 +23,8 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -86,7 +88,7 @@ public class AddCustomAudienceOverrideRequest {
      *
      * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
      */
-    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     public long getBiddingLogicJsVersion() {
         return mBiddingLogicJsVersion;
     }
@@ -150,7 +152,7 @@ public class AddCustomAudienceOverrideRequest {
          *
          * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
          */
-        @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+        @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
         @NonNull
         public AddCustomAudienceOverrideRequest.Builder setBiddingLogicJsVersion(
                 long biddingLogicJsVersion) {

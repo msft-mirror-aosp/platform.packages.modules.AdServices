@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
 import android.adservices.adselection.AdSelectionCallback;
@@ -54,6 +58,7 @@ import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -385,13 +390,19 @@ public class OutcomeSelectionRunner {
         try {
             sLogger.e("Notify caller of error: " + t);
             int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+            int failureReason =
+                    resultCode == STATUS_CALLER_NOT_ALLOWED
+                            ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
+                            : FAILURE_REASON_UNSET;
 
             // Skip logging if a FilterException occurs.
             // AdSelectionServiceFilter ensures the failing assertion is logged internally.
             // Note: Failure is logged before the callback to ensure deterministic testing.
             if (!(t instanceof FilterException)) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
+                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        /* latencyMs= */ 0,
+                        new ApiCallStats.Result(resultCode, failureReason));
             }
 
             FledgeErrorResponse selectionFailureResponse =

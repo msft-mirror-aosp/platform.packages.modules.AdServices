@@ -37,12 +37,13 @@ import android.os.RemoteException;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /** ProtectedSignalsManager provides APIs for apps and ad-SDKs to manage their protected signals. */
-@FlaggedApi("com.android.adservices.flags.protected_signals_enabled")
+@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -158,6 +159,9 @@ public class ProtectedSignalsManager {
      *
      * <p>The sub-key for providing an encoder endpoint is "endpoint" and the value is the URI
      * string for the endpoint.
+     *
+     * <p>On success, the onResult method of the provided OutcomeReceiver will be called with an
+     * empty Object. This Object has no significance and is used merely as a placeholder.
      *
      * <p>Key may only be operated on by one command per JSON. If two command attempt to operate on
      * the same key, this method will through an {@link IllegalArgumentException}

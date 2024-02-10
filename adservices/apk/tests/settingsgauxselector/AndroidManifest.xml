@@ -30,4 +30,6 @@
             android:name="androidx.test.runner.AndroidJUnitRunner"
             android:label="AdServices UI Test Cases"
             android:targetPackage="com.android.adservices.tests.ui" />
+
+    <application android:debuggable="true"/>
 </manifest>

@@ -24,6 +24,8 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -54,7 +56,7 @@ import java.util.Objects;
  *   <li>{@code Strings} get encoded into byte[] using UTF-8 encoding
  * </ul>
  */
-@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class SignedContextualAds implements Parcelable {
     private static final String BUYER_CANNOT_BE_NULL = "Buyer cannot be null.";
     private static final String DECISION_LOGIC_URI_CANNOT_BE_NULL =

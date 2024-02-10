@@ -87,7 +87,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         // UiDialogFragmentEnable flag should be on for this test
         doReturn(true).when(mMockFlags).getUiDialogFragmentEnabled();
-        doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
+        doReturn(true).when(mMockFlags).getUiDialogsFeatureEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(10001, 1, 1));

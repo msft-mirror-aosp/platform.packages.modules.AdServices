@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android voi muistaa sinua kiinnostavia aiheita äskettäin käyttämiesi sovellusten perusteella. Sovellukset ja niiden mainontakumppanit voivat myös käyttää toimintaasi muissa tämän laitteen sovelluksissa mainosten personointiin samalla, kun ne pitävät henkilöllisyytesi yksityisenä ja suojattuna."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Käyttämäsi sovellukset voivat päätellä sovellustoimintasi perusteella, mistä pidät. Jos esimerkiksi käytät säännöllisesti ruoanlaittosovelluksia, saatat nähdä muissa sovelluksissa ruokaostosten toimitukseen liittyvien palveluiden mainoksia tai tähän liittyvää sisältöä.\n\nSovellukset voivat tallentaa näitä tietoja turvallisesti niin, että mainontakumppanit voivat käyttää niitä vain mainosten personointiin muissa sovelluksissa."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Myöhemmin käyttämäsi sovellus voi pyytää näitä tietoja – joko mainosaiheita tai käyttämiesi sovellusten ehdottamia mainoksia."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Käyttämäsi sovellukset voivat pyytää Androidilta tietoja, jotka auttavat sovelluksia mittaamaan mainostuloksia. Android auttaa suojaamaan yksityisyyttäsi rajoittamalla sovellusten toistensa kanssa jakamia tietoja."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

@@ -20,6 +20,8 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.os.LimitExceededException;
 
+import com.android.adservices.shared.common.ServiceUnavailableException;
+
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.lang.annotation.Retention;
@@ -33,7 +35,8 @@ import java.util.concurrent.TimeoutException;
  *
  * @hide
  */
-public class AdServicesStatusUtils {
+public final class AdServicesStatusUtils {
+
     /**
      * The status code has not been set. Keep unset status code the lowest value of the status
      * codes.
@@ -167,15 +170,39 @@ public class AdServicesStatusUtils {
      */
     public static final int STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET = 18;
 
+    public static final int FAILURE_REASON_UNSET = 0;
+
+    // Failure Reason - Package Allowlist
+    public static final int FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST = 1;
+
+    // Failure Reason - Package Blocklist
+    public static final int FAILURE_REASON_PACKAGE_BLOCKLISTED = 2;
+
+    // Failure Reason - Enrollment
+    public static final int FAILURE_REASON_ENROLLMENT_BLOCKLISTED = 3;
+    public static final int FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND = 4;
+    public static final int FAILURE_REASON_ENROLLMENT_INVALID_ID = 5;
+
+    // Failure Reason - Dev Options
+    public static final int FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST = 6;
+
+    // Failure Reason - Foreground
+    public static final int FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND = 7;
+    public static final int FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION = 8;
+
+    // Failure Reason - App Manifest AdServices Config
+    public static final int FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION = 9;
+
+    // Failure Reason - Calling Package
+    public static final int FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND = 10;
+    public static final int FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID = 11;
+
     /**
      * Result code for Encryption related failures.
      *
      * <p>This error may be considered similar to {@link IllegalArgumentException}.
      */
     public static final int STATUS_ENCRYPTION_FAILURE = 19;
-
-    /** The error message to be returned along with {@link IllegalStateException}. */
-    public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
 
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
@@ -229,38 +256,6 @@ public class AdServicesStatusUtils {
     /** The error message to be returned along with {@link IllegalArgumentException}. */
     public static final String ENCRYPTION_FAILURE_MESSAGE = "Failed to encrypt responses.";
 
-    // API codes used for logging. Keep in sync with the AdServicesApiName in
-    // frameworks/proto_logging/stats/atoms.proto
-    // TODO(b/323439428): Add unit test for api name code.
-    public static final int API_NAME_GET_TOPICS = 1;
-    public static final int API_NAME_JOIN_CUSTOM_AUDIENCE = 2;
-    public static final int API_NAME_LEAVE_CUSTOM_AUDIENCE = 3;
-    public static final int API_NAME_SELECT_ADS = 4;
-    public static final int API_NAME_REGISTER_SOURCE = 5;
-    public static final int API_NAME_DELETE_REGISTRATIONS = 6;
-    public static final int API_NAME_REPORT_IMPRESSION = 7;
-    public static final int API_NAME_OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO = 8;
-    public static final int API_NAME_REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE = 9;
-    public static final int API_NAME_RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES = 10;
-    public static final int API_NAME_OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO = 11;
-    public static final int API_NAME_REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE = 12;
-    public static final int API_NAME_RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES = 13;
-    public static final int API_NAME_GET_ADID = 14;
-    public static final int API_NAME_GET_APPSETID = 15;
-    public static final int API_NAME_REGISTER_TRIGGER = 16;
-    public static final int API_NAME_REGISTER_WEB_SOURCE = 17;
-    public static final int API_NAME_REGISTER_WEB_TRIGGER = 18;
-    public static final int API_NAME_GET_MEASUREMENT_API_STATUS = 19;
-    public static final int API_NAME_GET_TOPICS_PREVIEW_API = 20;
-    public static final int API_NAME_SELECT_ADS_FROM_OUTCOMES = 21;
-    public static final int API_NAME_SET_APP_INSTALL_ADVERTISERS = 22;
-    public static final int API_NAME_REPORT_INTERACTION = 23;
-    public static final int API_NAME_UPDATE_AD_COUNTER_HISTOGRAM = 24;
-    public static final int API_NAME_FETCH_AND_JOIN_CUSTOM_AUDIENCE = 25;
-    public static final int API_NAME_REGISTER_SOURCES = 26;
-    public static final int API_NAME_GET_AD_SERVICES_EXT_DATA = 27;
-    public static final int API_NAME_PUT_AD_SERVICES_EXT_DATA = 28;
-
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
@@ -280,7 +275,7 @@ public class AdServicesStatusUtils {
             case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
-                return new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                return new ServiceUnavailableException();
             case STATUS_PERMISSION_NOT_REQUESTED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
@@ -343,41 +338,31 @@ public class AdServicesStatusUtils {
     public @interface StatusCode {}
 
     /**
-     * Api name codes used for app name api error logging.
+     * Failure reason codes that are common across various APIs.
      *
      * @hide
      */
     @IntDef(
+            prefix = {"FAILURE_REASON_"},
             value = {
-                API_NAME_GET_TOPICS,
-                API_NAME_JOIN_CUSTOM_AUDIENCE,
-                API_NAME_LEAVE_CUSTOM_AUDIENCE,
-                API_NAME_SELECT_ADS,
-                API_NAME_REGISTER_SOURCE,
-                API_NAME_DELETE_REGISTRATIONS,
-                API_NAME_REPORT_IMPRESSION,
-                API_NAME_OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
-                API_NAME_REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
-                API_NAME_RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
-                API_NAME_OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
-                API_NAME_REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE,
-                API_NAME_RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES,
-                API_NAME_GET_ADID,
-                API_NAME_GET_APPSETID,
-                API_NAME_REGISTER_TRIGGER,
-                API_NAME_REGISTER_WEB_SOURCE,
-                API_NAME_REGISTER_WEB_TRIGGER,
-                API_NAME_GET_MEASUREMENT_API_STATUS,
-                API_NAME_GET_TOPICS_PREVIEW_API,
-                API_NAME_SELECT_ADS_FROM_OUTCOMES,
-                API_NAME_SET_APP_INSTALL_ADVERTISERS,
-                API_NAME_REPORT_INTERACTION,
-                API_NAME_UPDATE_AD_COUNTER_HISTOGRAM,
-                API_NAME_FETCH_AND_JOIN_CUSTOM_AUDIENCE,
-                API_NAME_REGISTER_SOURCES,
-                API_NAME_GET_AD_SERVICES_EXT_DATA,
-                API_NAME_PUT_AD_SERVICES_EXT_DATA
+                FAILURE_REASON_UNSET,
+                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST,
+                FAILURE_REASON_PACKAGE_BLOCKLISTED,
+                FAILURE_REASON_ENROLLMENT_BLOCKLISTED,
+                FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND,
+                FAILURE_REASON_ENROLLMENT_INVALID_ID,
+                FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND,
+                FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION,
+                FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
+                FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND,
+                FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID
             })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface ApiNameCode {}
+    public @interface FailureReason {}
+
+
+    private AdServicesStatusUtils() {
+        throw new UnsupportedOperationException();
+    }
 }

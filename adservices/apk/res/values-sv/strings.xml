@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android registrerar ämnen du är intresserad av baserat på appar du nyligen har använt. Dessutom kan appar och deras annonseringspartners använda din aktivitet på andra appar på den här enheten för att anpassa annonser samtidigt som din identitet förblir privat och säker."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Appar som du använder kan också bedöma vad du gillar baserat på hur du använder dem. Om du till exempel regelbundet använder matlagningsappar kan du se annonser för livsmedelsleveranser eller relaterat innehåll i andra appar.\n\nAppar kan lagra den här informationen på ett säkert sätt så att den endast kan användas av deras annonseringspartners för att anpassa annonser på andra appar."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Senare kan en app du använder be om denna information – antingen dina annonsämnen eller annonser som föreslås av appar du har använt."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Appar du använder kan be Android om information för att hjälpa dem att mäta annonsernas resultat. Android hjälper till att skydda din integritet genom att begränsa informationen som appar kan dela med varandra."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

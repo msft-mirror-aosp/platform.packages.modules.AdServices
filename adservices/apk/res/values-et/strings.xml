@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android jätab teie hiljuti kasutatud rakenduste alusel meelde teid huvitavad teemad. Samuti saavad rakendused ja nende reklaamipartnerid kasutada teie tegevust selle seadme muudes rakendustes reklaamide isikupärastamiseks, aidates samal ajal teie identiteeti privaatsena ja turvalisena hoida."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Kasutatavad rakendused võivad teie rakendustegevuse põhjal määrata, mis teile meeldib. Näiteks kui kasutate regulaarselt toiduvalmistamisrakendusi, võite teistes rakendustes näha toidukaupade kohaletoimetamisteenuste reklaame või sellega seotud sisu.\n\nRakendused saavad seda teavet turvaliselt salvestada, nii et seda saavad kasutada ainult nende reklaamipartnerid teiste rakenduste reklaamide isikupärastamiseks."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Hiljem võib mõni teie kasutatav rakendus seda teavet (teavet teie reklaamiteemade või teie kasutatud rakenduste soovitatud reklaamide kohta) küsida."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Rakendused, mida kasutate, võivad oma reklaamide toimivuse mõõtmiseks Androidilt teavet küsida. Android aitab kaitsta teie privaatsust, piirates teavet, mida rakendused saavad üksteisega jagada."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

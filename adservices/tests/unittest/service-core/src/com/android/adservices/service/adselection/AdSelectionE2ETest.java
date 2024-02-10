@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
@@ -90,7 +91,6 @@ import android.adservices.adselection.SignedContextualAds;
 import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
-import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallerMetadata;
@@ -159,6 +159,7 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
@@ -2706,8 +2707,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2774,8 +2775,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2869,8 +2870,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -4843,8 +4844,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -4884,8 +4885,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -4931,8 +4932,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5143,8 +5144,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5256,8 +5257,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5368,8 +5369,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5726,8 +5727,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6619,8 +6620,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_TIMEOUT),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6671,8 +6672,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6762,8 +6763,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6864,8 +6865,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                        eq(STATUS_INTERNAL_ERROR),
-                        geq((int) BINDER_ELAPSED_TIME_MS));
+                        geq((int) BINDER_ELAPSED_TIME_MS),
+                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -7002,11 +7003,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredAnyPermission(
                         mSpyContext,
                         invalidPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                        AdSelectionServiceImpl.PERMISSIONS_SET);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7073,11 +7074,11 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         geq(0));
 
         verify(mFledgeAuthorizationFilterSpy)
-                .assertAppDeclaredPermission(
+                .assertAppDeclaredAnyPermission(
                         mSpyContext,
                         invalidPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+                        AdSelectionServiceImpl.PERMISSIONS_SET);
     }
 
     @Test
@@ -7632,8 +7633,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             verify(mAdServicesLoggerMock)
                     .logFledgeApiCallStats(
                             eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                            eq(STATUS_INTERNAL_ERROR),
-                            geq((int) BINDER_ELAPSED_TIME_MS));
+                            geq((int) BINDER_ELAPSED_TIME_MS),
+                            eq(
+                                    new ApiCallStats.Result(
+                                            STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
         } finally {
             // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
             JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger()).shutdown();

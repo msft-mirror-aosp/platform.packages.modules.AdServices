@@ -22,6 +22,8 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.flags.Flags;
+
 /**
  * Represents a request containing the information to get ad selection data.
  *
@@ -53,7 +55,7 @@ public final class GetAdSelectionDataRequest {
      *     origin
      */
     @Nullable
-    @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled")
+    @FlaggedApi(Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED)
     public Uri getCoordinatorOriginUri() {
         return mCoordinatorOriginUri;
     }
@@ -86,7 +88,7 @@ public final class GetAdSelectionDataRequest {
          * {@link AdSelectionManager#getAdSelectionData} will throw an IllegalArgumentException
          */
         @NonNull
-        @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled")
+        @FlaggedApi(Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED)
         public GetAdSelectionDataRequest.Builder setCoordinatorOriginUri(
                 @Nullable Uri coordinatorOriginUri) {
             this.mCoordinatorOriginUri = coordinatorOriginUri;

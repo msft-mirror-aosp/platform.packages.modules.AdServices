@@ -93,6 +93,7 @@ public class AppSearchDaoTest {
                     /* packageName= */ TEST, /* sha256= */ new Signature(SHA).toByteArray());
 
     private static final int APPSEARCH_READ_TIMEOUT_MS = 500;
+    private static final int APPSEARCH_WRITE_TIMEOUT_MS = 200;
 
     @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -107,6 +108,7 @@ public class AppSearchDaoTest {
         MockitoAnnotations.initMocks(this);
         when(mFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
         when(mFlags.getAppSearchReadTimeout()).thenReturn(APPSEARCH_READ_TIMEOUT_MS);
+        when(mFlags.getAppSearchWriteTimeout()).thenReturn(APPSEARCH_WRITE_TIMEOUT_MS);
         doReturn(mFlags).when(FlagsFactory::getFlags);
     }
 

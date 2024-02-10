@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android mengetahui topik yang anda minati berdasarkan apl yang anda gunakan baru-baru ini. Juga, apl dan rakan kongsi pengiklanan mereka boleh menggunakan aktiviti anda merentas apl lain pada peranti ini untuk memeribadikan iklan di samping tetap membantu dalam memastikan identiti anda dirahsiakan dan selamat."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Apl yang anda gunakan juga boleh menentukan perkara yang anda minati berdasarkan pada aktiviti apl anda. Contohnya, jika anda sering menggunakan apl memasak, anda mungkin melihat iklan untuk perkhidmatan penghantaran barang runcit atau kandungan berkaitan dalam apl lain.\n\nApl boleh menyimpan maklumat ini dengan selamat supaya maklumat tersebut hanya boleh digunakan oleh rakan kongsi pengiklanan untuk memeribadikan iklan pada apl lain."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Kemudian, apl yang anda gunakan boleh meminta maklumat ini — sama ada topik iklan anda atau iklan yang dicadangkan oleh apl yang telah anda gunakan."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Apl yang anda gunakan boleh meminta Android maklumat untuk membantu apl mengukur prestasi iklan apl. Android membantu dalam melindungi privasi anda dengan mengehadkan maklumat yang boleh dikongsi oleh apl dengan satu sama lain."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
