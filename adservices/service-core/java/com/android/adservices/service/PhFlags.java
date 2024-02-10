@@ -130,15 +130,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getTopicsEpochJobFlexMs() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // The priority of applying the flag values: PH (DeviceConfig), then
         // hard-coded value.
         long topicsEpochJobFlexMs =
-                SystemProperties.getLong(
-                        getSystemPropertyName(FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS),
-                        /* defaultValue */ DeviceConfig.getLong(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS,
-                                /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS));
+                DeviceConfig.getLong(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                        /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS);
         if (topicsEpochJobFlexMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobFlexMs should > 0");
         }
@@ -2579,6 +2577,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerOmitAdsEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4850,6 +4856,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED
                         + " = "
                         + getFledgeAuctionServerOmitAdsEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerRequestFlagsEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT
