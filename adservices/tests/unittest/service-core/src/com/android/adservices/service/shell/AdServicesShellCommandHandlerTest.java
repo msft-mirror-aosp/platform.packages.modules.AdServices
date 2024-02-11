@@ -277,11 +277,9 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         Map<String, List<String>> commandToFactories = new HashMap<>();
         for (ShellCommandFactory factory :
                 mShellCommandFactorySupplier.getAllShellCommandFactories()) {
-            for (String cmd : factory.getAllCommands()) {
-                commandToFactories
-                        .computeIfAbsent(cmd, unused -> new ArrayList<>())
-                        .add(factory.getClass().getSimpleName());
-            }
+            commandToFactories
+                    .computeIfAbsent(factory.getCommandPrefix(), unused -> new ArrayList<>())
+                    .add(factory.getClass().getSimpleName());
         }
 
         for (String cmd : commandToFactories.keySet()) {

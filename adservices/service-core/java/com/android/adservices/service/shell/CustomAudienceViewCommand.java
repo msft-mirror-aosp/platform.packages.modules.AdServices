@@ -33,9 +33,11 @@ import java.util.Optional;
 /** Command to view custom audiences created in Protected Audience. */
 final class CustomAudienceViewCommand extends AbstractShellCommand {
 
-    @VisibleForTesting public static final String CMD = "view-custom-audience";
+    @VisibleForTesting public static final String CMD = "view";
     public static final String HELP =
-            CMD
+            CustomAudienceShellCommandFactory.COMMAND_PREFIX
+                    + " "
+                    + CMD
                     + " --"
                     + CustomAudienceArgs.OWNER
                     + " <owner> --"
@@ -45,12 +47,12 @@ final class CustomAudienceViewCommand extends AbstractShellCommand {
                     + " <name>";
 
     private final CustomAudienceDao mCustomAudienceDao;
-    private final ArgParser mArgParser;
+    private final CustomAudienceArgParser mCustomAudienceArgParser;
 
     CustomAudienceViewCommand(CustomAudienceDao customAudienceDao) {
         mCustomAudienceDao = customAudienceDao;
-        mArgParser =
-                new ArgParser(
+        mCustomAudienceArgParser =
+                new CustomAudienceArgParser(
                         CustomAudienceArgs.OWNER,
                         CustomAudienceArgs.BUYER,
                         CustomAudienceArgs.NAME);
@@ -64,17 +66,18 @@ final class CustomAudienceViewCommand extends AbstractShellCommand {
     @Override
     public int run(PrintWriter out, PrintWriter err, String[] args) {
         try {
-            mArgParser.parse(args);
+            mCustomAudienceArgParser.parse(args);
         } catch (IllegalArgumentException e) {
             err.printf("Failed to parse arguments: %s\n", e.getMessage());
             Log.e(TAG, "Failed to parse arguments: " + e.getMessage());
             return invalidArgsError(HELP, err, args);
         }
 
-        String owner = mArgParser.getValue(CustomAudienceArgs.OWNER);
+        String owner = mCustomAudienceArgParser.getValue(CustomAudienceArgs.OWNER);
         AdTechIdentifier buyer =
-                AdTechIdentifier.fromString(mArgParser.getValue(CustomAudienceArgs.BUYER));
-        String name = mArgParser.getValue(CustomAudienceArgs.NAME);
+                AdTechIdentifier.fromString(
+                        mCustomAudienceArgParser.getValue(CustomAudienceArgs.BUYER));
+        String name = mCustomAudienceArgParser.getValue(CustomAudienceArgs.NAME);
         Optional<DBCustomAudience> customAudience = queryForCustomAudience(owner, buyer, name);
         try {
             if (customAudience.isPresent()) {

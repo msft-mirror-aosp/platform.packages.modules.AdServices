@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -54,9 +55,11 @@ public class ApkTestUtil {
 
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
-    private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
+
+    private static final String TAG = "ApkTestUtil";
+    private static final int WINDOW_LAUNCH_TIMEOUT = 1_000;
     private static final int SCROLL_TIMEOUT = 500;
-    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 2000;
+    public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1_000;
 
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.
@@ -151,7 +154,10 @@ public class ApkTestUtil {
 
     public static void clickTopLeft(UiObject2 obj) {
         assertThat(obj).isNotNull();
-        obj.click(new Point(obj.getVisibleBounds().top, obj.getVisibleBounds().left));
+        obj.clickAndWait(
+                new Point(obj.getVisibleBounds().top, obj.getVisibleBounds().left),
+                Until.newWindow(),
+                WINDOW_LAUNCH_TIMEOUT);
     }
 
     public static void gentleSwipe(UiDevice device) {
@@ -193,6 +199,21 @@ public class ApkTestUtil {
         return getElement(context, device, resId);
     }
 
+    public static UiObject2 scrollTo(UiDevice device, String regexStr) {
+        device.waitForWindowUpdate(null, WINDOW_LAUNCH_TIMEOUT);
+        UiObject2 scrollView =
+                device.wait(
+                        Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
+                        PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
+        scrollView.scrollUntil(
+                Direction.DOWN,
+                Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
+        scrollView.scrollUntil(
+                Direction.UP,
+                Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
+        return getElement(device, regexStr);
+    }
+
     /** Returns the string corresponding to a resource ID and index. */
     public static UiObject getElement(UiDevice device, int resId, int index) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)).instance(index));
@@ -207,6 +228,13 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject2 getElement(Context context, UiDevice device, int resId) {
         String targetStr = getString(context, resId);
+        Log.d(
+                TAG,
+                "Waiting for object using target string "
+                        + targetStr
+                        + " until a timeout of "
+                        + PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS
+                        + " ms");
         UiObject2 obj =
                 device.wait(
                         Until.findObject(By.text(targetStr)),
@@ -230,6 +258,20 @@ public class ApkTestUtil {
                     PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS).get(index);
         }
         return objs.get(index);
+    }
+
+    /** Returns the string corresponding to a resource regex string and index. */
+    public static UiObject2 getElement(UiDevice device, String regexStr) {
+        Log.d(
+                TAG,
+                "Waiting for object using res id regex "
+                        + regexStr
+                        + " until a timeout of "
+                        + PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS
+                        + " ms");
+        return device.wait(
+                Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))),
+                PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
     }
 
     /** Returns the UiObject corresponding to a resource ID. */

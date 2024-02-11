@@ -1323,6 +1323,31 @@ public interface Flags extends CommonFlags {
         return FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
     }
 
+    /** Flags related to Delayed Custom Audience Updates */
+
+    // Enable scheduleCustomAudienceUpdateApi()
+    boolean FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED = false;
+
+    long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
+    long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+    int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE = 30;
+
+    default boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+        return !getGlobalKillSwitch() && FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+    }
+
+    default long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS;
+    }
+
+    default long getFledgeScheduleCustomAudienceUpdateJobFlexMs() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS;
+    }
+
+    default int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** Returns whether to call trusted servers for off device ad selection. */
@@ -1676,6 +1701,13 @@ public interface Flags extends CommonFlags {
     /** Returns the max length of Ad Render Id. */
     default long getFledgeAuctionServerAdRenderIdMaxLength() {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED = false;
+
+    /** Returns whether the server auction request flags are enabled */
+    default boolean getFledgeAuctionServerRequestFlagsEnabled() {
+        return FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
     }
 
     boolean FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED = false;
@@ -3155,7 +3187,7 @@ public interface Flags extends CommonFlags {
     boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
     /** Returns if the UI Dialogs feature is enabled. */
-    default boolean getUIDialogsFeatureEnabled() {
+    default boolean getUiDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
@@ -4550,11 +4582,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** default value for get adservices common states enabled */
-    boolean DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED = false;
+    boolean DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED = false;
 
     /** Returns if the get adservices common states service enabled. */
-    default boolean isGetAdServicesCommonStatesEnabled() {
-        return DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
+    default boolean isGetAdServicesCommonStatesApiEnabled() {
+        return DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
     }
 
     /** Default value to determine whether ux related to the PAS Ux are enabled. */

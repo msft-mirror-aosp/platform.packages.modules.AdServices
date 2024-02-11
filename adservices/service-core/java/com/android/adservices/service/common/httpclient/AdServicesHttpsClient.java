@@ -48,10 +48,12 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -546,16 +548,43 @@ public class AdServicesHttpsClient {
                                 ClosingFuture.from(
                                         mExecutorService.submit(
                                                 () ->
-                                                        doPerformRequestAndGetResponseInBytes(
-                                                                url, closer, request))),
+                                                        doPerformRequestAndGetResponse(
+                                                                url,
+                                                                closer,
+                                                                request,
+                                                                new GetResponseInBytesToBase64StringStrategy()))),
                         mExecutorService)
                 .finishToFuture();
     }
 
-    private AdServicesHttpClientResponse doPerformRequestAndGetResponseInBytes(
+    /**
+     * Performs an HTTP request according to the request object and returns the response in plain
+     * String
+     */
+    public ListenableFuture<AdServicesHttpClientResponse> performRequestGetResponseInPlainString(
+            @NonNull AdServicesHttpClientRequest request) {
+        Objects.requireNonNull(request.getUri());
+        return ClosingFuture.from(
+                        mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
+                .transformAsync(
+                        (closer, url) ->
+                                ClosingFuture.from(
+                                        mExecutorService.submit(
+                                                () ->
+                                                        doPerformRequestAndGetResponse(
+                                                                url,
+                                                                closer,
+                                                                request,
+                                                                new GetResponseBodyInPlainStringStrategy()))),
+                        mExecutorService)
+                .finishToFuture();
+    }
+
+    private AdServicesHttpClientResponse doPerformRequestAndGetResponse(
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
-            AdServicesHttpClientRequest request)
+            AdServicesHttpClientRequest request,
+            GetResponseFromConnectionStrategy responseExtractionStrategy)
             throws IOException, AdServicesNetworkException {
         HttpsURLConnection urlConnection;
         try {
@@ -590,13 +619,15 @@ public class AdServicesHttpsClient {
 
             if (isSuccessfulResponse(responseCode)) {
                 LogUtil.d(" request succeeded for URL: " + url);
+                Map<String, List<String>> responseHeadersMap =
+                        pickRequiredHeaderFields(
+                                urlConnection.getHeaderFields(), request.getResponseHeaderKeys());
                 return AdServicesHttpClientResponse.builder()
-                        .setResponseBody(
-                                BaseEncoding.base64()
-                                        .encode(
-                                                getByteArray(
-                                                        urlConnection.getInputStream(),
-                                                        urlConnection.getContentLengthLong())))
+                        .setResponseBody(responseExtractionStrategy.extractResponse(urlConnection))
+                        .setResponseHeaders(
+                                ImmutableMap.<String, List<String>>builder()
+                                        .putAll(responseHeadersMap.entrySet())
+                                        .build())
                         .build();
             } else {
                 LogUtil.d(" request failed for URL: " + url);
@@ -809,5 +840,39 @@ public class AdServicesHttpsClient {
      */
     public HttpCache getAssociatedCache() {
         return mCache;
+    }
+
+    private abstract static class GetResponseFromConnectionStrategy {
+        abstract String extractResponse(URLConnection connection) throws IOException;
+    }
+
+    private class GetResponseInBytesToBase64StringStrategy
+            extends GetResponseFromConnectionStrategy {
+
+        @Override
+        String extractResponse(URLConnection connection) throws IOException {
+            return BaseEncoding.base64()
+                    .encode(
+                            getByteArray(
+                                    connection.getInputStream(),
+                                    connection.getContentLengthLong()));
+        }
+    }
+
+    private class GetResponseBodyInPlainStringStrategy extends GetResponseFromConnectionStrategy {
+
+        @Override
+        String extractResponse(URLConnection connection) throws IOException {
+            BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            return response.toString();
+        }
     }
 }
