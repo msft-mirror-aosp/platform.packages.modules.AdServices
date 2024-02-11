@@ -20,8 +20,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_T
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
@@ -114,15 +116,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getTopicsEpochJobPeriodMs() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
+        // The priority of applying the flag values: PH (DeviceConfig), then hard-coded value.
         long topicsEpochJobPeriodMs =
-                SystemProperties.getLong(
-                        getSystemPropertyName(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
-                        /* defaultValue */ DeviceConfig.getLong(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
-                                /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS));
+                DeviceConfig.getLong(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
+                        /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS);
         if (topicsEpochJobPeriodMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobPeriodMs should > 0");
         }
@@ -131,15 +130,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getTopicsEpochJobFlexMs() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // The priority of applying the flag values: PH (DeviceConfig), then
         // hard-coded value.
         long topicsEpochJobFlexMs =
-                SystemProperties.getLong(
-                        getSystemPropertyName(FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS),
-                        /* defaultValue */ DeviceConfig.getLong(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS,
-                                /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS));
+                DeviceConfig.getLong(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                        /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS);
         if (topicsEpochJobFlexMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobFlexMs should > 0");
         }
@@ -1464,6 +1461,44 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED,
+                /* defaultValue */ FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED);
+    }
+
+    @Override
+    public long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */
+                FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS,
+                /* defaultValue */
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public long getFledgeScheduleCustomAudienceUpdateJobFlexMs() {
+        return DeviceConfig.getLong(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */
+                FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS,
+                /* defaultValue */
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS);
+    }
+
+    @Override
+    public int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+        return DeviceConfig.getInt(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */
+                FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+                /* defaultValue */
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE);
+    }
+
+    @Override
     public boolean getFledgeHttpCachingEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -2148,19 +2183,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getProtectedSignalsServiceKillSwitch() {
+    public boolean getProtectedSignalsEnabled() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(
-                                FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH),
+                ? false
+                : SystemProperties.getBoolean(
+                        getSystemPropertyName(FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH,
-                                /* defaultValue */ PROTECTED_SIGNALS_SERVICE_KILL_SWITCH));
+                                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED,
+                                /* defaultValue */ PROTECTED_SIGNALS_ENABLED));
     }
 
     @Override
@@ -2578,6 +2612,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
                 FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED);
     }
 
     @Override
@@ -3272,25 +3314,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getUIDialogsFeatureEnabled() {
+    public boolean getUiDialogsFeatureEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED,
-                        /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED));
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED,
+                /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED);
     }
 
     @Override
     public boolean getUiDialogFragmentEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED,
-                        /* defaultValue */ UI_DIALOG_FRAGMENT));
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED,
+                /* defaultValue */ UI_DIALOG_FRAGMENT);
     }
 
     @Override
@@ -4477,13 +4515,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println(
                 "\t"
                         + FlagsConstants
-                               .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
+                        .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow());
         writer.println(
                 "\t"
                         + FlagsConstants
-                          .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
+                        .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow());
         writer.println(
@@ -4858,6 +4896,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeAuctionServerOmitAdsEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerRequestFlagsEnabled());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT
                         + " = "
                         + getFledgeAuctionServerEnabledForReportEvent());
@@ -5059,6 +5102,27 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeReportImpressionMaxInteractionReportingUriSizeB());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED
+                        + " = "
+                        + getFledgeScheduleCustomAudienceUpdateEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS
+                        + " = "
+                        + getFledgeScheduleCustomAudienceUpdateJobPeriodMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS
+                        + " = "
+                        + getFledgeScheduleCustomAudienceUpdateJobFlexMs());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE
+                        + " = "
+                        + getFledgeScheduleCustomAudienceMinDelayMinsOverride());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
                         + " = "
                         + getEnforceForegroundStatusForFledgeOverrides());
@@ -5181,9 +5245,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_PROTECTED_SIGNALS_SERVICE_KILL_SWITCH
+                        + FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED
                         + " = "
-                        + getProtectedSignalsServiceKillSwitch());
+                        + getProtectedSignalsEnabled());
 
         writer.println("==== AdServices PH Flags Throttling Related Flags ====");
         writer.println(
@@ -5213,7 +5277,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 "\t"
                         + FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED
                         + " = "
-                        + getUIDialogsFeatureEnabled());
+                        + getUiDialogsFeatureEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED
@@ -5551,9 +5615,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED
+                        + FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED
                         + " = "
-                        + isGetAdServicesCommonStatesEnabled());
+                        + isGetAdServicesCommonStatesApiEnabled());
         writer.println("=== Fledge KAnon related flags ===");
         writer.println(
                 "\t"
@@ -5587,9 +5651,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonPercentageImmediateSignJoinCalls());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY
+                        + KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS
                         + " = "
-                        + getFledgeKAnonBackgroundProcessFrequencyPerDay());
+                        + getFledgeKAnonBackgroundProcessTimePeriodInMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS
@@ -5599,7 +5663,17 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 "\t"
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
                         + " = "
+                        + getFledgeKAnonBackgroundProcessEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
+                        + " = "
                         + getAdServicesCommonStatesAllowList());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED
+                        + " = "
+                        + getFledgeCustomAudienceCLIEnabledStatus());
     }
 
     @VisibleForTesting
@@ -5820,7 +5894,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public Map<String, Boolean> getUxFlags() {
         Map<String, Boolean> uxMap = new HashMap<>();
-        uxMap.put(FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED, getUIDialogsFeatureEnabled());
+        uxMap.put(FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED, getUiDialogsFeatureEnabled());
         uxMap.put(FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED, getUiDialogFragmentEnabled());
         uxMap.put(FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED, isEeaDeviceFeatureEnabled());
         uxMap.put(FlagsConstants.KEY_IS_EEA_DEVICE, isEeaDevice());
@@ -5858,8 +5932,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE,
                 getConsentAlreadyInteractedEnableMode());
         uxMap.put(
-                FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
-                isGetAdServicesCommonStatesEnabled());
+                FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED,
+                isGetAdServicesCommonStatesApiEnabled());
         uxMap.put(FlagsConstants.KEY_PAS_UX_ENABLED, getPasUxEnabled());
         return uxMap;
     }
@@ -6573,19 +6647,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean isGetAdServicesCommonStatesEnabled() {
+    public boolean isGetAdServicesCommonStatesApiEnabled() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED,
-                /* defaultValue */ DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED);
+                /* flagName */ FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED,
+                /* defaultValue */ DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED);
     }
 
     @Override
     public boolean getFledgeKAnonSignJoinFeatureEnabled() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /*flagName */ FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
-                /*defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /*flagName */ FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
+                        /*defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
     }
 
     @Override
@@ -6645,11 +6720,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public int getFledgeKAnonBackgroundProcessFrequencyPerDay() {
-        return DeviceConfig.getInt(
+    public long getFledgeKAnonBackgroundProcessTimePeriodInMs() {
+        return DeviceConfig.getLong(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_FREQUENCY_PER_DAY,
-                /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY);
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS);
     }
 
     @Override
@@ -6666,5 +6741,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST,
                 /* defaultValue */ GET_ADSERVICES_COMMON_STATES_ALLOW_LIST);
+    }
+
+    public boolean getFledgeKAnonBackgroundProcessEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
+                        /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeCustomAudienceCLIEnabledStatus() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
+                /* defaultValue */ FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED);
     }
 }

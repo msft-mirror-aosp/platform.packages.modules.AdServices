@@ -50,28 +50,16 @@ public class EnrollmentUtil {
 
     /** Get build ID from shared preference */
     public int getBuildId() {
-        int defaultValue = -1;
-        if (mContext == null) {
-            SharedPreferences prefs =
-                    mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
-            if (prefs != null) {
-                return prefs.getInt(BUILD_ID, defaultValue);
-            }
-        }
-        return defaultValue;
+        SharedPreferences prefs =
+                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        return prefs.getInt(BUILD_ID, /* defaultValue */ -1);
     }
 
     /** Get file group status from shared preference */
     public int getFileGroupStatus() {
-        int defaultValue = 0;
-        if (mContext == null) {
-            SharedPreferences prefs =
-                    mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
-            if (prefs != null) {
-                return prefs.getInt(FILE_GROUP_STATUS, defaultValue);
-            }
-        }
-        return defaultValue;
+        SharedPreferences prefs =
+                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        return prefs.getInt(FILE_GROUP_STATUS, /* defaultValue */ 0);
     }
 
     private int convertBuildIdStringToInt(String buildIdString) {

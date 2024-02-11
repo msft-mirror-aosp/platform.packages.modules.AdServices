@@ -27,6 +27,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 
 import android.os.Build;
 
@@ -108,7 +109,7 @@ public final class AdServicesFlagsSetterRule
                 .setTopicsKillSwitch(false)
                 .setConsentManagerDebugMode(true)
                 .setDisableTopicsEnrollmentCheckForTests(true)
-                .setTopicsEpochJobPeriodMsForTests(epochPeriodMs)
+                .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, epochPeriodMs)
                 .setTopicsPercentageForRandomTopicForTests(pctRandomTopic)
                 .setCompatModeFlags();
     }

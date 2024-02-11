@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android reține subiectele de interes în funcție de aplicațiile pe care le-ai folosit recent. În plus, aplicațiile și partenerii lor publicitari îți pot folosi activitatea din alte aplicații pe acest dispozitiv pentru a personaliza anunțurile, păstrându-ți identitatea privată și în siguranță."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• Aplicațiile pe care le folosești pot stabili ce îți place pe baza activității tale din aplicații. De exemplu, dacă folosești regulat aplicații pentru gătit, e posibil să vezi anunțuri pentru servicii de livrare de cumpărături sau conținut asociat din alte aplicații.\n\nAplicațiile pot stoca în siguranță aceste informații, pentru ca ele să fie folosite de partenerii lor publicitari doar pentru a personaliza anunțurile din alte aplicații."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Ulterior, o aplicație pe care o folosești poate solicita aceste informații: subiectele anunțurilor sau anunțurile sugerate de aplicațiile pe care le-ai folosit."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Aplicațiile pe care le folosești pot solicita informații de la Android pentru a măsura performanța anunțurilor lor. Android contribuie la protejarea confidențialității tale, limitând informațiile pe care aplicațiile și le pot trimite."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

@@ -196,7 +196,6 @@ public class FetchCustomAudienceImpl {
         mFledgeCustomAuienceMaxTotal = flags.getFledgeCustomAudienceMaxCount();
         mDefaultRetryDurationSeconds = flags.getFledgeFetchCustomAudienceMinRetryAfterValueMs();
         mMaxRetryDurationSeconds = flags.getFledgeFetchCustomAudienceMaxRetryAfterValueMs();
-
         // Instantiate request, response and result CustomAudienceBlobs
         mRequestCustomAudience =
                 new CustomAudienceBlob(
@@ -442,6 +441,10 @@ public class FetchCustomAudienceImpl {
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
+                            boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+                            sLogger.v(
+                                    "Is debuggable custom audience: %b",
+                                    isDebuggableCustomAudience);
                             // TODO(b/283857101): Add a asDBCustomAudience() method.
                             DBCustomAudience.Builder customAudienceBuilder =
                                     new DBCustomAudience.Builder()
@@ -460,7 +463,7 @@ public class FetchCustomAudienceImpl {
                                                     DBTrustedBiddingData.fromServiceObject(
                                                             mFusedCustomAudience
                                                                     .getTrustedBiddingData()))
-                                            .setDebuggable(devContext.getDevOptionsEnabled());
+                                            .setDebuggable(isDebuggableCustomAudience);
 
                             List<DBAdData> ads = new ArrayList<>();
                             for (AdData ad : mFusedCustomAudience.getAds()) {
@@ -484,7 +487,7 @@ public class FetchCustomAudienceImpl {
                             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                                     customAudience,
                                     mFusedCustomAudience.getDailyUpdateUri(),
-                                    devContext.getDevOptionsEnabled());
+                                    isDebuggableCustomAudience);
                             return null;
                         }));
     }

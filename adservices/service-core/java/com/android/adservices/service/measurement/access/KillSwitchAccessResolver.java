@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -26,14 +28,13 @@ import java.util.function.Supplier;
 public class KillSwitchAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Measurement API is disabled by kill-switch.";
     private final boolean mEnabled;
-
     public KillSwitchAccessResolver(@NonNull Supplier<Boolean> enabledSupplier) {
         mEnabled = enabledSupplier.get();
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return !mEnabled;
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        return new AccessInfo(!mEnabled, FAILURE_REASON_UNSET);
     }
 
     @NonNull

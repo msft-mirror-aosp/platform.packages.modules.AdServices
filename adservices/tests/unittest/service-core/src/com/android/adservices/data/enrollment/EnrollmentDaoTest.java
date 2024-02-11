@@ -16,6 +16,11 @@
 
 package com.android.adservices.data.enrollment;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -38,6 +43,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.database.DatabaseUtils;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
@@ -1347,5 +1353,25 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         when(mMockDbHelper.safeGetWritableDatabase()).thenReturn(null);
         int enrollmentRecordsCount = enrollmentDao.getEnrollmentRecordCountForLogging();
         assertEquals(-1, enrollmentRecordsCount);
+    }
+
+    @Test
+    @SpyStatic(ErrorLogUtil.class)
+    public void testInsert_throwsSQLException_logsCEL() throws Exception {
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+        EnrollmentData enrollmentData = mock(EnrollmentData.class);
+
+        doNothingOnErrorLogUtilError();
+
+        when(mMockDbHelper.safeGetWritableDatabase()).thenReturn(db);
+        when(db.insertWithOnConflict(
+                        eq(EnrollmentTables.EnrollmentDataContract.TABLE), any(), any(), anyInt()))
+                .thenThrow(new SQLException());
+
+        assertThat(mEnrollmentDao.insert(enrollmentData)).isFalse();
+
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 }

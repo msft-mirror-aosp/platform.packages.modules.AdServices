@@ -21,6 +21,8 @@ import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -42,8 +44,18 @@ public class AddAdSelectionOverrideRequest {
 
     @NonNull private final PerBuyerDecisionLogic mPerBuyerDecisionLogic;
 
-    /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
-    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+    /**
+     * Builds a {@link AddAdSelectionOverrideRequest} instance.
+     *
+     * @param adSelectionConfig configuration for ad selection. See {@link AdSelectionConfig}
+     * @param decisionLogicJs override for scoring logic. See {@link
+     *     AdSelectionConfig#getDecisionLogicUri()}
+     * @param trustedScoringSignals override for trusted seller signals. See {@link
+     *     AdSelectionConfig#getTrustedScoringSignalsUri()}
+     * @param perBuyerDecisionLogic override for buyer's reporting logic for contextual ads. See
+     *     {@link SignedContextualAds#getDecisionLogicUri()}
+     */
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
@@ -60,6 +72,15 @@ public class AddAdSelectionOverrideRequest {
         mPerBuyerDecisionLogic = perBuyerDecisionLogic;
     }
 
+    /**
+     * Builds a {@link AddAdSelectionOverrideRequest} instance.
+     *
+     * @param adSelectionConfig configuration for ad selection. See {@link AdSelectionConfig}
+     * @param decisionLogicJs override for scoring logic. See {@link
+     *     AdSelectionConfig#getDecisionLogicUri()}
+     * @param trustedScoringSignals override for trusted seller signals. See {@link
+     *     AdSelectionConfig#getTrustedScoringSignalsUri()}
+     */
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
@@ -103,7 +124,7 @@ public class AddAdSelectionOverrideRequest {
      * @return The override for the decision logic for each buyer that is used by contextual ads for
      *     reporting, which may be extended to updating bid values for contextual ads in the future
      */
-    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @NonNull
     public PerBuyerDecisionLogic getPerBuyerDecisionLogic() {
         return mPerBuyerDecisionLogic;

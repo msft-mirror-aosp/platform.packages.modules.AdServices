@@ -209,7 +209,6 @@ public class AsyncRegistrationQueueRunner {
     private void processSourceRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         long startTime = asyncRegistration.getRequestTime();
         Optional<Source> resultSource =
@@ -237,6 +236,7 @@ public class AsyncRegistrationQueueRunner {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.STORAGE_ERROR);
         }
 
+        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         FetcherUtil.emitHeaderMetrics(
                 FlagsFactory.getFlags(), mLogger, asyncRegistration, asyncFetchStatus);
     }
@@ -273,7 +273,6 @@ public class AsyncRegistrationQueueRunner {
     private void processTriggerRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         long startTime = asyncRegistration.getRequestTime();
         Optional<Trigger> resultTrigger =
@@ -301,6 +300,7 @@ public class AsyncRegistrationQueueRunner {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.STORAGE_ERROR);
         }
 
+        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         FetcherUtil.emitHeaderMetrics(
                 FlagsFactory.getFlags(), mLogger, asyncRegistration, asyncFetchStatus);
     }

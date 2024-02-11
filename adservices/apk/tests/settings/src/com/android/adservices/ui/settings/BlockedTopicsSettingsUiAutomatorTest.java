@@ -20,6 +20,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_BLOCKED_TOPICS_S
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -52,8 +53,8 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
                     .setTopicsKillSwitch(false)
+                    .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS)
                     .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)
