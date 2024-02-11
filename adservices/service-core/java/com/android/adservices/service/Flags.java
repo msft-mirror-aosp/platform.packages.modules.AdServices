@@ -1323,6 +1323,31 @@ public interface Flags extends CommonFlags {
         return FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
     }
 
+    /** Flags related to Delayed Custom Audience Updates */
+
+    // Enable scheduleCustomAudienceUpdateApi()
+    boolean FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED = false;
+
+    long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
+    long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
+    int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE = 30;
+
+    default boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+        return !getGlobalKillSwitch() && FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+    }
+
+    default long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS;
+    }
+
+    default long getFledgeScheduleCustomAudienceUpdateJobFlexMs() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS;
+    }
+
+    default int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** Returns whether to call trusted servers for off device ad selection. */
@@ -1676,6 +1701,13 @@ public interface Flags extends CommonFlags {
     /** Returns the max length of Ad Render Id. */
     default long getFledgeAuctionServerAdRenderIdMaxLength() {
         return FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+    }
+
+    boolean FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED = false;
+
+    /** Returns whether the server auction request flags are enabled */
+    default boolean getFledgeAuctionServerRequestFlagsEnabled() {
+        return FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
     }
 
     boolean FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED = false;
@@ -2514,15 +2546,16 @@ public interface Flags extends CommonFlags {
     }
 
     /**
-     * Protected signals API kill switch. The default value is false which means that protected
-     * signals are enabled by default. This flag should be should as emergency andon cord.
+     * Protected signals API feature flag. The default value is {@code false}, which means that
+     * protected signals is disabled by default.
      */
-    boolean PROTECTED_SIGNALS_SERVICE_KILL_SWITCH = false;
+    // TODO(b/323972771): change to false after developer preview
+    boolean PROTECTED_SIGNALS_ENABLED = true;
 
-    /** Returns value of the protected signals API kill switch. */
-    default boolean getProtectedSignalsServiceKillSwitch() {
+    /** Returns value of the protected signals feature flag. */
+    default boolean getProtectedSignalsEnabled() {
         // Check for global kill switch first, as it should override all other kill switches
-        return getGlobalKillSwitch() || PROTECTED_SIGNALS_SERVICE_KILL_SWITCH;
+        return getGlobalKillSwitch() ? false : PROTECTED_SIGNALS_ENABLED;
     }
 
     // Encryption key Kill switches
@@ -3154,7 +3187,7 @@ public interface Flags extends CommonFlags {
     boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
     /** Returns if the UI Dialogs feature is enabled. */
-    default boolean getUIDialogsFeatureEnabled() {
+    default boolean getUiDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
@@ -4549,11 +4582,11 @@ public interface Flags extends CommonFlags {
     }
 
     /** default value for get adservices common states enabled */
-    boolean DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED = false;
+    boolean DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED = false;
 
     /** Returns if the get adservices common states service enabled. */
-    default boolean isGetAdServicesCommonStatesEnabled() {
-        return DEFAULT_IS_GET_AD_SERVICES_COMMON_STATES_ENABLED;
+    default boolean isGetAdServicesCommonStatesApiEnabled() {
+        return DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
     }
 
     /** Default value to determine whether ux related to the PAS Ux are enabled. */
@@ -4592,11 +4625,14 @@ public interface Flags extends CommonFlags {
     /** Default ttl of kanon-messages stored in the database */
     long FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS = 2 * 7 * 24 * 60 * 60; // 2 weeks
 
-    /** Default frequency of the KAnon Sign/Join background process */
-    int FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY = 2;
+    /** Default time period of the KAnon Sign/Join background process */
+    long FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     /** Default number of messages processed in a single background process */
     int FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS = 100;
+
+    /** Default value for kanon background process flag */
+    boolean FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED = false;
 
     /**
      * This is a feature flag for KAnon Sign/Join feature.
@@ -4604,7 +4640,7 @@ public interface Flags extends CommonFlags {
      * @return {@code true} if the feature is enabled, otherwise returns {@code false}.
      */
     default boolean getFledgeKAnonSignJoinFeatureEnabled() {
-        return FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
+        return getFledgeAuctionServerEnabled() && FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
     }
 
     /**
@@ -4673,8 +4709,8 @@ public interface Flags extends CommonFlags {
     }
 
     /** This method returns the number of k-anon sign/join background processes per day. */
-    default int getFledgeKAnonBackgroundProcessFrequencyPerDay() {
-        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_FREQUENCY_PER_DAY;
+    default long getFledgeKAnonBackgroundProcessTimePeriodInMs() {
+        return FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_TIME_PERIOD_MS;
     }
 
     /**
@@ -4682,6 +4718,15 @@ public interface Flags extends CommonFlags {
      */
     default int getFledgeKAnonMessagesPerBackgroundProcess() {
         return FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
+    }
+
+    /**
+     * This method returns {@code true} if the kanon background process is enabled, {@code false}
+     * otherwise
+     */
+    default boolean getFledgeKAnonBackgroundProcessEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
     }
 
     /*
@@ -4699,5 +4744,15 @@ public interface Flags extends CommonFlags {
      */
     default String getAdServicesCommonStatesAllowList() {
         return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
+    }
+
+    /** Default value for status of custom audiences CLI feature */
+    boolean FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED = false;
+
+    /**
+     * @return the enabled status for custom audiences CLI feature.
+     */
+    default boolean getFledgeCustomAudienceCLIEnabledStatus() {
+        return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
     }
 }

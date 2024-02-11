@@ -893,7 +893,7 @@ public class CobaltPeriodicJobImplTest {
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
         assertThat(mTestOnlyDao.getDayIndices()).containsExactly(LOG_TIME_DAY, LOG_TIME_DAY);
 
-        // Trigger the CobaltPeriodicJob for a day more than 30 days later when the cleanup occurs.
+        // Trigger the CobaltPeriodicJob for a day more than 1 days later when the cleanup occurs.
         mClock.set(CLEANUP_TIME);
         mPeriodicJob.generateAggregatedObservations().get();
 

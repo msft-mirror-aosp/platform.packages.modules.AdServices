@@ -44,6 +44,7 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -112,6 +113,52 @@ public class AdSelectionDataE2ETest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+    }
+
+    /**
+     * Warm up servers to reduce flakiness.
+     *
+     * <p>B&A servers often send responses if contacted after a while. Warming up with a couple of
+     * calls should greatly reduce this flakiness.
+     */
+    @Before
+    public void warmup() throws Exception {
+
+        // The first warm up call brings ups the sfe
+        List<CustomAudience> customAudiences =
+                CustomAudienceTestFixture.readCustomAudiences(
+                        CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA);
+        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdTechIdentifier.fromString(SELLER))
+                        .build();
+        GetAdSelectionDataOutcome outcome =
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        FakeAdExchangeServer.runServerAuction(
+                CONTEXTUAL_SIGNALS_TWO_BUYERS,
+                outcome.getAdSelectionData(),
+                SFE_ADDRESS,
+                SERVER_RESPONSE_LOGGING_ENABLED);
+
+        // Wait for a couple of seconds before test execution
+        Thread.sleep(2000L);
+
+        // The second warm up call will bring up both the BFEs
+        FakeAdExchangeServer.runServerAuction(
+                CONTEXTUAL_SIGNALS_TWO_BUYERS,
+                outcome.getAdSelectionData(),
+                SFE_ADDRESS,
+                SERVER_RESPONSE_LOGGING_ENABLED);
+
+        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+
+        // Wait for a couple of seconds before test execution
+        Thread.sleep(2000L);
     }
 
     @Test

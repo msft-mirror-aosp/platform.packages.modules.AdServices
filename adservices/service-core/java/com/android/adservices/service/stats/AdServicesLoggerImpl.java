@@ -16,19 +16,26 @@
 
 package com.android.adservices.service.stats;
 
+import android.annotation.Nullable;
+
+import com.android.adservices.cobalt.AppNameApiErrorLogger;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import javax.annotation.concurrent.ThreadSafe;
 
 /** AdServicesLogger that delegate to the appropriate Logger Implementations. */
 @ThreadSafe
-public class AdServicesLoggerImpl implements AdServicesLogger {
+public final class AdServicesLoggerImpl implements AdServicesLogger {
+
     private static volatile AdServicesLoggerImpl sAdServicesLogger;
     private final StatsdAdServicesLogger mStatsdAdServicesLogger;
+    @Nullable private AppNameApiErrorLogger mAppNameApiErrorLogger;
 
     private AdServicesLoggerImpl() {
-        mStatsdAdServicesLogger = StatsdAdServicesLogger.getInstance();
+        this(StatsdAdServicesLogger.getInstance());
     }
 
     @VisibleForTesting
@@ -56,6 +63,11 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logApiCallStats(ApiCallStats apiCallStats) {
         mStatsdAdServicesLogger.logApiCallStats(apiCallStats);
+
+        cobaltLogAppNameApiError(
+                apiCallStats.getAppPackageName(),
+                apiCallStats.getApiName(),
+                apiCallStats.getResultCode());
     }
 
     @Override
@@ -66,6 +78,12 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, latencyMs);
+        // TODO(b/324155747): Add Cobalt app name api error logging.
+    }
+
+    @Override
+    public void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result) {
+        mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, latencyMs, result);
     }
 
     @Override
@@ -222,5 +240,15 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logAppManifestConfigCall(AppManifestConfigCall call) {
         mStatsdAdServicesLogger.logAppManifestConfigCall(call);
+    }
+
+    /** Logs api call error status using {@code CobaltLogger}. */
+    private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
+        mAppNameApiErrorLogger =
+                AppNameApiErrorLogger.getInstance(
+                        ApplicationContextSingleton.get(), FlagsFactory.getFlags());
+        if (mAppNameApiErrorLogger != null) {
+            mAppNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
+        }
     }
 }

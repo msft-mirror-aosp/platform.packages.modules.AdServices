@@ -121,6 +121,9 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     }
 
     @Override
+    public void initGaUxWithPas() {}
+
+    @Override
     protected void onSaveInstanceState(@NonNull Bundle outBundle) {
         super.onSaveInstanceState(outBundle);
     }

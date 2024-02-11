@@ -19,6 +19,7 @@ package android.adservices.debuggablects;
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -80,7 +81,8 @@ public class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsT
                     .setPpapiAppAllowList(sContext.getPackageName())
                     .setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true)
                     .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, PPAPI_AND_SYSTEM_SERVER)
-                    .setFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
+                    .setFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true)
+                    .setFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED, true);
 
     @Before
     public void setUp() throws Exception {
@@ -118,14 +120,14 @@ public class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsT
 
         JSONArray customAudiences =
                 runAndParseShellCommand(
-                                "cmd adservices_manager %s --owner %s --buyer %s",
-                                "list-custom-audiences", OWNER, BUYER.toString())
+                                "cmd adservices_manager %s %s --owner %s --buyer %s",
+                                "custom-audience", "list", OWNER, BUYER.toString())
                         .getJSONArray("custom_audiences");
         mCustomAudienceTestFixture.leaveCustomAudience(mShirtsCustomAudience);
         JSONArray customAudiencesAfterLeaving =
                 runAndParseShellCommand(
-                                "cmd adservices_manager %s --owner %s --buyer %s",
-                                "list-custom-audiences", OWNER, BUYER.toString())
+                                "cmd adservices_manager %s %s --owner %s --buyer %s",
+                                "custom-audience", "list", OWNER, BUYER.toString())
                         .getJSONArray("custom_audiences");
 
         assertThat(
@@ -146,8 +148,9 @@ public class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsT
 
         JSONObject customAudience =
                 runAndParseShellCommand(
-                        "cmd adservices_manager %s --owner %s --buyer %s --name %s",
-                        "view-custom-audience",
+                        "cmd adservices_manager %s %s --owner %s --buyer %s --name %s",
+                        "custom-audience",
+                        "view",
                         OWNER,
                         BUYER.toString(),
                         mShirtsCustomAudience.getName());

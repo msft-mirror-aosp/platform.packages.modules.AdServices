@@ -23,6 +23,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -97,7 +98,7 @@ public final class AdFilters implements Parcelable {
      *
      * <p>If {@code null}, there are no app install filters which apply to the ad.
      */
-    @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @Nullable
     public AppInstallFilters getAppInstallFilters() {
         return mAppInstallFilters;
@@ -223,7 +224,7 @@ public final class AdFilters implements Parcelable {
          * <p>If set to {@code null} or not set, no app install filters will be associated with the
          * ad.
          */
-        @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+        @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
         @NonNull
         public Builder setAppInstallFilters(@Nullable AppInstallFilters appInstallFilters) {
             mAppInstallFilters = appInstallFilters;

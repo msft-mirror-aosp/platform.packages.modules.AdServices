@@ -15,9 +15,10 @@
  */
 package android.adservices.topics;
 
-import android.adservices.FlagsConstants;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,7 @@ public final class GetTopicsResponse {
 
     /** Returns a {@link List} of {@link EncryptedTopic} objects returned by getTopics API. */
     @NonNull
-    @FlaggedApi(FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED)
+    @FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
     public List<EncryptedTopic> getEncryptedTopics() {
         return mEncryptedTopics;
     }
@@ -90,7 +91,7 @@ public final class GetTopicsResponse {
          * @param topics The list of the returned Topics.
          * @param encryptedTopics The list of encrypted Topics.
          */
-        @FlaggedApi(FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED)
+        @FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
         public Builder(@NonNull List<Topic> topics, @NonNull List<EncryptedTopic> encryptedTopics) {
             mTopics = Objects.requireNonNull(topics);
             mEncryptedTopics = Objects.requireNonNull(encryptedTopics);

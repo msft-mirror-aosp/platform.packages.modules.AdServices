@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android neem kennis van onderwerpe waarin jy belangstel gegrond op apps wat jy onlangs gebruik het. Apps en hul reklamevennote kan ook jou aktiwiteit in ander apps op hierdie toestel gebruik om advertensies te personaliseer terwyl hulle steeds help om jou identiteit privaat en veilig te hou."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Apps wat jy gebruik, kan ook bepaal waarvan jy hou gegrond op jou appaktiwiteit. Byvoorbeeld, as jy gereeld kookapps gebruik, kan jy advertensies sien vir kruideniersware-afleweringdienste of soortgelyke inhoud in ander apps.\n\nApps kan hierdie inligting veilig berg sodat dit slegs deur hul advertensievennote gebruik kan word om advertensies in ander apps te personaliseer."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"’n App wat jy gebruik, kan later vir hierdie inligting vra – hetsy jou advertensie-onderwerpe óf advertensies wat voorgestel is deur die apps wat jy gebruik het."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Apps wat jy gebruik, kan Android vir inligting vra om hulle te help om die werkverrigting van hul advertensies te meet. Android help om jou privaatheid te beskerm deur die inligting wat apps met mekaar kan deel, te beperk."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

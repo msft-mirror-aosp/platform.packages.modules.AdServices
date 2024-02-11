@@ -21,10 +21,12 @@ import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.Objects;
 
 /** Generic Decision logic that could be provided by the buyer or seller. */
-@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class DecisionLogic implements Parcelable {
 
     @NonNull private final String mDecisionLogic;

@@ -25,7 +25,11 @@ import java.util.List;
 @AutoValue
 public abstract class AdServicesHttpClientResponse {
 
-    /** @return the body of response when a payload is downloaded */
+    /**
+     * @return the body of response when a payload is downloaded. This string can be encoded in
+     *     UTF-8 or Base64 encoding depending on the {@link AdServicesHttpsClient} method used to
+     *     make the HTTP call.
+     */
     public abstract String getResponseBody();
 
     /** @return the response headers associated with a payload download */

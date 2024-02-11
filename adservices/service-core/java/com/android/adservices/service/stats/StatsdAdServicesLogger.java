@@ -45,6 +45,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCO
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.util.proto.ProtoOutputStream;
 
@@ -123,7 +124,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 apiCallStats.getAppPackageName(),
                 apiCallStats.getSdkPackageName(),
                 apiCallStats.getLatencyMillisecond(),
-                apiCallStats.getResultCode());
+                apiCallStats.getResultCode(),
+                apiCallStats.getFailureReason());
     }
 
     /** log method for UI stats. */
@@ -148,7 +150,21 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 "",
                 "",
                 latencyMs,
-                resultCode);
+                resultCode,
+                AdServicesStatusUtils.FAILURE_REASON_UNSET);
+    }
+
+    @Override
+    public void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_API_CALLED,
+                AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN,
+                apiName,
+                "",
+                "",
+                latencyMs,
+                result.getResultCode(),
+                result.getFailureReason());
     }
 
     @Override
