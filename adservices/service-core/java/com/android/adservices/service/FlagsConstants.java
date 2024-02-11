@@ -574,6 +574,16 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES =
             "fledge_on_device_auction_should_use_unified_tables";
 
+    // FLEDGE Schedule Custom Audience Update keys
+    public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED =
+            "fledge_schedule_custom_audience_update_enabled";
+    public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS =
+            "fledge_schedule_custom_audience_update_job_period_ms";
+    public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS =
+            "fledge_schedule_custom_audience_update_job_flex_ms";
+    public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE =
+            "fledge_schedule_custom_audience_update_min_delay_mins_override";
+
     // FLEDGE Ad Counter Histogram keys
     public static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT =
             "fledge_ad_counter_histogram_absolute_max_total_event_count";
