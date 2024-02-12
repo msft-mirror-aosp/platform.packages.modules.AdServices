@@ -45,7 +45,8 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
                     + CustomAudienceArgs.OWNER
                     + " <owner> --"
                     + CustomAudienceArgs.BUYER
-                    + " <buyer>";
+                    + " <buyer>"
+                    + "\n    List custom audiences. See documentation for `view` for more info.";
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final CustomAudienceArgParser mCustomAudienceArgParser;
