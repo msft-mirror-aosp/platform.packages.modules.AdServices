@@ -24,6 +24,7 @@ import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICAT
 import static com.android.adservices.service.Flags.ADSERVICES_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_RELEASE_STAGE_FOR_COBALT;
+import static com.android.adservices.service.Flags.AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.Flags.APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.APPSETID_REQUEST_PERMITS_PER_SECOND;
@@ -474,6 +475,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABL
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
@@ -6218,6 +6220,21 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getPpapiAppAllowList()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAdIdApiAppBlockList() {
+        assertThat(mPhFlags.getAdIdApiAppBlockList()).isEqualTo(AD_ID_API_APP_BLOCK_LIST);
+
+        // Now overriding with the value from PH.
+        String phOverridingValue = AD_ID_API_APP_BLOCK_LIST + "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_AD_ID_API_APP_BLOCK_LIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getAdIdApiAppBlockList()).isEqualTo(phOverridingValue);
     }
 
     @Test
