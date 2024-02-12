@@ -274,6 +274,7 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
                         .setResult(Result.forFailure(resultCode, failureReason + 42))
                         .build();
 
+        expectObjectsAreEqual(equals1, equals1);
         expectObjectsAreEqual(equals1, equals2);
 
         expectObjectsAreNotEqual(equals1, null);
