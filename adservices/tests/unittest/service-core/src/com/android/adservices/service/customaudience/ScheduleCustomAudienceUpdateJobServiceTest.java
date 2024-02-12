@@ -106,6 +106,8 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
     @Before
     public void setup() {
         Assume.assumeNotNull(JOB_SCHEDULER);
+        // Reduces flake, in scenario the first test run encounters job already scheduled
+        JOB_SCHEDULER.cancelAll();
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID));
