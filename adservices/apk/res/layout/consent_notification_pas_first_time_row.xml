@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2024 The Android Open Source Project
+<!-- Copyright (C) 2022 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -50,7 +50,6 @@
                     android:src="@drawable/ic_android_icon"
                     tools:ignore="ContentDescription" />
                 <TextView
-                    android:id="@+id/notification_title"
                     android:text="@string/notificationUI_pas_header_title"
                     style="@style/MainStyle.H1" />
 
@@ -61,39 +60,39 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+
+
                 android:orientation="vertical"
                 android:animateLayoutChanges="true">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notificationUI_pas_combined_body_1"
+                    style="@style/MainStyle.Body1"
+                    android:gravity="center_vertical" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notificationUI_pas_combined_body_2"
+                    style="@style/MainStyle.Body1"
+                    android:gravity="center_vertical" />
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:src="@drawable/ic_main_view_ga_image"
-                    android:contentDescription="@string/ic_main_view_ga_image_description"/>
+                    android:src="@drawable/ic_consent_notification_ga_image"
+                    android:contentDescription="@string/ic_consent_notification_ga_image_description"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="@string/notificationUI_pas_body_main"
+                    android:text="@string/notificationUI_pas_combined_body_3"
                     style="@style/MainStyle.Body1" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/notificationUI_pas_subtitle1"
-                    style="@style/MainStyle.Body1Bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:text="@string/notificationUI_pas_body1"
-                    style="@style/MainStyle.Body1" />
-
                 <TextView
                     android:id="@+id/how_it_works_expander"
-                    android:drawableEnd="@drawable/ic_chevron_down"
+                    android:drawableEnd="@drawable/ic_expand"
                     android:layout_marginTop="16dp"
-                    android:text="@string/notificationUI_pas_expand_button_text1"
+                    android:text="@string/notificationUI_ga_container1_control_text_v2"
                     style="@style/MainStyle.Body1" />
                 <LinearLayout
                     android:id="@+id/how_it_works_expanded_text"
@@ -102,90 +101,36 @@
                     android:orientation="vertical"
                     android:visibility="gone" >
                     <TextView
-                        android:drawableStart="@drawable/ic_bullet_point"
-                        android:drawablePadding="12dp"
-                        android:text="@string/notificationUI_pas_app_dropdown_subtitle1"
+                        android:text="@string/notificationUI_pas_combined_dropdown_subtitle1"
                         style="@style/MainStyle.Body1Bold" />
                     <TextView
-                        android:text="@string/notificationUI_pas_app_body1"
+                        android:text="@string/notificationUI_pas_combined_dropdown_body1"
                         android:layout_marginTop="0dp"
-                        android:layout_marginStart="16dp"
                         style="@style/MainStyle.Body1" />
                     <TextView
-                        android:drawableStart="@drawable/ic_bullet_point"
-                        android:drawablePadding="12dp"
-                        android:text="@string/notificationUI_pas_app_dropdown_subtitle2"
-                        style="@style/MainStyle.Body1Bold" />
+                        android:text="@string/notificationUI_how_it_works_row_body2_v2"
+                        android:layout_marginTop="18dp"
+                        style="@style/MainStyle.Body1BulletSubtext" />
                     <TextView
-                        android:text="@string/notificationUI_pas_app_body2"
-                        android:layout_marginTop="0dp"
-                        android:layout_marginStart="16dp"
+                        android:text="@string/notificationUI_pas_combined_dropdown_body2"
+                        android:layout_marginTop="18dp"
+                        style="@style/MainStyle.Body1BulletSubtext" />
+                    <TextView
+                        android:text="@string/notificationUI_pas_combined_dropdown_body3"
                         style="@style/MainStyle.Body1" />
                     <TextView
-                        android:drawableStart="@drawable/ic_bullet_point"
-                        android:drawablePadding="12dp"
-                        android:text="@string/notificationUI_pas_app_dropdown_subtitle3"
+                        android:text="@string/notificationUI_pas_combined_dropdown_body4"
+                        style="@style/MainStyle.Body1" />
+                    <TextView
+                        android:text="@string/notificationUI_pas_combined_dropdown_subtitle2"
                         style="@style/MainStyle.Body1Bold" />
                     <TextView
-                        android:text="@string/notificationUI_pas_app_body3"
+                        android:text="@string/notificationUI_pas_combined_dropdown_body5"
                         android:layout_marginTop="0dp"
-                        android:layout_marginStart="16dp"
                         style="@style/MainStyle.Body1" />
                     <TextView
                         android:id="@+id/learn_more_from_privacy_policy"
-                        android:text="@string/notificationUI_pas_leanr_more_link"
-                        style="@style/MainStyle.Body1" />
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/notificationUI_pas_subtitle2"
-                    style="@style/MainStyle.Body1Bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:text="@string/notificationUI_pas_body2"
-                    style="@style/MainStyle.Body1" />
-
-                <TextView
-                    android:id="@+id/how_it_works_expander2"
-                    android:drawableEnd="@drawable/ic_chevron_down"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/notificationUI_pas_expand_button_text2"
-                    style="@style/MainStyle.Body1" />
-
-                <LinearLayout
-                    android:id="@+id/how_it_works_expanded_text2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone" >
-                    <TextView
-                        android:drawableStart="@drawable/ic_bullet_point"
-                        android:drawablePadding="12dp"
-                        android:text="@string/notificationUI_pas_msmt_dropdown_subtitle1"
-                        style="@style/MainStyle.Body1Bold" />
-                    <TextView
-                        android:text="@string/notificationUI_pas_msmt_body1"
-                        android:layout_marginTop="0dp"
-                        android:layout_marginStart="16dp"
-                        style="@style/MainStyle.Body1" />
-                    <TextView
-                        android:drawableStart="@drawable/ic_bullet_point"
-                        android:drawablePadding="12dp"
-                        android:text="@string/notificationUI_pas_msmt_dropdown_subtitle2"
-                        style="@style/MainStyle.Body1Bold" />
-                    <TextView
-                        android:text="@string/notificationUI_pas_msmt_body2"
-                        android:layout_marginTop="0dp"
-                        android:layout_marginStart="16dp"
-                        style="@style/MainStyle.Body1" />
-                    <TextView
-                        android:id="@+id/learn_more_from_privacy_policy2"
-                        android:text="@string/notificationUI_pas_leanr_more_link"
+                        android:text="@string/notificationUI_how_it_works_row_body7_v2"
                         style="@style/MainStyle.Body1" />
                 </LinearLayout>
             </LinearLayout>
