@@ -20,8 +20,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_T
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
@@ -4229,13 +4229,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println(
                 "\t"
                         + FlagsConstants
-                        .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT
+                                .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT
                         + " = "
                         + getMeasurementFlexApiMaxInformationGainDualDestinationEvent());
         writer.println(
                 "\t"
                         + FlagsConstants
-                        .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
+                                .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION
                         + " = "
                         + getMeasurementFlexApiMaxInformationGainDualDestinationNavigation());
         writer.println(
@@ -4504,7 +4504,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println(
                 "\t"
                         + FlagsConstants
-                        .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW
+                                .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW
                         + " = "
                         + getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow());
         writer.println(
@@ -4515,13 +4515,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println(
                 "\t"
                         + FlagsConstants
-                        .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
+                                .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow());
         writer.println(
                 "\t"
                         + FlagsConstants
-                        .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
+                                .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW
                         + " = "
                         + getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow());
         writer.println(
@@ -6757,5 +6757,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
                 /* defaultValue */ FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED);
+    }
+
+    @Override
+    public boolean getBackgroundJobsLoggingEnabled() {
+        return !getBackgroundJobsLoggingKillSwitch();
     }
 }

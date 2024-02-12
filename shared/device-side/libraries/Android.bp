@@ -77,7 +77,7 @@ java_library {
     min_sdk_version: "30",
     sdk_version: "module_current",
     srcs: [
-        "java/com/android/adservices/shared/common/*.java",
+        "java/com/android/adservices/shared/common/**/*.java",
     ],
     exclude_srcs : ["java/com/android/adservices/shared/common/ServiceUnavailableException.java"],
     static_libs: [
