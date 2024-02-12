@@ -27,8 +27,12 @@ import static org.mockito.Mockito.spy;
 
 import android.security.keystore.KeyProperties;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -54,6 +58,13 @@ public final class KeyAttestationTest {
     private KeyStore mSpyKeyStore;
 
     private KeyPairGenerator mSpyKeyPairGenerator;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
+    public final AdServicesDeviceSupportedRule deviceSupportRule =
+            new AdServicesDeviceSupportedRule();
 
     @Before
     public void setUp() throws Exception {
