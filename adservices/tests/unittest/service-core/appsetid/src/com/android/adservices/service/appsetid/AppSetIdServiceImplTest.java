@@ -19,16 +19,20 @@ package com.android.adservices.service.appsetid;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -47,8 +51,10 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
+import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.Throttler;
@@ -60,7 +66,6 @@ import com.android.adservices.service.stats.Clock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
@@ -69,6 +74,8 @@ import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
 @MockStatic(Binder.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(ErrorLogUtil.class)
 public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String TEST_APP_PACKAGE_NAME =
@@ -118,6 +125,8 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
         when(mMockThrottler.tryAcquire(
                         eq(Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
+
+        extendedMockito.mockGetFlags(mMockFlags);
     }
 
     @Test
@@ -252,7 +261,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                                     return null;
                                 })
                 .when(mAdServicesLogger)
-                .logApiCallStats(ArgumentMatchers.any(ApiCallStats.class));
+                .logApiCallStats(any(ApiCallStats.class));
 
         mAppSetIdServiceImpl =
                 new AppSetIdServiceImpl(
@@ -294,10 +303,15 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .setAppSetIdScope(0)
                         .build();
 
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);
 
         assertThat(getAppSetIdResult.getAppSetId())
                 .isEqualTo(expectedGetAppSetIdResult.getAppSetId());
+
+        logApiCallStatsCallback.assertResultReceived();
     }
 
     @NonNull

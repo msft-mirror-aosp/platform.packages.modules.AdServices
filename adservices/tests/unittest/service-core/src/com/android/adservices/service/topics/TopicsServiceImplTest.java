@@ -301,6 +301,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         when(mEnrollmentSharedPreferences.getInt(eq(FILE_GROUP_STATUS), eq(/* defaultValue */ 0)))
                 .thenReturn(2);
     }
+
     @Test
     public void checkEmptySdkNameRequests() throws Exception {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
@@ -723,8 +724,13 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // Call init() to load the cache
         topicsServiceImpl.init();
 
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
+
+        logApiCallStatsCallback.assertResultReceived();
 
         // Invocation Summary:
         // loadCache(): 1, getTopics(): 2
@@ -757,11 +763,17 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         TopicsServiceImpl topicsServiceImpl = createTestTopicsServiceImplInstance();
 
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         // Call init() to load the cache
         topicsServiceImpl.init();
 
         // To capture result in inner class, we have to declare final.
         GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
+
+        logApiCallStatsCallback.assertResultReceived();
+
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
                 .isEqualTo(expectedGetTopicsResult.getResultCode());
@@ -862,9 +874,14 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
         callback.assertFailed(STATUS_UNAUTHORIZED);
+
+        logApiCallStatsCallback.assertResultReceived();
 
         ExtendedMockito.verify(
                 () ->
