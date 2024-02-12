@@ -61,7 +61,7 @@ public final class BlockedTopicsSettingsTestUtil {
 
     /** Enter Topics Consent view when GA UX is enabled. */
     public static void enterGaTopicsConsentView(UiDevice device) throws InterruptedException {
-        ApkTestUtil.scrollToAndClick(sContext, device, R.string.settingsUI_topics_ga_title);
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_topics_ga_title);
     }
 
     /** Block a topic when dialog is enabled. */
@@ -72,8 +72,7 @@ public final class BlockedTopicsSettingsTestUtil {
 
         // Handle dialog for blocking a topic
         UiObject2 dialogTitle =
-                ApkTestUtil.getElement(
-                        sContext, device, R.string.settingsUI_dialog_block_topic_message);
+                ApkTestUtil.getElement(device, R.string.settingsUI_dialog_block_topic_message);
         assertWithMessage(
                         "Object with title: %s",
                         ApkTestUtil.getString(R.string.settingsUI_dialog_block_topic_message))
@@ -81,7 +80,7 @@ public final class BlockedTopicsSettingsTestUtil {
                 .isNotNull();
         UiObject2 positiveText =
                 ApkTestUtil.getElement(
-                        sContext, device, R.string.settingsUI_dialog_block_topic_positive_text);
+                        device, R.string.settingsUI_dialog_block_topic_positive_text);
         assertWithMessage(
                         "Object with title: %s",
                         ApkTestUtil.getString(R.string.settingsUI_dialog_block_topic_positive_text))
@@ -96,8 +95,7 @@ public final class BlockedTopicsSettingsTestUtil {
     public static void unblockATopicWithDialog(UiDevice device) {
         // Get unblock topic button.
         UiObject2 unblockTopicButton =
-                ApkTestUtil.getElement(
-                        sContext, device, R.string.settingsUI_unblock_topic_title, 0);
+                ApkTestUtil.getElement(device, R.string.settingsUI_unblock_topic_title, 0);
         assertWithMessage("Unblock Topic button").that(unblockTopicButton).isNotNull();
 
         // Click "Unblock" and UI should display text "no blocked topics".
@@ -105,8 +103,7 @@ public final class BlockedTopicsSettingsTestUtil {
 
         // Handle dialog for unblocking a topic.
         UiObject2 dialogTitle =
-                ApkTestUtil.getElement(
-                        sContext, device, R.string.settingsUI_dialog_unblock_topic_message);
+                ApkTestUtil.getElement(device, R.string.settingsUI_dialog_unblock_topic_message);
         assertWithMessage(
                         "Object with title: %s",
                         ApkTestUtil.getString(R.string.settingsUI_dialog_unblock_topic_message))
@@ -114,7 +111,7 @@ public final class BlockedTopicsSettingsTestUtil {
                 .isNotNull();
         UiObject2 positiveText =
                 ApkTestUtil.getElement(
-                        sContext, device, R.string.settingsUI_dialog_unblock_topic_positive_text);
+                        device, R.string.settingsUI_dialog_unblock_topic_positive_text);
         assertWithMessage(
                         "Object with title: %s",
                         ApkTestUtil.getString(
@@ -134,8 +131,7 @@ public final class BlockedTopicsSettingsTestUtil {
 
         // Handle dialog for resetting topics.
         UiObject2 dialogTitle =
-                ApkTestUtil.getElement(
-                        sContext, device, R.string.settingsUI_dialog_reset_topic_message);
+                ApkTestUtil.getElement(device, R.string.settingsUI_dialog_reset_topic_message);
         assertWithMessage(
                         "Object with title: %s",
                         ApkTestUtil.getString(R.string.settingsUI_dialog_reset_topic_message))
@@ -143,7 +139,7 @@ public final class BlockedTopicsSettingsTestUtil {
                 .isNotNull();
         UiObject2 positiveText =
                 ApkTestUtil.getElement(
-                        sContext, device, R.string.settingsUI_dialog_reset_topic_positive_text);
+                        device, R.string.settingsUI_dialog_reset_topic_positive_text);
         assertWithMessage(
                         "Object with title: %s",
                         ApkTestUtil.getString(R.string.settingsUI_dialog_reset_topic_positive_text))

@@ -66,27 +66,24 @@ public final class NotificationActivityRvcUxSelectorUiAutomatorTest extends AdSe
         NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
 
         UiObject2 u18NotificationTitle =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_u18_notification_title);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_u18_notification_title);
         assertThat(u18NotificationTitle).isNotNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_u18_left_control_button_text);
+                        mDevice, R.string.notificationUI_u18_left_control_button_text);
         assertThat(leftControlButton).isNotNull();
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_u18_right_control_button_text);
         rightControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
 
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
         u18NotificationTitle =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_u18_notification_title);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_u18_notification_title);
         assertThat(u18NotificationTitle).isNull();
     }
 
@@ -97,10 +94,9 @@ public final class NotificationActivityRvcUxSelectorUiAutomatorTest extends AdSe
 
         UiObject2 leftControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_u18_left_control_button_text);
+                        mDevice, R.string.notificationUI_u18_left_control_button_text);
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_u18_right_control_button_text);
         assertThat(rightControlButton).isNotNull();
@@ -108,12 +104,10 @@ public final class NotificationActivityRvcUxSelectorUiAutomatorTest extends AdSe
         leftControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
 
         // make sure it goes to u18 page rather than GA page
-        UiObject2 topicTitle =
-                ApkTestUtil.getElement(mSpyContext, mDevice, R.string.settingsUI_topics_ga_title);
+        UiObject2 topicTitle = ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);
         assertThat(topicTitle).isNull();
         UiObject2 measurementTitle =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.settingsUI_u18_measurement_view_title);
+                ApkTestUtil.getElement(mDevice, R.string.settingsUI_u18_measurement_view_title);
         assertThat(measurementTitle).isNotNull();
     }
 }
