@@ -142,11 +142,11 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
         leftControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
         UiObject2 topicsTitle =
                 ApkTestUtil.getElement(mSpyContext, mDevice, R.string.settingsUI_topics_ga_title);
-        ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_ga_title);
+        ApkTestUtil.scrollTo(mSpyContext, mDevice, R.string.settingsUI_topics_ga_title);
         assertThat(topicsTitle).isNotNull();
         UiObject2 appsTitle =
                 ApkTestUtil.getElement(mSpyContext, mDevice, R.string.settingsUI_apps_ga_title);
-        ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_apps_ga_title);
+        ApkTestUtil.scrollTo(mSpyContext, mDevice, R.string.settingsUI_apps_ga_title);
         assertThat(appsTitle).isNotNull();
     }
 }

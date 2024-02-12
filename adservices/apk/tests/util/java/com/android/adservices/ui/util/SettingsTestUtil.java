@@ -500,8 +500,7 @@ public final class SettingsTestUtil {
         }
     }
 
-    public static void clickResetButton(Context context, UiDevice device)
-            throws InterruptedException, UiObjectNotFoundException {
+    public static void clickResetButton(Context context, UiDevice device) {
         // R Msmt UI is not scrollable
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
             ApkTestUtil.click(device, R.string.settingsUI_measurement_view_reset_title);
