@@ -65,7 +65,6 @@ public final class SettingsGaUxSelectorUiAutomatorTest extends AdServicesUiTestC
     }
 
     @Test
-    @FlakyTest(bugId = 299152923)
     public void fledgeToggleTest() throws Exception {
         SettingsTestUtil.fledgeToggleTestUtil(mSpyContext, mDevice);
     }
