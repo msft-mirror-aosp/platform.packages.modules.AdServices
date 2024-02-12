@@ -970,25 +970,39 @@ public class AdServicesHttpsClientTest {
     @Test
     public void testPerformRequestAndGetResponseInString_shouldReturnResponseString()
             throws Exception {
-        String stringResponse = "This is a plain String response which could be a JSON String";
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        ImmutableList.of(new MockResponse().setBody(stringResponse)));
+        String stringResponse = "This is a plain String response which could also be a JSON String";
+        byte[] postedBodyInBytes = "{[1,2,3]}".getBytes("UTF-8");
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request)
+                            throws InterruptedException {
+                        assertEquals(new String(postedBodyInBytes), new String(request.getBody()));
+                        return new MockResponse().setBody(stringResponse);
+                    }
+                };
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
         URL url = server.getUrl(mReportingPath);
-        byte[] postedBodyInBytes = {1, 2, 3};
+
+        ImmutableMap<String, String> requestProperties =
+                ImmutableMap.of(
+                        "Content-Type", "application/json",
+                        "Accept", "application/json");
+
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.builder()
-                        .setRequestProperties(
-                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setRequestProperties(requestProperties)
                         .setUri(Uri.parse(url.toString()))
                         .setDevContext(DEV_CONTEXT_DISABLED)
                         .setBodyInBytes(postedBodyInBytes)
-                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.POST)
                         .build();
 
         AdServicesHttpClientResponse response =
                 mClient.performRequestGetResponseInPlainString(request).get();
 
+        assertEquals(1, server.getRequestCount());
         assertThat(response.getResponseBody()).isEqualTo(stringResponse);
     }
 
