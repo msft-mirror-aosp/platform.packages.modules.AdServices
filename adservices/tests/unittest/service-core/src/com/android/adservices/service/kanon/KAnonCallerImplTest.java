@@ -31,6 +31,8 @@ import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.net.Uri;
+import androidx.test.filters.FlakyTest;
+
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -172,6 +174,7 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324875845)
     public void test_signedJoinedSuccessfully_shouldUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         KAnonCallerImpl kAnonCaller =
@@ -215,6 +218,7 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324875845)
     public void test_multipleBatches_shouldSignAndJoinMessages()
             throws IOException, InterruptedException {
         Flags flagsWithBatchSizeOne = new KAnonSignAndJoinRunnerTestFlags(1);
@@ -260,6 +264,7 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324875845)
     public void test_signSuccessfulButJoinUnsuccessful_shouldUpdateKAnonMessageStatusToSignedDB()
             throws IOException, InterruptedException {
         setupMocks();
@@ -298,6 +303,7 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324875845)
     public void test_signUnsuccessfulVerifyTokenFails_shouldUpdateKAnonMessageStatusToFailedInDB()
             throws IOException, InterruptedException {
         setupMocks();
@@ -328,6 +334,7 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324875845)
     public void signUnsuccessfulCannotRecoverTokens_shouldUpdateKAnonMessageStatusToFailedInDB()
             throws IOException, InterruptedException {
         setupMocks();
@@ -358,6 +365,7 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324875845)
     public void actGenerateClientParamsFails_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         setupMocks();
@@ -389,6 +397,7 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324875845)
     public void registerClientUnsuccessful_httpCallFails_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         setupMocks();
@@ -438,6 +447,7 @@ public class KAnonCallerImplTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324875845)
     public void fetchServerParamsUnsuccessful_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         setupMocks();
