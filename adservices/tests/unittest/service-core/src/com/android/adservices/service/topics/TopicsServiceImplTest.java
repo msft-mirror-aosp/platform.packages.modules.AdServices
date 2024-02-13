@@ -68,6 +68,7 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.common.NoFailureSyncCallback;
@@ -97,7 +98,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -284,6 +284,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // which could cause test failures (like lack of permission when calling Flags)
         ExtendedMockito.doNothing().when(() -> AppManifestConfigMetricsLogger.logUsage(any()));
     }
+
     @Test
     public void checkEmptySdkNameRequests() throws Exception {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
@@ -743,6 +744,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         // To capture result in inner class, we have to declare final.
         GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
+
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
                 .isEqualTo(expectedGetTopicsResult.getResultCode());
@@ -843,9 +845,14 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
         callback.assertFailed(STATUS_UNAUTHORIZED);
+
+        logApiCallStatsCallback.assertResultReceived();
 
         ExtendedMockito.verify(
                 () ->
@@ -1033,8 +1040,13 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @NonNull
     private GetTopicsResult getTopicsResults(TopicsServiceImpl topicsServiceImpl)
             throws InterruptedException {
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
+
+        logApiCallStatsCallback.assertResultReceived();
         return callback.assertSuccess();
     }
 

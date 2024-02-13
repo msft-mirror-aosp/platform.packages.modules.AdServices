@@ -2665,6 +2665,13 @@ public interface Flags extends CommonFlags {
         return PPAPI_APP_ALLOW_LIST;
     }
 
+    String AD_ID_API_APP_BLOCK_LIST = "";
+
+    /** Get the app allow list for the AD ID API. */
+    default String getAdIdApiAppBlockList() {
+        return AD_ID_API_APP_BLOCK_LIST;
+    }
+
     /*
      * The allow-list for Measurement APIs. This list has the list of app package names that we
      * allow using Measurement APIs. Overridden by Block List
