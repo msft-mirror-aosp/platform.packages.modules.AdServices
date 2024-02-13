@@ -33,7 +33,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assume;
@@ -83,7 +82,7 @@ public class OTAStringsUiAutomatorTest {
 
     @AfterClass
     public static void cleanup() throws InterruptedException, UiObjectNotFoundException {
-        UiUtils.turnOffWifi(sDevice);
+        UiUtils.turnOffWifi();
         ShellUtils.runShellCommand(
                 "rm -rf /data/data/com.google.android.adservices.api/files/"
                         + "datadownload/shared/public");
