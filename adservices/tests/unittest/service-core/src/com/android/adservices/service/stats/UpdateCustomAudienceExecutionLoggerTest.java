@@ -30,6 +30,9 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.util.Clock;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;

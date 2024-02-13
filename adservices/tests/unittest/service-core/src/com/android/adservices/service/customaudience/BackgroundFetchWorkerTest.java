@@ -21,7 +21,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
-import static com.android.adservices.service.stats.Clock.SYSTEM_CLOCK;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -125,7 +124,8 @@ public class BackgroundFetchWorkerTest {
         mBackgroundFetchExecutionLoggerSpy =
                 Mockito.spy(
                         new BackgroundFetchExecutionLogger(
-                                SYSTEM_CLOCK, mAdServicesLoggerImplMock));
+                                com.android.adservices.shared.util.Clock.getInstance(),
+                                mAdServicesLoggerImplMock));
         when(mCustomAudienceLoggerFactoryMock.getBackgroundFetchExecutionLogger())
                 .thenReturn(mBackgroundFetchExecutionLoggerSpy);
 

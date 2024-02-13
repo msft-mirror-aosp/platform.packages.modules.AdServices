@@ -172,6 +172,7 @@ android_library {
         "adservices-shared-common",
         "adservices-shared-error-logging",
         "adservices-shared-storage",
+        "adservices-shared-util",
         "modules-utils-build",
     ],
     jarjar_rules: "jarjar-rules.txt",
