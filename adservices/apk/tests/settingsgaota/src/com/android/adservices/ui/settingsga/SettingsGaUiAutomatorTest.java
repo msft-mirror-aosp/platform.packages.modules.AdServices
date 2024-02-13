@@ -50,56 +50,56 @@ public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
 
     @Test
     public void settingsRemoveMainToggleAndMeasurementEntryTest() throws Exception {
-        SettingsTestUtil.settingsRemoveMainToggleAndMeasurementEntryTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.settingsRemoveMainToggleAndMeasurementEntryTestUtil(mDevice);
     }
 
     @Test
     public void measurementDialogTest() throws Exception {
-        SettingsTestUtil.measurementDialogTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.measurementDialogTestUtil(mDevice);
     }
 
     @Test
     public void topicsToggleTest() throws Exception {
-        SettingsTestUtil.topicsToggleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.topicsToggleTestUtil(mDevice);
     }
 
     @Test
     public void fledgeToggleTest() throws Exception {
-        SettingsTestUtil.fledgeToggleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.fledgeToggleTestUtil(mDevice);
     }
 
     @Test
     public void measurementToggleTest() throws Exception {
-        SettingsTestUtil.measurementToggleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.measurementToggleTestUtil(mDevice);
     }
 
     @Test
     public void topicsSubTitleTest() throws Exception {
-        SettingsTestUtil.topicsSubTitleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.topicsSubTitleTestUtil(mDevice);
     }
 
     @Test
     public void appsSubTitleTest() throws Exception {
-        SettingsTestUtil.appsSubTitleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.appsSubTitleTestUtil(mDevice);
     }
 
     @Test
     public void measurementSubTitleTest() throws Exception {
-        SettingsTestUtil.measurementSubTitleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.measurementSubTitleTestUtil(mDevice);
     }
 
     @Test
     public void topicsToggleDialogTest() throws Exception {
-        SettingsTestUtil.topicsToggleDialogTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.topicsToggleDialogTestUtil(mDevice);
     }
 
     @Test
     public void appsToggleDialogTest() throws Exception {
-        SettingsTestUtil.appsToggleDialogTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.appsToggleDialogTestUtil(mDevice);
     }
 
     @Test
     public void measurementToggleDialogTest() throws Exception {
-        SettingsTestUtil.measurementToggleDialogTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice);
     }
 }

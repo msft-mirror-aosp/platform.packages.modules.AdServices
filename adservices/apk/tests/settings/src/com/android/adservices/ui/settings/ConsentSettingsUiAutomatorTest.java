@@ -20,7 +20,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_EN
 
 import static com.google.common.truth.Truth.assertThat;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -135,10 +134,9 @@ public class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
                 "device_config put adservices consent_notification_activity_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices debug_ux BETA_UX");
 
-        ApkTestUtil.launchSettingViewGivenUx(
-                ApplicationProvider.getApplicationContext(), mDevice, LAUNCH_TIMEOUT, "BETA_UX");
+        ApkTestUtil.launchSettingViewGivenUx(mDevice, LAUNCH_TIMEOUT, "BETA_UX");
 
-        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch2(mDevice);
+        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(mDevice);
         setConsentToFalse(dialogsOn);
 
         // click switch
@@ -151,7 +149,7 @@ public class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
     }
 
     private void setConsentToFalse(boolean dialogsOn) {
-        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch2(mDevice);
+        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(mDevice);
         if (consentSwitch.isChecked()) {
             performSwitchClick(dialogsOn, consentSwitch);
         }
@@ -161,11 +159,10 @@ public class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
         if (dialogsOn && mainSwitch.isChecked()) {
             mainSwitch.click();
             UiObject2 dialogTitle =
-                    ApkTestUtil.getElement(
-                            mSpyContext, mDevice, R.string.settingsUI_dialog_opt_out_title);
+                    ApkTestUtil.getElement(mDevice, R.string.settingsUI_dialog_opt_out_title);
             UiObject2 positiveText =
                     ApkTestUtil.getElement(
-                            mSpyContext, mDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+                            mDevice, R.string.settingsUI_dialog_opt_out_positive_text);
             assertThat(dialogTitle).isNotNull();
             assertThat(positiveText).isNotNull();
             positiveText.click();

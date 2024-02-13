@@ -183,7 +183,7 @@ public class AppConsentSettingsUiAutomatorTest {
         // launch app
         launchSettingApp();
 
-        UiObject2 mainSwitch = ApkTestUtil.getConsentSwitch2(sDevice);
+        UiObject2 mainSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         assertThat(mainSwitch).isNotNull();
 
         if (!mainSwitch.isChecked()) {
@@ -228,41 +228,36 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // open apps view
         launchSettingApp();
-        ApkTestUtil.scrollToAndClick(CONTEXT, sDevice, R.string.settingsUI_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
         blockAppConsent(dialogsOn);
 
         unblockAppConsent(dialogsOn);
 
-        assertThat(ApkTestUtil.getElement(CONTEXT, sDevice, R.string.settingsUI_block_app_title))
+        assertThat(ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_app_title))
                 .isNotNull();
 
         resetAppConsent(dialogsOn);
 
-        assertThat(ApkTestUtil.getElement(CONTEXT, sDevice, R.string.settingsUI_block_app_title, 0))
+        assertThat(ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_app_title, 0))
                 .isNull();
-        assertThat(
-                        ApkTestUtil.getElement(
-                                CONTEXT, sDevice, R.string.settingsUI_blocked_apps_title, 0))
+        assertThat(ApkTestUtil.getElement(sDevice, R.string.settingsUI_blocked_apps_title, 0))
                 .isNull();
-        assertThat(
-                        ApkTestUtil.getElement(
-                                CONTEXT, sDevice, R.string.settingsUI_apps_view_no_apps_text, 0))
+        assertThat(ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_view_no_apps_text, 0))
                 .isNotNull();
     }
 
     private void unblockAppConsent(boolean dialogsOn) throws InterruptedException {
-        ApkTestUtil.scrollToAndClick(CONTEXT, sDevice, R.string.settingsUI_blocked_apps_title);
-        ApkTestUtil.scrollToAndClick(CONTEXT, sDevice, R.string.settingsUI_unblock_app_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_unblock_app_title);
 
         if (dialogsOn) {
             // click unblock
             UiObject2 dialogTitle =
-                    ApkTestUtil.getElement(
-                            CONTEXT, sDevice, R.string.settingsUI_dialog_unblock_app_message);
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_unblock_app_message);
             UiObject2 positiveText =
                     ApkTestUtil.getElement(
-                            CONTEXT, sDevice, R.string.settingsUI_dialog_unblock_app_positive_text);
+                            sDevice, R.string.settingsUI_dialog_unblock_app_positive_text);
             assertThat(dialogTitle).isNotNull();
             assertThat(positiveText).isNotNull();
 
@@ -272,7 +267,6 @@ public class AppConsentSettingsUiAutomatorTest {
 
         assertThat(
                         ApkTestUtil.getElement(
-                                CONTEXT,
                                 sDevice,
                                 R.string.settingsUI_apps_view_no_blocked_apps_text))
                 .isNotNull();
@@ -280,15 +274,14 @@ public class AppConsentSettingsUiAutomatorTest {
     }
 
     private void resetAppConsent(boolean dialogsOn) throws InterruptedException {
-        ApkTestUtil.scrollToAndClick(CONTEXT, sDevice, R.string.settingsUI_reset_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_apps_title);
 
         if (dialogsOn) {
             UiObject2 dialogTitle =
-                    ApkTestUtil.getElement(
-                            CONTEXT, sDevice, R.string.settingsUI_dialog_reset_app_message);
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_app_message);
             UiObject2 positiveText =
                     ApkTestUtil.getElement(
-                            CONTEXT, sDevice, R.string.settingsUI_dialog_reset_app_positive_text);
+                            sDevice, R.string.settingsUI_dialog_reset_app_positive_text);
             assertThat(dialogTitle).isNotNull();
             assertThat(positiveText).isNotNull();
 
@@ -298,15 +291,14 @@ public class AppConsentSettingsUiAutomatorTest {
     }
 
     private void blockAppConsent(boolean dialogsOn) throws InterruptedException {
-        ApkTestUtil.scrollToAndClick(CONTEXT, sDevice, R.string.settingsUI_block_app_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_block_app_title);
 
         if (dialogsOn) {
             UiObject2 dialogTitle =
-                    ApkTestUtil.getElement(
-                            CONTEXT, sDevice, R.string.settingsUI_dialog_block_app_message);
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_block_app_message);
             UiObject2 positiveText =
                     ApkTestUtil.getElement(
-                            CONTEXT, sDevice, R.string.settingsUI_dialog_block_app_positive_text);
+                            sDevice, R.string.settingsUI_dialog_block_app_positive_text);
             assertThat(dialogTitle).isNotNull();
             assertThat(positiveText).isNotNull();
             positiveText.click();
