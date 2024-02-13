@@ -96,6 +96,8 @@ public final class ApiCallStats {
         return mResultCode;
     }
 
+    // TODO(b/324488816): failure reason is not currently being used, it might be "folded" into
+    // more status codes.
     public @FailureReason int getFailureReason() {
         return mFailureReason;
     }
