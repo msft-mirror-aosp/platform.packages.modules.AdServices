@@ -136,6 +136,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
     private final SdkSandboxStatsdLogger mSdkSandboxStatsdLogger;
+    private final SdkSandboxRestrictionManager mSdkSandboxRestrictionManager;
 
     @GuardedBy("mLock")
     private IBinder mAdServicesManager;
@@ -331,6 +332,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mSdkSandboxPulledAtoms = mInjector.getSdkSandboxPulledAtoms();
         mSdkSandboxStorageManager = mInjector.getSdkSandboxStorageManager();
         mSdkSandboxStatsdLogger = mInjector.getSdkSandboxStatsdLogger();
+        mSdkSandboxRestrictionManager = new SdkSandboxRestrictionManager(mContext);
 
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
@@ -2161,6 +2163,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return false;
     }
 
+    private int getEffectiveTargetSdkVersion(int sdkSandboxUid)
+            throws PackageManager.NameNotFoundException {
+        // TODO(b/271547387): Need to decide on how to deal with apps using sharedUid
+        return mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(
+                Process.getAppUidForSdkSandboxUid(sdkSandboxUid));
+    }
+
     private class LocalImpl implements SdkSandboxManagerLocal {
         @Override
         public void registerAdServicesManagerService(IBinder iBinder, boolean published) {
@@ -2376,6 +2385,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
+        }
+
+        @Override
+        public int getEffectiveTargetSdkVersion(int sdkSandboxUid)
+                throws PackageManager.NameNotFoundException {
+            return SdkSandboxManagerService.this.getEffectiveTargetSdkVersion(sdkSandboxUid);
         }
     }
 }
