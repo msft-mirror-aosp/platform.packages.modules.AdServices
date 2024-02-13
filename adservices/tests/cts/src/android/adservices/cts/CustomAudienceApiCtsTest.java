@@ -52,7 +52,6 @@ import android.net.Uri;
 import android.os.Process;
 import android.util.Pair;
 
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
@@ -72,6 +71,7 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -396,7 +396,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validFetchUri_validRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -420,14 +420,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validFetchUri_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validFetchUri_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -457,14 +457,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validName_validRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -490,14 +490,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validName_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validName_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -527,14 +527,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_tooLongName_invalidRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validActivationTime_validRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -559,14 +559,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validActivationTime_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validActivationTime_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -592,14 +592,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -624,14 +624,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validExpirationTime_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -658,14 +658,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -690,14 +690,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest() {
         try {
             PhFlagsFixture.overrideFledgeFetchCustomAudienceEnabled(true);
@@ -725,7 +725,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest();
