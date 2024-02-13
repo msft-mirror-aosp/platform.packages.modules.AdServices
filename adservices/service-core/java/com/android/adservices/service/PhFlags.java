@@ -2292,6 +2292,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getAdIdApiAppBlockList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST,
+                /* defaultValue */ AD_ID_API_APP_BLOCK_LIST);
+    }
+
+    @Override
     public String getMsmtApiAppAllowList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
@@ -3862,6 +3871,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getPpapiAppSignatureAllowList());
         writer.println(
                 "\t" + FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST
+                        + " = "
+                        + getAdIdApiAppBlockList());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST

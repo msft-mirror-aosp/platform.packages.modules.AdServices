@@ -44,7 +44,10 @@ final class CustomAudienceViewCommand extends AbstractShellCommand {
                     + CustomAudienceArgs.BUYER
                     + " <buyer> --"
                     + CustomAudienceArgs.NAME
-                    + " <name>";
+                    + " <name>"
+                    + "\n    View a custom audience. For a CA to appear here, it must be 1) "
+                    + "created in a a context where android:debuggable=\"true\" is in the owning "
+                    + "app's manifest and 2) system-wide developer options are enabled";
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final CustomAudienceArgParser mCustomAudienceArgParser;

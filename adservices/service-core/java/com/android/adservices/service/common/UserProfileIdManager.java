@@ -41,7 +41,7 @@ public class UserProfileIdManager {
     private static volatile UserProfileIdManager sUserProfileIdManager;
 
     @VisibleForTesting
-    UserProfileIdManager(@NonNull final UserProfileIdDao userProfileIdDao) {
+    public UserProfileIdManager(@NonNull final UserProfileIdDao userProfileIdDao) {
         Objects.requireNonNull(userProfileIdDao);
 
         mUserProfileIdDao = userProfileIdDao;
