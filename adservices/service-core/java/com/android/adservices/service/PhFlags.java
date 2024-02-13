@@ -2841,6 +2841,22 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getFledgeAuctionServerCoordinatorUrlAllowlist() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST);
+    }
+
+    @Override
+    public boolean getFledgeAuctionServerMultiCloudEnabled() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
+    }
+
+    @Override
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
@@ -4963,6 +4979,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI
                         + " = "
                         + getFledgeAuctionServerAuctionKeyFetchUri());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED
+                        + " = "
+                        + getFledgeAuctionServerMultiCloudEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI

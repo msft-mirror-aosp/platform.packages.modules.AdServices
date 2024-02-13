@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 
@@ -82,9 +83,9 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
@@ -272,6 +273,111 @@ public class GetAdSelectionDataRunnerTest {
         verify(mAdFiltererSpy).filterCustomAudiences(any());
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_multiCloudFlagOn_invalidCoordinator_throwsError()
+            throws InterruptedException {
+        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong());
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(Uri.parse("random-url"))
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        Assert.assertFalse("Call should not have succeeded", callback.mIsSuccess);
+        Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_multiCloudFlagOn_validCoordinator_IsSuccess()
+            throws InterruptedException {
+        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong());
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(Uri.parse("https://example.com"))
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue("Call should have succeeded", callback.mIsSuccess);
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_multiCloudFlagOn_nullCoordinator_IsSuccess()
+            throws InterruptedException {
+        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong());
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(null)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue("Call should have succeeded", callback.mIsSuccess);
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_multiCloudFlagOff_invalidCoordinator_IsSuccess()
+            throws InterruptedException {
+        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(false);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong());
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(Uri.parse("a/b/c"))
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue("Call should have succeeded", callback.mIsSuccess);
     }
 
     @Test
@@ -651,6 +757,26 @@ public class GetAdSelectionDataRunnerTest {
         @Override
         public int getFledgeAuctionServerPayloadFormatVersion() {
             return AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
+        }
+    }
+
+    static class GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled
+            extends GetAdSelectionDataRunnerTestFlags {
+
+        private final boolean mMultiCloudEnabled;
+
+        GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(boolean multiCloudEnabled) {
+            this.mMultiCloudEnabled = multiCloudEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerMultiCloudEnabled() {
+            return mMultiCloudEnabled;
+        }
+
+        @Override
+        public String getFledgeAuctionServerCoordinatorUrlAllowlist() {
+            return "https://example.com";
         }
     }
 
