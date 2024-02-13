@@ -122,6 +122,8 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
                             @Override
                             public void onFailure(Throwable t) {
                                 boolean shouldRetry = false;
+                                LoggerFactory.getFledgeLogger()
+                                        .e(t, "Schedule Custom Audience Update job worker failed");
                                 AdServicesJobServiceLogger.getInstance(
                                                 ScheduleCustomAudienceUpdateJobService.this)
                                         .recordJobFinished(
@@ -187,10 +189,10 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
      */
     @VisibleForTesting
     protected static void schedule(Context context, Flags flags) {
-        if (!flags.getProtectedSignalsPeriodicEncodingEnabled()) {
+        if (!flags.getFledgeScheduleCustomAudienceUpdateEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .v(
-                            "FLEDGE Schedule Custom Audience Update API is disabled is disabled;"
+                            "FLEDGE Schedule Custom Audience Update API is disabled;"
                                     + " skipping schedule");
             return;
         }
