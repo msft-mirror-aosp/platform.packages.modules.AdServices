@@ -47,7 +47,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportingFallba
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 
 /** Measurement Service */
 // TODO(b/269798827): Enable for R.
@@ -76,7 +76,7 @@ public class MeasurementService extends Service {
             mMeasurementService =
                     new MeasurementServiceImpl(
                             this,
-                            Clock.SYSTEM_CLOCK,
+                            Clock.getInstance(),
                             ConsentManager.getInstance(),
                             new CachedFlags(flags),
                             appImportanceFilter);

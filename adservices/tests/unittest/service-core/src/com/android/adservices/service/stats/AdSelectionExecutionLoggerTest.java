@@ -76,6 +76,7 @@ import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.adselection.AdBiddingOutcome;
+import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
 import org.junit.Rule;

@@ -40,8 +40,8 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -72,7 +72,7 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
         mLogger =
                 Mockito.spy(
                         new AdServicesJobServiceLogger(
-                                CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
+                                CONTEXT, Clock.getInstance(), mMockStatsdLogger));
         extendedMockito.mockGetFlags(mMockFlags);
 
         // Clear shared preference
