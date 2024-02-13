@@ -501,7 +501,7 @@ public abstract class AdSelectionRunner {
                 mAdServicesLogger.logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         overallLatencyMs,
-                        new ApiCallStats.Result(resultCode, failureReason));
+                        ApiCallStats.failureResult(resultCode, failureReason));
             }
 
             FledgeErrorResponse selectionFailureResponse =

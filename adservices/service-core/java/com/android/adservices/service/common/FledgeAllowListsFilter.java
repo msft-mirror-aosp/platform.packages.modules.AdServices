@@ -63,7 +63,7 @@ public class FledgeAllowListsFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST));
             throw new AppNotAllowedException();
         }

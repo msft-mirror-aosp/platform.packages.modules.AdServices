@@ -599,7 +599,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         .setAppPackageName(appPackageName)
                         .setSdkPackageName(sdkPackageName)
                         .setLatencyMillisecond(latency)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(resultCode, failureReason)
                         .build());
     }
 

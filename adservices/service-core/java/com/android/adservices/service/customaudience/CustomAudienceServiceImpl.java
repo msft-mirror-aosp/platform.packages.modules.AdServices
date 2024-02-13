@@ -290,7 +290,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 mAdServicesLogger.logFledgeApiCallStats(
                         apiName,
                         /* latencyMs= */ 0,
-                        new ApiCallStats.Result(resultCode, failureReason));
+                        ApiCallStats.failureResult(resultCode, failureReason));
             }
         }
     }
@@ -534,7 +534,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 mAdServicesLogger.logFledgeApiCallStats(
                         apiName,
                         /* latencyMs= */ 0,
-                        new ApiCallStats.Result(resultCode, failureReason));
+                        ApiCallStats.failureResult(resultCode, failureReason));
             }
         }
     }
