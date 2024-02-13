@@ -343,7 +343,6 @@ public abstract class CustomAudienceDao {
             "SELECT * FROM custom_audience_background_fetch_data WHERE owner = :owner AND buyer ="
                     + " :buyer AND name = :name AND is_debuggable = 1")
     @Nullable
-    @VisibleForTesting
     public abstract DBCustomAudienceBackgroundFetchData
             getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
                     @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
@@ -357,7 +356,6 @@ public abstract class CustomAudienceDao {
             "SELECT * FROM custom_audience_background_fetch_data "
                     + "WHERE owner = :owner AND buyer = :buyer AND is_debuggable = 1")
     @Nullable
-    @VisibleForTesting
     public abstract List<DBCustomAudienceBackgroundFetchData>
             listDebuggableCustomAudienceBackgroundFetchData(
                     @NonNull String owner, @NonNull AdTechIdentifier buyer);

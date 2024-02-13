@@ -18,15 +18,19 @@ package com.android.adservices.service.shell;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 import org.json.JSONArray;
@@ -41,9 +45,12 @@ public class CustomAudienceHelperTest {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     private static final DBCustomAudience.Builder CUSTOM_AUDIENCE_BUILDER =
             DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER);
+    private static final DBCustomAudienceBackgroundFetchData.Builder
+            CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER =
+                    DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(BUYER);
 
     @Test
-    public void testFromJson_happyPath() throws JSONException {
+    public void testCustomAudienceFromJson_happyPath() throws JSONException {
         JSONObject jsonObject =
                 new JSONObject()
                         .put(CustomAudienceHelper.OWNER, CustomAudienceFixture.VALID_OWNER)
@@ -73,7 +80,8 @@ public class CustomAudienceHelperTest {
                         .put(CustomAudienceHelper.ADS, getFakeAdsJson())
                         .put(CustomAudienceHelper.IS_DEBUGGABLE, false);
 
-        DBCustomAudience customAudience = CustomAudienceHelper.fromJson(jsonObject);
+        DBCustomAudience customAudience =
+                CustomAudienceHelper.getCustomAudienceFromJson(jsonObject);
 
         assertThat(customAudience.getOwner()).isEqualTo(CustomAudienceFixture.VALID_OWNER);
         assertThat(customAudience.getBuyer()).isEqualTo(BUYER);
@@ -96,20 +104,99 @@ public class CustomAudienceHelperTest {
     }
 
     @Test
+    public void testCustomAudienceBackgroundFetchDataFromJson_happyPath() throws JSONException {
+        JSONObject jsonObject =
+                new JSONObject()
+                        .put(CustomAudienceHelper.OWNER, CustomAudienceFixture.VALID_OWNER)
+                        .put(CustomAudienceHelper.BUYER, BUYER)
+                        .put(CustomAudienceHelper.NAME, CustomAudienceFixture.VALID_NAME)
+                        .put(CustomAudienceHelper.IS_DEBUGGABLE, true)
+                        .put(
+                                CustomAudienceHelper.DAILY_UPDATE,
+                                new JSONObject()
+                                        .put(
+                                                CustomAudienceHelper.DAILY_UPDATE_URI,
+                                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                                        BUYER))
+                                        .put(
+                                                CustomAudienceHelper
+                                                        .DAILY_UPDATE_ELIGIBLE_UPDATE_TIME,
+                                                CommonFixture.FIXED_NEXT_ONE_DAY)
+                                        .put(
+                                                CustomAudienceHelper
+                                                        .DAILY_UPDATE_NUM_TIMEOUT_FAILURES,
+                                                DBCustomAudienceBackgroundFetchDataFixture
+                                                        .NUM_TIMEOUT_FAILURES_POSITIVE)
+                                        .put(
+                                                CustomAudienceHelper
+                                                        .DAILY_UPDATE_NUM_VALIDATION_FAILURES,
+                                                DBCustomAudienceBackgroundFetchDataFixture
+                                                        .NUM_VALIDATION_FAILURES_POSITIVE));
+
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson(jsonObject);
+
+        assertThat(customAudienceBackgroundFetchData.getOwner())
+                .isEqualTo(CustomAudienceFixture.VALID_OWNER);
+        assertThat(customAudienceBackgroundFetchData.getIsDebuggable()).isTrue();
+        assertThat(customAudienceBackgroundFetchData.getBuyer()).isEqualTo(BUYER);
+        assertThat(customAudienceBackgroundFetchData.getName())
+                .isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(customAudienceBackgroundFetchData.getDailyUpdateUri())
+                .isEqualTo(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER));
+        assertThat(customAudienceBackgroundFetchData.getEligibleUpdateTime())
+                .isEqualTo(CommonFixture.FIXED_NEXT_ONE_DAY);
+        assertThat(customAudienceBackgroundFetchData.getNumTimeoutFailures())
+                .isEqualTo(
+                        DBCustomAudienceBackgroundFetchDataFixture.NUM_TIMEOUT_FAILURES_POSITIVE);
+        assertThat(customAudienceBackgroundFetchData.getNumValidationFailures())
+                .isEqualTo(
+                        DBCustomAudienceBackgroundFetchDataFixture
+                                .NUM_VALIDATION_FAILURES_POSITIVE);
+    }
+
+    @Test
+    public void testGetBackgroundFetchDataFromJson_withoutDailyUpdate_throwsIllegalStateException()
+            throws JSONException {
+        JSONObject jsonObject =
+                new JSONObject()
+                        .put(CustomAudienceHelper.OWNER, CustomAudienceFixture.VALID_OWNER)
+                        .put(CustomAudienceHelper.BUYER, BUYER)
+                        .put(CustomAudienceHelper.NAME, CustomAudienceFixture.VALID_NAME);
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson(
+                                jsonObject));
+    }
+
+    @Test
     public void testToAndFromJson_happyPath_success() throws JSONException {
         DBCustomAudience customAudience = CUSTOM_AUDIENCE_BUILDER.build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
-        JSONObject jsonObject = CustomAudienceHelper.toJson(customAudience);
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
 
-        assertThat(customAudience).isEqualTo(CustomAudienceHelper.fromJson(jsonObject));
+        assertThat(customAudience)
+                .isEqualTo(CustomAudienceHelper.getCustomAudienceFromJson(jsonObject));
+        assertThat(customAudienceBackgroundFetchData)
+                .isEqualTo(
+                        CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson(
+                                jsonObject));
     }
 
     @Test
     public void testToJson_withNullTrustedBiddingData_fieldNotPresent() throws JSONException {
         DBCustomAudience customAudience =
                 CUSTOM_AUDIENCE_BUILDER.setTrustedBiddingData(null).build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
-        JSONObject jsonObject = CustomAudienceHelper.toJson(customAudience);
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
 
         assertThat(jsonObject.isNull(CustomAudienceHelper.TRUSTED_BIDDING_DATA)).isTrue();
     }
@@ -118,8 +205,11 @@ public class CustomAudienceHelperTest {
     public void testToJson_withNullUserBiddingSignals_fieldNotPresent() throws JSONException {
         DBCustomAudience customAudience =
                 CUSTOM_AUDIENCE_BUILDER.setUserBiddingSignals(null).build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
-        JSONObject jsonObject = CustomAudienceHelper.toJson(customAudience);
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
 
         assertThat(jsonObject.isNull(CustomAudienceHelper.USER_BIDDING_SIGNALS)).isTrue();
     }
@@ -127,10 +217,29 @@ public class CustomAudienceHelperTest {
     @Test
     public void testToJson_withNullAds_arrayIsEmpty() throws JSONException {
         DBCustomAudience customAudience = CUSTOM_AUDIENCE_BUILDER.setAds(List.of()).build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
-        JSONObject jsonObject = CustomAudienceHelper.toJson(customAudience);
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
 
         assertThat(jsonObject.getJSONArray(CustomAudienceHelper.ADS).length()).isEqualTo(0);
+    }
+
+    @Test
+    public void testToJson_withNullCustomAudience_throwsNullPointerException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        CustomAudienceHelper.toJson(
+                                null, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build()));
+    }
+
+    @Test
+    public void testToJson_withNullBackgroundFetchData_throwsNullPointerException() {
+        assertThrows(
+                NullPointerException.class,
+                () -> CustomAudienceHelper.toJson(CUSTOM_AUDIENCE_BUILDER.build(), null));
     }
 
     private static JSONArray getFakeAdsJson() throws JSONException {
