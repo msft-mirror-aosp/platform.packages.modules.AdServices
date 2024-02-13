@@ -42,8 +42,8 @@ import android.os.Build;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -92,7 +92,7 @@ public final class AdServicesJobServiceLogger {
                     sSingleton =
                             new AdServicesJobServiceLogger(
                                     context,
-                                    Clock.SYSTEM_CLOCK,
+                                    Clock.getInstance(),
                                     StatsdAdServicesLogger.getInstance());
                 }
             }
