@@ -2320,6 +2320,30 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
+    public void testDeleteScheduledCustomAudienceUpdate_Success() {
+        DBScheduledCustomAudienceUpdate anUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(anUpdate);
+
+        List<DBScheduledCustomAudienceUpdate> updates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertEquals("There should have been 1 entry", 1, updates.size());
+
+        for (DBScheduledCustomAudienceUpdate updatesToDelete : updates) {
+            mCustomAudienceDao.deleteScheduledCustomAudienceUpdate(updatesToDelete);
+        }
+
+        assertTrue(
+                "All updates should have been deleted",
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledBeforeTime(
+                                anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES))
+                        .isEmpty());
+    }
+
+    @Test
     public void testInsertAndQueryScheduledCustomAudienceUpdate_SimilarUpdateReplaces() {
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();

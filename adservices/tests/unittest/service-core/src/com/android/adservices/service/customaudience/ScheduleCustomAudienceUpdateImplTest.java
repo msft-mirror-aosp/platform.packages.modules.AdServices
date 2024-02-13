@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
@@ -34,17 +35,13 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
-import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.PartialCustomAudience;
-import android.adservices.customaudience.ScheduleCustomAudienceUpdateCallback;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateInput;
 import android.content.Context;
 import android.net.Uri;
-import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
@@ -78,18 +75,17 @@ public class ScheduleCustomAudienceUpdateImplTest {
     private static final Uri UPDATE_URI = Uri.parse("https://example.com");
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    @Captor ArgumentCaptor<DBScheduledCustomAudienceUpdate> mUpdateCaptor;
+    @Captor ArgumentCaptor<List<PartialCustomAudience>> mListArgumentCaptor;
     private MockitoSession mStaticMockSession = null;
     private ListeningExecutorService mBackgroundExecutorService;
-    private final Context mContext = ApplicationProvider.getApplicationContext();
     private int mCallingAppUid;
     @Mock private Flags mFlagsMock;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     @Mock private CustomAudienceServiceFilter mCustomAudienceServiceFilterMock;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
-    @Captor ArgumentCaptor<DBScheduledCustomAudienceUpdate> mUpdateCaptor;
-    @Captor ArgumentCaptor<List<PartialCustomAudience>> mListArgumentCaptor;
-
     private ScheduleCustomAudienceUpdateImpl mScheduleCustomAudienceUpdateImpl;
     private DevContext mDevContext;
 
@@ -319,34 +315,5 @@ public class ScheduleCustomAudienceUpdateImplTest {
         impl.doScheduleCustomAudienceUpdate(input, testCallback, mDevContext);
         latch.await();
         return testCallback;
-    }
-
-    public static class ScheduleUpdateTestCallback
-            extends ScheduleCustomAudienceUpdateCallback.Stub {
-        private final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
-        FledgeErrorResponse mFledgeErrorResponse;
-
-        public ScheduleUpdateTestCallback(CountDownLatch countDownLatch) {
-            mCountDownLatch = countDownLatch;
-        }
-
-        public boolean isSuccess() {
-            return mIsSuccess;
-        }
-
-        @Override
-        public void onSuccess() {
-            LoggerFactory.getFledgeLogger().v("Reporting success to Schedule CA Update.");
-            mIsSuccess = true;
-            mCountDownLatch.countDown();
-        }
-
-        @Override
-        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            LoggerFactory.getFledgeLogger().v("Reporting failure to Schedule CA Update.");
-            mFledgeErrorResponse = fledgeErrorResponse;
-            mCountDownLatch.countDown();
-        }
     }
 }

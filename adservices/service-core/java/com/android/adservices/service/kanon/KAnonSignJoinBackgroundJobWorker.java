@@ -21,10 +21,17 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
+import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
+import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
 import com.android.adservices.service.common.SingletonRunner;
+import com.android.adservices.service.common.UserProfileIdManager;
+import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -32,6 +39,7 @@ import com.google.common.util.concurrent.Futures;
 
 import java.time.Clock;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 public class KAnonSignJoinBackgroundJobWorker {
@@ -52,17 +60,51 @@ public class KAnonSignJoinBackgroundJobWorker {
         Objects.requireNonNull(context);
         if (sKAnonSignJoinBackgroundJobWorker == null) {
             synchronized (SINGLETON_LOCK) {
+                EncryptionKeyDao encryptionKeyDao =
+                        AdSelectionServerDatabase.getInstance(context).encryptionKeyDao();
+                Flags flags = FlagsFactory.getFlags();
+                int networkConnectTimeout =
+                        flags.getFledgeAuctionServerBackgroundKeyFetchNetworkConnectTimeoutMs();
+                int newtWorkReadTimeout =
+                        flags.getFledgeAuctionServerBackgroundKeyFetchNetworkReadTimeoutMs();
+                int keyFetchMaxResponseSize =
+                        flags.getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB();
+                ExecutorService backgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+                AdServicesHttpsClient adServicesHttpsClient =
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                networkConnectTimeout,
+                                newtWorkReadTimeout,
+                                keyFetchMaxResponseSize);
+                AdSelectionEncryptionKeyManager keyManager =
+                        new AdSelectionEncryptionKeyManager(
+                                encryptionKeyDao, flags, adServicesHttpsClient, backgroundExecutor);
+                KAnonObliviousHttpEncryptorImpl kAnonObliviousHttpEncryptor =
+                        new KAnonObliviousHttpEncryptorImpl(keyManager, backgroundExecutor);
+                KAnonMessageManager kAnonMessageManager =
+                        new KAnonMessageManager(
+                                KAnonDatabase.getInstance(context).kAnonMessageDao(),
+                                FlagsFactory.getFlags(),
+                                Clock.systemUTC());
                 sKAnonSignJoinBackgroundJobWorker =
                         new KAnonSignJoinBackgroundJobWorker(
                                 context,
                                 FlagsFactory.getFlags(),
                                 new KAnonSignJoinManager(
-                                        new KAnonCallerImpl(),
-                                        new KAnonMessageManager(
+                                        new KAnonCallerImpl(
+                                                backgroundExecutor,
+                                                new AnonymousCountingTokensImpl(),
+                                                adServicesHttpsClient,
                                                 KAnonDatabase.getInstance(context)
-                                                        .kAnonMessageDao(),
-                                                FlagsFactory.getFlags(),
-                                                Clock.systemUTC()),
+                                                        .clientParametersDao(),
+                                                KAnonDatabase.getInstance(context)
+                                                        .serverParametersDao(),
+                                                UserProfileIdManager.getInstance(context),
+                                                new BinaryHttpMessageDeserializer(),
+                                                flags,
+                                                kAnonObliviousHttpEncryptor,
+                                                kAnonMessageManager),
+                                        kAnonMessageManager,
                                         FlagsFactory.getFlags(),
                                         Clock.systemUTC()));
             }

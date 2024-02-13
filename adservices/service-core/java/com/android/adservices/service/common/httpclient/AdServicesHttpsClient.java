@@ -48,12 +48,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -552,7 +550,8 @@ public class AdServicesHttpsClient {
                                                                 url,
                                                                 closer,
                                                                 request,
-                                                                new GetResponseInBytesToBase64StringStrategy()))),
+                                                                ResponseBodyType
+                                                                        .BASE64_ENCODED_STRING))),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -564,6 +563,7 @@ public class AdServicesHttpsClient {
     public ListenableFuture<AdServicesHttpClientResponse> performRequestGetResponseInPlainString(
             @NonNull AdServicesHttpClientRequest request) {
         Objects.requireNonNull(request.getUri());
+        LogUtil.d("Making request expecting a response in plain string");
         return ClosingFuture.from(
                         mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
                 .transformAsync(
@@ -575,7 +575,8 @@ public class AdServicesHttpsClient {
                                                                 url,
                                                                 closer,
                                                                 request,
-                                                                new GetResponseBodyInPlainStringStrategy()))),
+                                                                ResponseBodyType
+                                                                        .PLAIN_TEXT_STRING))),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -584,14 +585,14 @@ public class AdServicesHttpsClient {
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
             AdServicesHttpClientRequest request,
-            GetResponseFromConnectionStrategy responseExtractionStrategy)
+            ResponseBodyType responseType)
             throws IOException, AdServicesNetworkException {
         HttpsURLConnection urlConnection;
         try {
             urlConnection = setupConnection(url, request.getDevContext());
             urlConnection.setRequestMethod(request.getHttpMethodType().name());
         } catch (IOException e) {
-            LogUtil.d(e, "Failed to open URL");
+            LogUtil.e(e, "Failed to open URL");
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
@@ -622,8 +623,21 @@ public class AdServicesHttpsClient {
                 Map<String, List<String>> responseHeadersMap =
                         pickRequiredHeaderFields(
                                 urlConnection.getHeaderFields(), request.getResponseHeaderKeys());
+                inputStream = new BufferedInputStream(urlConnection.getInputStream());
+                String responseBody;
+                if (responseType == ResponseBodyType.BASE64_ENCODED_STRING) {
+                    responseBody =
+                            BaseEncoding.base64()
+                                    .encode(
+                                            getByteArray(
+                                                    inputStream,
+                                                    urlConnection.getContentLengthLong()));
+                } else {
+                    responseBody =
+                            fromInputStream(inputStream, urlConnection.getContentLengthLong());
+                }
                 return AdServicesHttpClientResponse.builder()
-                        .setResponseBody(responseExtractionStrategy.extractResponse(urlConnection))
+                        .setResponseBody(responseBody)
                         .setResponseHeaders(
                                 ImmutableMap.<String, List<String>>builder()
                                         .putAll(responseHeadersMap.entrySet())
@@ -842,37 +856,8 @@ public class AdServicesHttpsClient {
         return mCache;
     }
 
-    private abstract static class GetResponseFromConnectionStrategy {
-        abstract String extractResponse(URLConnection connection) throws IOException;
-    }
-
-    private class GetResponseInBytesToBase64StringStrategy
-            extends GetResponseFromConnectionStrategy {
-
-        @Override
-        String extractResponse(URLConnection connection) throws IOException {
-            return BaseEncoding.base64()
-                    .encode(
-                            getByteArray(
-                                    connection.getInputStream(),
-                                    connection.getContentLengthLong()));
-        }
-    }
-
-    private class GetResponseBodyInPlainStringStrategy extends GetResponseFromConnectionStrategy {
-
-        @Override
-        String extractResponse(URLConnection connection) throws IOException {
-            BufferedReader reader =
-                    new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-
-            return response.toString();
-        }
+    enum ResponseBodyType {
+        BASE64_ENCODED_STRING,
+        PLAIN_TEXT_STRING
     }
 }

@@ -16,8 +16,17 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.JOIN_CUSTOM_AUDIENCE_KEY;
-import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.LEAVE_CUSTOM_AUDIENCE_KEY;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_1;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_2;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_1;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_2;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_2;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
+import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.STALE_DELAYED_UPDATE_AGE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -33,12 +42,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -62,7 +69,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,7 +90,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public final class ScheduledUpdatesHandlerTest {
-    private static final Long UPDATE_ID = 1L;
+
     private static final String OWNER = CustomAudienceFixture.VALID_OWNER;
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     private static final Uri UPDATE_URI = CommonFixture.getUri(BUYER, "/updateUri");
@@ -92,7 +98,7 @@ public final class ScheduledUpdatesHandlerTest {
     private static final Instant SCHEDULED_TIME = CommonFixture.FIXED_NEXT_ONE_DAY;
     private static final DBScheduledCustomAudienceUpdate UPDATE =
             DBScheduledCustomAudienceUpdate.builder()
-                    .setUpdateId(1L)
+                    .setUpdateId(UPDATE_ID)
                     .setUpdateUri(UPDATE_URI)
                     .setCreationTime(CREATION_TIME)
                     .setScheduledTime(SCHEDULED_TIME)
@@ -101,32 +107,7 @@ public final class ScheduledUpdatesHandlerTest {
                     .build();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
             AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
-    private static final String PARTIAL_CA_1 = "partial_ca_1";
-    private static final String PARTIAL_CA_2 = "partial_ca_2";
-    private static final String LEAVE_CA_1 = "leave_ca_1";
-    private static final String LEAVE_CA_2 = "leave_ca_2";
-    private static final Instant ACTIVATION_TIME = CommonFixture.FIXED_NOW;
-    private static final Instant EXPIRATION_TIME = CommonFixture.FIXED_NEXT_ONE_DAY;
-    private static final String SIGNALS_STRING = "{\"a\":\"b\"}";
-    private static final AdSelectionSignals VALID_BIDDING_SIGNALS =
-            AdSelectionSignals.fromString(SIGNALS_STRING);
-    private static final DBPartialCustomAudience PARTIAL_CUSTOM_AUDIENCE_1 =
-            DBPartialCustomAudience.builder()
-                    .setUpdateId(UPDATE_ID)
-                    .setName(PARTIAL_CA_1)
-                    .setActivationTime(ACTIVATION_TIME)
-                    .setExpirationTime(EXPIRATION_TIME)
-                    .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
-                    .build();
 
-    private static final DBPartialCustomAudience PARTIAL_CUSTOM_AUDIENCE_2 =
-            DBPartialCustomAudience.builder()
-                    .setUpdateId(UPDATE_ID)
-                    .setName(PARTIAL_CA_2)
-                    .setActivationTime(ACTIVATION_TIME)
-                    .setExpirationTime(EXPIRATION_TIME)
-                    .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
-                    .build();
     private final AdRenderIdValidator mAdRenderIdValidator =
             AdRenderIdValidator.createEnabledInstance(100);
     @Rule public MockitoRule rule = MockitoJUnit.rule();
@@ -230,6 +211,8 @@ public final class ScheduledUpdatesHandlerTest {
                         mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
+
+        verify(mCustomAudienceDaoMock).deleteScheduledCustomAudienceUpdate(UPDATE);
 
         assertTrue(
                 "Joined Custom Audiences should have all the CAs in response",
@@ -519,7 +502,18 @@ public final class ScheduledUpdatesHandlerTest {
                         any(DBCustomAudience.class), any(Uri.class), anyBoolean());
     }
 
-    byte[] createJsonRequestPayloadFromPartialCustomAudience(
+    @Test
+    public void testPerformScheduledUpdates_ClearsStaleUpdates_Success()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Instant invocationTime = CommonFixture.FIXED_NOW;
+        Void ignored = mHandler.performScheduledUpdates(invocationTime).get(10, TimeUnit.SECONDS);
+
+        verify(mCustomAudienceDaoMock)
+                .deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(
+                        invocationTime.minus(STALE_DELAYED_UPDATE_AGE));
+    }
+
+    private byte[] createJsonRequestPayloadFromPartialCustomAudience(
             List<DBPartialCustomAudience> partialCustomAudienceList) throws JSONException {
         List<CustomAudienceBlob> validBlobs = new ArrayList<>();
 
@@ -544,52 +538,6 @@ public final class ScheduledUpdatesHandlerTest {
         }
 
         return jsonArray.toString().getBytes(UTF_8);
-    }
-
-    private String createJsonResponsePayload(
-            AdTechIdentifier buyer,
-            String owner,
-            List<String> joinCustomAudienceNames,
-            List<String> leaveCustomAudienceNames)
-            throws JSONException {
-
-        JSONObject responseJson = new JSONObject();
-
-        JSONArray joinCustomAudienceArray = new JSONArray();
-        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
-            JSONObject generatedCa =
-                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
-            joinCustomAudienceArray.put(i, generatedCa);
-        }
-
-        JSONArray leaveCustomAudienceArray = new JSONArray();
-        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
-            leaveCustomAudienceArray.put(i, leaveCustomAudienceNames.get(i));
-        }
-
-        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
-        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
-
-        return responseJson.toString();
-    }
-
-    private JSONObject generateCustomAudienceWithName(
-            AdTechIdentifier buyer, String owner, String name) throws JSONException {
-
-        CustomAudience ca =
-                CustomAudienceFixture.getValidBuilderForBuyer(buyer).setName(name).build();
-        return CustomAudienceBlobFixture.asJSONObject(
-                owner,
-                ca.getBuyer(),
-                name,
-                ca.getActivationTime(),
-                ca.getExpirationTime(),
-                ca.getDailyUpdateUri(),
-                ca.getBiddingLogicUri(),
-                AdSelectionSignals.EMPTY.toString(),
-                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
-                Collections.emptyList(),
-                false);
     }
 
     private static class ScheduleCustomAudienceUpdateFlags implements Flags {

@@ -223,6 +223,10 @@ public class ScheduleCustomAudienceUpdateImpl {
                         .setScheduledTime(scheduledTime)
                         .build();
 
+        sLogger.d(
+                String.format(
+                        "Persisting update for uri:<%s> scheduled at time:%s in storage",
+                        updateUri, scheduledUpdate));
         return (ListenableFuture<Void>)
                 mBackgroundExecutorService.submit(
                         () ->
@@ -290,6 +294,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                         mFlags.getFledgeScheduleCustomAudienceMinDelayMinsOverride());
         if (delayTime.toMinutes() < minTimeDelayMinutes
                 || delayTime.toMinutes() > MAX_DELAY_TIME_MINUTES) {
+            sLogger.e("Delay Time not within permissible limits");
             throw new IllegalArgumentException("Delay Time not within permissible limits");
         }
     }

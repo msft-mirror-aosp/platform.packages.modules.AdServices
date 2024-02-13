@@ -1,4 +1,5 @@
 package: "com.android.sdksandbox.flags"
+container: "com.android.adservices"
 
 flag {
     name: "sandbox_activity_sdk_based_context"

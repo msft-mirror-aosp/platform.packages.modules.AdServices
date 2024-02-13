@@ -100,4 +100,30 @@ public class AdSelectionServerDatabaseMigrationTest {
         cursor.close();
         assertTrue(creationInstantColumnExists);
     }
+
+    @Test
+    public void testMigration3To4() throws IOException {
+        String protectedServersEncryptionConfigTable = "protected_servers_encryption_config";
+
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 3);
+        Cursor c =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                protectedServersEncryptionConfigTable));
+        assertEquals(0, c.getCount());
+
+        // Re-open the database with version 4 and provide MIGRATION_3_4 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 4, true);
+        c =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                protectedServersEncryptionConfigTable));
+        assertEquals(1, c.getCount());
+        c.moveToFirst();
+        assertEquals(
+                protectedServersEncryptionConfigTable,
+                c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
+    }
 }

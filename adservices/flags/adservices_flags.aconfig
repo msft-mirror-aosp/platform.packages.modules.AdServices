@@ -1,4 +1,5 @@
 package: "com.android.adservices.flags"
+container: "com.android.adservices"
 
 # NOTE: add new flags using alphabetical order to minimize merge conflicts
 
