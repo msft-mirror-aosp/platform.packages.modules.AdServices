@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.stats;
+package com.android.adservices.shared.util;
 
 import android.os.SystemClock;
 
-/**
- * Class for SystemClock call.
- * Copied from https://source.corp.google.com/android/frameworks/base/core/java/com/android/internal/os/Clock.java
- */
+/** Class for SystemClock call. */
 public abstract class Clock {
     /** Elapsed Realtime, see SystemClock.elapsedRealtime() */
     public long elapsedRealtime() {
@@ -38,21 +35,27 @@ public abstract class Clock {
         throw new UnsupportedOperationException();
     }
 
-    public static final Clock SYSTEM_CLOCK = new Clock() {
+    private static final Clock SYSTEM_CLOCK =
+            new Clock() {
 
-        @Override
-        public long elapsedRealtime() {
-            return SystemClock.elapsedRealtime();
-        }
+                @Override
+                public long elapsedRealtime() {
+                    return SystemClock.elapsedRealtime();
+                }
 
-        @Override
-        public long uptimeMillis() {
-            return SystemClock.uptimeMillis();
-        }
+                @Override
+                public long uptimeMillis() {
+                    return SystemClock.uptimeMillis();
+                }
 
-        @Override
-        public long currentTimeMillis() {
-            return System.currentTimeMillis();
-        }
-    };
+                @Override
+                public long currentTimeMillis() {
+                    return System.currentTimeMillis();
+                }
+            };
+
+    /** Returns the static instance of the {@link Clock} using {@link SystemClock}. */
+    public static Clock getInstance() {
+        return SYSTEM_CLOCK;
+    }
 }
