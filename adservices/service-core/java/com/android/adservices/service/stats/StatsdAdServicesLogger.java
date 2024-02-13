@@ -516,13 +516,16 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                             .InteractionKeySizeRangeType::getValue)
                     .toArray();
         }
-        AdServicesStatsLog.write(
-                DESTINATION_REGISTERED_BEACONS,
-                stats.getBeaconReportingDestinationType(),
-                stats.getAttemptedRegisteredBeacons(),
-                attemptedKeySizesRangeType,
-                stats.getTableNumRows(),
-                stats.getAdServicesStatusCode());
+        // TODO: b/325098723 - Add support for DestinationRegisteredBeacons for S- devices
+        if (SdkLevel.isAtLeastT()) {
+            AdServicesStatsLog.write(
+                    DESTINATION_REGISTERED_BEACONS,
+                    stats.getBeaconReportingDestinationType(),
+                    stats.getAttemptedRegisteredBeacons(),
+                    attemptedKeySizesRangeType,
+                    stats.getTableNumRows(),
+                    stats.getAdServicesStatusCode());
+        }
     }
 
     /** Logs beacon level reporting for ReportInteraction API called stats. */
