@@ -428,7 +428,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 measurementAttributionStats.getAggregateDebugReportCount(),
                 measurementAttributionStats.getEventReportCount(),
                 measurementAttributionStats.getEventDebugReportCount(),
-                /* retryCount */ 0);
+                /* retryCount */ 0,
+                measurementAttributionStats.getNullAggregateReportCount());
     }
 
     /** log method for measurement wipeout. */

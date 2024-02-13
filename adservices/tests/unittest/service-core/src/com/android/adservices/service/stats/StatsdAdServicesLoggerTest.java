@@ -655,6 +655,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setAttributionDelay(100L)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
                         .setAggregateReportCount(1)
+                        .setNullAggregateReportCount(1)
                         .setAggregateDebugReportCount(1)
                         .setEventReportCount(3)
                         .setEventDebugReportCount(1)
@@ -672,6 +673,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyBoolean(),
                                         anyLong(),
                                         anyString(),
+                                        anyInt(),
                                         anyInt(),
                                         anyInt(),
                                         anyInt(),
@@ -698,7 +700,8 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(1),
                                 eq(3),
                                 eq(1),
-                                eq(0));
+                                eq(0),
+                                eq(1));
 
         verify(writeInvocation);
 
