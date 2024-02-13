@@ -53,6 +53,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -1020,7 +1021,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    public void logDestinationRegisteredBeaconsReportedStats_success() {
+    public void logDestinationRegisteredBeaconsReportedStats_tPlus_success() {
+        // TODO: b/325098723 - Atoms using writeIntArray() crash the module on S- devices
+        mockIsAtLeastT(true);
         List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
                 keySizeRangeTypeList = Arrays.asList(
                 DestinationRegisteredBeaconsReportedStats
@@ -1055,7 +1058,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         // Invoke logging call.
         mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
 
-        // Verify only compat logging took place
+        // Verify only logging with T+ devices.
         MockedVoidMethod writeInvocation =
                 () ->
                         AdServicesStatsLog.write(
@@ -1069,6 +1072,47 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
         verify(writeInvocation);
 
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logDestinationRegisteredBeaconsReportedStats_sMinus_emptyLogging() {
+        // TODO: b/325098723 - Atoms using writeIntArray() crash the module on S- devices
+        mockIsAtLeastT(false);
+        List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
+                keySizeRangeTypeList = Arrays.asList(
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .LARGER_THAN_MAXIMUM_KEY_SIZE,
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .SMALLER_THAN_MAXIMUM_KEY_SIZE,
+                DestinationRegisteredBeaconsReportedStats
+                        .InteractionKeySizeRangeType
+                        .EQUAL_TO_MAXIMUM_KEY_SIZE);
+        int[] keySizeRangeTypeArray = new int[] {
+                /* LARGER_THAN_MAXIMUM_KEY_SIZE */ 4,
+                /* SMALLER_THAN_MAXIMUM_KEY_SIZE */ 2,
+                /* EQUAL_TO_MAXIMUM_KEY_SIZE */ 3};
+
+        DestinationRegisteredBeaconsReportedStats stats =
+                DestinationRegisteredBeaconsReportedStats.builder()
+                        .setBeaconReportingDestinationType(SELLER_DESTINATION)
+                        .setAttemptedRegisteredBeacons(5)
+                        .setAttemptedKeySizesRangeType(keySizeRangeTypeList)
+                        .setTableNumRows(25)
+                        .setAdServicesStatusCode(0)
+                        .build();
+
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), any(), anyInt(), anyInt()));
+        // Invoke logging call.
+        mLogger.logDestinationRegisteredBeaconsReportedStats(stats);
+
+        // Verify no logging action with S- devices.
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
