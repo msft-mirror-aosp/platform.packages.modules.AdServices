@@ -1315,7 +1315,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
                         eq(
-                                new ApiCallStats.Result(
+                                ApiCallStats.failureResult(
                                         STATUS_USER_CONSENT_REVOKED, FAILURE_REASON_UNSET)));
     }
 
@@ -1505,7 +1505,9 @@ public class OnDeviceAdSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -1570,7 +1572,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
                         eq(
-                                new ApiCallStats.Result(
+                                ApiCallStats.failureResult(
                                         STATUS_BACKGROUND_CALLER, FAILURE_REASON_UNSET)));
     }
 
@@ -1634,7 +1636,9 @@ public class OnDeviceAdSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -1978,7 +1982,9 @@ public class OnDeviceAdSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2075,7 +2081,9 @@ public class OnDeviceAdSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2180,7 +2188,9 @@ public class OnDeviceAdSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2416,7 +2426,9 @@ public class OnDeviceAdSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2578,7 +2590,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
-                        eq(new ApiCallStats.Result(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
+                        eq(ApiCallStats.failureResult(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2814,7 +2826,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS),
                         eq(
-                                new ApiCallStats.Result(
+                                ApiCallStats.failureResult(
                                         STATUS_RATE_LIMIT_REACHED, FAILURE_REASON_UNSET)));
     }
 
