@@ -1529,7 +1529,7 @@ public interface Flags extends CommonFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
-            "https://chromekanonymity-pa.googleapis.com/v1/proxy/keys";
+            "https://staging-chromekanonymity-pa.sandbox.googleapis.com/v1/proxy/keys";
 
     /** Returns Uri to fetch join encryption key for fledge ad selection. */
     default String getFledgeAuctionServerJoinKeyFetchUri() {
@@ -2696,6 +2696,13 @@ public interface Flags extends CommonFlags {
      */
     default String getPpapiAppAllowList() {
         return PPAPI_APP_ALLOW_LIST;
+    }
+
+    String AD_ID_API_APP_BLOCK_LIST = "";
+
+    /** Get the app allow list for the AD ID API. */
+    default String getAdIdApiAppBlockList() {
+        return AD_ID_API_APP_BLOCK_LIST;
     }
 
     /*
@@ -4602,7 +4609,7 @@ public interface Flags extends CommonFlags {
 
     /** Default value of k-anon fetch server parameters url. */
     String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL =
-            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getServerPublicParams";
+            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getServerPublicParams/act_v0_32_2048_05_2023";
 
     /** Default value of k-anon register client parameters url. */
     String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL =

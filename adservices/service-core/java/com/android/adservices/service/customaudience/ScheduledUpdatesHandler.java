@@ -54,6 +54,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContextFilter;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -67,6 +68,7 @@ import java.io.InvalidObjectException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -77,10 +79,15 @@ public class ScheduledUpdatesHandler {
 
     public static final String JOIN_CUSTOM_AUDIENCE_KEY = "join";
     public static final String LEAVE_CUSTOM_AUDIENCE_KEY = "leave";
+    public static final Duration STALE_DELAYED_UPDATE_AGE = Duration.of(24, ChronoUnit.HOURS);
     public static final String FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE =
             "Fused custom audience is incomplete.";
     public static final String FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE =
             "Fused custom audience exceeds size limit.";
+    public static final ImmutableMap<String, String> JSON_REQUEST_PROPERTIES =
+            ImmutableMap.of(
+                    "Content-Type", "application/json",
+                    "Accept", "application/json");
     @NonNull private final AdServicesHttpsClient mHttpClient;
     @NonNull private final Clock mClock;
     @NonNull private final Flags mFlags;
@@ -195,8 +202,16 @@ public class ScheduledUpdatesHandler {
 
     /** Performs Custom Audience Updates for delayed events in the schedule */
     public FluentFuture<Void> performScheduledUpdates(@NonNull Instant beforeTime) {
+        // Clean-up stale events before we start the updates
+        sLogger.d("Removing stale Custom Audience Updates");
+        mCustomAudienceDao.deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(
+                beforeTime.minus(STALE_DELAYED_UPDATE_AGE));
+
         List<DBScheduledCustomAudienceUpdate> scheduledUpdates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(beforeTime);
+        sLogger.d(
+                "Initiating scheduled Custom Audience Updates: #%s before time: %s",
+                scheduledUpdates.size(), beforeTime);
 
         List<ListenableFuture<Void>> updates =
                 scheduledUpdates.stream()
@@ -233,6 +248,7 @@ public class ScheduledUpdatesHandler {
                 sLogger.e(e, "Blob failed validation skipping");
             }
         }
+        sLogger.d("Override blobs validation complete");
         return fetchUpdate(update, validatedPartialCustomAudienceBlobs);
     }
 
@@ -251,11 +267,12 @@ public class ScheduledUpdatesHandler {
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.builder()
                         .setUri(update.getUpdateUri())
+                        .setRequestProperties(JSON_REQUEST_PROPERTIES)
                         .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.POST)
                         .setBodyInBytes(jsonArray.toString().getBytes(UTF_8))
                         .setDevContext(mDevContextFilter.createDevContext())
                         .build();
-
+        sLogger.d("Making scheduled update POST request");
         FluentFuture<AdServicesHttpClientResponse> response =
                 FluentFuture.from(mHttpClient.performRequestGetResponseInPlainString(request));
 
@@ -286,7 +303,8 @@ public class ScheduledUpdatesHandler {
                                 joinCustomAudiences(
                                         overrideCustomAudienceBlobs,
                                         extractJoinCustomAudiencesFromResponse(jsonResponse)),
-                        mLightWeightExecutor);
+                        mLightWeightExecutor)
+                .transformAsync(ignoredVoid -> removeHandledUpdate(update), mLightWeightExecutor);
     }
 
     private void leaveCustomAudiences(
@@ -294,6 +312,15 @@ public class ScheduledUpdatesHandler {
 
         leaveCustomAudienceList.stream()
                 .forEach(leave -> mCustomAudienceImpl.leaveCustomAudience(owner, buyer, leave));
+    }
+
+    private FluentFuture<Void> removeHandledUpdate(DBScheduledCustomAudienceUpdate handledUpdate) {
+        return FluentFuture.from(
+                        mBackgroundExecutor.submit(
+                                () ->
+                                        mCustomAudienceDao.deleteScheduledCustomAudienceUpdate(
+                                                handledUpdate)))
+                .transformAsync(ignored -> null, mLightWeightExecutor);
     }
 
     private FluentFuture<Void> joinCustomAudiences(
@@ -344,6 +371,7 @@ public class ScheduledUpdatesHandler {
 
     // TODO(b/324474350) Refactor common code with FetchAndJoinCA API
     private FluentFuture<Void> persistCustomAudience(CustomAudienceBlob fusedCustomAudienceBlob) {
+        sLogger.d("Persisting Custom Audience obtained from delayed update");
         return FluentFuture.from(
                         mBackgroundExecutor.submit(
                                 () -> {
@@ -414,6 +442,7 @@ public class ScheduledUpdatesHandler {
             for (int i = 0; i < jsonArray.length(); i++) {
                 customAudienceList.add(jsonArray.getString(i));
             }
+            sLogger.d("No of CAs to leave obtained from update: %s", customAudienceList.size());
         } catch (JSONException e) {
             sLogger.e(e, "Unable to parse any Custom Audiences To Leave");
         }
@@ -429,6 +458,7 @@ public class ScheduledUpdatesHandler {
             for (int i = 0; i < jsonArray.length(); i++) {
                 customAudienceJsonList.add(jsonArray.getJSONObject(i));
             }
+            sLogger.d("No of CAs to join obtained from update: %s", customAudienceJsonList.size());
         } catch (JSONException e) {
             sLogger.e(e, "Unable to parse any Custom Audiences To Join");
         }

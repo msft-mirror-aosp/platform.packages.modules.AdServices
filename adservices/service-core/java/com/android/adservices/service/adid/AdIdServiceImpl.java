@@ -238,10 +238,10 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
         // of non-binder thread of the PPAPI.
-        boolean appCanUsePpapi =
+        boolean appCanNotUseAdId =
                 AllowLists.isPackageAllowListed(
-                        mFlags.getPpapiAppAllowList(), adIdParam.getAppPackageName());
-        if (!appCanUsePpapi) {
+                        mFlags.getAdIdApiAppBlockList(), adIdParam.getAppPackageName());
+        if (appCanNotUseAdId) {
             invokeCallbackWithStatus(
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,

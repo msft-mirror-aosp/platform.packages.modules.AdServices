@@ -25,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -839,6 +840,14 @@ public abstract class CustomAudienceDao {
     /** Gets list of delayed Custom Audience Updates created before the given time */
     @Query("DELETE FROM scheduled_custom_audience_update WHERE creation_time <= :timestamp")
     public abstract void deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(Instant timestamp);
+
+    /**
+     * Removes a Custom Audience Update from storage and cascades the deletion to associated Partial
+     * Custom Audiences for overrides
+     */
+    @Delete
+    public abstract void deleteScheduledCustomAudienceUpdate(
+            @NonNull DBScheduledCustomAudienceUpdate update);
 
     @VisibleForTesting
     static class BiddingLogicJsWithVersion {

@@ -72,7 +72,7 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -381,7 +381,7 @@ public class GetAdSelectionDataRunnerTest {
     }
 
     @Test
-    public void test_composeProtectedAudienceInput_generatesProto() {
+    public void test_composeProtectedAuctionInput_generatesProto() {
         byte[] buyer1data = new byte[] {2, 3};
         byte[] buyer2data = new byte[] {1};
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerInputs =
@@ -393,8 +393,8 @@ public class GetAdSelectionDataRunnerTest {
 
         long adSelectionId = 234L;
 
-        ProtectedAudienceInput result =
-                mGetAdSelectionDataRunner.composeProtectedAudienceInputBytes(
+        ProtectedAuctionInput result =
+                mGetAdSelectionDataRunner.composeProtectedAuctionInputBytes(
                         buyerInputs, CALLER_PACKAGE_NAME, adSelectionId, false);
 
         Map<String, ByteString> expectedBuyerInput =
@@ -410,14 +410,14 @@ public class GetAdSelectionDataRunnerTest {
     }
 
     @Test
-    public void test_composeProtectedAudienceInput_DebugReportingEnabled() {
+    public void test_composeProtectedAuctionInput_DebugReportingEnabled() {
         boolean isDebugReportingEnabled = true;
         long adSelectionId = 234L;
         doReturn(mFlags).when(FlagsFactory::getFlags);
         GetAdSelectionDataRunner getAdSelectionDataRunner = initRunner(mFlags);
 
-        ProtectedAudienceInput result =
-                getAdSelectionDataRunner.composeProtectedAudienceInputBytes(
+        ProtectedAuctionInput result =
+                getAdSelectionDataRunner.composeProtectedAuctionInputBytes(
                         createTestBuyerInputs(),
                         CALLER_PACKAGE_NAME,
                         adSelectionId,

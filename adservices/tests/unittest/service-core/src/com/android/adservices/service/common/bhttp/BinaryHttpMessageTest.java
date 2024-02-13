@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -31,6 +32,13 @@ import java.util.Arrays;
  * Representation of HTTP Messages</a>
  */
 public class BinaryHttpMessageTest {
+
+    private BinaryHttpMessageDeserializer mBinaryHttpMessageDeserializer;
+
+    @Before
+    public void setup() {
+        mBinaryHttpMessageDeserializer = new BinaryHttpMessageDeserializer();
+    }
 
     @Test
     public void testEncodeAndDecodeRequestGetNoBody() {
@@ -648,8 +656,8 @@ public class BinaryHttpMessageTest {
         assertArrayStartWithAndPaddedWithZeros(encoded, paddedEncoded);
 
         assertEquals(
-                BinaryHttpMessageDeserializer.deserialize(encoded),
-                BinaryHttpMessageDeserializer.deserialize(paddedEncoded));
+                mBinaryHttpMessageDeserializer.deserialize(encoded),
+                mBinaryHttpMessageDeserializer.deserialize(paddedEncoded));
     }
 
     private void testEncodeAndDecode(
@@ -657,7 +665,7 @@ public class BinaryHttpMessageTest {
         final byte[] expectedEncodedBytes = fromIntArray(expectedEncodedMessage, trim);
         final byte[] encodedMessage = message.serialize();
         assertArrayStartWithAndPaddedWithZeros(expectedEncodedBytes, encodedMessage);
-        assertEquals(message, BinaryHttpMessageDeserializer.deserialize(expectedEncodedBytes));
+        assertEquals(message, mBinaryHttpMessageDeserializer.deserialize(expectedEncodedBytes));
     }
 
     private static void assertArrayStartWithAndPaddedWithZeros(byte[] target, byte[] tested) {
