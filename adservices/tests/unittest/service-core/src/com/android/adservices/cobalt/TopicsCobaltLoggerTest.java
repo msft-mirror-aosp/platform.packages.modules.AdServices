@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.topics.cobalt;
+package com.android.adservices.cobalt;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,7 +29,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.cobalt.CobaltRegistryLoader;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
@@ -38,6 +38,7 @@ import com.google.cobalt.MetricDefinition;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -60,6 +61,9 @@ public final class TopicsCobaltLoggerTest {
 
     @Mock private CobaltLogger mMockCobaltLogger;
     private TopicsCobaltLogger mTopicsCobaltLogger;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws Exception {
@@ -175,4 +179,3 @@ public final class TopicsCobaltLoggerTest {
         return Topic.create(topic, /* taxonomyVersion= */ 1, /* modelVersion= */ 1);
     }
 }
-
