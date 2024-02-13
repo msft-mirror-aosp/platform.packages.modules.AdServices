@@ -19,7 +19,8 @@ package com.android.adservices.shared.common;
 import android.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
+
+import com.android.adservices.shared.util.LogUtil;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
@@ -29,9 +30,6 @@ import java.util.Objects;
 
 /** Helper class that provides utility to parse Base64 encoded string to a proto. */
 public final class ProtoParser {
-
-    private static final String TAG = ProtoParser.class.getSimpleName();
-
     private ProtoParser() {
         throw new UnsupportedOperationException("static methods present");
     }
@@ -46,7 +44,7 @@ public final class ProtoParser {
     public static <T extends MessageLite> T parseBase64EncodedStringToProto(
             Parser<T> parser, String property, String value) {
         if (TextUtils.isEmpty(value)) {
-            Log.d(TAG, "Property " + property + " is empty.");
+            LogUtil.d("Property %s is empty.", property);
             return null;
         }
 
@@ -60,7 +58,7 @@ public final class ProtoParser {
             proto = parser.parseFrom(decode);
         } catch (InvalidProtocolBufferException e) {
             // TODO(b/315382750): Add CEL for this
-            Log.e(TAG, "Error while parsing " + property + ". Error: ", e);
+            LogUtil.e(e, "Error while parsing %s. Error: ", property);
         }
 
         return proto;
@@ -78,7 +76,7 @@ public final class ProtoParser {
             return Base64.decode(base64value, Base64.NO_PADDING | Base64.NO_WRAP);
         } catch (IllegalArgumentException e) {
             // TODO(b/315382750): Add CEL for this
-            Log.e(TAG, "Error while decoding " + property + " Error: " + e);
+            LogUtil.e(e, "Error while decoding %s. Error: ", property);
         }
         return null;
     }
