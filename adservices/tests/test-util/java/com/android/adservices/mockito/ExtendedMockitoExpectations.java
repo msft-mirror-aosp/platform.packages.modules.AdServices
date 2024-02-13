@@ -36,8 +36,8 @@ import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -188,7 +188,7 @@ public final class ExtendedMockitoExpectations {
     public static AdServicesJobServiceLogger mockAdservicesJobServiceLogger(
             Context context, StatsdAdServicesLogger statsDLogger) {
         AdServicesJobServiceLogger logger =
-                spy(new AdServicesJobServiceLogger(context, Clock.SYSTEM_CLOCK, statsDLogger));
+                spy(new AdServicesJobServiceLogger(context, Clock.getInstance(), statsDLogger));
 
         mockGetAdServicesJobServiceLogger(logger);
         doNothing().when(logger).recordOnStartJob(anyInt());

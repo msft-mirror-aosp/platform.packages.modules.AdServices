@@ -232,7 +232,7 @@ public class OnDeviceAdSelectionRunnerTest {
     @Mock private AdsScoreGenerator mMockAdsScoreGenerator;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Spy private Clock mClockSpy = Clock.systemUTC();
-    @Mock private com.android.adservices.service.stats.Clock mAdSelectionExecutionLoggerClockMock;
+    @Mock private com.android.adservices.shared.util.Clock mAdSelectionExecutionLoggerClockMock;
     @Mock private File mMockDBAdSelectionFile;
     @Mock private AdFilterer mMockAdFilterer;
     @Mock private AdServicesHttpsClient mMockHttpClient;
