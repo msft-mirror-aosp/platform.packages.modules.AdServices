@@ -19,6 +19,7 @@ package com.android.adservices.service;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.os.Build.VERSION.SDK_INT;
 
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.RAMPED_UP;
@@ -2480,10 +2481,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     // TOPICS Killswitches
 
     /**
-     * Topics API Kill Switch. The default value is false which means the Topics API is enabled.
-     * This flag is used for emergency turning off the Topics API.
+     * Topics API Kill Switch. The default value is {@code true} which means the Topics API is
+     * disabled.
+     *
+     * <p>This flag is used for emergency turning off the Topics API.
      */
-    boolean TOPICS_KILL_SWITCH = false; // By default, the Topics API is enabled.
+    @FeatureFlag(LEGACY_KILL_SWITCH)
+    boolean TOPICS_KILL_SWITCH = true;
 
     /** Returns value of Topics API kill switch */
     default boolean getTopicsKillSwitch() {
@@ -2584,8 +2588,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Protected signals API feature flag. The default value is {@code false}, which means that
      * protected signals is disabled by default.
      */
-    // TODO(b/323972771): change to false after developer preview
-    boolean PROTECTED_SIGNALS_ENABLED = true;
+    @FeatureFlag boolean PROTECTED_SIGNALS_ENABLED = false;
 
     /** Returns value of the protected signals feature flag. */
     default boolean getProtectedSignalsEnabled() {
