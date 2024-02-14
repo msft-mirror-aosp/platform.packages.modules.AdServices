@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.shared.util.Preconditions.checkState;
+
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -27,6 +29,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 import com.google.common.collect.ImmutableList;
@@ -53,7 +56,6 @@ final class CustomAudienceHelper {
     @VisibleForTesting public static final String BIDDING_LOGIC_URI = "bidding_logic_uri";
     @VisibleForTesting public static final String USER_BIDDING_SIGNALS = "user_bidding_signals";
     @VisibleForTesting public static final String TRUSTED_BIDDING_DATA = "trusted_bidding_data";
-    @VisibleForTesting public static final String DAILY_UPDATE_URI = "daily_update_uri";
     @VisibleForTesting public static final String ADS = "ads";
     @VisibleForTesting public static final String TRUSTED_BIDDING_DATA_URI = "uri";
     @VisibleForTesting public static final String ADS_AD_COUNTER_KEYS = "ad_counter_keys";
@@ -62,12 +64,44 @@ final class CustomAudienceHelper {
     @VisibleForTesting public static final String AD_AD_RENDER_URI = "render_uri";
     @VisibleForTesting public static final String AD_METADATA = "metadata";
     @VisibleForTesting public static final String AD_AD_RENDER_ID = "ad_render_id";
+    @VisibleForTesting public static final String DAILY_UPDATE = "daily_update";
+    @VisibleForTesting public static final String DAILY_UPDATE_URI = "uri";
 
-    static JSONObject toJson(@NonNull DBCustomAudience customAudience) throws JSONException {
+    @VisibleForTesting
+    public static final String DAILY_UPDATE_ELIGIBLE_UPDATE_TIME = "eligible_update_time";
+
+    @VisibleForTesting
+    public static final String DAILY_UPDATE_NUM_VALIDATION_FAILURES = "num_validation_failures";
+
+    @VisibleForTesting
+    public static final String DAILY_UPDATE_NUM_TIMEOUT_FAILURES = "num_timeout_failures";
+
+    static JSONObject toJson(
+            @NonNull DBCustomAudience customAudience,
+            @NonNull DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData)
+            throws JSONException {
+        Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(customAudienceBackgroundFetchData);
         return new JSONObject()
                 .put(NAME, customAudience.getName())
                 .put(OWNER, customAudience.getOwner())
                 .put(BUYER, customAudience.getBuyer())
+                .put(
+                        DAILY_UPDATE,
+                        new JSONObject()
+                                .put(
+                                        DAILY_UPDATE_URI,
+                                        customAudienceBackgroundFetchData.getDailyUpdateUri())
+                                .put(
+                                        DAILY_UPDATE_ELIGIBLE_UPDATE_TIME,
+                                        customAudienceBackgroundFetchData.getEligibleUpdateTime())
+                                .put(
+                                        DAILY_UPDATE_NUM_VALIDATION_FAILURES,
+                                        customAudienceBackgroundFetchData
+                                                .getNumValidationFailures())
+                                .put(
+                                        DAILY_UPDATE_NUM_TIMEOUT_FAILURES,
+                                        customAudienceBackgroundFetchData.getNumTimeoutFailures()))
                 .put(IS_DEBUGGABLE, customAudience.isDebuggable())
                 .put(CREATION_TIME, customAudience.getCreationTime())
                 .put(ACTIVATION_TIME, customAudience.getActivationTime())
@@ -122,7 +156,8 @@ final class CustomAudienceHelper {
         return jsonObject;
     }
 
-    static DBCustomAudience fromJson(@NonNull JSONObject jsonObject) throws JSONException {
+    static DBCustomAudience getCustomAudienceFromJson(@NonNull JSONObject jsonObject)
+            throws JSONException {
         return new DBCustomAudience.Builder()
                 .setName(jsonObject.getString(NAME))
                 .setOwner(jsonObject.getString(OWNER))
@@ -140,6 +175,26 @@ final class CustomAudienceHelper {
                         getTrustedBiddingDataFromJson(
                                 jsonObject.getJSONObject(TRUSTED_BIDDING_DATA)))
                 .setAds(getAdsFromJsonArray(jsonObject.getJSONArray(ADS)))
+                .build();
+    }
+
+    static DBCustomAudienceBackgroundFetchData getCustomAudienceBackgroundFetchDataFromJson(
+            @NonNull JSONObject jsonObject) throws JSONException {
+        checkState(!jsonObject.isNull(DAILY_UPDATE), "`daily_update` field is not present.");
+        JSONObject dailyUpdateJsonObject = jsonObject.getJSONObject(DAILY_UPDATE);
+        return DBCustomAudienceBackgroundFetchData.builder()
+                .setName(jsonObject.getString(NAME))
+                .setOwner(jsonObject.getString(OWNER))
+                .setBuyer(AdTechIdentifier.fromString(jsonObject.getString(BUYER)))
+                .setIsDebuggable(jsonObject.getBoolean(IS_DEBUGGABLE))
+                .setDailyUpdateUri(Uri.parse(dailyUpdateJsonObject.getString(DAILY_UPDATE_URI)))
+                .setEligibleUpdateTime(
+                        Instant.parse(
+                                dailyUpdateJsonObject.getString(DAILY_UPDATE_ELIGIBLE_UPDATE_TIME)))
+                .setNumTimeoutFailures(
+                        dailyUpdateJsonObject.getInt(DAILY_UPDATE_NUM_TIMEOUT_FAILURES))
+                .setNumValidationFailures(
+                        dailyUpdateJsonObject.getInt(DAILY_UPDATE_NUM_VALIDATION_FAILURES))
                 .build();
     }
 
