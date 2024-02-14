@@ -32,6 +32,7 @@ import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.compatibility.common.util.ShellUtils;
 
 /** Util class for Settings tests. */
 public final class SettingsTestUtil {
@@ -419,6 +420,57 @@ public final class SettingsTestUtil {
             measurementToggle = getToggleSwitch(device);
             assertToggleState(measurementToggle, /* checked= */ false);
         }
+    }
+
+    /**
+     * Tests whether the new PAS Fledge view has updated PAS text.
+     *
+     * @param context Android context
+     * @param device UiDevice
+     * @throws RemoteException during screen rotation
+     */
+    public static void fledgeViewTextPasEnabledTest(UiDevice device) throws RemoteException {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices pas_ux_enabled true");
+
+        ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
+        // 1) disable Fledge API is enabled
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
+        device.waitForIdle();
+
+        UiObject2 fledgeToggle = getToggleSwitch(device);
+        if (fledgeToggle.isChecked()) {
+            fledgeToggle.click();
+        }
+        assertThat(fledgeToggle.isChecked()).isFalse();
+        device.pressBack();
+
+        // 2) enable Fledge API
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
+        device.waitForIdle();
+
+        fledgeToggle = getToggleSwitch(device);
+        assertThat(fledgeToggle.isChecked()).isFalse();
+        fledgeToggle.click();
+        device.waitForIdle();
+        fledgeToggle = getToggleSwitch(device);
+        assertThat(fledgeToggle.isChecked()).isTrue();
+        device.pressBack();
+
+        // 3) check if Fledge API is enabled
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
+        device.waitForIdle();
+        // rotate device to test rotating as well
+        device.setOrientationLeft();
+        device.setOrientationNatural();
+        fledgeToggle = getToggleSwitch(device);
+        assertThat(fledgeToggle.isChecked()).isTrue();
+
+        // 4) check text is PAS text
+        UiObject2 bodyText =
+                ApkTestUtil.getElement(device, R.string.settingsUI_pas_apps_view_body_text);
+        assertNotNull(bodyText, R.string.settingsUI_pas_apps_view_body_text);
+        device.pressBack();
     }
 
     public static void checkSubtitleMatchesToggle(

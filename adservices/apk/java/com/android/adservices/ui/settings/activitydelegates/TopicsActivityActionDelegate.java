@@ -153,7 +153,11 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
     public void initRvc() {}
 
     @Override
-    public void initGaUxWithPas() {}
+    public void initGaUxWithPas() {
+        initGA();
+        configureElement(R.id.topics_view_ga_footer, R.string.settingsUI_pas_topics_view_footer);
+        configureLink(R.id.topics_view_ga_footer);
+    }
 
     private void configureSharedElements() {
         // recycler view (topics list)

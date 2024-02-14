@@ -173,6 +173,7 @@
                         android:src="@drawable/ic_info_icon"
                         tools:ignore="ContentDescription" />
                     <TextView
+                        android:id="@+id/apps_view_ga_footer_text"
                         android:text="@string/settingsUI_apps_view_footer"
                         style="@style/MainStyle.Body2" />
                 </LinearLayout>
