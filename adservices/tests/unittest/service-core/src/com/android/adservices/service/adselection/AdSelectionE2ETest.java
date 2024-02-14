@@ -26,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.data.encryptionkey.EncryptionKeyDaoTest.ENCRYPTION_KEY1;
@@ -596,8 +597,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
             Uri.parse("https://developer%$android.com/test/decisions_logic_uris");
     private static final long BINDER_ELAPSED_TIME_MS = 100L;
-    private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
+    private static final String MY_APP_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private Flags mFlags = new AdSelectionE2ETestFlags();
@@ -937,6 +938,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1064,6 +1066,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1209,6 +1212,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1351,6 +1355,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1474,6 +1479,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1600,6 +1606,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1695,6 +1702,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1904,6 +1912,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1979,6 +1988,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2103,6 +2113,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2248,6 +2259,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2389,6 +2401,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2511,6 +2524,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2634,6 +2648,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2703,6 +2718,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2771,6 +2787,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2866,6 +2883,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2961,6 +2979,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3137,6 +3156,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3261,6 +3281,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3322,6 +3343,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3428,6 +3450,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
 
@@ -3516,6 +3539,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
         mMockWebServerRule.verifyMockServerRequests(
@@ -3595,6 +3619,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3669,6 +3694,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3782,6 +3808,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3895,6 +3922,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4515,6 +4543,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4654,6 +4683,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4746,6 +4776,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4840,6 +4871,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4881,6 +4913,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4928,6 +4961,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5005,6 +5039,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5140,6 +5175,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5253,6 +5289,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5365,6 +5402,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5482,6 +5520,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5604,6 +5643,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5723,6 +5763,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5900,6 +5941,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6169,6 +6211,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, times(2))
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6438,6 +6481,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, times(2))
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6616,6 +6660,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_TIMEOUT),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6668,6 +6713,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6759,6 +6805,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6861,6 +6908,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CALLER_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6976,6 +7024,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -7065,6 +7114,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_UNAUTHORIZED),
                         geq(0));
 
@@ -7152,6 +7202,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         geq(0));
     }
@@ -7271,6 +7322,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         geq(0));
     }
@@ -7547,6 +7599,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -7627,6 +7680,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             verify(mAdServicesLoggerMock)
                     .logFledgeApiCallStats(
                             eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                            eq(CALLER_PACKAGE_NAME),
                             eq(STATUS_INTERNAL_ERROR),
                             geq((int) BINDER_ELAPSED_TIME_MS));
         } finally {

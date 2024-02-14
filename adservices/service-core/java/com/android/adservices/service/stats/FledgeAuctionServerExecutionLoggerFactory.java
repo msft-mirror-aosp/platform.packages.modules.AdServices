@@ -31,14 +31,14 @@ import java.util.Objects;
 
 public class FledgeAuctionServerExecutionLoggerFactory {
 
-    @VisibleForTesting
-    static final String GET_AD_SELECTION_DATA_API_NAME = "GET_AD_SELECTION_DATA";
+    @VisibleForTesting static final String GET_AD_SELECTION_DATA_API_NAME = "GET_AD_SELECTION_DATA";
 
     @VisibleForTesting
     static final String PERSIST_AD_SELECTION_RESULT_API_NAME = "PERSIST_AD_SELECTION_RESULT";
 
-    @VisibleForTesting
-    static final String UNKNOWN_API_NAME = "UNKNOWN_API_NAME";
+    @VisibleForTesting static final String UNKNOWN_API_NAME = "UNKNOWN_API_NAME";
+
+    private final String mCallerAppPackageName;
 
     private final CallerMetadata mCallerMetadata;
 
@@ -53,15 +53,18 @@ public class FledgeAuctionServerExecutionLoggerFactory {
     private final boolean mFledgeAuctionServerApiUsageMetricsEnabled;
 
     public FledgeAuctionServerExecutionLoggerFactory(
+            @NonNull String callerAppPackageName,
             @NonNull CallerMetadata callerMetadata,
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
             int apiNameCode) {
+        Objects.requireNonNull(callerAppPackageName);
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        mCallerAppPackageName = callerAppPackageName;
         mFledgeAuctionServerApiUsageMetricsEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeAuctionServerApiUsageMetricsEnabled);
         mCallerMetadata = callerMetadata;
@@ -78,17 +81,22 @@ public class FledgeAuctionServerExecutionLoggerFactory {
     }
 
     /**
-     * Gets the {@link FledgeAuctionServerExecutionLogger} implementation to use,
-     * dependent on whether the fledge auction server metrics is enabled.
+     * Gets the {@link FledgeAuctionServerExecutionLogger} implementation to use, dependent on
+     * whether the fledge auction server metrics is enabled.
      *
      * @return an {@link FledgeAuctionServerExecutionLoggerImpl} instance if the fledge auction
-     *      server metrics is enabled, or {@link FledgeAuctionServerExecutionLoggerNoLoggingImpl}
-     *      instance otherwise
+     *     server metrics is enabled, or {@link FledgeAuctionServerExecutionLoggerNoLoggingImpl}
+     *     instance otherwise
      */
     public FledgeAuctionServerExecutionLogger getFledgeAuctionServerExecutionLogger() {
         if (mFledgeAuctionServerApiUsageMetricsEnabled) {
             return new FledgeAuctionServerExecutionLoggerImpl(
-                    mCallerMetadata, mClock, mAdServicesLogger, mApiName, mApiNameCode);
+                    mCallerAppPackageName,
+                    mCallerMetadata,
+                    mClock,
+                    mAdServicesLogger,
+                    mApiName,
+                    mApiNameCode);
         } else {
             return new FledgeAuctionServerExecutionLoggerNoLoggingImpl(mApiName);
         }

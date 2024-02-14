@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
@@ -66,8 +67,9 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
     public static final long PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP =
             PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP + PERSIST_AD_SELECTION_RESULT_LATENCY_MS;
     public static final int PERSIST_AD_SELECTION_RESULT_INTERNAL_FINAL_LATENCY_MS =
-            (int) (PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP
-                    - PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP);
+            (int)
+                    (PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP
+                            - PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP);
     public static final int PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS =
             BINDER_LATENCY_MS + PERSIST_AD_SELECTION_RESULT_INTERNAL_FINAL_LATENCY_MS;
 
@@ -93,6 +95,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         // Start the Ad selection execution logger and set start state of the process.
         FledgeAuctionServerExecutionLoggerImpl getAdSelectionDataLogger =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -125,6 +128,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         // Start the Ad selection execution logger and set start state of the process.
         FledgeAuctionServerExecutionLoggerImpl persistAdSelectionResultLogger =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -149,6 +153,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         when(mMockClockMock.elapsedRealtime()).thenReturn(BINDER_ELAPSED_TIMESTAMP);
         FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -167,8 +172,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         assertThat(getAdSelectionDataStats.getApiName())
                 .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         assertThat(getAdSelectionDataStats.getResultCode()).isEqualTo(STATUS_UNSET);
-        assertThat(getAdSelectionDataStats.getLatencyMillisecond())
-                .isEqualTo(UNAVAILABLE_LATENCY);
+        assertThat(getAdSelectionDataStats.getLatencyMillisecond()).isEqualTo(UNAVAILABLE_LATENCY);
     }
 
     @Test
@@ -181,6 +185,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
         FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -199,8 +204,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         assertThat(getAdSelectionDataStats.getApiName())
                 .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         assertThat(getAdSelectionDataStats.getResultCode()).isEqualTo(STATUS_UNSET);
-        assertThat(getAdSelectionDataStats.getLatencyMillisecond())
-                .isEqualTo(UNAVAILABLE_LATENCY);
+        assertThat(getAdSelectionDataStats.getLatencyMillisecond()).isEqualTo(UNAVAILABLE_LATENCY);
     }
 
     @Test
@@ -209,6 +213,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         when(mMockClockMock.elapsedRealtime()).thenReturn(BINDER_ELAPSED_TIMESTAMP);
         FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -241,6 +246,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
                         PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP);
         FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,

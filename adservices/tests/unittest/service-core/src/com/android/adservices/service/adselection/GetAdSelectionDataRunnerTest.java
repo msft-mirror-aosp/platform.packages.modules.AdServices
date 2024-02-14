@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
@@ -50,7 +51,6 @@ import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.AssetFileDescriptorUtil;
-import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.content.Context;
 import android.net.Uri;
@@ -122,7 +122,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class GetAdSelectionDataRunnerTest {
     private static final int CALLER_UID = Process.myUid();
-    private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private static final ExecutorService BLOCKING_EXECUTOR =
             AdServicesExecutors.getBlockingExecutor();
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
@@ -152,8 +152,10 @@ public class GetAdSelectionDataRunnerTest {
     @Mock private AuctionServerDebugReporting mAuctionServerDebugReporting;
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
     private MockitoSession mStaticMockSession = null;
-    @Mock private com.android.adservices.shared.util.Clock
-            mFledgeAuctionServerExecutionLoggerClockMock;
+
+    @Mock
+    private com.android.adservices.shared.util.Clock mFledgeAuctionServerExecutionLoggerClockMock;
+
     private FledgeAuctionServerExecutionLoggerFactory mFledgeAuctionServerExecutionLoggerFactory;
     private FledgeAuctionServerExecutionLogger mFledgeAuctionServerExecutionLogger;
 
@@ -214,6 +216,7 @@ public class GetAdSelectionDataRunnerTest {
         mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
         mFledgeAuctionServerExecutionLoggerFactory =
                 new FledgeAuctionServerExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mFledgeAuctionServerExecutionLoggerClockMock,
                         mAdServicesLoggerSpy,
@@ -221,9 +224,7 @@ public class GetAdSelectionDataRunnerTest {
                         AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         mFledgeAuctionServerExecutionLogger =
                 mFledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
-        mGetAdSelectionDataRunner = initRunner(
-                mFlags,
-                mFledgeAuctionServerExecutionLogger);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
     }
 
     @After
@@ -603,18 +604,17 @@ public class GetAdSelectionDataRunnerTest {
         logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mFledgeAuctionServerExecutionLogger =
                 mFledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
-        mGetAdSelectionDataRunner = initRunner(
-                mFlags,
-                mFledgeAuctionServerExecutionLogger);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
     }
 
     private void verifyGetAdSelectionDataApiUsageLog(int resultCode) throws InterruptedException {
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
-        assertThat(apiCallStats.getApiName()).isEqualTo(
-                AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
+        assertThat(apiCallStats.getApiName())
+                .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
+        assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_PACKAGE_NAME);
         assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
-        assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(
-                GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS);
+        assertThat(apiCallStats.getLatencyMillisecond())
+                .isEqualTo(GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS);
     }
 
     public static class GetAdSelectionDataRunnerTestFlags implements Flags {

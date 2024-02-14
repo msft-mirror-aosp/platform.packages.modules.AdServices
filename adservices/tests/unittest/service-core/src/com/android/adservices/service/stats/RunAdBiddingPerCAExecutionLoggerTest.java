@@ -53,7 +53,6 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdSelectionSignals;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;

@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
@@ -31,9 +30,9 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /**
- * Class for logging the Fledge auction server process. It provides the functions to collect and
- * log the corresponding auction server process and log the data into the statsd logs.
- * This class collect data for the telemetry atoms:
+ * Class for logging the Fledge auction server process. It provides the functions to collect and log
+ * the corresponding auction server process and log the data into the statsd logs. This class
+ * collect data for the telemetry atoms:
  *
  * <ul>
  *   <li>ApiCallStats for getAdSelectionData API
@@ -48,11 +47,12 @@ public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCal
         implements FledgeAuctionServerExecutionLogger {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
-    @VisibleForTesting
-    static final int UNAVAILABLE_LATENCY = -1;
+    @VisibleForTesting static final int UNAVAILABLE_LATENCY = -1;
+
     @VisibleForTesting
     static final String MISSING_AUCTION_SERVER_API_PROCESS =
             "The logger should set the start of auction server API process: ";
+
     @VisibleForTesting
     static final String REPEATED_END_AUCTION_SERVER_API_PROCESS =
             "The logger has already set the end of auction server API process: ";
@@ -63,23 +63,26 @@ public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCal
     private long mAuctionServerApiEndTimestamp;
 
     private AdServicesLogger mAdServicesLogger;
-
+    private String mCallerAppPackageName;
     private int mApiNameCode;
     private String mApiName;
 
     private boolean isLatencyAvailable;
 
     public FledgeAuctionServerExecutionLoggerImpl(
+            @NonNull String callerAppPackageName,
             @NonNull CallerMetadata callerMetadata,
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull String apiName,
             int apiNameCode) {
         super(clock);
+        Objects.requireNonNull(callerAppPackageName);
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(apiName);
+        this.mCallerAppPackageName = callerAppPackageName;
         this.mBinderElapsedTimestamp = callerMetadata.getBinderElapsedTimestamp();
         this.mAdServicesLogger = adServicesLogger;
         this.mApiName = apiName;
@@ -113,7 +116,7 @@ public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCal
                         .setApiName(mApiNameCode)
                         .setLatencyMillisecond(overallAuctionServerApiLatency)
                         .setResultCode(auctionServerApiResultCode)
-                        .setAppPackageName("")
+                        .setAppPackageName(mCallerAppPackageName)
                         .setSdkPackageName("")
                         .build());
     }
@@ -125,7 +128,7 @@ public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCal
 
     /**
      * @return the latency in milliseconds of the get-ad-selection-data process if started,
-     *      otherwise the {@link AdServicesLoggerUtil#FIELD_UNSET}.
+     *     otherwise the {@link AdServicesLoggerUtil#FIELD_UNSET}.
      */
     private int getAuctionServerApiInternalFinalLatencyInMs() {
         if (mAuctionServerApiEndTimestamp == 0L) {
