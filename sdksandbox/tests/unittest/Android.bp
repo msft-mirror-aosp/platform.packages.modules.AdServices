@@ -109,4 +109,3 @@ android_test {
       ":CodeProviderWithResources",
     ],
 }
-
