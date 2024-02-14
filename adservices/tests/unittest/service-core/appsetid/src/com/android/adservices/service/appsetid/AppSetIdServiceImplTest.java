@@ -19,7 +19,6 @@ package com.android.adservices.service.appsetid;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
@@ -53,6 +52,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.IntFailureSyncCallback;
 import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
