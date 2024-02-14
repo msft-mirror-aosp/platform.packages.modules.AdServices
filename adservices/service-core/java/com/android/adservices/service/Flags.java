@@ -1976,7 +1976,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * the Global Kill Switch or the Measurement Kill Switch value is true.
      */
     default boolean getMeasurementKillSwitch() {
-        return MEASUREMENT_KILL_SWITCH;
+        return getGlobalKillSwitch() || MEASUREMENT_KILL_SWITCH;
     }
 
     /**

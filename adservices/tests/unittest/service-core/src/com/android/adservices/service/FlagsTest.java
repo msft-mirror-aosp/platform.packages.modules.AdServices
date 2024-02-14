@@ -270,7 +270,10 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetMeasurementKillSwitch() {
         // Getter
         expect.withMessage("getMeasurementKillSwitch()")
-                .that(mFlags.getMeasurementKillSwitch())
+                .that(mGlobalKsEnabled.getMeasurementKillSwitch())
+                .isTrue();
+        expect.withMessage("getMeasurementKillSwitch()")
+                .that(mGlobalKsDisabled.getMeasurementKillSwitch())
                 .isEqualTo(MEASUREMENT_KILL_SWITCH);
 
         // Constant
