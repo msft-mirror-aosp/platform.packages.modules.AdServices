@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -26,19 +27,19 @@ filegroup {
 genrule_defaults {
     name: "gen_platform_api_allowlist_per_target_sdk_version",
     tools: ["aprotoc"],
-    tool_files: [ "Verifier.proto" ],
+    tool_files: ["Verifier.proto"],
     cmd: "$(location aprotoc) --encode=com.android.server.sdksandbox.proto.AllowedApisPerTargetSdk " +
         "-I $$(dirname $(location Verifier.proto))" +
         " $(location Verifier.proto) < $(in) > $(out)",
     visibility: [
-        "//packages/modules/AdServices/sdksandbox/service"
+        "//packages/modules/AdServices/sdksandbox/service",
     ],
 }
 
 genrule {
     name: "platform_api_allowlist_per_target_sdk_version_current.binarypb",
     defaults: ["gen_platform_api_allowlist_per_target_sdk_version"],
-    srcs: [ "platform_api_allowlist_per_target_sdk_version_current.textproto"],
+    srcs: ["platform_api_allowlist_per_target_sdk_version_current.textproto"],
     out: ["platform_api_allowlist_per_target_sdk_version_current.binarypb"],
 }
 
@@ -50,7 +51,7 @@ java_library {
         type: "lite",
         include_dirs: [
             "external/protobuf/src",
-            "external/protobuf/java"
+            "external/protobuf/java",
         ],
     },
     srcs: [
