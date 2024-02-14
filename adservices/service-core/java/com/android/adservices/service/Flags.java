@@ -1974,9 +1974,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /**
      * Returns the kill switch value for Global Measurement. Measurement will be disabled if either
      * the Global Kill Switch or the Measurement Kill Switch value is true.
+     *
+     * @deprecated use {@link #getMeasurementEnabled()} instead;
      */
+    @Deprecated
     default boolean getMeasurementKillSwitch() {
         return getGlobalKillSwitch() || MEASUREMENT_KILL_SWITCH;
+    }
+
+    /**
+     * Returns whether the Global Measurement feature is enabled. Measurement will be disabled if
+     * either the Global Kill Switch or the Measurement Kill Switch value is {@code true}.
+     */
+    default boolean getMeasurementEnabled() {
+        return getGlobalKillSwitch() ? false : !MEASUREMENT_KILL_SWITCH;
     }
 
     /**
