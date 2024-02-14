@@ -139,7 +139,7 @@
           "trigger_data": "1",
           "source_type": "event",
           "trigger_summary_bucket": [10, 4294967295],
-          "randomized_trigger_rate": 0.000002494582008677539
+          "randomized_trigger_rate": 0.0000025
         }
       }
     ],
