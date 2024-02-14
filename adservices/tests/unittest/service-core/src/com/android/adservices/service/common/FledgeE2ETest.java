@@ -3308,7 +3308,11 @@ public class FledgeE2ETest {
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
         // Registers the test app for app install filtering
-        registerForAppInstallFiltering();
+        // Should fail since flag is turned off
+        // Everything else should pass
+        AppInstallResultCapturingCallback callback = invokeSetAppInstallAdvertisers();
+        assertFalse(callback.isSuccess());
+        assertTrue(callback.getException() instanceof IllegalStateException);
 
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
@@ -3768,15 +3772,33 @@ public class FledgeE2ETest {
                         .setAdvertisers(advertisers)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                         .build();
-        CountDownLatch appInstallDone = new CountDownLatch(1);
         AppInstallResultCapturingCallback appInstallCallback =
-                new AppInstallResultCapturingCallback(appInstallDone);
-        mAdSelectionService.setAppInstallAdvertisers(
-                setAppInstallAdvertisersInput, appInstallCallback);
-        assertTrue(appInstallDone.await(5, TimeUnit.SECONDS));
+                invokeSetAppInstallAdvertisers(setAppInstallAdvertisersInput);
         assertTrue(
                 "App Install call failed with: " + appInstallCallback.getException(),
                 appInstallCallback.isSuccess());
+    }
+
+    private AppInstallResultCapturingCallback invokeSetAppInstallAdvertisers()
+            throws RemoteException, InterruptedException {
+        Set<AdTechIdentifier> advertisers =
+                Collections.singleton(AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()));
+        SetAppInstallAdvertisersInput setAppInstallAdvertisersInput =
+                new SetAppInstallAdvertisersInput.Builder()
+                        .setAdvertisers(advertisers)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+        return invokeSetAppInstallAdvertisers(setAppInstallAdvertisersInput);
+    }
+
+    private AppInstallResultCapturingCallback invokeSetAppInstallAdvertisers(
+            SetAppInstallAdvertisersInput input) throws RemoteException, InterruptedException {
+        CountDownLatch appInstallDone = new CountDownLatch(1);
+        AppInstallResultCapturingCallback appInstallCallback =
+                new AppInstallResultCapturingCallback(appInstallDone);
+        mAdSelectionService.setAppInstallAdvertisers(input, appInstallCallback);
+        assertTrue(appInstallDone.await(5, TimeUnit.SECONDS));
+        return appInstallCallback;
     }
 
     private String getV3BiddingLogicJs() {

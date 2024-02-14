@@ -9887,7 +9887,7 @@ public class AdSelectionServiceImplTest {
 
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
+            return true;
         }
 
         @Override
