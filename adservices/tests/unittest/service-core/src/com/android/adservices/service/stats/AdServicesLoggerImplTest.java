@@ -17,7 +17,6 @@
 package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
@@ -144,12 +143,12 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         adServicesLogger.logFledgeApiCallStats(
                 AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                 latencyMs,
-                new ApiCallStats.Result(STATUS_SUCCESS, FAILURE_REASON_UNSET));
+                ApiCallStats.successResult());
         verify(mStatsdLoggerMock)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         latencyMs,
-                        new ApiCallStats.Result(STATUS_SUCCESS, FAILURE_REASON_UNSET));
+                        ApiCallStats.successResult());
     }
 
     @Test
@@ -436,7 +435,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setSdkPackageName(sdkName)
                         .setLatencyMillisecond(latency)
                         .setResult(
-                                new ApiCallStats.Result(
+                                ApiCallStats.failureResult(
                                         STATUS_SUCCESS,
                                         FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND))
                         .build();

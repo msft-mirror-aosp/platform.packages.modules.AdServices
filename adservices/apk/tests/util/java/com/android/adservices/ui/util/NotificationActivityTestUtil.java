@@ -78,11 +78,10 @@ public final class NotificationActivityTestUtil {
     /***
      * Click on the More button on the notification page.
      * @param device device
-     * @throws InterruptedException interruptedException
      */
-    public static void clickMoreToBottom(UiDevice device) throws InterruptedException {
+    public static void clickMoreToBottom(UiDevice device) {
         UiObject2 moreButton =
-                ApkTestUtil.getElement(sContext, device, R.string.notificationUI_more_button_text);
+                ApkTestUtil.getElement(device, R.string.notificationUI_more_button_text);
 
         if (moreButton == null) {
             LogUtil.e("More Button not Found");
@@ -94,9 +93,7 @@ public final class NotificationActivityTestUtil {
             moreButton.clickAndWait(Until.scrollFinished(Direction.DOWN), SCROLL_WAIT_TIME);
             // Retrieve a new instance to avoid android.support.test.uiautomator
             // .StaleObjectException.
-            moreButton =
-                    ApkTestUtil.getElement(
-                            sContext, device, R.string.notificationUI_more_button_text);
+            moreButton = ApkTestUtil.getElement(device, R.string.notificationUI_more_button_text);
         }
         assertWithMessage("More button").that(moreButton).isNull();
     }

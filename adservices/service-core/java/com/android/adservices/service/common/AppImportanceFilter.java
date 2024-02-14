@@ -242,7 +242,7 @@ public final class AppImportanceFilter {
                         .setCode(AD_SERVICES_API_CALLED)
                         .setApiClass(mApiClass)
                         .setApiName(apiNameLoggingId)
-                        .setResult(new ApiCallStats.Result(resultCode, FAILURE_REASON_UNSET))
+                        .setResult(resultCode, FAILURE_REASON_UNSET)
                         .setSdkPackageName(sdkName != null ? sdkName : "")
                         .setAppPackageName(appPackageName)
                         .build());
