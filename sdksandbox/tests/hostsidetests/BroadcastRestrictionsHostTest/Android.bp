@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -36,25 +37,25 @@ android_test_helper_app {
     name: "BroadcastRestrictionsTestApp",
     manifest: "app/BroadcastRestrictionsTestAppManifest.xml",
     srcs: [
-            "app/src/**/BroadcastRestrictionsTestApp.java",
-            ":framework-sdksandbox-sources",
-            ":sdksandbox_aidl",
-            ":sdksandbox-sources",
-            "sdkprovider/src/**/*.aidl",
-        ],
-        defaults: ["framework-sdksandbox-jarjar-defaults"],
-        static_libs: [
-            "androidx.core_core",
-            "androidx.test.ext.junit",
-            "compatibility-device-util-axt",
-            "SdkSandboxTestUtils",
-            "BroadcastsSdkInterfaces",
-            "modules-utils-build",
-        ],
-        test_suites: ["general-tests"],
-        platform_apis: true,
-        min_sdk_version: "33",
-        target_sdk_version: "33",
+        "app/src/**/BroadcastRestrictionsTestApp.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+        "sdkprovider/src/**/*.aidl",
+    ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.ext.junit",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+        "BroadcastsSdkInterfaces",
+        "modules-utils-build",
+    ],
+    test_suites: ["general-tests"],
+    platform_apis: true,
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
 
 android_test_helper_app {
@@ -66,9 +67,9 @@ android_test_helper_app {
         "framework-sdksandbox-jarjar-defaults",
     ],
     srcs: [
-       "sdkprovider/src/**/*.java",
-       ":framework-sdksandbox-sources",
-       "sdkprovider/src/**/*.aidl",
+        "sdkprovider/src/**/*.java",
+        ":framework-sdksandbox-sources",
+        "sdkprovider/src/**/*.aidl",
     ],
     static_libs: [
         "BroadcastsSdkInterfaces",
