@@ -14,83 +14,86 @@
  * limitations under the License.
  */
 
-package com.android.adservices.spe;
+package com.android.adservices.shared.spe.logging;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
-import static com.android.adservices.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
-import static com.android.adservices.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
-import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
-import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP;
-import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP;
-import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
-import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
+import static com.android.adservices.shared.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
+import static com.android.adservices.shared.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
+import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
+import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP;
+import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP;
+import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
+import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
 
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.util.Clock;
-import com.android.adservices.spe.stats.ExecutionReportedStats;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
-/** Unit test for {@link AdServicesJobServiceLogger}. */
-@SpyStatic(FlagsFactory.class)
-public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMockitoTestCase {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+import java.util.concurrent.Executors;
 
+/** Unit test for {@link JobServiceLogger}. */
+public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCase {
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
-    private static final int JOB_ID_1 =
-            AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
-    private static final int JOB_ID_2 =
-            AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId();
-    private AdServicesJobServiceLogger mLogger;
-    @Mock StatsdAdServicesLogger mMockStatsdLogger;
-    @Mock Flags mMockFlags;
+    private static final int JOB_ID_1 = 1;
+    private static final int JOB_ID_2 = 2;
+    private static final ImmutableMap<Integer, String> sJobIdToNameMap =
+            new ImmutableMap.Builder<Integer, String>()
+                    .put(JOB_ID_1, "job_1")
+                    .put(JOB_ID_2, "job_2")
+                    .build();
+    private JobServiceLogger mLogger;
+
+    @Mock private ModuleSharedFlags mMockFlags;
+    @Mock private StatsdJobServiceLogger mMockStatsdLogger;
 
     @Before
     public void setup() {
         mLogger =
-                Mockito.spy(
-                        new AdServicesJobServiceLogger(
-                                CONTEXT, Clock.getInstance(), mMockStatsdLogger));
-        extendedMockito.mockGetFlags(mMockFlags);
+                spy(
+                        new JobServiceLogger(
+                                sContext,
+                                Clock.getInstance(),
+                                mMockStatsdLogger,
+                                Executors.newCachedThreadPool(),
+                                sJobIdToNameMap,
+                                mMockFlags));
 
         // Clear shared preference
-        CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
+        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
     }
 
     @After
     public void teardown() {
         // Clear shared preference
-        CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
+        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
     }
 
     @Test
     public void testPersistJobExecutionData_firstExecution() {
-        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStartTime = JobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = JobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
         SharedPreferences sharedPreferences =
-                CONTEXT.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         long startJobTimestamp = 100L;
 
         mLogger.persistJobExecutionData(JOB_ID_1, startJobTimestamp);
@@ -105,9 +108,9 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
     @Test
     public void testPersistJobExecutionData_openEndedLastExecution() {
-        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStopTime = AdServicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
+        String keyJobStartTime = JobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = JobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStopTime = JobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
         // previousJobStopTime < previousJobStartTime, which indicates previous execution finished
         // with an open end.
         long previousJobStartTime = 100L;
@@ -117,7 +120,7 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
         // Store previous execution data.
         SharedPreferences sharedPreferences =
-                CONTEXT.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putLong(keyJobStartTime, previousJobStartTime);
         editor.putLong(keyJobStopTime, previousJobStopTime);
@@ -153,9 +156,9 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
     @Test
     public void testPersistJobExecutionData_closeEndedLastExecution() {
-        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStopTime = AdServicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
+        String keyJobStartTime = JobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = JobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStopTime = JobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
         long previousJobStartTime = 100L;
         long previousJobStopTime = 150L;
         long previousExecutionPeriod = 100L;
@@ -163,7 +166,7 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
         // Store previous execution data.
         SharedPreferences sharedPreferences =
-                CONTEXT.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putLong(keyJobStartTime, previousJobStartTime);
         editor.putLong(keyJobStopTime, previousJobStopTime);
@@ -198,12 +201,12 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
     @Test
     public void testPersistJobExecutionData_multipleJobs() {
-        String keyJobStartTime1 = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod1 = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStartTime2 = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_2);
-        String keyExecutionPeriod2 = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_2);
+        String keyJobStartTime1 = JobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod1 = JobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStartTime2 = JobServiceLogger.getJobStartTimestampKey(JOB_ID_2);
+        String keyExecutionPeriod2 = JobServiceLogger.getExecutionPeriodKey(JOB_ID_2);
         SharedPreferences sharedPreferences =
-                CONTEXT.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         long startJobTimestamp1 = 100L;
         long startJobTimestamp2 = 200L;
 
@@ -230,9 +233,9 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
     @Test
     public void testLogExecutionStats() {
-        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStopTime = AdServicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
+        String keyJobStartTime = JobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = JobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStopTime = JobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
         long jobStartTime = 100L;
         long jobStopTime = 200L;
         long executionPeriod = 50L;
@@ -243,7 +246,7 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
         // Store execution data.
         SharedPreferences sharedPreferences =
-                CONTEXT.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putLong(keyJobStartTime, jobStartTime);
         editor.putLong(keyExecutionPeriod, executionPeriod);
@@ -266,9 +269,9 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
     @Test
     public void testLogExecutionStats_invalidStats() {
-        String keyJobStartTime = AdServicesJobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
-        String keyExecutionPeriod = AdServicesJobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
-        String keyJobStopTime = AdServicesJobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
+        String keyJobStartTime = JobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
+        String keyExecutionPeriod = JobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
+        String keyJobStopTime = JobServiceLogger.getJobStopTimestampKey(JOB_ID_1);
         long jobStopTime = 200L;
         long executionPeriod = 50L;
         int stopReason = UNAVAILABLE_STOP_REASON;
@@ -277,7 +280,7 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
         // Store execution data.
         SharedPreferences sharedPreferences =
-                CONTEXT.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         // Invalid start Time.
         editor.putLong(keyJobStartTime, UNAVAILABLE_JOB_EXECUTION_PERIOD);
@@ -373,10 +376,10 @@ public final class AdServicesJobServiceLoggerTest extends AdServicesExtendedMock
 
     @Test
     public void testConvertLongToInteger() {
-        expect.that(AdServicesJobServiceLogger.convertLongToInteger((long) Integer.MIN_VALUE - 1))
+        expect.that(JobServiceLogger.convertLongToInteger((long) Integer.MIN_VALUE - 1))
                 .isEqualTo(Integer.MIN_VALUE);
-        expect.that(AdServicesJobServiceLogger.convertLongToInteger((long) Integer.MAX_VALUE + 1))
+        expect.that(JobServiceLogger.convertLongToInteger((long) Integer.MAX_VALUE + 1))
                 .isEqualTo(Integer.MAX_VALUE);
-        expect.that(AdServicesJobServiceLogger.convertLongToInteger(1000L)).isEqualTo(1000);
+        expect.that(JobServiceLogger.convertLongToInteger(1000L)).isEqualTo(1000);
     }
 }

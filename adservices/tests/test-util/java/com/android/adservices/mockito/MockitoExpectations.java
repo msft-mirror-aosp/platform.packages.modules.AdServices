@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,7 +40,13 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.util.Clock;
+import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesStatsdJobServiceLogger;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
+import java.util.concurrent.Executors;
 
 /** Provides Mockito expectation for common calls. */
 public final class MockitoExpectations {
@@ -211,6 +218,19 @@ public final class MockitoExpectations {
         callback.assertLoggingFinished();
 
         verify(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+    }
+
+    /** Get a spied instance of {@link AdServicesJobServiceLogger}. */
+    public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
+            Context context, Flags flags) {
+        return spy(
+                new AdServicesJobServiceLogger(
+                        context,
+                        Clock.getInstance(),
+                        ExtendedMockito.mock(AdServicesStatsdJobServiceLogger.class),
+                        Executors.newCachedThreadPool(),
+                        AdServicesJobInfo.getJobIdToJobNameMap(),
+                        flags));
     }
 
     private MockitoExpectations() {

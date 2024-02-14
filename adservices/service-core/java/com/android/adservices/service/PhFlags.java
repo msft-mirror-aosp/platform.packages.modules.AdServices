@@ -6638,6 +6638,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         /* flagName */ FlagsConstants.KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
                         /* defaultValue */ DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE);
 
+        // TODO(b/323187832): Calling JobServiceConstants.MAX_PERCENTAGE meets dependency error.
         if (loggingRatio < 0 || loggingRatio > MAX_PERCENTAGE) {
             throw new IllegalArgumentException(
                     "BackgroundJobSamplingLoggingRatio should be in the range of [0, 100]");

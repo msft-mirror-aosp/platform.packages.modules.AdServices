@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -420,7 +420,7 @@ public class DeleteUninstalledJobServiceTest {
         ExtendedMockito.doNothing().when(() -> DeleteUninstalledJobService.schedule(any(), any()));
 
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
-        mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mockStatsdLogger);
+        mSpyLogger = mockAdServicesJobServiceLogger(CONTEXT, mMockFlags);
 
         // Execute
         execute.run();
