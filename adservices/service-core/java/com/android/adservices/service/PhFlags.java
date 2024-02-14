@@ -130,13 +130,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getTopicsEpochJobFlexMs() {
-        // The priority of applying the flag values: PH (DeviceConfig), then
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         long topicsEpochJobFlexMs =
-                DeviceConfig.getLong(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS,
-                        /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS);
+                SystemProperties.getLong(
+                        getSystemPropertyName(FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS),
+                        /* defaultValue */ DeviceConfig.getLong(
+                                FlagsConstants.NAMESPACE_ADSERVICES,
+                                /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                                /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS));
         if (topicsEpochJobFlexMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobFlexMs should > 0");
         }
