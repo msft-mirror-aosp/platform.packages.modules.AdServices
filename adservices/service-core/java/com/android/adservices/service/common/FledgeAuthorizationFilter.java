@@ -225,7 +225,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND));
             if (mEnrollmentUtil != null) {
                 mEnrollmentUtil.logEnrollmentFailedStats(
@@ -248,7 +248,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED,
                             FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION));
             mEnrollmentUtil.logEnrollmentFailedStats(
@@ -270,7 +270,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_ENROLLMENT_BLOCKLISTED));
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
@@ -322,7 +322,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND));
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
@@ -359,7 +359,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(STATUS_CALLER_NOT_ALLOWED, failureReason));
+                    ApiCallStats.failureResult(STATUS_CALLER_NOT_ALLOWED, failureReason));
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
                     buildId,
@@ -395,7 +395,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND));
 
             int buildId = -1;

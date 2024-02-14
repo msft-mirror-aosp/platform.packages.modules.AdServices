@@ -62,8 +62,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -112,7 +112,7 @@ public class AsyncRegistrationFallbackJobServiceTest {
 
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
         mSpyLogger =
-                spy(new AdServicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
+                spy(new AdServicesJobServiceLogger(CONTEXT, Clock.getInstance(), mockStatsdLogger));
         mMockFlags = mock(Flags.class);
         when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow())
                 .thenReturn(true);

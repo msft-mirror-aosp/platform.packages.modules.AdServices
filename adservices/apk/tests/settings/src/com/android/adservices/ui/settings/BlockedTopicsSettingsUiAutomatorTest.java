@@ -69,7 +69,7 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
         ShellUtils.runShellCommand(
                 "device_config put adservices ui_toggle_speed_bump_enabled false");
         // Launch main view of Privacy Sandbox Settings.
-        ApkTestUtil.launchSettingView(mSpyContext, mDevice, LAUNCHER_LAUNCH_TIMEOUT);
+        ApkTestUtil.launchSettingView(mDevice, LAUNCHER_LAUNCH_TIMEOUT);
 
         // Enter Topics Consent view.
         BlockedTopicsSettingsTestUtil.enterGaTopicsConsentView(mDevice);
@@ -78,7 +78,7 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
         // enable it again. This is to ensure no stale data or pending jobs.
         //
         // Note there is no dialog when the user opts out in GA.
-        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch2(mDevice);
+        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(mDevice);
         if (consentSwitch.isChecked()) {
             consentSwitch.click();
         }
@@ -96,16 +96,14 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
 
         // Verify there is a topic to be blocked.
         UiObject2 blockTopicButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.settingsUI_block_topic_title, 0);
+                ApkTestUtil.getElement(mDevice, R.string.settingsUI_block_topic_title, 0);
         BlockedTopicsSettingsTestUtil.blockATopicWithDialog(mDevice, blockTopicButton);
 
         // When there is no topic available to be blocked, it will display "no topics" text and the
         // "Block" button will not be displayed.
         assertThat(blockTopicButton).isNull();
         UiObject2 noTopicsText =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.settingsUI_topics_view_no_topics_ga_text);
+                ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_view_no_topics_ga_text);
         assertThat(noTopicsText).isNotNull();
 
         // Click viewBlockedTopicsButton to view topics being blocked.
@@ -116,8 +114,7 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
 
         // Verify there is no blocked topic.
         UiObject2 noUnblockedTopicsText =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.settingsUI_no_blocked_topics_ga_text);
+                ApkTestUtil.getElement(mDevice, R.string.settingsUI_no_blocked_topics_ga_text);
         assertThat(noUnblockedTopicsText).isNotNull();
 
         // Press back to return to the Topics Consent view.
@@ -128,13 +125,11 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
 
         // Reset blocked topics.
         UiObject2 resetButton =
-                ApkTestUtil.scrollTo(
-                        mSpyContext, mDevice, R.string.settingsUI_reset_topics_ga_title);
+                ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_reset_topics_ga_title);
         BlockedTopicsSettingsTestUtil.resetATopicWithDialog(mDevice, resetButton);
 
         // Scroll to consent switch and verify there is no topic to block after resetting.
-        consentSwitch =
-                ApkTestUtil.scrollTo(mSpyContext, mDevice, R.string.settingsUI_topics_switch_title);
+        consentSwitch = ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_switch_title);
         assertThat(blockTopicButton).isNull();
 
         // Disable user consent.

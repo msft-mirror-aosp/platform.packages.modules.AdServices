@@ -23,6 +23,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -41,26 +42,26 @@ import java.util.Objects;
 import java.util.Set;
 
 final class CustomAudienceHelper {
-    private static final String NAME = "name";
-    private static final String OWNER = "owner";
-    private static final String BUYER = "buyer";
-    private static final String IS_DEBUGGABLE = "is_debuggable";
-    private static final String ACTIVATION_TIME = "activation_time";
-    private static final String CREATION_TIME = "creation_time";
-    private static final String EXPIRATION_TIME = "expiration_time";
-    private static final String UPDATED_TIME = "updated_time";
-    private static final String BIDDING_LOGIC_URI = "bidding_logic_uri";
-    private static final String USER_BIDDING_SIGNALS = "user_bidding_signals";
-    private static final String TRUSTED_BIDDING_DATA = "trusted_bidding_data";
-    private static final String DAILY_UPDATE_URI = "daily_update_uri";
-    private static final String ADS = "ads";
-    private static final String ADS_URI = "uri";
-    private static final String ADS_AD_COUNTER_KEYS = "ad_counter_keys";
-    private static final String ADS_AD_FILTERS = "ad_filters";
-    private static final String ADS_KEYS = "keys";
-    private static final String AD_AD_RENDER_URI = "render_uri";
-    private static final String AD_METADATA = "metadata";
-    private static final String AD_AD_RENDER_ID = "ad_render_id";
+    @VisibleForTesting public static final String NAME = "name";
+    @VisibleForTesting public static final String OWNER = "owner";
+    @VisibleForTesting public static final String BUYER = "buyer";
+    @VisibleForTesting public static final String IS_DEBUGGABLE = "is_debuggable";
+    @VisibleForTesting public static final String ACTIVATION_TIME = "activation_time";
+    @VisibleForTesting public static final String CREATION_TIME = "creation_time";
+    @VisibleForTesting public static final String EXPIRATION_TIME = "expiration_time";
+    @VisibleForTesting public static final String UPDATED_TIME = "updated_time";
+    @VisibleForTesting public static final String BIDDING_LOGIC_URI = "bidding_logic_uri";
+    @VisibleForTesting public static final String USER_BIDDING_SIGNALS = "user_bidding_signals";
+    @VisibleForTesting public static final String TRUSTED_BIDDING_DATA = "trusted_bidding_data";
+    @VisibleForTesting public static final String DAILY_UPDATE_URI = "daily_update_uri";
+    @VisibleForTesting public static final String ADS = "ads";
+    @VisibleForTesting public static final String TRUSTED_BIDDING_DATA_URI = "uri";
+    @VisibleForTesting public static final String ADS_AD_COUNTER_KEYS = "ad_counter_keys";
+    @VisibleForTesting public static final String ADS_AD_FILTERS = "ad_filters";
+    @VisibleForTesting public static final String ADS_KEYS = "keys";
+    @VisibleForTesting public static final String AD_AD_RENDER_URI = "render_uri";
+    @VisibleForTesting public static final String AD_METADATA = "metadata";
+    @VisibleForTesting public static final String AD_AD_RENDER_ID = "ad_render_id";
 
     static JSONObject toJson(@NonNull DBCustomAudience customAudience) throws JSONException {
         return new JSONObject()
@@ -69,7 +70,6 @@ final class CustomAudienceHelper {
                 .put(BUYER, customAudience.getBuyer())
                 .put(IS_DEBUGGABLE, customAudience.isDebuggable())
                 .put(CREATION_TIME, customAudience.getCreationTime())
-                // TODO(b/323023421): Update to check for nullable activation and expirations.
                 .put(ACTIVATION_TIME, customAudience.getActivationTime())
                 .put(EXPIRATION_TIME, customAudience.getExpirationTime())
                 .put(UPDATED_TIME, customAudience.getLastAdsAndBiddingDataUpdatedTime())
@@ -84,11 +84,12 @@ final class CustomAudienceHelper {
 
     private static JSONObject getJsonFromTrustedBiddingData(
             @Nullable DBTrustedBiddingData trustedBiddingData) throws JSONException {
-        JSONObject jsonObject = new JSONObject();
         if (Objects.isNull(trustedBiddingData)) {
-            return jsonObject;
+            return null;
         }
-        jsonObject.put(ADS_URI, trustedBiddingData.getUri().toString());
+        JSONObject jsonObject =
+                new JSONObject()
+                        .put(TRUSTED_BIDDING_DATA_URI, trustedBiddingData.getUri().toString());
         JSONArray keys = new JSONArray();
         trustedBiddingData.getKeys().forEach(keys::put);
         return jsonObject.put(ADS_KEYS, keys);
@@ -145,7 +146,7 @@ final class CustomAudienceHelper {
     private static DBTrustedBiddingData getTrustedBiddingDataFromJson(JSONObject jsonObject)
             throws JSONException {
         return new DBTrustedBiddingData.Builder()
-                .setUri(Uri.parse(jsonObject.getString(ADS_URI)))
+                .setUri(Uri.parse(jsonObject.getString(TRUSTED_BIDDING_DATA_URI)))
                 .setKeys(getStringsFromJsonArray(jsonObject.getJSONArray(ADS_KEYS)))
                 .build();
     }

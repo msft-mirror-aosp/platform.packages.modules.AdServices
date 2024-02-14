@@ -59,7 +59,7 @@ import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 
 import java.util.concurrent.Executor;
 
@@ -137,7 +137,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
                         result =
-                                new ApiCallStats.Result(
+                                ApiCallStats.failureResult(
                                         STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET);
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
@@ -225,7 +225,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         } catch (WrongCallingApplicationStateException backgroundCaller) {
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return new ApiCallStats.Result(STATUS_BACKGROUND_CALLER, FAILURE_REASON_UNSET);
+            return ApiCallStats.failureResult(STATUS_BACKGROUND_CALLER, FAILURE_REASON_UNSET);
         }
 
         if (!sufficientPermission) {
@@ -233,7 +233,8 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     callback,
                     STATUS_PERMISSION_NOT_REQUESTED,
                     "Unauthorized caller. Permission not requested.");
-            return new ApiCallStats.Result(STATUS_PERMISSION_NOT_REQUESTED, FAILURE_REASON_UNSET);
+            return ApiCallStats.failureResult(
+                    STATUS_PERMISSION_NOT_REQUESTED, FAILURE_REASON_UNSET);
         }
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
@@ -246,7 +247,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
                     "Unauthorized caller. Caller is not allowed.");
-            return new ApiCallStats.Result(
+            return ApiCallStats.failureResult(
                     STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
         }
 
@@ -257,7 +258,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             invokeCallbackWithStatus(callback, result.getResultCode(), "Caller is not authorized.");
             return result;
         }
-        return new ApiCallStats.Result(STATUS_SUCCESS, FAILURE_REASON_UNSET);
+        return ApiCallStats.successResult();
     }
 
     private void invokeCallbackWithStatus(
@@ -289,16 +290,16 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
-            return new ApiCallStats.Result(
+            return ApiCallStats.failureResult(
                     STATUS_UNAUTHORIZED, FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND);
         }
         if (packageUid != appCallingUid) {
             LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
 
-            return new ApiCallStats.Result(
+            return ApiCallStats.failureResult(
                     STATUS_UNAUTHORIZED,
                     FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID);
         }
-        return new ApiCallStats.Result(STATUS_SUCCESS, FAILURE_REASON_UNSET);
+        return ApiCallStats.successResult();
     }
 }

@@ -402,7 +402,7 @@ public class OutcomeSelectionRunner {
                 mAdServicesLogger.logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
                         /* latencyMs= */ 0,
-                        new ApiCallStats.Result(resultCode, failureReason));
+                        ApiCallStats.failureResult(resultCode, failureReason));
             }
 
             FledgeErrorResponse selectionFailureResponse =

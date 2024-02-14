@@ -24,6 +24,7 @@ import android.app.job.JobInfo;
 import android.os.Build;
 
 import com.android.adservices.cobalt.CobaltConstants;
+import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -42,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  */
-public interface Flags extends CommonFlags {
+public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 

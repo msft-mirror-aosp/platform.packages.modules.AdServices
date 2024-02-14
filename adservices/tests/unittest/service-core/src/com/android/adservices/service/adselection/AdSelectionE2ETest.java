@@ -2708,7 +2708,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2776,7 +2778,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2871,7 +2875,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -4845,7 +4851,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -4886,7 +4894,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -4933,7 +4943,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5145,7 +5157,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5258,7 +5272,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5370,7 +5386,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5728,7 +5746,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6621,7 +6641,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
+                        eq(ApiCallStats.failureResult(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6673,7 +6693,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6764,7 +6786,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6866,7 +6890,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -7635,7 +7661,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                             geq((int) BINDER_ELAPSED_TIME_MS),
                             eq(
-                                    new ApiCallStats.Result(
+                                    ApiCallStats.failureResult(
                                             STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
         } finally {
             // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
