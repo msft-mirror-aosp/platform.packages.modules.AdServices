@@ -16,12 +16,18 @@
 
 package com.android.adservices.service.stats;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
+
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus.IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_DB_TRANSACTION_ENDED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENCRYPTION_KEY_FETCHED;
@@ -31,11 +37,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_AD_ID_MATCH_FOR_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_CLICK_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
@@ -53,7 +59,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -396,6 +401,199 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
         // No compat (and T+) logging should happen
         verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogFledgeApiCallStats() {
+        // Mocks
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        // Invoke logging call
+        mLogger.logFledgeApiCallStats(apiName, resultCode, latencyMs);
+
+        // Verify logging
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(""),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(resultCode)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogFledgeApiCallStatsWithAppPackageNameLogging_enabled() {
+        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        mLogger = new StatsdAdServicesLogger(mFlags);
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = TEST_PACKAGE_NAME;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        // Log api call with app package name.
+        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        // Verify app package name is logged.
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(appPackageName),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(resultCode)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogFledgeApiCallStatsWithAppPackageNameLogging_nullAppPackageName() {
+        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        mLogger = new StatsdAdServicesLogger(mFlags);
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = null;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        // Log api call with app package name.
+        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        // Verify app package name is logged.
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(""),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(resultCode)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogFledgeApiCallStatsWithAppPackageNameLogging_disabled() {
+        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(false);
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        mLogger = new StatsdAdServicesLogger(mFlags);
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = TEST_PACKAGE_NAME;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        // Log api call with app package name.
+        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        // Verify app package name is not logged.
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(""),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(resultCode)));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testlogFledgeApiCallStatsWithFailureReason() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyInt()));
+
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        int latencyMs = 10;
+        ApiCallStats.Result result = ApiCallStats.successResult();
+
+        // Log api call with result.
+        mLogger.logFledgeApiCallStats(apiName, latencyMs, result);
+
+        // Verify result is logged.
+        verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_API_CALLED),
+                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
+                                eq(apiName),
+                                eq(""),
+                                eq(""),
+                                eq(latencyMs),
+                                eq(result.getResultCode())));
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
     @Test

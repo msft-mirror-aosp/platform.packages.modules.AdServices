@@ -82,6 +82,7 @@ public class ScheduleCustomAudienceUpdateImpl {
     @NonNull private final boolean mEnforceForegroundStatus;
     @NonNull private final boolean mScheduleCustomAudienceUpdateEnabled;
     int mCallingAppUid;
+    @NonNull private String mCallerAppPackageName;
 
     public ScheduleCustomAudienceUpdateImpl(
             @NonNull Context context,
@@ -111,6 +112,7 @@ public class ScheduleCustomAudienceUpdateImpl {
             @NonNull ScheduleCustomAudienceUpdateCallback callback,
             @NonNull DevContext devContext) {
         try {
+            mCallerAppPackageName = input.getCallerPackageName();
 
             if (!mScheduleCustomAudienceUpdateEnabled) {
                 sLogger.v("scheduleCustomAudienceUpdate is disabled.");
@@ -263,7 +265,8 @@ public class ScheduleCustomAudienceUpdateImpl {
             // AdSelectionServiceFilter ensures the failing assertion is logged internally.
             // Note: Failure is logged before the callback to ensure deterministic testing.
             if (!isFilterException) {
-                mAdServicesLogger.logFledgeApiCallStats(API_NAME, resultCode, 0);
+                mAdServicesLogger.logFledgeApiCallStats(
+                        API_NAME, mCallerAppPackageName, resultCode, /*latencyMs=*/ 0);
             }
 
             callback.onFailure(
@@ -274,7 +277,10 @@ public class ScheduleCustomAudienceUpdateImpl {
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    API_NAME,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
         }
     }
 
@@ -282,12 +288,18 @@ public class ScheduleCustomAudienceUpdateImpl {
     private void notifySuccess(@NonNull ScheduleCustomAudienceUpdateCallback callback) {
         try {
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+                    API_NAME,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_SUCCESS,
+                    /*latencyMs=*/ 0);
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    API_NAME,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
         }
     }
 
