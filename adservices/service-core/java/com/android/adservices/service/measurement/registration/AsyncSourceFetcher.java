@@ -616,17 +616,10 @@ public class AsyncSourceFetcher {
 
             summaryBuckets = TriggerSpec.getLongListFromJSON(maybeSummaryBucketsJson.get());
 
-            if (summaryBuckets.size() > maxEventLevelReports) {
+            if (summaryBuckets.isEmpty() || summaryBuckets.size() > maxEventLevelReports
+                    || !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
                 return Optional.empty();
             }
-        }
-        if ((summaryBuckets == null || summaryBuckets.isEmpty())
-                && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
-            return Optional.empty();
-        }
-
-        if (summaryBuckets != null && !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
-            return Optional.empty();
         }
 
         return Optional.of(
