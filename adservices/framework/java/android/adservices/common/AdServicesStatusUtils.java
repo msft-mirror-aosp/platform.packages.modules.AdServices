@@ -167,6 +167,33 @@ public class AdServicesStatusUtils {
      */
     public static final int STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET = 18;
 
+    public static final int FAILURE_REASON_UNSET = 0;
+
+    // Failure Reason - Package Allowlist
+    public static final int FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST = 1;
+
+    // Failure Reason - Package Blocklist
+    public static final int FAILURE_REASON_PACKAGE_BLOCKLISTED = 2;
+
+    // Failure Reason - Enrollment
+    public static final int FAILURE_REASON_ENROLLMENT_BLOCKLISTED = 3;
+    public static final int FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND = 4;
+    public static final int FAILURE_REASON_ENROLLMENT_INVALID_ID = 5;
+
+    // Failure Reason - Dev Options
+    public static final int FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST = 6;
+
+    // Failure Reason - Foreground
+    public static final int FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND = 7;
+    public static final int FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION = 8;
+
+    // Failure Reason - App Manifest AdServices Config
+    public static final int FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION = 9;
+
+    // Failure Reason - Calling Package
+    public static final int FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND = 10;
+    public static final int FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID = 11;
+
     /**
      * Result code for Encryption related failures.
      *
