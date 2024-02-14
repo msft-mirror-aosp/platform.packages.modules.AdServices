@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.shared.common;
+package com.android.adservices.shared.proto;
 
 import android.annotation.Nullable;
 import android.text.TextUtils;
@@ -35,6 +35,8 @@ public final class ProtoParser {
     }
 
     /**
+     * Parses Base64 encoded string to a proto object.
+     *
      * @param parser A protobuf parser object. e.g. MyProto.parser()
      * @param property The property which needs to be decoded
      * @param value Base64 encoded String
