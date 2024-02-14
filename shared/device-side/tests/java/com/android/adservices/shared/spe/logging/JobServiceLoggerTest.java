@@ -366,6 +366,34 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    public void testLogJobStatsHelper_smallNegativePeriod() {
+        // Mock to avoid sampling logging
+        doReturn(true).when(mLogger).shouldLog();
+
+        ArgumentCaptor<ExecutionReportedStats> captor =
+                ArgumentCaptor.forClass(ExecutionReportedStats.class);
+        long executionLatencyMs = 100L;
+        long executionPeriodMs = UNAVAILABLE_JOB_EXECUTION_PERIOD;
+        int resultCode =
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+        int stopReason = UNAVAILABLE_STOP_REASON;
+
+        mLogger.logJobStatsHelper(
+                JOB_ID_1, executionLatencyMs, executionPeriodMs, resultCode, stopReason);
+
+        verify(mMockStatsdLogger).logExecutionReportedStats(captor.capture());
+        expect.that(captor.getValue())
+                .isEqualTo(
+                        ExecutionReportedStats.builder()
+                                .setJobId(JOB_ID_1)
+                                .setExecutionLatencyMs((int) executionLatencyMs)
+                                .setExecutionPeriodMinute((int) executionPeriodMs)
+                                .setExecutionResultCode(resultCode)
+                                .setStopReason(stopReason)
+                                .build());
+    }
+
+    @Test
     public void testShouldLog() {
         when(mMockFlags.getBackgroundJobSamplingLoggingRate()).thenReturn(0);
         expect.that(mLogger.shouldLog()).isFalse();
