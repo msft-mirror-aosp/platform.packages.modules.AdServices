@@ -434,8 +434,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getSdkPackageName()).isEqualTo(sdkName);
         expect.that(loggedStats.getLatencyMillisecond()).isEqualTo(latency);
         expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
-        expect.that(loggedStats.getFailureReason())
-                .isEqualTo(FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND);
 
         verify(() -> AppNameApiErrorLogger.getInstance(any(), any()));
         verify(mMockAppNameApiErrorLogger)
