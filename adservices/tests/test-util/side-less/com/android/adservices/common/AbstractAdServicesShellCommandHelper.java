@@ -25,11 +25,13 @@ import com.google.errorprone.annotations.FormatString;
 import java.util.Objects;
 
 /** Helper to run the AdServices service side shell command and return output and error. */
-// TODO(b/308009734): Add unit tests in the follow-up cl.
 public abstract class AbstractAdServicesShellCommandHelper {
     protected static final String TAG = "AdServicesShellCommand";
-    private static final String START_SHELL_COMMAND_SERVICE =
+
+    @VisibleForTesting
+    static final String START_SHELL_COMMAND_SERVICE =
             "am start-foreground-service -a android.adservices.SHELL_COMMAND_SERVICE";
+
     private static final String FOREGROUND_SERVICE_ERROR =
             "Failed to start shell command foreground service";
 
@@ -157,7 +159,6 @@ public abstract class AbstractAdServicesShellCommandHelper {
        parsed Output: hello
     */
     @VisibleForTesting
-    // TODO(b/308009734): Add test for this in the follow-up cl.
     String parseResultFromDumpsys(String res) {
 
         String strSeparator = "Client:\n";
@@ -168,7 +169,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
         return res.substring(index + strSeparator.length());
     }
 
-    private String runDumpsysShellCommand(String cmd) {
+    @VisibleForTesting
+    String runDumpsysShellCommand(String cmd) {
         return String.format(
                 "dumpsys activity service com.google.android.adservices.api/com.android"
                         + ".adservices.shell.AdServicesShellCommandService cmd %s",
