@@ -23,6 +23,7 @@ import static android.adservices.adselection.DataHandlersFixture.getWinningCusto
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -66,7 +67,6 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.NoFailureSyncCallback;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -454,6 +454,7 @@ public class PersistAdSelectionResultRunnerTest {
         mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
         mFledgeAuctionServerExecutionLoggerFactory =
                 new FledgeAuctionServerExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mFledgeAuctionServerExecutionLoggerClockMock,
                         mAdServicesLoggerSpy,
@@ -1699,11 +1700,12 @@ public class PersistAdSelectionResultRunnerTest {
     private void verifyPersistAdSelectionResultApiUsageLog(int resultCode)
             throws InterruptedException {
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
-        assertThat(apiCallStats.getApiName()).isEqualTo(
-                AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
+        assertThat(apiCallStats.getApiName())
+                .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
+        assertThat(apiCallStats.getAppPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
         assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
-        assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(
-                PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS);
+        assertThat(apiCallStats.getLatencyMillisecond())
+                .isEqualTo(PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS);
     }
 
     public static class PersistAdSelectionResultRunnerTestFlags implements Flags {

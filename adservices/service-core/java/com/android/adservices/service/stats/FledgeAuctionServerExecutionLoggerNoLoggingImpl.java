@@ -20,10 +20,12 @@ import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 
-/** Replacement for {@link FledgeAuctionServerExecutionLoggerImpl} if
- * Fledge auction server metrics is disabled. */
+/**
+ * Replacement for {@link FledgeAuctionServerExecutionLoggerImpl} if Fledge auction server metrics
+ * is disabled.
+ */
 public class FledgeAuctionServerExecutionLoggerNoLoggingImpl
-        implements FledgeAuctionServerExecutionLogger{
+        implements FledgeAuctionServerExecutionLogger {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 

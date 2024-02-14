@@ -448,6 +448,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES =
             "key_measurement_enable_session_stable_kill_switches";
 
+    public static final String KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED =
+            "fledge_app_package_name_logging_enabled";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";

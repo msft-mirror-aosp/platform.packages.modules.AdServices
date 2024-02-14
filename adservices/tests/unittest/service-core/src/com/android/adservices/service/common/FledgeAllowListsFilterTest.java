@@ -97,7 +97,10 @@ public class FledgeAllowListsFilterTest {
                 exception.getMessage());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+                        eq(API_NAME_LOGGING_ID),
+                        eq(CommonFixture.TEST_PACKAGE_NAME),
+                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        anyInt());
 
         verifyNoMoreInteractions(mAdServicesLoggerMock);
     }

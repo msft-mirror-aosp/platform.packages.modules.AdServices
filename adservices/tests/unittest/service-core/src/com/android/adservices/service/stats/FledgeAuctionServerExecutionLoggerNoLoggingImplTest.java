@@ -39,9 +39,8 @@ public class FledgeAuctionServerExecutionLoggerNoLoggingImplTest {
 
     @Test
     public void testFledgeAuctionServerExecutionLoggerNoLogging() {
-        FledgeAuctionServerExecutionLoggerNoLoggingImpl getAdSelectionDataLogger
-                = new FledgeAuctionServerExecutionLoggerNoLoggingImpl(
-                        GET_AD_SELECTION_DATA_API_NAME);
+        FledgeAuctionServerExecutionLoggerNoLoggingImpl getAdSelectionDataLogger =
+                new FledgeAuctionServerExecutionLoggerNoLoggingImpl(GET_AD_SELECTION_DATA_API_NAME);
 
         getAdSelectionDataLogger.endAuctionServerApi(STATUS_SUCCESS);
         verifyZeroInteractions(mAdServicesLoggerMock);

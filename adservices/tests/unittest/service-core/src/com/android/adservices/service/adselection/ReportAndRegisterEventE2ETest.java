@@ -257,6 +257,8 @@ public class ReportAndRegisterEventE2ETest {
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
 
+        doReturn(mFlags).when(() -> FlagsFactory.getFlags());
+
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true))
@@ -302,7 +304,6 @@ public class ReportAndRegisterEventE2ETest {
         when(mEnrollmentDaoMock.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(ENROLLMENT_DATA);
 
-        doReturn(mFlags).when(() -> FlagsFactory.getFlags());
 
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
 
@@ -376,6 +377,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
 
@@ -421,6 +423,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -462,6 +465,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -514,6 +518,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -566,6 +571,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -616,6 +622,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -665,6 +672,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -721,6 +729,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -780,6 +789,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -838,6 +848,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -898,6 +909,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -959,6 +971,7 @@ public class ReportAndRegisterEventE2ETest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -1112,7 +1125,7 @@ public class ReportAndRegisterEventE2ETest {
                     };
             doAnswer(countDownAnswer)
                     .when(mAdServicesLoggerMock)
-                    .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                    .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
         }
 
         // Counted down callback call
@@ -1190,6 +1203,11 @@ public class ReportAndRegisterEventE2ETest {
 
         @Override
         public boolean getGaUxFeatureEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppPackageNameLoggingEnabled() {
             return true;
         }
     }

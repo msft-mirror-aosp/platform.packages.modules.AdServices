@@ -112,7 +112,8 @@ public class FledgeAuthorizationFilter {
         }
 
         sLogger.v("No match found, failing calling package name match in API %d", apiNameLoggingId);
-        mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_UNAUTHORIZED, 0);
+        mAdServicesLogger.logFledgeApiCallStats(
+                apiNameLoggingId, callingPackageName, STATUS_UNAUTHORIZED, /*latencyMs=*/ 0);
         throw new CallerMismatchException();
     }
 
@@ -132,7 +133,10 @@ public class FledgeAuthorizationFilter {
         if (!PermissionHelper.hasCustomAudiencesPermission(context, appPackageName)) {
             sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
+                    apiNameLoggingId,
+                    appPackageName,
+                    STATUS_PERMISSION_NOT_REQUESTED,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(
                     AdServicesStatusUtils
                             .SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
@@ -173,7 +177,8 @@ public class FledgeAuthorizationFilter {
             sLogger.v(
                     "Enrollment data match not found for ad tech \"%s\" while calling API %d",
                     adTechIdentifier.toString(), apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, appPackageName, STATUS_CALLER_NOT_ALLOWED, /*latencyMs=*/ 0);
             if (mEnrollmentUtil != null) {
                 mEnrollmentUtil.logEnrollmentFailedStats(
                         mAdServicesLogger,
@@ -192,7 +197,8 @@ public class FledgeAuthorizationFilter {
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
                     appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, appPackageName, STATUS_CALLER_NOT_ALLOWED, /*latencyMs=*/ 0);
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
                     buildId,
@@ -209,7 +215,8 @@ public class FledgeAuthorizationFilter {
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
                     appPackageName, adTechIdentifier.toString(), apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, appPackageName, STATUS_CALLER_NOT_ALLOWED, /*latencyMs=*/ 0);
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
                     buildId,
@@ -257,7 +264,8 @@ public class FledgeAuthorizationFilter {
             sLogger.v(
                     "Enrollment data match not found for URI \"%s\" while calling API %d",
                     uriForAdTech, apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, appPackageName, STATUS_CALLER_NOT_ALLOWED, /*latencyMs=*/ 0);
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
                     buildId,
@@ -285,7 +293,8 @@ public class FledgeAuthorizationFilter {
                     "App package name \"%s\" with ad tech identifier \"%s\" from URI \"%s\" not"
                             + " authorized to call API %d",
                     appPackageName, adTechIdentifier.toString(), uriForAdTech, apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, appPackageName, STATUS_CALLER_NOT_ALLOWED, /*latencyMs=*/ 0);
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
                     buildId,

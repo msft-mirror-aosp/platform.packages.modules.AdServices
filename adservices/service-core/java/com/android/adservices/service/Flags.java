@@ -798,6 +798,14 @@ public interface Flags extends CommonFlags {
         return MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
     }
 
+    /** Default FLEDGE app package name logging flag. */
+    boolean FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED = false;
+
+    /** Returns whether FLEDGE app package name logging is enabled. */
+    default boolean getFledgeAppPackageNameLoggingEnabled() {
+        return FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -3427,8 +3435,8 @@ public interface Flags extends CommonFlags {
     boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED = false;
 
     /**
-     * Returns whether the fledge beacon reporting metrics is enabled.
-     * This flag should not be ramped on S- prior to M-2024-04.
+     * Returns whether the fledge beacon reporting metrics is enabled. This flag should not be
+     * ramped on S- prior to M-2024-04.
      */
     default boolean getFledgeBeaconReportingMetricsEnabled() {
         return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;

@@ -791,7 +791,6 @@ public class PersistAdSelectionResultRunner {
         } finally {
             sLogger.v("Attempted notifying success");
             mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
-
         }
     }
 
