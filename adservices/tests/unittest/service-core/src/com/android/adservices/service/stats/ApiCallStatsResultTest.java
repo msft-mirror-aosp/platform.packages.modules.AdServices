@@ -21,6 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNS
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.stats.ApiCallStats.failureResult;
+import static com.android.adservices.service.stats.ApiCallStats.successResult;
 import static com.android.adservices.service.stats.ApiCallStats.Result;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -35,7 +37,7 @@ public final class ApiCallStatsResultTest extends AdServicesUnitTestCase {
 
     @Test
     public void testForFailure() {
-        Result result = Result.forFailure(CODE, FAILURE);
+        Result result = failureResult(CODE, FAILURE);
 
         expect.withMessage("%s.getResultCode()", result)
                 .that(result.getResultCode())
@@ -47,7 +49,7 @@ public final class ApiCallStatsResultTest extends AdServicesUnitTestCase {
 
     @Test
     public void testForSuccess() {
-        Result ok = Result.forSuccess();
+        Result ok = successResult();
         expect.withMessage("%s.isSuccess()", ok).that(ok.isSuccess()).isTrue();
         expect.withMessage("%s.getResultCode()", ok)
                 .that(ok.getResultCode())
@@ -56,13 +58,13 @@ public final class ApiCallStatsResultTest extends AdServicesUnitTestCase {
                 .that(ok.getFailureReason())
                 .isEqualTo(FAILURE_REASON_UNSET);
 
-        Result ok2 = Result.forSuccess();
+        Result ok2 = successResult();
         expect.withMessage("2nd call of forSuccess()").that(ok2).isSameInstanceAs(ok);
     }
 
     @Test
     public void testToString() {
-        Result result = Result.forFailure(CODE, FAILURE);
+        Result result = failureResult(CODE, FAILURE);
 
         String toString = result.toString();
 
@@ -73,12 +75,13 @@ public final class ApiCallStatsResultTest extends AdServicesUnitTestCase {
 
     @Test
     public void testEqualsHashCode() {
-        Result equals1 = Result.forFailure(CODE, FAILURE);
-        Result equals2 = Result.forFailure(CODE, FAILURE);
+        Result equals1 = failureResult(CODE, FAILURE);
+        Result equals2 = failureResult(CODE, FAILURE);
 
-        Result different1 = Result.forFailure(CODE + 1, FAILURE);
-        Result different2 = Result.forFailure(CODE, FAILURE + 1);
+        Result different1 = failureResult(CODE + 1, FAILURE);
+        Result different2 = failureResult(CODE, FAILURE + 1);
 
+        expectObjectsAreEqual(equals1, equals1);
         expectObjectsAreEqual(equals1, equals2);
 
         expectObjectsAreNotEqual(equals1, null);

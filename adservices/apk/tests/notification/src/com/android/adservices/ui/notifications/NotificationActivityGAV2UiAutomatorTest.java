@@ -70,13 +70,11 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
 
         UiObject2 leftControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_confirmation_left_control_button_text);
         assertThat(leftControlButton).isNotNull();
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_confirmation_right_control_button_text);
         assertThat(rightControlButton).isNotNull();
@@ -88,30 +86,26 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_left_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_left_control_button_text);
         assertThat(leftControlButton).isNotNull();
         UiObject2 rightControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_right_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
         assertThat(rightControlButton).isNotNull();
 
         rightControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
 
         UiObject2 title2 =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_header_ga_title_eu_v2);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
         assertThat(title2).isNotNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         leftControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_left_control_button_text_eu);
+                        mDevice, R.string.notificationUI_left_control_button_text_eu);
         assertThat(leftControlButton).isNotNull();
         rightControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_right_control_button_ga_text_eu_v2);
         assertThat(rightControlButton).isNotNull();
@@ -119,9 +113,7 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
         rightControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
 
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
-        title2 =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_header_ga_title_eu_v2);
+        title2 = ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
         assertThat(title2).isNull();
     }
 
@@ -132,30 +124,25 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_left_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_left_control_button_text);
         assertThat(leftControlButton).isNotNull();
         UiObject2 rightControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_right_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
         assertThat(rightControlButton).isNotNull();
 
         rightControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
 
         // Retrieve new instances to avoid android.support.test.uiautomator.StaleObjectException.
         leftControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_left_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_left_control_button_text);
         assertThat(leftControlButton).isNull();
         rightControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_right_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
         assertThat(rightControlButton).isNull();
 
         // verify that the 2nd screen doesn't show up
         UiObject2 nextPageTitle =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_header_ga_title_eu_v2);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
         assertThat(nextPageTitle).isNull();
     }
 
@@ -166,22 +153,18 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_left_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_left_control_button_text);
         assertThat(leftControlButton).isNotNull();
         UiObject2 rightControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_right_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
         assertThat(rightControlButton).isNotNull();
 
         leftControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
 
-        UiObject2 topicsTitle =
-                ApkTestUtil.scrollTo(mSpyContext, mDevice, R.string.settingsUI_topics_ga_title);
+        UiObject2 topicsTitle = ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_ga_title);
         assertThat(topicsTitle).isNotNull();
 
-        UiObject2 appsTitle =
-                ApkTestUtil.scrollTo(mSpyContext, mDevice, R.string.settingsUI_apps_ga_title);
+        UiObject2 appsTitle = ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_apps_ga_title);
         assertThat(appsTitle).isNotNull();
     }
 }

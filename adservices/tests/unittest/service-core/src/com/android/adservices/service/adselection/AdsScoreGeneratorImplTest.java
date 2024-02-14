@@ -90,8 +90,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;

@@ -35,7 +35,6 @@ import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCo
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 import static com.android.adservices.ui.util.ApkTestUtil.getPageElement;
-import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
@@ -198,7 +197,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 scroller.getChild(
                         new UiSelector()
                                 .text(
-                                        getString(
+                                        mSpyContext.getString(
                                                 R.string
                                                         .notificationUI_notification_ga_title_eu_v2)));
         assertThat(notificationCard.exists()).isTrue();
@@ -315,7 +314,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiSelector notificationCardSelector =
                 new UiSelector()
                         .textContains(
-                                getString(R.string.notificationUI_notification_ga_title_eu_v2)
+                                mSpyContext
+                                        .getString(
+                                                R.string.notificationUI_notification_ga_title_eu_v2)
                                         .substring(0, 15));
         if (scroller.exists()) {
             notificationCard = scroller.getChild(notificationCardSelector);
@@ -398,7 +399,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiSelector notificationCardSelector =
                 new UiSelector()
                         .textContains(
-                                getString(R.string.notificationUI_notification_ga_title_eu_v2)
+                                mSpyContext
+                                        .getString(
+                                                R.string.notificationUI_notification_ga_title_eu_v2)
                                         .substring(0, 15));
         if (scroller.exists()) {
             notificationCard = scroller.getChild(notificationCardSelector);
@@ -540,7 +543,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiObject notificationCard =
                 scroller.getChild(
                         new UiSelector()
-                                .text(getString(R.string.notificationUI_u18_notification_title)));
+                                .text(
+                                        mSpyContext.getString(
+                                                R.string.notificationUI_u18_notification_title)));
         assertThat(notificationCard.exists()).isTrue();
 
         notificationCard.click();
@@ -666,7 +671,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
                 scroller.getChild(
                         new UiSelector()
                                 .text(
-                                        getString(
+                                        mSpyContext.getString(
                                                 isEeaDevice
                                                         ? R.string
                                                                 .notificationUI_notification_ga_title_eu_v2

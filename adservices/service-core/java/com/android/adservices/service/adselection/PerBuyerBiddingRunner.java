@@ -26,8 +26,8 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.Lists;
@@ -160,7 +160,7 @@ public class PerBuyerBiddingRunner {
                 adSelectionConfig.getAdSelectionSignals(),
                 buyerSignal,
                 new RunAdBiddingPerCAExecutionLogger(
-                        Clock.SYSTEM_CLOCK, AdServicesLoggerImpl.getInstance()));
+                        Clock.getInstance(), AdServicesLoggerImpl.getInstance()));
     }
 
     /**
