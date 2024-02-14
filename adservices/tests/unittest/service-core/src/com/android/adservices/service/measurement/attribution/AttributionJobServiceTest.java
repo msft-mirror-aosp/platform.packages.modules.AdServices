@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
+import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -63,8 +64,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -118,10 +117,8 @@ public class AttributionJobServiceTest {
         mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
 
-        StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
-        mSpyLogger =
-                spy(new AdServicesJobServiceLogger(CONTEXT, Clock.getInstance(), mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
         when(mMockFlags.getMeasurementAttributionJobTriggeringDelayMs()).thenReturn(JOB_DELAY_MS);
     }
 
