@@ -1274,7 +1274,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void logSandboxActivityApiLatency(int method, int callResult, int latencyMillis) {
-        logSandboxActivityApiLatency(method, callResult, latencyMillis, Binder.getCallingUid());
+        int clientUid = Binder.getCallingUid();
+        if (Process.isSdkSandboxUid(clientUid)) {
+            clientUid = Process.getAppUidForSdkSandboxUid(clientUid);
+        }
+        logSandboxActivityApiLatency(method, callResult, latencyMillis, clientUid);
     }
 
     private void logSandboxActivityApiLatency(
@@ -1878,6 +1882,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @Override
         public void logLatenciesFromSandbox(SandboxLatencyInfo sandboxLatencyInfo) {
             logSandboxApiLatency(sandboxLatencyInfo);
+        }
+
+        @Override
+        public void logSandboxActivityApiLatencyFromSandbox(
+                int method, int callResult, int latencyMillis) {
+            SdkSandboxManagerService.this.logSandboxActivityApiLatency(
+                    method, callResult, latencyMillis);
         }
     }
 
