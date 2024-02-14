@@ -32,6 +32,9 @@ public abstract class AbstractAdServicesShellCommandHelper {
     static final String START_SHELL_COMMAND_SERVICE =
             "am start-foreground-service -a android.adservices.SHELL_COMMAND_SERVICE";
 
+    @VisibleForTesting
+    static final String ADSERVICES_MANAGER_SERVICE_CHECK = "service check adservices_manager";
+
     private static final String FOREGROUND_SERVICE_ERROR =
             "Failed to start shell command foreground service";
 
@@ -60,8 +63,13 @@ public abstract class AbstractAdServicesShellCommandHelper {
     public String runCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
         int level = getDeviceApiLevel();
         if (level >= AndroidSdk.TM) {
-            // TODO (b/308009734): For Android T, Check if the service adservices_manager is
-            //  published or not. If it's not published, use sdk_sandbox to run the shell command.
+            // For Android T, Check if the service adservices_manager is published or not. If
+            // it's not published, use sdk_sandbox to run the shell command.
+            if (level == AndroidSdk.TM && !isAdServicesManagerServicePublished()) {
+                return runShellCommand(
+                        String.format(
+                                "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs)));
+            }
             return runShellCommand(
                     String.format("cmd adservices_manager %s", String.format(cmdFmt, cmdArgs)));
         }
@@ -94,8 +102,13 @@ public abstract class AbstractAdServicesShellCommandHelper {
     public CommandResult runCommandRwe(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
         int level = getDeviceApiLevel();
         if (level >= AndroidSdk.TM) {
-            // TODO (b/308009734): For Android T, Check if the service adservices_manager is
-            //  published or not. If it's not published, use sdk_sandbox to run the shell command.
+            // For Android T, Check if the service adservices_manager is published or not. If
+            // it's not published, use sdk_sandbox to run the shell command.
+            if (level == AndroidSdk.TM && !isAdServicesManagerServicePublished()) {
+                return runShellCommandRwe(
+                        String.format(
+                                "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs)));
+            }
             return runShellCommandRwe(
                     String.format("cmd adservices_manager %s", String.format(cmdFmt, cmdArgs)));
         }
@@ -175,6 +188,11 @@ public abstract class AbstractAdServicesShellCommandHelper {
                 "dumpsys activity service com.google.android.adservices.api/com.android"
                         + ".adservices.shell.AdServicesShellCommandService cmd %s",
                 cmd);
+    }
+
+    boolean isAdServicesManagerServicePublished() {
+        String out = runShellCommand(ADSERVICES_MANAGER_SERVICE_CHECK);
+        return !out.contains("not found");
     }
 
     /** Contains the result of a shell command. */
