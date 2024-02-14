@@ -67,7 +67,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         cobaltLogAppNameApiError(
                 apiCallStats.getAppPackageName(),
                 apiCallStats.getApiName(),
-                apiCallStats.getResult().getResultCode());
+                apiCallStats.getResultCode());
     }
 
     @Override

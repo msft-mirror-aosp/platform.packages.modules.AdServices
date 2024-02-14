@@ -297,7 +297,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .setSdkPackageName(SDK_PACKAGE_NAME)
                         .build();
 
-        invokeGetTopicsAndVerifyError(mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
+        invokeGetTopicsAndVerifyError(
+                mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
         ExtendedMockito.verify(
                 () ->
                         ErrorLogUtil.e(
@@ -313,7 +314,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         GetTopicsParam request =
                 new GetTopicsParam.Builder().setAppPackageName(TEST_APP_PACKAGE_NAME).build();
 
-        invokeGetTopicsAndVerifyError(mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
+        invokeGetTopicsAndVerifyError(
+                mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
     }
 
     @Test
