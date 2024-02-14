@@ -432,6 +432,9 @@ public final class SettingsTestUtil {
     public static void fledgeViewTextPasEnabledTest(UiDevice device) throws RemoteException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices pas_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices is_eea_device_feature_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled

@@ -7722,9 +7722,20 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testPasUxEnabled() {
+    public void testPasUxEnabled_isRowUser() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(DEFAULT_PAS_UX_ENABLED);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_IS_EEA_DEVICE_FEATURE_ENABLED,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_IS_EEA_DEVICE,
+                Boolean.toString(false),
+                /* makeDefault */ false);
 
         boolean phOverridingValue = !DEFAULT_PAS_UX_ENABLED;
         DeviceConfig.setProperty(
@@ -7734,6 +7745,32 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testPasUxEnabled_isEeaUser_m05() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(DEFAULT_PAS_UX_ENABLED);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_IS_EEA_DEVICE_FEATURE_ENABLED,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_IS_EEA_DEVICE,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        boolean phOverridingValue = !DEFAULT_PAS_UX_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PAS_UX_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(false);
     }
 
     @Test
