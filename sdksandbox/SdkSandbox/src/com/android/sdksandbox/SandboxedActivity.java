@@ -20,11 +20,12 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_
 
 import android.annotation.NonNull;
 import android.app.Activity;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.Window;
 
@@ -43,6 +44,29 @@ import com.android.internal.annotations.VisibleForTesting;
 public class SandboxedActivity extends Activity {
     private static final String TAG = "SandboxedActivity";
 
+    /**
+     * Wraps the base context in an internal {@link android.content.ContextWrapper} instance before
+     * attaching it, that would only happen in case that customized SDK context flag is enabled,
+     * otherwise the passed {@link Context} will be attached.
+     */
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
+        final SandboxedSdkContext sdkContext = registry.getSdkContext(this.getIntent());
+        if (sdkContext == null) {
+            Log.w(TAG, "Failed to get SDK Context for the passed intent");
+            super.attachBaseContext(newBase);
+            return;
+        }
+        if (!sdkContext.isCustomizedSdkContextEnabled()) {
+            Log.w(TAG, "CustomizedSdkContext flag is disabled");
+            super.attachBaseContext(newBase);
+            return;
+        }
+        super.attachBaseContext(sdkContext.createContextWithNewBase(newBase));
+    }
+
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
     public void onCreate(@NonNull Bundle savedInstanceState) {
@@ -58,26 +82,9 @@ public class SandboxedActivity extends Activity {
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public void notifySdkOnActivityCreation() {
-        if (this.getIntent() == null
-                || this.getIntent().getExtras() == null
-                || this.getIntent()
-                                .getExtras()
-                                .getBinder(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER)
-                        == null) {
-            Log.e(
-                    TAG,
-                    "Extra params of the intent are missing the IBinder value for the key"
-                            + SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER);
-            finish();
-            return;
-        }
-        IBinder token =
-                this.getIntent()
-                        .getExtras()
-                        .getBinder(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER);
         SdkSandboxActivityRegistry registry = SdkSandboxActivityRegistry.getInstance();
         try {
-            registry.notifyOnActivityCreation(token, this);
+            registry.notifyOnActivityCreation(this.getIntent(), this);
         } catch (Exception e) {
             Log.e(TAG, "Failed to start the SandboxedActivity and going to finish it: ", e);
             finish();

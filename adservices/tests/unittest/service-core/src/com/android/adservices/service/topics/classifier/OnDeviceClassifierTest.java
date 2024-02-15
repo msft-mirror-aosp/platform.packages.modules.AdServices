@@ -16,28 +16,31 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
-import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -45,14 +48,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -76,12 +76,9 @@ public class OnDeviceClassifierTest {
     private static final float DEFAULT_THRESHOLD = 0.1f;
     private static final int DEFAULT_DESCRIPTION_MAX_LENGTH = 2500;
     private static final int DEFAULT_DESCRIPTION_MAX_WORDS = 500;
-
-    private MockitoSession mStaticMockSession;
+    private static final Context sContext = ApplicationProvider.getApplicationContext();
 
     @Mock private Flags mFlags;
-
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock private ModelManager mModelManager;
     @Mock private CacheManager mCacheManager;
@@ -90,32 +87,26 @@ public class OnDeviceClassifierTest {
     private OnDeviceClassifier mOnDeviceClassifier;
     @Mock AdServicesLogger mLogger;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(ErrorLogUtil.class)
+                    .build();
+
     @Before
     public void setUp() throws IOException {
-        MockitoAnnotations.initMocks(this);
-
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-
         // Mock default flag values.
-        ExtendedMockito.doReturn(DEFAULT_NUMBER_OF_TOP_LABELS)
-                .when(mFlags)
-                .getClassifierNumberOfTopLabels();
-        ExtendedMockito.doReturn(DEFAULT_THRESHOLD).when(mFlags).getClassifierThreshold();
-        ExtendedMockito.doReturn(DEFAULT_DESCRIPTION_MAX_LENGTH)
-                .when(mFlags)
-                .getClassifierDescriptionMaxLength();
-        ExtendedMockito.doReturn(DEFAULT_DESCRIPTION_MAX_WORDS)
-                .when(mFlags)
-                .getClassifierDescriptionMaxWords();
+        doReturn(DEFAULT_NUMBER_OF_TOP_LABELS).when(mFlags).getClassifierNumberOfTopLabels();
+        doReturn(DEFAULT_THRESHOLD).when(mFlags).getClassifierThreshold();
+        doReturn(DEFAULT_DESCRIPTION_MAX_LENGTH).when(mFlags).getClassifierDescriptionMaxLength();
+        doReturn(DEFAULT_DESCRIPTION_MAX_WORDS).when(mFlags).getClassifierDescriptionMaxWords();
 
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(mFlags).when(FlagsFactory::getFlags);
 
         mModelManager =
                 new ModelManager(
@@ -136,13 +127,8 @@ public class OnDeviceClassifierTest {
                         mClassifierInputManager,
                         mLogger);
         when(mCacheManager.getTopicsWithRevokedConsent()).thenReturn(ImmutableList.of());
-    }
 
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+        doNothingOnErrorLogUtilError();
     }
 
     @Test
@@ -397,9 +383,7 @@ public class OnDeviceClassifierTest {
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // Override classifierNumberOfTopLabels.
         int overrideNumberOfTopLabels = 0;
-        ExtendedMockito.doReturn(overrideNumberOfTopLabels)
-                .when(mFlags)
-                .getClassifierNumberOfTopLabels();
+        doReturn(overrideNumberOfTopLabels).when(mFlags).getClassifierNumberOfTopLabels();
 
         ImmutableMap<String, List<Topic>> classifications =
                 mOnDeviceClassifier.classify(appPackages);
@@ -440,7 +424,7 @@ public class OnDeviceClassifierTest {
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // Override classifierThreshold.
         float overrideThreshold = 0.1f;
-        ExtendedMockito.doReturn(overrideThreshold).when(mFlags).getClassifierThreshold();
+        doReturn(overrideThreshold).when(mFlags).getClassifierThreshold();
 
         ImmutableMap<String, List<Topic>> classifications =
                 mOnDeviceClassifier.classify(appPackages);
@@ -552,17 +536,6 @@ public class OnDeviceClassifierTest {
         // Verify the last 4 random topics are not the same.
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         String appPackage2 = "com.example.adservices.samples.topics.sampleapp2";
-        ImmutableMap<String, AppInfo> appInfoMap =
-                ImmutableMap.<String, AppInfo>builder()
-                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
-                        .put(
-                                appPackage2,
-                                new AppInfo(
-                                        "appName2",
-                                        "This xyz game is the best adventure game to thrill our"
-                                                + " users! Play, win and share with your friends to"
-                                                + " win more coins."))
-                        .build();
         int numberOfTopTopics = 1, numberOfRandomTopics = 4;
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1, appPackage2);
         when(mClassifierInputManager.getClassifierInput(

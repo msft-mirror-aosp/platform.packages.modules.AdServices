@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -29,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 public class EventReportPayloadTest {
@@ -45,15 +47,52 @@ public class EventReportPayloadTest {
     private static final double RANDOMIZED_TRIGGER_RATE = 0.0024;
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(3894783L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(2387222L);
+    private static final Pair<Long, Long> TRIGGER_SUMMARY_BUCKET = Pair.create(5L, 37L);
+    private static final List<UnsignedLong> TRIGGER_DEBUG_KEYS = List.of(
+            new UnsignedLong(2387222L), new UnsignedLong("9223372036854775809"));
 
-    private static EventReportPayload createEventReportPayload(UnsignedLong triggerData,
-            UnsignedLong sourceDebugKey, UnsignedLong triggerDebugKey) {
+    private static EventReportPayload createEventReportPayload(
+            UnsignedLong triggerData,
+            List<UnsignedLong> triggerDebugKeys) {
         return createEventReportPayload(
-                triggerData, sourceDebugKey, triggerDebugKey, ATTRIBUTION_DESTINATIONS);
+                triggerData,
+                null,
+                null,
+                triggerDebugKeys,
+                ATTRIBUTION_DESTINATIONS);
     }
 
-    private static EventReportPayload createEventReportPayload(UnsignedLong triggerData,
-            UnsignedLong sourceDebugKey, UnsignedLong triggerDebugKey, List<Uri> destinations) {
+    private static EventReportPayload createEventReportPayload(
+            UnsignedLong triggerData,
+            UnsignedLong sourceDebugKey,
+            UnsignedLong triggerDebugKey) {
+        return createEventReportPayload(
+                triggerData,
+                sourceDebugKey,
+                triggerDebugKey,
+                Collections.emptyList(),
+                ATTRIBUTION_DESTINATIONS);
+    }
+
+    private static EventReportPayload createEventReportPayload(
+            UnsignedLong triggerData,
+            UnsignedLong sourceDebugKey,
+            UnsignedLong triggerDebugKey,
+            List<Uri> attributionDestinations) {
+        return createEventReportPayload(
+                triggerData,
+                sourceDebugKey,
+                triggerDebugKey,
+                Collections.emptyList(),
+                attributionDestinations);
+    }
+
+    private static EventReportPayload.Builder createEventReportPayloadBuilder(
+            UnsignedLong triggerData,
+            UnsignedLong sourceDebugKey,
+            UnsignedLong triggerDebugKey,
+            List<UnsignedLong> triggerDebugKeys,
+            List<Uri> destinations) {
         return new EventReportPayload.Builder()
                 .setAttributionDestination(destinations)
                 .setScheduledReportTime(SCHEDULED_REPORT_TIME)
@@ -64,18 +103,41 @@ public class EventReportPayloadTest {
                 .setRandomizedTriggerRate(RANDOMIZED_TRIGGER_RATE)
                 .setSourceDebugKey(sourceDebugKey)
                 .setTriggerDebugKey(triggerDebugKey)
-                .build();
+                .setTriggerDebugKeys(triggerDebugKeys);
+    }
+
+    private static EventReportPayload createEventReportPayload(
+            UnsignedLong triggerData,
+            UnsignedLong sourceDebugKey,
+            UnsignedLong triggerDebugKey,
+            List<UnsignedLong> triggerDebugKeys,
+            List<Uri> destinations) {
+        return createEventReportPayloadBuilder(
+                triggerData,
+                sourceDebugKey,
+                triggerDebugKey,
+                triggerDebugKeys,
+                destinations)
+                        .build();
     }
 
     @Test
     public void toJson_success() throws JSONException {
         EventReportPayload eventReport =
-                createEventReportPayload(TRIGGER_DATA, SOURCE_DEBUG_KEY, TRIGGER_DEBUG_KEY);
+                createEventReportPayloadBuilder(
+                        TRIGGER_DATA,
+                        SOURCE_DEBUG_KEY,
+                        TRIGGER_DEBUG_KEY,
+                        TRIGGER_DEBUG_KEYS,
+                        ATTRIBUTION_DESTINATIONS)
+                                .setTriggerSummaryBucket(TRIGGER_SUMMARY_BUCKET)
+                                .build();
+
         JSONObject eventPayloadReportJson = eventReport.toJson();
 
-        Object obj = eventPayloadReportJson.get("attribution_destination");
-        assertTrue(obj instanceof String);
-        assertEquals(ATTRIBUTION_DESTINATIONS.get(0).toString(), (String) obj);
+        Object destinationsObj = eventPayloadReportJson.get("attribution_destination");
+        assertTrue(destinationsObj instanceof String);
+        assertEquals(ATTRIBUTION_DESTINATIONS.get(0).toString(), (String) destinationsObj);
         assertEquals(SCHEDULED_REPORT_TIME, eventPayloadReportJson.get("scheduled_report_time"));
         assertEquals(SOURCE_EVENT_ID.toString(), eventPayloadReportJson.get("source_event_id"));
         assertEquals(TRIGGER_DATA.toString(), eventPayloadReportJson.get("trigger_data"));
@@ -85,6 +147,22 @@ public class EventReportPayloadTest {
                 eventPayloadReportJson.get("randomized_trigger_rate"));
         assertEquals(SOURCE_DEBUG_KEY.toString(), eventPayloadReportJson.get("source_debug_key"));
         assertEquals(TRIGGER_DEBUG_KEY.toString(), eventPayloadReportJson.get("trigger_debug_key"));
+        Object triggerDebugKeysObj = eventPayloadReportJson.get("trigger_debug_keys");
+        assertTrue(triggerDebugKeysObj instanceof JSONArray);
+        assertEquals(TRIGGER_DEBUG_KEYS.get(0).toString(),
+                ((JSONArray) triggerDebugKeysObj).getString(0));
+        assertEquals(TRIGGER_DEBUG_KEYS.get(1).toString(),
+                ((JSONArray) triggerDebugKeysObj).getString(1));
+        // Trigger summary bucket
+        assertTrue(eventPayloadReportJson.get("trigger_summary_bucket") instanceof JSONArray);
+        JSONArray triggerSummaryBucket =
+                eventPayloadReportJson.getJSONArray("trigger_summary_bucket");
+        Object first = triggerSummaryBucket.get(0);
+        assertTrue(first instanceof Number);
+        assertEquals(TRIGGER_SUMMARY_BUCKET.first, Long.valueOf((long) first));
+        Object second = triggerSummaryBucket.get(1);
+        assertTrue(second instanceof Number);
+        assertEquals(TRIGGER_SUMMARY_BUCKET.second, Long.valueOf((long) second));
     }
 
     @Test
@@ -123,6 +201,7 @@ public class EventReportPayloadTest {
                 RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
         assertNull(eventPayloadReportJson.opt("source_debug_key"));
         assertNull(eventPayloadReportJson.opt("trigger_debug_key"));
+        assertNull(eventPayloadReportJson.opt("trigger_debug_keys"));
     }
 
     @Test
@@ -144,7 +223,7 @@ public class EventReportPayloadTest {
     }
 
     @Test
-    public void testEventPayloadJsonSerializationWithSingleTriggerDebugKeys() throws JSONException {
+    public void testEventPayloadJsonSerializationWithSingleTriggerDebugKey() throws JSONException {
         EventReportPayload eventReport =
                 createEventReportPayload(TRIGGER_DATA, null, TRIGGER_DEBUG_KEY);
         JSONObject eventPayloadReportJson = eventReport.toJson();
@@ -160,6 +239,32 @@ public class EventReportPayloadTest {
                 RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
         assertNull(eventPayloadReportJson.opt("source_debug_key"));
         assertEquals(TRIGGER_DEBUG_KEY.toString(), eventPayloadReportJson.get("trigger_debug_key"));
+    }
+
+    @Test
+    public void testEventPayloadJsonSerializationWithMultipleTriggerDebugKeys()
+            throws JSONException {
+        EventReportPayload eventReport =
+                createEventReportPayload(TRIGGER_DATA, TRIGGER_DEBUG_KEYS);
+        JSONObject eventPayloadReportJson = eventReport.toJson();
+
+        assertEquals(
+                ATTRIBUTION_DESTINATIONS.get(0).toString(),
+                eventPayloadReportJson.get("attribution_destination"));
+        assertEquals(SOURCE_EVENT_ID.toString(), eventPayloadReportJson.get("source_event_id"));
+        assertEquals(TRIGGER_DATA.toString(), eventPayloadReportJson.get("trigger_data"));
+        assertEquals(REPORT_ID, eventPayloadReportJson.get("report_id"));
+        assertEquals(SOURCE_TYPE, eventPayloadReportJson.get("source_type"));
+        assertEquals(
+                RANDOMIZED_TRIGGER_RATE, eventPayloadReportJson.get("randomized_trigger_rate"));
+        assertNull(eventPayloadReportJson.opt("source_debug_key"));
+        assertNull(eventPayloadReportJson.opt("trigger_debug_key"));
+        Object triggerDebugKeysObj = eventPayloadReportJson.get("trigger_debug_keys");
+        assertTrue(triggerDebugKeysObj instanceof JSONArray);
+        assertEquals(TRIGGER_DEBUG_KEYS.get(0).toString(),
+                ((JSONArray) triggerDebugKeysObj).getString(0));
+        assertEquals(TRIGGER_DEBUG_KEYS.get(1).toString(),
+                ((JSONArray) triggerDebugKeysObj).getString(1));
     }
 
     @Test
@@ -193,7 +298,7 @@ public class EventReportPayloadTest {
     }
 
     @Test
-    public void testEventPayloadJsonSerializationWithSingleSourceDebugKeys() throws JSONException {
+    public void testEventPayloadJsonSerializationWithSingleSourceDebugKey() throws JSONException {
         EventReportPayload eventReport =
                 createEventReportPayload(TRIGGER_DATA, SOURCE_DEBUG_KEY, null);
         JSONObject eventPayloadReportJson = eventReport.toJson();

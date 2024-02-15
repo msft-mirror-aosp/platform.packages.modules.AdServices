@@ -16,15 +16,20 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -56,6 +61,9 @@ public class CustomAudienceBiddingInfoTest {
                     .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                     .build();
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testCustomAudienceBiddingInfo() {
         CustomAudienceBiddingInfo customAudienceBiddingInfo =
@@ -63,23 +71,26 @@ public class CustomAudienceBiddingInfoTest {
                         CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
                         BUYER_DECISION_LOGIC_JS,
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        CUSTOM_AUDIENCE_SIGNALS,
+                        null);
         assertEquals(
                 customAudienceBiddingInfo.getBiddingLogicUri(),
                 CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1));
         assertEquals(customAudienceBiddingInfo.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
         assertEquals(customAudienceBiddingInfo.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
+        assertNull(customAudienceBiddingInfo.getBuyerContextualSignals());
     }
 
     @Test
     public void testCustomAudienceBiddingInfoFromCA() {
         CustomAudienceBiddingInfo customAudienceBiddingInfo =
-                CustomAudienceBiddingInfo.create(CUSTOM_AUDIENCE, BUYER_DECISION_LOGIC_JS);
+                CustomAudienceBiddingInfo.create(CUSTOM_AUDIENCE, BUYER_DECISION_LOGIC_JS, null);
         assertEquals(
                 customAudienceBiddingInfo.getBiddingLogicUri(),
                 CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1));
         assertEquals(customAudienceBiddingInfo.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
         assertEquals(customAudienceBiddingInfo.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
+        assertNull(customAudienceBiddingInfo.getBuyerContextualSignals());
     }
 
     @Test
@@ -97,5 +108,27 @@ public class CustomAudienceBiddingInfoTest {
                 CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1));
         assertEquals(customAudienceBiddingInfo.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
         assertEquals(customAudienceBiddingInfo.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
+        assertNull(customAudienceBiddingInfo.getBuyerContextualSignals());
+    }
+
+    @Test
+    public void testCustomAudienceBiddingInfoBuilderWithContextualSignals() {
+        CustomAudienceBiddingInfo customAudienceBiddingInfo =
+                CustomAudienceBiddingInfo.builder()
+                        .setBiddingLogicUri(
+                                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
+                                        CommonFixture.VALID_BUYER_1))
+                        .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
+                        .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setBuyerContextualSignals(BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST)
+                        .build();
+        assertEquals(
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1),
+                customAudienceBiddingInfo.getBiddingLogicUri());
+        assertEquals(BUYER_DECISION_LOGIC_JS, customAudienceBiddingInfo.getBuyerDecisionLogicJs());
+        assertEquals(CUSTOM_AUDIENCE_SIGNALS, customAudienceBiddingInfo.getCustomAudienceSignals());
+        assertEquals(
+                BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST,
+                customAudienceBiddingInfo.getBuyerContextualSignals());
     }
 }

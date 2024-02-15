@@ -19,11 +19,27 @@ package com.android.adservices.service.profiling;
 import android.annotation.NonNull;
 import android.os.Trace;
 
+import com.android.adservices.LogUtil;
+
+import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
 /** Utility class providing methods for using {@link android.os.Trace}. */
 public final class Tracing {
 
+    public static final String FILTERER_FILTER_CA = "AdFilterer#FilterCustomAudiences";
+    public static final String FILTERER_FOR_EACH_CA = "AdFilterer#ForEachCustomAudience";
+    public static final String FILTERER_FOR_EACH_AD = "AdFilterer#ForEachAd";
+    public static final String FILTERER_FREQUENCY_CAP = "AdFilterer#doesAdPassFrequencyCapFilters";
+    public static final String FILTERER_FREQUENCY_CAP_WIN =
+            "AdFilterer#doesAdPassFrequencyCapFiltersForWinType";
+    public static final String FREQUENCY_CAP_GET_NUM_EVENTS_CA =
+            "FrequencyCapDao#getNumEventsForCustomAudienceAfterTime";
+    public static final String FREQUENCY_CAP_GET_NUM_EVENTS_BUYER =
+            "FrequencyCapDao#getNumEventsForBuyerAfterTime";
+    public static final String FILTERER_FREQUENCY_CAP_NON_WIN =
+            "AdFilterer#doesAdPassFrequencyCapFiltersForNonWinType";
+    public static final String FILTERER_FILTER_CONTEXTUAL = "AdFilterer#FilterContextualAds";
     public static final String RUN_AD_SELECTION = "RunOnDeviceAdSelection";
     public static final String PERSIST_AD_SELECTION = "PersistOnDeviceAdSelection";
     public static final String GET_BUYERS_CUSTOM_AUDIENCE = "GetBuyersCustomAudience";
@@ -46,6 +62,41 @@ public final class Tracing {
     public static final String JSSCRIPTENGINE_EVALUATE_ON_SANDBOX =
             "JSScriptEngine#evaluateOnSandbox";
     public static final String JSSCRIPTENGINE_CLOSE_ISOLATE = "JSScriptEngine#closeIsolate";
+    public static final String PERSIST_AD_SELECTION_RESULT =
+            "AdSelectionServiceImpl#persistAdSelectionResult";
+    public static final String ORCHESTRATE_PERSIST_AD_SELECTION_RESULT =
+            "PersistAdSelectionResultRunner#orchestratePersistAdSelectionResultRunner";
+    public static final String PERSIST_AUCTION_RESULTS =
+            "PersistAdSelectionResultRunner#persistAuctionResults";
+    public static final String OHTTP_DECRYPT_BYTES = "PersistAdSelectionResultRunner#decryptBytes";
+    public static final String PARSE_AD_SELECTION_RESULT =
+            "PersistAdSelectionResultRunner#parseAdSelectionResult";
+    public static final String GET_AD_SELECTION_DATA = "AdSelectionServiceImpl#getAdSelectionData";
+    public static final String GET_BUYERS_CA = "BuyerInputGenerator#getBuyersCustomAudience";
+    public static final String GET_FILTERED_BUYERS_CA =
+            "BuyerInputGenerator#getFilteredCustomAudiences";
+    public static final String GET_BUYERS_PS = "BuyerInputGenerator#getBuyersProtectedSignals";
+    public static final String GET_COMPRESSED_BUYERS_INPUTS =
+            "BuyerInputGenerator#getCompressedBuyerInputs";
+    public static final String AUCTION_SERVER_GZIP_COMPRESS =
+            "AuctionServerDataCompressorGzip#compress";
+    public static final String FORMAT_PAYLOAD_V0 = "AuctionServerPayloadFormatterV0#apply";
+    public static final String FORMAT_PAYLOAD_EXCESSIVE_MAX_SIZE =
+            "AuctionServerPayloadFormatterExcessiveMaxSize#apply";
+    public static final String CREATE_BUYER_INPUTS = "BuyerInputGenerator#createBuyerInputs";
+    public static final String CREATE_GET_AD_SELECTION_DATA_PAYLOAD =
+            "GetAdSelectionDataRunner#createPayload";
+    public static final String ORCHESTRATE_GET_AD_SELECTION_DATA =
+            "GetAdSelectionDataRunner#orchestrateGetAdSelectionDataRunner";
+    public static final String PERSIST_AD_SELECTION_ID_REQUEST =
+            "GetAdSelectionDataRunner#persistAdSelectionIdRequest";
+    public static final String GET_LATEST_OHTTP_KEY_CONFIG =
+            "AdSelectionEncryptionKeyManager#getLatestOhttpKeyConfigOfType";
+    public static final String CREATE_AND_SERIALIZE_REQUEST =
+            "ObliviousHttpEncryptorImpl#createAndSerializeRequest";
+    public static final String OHTTP_ENCRYPT_BYTES = "ObliviousHttpEncryptorImpl#encryptBytes";
+
+    private static final String PERFETTO_TRIGGER_COMMAND = "/system/bin/trigger_perfetto";
 
     /**
      * Begins an asynchronous trace and generates random cookie.
@@ -70,5 +121,21 @@ public final class Tracing {
      */
     public static void endAsyncSection(@NonNull String sectionName, int traceCookie) {
         Trace.endAsyncSection(sectionName, traceCookie);
+    }
+
+    /**
+     * Notifies perfetto to start AOT given a trace event. This can be an expensive operation so
+     * only use it to record failures but not general trace events.
+     *
+     * @param triggerEvent name of Perfetto trigger event.
+     */
+    public static void triggerPerfetto(String triggerEvent) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder(PERFETTO_TRIGGER_COMMAND, triggerEvent);
+            LogUtil.d("Triggering perfetto with " + triggerEvent);
+            pb.start();
+        } catch (IOException e) {
+            LogUtil.e("Failed to trigger perfetto with " + triggerEvent, e);
+        }
     }
 }

@@ -24,16 +24,22 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
+import android.adservices.common.KeyedFrequencyCapFixture;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.adselection.HistogramEventFixture;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
 public class DBHistogramEventDataTest {
     private static final Long NON_NULL_ROW_ID = 50L;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidEventData_success() {
@@ -43,6 +49,7 @@ public class DBHistogramEventDataTest {
                         .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
                         .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setAdCounterIntKey(KeyedFrequencyCapFixture.KEY1)
                         .build();
 
         assertThat(originalEventData.getRowId()).isEqualTo(NON_NULL_ROW_ID);
@@ -52,6 +59,7 @@ public class DBHistogramEventDataTest {
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_WIN);
         assertThat(originalEventData.getTimestamp())
                 .isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+        assertThat(originalEventData.getAdCounterIntKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
     }
 
     @Test
@@ -61,6 +69,7 @@ public class DBHistogramEventDataTest {
                         .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
                         .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .setAdCounterIntKey(KeyedFrequencyCapFixture.KEY1)
                         .build();
 
         assertThat(originalEventData.getRowId()).isNull();
@@ -70,6 +79,7 @@ public class DBHistogramEventDataTest {
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_WIN);
         assertThat(originalEventData.getTimestamp())
                 .isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+        assertThat(originalEventData.getAdCounterIntKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
     }
 
     @Test
@@ -80,6 +90,7 @@ public class DBHistogramEventDataTest {
                         DBHistogramEventData.builder()
                                 .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
                                 .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                                .setAdCounterIntKey(KeyedFrequencyCapFixture.KEY1)
                                 .build());
     }
 
@@ -91,6 +102,7 @@ public class DBHistogramEventDataTest {
                         DBHistogramEventData.builder()
                                 .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
                                 .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                                .setAdCounterIntKey(KeyedFrequencyCapFixture.KEY1)
                                 .build());
     }
 
@@ -102,6 +114,19 @@ public class DBHistogramEventDataTest {
                         DBHistogramEventData.builder()
                                 .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
                                 .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                                .setAdCounterIntKey(KeyedFrequencyCapFixture.KEY1)
+                                .build());
+    }
+
+    @Test
+    public void testBuildUnsetAdCounterKey_throws() {
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        DBHistogramEventData.builder()
+                                .setHistogramIdentifierForeignKey(VALID_FOREIGN_KEY)
+                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                                .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                                 .build());
     }
 
@@ -119,7 +144,8 @@ public class DBHistogramEventDataTest {
                         NON_NULL_ROW_ID,
                         VALID_FOREIGN_KEY,
                         FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
-                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        KeyedFrequencyCapFixture.KEY1);
 
         assertThat(originalEventData.getRowId()).isEqualTo(NON_NULL_ROW_ID);
         assertThat(originalEventData.getHistogramIdentifierForeignKey())
@@ -128,6 +154,7 @@ public class DBHistogramEventDataTest {
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
         assertThat(originalEventData.getTimestamp())
                 .isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+        assertThat(originalEventData.getAdCounterIntKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
     }
 
     @Test
@@ -137,7 +164,8 @@ public class DBHistogramEventDataTest {
                         null,
                         VALID_FOREIGN_KEY,
                         FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
-                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        KeyedFrequencyCapFixture.KEY1);
 
         assertThat(originalEventData.getRowId()).isNull();
         assertThat(originalEventData.getHistogramIdentifierForeignKey())
@@ -146,6 +174,7 @@ public class DBHistogramEventDataTest {
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
         assertThat(originalEventData.getTimestamp())
                 .isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+        assertThat(originalEventData.getAdCounterIntKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
     }
 
     @Test
@@ -157,7 +186,8 @@ public class DBHistogramEventDataTest {
                                 NON_NULL_ROW_ID,
                                 VALID_FOREIGN_KEY,
                                 FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
-                                null));
+                                null,
+                                KeyedFrequencyCapFixture.KEY1));
     }
 
     @Test
@@ -172,6 +202,8 @@ public class DBHistogramEventDataTest {
                 .isEqualTo(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getAdEventType());
         assertThat(originalEventData.getTimestamp())
                 .isEqualTo(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getTimestamp());
+        assertThat(originalEventData.getAdCounterIntKey())
+                .isEqualTo(HistogramEventFixture.VALID_HISTOGRAM_EVENT.getAdCounterKey());
     }
 
     @Test

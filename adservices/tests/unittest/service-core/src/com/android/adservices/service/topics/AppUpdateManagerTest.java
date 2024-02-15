@@ -38,8 +38,10 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
@@ -47,11 +49,13 @@ import com.android.adservices.service.Flags;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,6 +82,9 @@ public class AppUpdateManagerTest {
 
     @Mock PackageManager mMockPackageManager;
     @Mock Flags mMockFlags;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -531,6 +538,65 @@ public class AppUpdateManagerTest {
                                 .retrieveReturnedTopics(epochId1, numberOfLookBackEpochs)
                                 .get(epochId1))
                 .isEqualTo(expectedReturnedTopicsAfterWiping);
+    }
+
+    @Test
+    public void testDeleteAppDataFromTableByApps_encryptedTopicsTable() {
+        final String app = "app";
+        final String sdk = "sdk";
+        final long epochId = 1L;
+        final int topicId = 1;
+        final int numberOfLookBackEpochs = 1;
+
+        Topic topic1 = Topic.create(topicId, TAXONOMY_VERSION, MODEL_VERSION);
+        EncryptedTopic encryptedTopic1 =
+                EncryptedTopic.create(
+                        topic1.toString().getBytes(StandardCharsets.UTF_8),
+                        "publicKey",
+                        "encapsulatedKey".getBytes(StandardCharsets.UTF_8));
+
+        // Handle ReturnedTopicContract
+        Map<Pair<String, String>, Topic> returnedAppSdkTopics = new HashMap<>();
+        returnedAppSdkTopics.put(Pair.create(app, EMPTY_SDK), topic1);
+        returnedAppSdkTopics.put(Pair.create(app, sdk), topic1);
+
+        mTopicsDao.persistReturnedAppTopicsMap(epochId, returnedAppSdkTopics);
+        // Handle ReturnedEncryptedTopicContract
+        Map<Pair<String, String>, EncryptedTopic> encryptedTopics =
+                Map.of(Pair.create(app, sdk), encryptedTopic1);
+
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(epochId, encryptedTopics);
+
+        // Verify ReturnedTopicContract has expected apps
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId, numberOfLookBackEpochs).get(epochId))
+                .isEqualTo(returnedAppSdkTopics);
+        // Verify ReturnedEncryptedTopicContract has expected apps
+        assertThat(
+                        mTopicsDao
+                                .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
+                                .get(epochId))
+                .isEqualTo(encryptedTopics);
+
+        // When db flag is off for version 9.
+        when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(false);
+        mAppUpdateManager.deleteAppDataFromTableByApps(List.of(app));
+        // Unencrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId, numberOfLookBackEpochs)).isEmpty();
+        // Encrypted table is not cleared.
+        assertThat(
+                        mTopicsDao
+                                .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
+                                .get(epochId))
+                .isEqualTo(encryptedTopics);
+
+        // When db flag is on for version 9.
+        when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        mAppUpdateManager.deleteAppDataFromTableByApps(List.of(app));
+        // Unencrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId, numberOfLookBackEpochs)).isEmpty();
+        // Encrypted table is cleared.
+        assertThat(mTopicsDao.retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs))
+                .isEmpty();
     }
 
     @Test

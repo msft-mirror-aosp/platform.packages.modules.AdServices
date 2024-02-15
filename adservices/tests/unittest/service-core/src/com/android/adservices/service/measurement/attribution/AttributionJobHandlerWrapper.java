@@ -22,6 +22,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 /**
  * A wrapper class to expose a constructor for AttributionJobHandler in testing.
@@ -34,17 +35,21 @@ public class AttributionJobHandlerWrapper {
             Flags flags,
             DebugReportApi debugReportApi,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-            SourceNoiseHandler sourceNoiseHandler) {
+            SourceNoiseHandler sourceNoiseHandler,
+            AdServicesLogger logger) {
         this.mAttributionJobHandler =
                 new AttributionJobHandler(
                         datastoreManager,
                         flags,
                         debugReportApi,
                         eventReportWindowCalcDelegate,
-                        sourceNoiseHandler);
+                        sourceNoiseHandler,
+                        logger,
+                        new XnaSourceCreator(flags));
     }
 
     public boolean performPendingAttributions() {
-        return mAttributionJobHandler.performPendingAttributions();
+        return AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED
+                == mAttributionJobHandler.performPendingAttributions();
     }
 }

@@ -25,6 +25,7 @@ java_test_host {
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
     libs: [
         "cts-tradefed",
@@ -32,6 +33,7 @@ java_test_host {
         "platformprotos",
     ],
     static_libs: [
+        "adservices-host-side-test-utility",
         "cts-statsd-atom-host-test-utils",
     ],
     data: [
@@ -49,6 +51,7 @@ java_test_host {
         "cts",
         "general-tests",
         "mts-extservices",
+        "mcts-extservices",
     ],
     libs: [
         "cts-tradefed",
@@ -56,6 +59,7 @@ java_test_host {
         "platformprotos",
     ],
     static_libs: [
+        "adservices-host-side-test-utility",
         "cts-statsd-atom-host-test-utils",
     ],
     data: [

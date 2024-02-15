@@ -13,13 +13,14 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 filegroup {
     name: "framework-sdksandbox-aidl-sources",
     srcs: [
-      "java/**/*.aidl",
+        "java/**/*.aidl",
     ],
     visibility: [
         "//frameworks/base",
@@ -32,8 +33,8 @@ filegroup {
     name: "framework-sdksandbox-sources",
     defaults: ["framework-sources-module-defaults"],
     srcs: [
-      "java/**/*.java",
-      ":framework-sdksandbox-aidl-sources",
+        "java/**/*.java",
+        ":framework-sdksandbox-aidl-sources",
     ],
     visibility: ["//packages/modules/AdServices:__subpackages__"],
     path: "java",
@@ -41,13 +42,16 @@ filegroup {
 
 filegroup {
     name: "framework-sdksandbox-jarjar",
-    srcs: ["jarjar_rules.txt"]
+    srcs: ["jarjar_rules.txt"],
 }
 
 java_defaults {
     name: "framework-sdksandbox-jarjar-defaults",
     jarjar_rules: ":framework-sdksandbox-jarjar",
-    static_libs: ["modules-utils-build"],
+    static_libs: [
+        "modules-utils-build",
+        "sdk_sandbox_flags_lib",
+    ],
     libs: [
         "androidx.annotation_annotation",
     ],
@@ -76,13 +80,4 @@ java_sdk_library {
             "com.android.server.sdksandbox.**",
         ],
     },
-}
-
-java_api_contribution {
-    name: "framework-sdksandbox-public-stubs",
-    api_surface: "public",
-    api_file: "api/current.txt",
-    visibility: [
-        "//build/orchestrator/apis",
-    ],
 }

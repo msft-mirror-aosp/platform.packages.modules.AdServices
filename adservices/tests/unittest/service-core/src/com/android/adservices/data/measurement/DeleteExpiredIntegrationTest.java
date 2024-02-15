@@ -18,14 +18,17 @@ package com.android.adservices.data.measurement;
 
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Tests for {@link MeasurementDao} app deletion that affect the database.
@@ -33,23 +36,33 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open(
                 "measurement_delete_expired_test.json");
-        return AbstractDbIntegrationTest.getTestCasesFrom(inputStream, null);
+        return AbstractDbIntegrationTest.getTestCasesFrom(
+                inputStream, /*prepareAdditionalData=*/ null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public DeleteExpiredIntegrationTest(DbState input, DbState output, String name) {
-        super(input, output);
+    public DeleteExpiredIntegrationTest(
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            String name) {
+        super(input, output, flagsMap);
     }
 
+    /** Runs the action we want to test. */
     public void runActionToTest() {
         long earliestValidInsertion =
                 System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
-        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())
-                .runInTransaction(dao -> dao.deleteExpiredRecords(earliestValidInsertion));
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
+
+        AdServicesErrorLogger errorLogger = Mockito.mock(AdServicesErrorLogger.class);
+        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), errorLogger)
+                .runInTransaction(
+                        dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
     }
 }

@@ -26,12 +26,20 @@ android_app {
     libs: [
         "android.ext.adservices",
     ],
+    optional_uses_libs: ["android.ext.adservices"],
     static_libs: [
         "adservices-clients",
+        "adservices-service-core",
         "androidx.appcompat_appcompat",
         "androidx-constraintlayout_constraintlayout",
         "com.google.android.material_material",
         "androidx.concurrent_concurrent-futures",
+    ],
+    dex_preopt: {
+        enabled: false,
+    },
+    jni_libs: [
+        "libhpke_jni",
     ],
     resource_dirs: ["res"],
     platform_apis: true,

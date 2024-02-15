@@ -40,19 +40,26 @@ import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionRunner.AdSelectionOrchestrationResult;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
 import com.android.adservices.service.proto.SellerFrontEndGrpc.SellerFrontEndFutureStub;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
@@ -69,8 +76,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -126,6 +133,10 @@ public class TrustedServerAdSelectionRunnerTest {
                                     .setBidPrice(1))
                     .build();
     private static final AdFilterer sAdFilterer = new AdFiltererNoOpImpl();
+    private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP =
+            new FrequencyCapAdDataValidatorNoOpImpl();
+    private static final AdCounterHistogramUpdater AD_COUNTER_HISTOGRAM_UPDATER_NO_OP =
+            new AdCounterHistogramUpdaterNoOpImpl();
 
     private MockitoSession mStaticMockSession = null;
     private Context mContext = ApplicationProvider.getApplicationContext();
@@ -142,6 +153,8 @@ public class TrustedServerAdSelectionRunnerTest {
     @Mock private AdServicesLogger mAdServicesLoggerSpy;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private EncryptionKeyDao mEncryptionKeyDaoMock;
     @Mock private JsFetcher mJsFetcher;
     @Mock private CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
@@ -154,13 +167,22 @@ public class TrustedServerAdSelectionRunnerTest {
 
     @Mock AdSelectionServiceFilter mAdSelectionServiceFilter;
 
+    @Mock private DebugReporting mDebugReportingMock;
+
+    @Mock private DebugReportSenderStrategy mDebugReportSenderMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 1)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule(mContext);
+
     @Before
     public void setUp() {
-        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
-        // availability depends on an external component (the system webview) being higher than a
-        // certain minimum version. Marking that as an assumption that the test is making.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
-
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
@@ -201,6 +223,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -211,8 +235,11 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
         AdSelectionOrchestrationResult adSelectionOrchestrationResult =
                 invokeRunAdSelection(
                         mAdSelectionRunner,
@@ -259,6 +286,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -269,8 +298,11 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
 
         // Add CA name to bidding data keys and later verify we don't send it to the server.
         DBCustomAudience customAudience = createDBCustomAudience(BUYER_1);
@@ -319,6 +351,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -329,8 +363,11 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
 
         // Add CA name to bidding data keys and later verify we don't send it to the server.
         DBCustomAudience customAudience = createDBCustomAudience(BUYER_1);
@@ -385,6 +422,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -395,8 +434,11 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
 
         invokeRunAdSelection(
                 mAdSelectionRunner,
@@ -406,6 +448,7 @@ public class TrustedServerAdSelectionRunnerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 315521295)
     public void verifyNoRequestCompressionWhenFlagDisabled() {
         Flags flags =
                 new Flags() {
@@ -434,6 +477,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
                         sLightweightExecutorService,
                         sBackgroundExecutorService,
                         sScheduledExecutor,
@@ -444,8 +489,11 @@ public class TrustedServerAdSelectionRunnerTest {
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         sAdFilterer,
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        AD_COUNTER_HISTOGRAM_UPDATER_NO_OP,
                         mJsFetcher,
-                        mAdSelectionExecutionLogger);
+                        mAdSelectionExecutionLogger,
+                        mDebugReportingMock);
         invokeRunAdSelection(
                 mAdSelectionRunner,
                 adSelectionConfig,

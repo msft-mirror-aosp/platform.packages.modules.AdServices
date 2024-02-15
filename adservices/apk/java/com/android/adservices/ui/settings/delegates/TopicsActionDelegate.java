@@ -67,16 +67,24 @@ public class TopicsActionDelegate {
                     try {
                         switch (event) {
                             case SWITCH_ON_TOPICS:
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptInTopicsDialog(mTopicsActivity);
+                                }
                                 mTopicsViewModel.setTopicsConsent(true);
                                 mTopicsViewModel.refresh();
                                 break;
                             case SWITCH_OFF_TOPICS:
-                                mTopicsViewModel.setTopicsConsent(false);
-                                mTopicsViewModel.refresh();
+                                if (FlagsFactory.getFlags().getToggleSpeedBumpEnabled()) {
+                                    DialogFragmentManager.showOptOutTopicsDialog(
+                                            mTopicsActivity, mTopicsViewModel);
+                                } else {
+                                    mTopicsViewModel.setTopicsConsent(false);
+                                    mTopicsViewModel.refresh();
+                                }
                                 break;
                             case BLOCK_TOPIC:
-                                UiStatsLogger.logBlockTopicSelected(mTopicsActivity);
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                UiStatsLogger.logBlockTopicSelected();
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockTopicDialog(
                                                 mTopicsActivity, mTopicsViewModel, topic);
@@ -89,8 +97,8 @@ public class TopicsActionDelegate {
                                 }
                                 break;
                             case RESET_TOPICS:
-                                UiStatsLogger.logResetTopicSelected(mTopicsActivity);
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                UiStatsLogger.logResetTopicSelected();
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetTopicDialog(
                                                 mTopicsActivity, mTopicsViewModel);

@@ -18,13 +18,24 @@ package android.adservices.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link android.adservices.topics.Topic} */
 public class TopicTest {
+
+    private static final long TAXONOMY_VERSION_2 = 2L;
+    private static final long MODEL_VERSION_5 = 5L;
+    private static final int TOPIC_ID_1 = 1;
+
     private Topic mTopic1;
     private Topic mTopic2;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
@@ -34,13 +45,13 @@ public class TopicTest {
     @Test
     public void testGetters() {
         assertThat(mTopic1.getTopicId()).isEqualTo(1);
-        assertThat(mTopic1.getModelVersion()).isEqualTo(1L);
-        assertThat(mTopic1.getTaxonomyVersion()).isEqualTo(1L);
+        assertThat(mTopic1.getModelVersion()).isEqualTo(5L);
+        assertThat(mTopic1.getTaxonomyVersion()).isEqualTo(2L);
     }
 
     @Test
     public void testToString() {
-        String expectedTopicString = "Topic{mTaxonomyVersion=1, mModelVersion=1, mTopicCode=1}";
+        String expectedTopicString = "Topic{mTaxonomyVersion=2, mModelVersion=5, mTopicCode=1}";
         assertThat(mTopic1.toString()).isEqualTo(expectedTopicString);
         assertThat(mTopic2.toString()).isEqualTo(expectedTopicString);
     }
@@ -57,12 +68,23 @@ public class TopicTest {
     }
 
     @Test
-    public void testHashCode() {
+    public void testHashCode_equalObject() {
         assertThat(mTopic1.hashCode()).isEqualTo(mTopic2.hashCode());
     }
 
+    @Test
+    public void testHashCode_unequalObject() {
+        assertThat(mTopic1.hashCode())
+                .isNotEqualTo(
+                        new Topic(
+                                        /* mTaxonomyVersion */ 100L,
+                                        /* mModelVersion */ 101L,
+                                        /* mTopicId */ 102)
+                                .hashCode());
+    }
+
     private void generateTopics() {
-        mTopic1 = new Topic(/* mTaxonomyVersion */ 1L, /* mModelVersion */ 1L, /* mTopicId */ 1);
-        mTopic2 = new Topic(/* mTaxonomyVersion */ 1L, /* mModelVersion */ 1L, /* mTopicId */ 1);
+        mTopic1 = new Topic(TAXONOMY_VERSION_2, MODEL_VERSION_5, TOPIC_ID_1);
+        mTopic2 = new Topic(TAXONOMY_VERSION_2, MODEL_VERSION_5, TOPIC_ID_1);
     }
 }

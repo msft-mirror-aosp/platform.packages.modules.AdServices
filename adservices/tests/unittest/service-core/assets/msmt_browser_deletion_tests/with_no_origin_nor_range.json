@@ -58,7 +58,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -75,7 +76,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -134,6 +136,44 @@
         "registrant": "android-app://com.registrant2",
         "sourceId": "S2",
         "triggerId": "T2"
+      }
+    ],
+    "async_registrations": [
+      {
+        "registrationId": "AR1",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate1.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733601,
+        "adIdPermission": false,
+        "id": "id1",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
+      },
+      {
+        "registrationId": "AR2",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate2.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733605,
+        "adIdPermission": false,
+        "id": "id2",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       }
     ]
   },
@@ -194,7 +234,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -211,7 +252,8 @@
               "key_1": ["value_1"]
             }
           }
-        ]
+        ],
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -270,6 +312,44 @@
         "registrant": "android-app://com.registrant2",
         "sourceId": "S2",
         "triggerId": "T2"
+      }
+    ],
+    "async_registrations": [
+      {
+        "registrationId": "AR1",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate1.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733601,
+        "adIdPermission": false,
+        "id": "id1",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
+      },
+      {
+        "registrationId": "AR2",
+        "registrationUri": "https://foo.com",
+        "topOrigin": "https://deleteCandidate2.site.test",
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "osDestination": "https://foo.com",
+        "requestTime": 1648665733605,
+        "adIdPermission": false,
+        "id": "id2",
+        "registrationType": 0,
+        "platformAdId": "platform",
+        "debugKeyAllowed": false,
+        "retryCount": 1,
+        "verifiedDestination": "https://foo.com",
+        "webDestination": "https://foo.com",
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       }
     ]
   },

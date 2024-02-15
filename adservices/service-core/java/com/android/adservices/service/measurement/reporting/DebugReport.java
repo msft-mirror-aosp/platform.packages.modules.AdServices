@@ -31,6 +31,9 @@ public final class DebugReport {
     private final JSONObject mBody;
     private final String mEnrollmentId;
     private final Uri mRegistrationOrigin;
+    private final String mReferenceId;
+    private final Long mInsertionTime;
+    private final Uri mRegistrant;
 
     /** Create a new debug report object. */
     private DebugReport(
@@ -38,29 +41,45 @@ public final class DebugReport {
             @NonNull String type,
             @NonNull JSONObject body,
             @NonNull String enrollmentId,
-            @NonNull Uri registrationOrigin) {
+            @NonNull Uri registrationOrigin,
+            @Nullable String referenceId,
+            @Nullable Uri registrant,
+            @Nullable Long insertionTime) {
         mId = id;
         mType = type;
         mBody = body;
         mEnrollmentId = enrollmentId;
         mRegistrationOrigin = registrationOrigin;
+        mReferenceId = referenceId;
+        mInsertionTime = insertionTime;
+        mRegistrant = registrant;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof DebugReport)) {
+        // TODO (b/300109438) Investigate DebugReport::equals
+        if (!(obj instanceof DebugReport key)) {
             return false;
         }
-        DebugReport key = (DebugReport) obj;
         return Objects.equals(mType, key.mType)
                 && Objects.equals(mBody, key.mBody)
                 && Objects.equals(mEnrollmentId, key.mEnrollmentId)
-                && Objects.equals(mRegistrationOrigin, key.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, key.mRegistrationOrigin)
+                && Objects.equals(mReferenceId, key.mReferenceId)
+                && Objects.equals(mRegistrant, key.mRegistrant)
+                && Objects.equals(mInsertionTime, key.mInsertionTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mType, mBody, mEnrollmentId, mRegistrationOrigin);
+        return Objects.hash(
+                mType,
+                mBody,
+                mEnrollmentId,
+                mRegistrationOrigin,
+                mReferenceId,
+                mRegistrant,
+                mInsertionTime);
     }
 
     /** Unique identifier for the {@link DebugReport}. */
@@ -86,6 +105,18 @@ public final class DebugReport {
     public Uri getRegistrationOrigin() {
         return mRegistrationOrigin;
     }
+    /** Reference ID for grouping reports. */
+    public String getReferenceId() {
+        return mReferenceId;
+    }
+    /** Datastore Insertion time */
+    public Long getInsertionTime() {
+        return mInsertionTime;
+    }
+    /** Associated Source App Identifier */
+    public Uri getRegistrant() {
+        return mRegistrant;
+    }
 
     /** Generate the JSON serialization of the debug report payload. */
     public JSONObject toPayloadJson() throws JSONException {
@@ -102,6 +133,9 @@ public final class DebugReport {
         private JSONObject mBody;
         private String mEnrollmentId;
         private Uri mRegistrationOrigin;
+        private String mReferenceId;
+        private Long mInsertionTime;
+        private Uri mRegistrant;
 
         public Builder() {}
 
@@ -112,13 +146,15 @@ public final class DebugReport {
         }
 
         /** See {@link DebugReport#getType}. */
-        public @NonNull Builder setType(@NonNull String type) {
+        @NonNull
+        public Builder setType(@NonNull String type) {
             mType = type;
             return this;
         }
 
         /** See {@link DebugReport#getBody}. */
-        public @NonNull Builder setBody(@NonNull String body) {
+        @NonNull
+        public Builder setBody(@NonNull String body) {
             try {
                 mBody = new JSONObject(body);
             } catch (JSONException e) {
@@ -128,7 +164,8 @@ public final class DebugReport {
         }
 
         /** See {@link DebugReport#getBody}. */
-        public @NonNull Builder setBody(@NonNull JSONObject body) {
+        @NonNull
+        public Builder setBody(@NonNull JSONObject body) {
             mBody = body;
             return this;
         }
@@ -147,12 +184,42 @@ public final class DebugReport {
             return this;
         }
 
+        /** See {@link DebugReport#getReferenceId()} ()}. */
+        @NonNull
+        public Builder setReferenceId(String referenceId) {
+            mReferenceId = referenceId;
+            return this;
+        }
+
+        /** See {@link DebugReport#getInsertionTime()} ()}. */
+        @NonNull
+        public Builder setInsertionTime(Long insertionTime) {
+            mInsertionTime = insertionTime;
+            return this;
+        }
+
+        /** See {@link DebugReport#getRegistrant()} ()}. */
+        @NonNull
+        public Builder setRegistrant(Uri registrant) {
+            mRegistrant = registrant;
+            return this;
+        }
+
         /** Build the DebugReport. */
-        public @NonNull DebugReport build() {
+        @NonNull
+        public DebugReport build() {
             if (mType == null || mBody == null) {
                 throw new IllegalArgumentException("Uninitialized fields");
             }
-            return new DebugReport(mId, mType, mBody, mEnrollmentId, mRegistrationOrigin);
+            return new DebugReport(
+                    mId,
+                    mType,
+                    mBody,
+                    mEnrollmentId,
+                    mRegistrationOrigin,
+                    mReferenceId,
+                    mRegistrant,
+                    mInsertionTime);
         }
     }
 }

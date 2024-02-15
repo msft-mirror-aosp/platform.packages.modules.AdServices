@@ -27,9 +27,12 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -88,176 +91,112 @@ public class EncryptionKeyDaoTest {
 
     private EncryptionKeyDao mEncryptionKeyDao;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
         mEncryptionKeyDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionEncryptionDatabase.class)
+                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionKeyDao();
     }
 
     @Test
-    public void test_doesKeyOfTypeExists_returnsTrueWhenKeyExists() {
+    public void test_getLatestExpiryNKeysOfType_returnsEmptyListWhenKeyAbsent() {
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_AUCTION, 1))
+                .isEmpty();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_JOIN, 1))
+                .isEmpty();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_QUERY, 1))
+                .isEmpty();
+    }
+
+    @Test
+    public void test_getLatestExpiryNKeysOfType_returnsNFreshestKey() {
         mEncryptionKeyDao.insertAllKeys(
-                ENCRYPTION_KEY_AUCTION, ENCRYPTION_KEY_JOIN, ENCRYPTION_KEY_QUERY);
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNotNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_JOIN))
-                .isNotNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_QUERY))
-                .isNotNull();
-    }
+                ImmutableList.of(
+                        ENCRYPTION_KEY_AUCTION,
+                        ENCRYPTION_KEY_JOIN,
+                        ENCRYPTION_KEY_QUERY,
+                        ENCRYPTION_KEY_AUCTION_TTL_5SECS,
+                        ENCRYPTION_KEY_JOIN_TTL_5SECS,
+                        ENCRYPTION_KEY_QUERY_TTL_5SECS));
 
-    @Test
-    public void test_doesKeyOfTypeExists_returnsFalseWhenKeyAbsent() {
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_JOIN)).isNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_QUERY)).isNull();
-    }
-
-    @Test
-    public void test_getHighestExpiryKeyOfType_returnsEmptyMapWhenKeyAbsent() {
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_JOIN)).isNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_QUERY)).isNull();
-    }
-
-    @Test
-    public void test_getHighestExpiryKeyOfType_returnsFreshestKey() {
-        mEncryptionKeyDao.insertAllKeys(
-                ENCRYPTION_KEY_AUCTION,
-                ENCRYPTION_KEY_JOIN,
-                ENCRYPTION_KEY_QUERY,
-                ENCRYPTION_KEY_AUCTION_TTL_5SECS,
-                ENCRYPTION_KEY_JOIN_TTL_5SECS,
-                ENCRYPTION_KEY_QUERY_TTL_5SECS);
-
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION)
-                                .getKeyIdentifier())
+        List<DBEncryptionKey> auctionKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_AUCTION, 2);
+        assertThat(auctionKeys).hasSize(2);
+        assertThat(auctionKeys.get(0).getKeyIdentifier())
                 .isEqualTo(ENCRYPTION_KEY_AUCTION.getKeyIdentifier());
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_QUERY)
-                                .getKeyIdentifier())
+        assertThat(auctionKeys.get(1).getKeyIdentifier())
+                .isEqualTo(ENCRYPTION_KEY_AUCTION_TTL_5SECS.getKeyIdentifier());
+
+        List<DBEncryptionKey> queryKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_QUERY, 2);
+        assertThat(queryKeys).hasSize(2);
+        assertThat(queryKeys.get(0).getKeyIdentifier())
                 .isEqualTo(ENCRYPTION_KEY_QUERY.getKeyIdentifier());
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_JOIN)
-                                .getKeyIdentifier())
+        assertThat(queryKeys.get(1).getKeyIdentifier())
+                .isEqualTo(ENCRYPTION_KEY_QUERY_TTL_5SECS.getKeyIdentifier());
+
+        List<DBEncryptionKey> joinKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_JOIN, 2);
+        assertThat(joinKeys).hasSize(2);
+        assertThat(joinKeys.get(0).getKeyIdentifier())
                 .isEqualTo(ENCRYPTION_KEY_JOIN.getKeyIdentifier());
+        assertThat(joinKeys.get(1).getKeyIdentifier())
+                .isEqualTo(ENCRYPTION_KEY_JOIN_TTL_5SECS.getKeyIdentifier());
     }
 
     @Test
-    public void test_getHighestExpiryActiveKeyOfType_returnsEmptyMapWhenKeyAbsent() {
+    public void test_getLatestExpiryNActiveKeyOfType_returnsEmptyWhenKeyAbsent() {
         assertThat(
-                        mEncryptionKeyDao.getLatestExpiryActiveKeyOfType(
-                                ENCRYPTION_KEY_TYPE_AUCTION, Instant.now()))
-                .isNull();
+                        mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
+                                ENCRYPTION_KEY_TYPE_AUCTION, Instant.now(), 1))
+                .isEmpty();
         assertThat(
-                        mEncryptionKeyDao.getLatestExpiryActiveKeyOfType(
-                                ENCRYPTION_KEY_TYPE_JOIN, Instant.now()))
-                .isNull();
+                        mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
+                                ENCRYPTION_KEY_TYPE_JOIN, Instant.now(), 1))
+                .isEmpty();
         assertThat(
-                        mEncryptionKeyDao.getLatestExpiryActiveKeyOfType(
-                                ENCRYPTION_KEY_TYPE_QUERY, Instant.now()))
-                .isNull();
+                        mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
+                                ENCRYPTION_KEY_TYPE_QUERY, Instant.now(), 1))
+                .isEmpty();
     }
 
     @Test
-    public void test_getHighestExpiryActiveKeyOfType_returnsFreshestKey() {
+    public void test_getLatestExpiryNActiveKeyOfType_returnsNFreshestKey() {
         mEncryptionKeyDao.insertAllKeys(
-                ENCRYPTION_KEY_AUCTION,
-                ENCRYPTION_KEY_JOIN,
-                ENCRYPTION_KEY_QUERY,
-                ENCRYPTION_KEY_AUCTION_TTL_5SECS,
-                ENCRYPTION_KEY_JOIN_TTL_5SECS,
-                ENCRYPTION_KEY_QUERY_TTL_5SECS);
+                ImmutableList.of(
+                        ENCRYPTION_KEY_AUCTION,
+                        ENCRYPTION_KEY_JOIN,
+                        ENCRYPTION_KEY_QUERY,
+                        ENCRYPTION_KEY_AUCTION_TTL_5SECS,
+                        ENCRYPTION_KEY_JOIN_TTL_5SECS,
+                        ENCRYPTION_KEY_QUERY_TTL_5SECS));
 
-        Instant currentInstant = Instant.now().minusSeconds(3600L);
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryActiveKeyOfType(
-                                        ENCRYPTION_KEY_TYPE_AUCTION, currentInstant)
-                                .getKeyIdentifier())
+        Instant currentInstant = Instant.now().plusSeconds(5L);
+
+        List<DBEncryptionKey> auctionKeys =
+                mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
+                        ENCRYPTION_KEY_TYPE_AUCTION, currentInstant, 2);
+        assertThat(auctionKeys).hasSize(1);
+        assertThat(auctionKeys.get(0).getKeyIdentifier())
                 .isEqualTo(ENCRYPTION_KEY_AUCTION.getKeyIdentifier());
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryActiveKeyOfType(
-                                        ENCRYPTION_KEY_TYPE_QUERY, currentInstant)
-                                .getKeyIdentifier())
+
+        List<DBEncryptionKey> queryKeys =
+                mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
+                        ENCRYPTION_KEY_TYPE_QUERY, currentInstant, 2);
+        assertThat(queryKeys).hasSize(1);
+        assertThat(queryKeys.get(0).getKeyIdentifier())
                 .isEqualTo(ENCRYPTION_KEY_QUERY.getKeyIdentifier());
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryActiveKeyOfType(
-                                        ENCRYPTION_KEY_TYPE_JOIN, currentInstant)
-                                .getKeyIdentifier())
+
+        List<DBEncryptionKey> joinKeys =
+                mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
+                        ENCRYPTION_KEY_TYPE_JOIN, currentInstant, 2);
+        assertThat(joinKeys).hasSize(1);
+        assertThat(joinKeys.get(0).getKeyIdentifier())
                 .isEqualTo(ENCRYPTION_KEY_JOIN.getKeyIdentifier());
-    }
-
-    @Test
-    public void test_getHighestExpiryNActiveKeyOfType_returnsEmptyMapWhenKeyAbsent() {
-        assertThat(
-                        mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
-                                ENCRYPTION_KEY_TYPE_AUCTION, Instant.now(), 2))
-                .isEmpty();
-        assertThat(
-                        mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
-                                ENCRYPTION_KEY_TYPE_JOIN, Instant.now(), 2))
-                .isEmpty();
-        assertThat(
-                        mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
-                                ENCRYPTION_KEY_TYPE_QUERY, Instant.now(), 2))
-                .isEmpty();
-    }
-
-    @Test
-    public void test_getHighestExpiryNActiveKeyOfType_returnsNFreshestKey() {
-        mEncryptionKeyDao.insertAllKeys(
-                ENCRYPTION_KEY_AUCTION,
-                ENCRYPTION_KEY_JOIN,
-                ENCRYPTION_KEY_QUERY,
-                ENCRYPTION_KEY_AUCTION_TTL_5SECS,
-                ENCRYPTION_KEY_JOIN_TTL_5SECS,
-                ENCRYPTION_KEY_QUERY_TTL_5SECS);
-
-        Instant currentInstant = Instant.now().minusSeconds(3600L);
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryNActiveKeysOfType(
-                                        ENCRYPTION_KEY_TYPE_AUCTION, currentInstant, 2)
-                                .stream()
-                                .map(k -> k.getKeyIdentifier())
-                                .collect(Collectors.toSet()))
-                .containsExactlyElementsIn(
-                        ImmutableList.of(
-                                ENCRYPTION_KEY_AUCTION.getKeyIdentifier(),
-                                ENCRYPTION_KEY_AUCTION_TTL_5SECS.getKeyIdentifier()));
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryNActiveKeysOfType(
-                                        ENCRYPTION_KEY_TYPE_QUERY, currentInstant, 2)
-                                .stream()
-                                .map(k -> k.getKeyIdentifier())
-                                .collect(Collectors.toSet()))
-                .containsExactlyElementsIn(
-                        ImmutableList.of(
-                                ENCRYPTION_KEY_QUERY.getKeyIdentifier(),
-                                ENCRYPTION_KEY_QUERY_TTL_5SECS.getKeyIdentifier()));
-        assertThat(
-                        mEncryptionKeyDao
-                                .getLatestExpiryNActiveKeysOfType(
-                                        ENCRYPTION_KEY_TYPE_JOIN, currentInstant, 2)
-                                .stream()
-                                .map(k -> k.getKeyIdentifier())
-                                .collect(Collectors.toSet()))
-                .containsExactlyElementsIn(
-                        ImmutableList.of(
-                                ENCRYPTION_KEY_JOIN.getKeyIdentifier(),
-                                ENCRYPTION_KEY_JOIN_TTL_5SECS.getKeyIdentifier()));
     }
 
     @Test
@@ -277,12 +216,13 @@ public class EncryptionKeyDaoTest {
     @Test
     public void test_getExpiredKeysForType_returnsExpiredKeys_success() {
         mEncryptionKeyDao.insertAllKeys(
-                ENCRYPTION_KEY_AUCTION,
-                ENCRYPTION_KEY_JOIN,
-                ENCRYPTION_KEY_QUERY,
-                ENCRYPTION_KEY_AUCTION_TTL_5SECS,
-                ENCRYPTION_KEY_JOIN_TTL_5SECS,
-                ENCRYPTION_KEY_QUERY_TTL_5SECS);
+                ImmutableList.of(
+                        ENCRYPTION_KEY_AUCTION,
+                        ENCRYPTION_KEY_JOIN,
+                        ENCRYPTION_KEY_QUERY,
+                        ENCRYPTION_KEY_AUCTION_TTL_5SECS,
+                        ENCRYPTION_KEY_JOIN_TTL_5SECS,
+                        ENCRYPTION_KEY_QUERY_TTL_5SECS));
 
         Instant currentInstant = Instant.now().plusSeconds(5L);
         List<DBEncryptionKey> expiredAuctionKeys =
@@ -308,19 +248,21 @@ public class EncryptionKeyDaoTest {
     @Test
     public void test_getExpiredKeys_noExpiredKeys_returnsEmpty() {
         mEncryptionKeyDao.insertAllKeys(
-                ENCRYPTION_KEY_AUCTION, ENCRYPTION_KEY_JOIN, ENCRYPTION_KEY_QUERY);
+                ImmutableList.of(
+                        ENCRYPTION_KEY_AUCTION, ENCRYPTION_KEY_JOIN, ENCRYPTION_KEY_QUERY));
         assertThat(mEncryptionKeyDao.getExpiredKeys(Instant.now())).isEmpty();
     }
 
     @Test
     public void test_getExpiredKeys_returnsExpiredKeys() {
         mEncryptionKeyDao.insertAllKeys(
-                ENCRYPTION_KEY_AUCTION,
-                ENCRYPTION_KEY_JOIN,
-                ENCRYPTION_KEY_QUERY,
-                ENCRYPTION_KEY_AUCTION_TTL_5SECS,
-                ENCRYPTION_KEY_JOIN_TTL_5SECS,
-                ENCRYPTION_KEY_QUERY_TTL_5SECS);
+                ImmutableList.of(
+                        ENCRYPTION_KEY_AUCTION,
+                        ENCRYPTION_KEY_JOIN,
+                        ENCRYPTION_KEY_QUERY,
+                        ENCRYPTION_KEY_AUCTION_TTL_5SECS,
+                        ENCRYPTION_KEY_JOIN_TTL_5SECS,
+                        ENCRYPTION_KEY_QUERY_TTL_5SECS));
 
         Instant currentInstant = Instant.now().plusSeconds(5L);
         List<DBEncryptionKey> expiredKeys = mEncryptionKeyDao.getExpiredKeys(currentInstant);
@@ -335,7 +277,7 @@ public class EncryptionKeyDaoTest {
 
     @Test
     public void test_deleteExpiredKeys_noExpiredKeys_returnsZero() {
-        mEncryptionKeyDao.insertAllKeys(ENCRYPTION_KEY_AUCTION);
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION));
         assertThat(
                         mEncryptionKeyDao.deleteExpiredRowsByType(
                                 ENCRYPTION_KEY_TYPE_AUCTION, Instant.now()))
@@ -344,43 +286,47 @@ public class EncryptionKeyDaoTest {
 
     @Test
     public void test_deleteExpiredKeys_deletesKeysSuccessfully() {
-        mEncryptionKeyDao.insertAllKeys(ENCRYPTION_KEY_JOIN, ENCRYPTION_KEY_AUCTION_TTL_5SECS);
+        mEncryptionKeyDao.insertAllKeys(
+                ImmutableList.of(ENCRYPTION_KEY_JOIN, ENCRYPTION_KEY_AUCTION_TTL_5SECS));
 
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNotNull();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_AUCTION, 1))
+                .isNotEmpty();
 
         mEncryptionKeyDao.deleteExpiredRowsByType(
                 ENCRYPTION_KEY_TYPE_AUCTION, Instant.now().plusSeconds(10L));
 
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNull();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_AUCTION, 1))
+                .isEmpty();
     }
 
     @Test
     public void test_insertAllKeys_validKeys_success() {
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNull();
-        mEncryptionKeyDao.insertAllKeys(ENCRYPTION_KEY_AUCTION);
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNotNull();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_AUCTION, 1))
+                .isEmpty();
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION));
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_AUCTION, 1))
+                .isNotEmpty();
     }
 
     @Test
     public void test_deleteAllEncryptionKeys_success() {
         mEncryptionKeyDao.insertAllKeys(
-                ENCRYPTION_KEY_AUCTION, ENCRYPTION_KEY_JOIN, ENCRYPTION_KEY_QUERY);
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNotNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_JOIN))
-                .isNotNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_QUERY))
-                .isNotNull();
+                ImmutableList.of(
+                        ENCRYPTION_KEY_AUCTION, ENCRYPTION_KEY_JOIN, ENCRYPTION_KEY_QUERY));
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_AUCTION, 1))
+                .isNotEmpty();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_JOIN, 1))
+                .isNotEmpty();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_QUERY, 1))
+                .isNotEmpty();
 
         mEncryptionKeyDao.deleteAllEncryptionKeys();
 
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_AUCTION))
-                .isNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_JOIN)).isNull();
-        assertThat(mEncryptionKeyDao.getLatestExpiryKeyOfType(ENCRYPTION_KEY_TYPE_QUERY)).isNull();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_AUCTION, 1))
+                .isEmpty();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_JOIN, 1))
+                .isEmpty();
+        assertThat(mEncryptionKeyDao.getLatestExpiryNKeysOfType(ENCRYPTION_KEY_TYPE_QUERY, 1))
+                .isEmpty();
     }
 }

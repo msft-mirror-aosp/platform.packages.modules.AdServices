@@ -18,6 +18,8 @@ package com.android.adservices.data.adselection;
 
 import android.annotation.IntDef;
 
+import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -37,5 +39,39 @@ public final class EncryptionKeyConstants {
         int ENCRYPTION_KEY_TYPE_AUCTION = 1;
         int ENCRYPTION_KEY_TYPE_QUERY = 2;
         int ENCRYPTION_KEY_TYPE_JOIN = 3;
+    }
+
+    /** Convert AdSelectionEncryptionKeyType to the encryptionKeyType used in DB. */
+    @EncryptionKeyType
+    public static int from(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
+                    int adSelectionEncryptionKeyType) {
+        switch (adSelectionEncryptionKeyType) {
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
+                return EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
+                return EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN;
+            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
+                // Intentional fallthrough
+            default:
+                return EncryptionKeyType.ENCRYPTION_KEY_TYPE_INVALID;
+        }
+    }
+
+    /** Convert DBEncryptionKeyType to AdSelectionEncryptionType. */
+    @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
+    public static int toAdSelectionEncryptionKeyType(@EncryptionKeyType int dbEncryptionKeyType) {
+        switch (dbEncryptionKeyType) {
+            case EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION:
+                return AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
+            case EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN:
+                return AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN;
+            case EncryptionKeyType.ENCRYPTION_KEY_TYPE_QUERY:
+                // Intentional fallthrough
+            case EncryptionKeyType.ENCRYPTION_KEY_TYPE_INVALID:
+                // Intentional fallthrough
+            default:
+                return AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED;
+        }
     }
 }

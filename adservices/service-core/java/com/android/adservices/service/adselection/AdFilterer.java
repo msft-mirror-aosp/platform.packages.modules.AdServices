@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.SignedContextualAds;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
@@ -37,11 +37,11 @@ public interface AdFilterer {
      */
     List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas);
     /**
-     * Takes in a {@link ContextualAds} object and filters out ads from it that should not be in the
-     * auction
+     * Takes in a {@link SignedContextualAds} object and filters out ads from it that should not be
+     * in the auction
      *
      * @param contextualAds An object containing contextual ads corresponding to a buyer
      * @return A list of object identical to the input, but without any ads that should be filtered
      */
-    ContextualAds filterContextualAds(ContextualAds contextualAds);
+    SignedContextualAds filterContextualAds(SignedContextualAds contextualAds);
 }

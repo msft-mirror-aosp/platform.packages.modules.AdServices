@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.UpdateAdCounterHistogramRequest.INVALID_AD_EVENT_TYPE_MESSAGE;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 
@@ -23,6 +25,7 @@ import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 import android.os.Build;
 import android.os.RemoteException;
@@ -33,8 +36,10 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.internal.util.Preconditions;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -65,6 +70,7 @@ public class UpdateAdCounterHistogramWorker {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ConsentManager mConsentManager;
     private final int mCallerUid;
+    @NonNull private final DevContext mDevContext;
 
     public UpdateAdCounterHistogramWorker(
             @NonNull AdCounterHistogramUpdater adCounterHistogramUpdater,
@@ -74,7 +80,8 @@ public class UpdateAdCounterHistogramWorker {
             @NonNull Flags flags,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull ConsentManager consentManager,
-            int callerUid) {
+            int callerUid,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(clock);
@@ -82,6 +89,7 @@ public class UpdateAdCounterHistogramWorker {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(consentManager);
+        Objects.requireNonNull(devContext);
 
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mExecutorService = MoreExecutors.listeningDecorator(executor);
@@ -91,6 +99,7 @@ public class UpdateAdCounterHistogramWorker {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mConsentManager = consentManager;
         mCallerUid = callerUid;
+        mDevContext = devContext;
     }
 
     /**
@@ -151,8 +160,8 @@ public class UpdateAdCounterHistogramWorker {
         sLogger.v("Validating updateAdCounterHistogram request");
 
         if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            sLogger.v("Ad selection filtering disabled");
-            throw new IllegalStateException();
+            sLogger.v("Warning: Ad selection filtering disabled");
+            throw new IllegalStateException("Ad selection filtering disabled");
         }
 
         mAdSelectionServiceFilter.filterRequest(
@@ -162,7 +171,8 @@ public class UpdateAdCounterHistogramWorker {
                 false,
                 mCallerUid,
                 LOGGING_API_NAME,
-                FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM);
+                FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM,
+                mDevContext);
 
         // TODO(b/271147154): Merge into the filterRequest call once all filters update
         //  FLEDGE per-app consent
@@ -173,6 +183,11 @@ public class UpdateAdCounterHistogramWorker {
                     inputParams.getCallerPackageName());
             throw new ConsentManager.RevokedConsentException();
         }
+
+        Preconditions.checkArgument(
+                inputParams.getAdEventType() >= FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                        && inputParams.getAdEventType() <= FrequencyCapFilters.AD_EVENT_TYPE_MAX,
+                INVALID_AD_EVENT_TYPE_MESSAGE);
 
         return null;
     }

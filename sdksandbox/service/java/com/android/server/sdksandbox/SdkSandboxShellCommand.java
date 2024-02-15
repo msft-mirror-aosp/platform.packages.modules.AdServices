@@ -17,26 +17,35 @@
 package com.android.server.sdksandbox;
 
 import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Binder;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.UserHandle;
+import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 import com.android.sdksandbox.ISdkSandboxService;
 
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
+    @VisibleForTesting static final String ADSERVICES_CMD = "adservices-cmd";
+    private static final String TAG = SdkSandboxShellCommand.class.getSimpleName();
+
     private final SdkSandboxManagerService mService;
     private final Context mContext;
     private final Injector mInjector;
+    private final boolean mSupportsAdServicesShellCmd;
 
     private int mUserId = UserHandle.CURRENT.getIdentifier();
     private CallingInfo mCallingInfo;
@@ -48,14 +57,25 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
     }
 
     @VisibleForTesting
-    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context, Injector injector) {
+    SdkSandboxShellCommand(
+            SdkSandboxManagerService service,
+            Context context,
+            boolean supportsAdServicesShellCmd,
+            Injector injector) {
         mService = service;
         mContext = context;
+        mSupportsAdServicesShellCmd = supportsAdServicesShellCmd;
         mInjector = injector;
     }
 
-    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context) {
-        this(service, context, new Injector());
+    @VisibleForTesting
+    SdkSandboxShellCommand(SdkSandboxManagerService service, Context context, Injector injector) {
+        this(service, context, /* supportsAdServicesShellCmd= */ false, injector);
+    }
+
+    SdkSandboxShellCommand(
+            SdkSandboxManagerService service, Context context, boolean supportsAdServicesShellCmd) {
+        this(service, context, supportsAdServicesShellCmd, new Injector());
     }
 
     @Override
@@ -82,6 +102,9 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                     case "set-state":
                         result = runSetState();
                         break;
+                    case ADSERVICES_CMD:
+                        result = runAdServicesShellCommand();
+                        break;
                     default:
                         result = handleDefaultCommands(cmd);
                 }
@@ -92,6 +115,35 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         return result;
     }
 
+    /* Delegates the shell command and args to adservice manager, executes the shell
+    command and returns the result back. */
+    private int runAdServicesShellCommand() {
+        int result = -1;
+        if (!mSupportsAdServicesShellCmd) {
+            getErrPrintWriter()
+                    .println(
+                            "AdServices shell command not supported through sdk_sandbox service."
+                                    + " Trying calling it using adservices_manager service.");
+            return result;
+        }
+        String[] args = getAllArgs();
+        // strip "adservices-cmd" which is the first argument from the args .
+        String[] realArgs = new String[args.length - 1];
+        System.arraycopy(args, 1, realArgs, 0, args.length - 1);
+
+        try (ParcelFileDescriptor pfdIn = ParcelFileDescriptor.dup(getInFileDescriptor());
+                ParcelFileDescriptor pfdOut = ParcelFileDescriptor.dup(getOutFileDescriptor());
+                ParcelFileDescriptor pfdErr = ParcelFileDescriptor.dup(getErrFileDescriptor())) {
+            Binder adServicesBinder = (Binder) mService.getAdServicesManager();
+            result = adServicesBinder.handleShellCommand(pfdIn, pfdOut, pfdErr, realArgs);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to copy file descriptor for cmd: " + Arrays.toString(args), e);
+        }
+        return result;
+    }
+
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     private void handleSandboxArguments() {
         String opt;
         while ((opt = getNextOption()) != null) {
@@ -122,6 +174,8 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         }
     }
 
+    // Suppress lint warning for context.getUser in R since this code is unused in R
+    @SuppressWarnings("NewApi")
     private int parseUserArg(String arg) {
         switch (arg) {
             case "all":
@@ -143,18 +197,17 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
         private final CountDownLatch mLatch = new CountDownLatch(1);
         private boolean mSuccess = false;
-        private ISdkSandboxService mService;
         public static final int SANDBOX_BIND_TIMEOUT_S = 5;
 
         @Override
-        public void onBindingSuccessful(ISdkSandboxService service, int time) {
+        public void onBindingSuccessful(
+                ISdkSandboxService service, SandboxLatencyInfo sandboxLatencyInfo) {
             mSuccess = true;
-            mService = service;
             mLatch.countDown();
         }
 
         @Override
-        public void onBindingFailed(LoadSdkException e, long time) {
+        public void onBindingFailed(LoadSdkException e, SandboxLatencyInfo sandboxLatencyInfo) {
             mLatch.countDown();
         }
 
@@ -178,10 +231,6 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                 return false;
             }
         }
-
-        private ISdkSandboxService getService() {
-            return mService;
-        }
     }
 
     private int runStart() {
@@ -194,11 +243,11 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
         LatchSandboxServiceConnectionCallback callback =
                 new LatchSandboxServiceConnectionCallback();
+        final SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
 
-        mService.startSdkSandboxIfNeeded(mCallingInfo, callback);
+        mService.startSdkSandboxIfNeeded(mCallingInfo, callback, sandboxLatencyInfo);
         if (callback.isSuccessful()) {
-            ISdkSandboxService service = callback.getService();
-            if (mService.isSdkSandboxDisabled(service)) {
+            if (mService.isSdkSandboxDisabled()) {
                 getErrPrintWriter().println("Error: SDK sandbox is disabled.");
                 mService.stopSdkSandboxService(
                         mCallingInfo,

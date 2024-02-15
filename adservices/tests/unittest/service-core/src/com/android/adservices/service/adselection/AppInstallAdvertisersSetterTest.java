@@ -38,6 +38,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.os.LimitExceededException;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
@@ -48,6 +49,7 @@ import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -55,6 +57,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -97,6 +100,9 @@ public class AppInstallAdvertisersSetterTest {
 
     private AppInstallAdvertisersSetter mAppInstallAdvertisersSetter;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
         mAppInstallAdvertisersSetter =
@@ -107,7 +113,8 @@ public class AppInstallAdvertisersSetterTest {
                         mFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
-                        UID);
+                        UID,
+                        DevContext.createForDevOptionsDisabled());
         when(mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
     }
@@ -124,7 +131,8 @@ public class AppInstallAdvertisersSetterTest {
                         false,
                         UID,
                         AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
-                        Throttler.ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS);
+                        Throttler.ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,
+                        DevContext.createForDevOptionsDisabled());
         assertTrue(callback.mIsSuccess);
         verifyLog(AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAppInstallDaoMock)
@@ -175,7 +183,8 @@ public class AppInstallAdvertisersSetterTest {
     public void testSetAppInstallAdvertisersBackgroundCaller() throws Exception {
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
                 .when(mAdSelectionServiceFilter)
-                .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         // Confirm a duplicate log entry does not exist.
@@ -192,7 +201,8 @@ public class AppInstallAdvertisersSetterTest {
     public void testSetAppInstallAdvertisersAppNotAllowed() throws Exception {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mAdSelectionServiceFilter)
-                .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         // Confirm a duplicate log entry does not exist.
@@ -209,7 +219,8 @@ public class AppInstallAdvertisersSetterTest {
     public void testSetAppInstallAdvertisersUidMismatch() throws Exception {
         doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
                 .when(mAdSelectionServiceFilter)
-                .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         // Confirm a duplicate log entry does not exist.
@@ -226,7 +237,8 @@ public class AppInstallAdvertisersSetterTest {
     public void testSetAppInstallAdvertisersLimitExceeded() throws Exception {
         doThrow(new LimitExceededException())
                 .when(mAdSelectionServiceFilter)
-                .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         // Confirm a duplicate log entry does not exist.

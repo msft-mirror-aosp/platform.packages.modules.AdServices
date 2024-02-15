@@ -15,13 +15,13 @@
  */
 package com.android.adservices.spe.stats;
 
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import com.google.auto.value.AutoValue;
 
 /**
  * Class for AdServicesBackgroundJobsExecutionReportedStats atom. It's used by {@link
- * AdservicesJobServiceLogger}.
+ * AdServicesJobServiceLogger}.
  */
 @AutoValue
 public abstract class ExecutionReportedStats {

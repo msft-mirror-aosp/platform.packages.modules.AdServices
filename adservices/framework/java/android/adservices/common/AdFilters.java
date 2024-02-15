@@ -16,12 +16,14 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -35,10 +37,7 @@ import java.util.Objects;
  * <p>If any of the filters in an {@link AdFilters} instance are not satisfied, the associated ad
  * will not be eligible for ad selection. Filters are optional ad parameters and are not required as
  * part of {@link AdData}.
- *
- * @hide
  */
-// TODO(b/221876775): Unhide for frequency cap API review
 public final class AdFilters implements Parcelable {
     /** @hide */
     @VisibleForTesting public static final String FREQUENCY_CAP_FIELD_NAME = "frequency_cap";
@@ -87,8 +86,6 @@ public final class AdFilters implements Parcelable {
      * the ad.
      *
      * <p>If {@code null}, there are no frequency cap filters which apply to the ad.
-     *
-     * @hide
      */
     @Nullable
     public FrequencyCapFilters getFrequencyCapFilters() {
@@ -100,9 +97,8 @@ public final class AdFilters implements Parcelable {
      * ad.
      *
      * <p>If {@code null}, there are no app install filters which apply to the ad.
-     *
-     * @hide
      */
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @Nullable
     public AppInstallFilters getAppInstallFilters() {
         return mAppInstallFilters;
@@ -197,19 +193,10 @@ public final class AdFilters implements Parcelable {
         return Objects.hash(mFrequencyCapFilters, mAppInstallFilters);
     }
 
+    // TODO(b/266837113) Add app install once it is unhidden
     @Override
     public String toString() {
-        return "AdFilters{" + generateFrequencyCapString() + generateAppInstallString() + "}";
-    }
-
-    private String generateFrequencyCapString() {
-        // TODO(b/221876775) Add fcap once it is unhidden
-        return "";
-    }
-
-    private String generateAppInstallString() {
-        // TODO(b/266837113) Add app install once it is unhidden
-        return "";
+        return "AdFilters{mFrequencyCapFilters=" + mFrequencyCapFilters + '}';
     }
 
     /** Builder for creating {@link AdFilters} objects. */
@@ -224,8 +211,6 @@ public final class AdFilters implements Parcelable {
          *
          * <p>If set to {@code null} or not set, no frequency cap filters will be associated with
          * the ad.
-         *
-         * @hide
          */
         @NonNull
         public Builder setFrequencyCapFilters(@Nullable FrequencyCapFilters frequencyCapFilters) {
@@ -238,9 +223,8 @@ public final class AdFilters implements Parcelable {
          *
          * <p>If set to {@code null} or not set, no app install filters will be associated with the
          * ad.
-         *
-         * @hide
          */
+        @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
         @NonNull
         public Builder setAppInstallFilters(@Nullable AppInstallFilters appInstallFilters) {
             mAppInstallFilters = appInstallFilters;

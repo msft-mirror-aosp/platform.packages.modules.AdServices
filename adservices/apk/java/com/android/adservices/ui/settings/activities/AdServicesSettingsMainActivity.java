@@ -15,8 +15,11 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
@@ -56,16 +59,20 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Trace.beginSection("AdServicesSettingsMainActivity#OnCreate");
         // Only for main view, we want to use the most up to date OTA strings on the device to
         // create the ResourcesLoader.
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+            // apply to activity context as well since activity context has been created already.
+            OTAResourcesManager.applyOTAResources(this, false);
         }
-        UiStatsLogger.logSettingsPageDisplayed(getApplication());
+        UiStatsLogger.logSettingsPageDisplayed();
         super.onCreate(savedInstanceState);
-        if (!FlagsFactory.getFlags().getU18UxEnabled()) {
+        if (!isUxStatesReady(this)) {
             initMainFragment();
         }
+        Trace.endSection();
     }
 
     private void initMainFragment() {
@@ -82,27 +89,39 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (FlagsFactory.getFlags().getU18UxEnabled()) {
-            initWithMode(true);
+        if (isUxStatesReady(this)) {
+            initWithUx(this, getApplicationContext());
         }
     }
 
     @Override
     public void initBeta() {
-        initMainActivity();
+        initMainActivity(R.layout.main_activity);
     }
 
     @Override
     public void initGA() {
-        initMainActivity();
+        initMainActivity(R.layout.main_activity);
     }
 
     @Override
-    public void initU18() {}
+    public void initU18() {
+        initMainActivity(R.layout.main_u18_activity);
+    }
 
-    private void initMainActivity() {
-        setContentView(R.layout.main_activity);
-        // no need to store since no
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+    }
+
+    private void initMainActivity(int layoutResID) {
+        setContentView(layoutResID);
+        // no need to store since not using
         new MainActivityActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
     }
 }

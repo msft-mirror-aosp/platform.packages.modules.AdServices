@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -30,12 +34,16 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.SingletonRunner;
+import com.android.adservices.service.stats.AdServicesLoggerUtil;
+import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
+import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ExecutionSequencer;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -58,6 +66,7 @@ public class BackgroundFetchWorker {
     private final Flags mFlags;
     private final BackgroundFetchRunner mBackgroundFetchRunner;
     private final Clock mClock;
+    private final CustomAudienceLoggerFactory mCustomAudienceLoggerFactory;
     private final SingletonRunner<Void> mSingletonRunner =
             new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
 
@@ -66,15 +75,18 @@ public class BackgroundFetchWorker {
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull Flags flags,
             @NonNull BackgroundFetchRunner backgroundFetchRunner,
-            @NonNull Clock clock) {
+            @NonNull Clock clock,
+            @NonNull CustomAudienceLoggerFactory customAudienceLoggerFactory) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(backgroundFetchRunner);
         Objects.requireNonNull(clock);
+        Objects.requireNonNull(customAudienceLoggerFactory);
         mCustomAudienceDao = customAudienceDao;
         mFlags = flags;
         mBackgroundFetchRunner = backgroundFetchRunner;
         mClock = clock;
+        mCustomAudienceLoggerFactory = customAudienceLoggerFactory;
     }
 
     /**
@@ -93,6 +105,8 @@ public class BackgroundFetchWorker {
                             CustomAudienceDatabase.getInstance(context).customAudienceDao();
                     AppInstallDao appInstallDao =
                             SharedStorageDatabase.getInstance(context).appInstallDao();
+                    CustomAudienceLoggerFactory customAudienceLoggerFactory =
+                            CustomAudienceLoggerFactory.getInstance();
                     Flags flags = FlagsFactory.getFlags();
                     sBackgroundFetchWorker =
                             new BackgroundFetchWorker(
@@ -103,8 +117,10 @@ public class BackgroundFetchWorker {
                                             appInstallDao,
                                             context.getPackageManager(),
                                             EnrollmentDao.getInstance(context),
-                                            flags),
-                                    Clock.systemUTC());
+                                            flags,
+                                            customAudienceLoggerFactory),
+                                    Clock.systemUTC(),
+                                    customAudienceLoggerFactory);
                 }
             }
         }
@@ -130,29 +146,45 @@ public class BackgroundFetchWorker {
 
     private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
         Instant jobStartTime = mClock.instant();
-        return cleanupFledgeData(jobStartTime)
-                .transform(
-                        ignored -> getFetchDataList(shouldStop, jobStartTime),
-                        AdServicesExecutors.getBackgroundExecutor())
-                .transformAsync(
-                        fetchDataList -> updateData(fetchDataList, shouldStop, jobStartTime),
-                        AdServicesExecutors.getBackgroundExecutor())
-                .withTimeout(
-                        mFlags.getFledgeBackgroundFetchJobMaxRuntimeMs(),
-                        TimeUnit.MILLISECONDS,
-                        AdServicesExecutors.getScheduler());
+        BackgroundFetchExecutionLogger backgroundFetchExecutionLogger =
+                mCustomAudienceLoggerFactory.getBackgroundFetchExecutionLogger();
+        FluentFuture<Void> run =
+                cleanupFledgeData(jobStartTime, backgroundFetchExecutionLogger)
+                        .transform(
+                                ignored -> getFetchDataList(shouldStop, jobStartTime),
+                                AdServicesExecutors.getBackgroundExecutor())
+                        .transformAsync(
+                                fetchDataList ->
+                                        updateData(
+                                                fetchDataList,
+                                                shouldStop,
+                                                jobStartTime,
+                                                backgroundFetchExecutionLogger),
+                                AdServicesExecutors.getBackgroundExecutor())
+                        .withTimeout(
+                                mFlags.getFledgeBackgroundFetchJobMaxRuntimeMs(),
+                                TimeUnit.MILLISECONDS,
+                                AdServicesExecutors.getScheduler());
+        run.addCallback(
+                getCloseBackgroundFetchExecutionLoggerCallback(backgroundFetchExecutionLogger),
+                AdServicesExecutors.getBackgroundExecutor());
+
+        return run;
     }
 
     private ListenableFuture<Void> updateData(
             @NonNull List<DBCustomAudienceBackgroundFetchData> fetchDataList,
             @NonNull Supplier<Boolean> shouldStop,
-            @NonNull Instant jobStartTime) {
+            @NonNull Instant jobStartTime,
+            @NonNull BackgroundFetchExecutionLogger backgroundFetchExecutionLogger) {
         if (fetchDataList.isEmpty()) {
             sLogger.d("No custom audiences found to update");
+            backgroundFetchExecutionLogger.setNumOfEligibleToUpdateCAs(0);
             return FluentFuture.from(Futures.immediateVoidFuture());
         }
 
         sLogger.d("Updating %d custom audiences", fetchDataList.size());
+        backgroundFetchExecutionLogger.setNumOfEligibleToUpdateCAs(fetchDataList.size());
         // Divide the gathered CAs among worker threads
         int numWorkers =
                 Math.min(
@@ -196,11 +228,16 @@ public class BackgroundFetchWorker {
                 jobStartTime, mFlags.getFledgeBackgroundFetchMaxNumUpdated());
     }
 
-    private FluentFuture<?> cleanupFledgeData(Instant jobStartTime) {
+    private FluentFuture<?> cleanupFledgeData(
+            Instant jobStartTime, BackgroundFetchExecutionLogger backgroundFetchExecutionLogger) {
         return FluentFuture.from(
                 AdServicesExecutors.getBackgroundExecutor()
                         .submit(
                                 () -> {
+                                    // Start background fetch execution logger.
+                                    backgroundFetchExecutionLogger.start();
+                                    backgroundFetchExecutionLogger.setNumOfEligibleToUpdateCAs(
+                                            FIELD_UNSET);
                                     // Clean up custom audiences first so the actual fetch won't do
                                     // unnecessary work
                                     mBackgroundFetchRunner.deleteExpiredCustomAudiences(
@@ -212,5 +249,42 @@ public class BackgroundFetchWorker {
                                                 .deleteDisallowedPackageAppInstallEntries();
                                     }
                                 }));
+    }
+
+    private FutureCallback<Void> getCloseBackgroundFetchExecutionLoggerCallback(
+            BackgroundFetchExecutionLogger backgroundFetchExecutionLogger) {
+        return new FutureCallback<>() {
+            @Override
+            public void onSuccess(Void result) {
+                closeBackgroundFetchExecutionLogger(
+                        backgroundFetchExecutionLogger,
+                        backgroundFetchExecutionLogger.getNumOfEligibleToUpdateCAs(),
+                        STATUS_SUCCESS);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                sLogger.d(t, "Error in Custom Audience Background Fetch");
+                int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+                closeBackgroundFetchExecutionLogger(
+                        backgroundFetchExecutionLogger,
+                        backgroundFetchExecutionLogger.getNumOfEligibleToUpdateCAs(),
+                        resultCode);
+            }
+        };
+    }
+
+    private void closeBackgroundFetchExecutionLogger(
+            BackgroundFetchExecutionLogger backgroundFetchExecutionLogger,
+            int numOfEligibleToUpdateCAs,
+            int resultCode) {
+        try {
+            backgroundFetchExecutionLogger.close(numOfEligibleToUpdateCAs, resultCode);
+        } catch (Exception e) {
+            sLogger.d(
+                    "Error when closing backgroundFetchExecutionLogger, "
+                            + "skipping metrics logging: %s",
+                    e.getMessage());
+        }
     }
 }

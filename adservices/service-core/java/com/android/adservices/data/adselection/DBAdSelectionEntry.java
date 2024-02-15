@@ -46,7 +46,7 @@ public final class DBAdSelectionEntry {
 
     @ColumnInfo(name = "contextual_signals")
     @NonNull
-    private final String mContextualSignals;
+    private final String mBuyerContextualSignals;
 
     @ColumnInfo(name = "winning_ad_render_uri")
     @NonNull
@@ -67,23 +67,29 @@ public final class DBAdSelectionEntry {
     @NonNull
     private final Uri mBiddingLogicUri;
 
+    @ColumnInfo(name = "seller_contextual_signals")
+    @Nullable
+    private final String mSellerContextualSignals;
+
     public DBAdSelectionEntry(
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
-            @NonNull String contextualSignals,
+            @NonNull String buyerContextualSignals,
             @NonNull Uri winningAdRenderUri,
             double winningAdBid,
             @NonNull Instant creationTimestamp,
             @Nullable String buyerDecisionLogicJs,
-            @NonNull Uri biddingLogicUri) {
+            @NonNull Uri biddingLogicUri,
+            @Nullable String sellerContextualSignals) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
-        this.mContextualSignals = contextualSignals;
+        this.mBuyerContextualSignals = buyerContextualSignals;
         this.mWinningAdRenderUri = winningAdRenderUri;
         this.mWinningAdBid = winningAdBid;
         this.mCreationTimestamp = creationTimestamp;
         this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
         this.mBiddingLogicUri = biddingLogicUri;
+        this.mSellerContextualSignals = sellerContextualSignals;
     }
 
     @Override
@@ -94,12 +100,14 @@ public final class DBAdSelectionEntry {
             return mAdSelectionId == adSelectionEntry.mAdSelectionId
                     && Objects.equals(
                             mCustomAudienceSignals, adSelectionEntry.mCustomAudienceSignals)
-                    && mContextualSignals.equals(adSelectionEntry.mContextualSignals)
+                    && mBuyerContextualSignals.equals(adSelectionEntry.mBuyerContextualSignals)
                     && Objects.equals(mWinningAdRenderUri, adSelectionEntry.mWinningAdRenderUri)
                     && mWinningAdBid == adSelectionEntry.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelectionEntry.mCreationTimestamp)
                     && Objects.equals(mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs)
-                    && Objects.equals(mBiddingLogicUri, adSelectionEntry.mBiddingLogicUri);
+                    && Objects.equals(mBiddingLogicUri, adSelectionEntry.mBiddingLogicUri)
+                    && Objects.equals(
+                            mSellerContextualSignals, adSelectionEntry.mSellerContextualSignals);
         }
         return false;
     }
@@ -109,12 +117,13 @@ public final class DBAdSelectionEntry {
         return Objects.hash(
                 mAdSelectionId,
                 mCustomAudienceSignals,
-                mContextualSignals,
+                mBuyerContextualSignals,
                 mWinningAdRenderUri,
                 mWinningAdBid,
                 mCreationTimestamp,
                 mBuyerDecisionLogicJs,
-                mBiddingLogicUri);
+                mBiddingLogicUri,
+                mSellerContextualSignals);
     }
 
     /**
@@ -134,12 +143,11 @@ public final class DBAdSelectionEntry {
     }
 
     /**
-     * @return the contextual signals, for instance application name used in this
-     *     ad_selection_entry.
+     * @return the contextual signals that will be used in buyer scripts
      */
     @NonNull
-    public String getContextualSignals() {
-        return mContextualSignals;
+    public String getBuyerContextualSignals() {
+        return mBuyerContextualSignals;
     }
 
     /** @return the rendering URI of the winning ad in this ad_selection_entry. */
@@ -177,16 +185,52 @@ public final class DBAdSelectionEntry {
         return mBiddingLogicUri;
     }
 
+    /**
+     * @return the contextual signals that will be used in seller scripts
+     */
+    @Nullable
+    public String getSellerContextualSignals() {
+        return mSellerContextualSignals;
+    }
+
+    @Override
+    public String toString() {
+        return "DBAdSelectionEntry{"
+                + "mAdSelectionId="
+                + mAdSelectionId
+                + ", mCustomAudienceSignals="
+                + mCustomAudienceSignals
+                + ", mBuyerContextualSignals='"
+                + mBuyerContextualSignals
+                + '\''
+                + ", mWinningAdRenderUri="
+                + mWinningAdRenderUri
+                + ", mWinningAdBid="
+                + mWinningAdBid
+                + ", mCreationTimestamp="
+                + mCreationTimestamp
+                + ", mBuyerDecisionLogicJs='"
+                + mBuyerDecisionLogicJs
+                + '\''
+                + ", mBiddingLogicUri="
+                + mBiddingLogicUri
+                + ", mSellerContextualSignals='"
+                + mSellerContextualSignals
+                + '\''
+                + '}';
+    }
+
     /** Builder for {@link DBAdSelectionEntry} object. */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
         private CustomAudienceSignals mCustomAudienceSignals;
-        private String mContextualSignals;
+        private String mBuyerContextualSignals;
         private Uri mWinningAdRenderUri;
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
         private String mBuyerDecisionLogicJs;
         private Uri mBiddingLogicUri;
+        private String mSellerContextualSignals;
 
         public Builder() {}
 
@@ -209,9 +253,10 @@ public final class DBAdSelectionEntry {
 
         /** Sets the contextual signals with this ad_selection_entry. */
         @NonNull
-        public DBAdSelectionEntry.Builder setContextualSignals(@NonNull String contextualSignals) {
-            Objects.requireNonNull(contextualSignals);
-            this.mContextualSignals = contextualSignals;
+        public DBAdSelectionEntry.Builder setBuyerContextualSignals(
+                @NonNull String buyerContextualSignals) {
+            Objects.requireNonNull(buyerContextualSignals);
+            this.mBuyerContextualSignals = buyerContextualSignals;
             return this;
         }
 
@@ -257,6 +302,17 @@ public final class DBAdSelectionEntry {
         }
 
         /**
+         * Sets the seller contextual signals with this ad selection. These signals will only be
+         * used for seller scripts.
+         */
+        @Nullable
+        public DBAdSelectionEntry.Builder setSellerContextualSignals(
+                @Nullable String sellerContextualSignals) {
+            this.mSellerContextualSignals = sellerContextualSignals;
+            return this;
+        }
+
+        /**
          * Builds an {@link DBAdSelectionEntry} instance.
          *
          * @throws NullPointerException if any non-null params are null.
@@ -273,7 +329,7 @@ public final class DBAdSelectionEntry {
                     Objects.isNull(mCustomAudienceSignals) ^ Objects.isNull(mBuyerDecisionLogicJs);
             Preconditions.checkArgument(
                     !oneNull, "Buyer fields must both be null in case of contextual ad.");
-            Objects.requireNonNull(mContextualSignals);
+            Objects.requireNonNull(mBuyerContextualSignals);
             Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
             Objects.requireNonNull(mBiddingLogicUri);
@@ -281,12 +337,13 @@ public final class DBAdSelectionEntry {
             return new DBAdSelectionEntry(
                     mAdSelectionId,
                     mCustomAudienceSignals,
-                    mContextualSignals,
+                    mBuyerContextualSignals,
                     mWinningAdRenderUri,
                     mWinningAdBid,
                     mCreationTimestamp,
                     mBuyerDecisionLogicJs,
-                    mBiddingLogicUri);
+                    mBiddingLogicUri,
+                    mSellerContextualSignals);
         }
     }
 }

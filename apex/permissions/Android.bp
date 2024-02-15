@@ -18,8 +18,7 @@ package {
     default_visibility: ["//packages/modules/AdServices:__subpackages__"],
 }
 
-prebuilt_etc {
+filegroup {
     name: "privapp_allowlist_com.android.adservices.api.xml",
-    sub_dir: "permissions",
-    src: "com.android.adservices.api.xml",
+    srcs: ["com.android.adservices.api.xml"],
 }

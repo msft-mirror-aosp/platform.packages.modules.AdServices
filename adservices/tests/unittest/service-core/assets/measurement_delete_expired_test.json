@@ -73,6 +73,9 @@
         "triggers": [],
         "event_reports": [],
         "attributions": []
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
       }
     },
     {
@@ -99,7 +102,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "young1",
@@ -118,7 +122,8 @@
               }
             ],
             "triggerTime": 33203622330000,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -146,11 +151,15 @@
               }
             ],
             "triggerTime": 33203622330000,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
         "attributions": []
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
       }
     },
     {
@@ -165,7 +174,8 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           },
           {
             "id": "old report time - deleted",
@@ -175,7 +185,8 @@
             "scheduledReportTime": 8640000002,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           },
           {
             "id": "delivered report - deleted",
@@ -185,7 +196,8 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 1,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           }
         ]
       },
@@ -199,9 +211,13 @@
             "scheduledReportTime": 33203622330000,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": ""
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
           }
         ]
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
       }
     },
     {
@@ -253,6 +269,542 @@
             "registrant": "android-app://com.example.xyz"
           }
         ]
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
+    },
+    {
+      "name": "1 non-expired AsyncRegistration, 1 expired AsyncRegistration, 1 AsyncRegistration both expired and past retry limit, and 1 AsyncRegistration only past retry limit",
+      "input": {
+        "sources": [],
+        "source_destinations": [
+        ],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [
+          {
+            "registrationId": "AR1",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant":  "android-app://com.registrant1",
+            "osDestination": "https://foo.com",
+            "requestTime": 33203622330000,
+            "adIdPermission": false,
+            "id": "id1",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 1,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
+          },
+          {
+            "registrationId": "AR2",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant": "android-app://com.registrant2",
+            "osDestination": "https://foo.com",
+            "requestTime": 8640000002,
+            "adIdPermission": false,
+            "id": "id2",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 1,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
+          },
+          {
+            "registrationId": "AR3",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant":  "android-app://com.registrant1",
+            "osDestination": "https://foo.com",
+            "requestTime": 8640000002,
+            "adIdPermission": false,
+            "id": "id3",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 5,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
+          },
+          {
+            "registrationId": "AR4",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant":  "android-app://com.registrant1",
+            "osDestination": "https://foo.com",
+            "requestTime": 33203622330000,
+            "adIdPermission": false,
+            "id": "id4",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 5,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "source_destinations": [
+        ],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [
+          {
+            "registrationId": "AR1",
+            "registrationUri": "https://foo.com",
+            "topOrigin": "https://foo.com",
+            "registrant":  "android-app://com.registrant1",
+            "osDestination": "https://foo.com",
+            "requestTime": 33203622330000,
+            "adIdPermission": false,
+            "id": "id1",
+            "registrationType": 0,
+            "platformAdId": "platform",
+            "debugKeyAllowed": false,
+            "retryCount": 1,
+            "verifiedDestination": "https://foo.com",
+            "webDestination": "https://foo.com",
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
+          }
+        ]
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
+    },
+    {
+      "name": "1 non-expired DebugReport, 1 expired DebugReport",
+      "input": {
+        "key_values": [
+          {
+            "key":"DR-Expired",
+            "dataType": "DEBUG_REPORT_RETRY_COUNT",
+            "value": "1000"
+          }
+        ],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}"
+          },
+          {
+            "id": "DR-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}"
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "source_destinations": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}"
+          }
+        ],
+        "key_values": []
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
+    },
+    {
+      "name": "1 each Expired DebugRetry, EventRetry, DebugEventRetry, AggregateRetry, DebugAggregateRetry",
+      "input": {
+        "key_values": [
+          {
+            "key":"DR-Expired",
+            "dataType": "DEBUG_REPORT_RETRY_COUNT",
+            "value": "1000"
+          },
+          {
+            "key":"ER-Expired",
+            "dataType": "EVENT_REPORT_RETRY_COUNT",
+            "value": "1000"
+          },
+          {
+            "key":"AR-Expired",
+            "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1000"
+          },
+          {
+            "key":"ER-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1000"
+          },
+          {
+            "key":"AR-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1000"
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "source_destinations": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [],
+        "debug_reports": [],
+        "key_values": []
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
+    },
+    {
+      "name": "1 each non-Expired DebugRetry, EventRetry, DebugEventRetry, AggregateRetry, DebugAggregateRetry",
+      "input": {
+        "aggregate_reports": [
+          {
+            "id": "AR-non-Expired",
+            "publisher": "android-app://com.a",
+            "attributionDestination": "android-app://com.b",
+            "sourceRegistrationTime": 8640000002,
+            "scheduledReportTime": 33203622330000,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "ER-non-Expired",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://no-match.test",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101,
+            "sourceType": "navigation"
+          }
+        ],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}"
+          }
+        ],
+        "key_values": [
+          {
+            "key":"DR-non-Expired",
+            "dataType": "DEBUG_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          }
+        ]
+      },
+      "output": {
+        "aggregate_reports": [
+          {
+            "id": "AR-non-Expired",
+            "publisher": "android-app://com.a",
+            "attributionDestination": "android-app://com.b",
+            "sourceRegistrationTime": 8640000002,
+            "scheduledReportTime": 33203622330000,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "ER-non-Expired",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://no-match.test",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101,
+            "sourceType": "navigation"
+          }
+        ],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}"
+          }
+        ],
+        "key_values": [
+          {
+            "key":"DR-non-Expired",
+            "dataType": "DEBUG_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          }
+        ]
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
+    },
+    {
+      "name": "1 each non-Expired and 1 each Expired DebugRetry, EventRetry, and AggregateRetry",
+      "input": {
+        "aggregate_reports": [
+          {
+            "id": "AR-non-Expired",
+            "publisher": "android-app://com.a",
+            "attributionDestination": "android-app://com.b",
+            "sourceRegistrationTime": 8640000002,
+            "scheduledReportTime": 33203622330000,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "ER-non-Expired",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://no-match.test",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101,
+            "sourceType": "navigation"
+          }
+        ],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}"
+          }
+        ],
+        "key_values": [
+          {
+            "key":"DR-non-Expired",
+            "dataType": "DEBUG_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"DR-Expired",
+            "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-Expired",
+            "dataType": "EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-Expired",
+            "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          }
+        ]
+      },
+      "output": {
+        "aggregate_reports": [
+          {
+            "id": "AR-non-Expired",
+            "publisher": "android-app://com.a",
+            "attributionDestination": "android-app://com.b",
+            "sourceRegistrationTime": 8640000002,
+            "scheduledReportTime": 33203622330000,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": "",
+            "aggregation_coordinator_origin": "https://test.test"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "ER-non-Expired",
+            "sourceEventId": 1,
+            "attributionDestination": "android-app://no-match.test",
+            "enrollmentId": "enrollment-id-3",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101,
+            "sourceType": "navigation"
+          }
+        ],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}"
+          }
+        ],
+        "key_values": [
+          {
+            "key":"DR-non-Expired",
+            "dataType": "DEBUG_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"ER-non-Expired",
+            "dataType": "DEBUG_EVENT_REPORT_RETRY_COUNT",
+            "value": "1"
+          },
+          {
+            "key":"AR-non-Expired",
+            "dataType": "DEBUG_AGGREGATE_REPORT_RETRY_COUNT",
+            "value": "1"
+          }
+        ]
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "true"
+      }
+    },
+    {
+      "name": "1 non-expired DebugReport, 1 expired DebugReport. Retry Off",
+      "input": {
+        "key_values": [],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "insertion_time": 9223372036854775807
+          },
+          {
+            "id": "DR-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "insertion_time": 1
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "source_destinations": [],
+        "triggers": [],
+        "event_reports": [],
+        "attributions": [],
+        "async_registrations": [],
+        "debug_reports": [
+          {
+            "id": "DR-non-Expired",
+            "type": "source-success",
+            "body": "{\"test\":\"body\"}",
+            "insertion_time": 9223372036854775807
+          }
+        ],
+        "key_values": []
+      },
+      "phflags_override": {
+        "measurement_report_retry_limit_enabled": "false"
       }
     }
   ]

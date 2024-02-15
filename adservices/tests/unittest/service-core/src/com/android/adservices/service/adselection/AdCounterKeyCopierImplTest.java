@@ -26,6 +26,7 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.js.JSScriptRecordArgument;
@@ -33,6 +34,7 @@ import com.android.adservices.service.js.JSScriptRecordArgument;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -41,6 +43,9 @@ import java.util.HashSet;
 public class AdCounterKeyCopierImplTest {
     private static final String EXPECTED_AD_COUNTER_KEYS_FIELD_NAME = "ad_counter_keys";
     private final AdCounterKeyCopierImpl mAdCounterKeyCopier = new AdCounterKeyCopierImpl();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testCopyAdCounterKeys_DBAdDataToAdDataBuilder_NullBuilderThrows() {
@@ -233,7 +238,7 @@ public class AdCounterKeyCopierImplTest {
                                         .getAdData()
                                         .getRenderUri())
                         .setBiddingLogicUri(sourceOutcome.getBiddingLogicUri())
-                        .setContextualSignals("{}");
+                        .setBuyerContextualSignals("{}");
 
         DBAdSelection outputSelection =
                 mAdCounterKeyCopier
@@ -242,7 +247,7 @@ public class AdCounterKeyCopierImplTest {
                         .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                         .build();
-        assertThat(outputSelection.getAdCounterKeys())
+        assertThat(outputSelection.getAdCounterIntKeys())
                 .containsExactlyElementsIn(
                         sourceOutcome
                                 .getAdWithScore()

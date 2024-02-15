@@ -26,11 +26,17 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
-// TODO(b/221876775): Move to CTS tests once public APIs are unhidden
+// TODO(b/265204820): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class RemoveAdCounterHistogramOverrideRequestTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildValidRequest_success() {
         final RemoveAdCounterHistogramOverrideRequest originalRequest =
@@ -57,20 +63,13 @@ public class RemoveAdCounterHistogramOverrideRequestTest {
 
         final String expected =
                 String.format(
-                        "RemoveAdCounterHistogramOverrideRequest{mAdEventType=%s,"
-                                + " mAdCounterKey='%s', mBuyer=%s}",
+                        "RemoveAdCounterHistogramOverrideRequest{mAdEventType=%d,"
+                                + " mAdCounterKey=%d, mBuyer=%s}",
                         FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
                         KeyedFrequencyCapFixture.KEY1,
                         CommonFixture.VALID_BUYER_1);
 
         assertThat(originalRequest.toString()).isEqualTo(expected);
-    }
-
-    @Test
-    public void testSetNullAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () -> new RemoveAdCounterHistogramOverrideRequest.Builder().setAdCounterKey(null));
     }
 
     @Test
@@ -92,14 +91,17 @@ public class RemoveAdCounterHistogramOverrideRequestTest {
     }
 
     @Test
-    public void testBuildUnsetAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new RemoveAdCounterHistogramOverrideRequest.Builder()
-                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                                .setBuyer(CommonFixture.VALID_BUYER_1)
-                                .build());
+    public void testBuildUnsetAdCounterKey_success() {
+        final RemoveAdCounterHistogramOverrideRequest originalRequest =
+                new RemoveAdCounterHistogramOverrideRequest.Builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .build();
+
+        assertThat(originalRequest.getAdEventType())
+                .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
+        assertThat(originalRequest.getAdCounterKey()).isEqualTo(0);
+        assertThat(originalRequest.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
     }
 
     @Test

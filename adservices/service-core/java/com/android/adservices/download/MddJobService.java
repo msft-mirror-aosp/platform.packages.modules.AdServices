@@ -16,12 +16,11 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -41,10 +40,10 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.tracing.PropagatedFutures;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -115,21 +114,20 @@ public class MddJobService extends JobService {
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d("Disabling MddJobService job because it's running in ExtServices on T+");
             return skipAndCancelBackgroundJob(
-                    params,
-                    jobId,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+                    params, jobId, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
         // Record the invocation of onStartJob() for logging purpose.
         LogUtil.d("MddJobService.onStartJob");
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(jobId);
+        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(jobId);
 
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("MDD background task is disabled, skipping and cancelling MddJobService");
             return skipAndCancelBackgroundJob(
                     params,
                     jobId,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                    /* doRecord=*/ true);
         }
 
         // This service executes each incoming job on a Handler running on the application's
@@ -155,7 +153,7 @@ public class MddJobService extends JobService {
                         sBlockingExecutor.execute(
                                 () -> {
                                     EnrollmentDataDownloadManager.getInstance(MddJobService.this)
-                                            .readAndInsertEnrolmentDataFromMdd();
+                                            .readAndInsertEnrollmentDataFromMdd();
 
                                     // Logging has to happen before jobFinished() is called. Due to
                                     // JobScheduler infra, the JobService instance will end its
@@ -164,7 +162,7 @@ public class MddJobService extends JobService {
                                     // Tell the JobScheduler that the job has completed and does not
                                     // need to be rescheduled.
                                     boolean shouldRetry = false;
-                                    AdservicesJobServiceLogger.getInstance(MddJobService.this)
+                                    AdServicesJobServiceLogger.getInstance(MddJobService.this)
                                             .recordJobFinished(
                                                     jobId, /* isSuccessful= */ true, shouldRetry);
 
@@ -183,7 +181,7 @@ public class MddJobService extends JobService {
                         // When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
                         boolean shouldRetry = false;
-                        AdservicesJobServiceLogger.getInstance(MddJobService.this)
+                        AdServicesJobServiceLogger.getInstance(MddJobService.this)
                                 .recordJobFinished(jobId, /* isSuccessful= */ false, shouldRetry);
 
                         jobFinished(params, shouldRetry);
@@ -202,7 +200,7 @@ public class MddJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, getMddTaskJobId(getMddTag(params)), shouldRetry);
         return shouldRetry;
     }
@@ -327,10 +325,15 @@ public class MddJobService extends JobService {
     }
 
     private boolean skipAndCancelBackgroundJob(
-            final JobParameters params, int jobId, int skipReason) {
-        this.getSystemService(JobScheduler.class).cancel(getMddTaskJobId(getMddTag(params)));
+            final JobParameters params, int jobId, int skipReason, boolean doRecord) {
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(getMddTaskJobId(getMddTag(params)));
+        }
 
-        AdservicesJobServiceLogger.getInstance(this).recordJobSkipped(jobId, skipReason);
+        if (doRecord) {
+            AdServicesJobServiceLogger.getInstance(this).recordJobSkipped(jobId, skipReason);
+        }
 
         // Tell the JobScheduler that the job has completed and does not need to be
         // rescheduled.
@@ -350,7 +353,8 @@ public class MddJobService extends JobService {
     }
 
     /** Schedule MDD background tasks. */
-    private static void schedule(
+    @VisibleForTesting
+    static void schedule(
             Context context,
             @NonNull JobScheduler jobScheduler,
             long jobPeriodMs,

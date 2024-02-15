@@ -15,39 +15,34 @@
  */
 package com.android.adservices.service.measurement.util;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
-import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.Optional;
 
 @SmallTest
-public final class EnrollmentTest {
+@SpyStatic(AppManifestConfigHelper.class)
+public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
     private static final Uri REGISTRATION_URI = Uri.parse("https://ad-tech.test/register");
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final String PACKAGE_NAME = "com.package.name";
@@ -60,34 +55,12 @@ public final class EnrollmentTest {
     @Mock private EnrollmentDao mEnrollmentDao;
 
     @Mock private Flags mFlags;
-
-    private StaticMockitoSession mStaticMockitoSession;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AppManifestConfigHelper.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-    }
-
-    @After
-    public void cleanup() {
-        mStaticMockitoSession.finishMocking();
-    }
-
     @Test
     public void testMaybeGetEnrollmentId_success() {
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(ENROLLMENT);
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        mockIsAllowedAttributionAccess(/* allowed= */ true);
 
         assertEquals(
                 Optional.of(ENROLLMENT.getEnrollmentId()),
@@ -101,11 +74,7 @@ public final class EnrollmentTest {
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(null);
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        mockIsAllowedAttributionAccess(/* allowed= */ true);
 
         assertEquals(
                 Optional.empty(),
@@ -119,11 +88,8 @@ public final class EnrollmentTest {
                 .thenReturn(ENROLLMENT);
         // Simulating failure
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(true);
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        mockIsAllowedAttributionAccess(/* allowed= */ true);
+
         assertEquals(
                 Optional.empty(),
                 Enrollment.getValidEnrollmentId(
@@ -136,11 +102,7 @@ public final class EnrollmentTest {
                 .thenReturn(ENROLLMENT);
         when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
         // Simulating failure
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        any(), eq(PACKAGE_NAME), eq(ENROLLMENT_ID)));
+        mockIsAllowedAttributionAccess(/* allowed= */ false);
 
         assertEquals(
                 Optional.empty(),
@@ -149,31 +111,90 @@ public final class EnrollmentTest {
     }
 
     @Test
-    public void testMaybeGetReportingOrigin_success() {
-        when(mEnrollmentDao.getEnrollmentData(eq(ENROLLMENT_ID))).thenReturn(ENROLLMENT);
+    public void testMaybeGetEnrollmentId_localhost_success() {
+        String localhost = "https://localhost";
+        String localhostWithPort = localhost + ":5678";
+        String localhostWithPortAndPath = localhostWithPort + "/path";
+        String localhostWithPortAndPathAndParams = localhostWithPort + "/path?param=2";
+        String localhostWithPath = localhost + "/path";
+        String localhostWithPathAndParams = localhostWithPath + "/path?param=2";
 
         assertEquals(
-                Optional.of(Uri.parse("https://origin1.test")),
-                Enrollment.maybeGetReportingOrigin(ENROLLMENT_ID, mEnrollmentDao));
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhost), PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPort), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPortAndPath), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPortAndPathAndParams), PACKAGE_NAME, mEnrollmentDao,
+                        sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPath), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostWithPathAndParams), PACKAGE_NAME, mEnrollmentDao,
+                        sContext, mFlags));
     }
 
     @Test
-    public void testMaybeGetReportingOrigin_enrollmentDataNull() {
-        when(mEnrollmentDao.getEnrollmentData(eq(ENROLLMENT_ID))).thenReturn(null);
+    public void testMaybeGetEnrollmentId_localhostIp_success() {
+        String localhostIp = "https://127.0.0.1";
+        String localhostIpWithPort = localhostIp + ":5678";
+        String localhostIpWithPortAndPath = localhostIpWithPort + "/path";
+        String localhostIpWithPortAndPathAndParams = localhostIpWithPort + "/path?param=2";
+        String localhostIpWithPath = localhostIp + "/path";
+        String localhostIpWithPathAndParams = localhostIpWithPath + "/path?param=2";
 
         assertEquals(
-                Optional.empty(),
-                Enrollment.maybeGetReportingOrigin(ENROLLMENT_ID, mEnrollmentDao));
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIp), PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPort), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPortAndPath), PACKAGE_NAME, mEnrollmentDao,
+                        sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPortAndPathAndParams), PACKAGE_NAME,
+                        mEnrollmentDao, sContext, mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPath), PACKAGE_NAME, mEnrollmentDao, sContext,
+                        mFlags));
+        assertEquals(
+                Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
+                Enrollment.getValidEnrollmentId(
+                        Uri.parse(localhostIpWithPathAndParams), PACKAGE_NAME, mEnrollmentDao,
+                        sContext, mFlags));
     }
 
-    @Test
-    public void testMaybeGetReportingOrigin_attributionReportingUrlEmpty() {
-        EnrollmentData enrollment = new EnrollmentData.Builder().build();
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(Uri.parse(ENROLLMENT_ID))))
-                .thenReturn(enrollment);
-
-        assertEquals(
-                Optional.empty(),
-                Enrollment.maybeGetReportingOrigin(ENROLLMENT_ID, mEnrollmentDao));
+    private void mockIsAllowedAttributionAccess(boolean allowed) {
+        doReturn(allowed)
+                .when(
+                        () ->
+                                AppManifestConfigHelper.isAllowedAttributionAccess(
+                                        PACKAGE_NAME, ENROLLMENT_ID));
     }
 }

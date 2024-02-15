@@ -25,12 +25,15 @@ import androidx.appsearch.app.AppSearchSchema.StringPropertyConfig;
 import androidx.appsearch.app.GlobalSearchSession;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.stream.Stream;
 
 /** This class represents the data access object for the UX states written to AppSearch. */
 // TODO(b/269798827): Enable for R.
@@ -59,16 +62,22 @@ class AppSearchUxStatesDao extends AppSearchDao {
     @Document.BooleanProperty private boolean mIsAdultAccount;
     @Document.BooleanProperty private boolean mIsAdIdEnabled;
     @Document.BooleanProperty private boolean mWasU18NotificationDisplayed;
+    // Save the enums as string attributes rather than int as the ordinal could change when
+    // binary changes.
+    @Document.StringProperty private String mUx;
+    @Document.StringProperty private String mEnrollmentChannel;
 
     AppSearchUxStatesDao(
             @NonNull String id,
             @NonNull String userId,
             @NonNull String namespace,
-            @NonNull boolean isEntryPointEnabled,
-            @NonNull boolean isU18Account,
-            @NonNull boolean isAdultAccount,
-            @NonNull boolean isAdIdEnabled,
-            @NonNull boolean wasU18NotificationDisplayed) {
+            boolean isEntryPointEnabled,
+            boolean isU18Account,
+            boolean isAdultAccount,
+            boolean isAdIdEnabled,
+            boolean wasU18NotificationDisplayed,
+            @NonNull String ux,
+            @NonNull String enrollmentChannel) {
         this.mId = id;
         this.mUserId = userId;
         this.mNamespace = namespace;
@@ -77,6 +86,14 @@ class AppSearchUxStatesDao extends AppSearchDao {
         this.mIsAdultAccount = isAdultAccount;
         this.mIsAdIdEnabled = isAdIdEnabled;
         this.mWasU18NotificationDisplayed = wasU18NotificationDisplayed;
+        this.mUx = ux;
+        this.mEnrollmentChannel = enrollmentChannel;
+    }
+
+    AppSearchUxStatesDao(@NonNull String id, @NonNull String userId, @NonNull String namespace) {
+        this.mId = id;
+        this.mUserId = userId;
+        this.mNamespace = namespace;
     }
 
     /** Returns the row ID that should be unique for the namespace. */
@@ -95,7 +112,8 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static AppSearchUxStatesDao readData(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -103,7 +121,12 @@ class AppSearchUxStatesDao extends AppSearchDao {
         String query = getQuery(userId);
         AppSearchUxStatesDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchUxStatesDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchUxStatesDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
         LogUtil.d("AppSearch UX states read: " + dao + " [ query: " + query + "]");
         return dao;
     }
@@ -192,6 +215,26 @@ class AppSearchUxStatesDao extends AppSearchDao {
         mWasU18NotificationDisplayed = wasU18NotificationDisplayed;
     }
 
+    @NonNull
+    public String getUx() {
+        return mUx;
+    }
+
+    @NonNull
+    public void setUx(@NonNull String ux) {
+        mUx = ux;
+    }
+
+    @NonNull
+    public String getEnrollmentChannel() {
+        return mEnrollmentChannel;
+    }
+
+    @NonNull
+    public void setEnrollmentChannel(@NonNull String enrollmentChannel) {
+        mEnrollmentChannel = enrollmentChannel;
+    }
+
     public String toString() {
         return "id="
                 + mId
@@ -208,13 +251,26 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 + "; isAdIdEnabled="
                 + mIsAdIdEnabled
                 + "; wasU18NotificationDisplayed="
-                + mWasU18NotificationDisplayed;
+                + mWasU18NotificationDisplayed
+                + "; ux="
+                + mUx
+                + "; enrollmentChannel="
+                + mEnrollmentChannel;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-                mId, mUserId, mNamespace, mIsEntryPointEnabled, mIsU18Account, mIsAdultAccount, mIsAdIdEnabled, mWasU18NotificationDisplayed);
+                mId,
+                mUserId,
+                mNamespace,
+                mIsEntryPointEnabled,
+                mIsU18Account,
+                mIsAdultAccount,
+                mIsAdIdEnabled,
+                mWasU18NotificationDisplayed,
+                mUx,
+                mEnrollmentChannel);
     }
 
     @Override
@@ -229,15 +285,18 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 && this.mIsU18Account == obj.mIsU18Account
                 && this.mIsAdultAccount == obj.mIsAdultAccount
                 && this.mIsAdIdEnabled == obj.mIsAdIdEnabled
-                && this.mWasU18NotificationDisplayed == obj.mWasU18NotificationDisplayed;
+                && this.mWasU18NotificationDisplayed == obj.mWasU18NotificationDisplayed
+                && (Objects.equals(this.mUx, obj.mUx))
+                && (Objects.equals(this.mEnrollmentChannel, obj.mEnrollmentChannel));
     }
 
     /** Read the isAdIdEnabled bit from AppSearch. */
     public static boolean readIsAdIdEnabled(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -248,8 +307,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsU18Account(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -260,8 +320,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsEntryPointEnabled(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -272,8 +333,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsAdultAccount(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
@@ -284,11 +346,47 @@ class AppSearchUxStatesDao extends AppSearchDao {
     public static boolean readIsU18NotificationDisplayed(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
-        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
         if (dao == null) {
             return false;
         }
         return dao.wasU18NotificationDisplayed();
+    }
+
+    /** Read the current UX from AppSearch. */
+    public static PrivacySandboxUxCollection readUx(
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
+        if (dao == null) {
+            return PrivacySandboxUxCollection.UNSUPPORTED_UX;
+        }
+
+        return Stream.of(PrivacySandboxUxCollection.values())
+                .filter(ux -> ux.toString().equals(dao.getUx()))
+                .findFirst()
+                .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
+    }
+
+    /** Read the current enrollment channel from AppSearch. */
+    public static PrivacySandboxEnrollmentChannelCollection readEnrollmentChannel(
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String userId,
+            @NonNull PrivacySandboxUxCollection ux,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
+        if (dao == null) {
+            return null;
+        }
+
+        return Stream.of(ux.getEnrollmentChannelCollection())
+                .filter(channel -> channel.toString().equals(dao.getEnrollmentChannel()))
+                .findFirst()
+                .orElse(null);
     }
 }

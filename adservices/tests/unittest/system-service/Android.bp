@@ -26,9 +26,11 @@ android_test {
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
+        "adservices-shared-storage",
+        "adservices-shared-testing",
         "androidx.test.runner",
         "androidx.test.core",
-        "truth-prebuilt",
+        "truth",
         "services.core",
         "framework-adservices.impl",
         "adservices-test-utility",
@@ -41,13 +43,13 @@ android_test {
         "android.test.mock",
         "android.test.runner",
         "framework-configinfrastructure",
+        "modules-utils-shell-command-handler",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }

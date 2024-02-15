@@ -32,8 +32,7 @@ import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -61,7 +60,7 @@ public class AdSelectionService extends Service {
     public void onCreate() {
         super.onCreate();
         if (mFlags.getFledgeSelectAdsKillSwitch()) {
-            sLogger.e("Select Ads API is disabled");
+            sLogger.e("Ad Selection Service APIs are disabled");
             return;
         }
 
@@ -79,7 +78,7 @@ public class AdSelectionService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         if (mFlags.getFledgeSelectAdsKillSwitch()) {
-            sLogger.e("Select Ads API is disabled");
+            sLogger.e("Ad Selection Service APIs are disabled");
             // Return null so that clients can not bind to the service.
             return null;
         }
@@ -95,10 +94,6 @@ public class AdSelectionService extends Service {
 
     /** @return {@code true} if the Privacy Sandbox has user consent */
     private boolean hasUserConsent() {
-        if (mFlags.getGaUxFeatureEnabled()) {
-            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven();
-        } else {
-            return ConsentManager.getInstance(this).getConsent().isGiven();
-        }
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 }

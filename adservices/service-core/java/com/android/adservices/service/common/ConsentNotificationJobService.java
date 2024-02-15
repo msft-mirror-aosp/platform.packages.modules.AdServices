@@ -17,8 +17,10 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.FIRST_ENTRY_REQUEST_TIMESTAMP;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
-import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
+import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -37,12 +39,13 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.download.MobileDataDownloadFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.DeviceRegionProvider;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
@@ -67,6 +70,8 @@ public class ConsentNotificationJobService extends JobService {
             "AdserviceStatusSharedPreference";
 
     private ConsentManager mConsentManager;
+
+    private UxStatesManager mUxStatesManager;
 
     /** Schedule the Job. */
     public static void schedule(Context context, boolean adidEnabled, boolean reConsentStatus) {
@@ -169,10 +174,6 @@ public class ConsentNotificationJobService extends JobService {
                 + flags.getConsentNotificationIntervalEndMs();
     }
 
-    static boolean isEuDevice(Context context, Flags flags) {
-        return DeviceRegionProvider.isEuDevice(context, flags);
-    }
-
     private static long getMillisecondsInTheCurrentDay(Calendar calendar) {
         long currentHour = calendar.get(Calendar.HOUR_OF_DAY);
         long currentMinute = calendar.get(Calendar.MINUTE);
@@ -188,8 +189,14 @@ public class ConsentNotificationJobService extends JobService {
         return millisecondsInTheCurrentDay;
     }
 
+    /** Set the consent manager instance explicitly (for testing purposes). */
     public void setConsentManager(@NonNull ConsentManager consentManager) {
         mConsentManager = consentManager;
+    }
+
+    /** Set the ux states manager instance explicitly (for testing purposes). */
+    public void setUxStatesManager(@NonNull UxStatesManager uxStatesManager) {
+        mUxStatesManager = uxStatesManager;
     }
 
     @Override
@@ -200,22 +207,31 @@ public class ConsentNotificationJobService extends JobService {
             LogUtil.d(
                     "Disabling ConsentNotificationJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(
-                    params,
-                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
         LogUtil.d("ConsentNotificationJobService.onStartJob");
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
+        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
 
         if (mConsentManager == null) {
-            setConsentManager(ConsentManager.getInstance(this));
+            setConsentManager(ConsentManager.getInstance());
+        }
+        if (mUxStatesManager == null) {
+            setUxStatesManager(UxStatesManager.getInstance());
         }
 
-        boolean defaultAdIdState = params.getExtras().getBoolean(ADID_ENABLE_STATUS, false);
-        mConsentManager.recordDefaultAdIdState(defaultAdIdState);
-        boolean isEuNotification = !defaultAdIdState || isEuDevice(this, FlagsFactory.getFlags());
-        mConsentManager.recordDefaultConsent(!isEuNotification);
+        mConsentManager.recordDefaultAdIdState(mConsentManager.isAdIdEnabled());
+        boolean isEeaNotification =
+                !mConsentManager.isAdIdEnabled() || mUxStatesManager.isEeaDevice();
+        LogUtil.d(
+                "ConsentNotificationJobService states. isAdIdEnabled: %s, isEeaDevice: %s,"
+                        + " isEeaNotification: %s.",
+                mConsentManager.isAdIdEnabled(), mUxStatesManager.isEeaDevice(), isEeaNotification);
+        if (mConsentManager.getUx() == RVC_UX) {
+            mConsentManager.recordMeasurementDefaultConsent(!isEeaNotification);
+        } else {
+            mConsentManager.recordDefaultConsent(!isEeaNotification);
+        }
         boolean reConsentStatus = params.getExtras().getBoolean(RE_CONSENT_STATUS, false);
 
         AdServicesExecutors.getBackgroundExecutor()
@@ -237,17 +253,17 @@ public class ConsentNotificationJobService extends JobService {
                                                     .getLong(
                                                             FIRST_ENTRY_REQUEST_TIMESTAMP,
                                                             System.currentTimeMillis()),
-                                            isEuNotification);
+                                            isEeaNotification);
                                 } else {
                                     LogUtil.d(
                                             "OTA strings feature is not enabled, sending"
                                                     + " notification now.");
                                     AdServicesSyncUtil.getInstance()
-                                            .execute(this, isEuNotification);
+                                            .execute(this, isEeaNotification);
                                 }
                             } finally {
                                 boolean shouldRetry = false;
-                                AdservicesJobServiceLogger.getInstance(
+                                AdServicesJobServiceLogger.getInstance(
                                                 ConsentNotificationJobService.this)
                                         .recordJobFinished(
                                                 CONSENT_NOTIFICATION_JOB_ID,
@@ -266,16 +282,23 @@ public class ConsentNotificationJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, CONSENT_NOTIFICATION_JOB_ID, shouldRetry);
         return shouldRetry;
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
-        this.getSystemService(JobScheduler.class).cancel(CONSENT_NOTIFICATION_JOB_ID);
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int skipReason, boolean doRecord) {
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
 
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordJobSkipped(CONSENT_NOTIFICATION_JOB_ID, skipReason);
+        if (jobScheduler != null) {
+            jobScheduler.cancel(CONSENT_NOTIFICATION_JOB_ID);
+        }
+
+        if (doRecord) {
+            AdServicesJobServiceLogger.getInstance(this)
+                    .recordJobSkipped(CONSENT_NOTIFICATION_JOB_ID, skipReason);
+        }
 
         // Tell the JobScheduler that the job has completed and does not need to be
         // rescheduled.
@@ -285,17 +308,17 @@ public class ConsentNotificationJobService extends JobService {
         return false;
     }
 
-    private void handleOtaStrings(long firstEntryRequestTimestamp, boolean isEuNotification) {
+    private void handleOtaStrings(long firstEntryRequestTimestamp, boolean isEeaNotification) {
         if (System.currentTimeMillis() - firstEntryRequestTimestamp
                 >= FlagsFactory.getFlags().getUiOtaStringsDownloadDeadline()) {
             LogUtil.d("Passed OTA strings download deadline, sending" + " notification now.");
-            AdServicesSyncUtil.getInstance().execute(this, isEuNotification);
+            AdServicesSyncUtil.getInstance().execute(this, isEeaNotification);
         } else {
-            sendNotificationIfOtaStringsDownloadCompleted(isEuNotification);
+            sendNotificationIfOtaStringsDownloadCompleted(isEeaNotification);
         }
     }
 
-    private void sendNotificationIfOtaStringsDownloadCompleted(boolean isEuNotification) {
+    private void sendNotificationIfOtaStringsDownloadCompleted(boolean isEeaNotification) {
         try {
             ClientFileGroup cfg =
                     MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
@@ -308,11 +331,15 @@ public class ConsentNotificationJobService extends JobService {
                             .get();
             if (cfg != null && cfg.getStatus() == ClientFileGroup.Status.DOWNLOADED) {
                 LogUtil.d("finished downloading OTA strings." + " Sending notification now.");
-                AdServicesSyncUtil.getInstance().execute(this, isEuNotification);
+                AdServicesSyncUtil.getInstance().execute(this, isEeaNotification);
                 return;
             }
         } catch (InterruptedException | ExecutionException e) {
             LogUtil.e("Error while fetching clientFileGroup: " + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
         LogUtil.d("OTA strings are not yet downloaded.");
         return;

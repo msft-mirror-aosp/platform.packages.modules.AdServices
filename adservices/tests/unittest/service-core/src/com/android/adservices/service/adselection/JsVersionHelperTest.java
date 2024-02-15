@@ -22,11 +22,13 @@ import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
-
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -37,6 +39,9 @@ public class JsVersionHelperTest {
     private static final Uri URI = Uri.parse("https://example.com");
     private static final Long VERSION = 3L;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testGetRequestWithVersionAttribute() {
         AdServicesHttpClientRequest request =
@@ -44,7 +49,8 @@ public class JsVersionHelperTest {
                         URI,
                         ImmutableMap.of(
                                 JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS, VERSION),
-                        false);
+                        false,
+                        DevContext.createForDevOptionsDisabled());
 
         assertEquals(request.getUri(), URI);
         assertEquals(request.getRequestProperties().size(), 1);

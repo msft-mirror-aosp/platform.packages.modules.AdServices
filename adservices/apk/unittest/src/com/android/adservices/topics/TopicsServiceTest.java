@@ -30,6 +30,7 @@ import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
@@ -40,68 +41,55 @@ import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 
 import java.util.function.Supplier;
 
 /** Unit test for {@link com.android.adservices.topics.TopicsService}. */
-public class TopicsServiceTest {
-    @SuppressWarnings("unused")
-    private static final String TAG = "TopicsServiceTest";
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(TopicsWorker.class)
+@SpyStatic(ConsentManager.class)
+@SpyStatic(AdServicesLoggerImpl.class)
+@SpyStatic(MaintenanceJobService.class)
+@SpyStatic(EncryptionKeyJobService.class)
+@SpyStatic(EpochJobService.class)
+@SpyStatic(MddJobService.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(AppImportanceFilter.class)
+@SpyStatic(PackageChangedReceiver.class)
+public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
 
-    @Mock TopicsWorker mMockTopicsWorker;
-    @Mock ConsentManager mMockConsentManager;
-    @Mock EnrollmentDao mMockEnrollmentDao;
-    @Mock AppImportanceFilter mMockAppImportanceFilter;
-    @Mock Flags mMockFlags;
-    @Mock AdServicesApiConsent mMockAdServicesApiConsent;
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
+    @Mock private TopicsWorker mMockTopicsWorker;
+    @Mock private ConsentManager mMockConsentManager;
+    @Mock private EnrollmentDao mMockEnrollmentDao;
+    @Mock private AppImportanceFilter mMockAppImportanceFilter;
+    @Mock private Flags mMockFlags;
+    @Mock private AdServicesApiConsent mMockAdServicesApiConsent;
 
     @Test
     public void testBindableTopicsService_killswitchOff() {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(TopicsWorker.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(AdServicesLoggerImpl.class)
-                        .spyStatic(MaintenanceJobService.class)
-                        .spyStatic(EpochJobService.class)
-                        .spyStatic(MddJobService.class)
-                        .spyStatic(EnrollmentDao.class)
-                        .spyStatic(AppImportanceFilter.class)
-                        .spyStatic(PackageChangedReceiver.class)
-                        .startMocking();
-
-        try {
             // Killswitch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            extendedMockito.mockGetFlags(mMockFlags);
 
             ExtendedMockito.doReturn(mMockTopicsWorker)
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));
 
             TopicsService spyTopicsService = spy(new TopicsService());
-            ExtendedMockito.doReturn(mMockConsentManager)
-                    .when(() -> ConsentManager.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
             doReturn(true).when(mMockAdServicesApiConsent).isGiven();
-            doReturn(mMockAdServicesApiConsent).when(mMockConsentManager).getConsent();
+            doReturn(mMockAdServicesApiConsent)
+                    .when(mMockConsentManager)
+                    .getConsent(AdServicesApiType.TOPICS);
 
             ExtendedMockito.doReturn(true)
                     .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
@@ -109,6 +97,11 @@ public class TopicsServiceTest {
                     .when(
                             () ->
                                     MaintenanceJobService.scheduleIfNeeded(
+                                            any(Context.class), eq(false)));
+            ExtendedMockito.doReturn(true)
+                    .when(
+                            () ->
+                                    EncryptionKeyJobService.scheduleIfNeeded(
                                             any(Context.class), eq(false)));
             ExtendedMockito.doReturn(true)
                     .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -126,32 +119,19 @@ public class TopicsServiceTest {
             spyTopicsService.onCreate();
             IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());
             assertNotNull(binder);
-        } finally {
-            session.finishMocking();
-        }
     }
 
     @Test
     public void testBindableTopicsService_killswitchOn() {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
-
-        try {
             // Killswitch is on.
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
-            doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            extendedMockito.mockGetFlags(mMockFlags);
 
             TopicsService topicsService = new TopicsService();
             topicsService.onCreate();
             IBinder binder = topicsService.onBind(getIntentForTopicsService());
             assertNull(binder);
-        } finally {
-            session.finishMocking();
-        }
     }
 
     /**
@@ -160,35 +140,16 @@ public class TopicsServiceTest {
      */
     @Test
     public void testBindableTopicsService_killswitchOffGaUxFeatureFlagOn() {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(TopicsWorker.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(AdServicesLoggerImpl.class)
-                        .spyStatic(MaintenanceJobService.class)
-                        .spyStatic(EpochJobService.class)
-                        .spyStatic(MddJobService.class)
-                        .spyStatic(EnrollmentDao.class)
-                        .spyStatic(AppImportanceFilter.class)
-                        .spyStatic(PackageChangedReceiver.class)
-                        .startMocking();
-
-        try {
             // Killswitch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+            extendedMockito.mockGetFlags(mMockFlags);
 
             ExtendedMockito.doReturn(mMockTopicsWorker)
                     .when(() -> TopicsWorker.getInstance(any(Context.class)));
 
             TopicsService spyTopicsService = spy(new TopicsService());
-            ExtendedMockito.doReturn(mMockConsentManager)
-                    .when(() -> ConsentManager.getInstance(any(Context.class)));
+            ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
             doReturn(true).when(mMockAdServicesApiConsent).isGiven();
             doReturn(mMockAdServicesApiConsent)
                     .when(mMockConsentManager)
@@ -200,6 +161,11 @@ public class TopicsServiceTest {
                     .when(
                             () ->
                                     MaintenanceJobService.scheduleIfNeeded(
+                                            any(Context.class), eq(false)));
+            ExtendedMockito.doReturn(true)
+                    .when(
+                            () ->
+                                    EncryptionKeyJobService.scheduleIfNeeded(
                                             any(Context.class), eq(false)));
             ExtendedMockito.doReturn(true)
                     .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
@@ -218,9 +184,6 @@ public class TopicsServiceTest {
             IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());
             assertNotNull(binder);
             verifyMethodExecutionOnUserConsentGiven();
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private Intent getIntentForTopicsService() {
@@ -232,6 +195,8 @@ public class TopicsServiceTest {
                 () -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        ExtendedMockito.verify(
+                () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(
                 () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));

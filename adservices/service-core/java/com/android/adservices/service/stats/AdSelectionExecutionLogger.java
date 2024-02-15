@@ -33,6 +33,8 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.adselection.AdBiddingOutcome;
+import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
@@ -540,7 +542,8 @@ public class AdSelectionExecutionLogger extends ApiServiceLatencyCalculator {
         }
         sLogger.v("Ends the persisting ad selection.");
         this.mPersistAdSelectionEndTimestamp = getServiceElapsedTimestamp();
-        this.mDBAdSelectionSizeInBytes = mContext.getDatabasePath(DATABASE_NAME).length();
+        this.mDBAdSelectionSizeInBytes =
+                FileCompatUtils.getDatabasePathHelper(mContext, DATABASE_NAME).length();
         sLogger.v("The persistAdSelection end timestamp is %d:", mPersistAdSelectionEndTimestamp);
         sLogger.v("The database file size is %d", mDBAdSelectionSizeInBytes);
     }

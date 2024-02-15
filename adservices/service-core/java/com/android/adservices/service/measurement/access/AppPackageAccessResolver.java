@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -26,16 +30,28 @@ import com.android.adservices.service.common.AllowLists;
 public class AppPackageAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Package %s is not allowed to call the API.";
     private final String mAllowList;
+    private final String mBlockList;
     private final String mPackageName;
 
-    public AppPackageAccessResolver(@NonNull String allowList, @NonNull String packageName) {
-        mAllowList = allowList;
+    public AppPackageAccessResolver(
+            String allowList, String blockList, @NonNull String packageName) {
+        mAllowList = allowList == null ? AllowLists.ALLOW_NONE : allowList;
+        mBlockList = blockList == null ? AllowLists.ALLOW_NONE : blockList;
         mPackageName = packageName;
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return AllowLists.isPackageAllowListed(mAllowList, mPackageName);
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        boolean isInAllowList = AllowLists.isPackageAllowListed(mAllowList, mPackageName);
+        boolean isInBlockList = isBlocked();
+        if (isInAllowList && !isInBlockList) {
+            return new AccessInfo(true, FAILURE_REASON_UNSET);
+        }
+        return new AccessInfo(
+                false,
+                !isInAllowList
+                        ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
+                        : FAILURE_REASON_PACKAGE_BLOCKLISTED);
     }
 
     @NonNull
@@ -49,5 +65,10 @@ public class AppPackageAccessResolver implements IAccessResolver {
     @Override
     public String getErrorMessage() {
         return String.format(ERROR_MESSAGE, mPackageName);
+    }
+
+    private boolean isBlocked() {
+        // Allowlist is misnomer in this case. isBlocked method for code clarity.
+        return AllowLists.isPackageAllowListed(mBlockList, mPackageName);
     }
 }

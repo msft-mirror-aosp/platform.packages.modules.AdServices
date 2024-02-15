@@ -60,7 +60,7 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
             AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
         super(mainSettingsActivity);
         mMainViewModel = mainViewModel;
-        initWithMode(false);
+        initWithUx(mainSettingsActivity, mainSettingsActivity.getApplicationContext());
         listenToMainViewModelUiEvents();
     }
 
@@ -71,7 +71,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
         // show elements
         showElements(BetaOnlyElements);
 
-        // set title
         mActivity.setTitle(R.string.settingsUI_main_view_title);
         // privacy sandbox controls
         configureElement(
@@ -101,7 +100,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
         // show elements
         showElements(GaOnlyElements);
 
-        // set title
         mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
 
         // privacy sandbox controls
@@ -147,7 +145,27 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initU18() {}
+    public void initU18() {
+        mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
+        // measurement button
+        configureElement(
+                R.id.measurement_preference, button -> mMainViewModel.measurementClickHandler());
+        configureElement(
+                R.id.measurement_preference_subtitle,
+                mMainViewModel.getMeasurementConsentFromConsentManager()
+                        ? R.string.settingsUI_subtitle_consent_on
+                        : R.string.settingsUI_subtitle_consent_off);
+    }
+
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+    }
 
     private void listenToMainViewModelUiEvents() {
         Observer<MainViewModel.MainViewModelUiEvent> observer =
@@ -161,7 +179,7 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                                 mMainViewModel.setConsent(true);
                                 break;
                             case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showOptOutDialogFragment(
                                                 mActivity, mMainViewModel);
@@ -173,16 +191,16 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case DISPLAY_APPS_FRAGMENT:
-                                UiStatsLogger.logManageAppsSelected(mActivity);
+                                UiStatsLogger.logManageAppsSelected();
                                 mActivity.startActivity(new Intent(mActivity, AppsActivity.class));
                                 break;
                             case DISPLAY_TOPICS_FRAGMENT:
-                                UiStatsLogger.logManageTopicsSelected(mActivity);
+                                UiStatsLogger.logManageTopicsSelected();
                                 mActivity.startActivity(
                                         new Intent(mActivity, TopicsActivity.class));
                                 break;
                             case DISPLAY_MEASUREMENT_FRAGMENT:
-                                UiStatsLogger.logManageMeasurementSelected(mActivity);
+                                UiStatsLogger.logManageMeasurementSelected();
                                 mActivity.startActivity(
                                         new Intent(mActivity, MeasurementActivity.class));
                                 break;

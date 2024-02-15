@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -26,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -35,12 +37,15 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.FrequencyCapFilters;
+import android.os.Parcel;
 import android.os.RemoteException;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -76,6 +81,9 @@ public class UpdateAdCounterHistogramWorkerTest {
     private UpdateAdCounterHistogramWorker mUpdateWorker;
     private UpdateAdCounterHistogramInput mInputParams;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
         mUpdateWorker =
@@ -87,14 +95,15 @@ public class UpdateAdCounterHistogramWorkerTest {
                         new FlagsOverridingAdFiltering(true),
                         mServiceFilterMock,
                         mConsentManagerMock,
-                        CALLER_UID);
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
 
         mInputParams =
-                new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                new UpdateAdCounterHistogramInput.Builder(
+                                AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                CommonFixture.VALID_BUYER_1,
+                                CommonFixture.TEST_PACKAGE_NAME)
                         .build();
     }
 
@@ -122,6 +131,39 @@ public class UpdateAdCounterHistogramWorkerTest {
     }
 
     @Test
+    public void testWorkerValidatesInvalidAdEventTypeAndNotifiesFailure() throws Exception {
+        Parcel sourceParcel = Parcel.obtain();
+        sourceParcel.writeLong(AD_SELECTION_ID);
+        sourceParcel.writeInt(FrequencyCapFilters.AD_EVENT_TYPE_MAX + 10);
+        CommonFixture.VALID_BUYER_1.writeToParcel(sourceParcel, 0);
+        sourceParcel.writeString(CommonFixture.TEST_PACKAGE_NAME);
+        sourceParcel.setDataPosition(0);
+
+        UpdateAdCounterHistogramInput invalidInputParams =
+                UpdateAdCounterHistogramInput.CREATOR.createFromParcel(sourceParcel);
+
+        CountDownLatch callbackLatch = new CountDownLatch(1);
+        UpdateAdCounterHistogramTestCallback callback =
+                new UpdateAdCounterHistogramTestCallback(callbackLatch);
+
+        mUpdateWorker.updateAdCounterHistogram(invalidInputParams, callback);
+
+        assertWithMessage("Callback latch wait")
+                .that(callbackLatch.await(CALLBACK_WAIT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+        assertWithMessage("Callback success").that(callback.mIsSuccess).isFalse();
+
+        verify(mHistogramUpdaterMock, never())
+                .updateNonWinHistogram(anyLong(), any(), anyInt(), any());
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(LOGGING_API_NAME),
+                        eq(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT),
+                        anyInt());
+    }
+
+    @Test
     public void testWorkerFeatureFlagDisabledStopsAndNotifiesFailure() throws InterruptedException {
         mUpdateWorker =
                 new UpdateAdCounterHistogramWorker(
@@ -132,7 +174,8 @@ public class UpdateAdCounterHistogramWorkerTest {
                         new FlagsOverridingAdFiltering(false),
                         mServiceFilterMock,
                         mConsentManagerMock,
-                        CALLER_UID);
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
 
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =
@@ -158,7 +201,8 @@ public class UpdateAdCounterHistogramWorkerTest {
     public void testWorkerFilterFailureStopsAndNotifiesFailure() throws InterruptedException {
         doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
                 .when(mServiceFilterMock)
-                .filterRequest(any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
+                .filterRequest(
+                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
 
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =
@@ -383,6 +427,15 @@ public class UpdateAdCounterHistogramWorkerTest {
 
         public FlagsOverridingAdFiltering(boolean shouldEnableAdFilteringFeature) {
             mShouldEnableAdFilteringFeature = shouldEnableAdFilteringFeature;
+        }
+
+        public FlagsOverridingAdFiltering() {
+            this(FLEDGE_AD_SELECTION_FILTERING_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeOnDeviceAuctionKillSwitch() {
+            return false;
         }
 
         @Override

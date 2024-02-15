@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -26,8 +28,10 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -58,7 +62,13 @@ public class AdBiddingOutcomeTest {
                     .build();
     private static final CustomAudienceBiddingInfo CUSTOM_AUDIENCE_BIDDING_INFO =
             CustomAudienceBiddingInfo.create(
-                    BIDDING_LOGIC_URI, BUYER_DECISION_LOGIC_JS, CUSTOM_AUDIENCE_SIGNALS);
+                    BIDDING_LOGIC_URI,
+                    BUYER_DECISION_LOGIC_JS,
+                    CUSTOM_AUDIENCE_SIGNALS,
+                    BUYER_CONTEXTUAL_SIGNALS_WITH_AD_COST);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testAdSelectionBiddingOutcomeBuilder() {

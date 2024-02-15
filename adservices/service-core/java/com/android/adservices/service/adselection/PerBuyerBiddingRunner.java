@@ -26,16 +26,14 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ExecutionSequencer;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;
@@ -95,7 +93,7 @@ public class PerBuyerBiddingRunner {
                 partitionList(customAudienceList, getMaxConcurrentBiddingCount());
 
         sLogger.v("Fetching trusted bidding data for buyer: %s", buyer);
-        FluentFuture<Map<Uri, JSONObject>> trustedBiddingDataMap =
+        FluentFuture<Map<Uri, TrustedBiddingResponse>> trustedBiddingDataMap =
                 mTrustedBiddingDataFetcher.getTrustedBiddingDataForBuyer(customAudienceList);
 
         List<ListenableFuture<AdBiddingOutcome>> buyerBiddingOutcomes =
@@ -124,7 +122,7 @@ public class PerBuyerBiddingRunner {
     private List<ListenableFuture<AdBiddingOutcome>> runBidPerCAWorkPartition(
             List<DBCustomAudience> customAudienceSubList,
             AdSelectionConfig adSelectionConfig,
-            FluentFuture<Map<Uri, JSONObject>> trustedBiddingDataMap) {
+            FluentFuture<Map<Uri, TrustedBiddingResponse>> trustedBiddingDataMap) {
         ExecutionSequencer sequencer = ExecutionSequencer.create();
         sLogger.v("Bidding partition chunk size: %d", customAudienceSubList.size());
         return customAudienceSubList.stream()
@@ -146,7 +144,7 @@ public class PerBuyerBiddingRunner {
     private ListenableFuture<AdBiddingOutcome> runBiddingPerCA(
             @NonNull final DBCustomAudience customAudience,
             @NonNull final AdSelectionConfig adSelectionConfig,
-            @NonNull final Map<Uri, JSONObject> trustedBiddingDataByBaseUri) {
+            @NonNull final Map<Uri, TrustedBiddingResponse> trustedBiddingDataByBaseUri) {
         sLogger.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
 
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
@@ -161,9 +159,8 @@ public class PerBuyerBiddingRunner {
                 trustedBiddingDataByBaseUri,
                 adSelectionConfig.getAdSelectionSignals(),
                 buyerSignal,
-                AdSelectionSignals.EMPTY,
                 new RunAdBiddingPerCAExecutionLogger(
-                        Clock.SYSTEM_CLOCK, AdServicesLoggerImpl.getInstance()));
+                        Clock.getInstance(), AdServicesLoggerImpl.getInstance()));
     }
 
     /**

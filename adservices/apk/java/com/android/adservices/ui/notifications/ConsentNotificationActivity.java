@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,14 +31,14 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
+import com.android.adservices.ui.UxSelector;
 
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class ConsentNotificationActivity extends FragmentActivity {
-
+public class ConsentNotificationActivity extends FragmentActivity implements UxSelector {
     public enum NotificationFragmentEnum {
         LANDING_PAGE_DISPLAYED,
         LANDING_PAGE_DISMISSED,
@@ -83,25 +85,55 @@ public class ConsentNotificationActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Context context = getApplicationContext();
+
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-            OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+            OTAResourcesManager.applyOTAResources(context, true);
         }
 
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
-                setContentView(R.layout.consent_notification_ga_v2_activity);
-            } else {
-                setContentView(R.layout.consent_notification_ga_activity);
-            }
+        if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
+                || isUxStatesReady(this)) {
+            initWithUx(this, context);
         } else {
-            setContentView(R.layout.consent_notification_activity);
+            initFragment();
         }
     }
 
     @Override
+    public void initBeta() {
+        setContentView(R.layout.consent_notification_activity);
+    }
+
+    @Override
+    public void initGA() {
+        setContentView(R.layout.consent_notification_ga_v2_activity);
+    }
+
+    @Override
+    public void initU18() {
+        setContentView(R.layout.consent_notification_u18_activity);
+    }
+
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
+    @Override
+    public void initGaUxWithPas() {}
+
+    @Override
     protected void onSaveInstanceState(@NonNull Bundle outBundle) {
         super.onSaveInstanceState(outBundle);
+    }
+
+    private void initFragment() {
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            setContentView(R.layout.consent_notification_ga_v2_activity);
+        } else {
+            setContentView(R.layout.consent_notification_activity);
+        }
     }
 
     /**
@@ -117,7 +149,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 LogUtil.v("LANDING_PAGE_DISPLAYED logged!");
                 sLandingPageDisplayed = true;
-                UiStatsLogger.logLandingPageDisplayed(context);
+                UiStatsLogger.logLandingPageDisplayed();
                 break;
             case LANDING_PAGE_DISMISSED:
                 if (sLandingPageDismissed
@@ -126,7 +158,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageDismissed = true;
                 LogUtil.v("LANDING_PAGE_DISMISSED logged!");
-                UiStatsLogger.logLandingPageDismissed(context);
+                UiStatsLogger.logLandingPageDismissed();
                 break;
             case LANDING_PAGE_SCROLLED:
                 if (sLandingPageScrolled) {
@@ -134,7 +166,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageScrolled = true;
                 LogUtil.v("LANDING_PAGE_SCROLLED logged!");
-                UiStatsLogger.logLandingPageScrolled(context);
+                UiStatsLogger.logLandingPageScrolled();
                 break;
             case LANDING_PAGE_SCROLLED_TO_BOTTOM:
                 if (sLandingPageScrolledToBottom) {
@@ -142,7 +174,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageScrolledToBottom = true;
                 LogUtil.v("LANDING_PAGE_SCROLLED_TO_BOTTOM logged!");
-                UiStatsLogger.logLandingPageScrolledToBottom(context);
+                UiStatsLogger.logLandingPageScrolledToBottom();
                 break;
             case LANDING_PAGE_ADDITIONAL_INFO_CLICKED:
                 if (sLandingPageAdditionalInfoClicked) {
@@ -150,7 +182,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageAdditionalInfoClicked = true;
                 LogUtil.v("LANDING_PAGE_ADDITIONAL_INFO_CLICKED logged!");
-                UiStatsLogger.logLandingPageAdditionalInfoClicked(context);
+                UiStatsLogger.logLandingPageAdditionalInfoClicked();
                 break;
             case LANDING_PAGE_MORE_BUTTON_CLICKED:
                 if (sLandingPageMoreButtonClicked) {
@@ -158,7 +190,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageMoreButtonClicked = true;
                 LogUtil.v("LANDING_PAGE_MORE_BUTTON_CLICKED logged!");
-                UiStatsLogger.logLandingPageMoreButtonClicked(context);
+                UiStatsLogger.logLandingPageMoreButtonClicked();
                 break;
             case LANDING_PAGE_SETTINGS_BUTTON_CLICKED:
                 if (sLandingPageSettingsButtonClicked) {
@@ -166,7 +198,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageSettingsButtonClicked = true;
                 LogUtil.v("LANDING_PAGE_SETTINGS_BUTTON_CLICKED logged!");
-                UiStatsLogger.logLandingPageSettingsButtonClicked(context);
+                UiStatsLogger.logLandingPageSettingsButtonClicked();
                 break;
             case LANDING_PAGE_OPT_IN_CLICKED:
                 if (sLandingPageOptInClicked) {
@@ -174,7 +206,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageOptInClicked = true;
                 LogUtil.v("LANDING_PAGE_OPT_IN_CLICKED logged!");
-                UiStatsLogger.logLandingPageOptIn(context);
+                UiStatsLogger.logLandingPageOptIn();
                 break;
             case LANDING_PAGE_OPT_OUT_CLICKED:
                 if (sLandingPageOptOutClicked) {
@@ -182,7 +214,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageOptOutClicked = true;
                 LogUtil.v("LANDING_PAGE_OPT_OUT_CLICKED logged!");
-                UiStatsLogger.logLandingPageOptOut(context);
+                UiStatsLogger.logLandingPageOptOut();
                 break;
             case LANDING_PAGE_GOT_IT_CLICKED:
                 if (sLandingPageGotItClicked) {
@@ -190,7 +222,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sLandingPageGotItClicked = true;
                 LogUtil.v("LANDING_PAGE_GOT_IT_CLICKED logged!");
-                UiStatsLogger.logLandingPageGotItButtonClicked(context);
+                UiStatsLogger.logLandingPageGotItButtonClicked();
                 break;
             case CONFIRMATION_PAGE_DISPLAYED:
                 sCurrentFragment = fragmentAction;
@@ -199,7 +231,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 LogUtil.v("CONFIRMATION_PAGE_DISPLAYED logged!");
                 sConfirmationPageDisplayed = true;
-                UiStatsLogger.logConfirmationPageDisplayed(context);
+                UiStatsLogger.logConfirmationPageDisplayed();
                 break;
             case CONFIRMATION_PAGE_DISMISSED:
                 if (sConfirmationPageDismissed
@@ -209,7 +241,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sConfirmationPageDismissed = true;
                 LogUtil.v("CONFIRMATION_PAGE_DISMISSED logged!");
-                UiStatsLogger.logConfirmationPageDismissed(context);
+                UiStatsLogger.logConfirmationPageDismissed();
                 break;
             case CONFIRMATION_PAGE_OPT_IN_MORE_INFO_CLICKED:
                 if (sConfirmationPageOptInMoreInfoClicked) {
@@ -217,7 +249,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sConfirmationPageOptInMoreInfoClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_IN_MORE_INFO_CLICKED logged!");
-                UiStatsLogger.logOptInConfirmationPageMoreInfoClicked(context);
+                UiStatsLogger.logOptInConfirmationPageMoreInfoClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED:
                 if (sConfirmationPageOptOutMoreInfoClicked) {
@@ -225,7 +257,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sConfirmationPageOptOutMoreInfoClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED logged!");
-                UiStatsLogger.logOptOutConfirmationPageMoreInfoClicked(context);
+                UiStatsLogger.logOptOutConfirmationPageMoreInfoClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED:
                 if (sConfirmationPageOptInSettingsClicked) {
@@ -233,7 +265,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sConfirmationPageOptInSettingsClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED logged!");
-                UiStatsLogger.logOptInConfirmationPageSettingsClicked(context);
+                UiStatsLogger.logOptInConfirmationPageSettingsClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED:
                 if (sConfirmationPageOptOutSettingsClicked) {
@@ -241,7 +273,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sConfirmationPageOptOutSettingsClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED logged!");
-                UiStatsLogger.logOptOutConfirmationPageSettingsClicked(context);
+                UiStatsLogger.logOptOutConfirmationPageSettingsClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED:
                 if (sConfirmationPageOptInGotItClicked) {
@@ -249,7 +281,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sConfirmationPageOptInGotItClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED logged!");
-                UiStatsLogger.logOptInConfirmationPageGotItClicked(context);
+                UiStatsLogger.logOptInConfirmationPageGotItClicked();
                 break;
             case CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED:
                 if (sConfirmationPageOptOutGotItClicked) {
@@ -257,7 +289,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
                 }
                 sConfirmationPageOptOutGotItClicked = true;
                 LogUtil.v("CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED logged!");
-                UiStatsLogger.logOptOutConfirmationPageGotItClicked(context);
+                UiStatsLogger.logOptOutConfirmationPageGotItClicked();
                 break;
         }
     }

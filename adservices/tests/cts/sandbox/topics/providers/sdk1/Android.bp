@@ -21,13 +21,13 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     certificate: ":sdksandbox-test",
     srcs: [
-       "src/**/*.java",
+        "src/**/*.java",
     ],
     static_libs: [
-            "adservices-clients",
-            "androidx.concurrent_concurrent-futures",
-            "compatibility-device-util-axt",
-            "truth-prebuilt",
+        "adservices-clients",
+        "androidx.concurrent_concurrent-futures",
+        "compatibility-device-util-axt",
+        "truth",
     ],
     libs: [
         "android.test.base",

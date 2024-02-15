@@ -67,20 +67,23 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
             Map<String, String> phFlagsMap)
             throws RemoteException {
         super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
+        mAttributionHelper =
+                TestObjectProvider.getAttributionJobHandler(
+                        mDatastoreManager, mFlags, mErrorLogger);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
+                        mDatastoreManager,
                         mClickVerifier,
                         mMeasurementDataDeleter,
                         mMockContentResolver);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.NOISY,
-                        sDatastoreManager,
+                        mDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mDebugReportApi);
+                        mDebugReportApi,
+                        mFlags);
         getExpectedTriggerDataDistributions();
     }
 
@@ -88,7 +91,7 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
     void processAction(RegisterSource sourceRegistration) throws IOException, JSONException {
         super.processAction(sourceRegistration);
         if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
         }
     }
 
@@ -96,7 +99,7 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
     void processAction(RegisterWebSource sourceRegistration) throws IOException, JSONException {
         super.processAction(sourceRegistration);
         if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
         }
     }
 

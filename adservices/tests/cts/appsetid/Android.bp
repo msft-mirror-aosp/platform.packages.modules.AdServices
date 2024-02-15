@@ -23,25 +23,26 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-shared-exceptions",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
+        "mcts-adservices",
     ],
     javacflags: ["-parameters"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     manifest: "AndroidManifest.xml",
 }
 
@@ -52,10 +53,11 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-shared-exceptions",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -65,7 +67,8 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
+        "mcts-extservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "31",

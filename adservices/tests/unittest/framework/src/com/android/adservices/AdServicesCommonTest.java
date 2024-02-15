@@ -30,10 +30,11 @@ import java.util.List;
 
 @SmallTest
 public class AdServicesCommonTest {
-    private ResolveInfo mResolveInfo1, mResolveInfo2, mResolveInfo3;
-    private ServiceInfo mServiceInfo1, mServiceInfo2, mServiceInfo3;
+    private ResolveInfo mResolveInfo1, mResolveInfo2, mResolveInfo3, mResolveInfo4;
+    private ServiceInfo mServiceInfo1, mServiceInfo2;
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
-    private static final String ADEXTSERVICES_PACKAGE_NAME = "com.android.ext.adservices.api";
+    private static final String ADEXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
+    private static final String ADSERVICES_PACKAGE_NAME_NOT_SUFFIX = "com.android.adservices.api.x";
 
     @Before
     public void setUp() {
@@ -48,9 +49,14 @@ public class AdServicesCommonTest {
         mResolveInfo2.serviceInfo = mServiceInfo2;
 
         mResolveInfo3 = new ResolveInfo();
-        mServiceInfo3 = new ServiceInfo();
-        mServiceInfo3.packageName = "foobar";
-        mResolveInfo3.serviceInfo = mServiceInfo3;
+        ServiceInfo serviceInfo3 = new ServiceInfo();
+        serviceInfo3.packageName = "foobar";
+        mResolveInfo3.serviceInfo = serviceInfo3;
+
+        mResolveInfo4 = new ResolveInfo();
+        ServiceInfo serviceInfo4 = new ServiceInfo();
+        serviceInfo4.packageName = ADSERVICES_PACKAGE_NAME_NOT_SUFFIX;
+        mResolveInfo4.serviceInfo = serviceInfo4;
     }
 
     @Test
@@ -85,5 +91,17 @@ public class AdServicesCommonTest {
                         AdServicesCommon.resolveAdServicesService(
                                 List.of(mResolveInfo2, mResolveInfo1), ""))
                 .isEqualTo(mServiceInfo1);
+        assertThat(
+                        AdServicesCommon.resolveAdServicesService(
+                                List.of(mResolveInfo1, mResolveInfo4), ""))
+                .isEqualTo(mServiceInfo1);
+        assertThat(
+                        AdServicesCommon.resolveAdServicesService(
+                                List.of(mResolveInfo4, mResolveInfo1), ""))
+                .isEqualTo(mServiceInfo1);
+        assertThat(
+                        AdServicesCommon.resolveAdServicesService(
+                                List.of(mResolveInfo2, mResolveInfo4), ""))
+                .isNull();
     }
 }

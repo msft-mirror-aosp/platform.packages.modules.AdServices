@@ -42,6 +42,11 @@
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <!-- Temporarily enable enrollment seed for testing -->
+        <option name="run-command"
+                value="device_config put adservices enable_enrollment_test_seed true" />
+        <option name="teardown-command"
+                value="device_config put adservices enable_enrollment_test_seed false" />
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
         <option name="run-command" value="setprop debug.adservices.global_kill_switch false" />
         <option name="run-command" value="setprop debug.adservices.fledge_select_ads_kill_switch false" />
@@ -61,9 +66,15 @@
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
         <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
 
-        <!-- TODO(b/221876775): Temporarily enable the ad filtering feature when unhidden -->
+        <!-- Temporarily enable fetchAndJoinCustomAudience API -->
         <option name="run-command"
-                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+                value="device_config put adservices fledge_fetch_custom_audience_enabled true" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_fetch_custom_audience_enabled false" />
+
+        <!-- Temporarily enable the ad filtering feature -->
+        <option name="run-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled true" />
         <option name="teardown-command"
                 value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 

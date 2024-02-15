@@ -16,78 +16,75 @@
 
 package com.android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.android.adservices.common.TestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
+import static com.android.adservices.common.TestDeviceHelper.startActivity;
+import static com.android.adservices.common.AndroidSdk.PRE_T;
 
-import com.android.tradefed.device.DeviceNotAvailableException;
-import com.android.tradefed.device.ITestDevice;
+import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
+import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.common.BackgroundLogReceiver;
+import com.android.adservices.common.HostSideSdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkRange;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
-import com.android.tradefed.testtype.IDeviceTest;
 
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+
 /**
- * Test to check that AdExtServicesApk activities are enabled by AdExtBootCompletedReceiver on S
+ * Test to check that ExtServices activities are enabled by AdExtBootCompletedReceiver on S
  *
- * <p>AdExtServicesApk activities are disabled by default so that there are no duplicate activities
- * on T+ devices. AdExtBootCompletedReceiver handles the BootCompleted initialization and changes
+ * <p>ExtServices activities are disabled by default so that there are no duplicate activities on T+
+ * devices. AdExtBootCompletedReceiver handles the BootCompleted initialization and changes
  * activities to enabled on Android S devices
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
-public class AdExtServicesBootCompleteReceiverHostTest implements IDeviceTest {
+@RequiresSdkRange(atMost = PRE_T, reason = "It's for S only")
+public class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSideTestCase {
+    private static final String LOGCAT_COMMAND = "logcat -s adservices";
 
-    private ITestDevice mDevice;
+    private static final String LOG_FROM_BOOTCOMPLETE_RECEIVER =
+            "AdExtBootCompletedReceiver onReceive invoked";
 
-    @Override
-    public void setDevice(ITestDevice device) {
-        mDevice = device;
-    }
+    @Rule(order = 0)
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
 
-    @Override
-    public ITestDevice getDevice() {
-        return mDevice;
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        overrideCompatFlags();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        resetCompatFlags();
-    }
+    // Sets flags used in the test (and automatically reset them at the end)
+    @Rule(order = 1)
+    public final AdServicesHostSideFlagsSetterRule flags =
+            AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests()
+                    .setAdServicesEnabled(true);
 
     @Test
     public void testExtBootCompleteReceiver() throws Exception {
-        final int apiLevel = getDevice().getApiLevel();
-        Assume.assumeTrue(apiLevel == 31 || apiLevel == 32 /* Build.VERSION_CODES.S or S_V2 */);
-        ITestDevice device = getDevice();
-
         // reboot the device
-        device.reboot();
-        device.waitForDeviceAvailable();
-        // Sleep 30s to wait for AdBootCompletedReceiver execution
-        Thread.sleep(30 * 1000);
+        mDevice.reboot();
+        mDevice.waitForDeviceAvailable();
 
-        String startActivityMsg =
-                getDevice().executeShellCommand("am start -a android.adservices.ui.SETTINGS");
-        assertThat(startActivityMsg)
-                .doesNotContain("Error: Activity not started, unable to resolve Intent");
+        // Start log collection, keep going until the boot complete receiver runs or times out.
+        BackgroundLogReceiver logcatReceiver =
+                new BackgroundLogReceiver.Builder()
+                        .setDevice(mDevice)
+                        .setLogCatCommand(LOGCAT_COMMAND)
+                        .setEarlyStopCondition(stopIfBootCompleteReceiverLogOccurs())
+                        .build();
+
+        // Wait for up to 5 minutes for AdBootCompletedReceiver execution
+        logcatReceiver.collectLogs(/* timeoutMilliseconds= */ 5 * 60 * 1000);
+
+        // The log receiver will block until the log line occurs. The log line happens at the start
+        // of the receiver execution, so give it a few more seconds to complete execution.
+        TimeUnit.SECONDS.sleep(/* timeout= */ 2);
+
+        // Try to launch the settings intent, and check for failure.
+        startActivity(ADSERVICES_SETTINGS_INTENT);
     }
 
-    private void overrideCompatFlags() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("device_config put adservices global_kill_switch false");
-        getDevice().executeShellCommand("device_config put adservices adservice_enabled true");
-        getDevice().executeShellCommand("device_config put adservices enable_back_compat true");
-    }
-
-    private void resetCompatFlags() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("device_config delete adservices global_kill_switch");
-        getDevice().executeShellCommand("device_config delete adservices adservice_enabled");
-        getDevice().executeShellCommand("device_config delete adservices enable_back_compat");
+    private Predicate<String[]> stopIfBootCompleteReceiverLogOccurs() {
+        return (s) -> Arrays.stream(s).anyMatch(t -> t.contains(LOG_FROM_BOOTCOMPLETE_RECEIVER));
     }
 }

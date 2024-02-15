@@ -15,66 +15,76 @@
  */
 package com.android.adservices.service.measurement.aggregation;
 
+import android.content.Context;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 /** A public key used to encrypt aggregatable reports. */
 public final class AggregateEncryptionKeyManager {
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyFetcher mAggregateEncryptionKeyFetcher;
     private final Clock mClock;
-    private final Uri mAggregateEncryptionKeyCoordinatorUrl;
+    private final String mAggregationCoordinatorOriginList;
+    private final String mAggregationCoordinatorPath;
 
-    public AggregateEncryptionKeyManager(DatastoreManager datastoreManager) {
+    public AggregateEncryptionKeyManager(DatastoreManager datastoreManager, Context context) {
         mDatastoreManager = datastoreManager;
-        mAggregateEncryptionKeyFetcher = new AggregateEncryptionKeyFetcher();
+        mAggregateEncryptionKeyFetcher = new AggregateEncryptionKeyFetcher(context);
         mClock = Clock.systemUTC();
-        String encryptionKeyCoordinatorUrl =
-                AdServicesConfig.getMeasurementAggregateEncryptionKeyCoordinatorUrl();
-        if (encryptionKeyCoordinatorUrl != null) {
-            mAggregateEncryptionKeyCoordinatorUrl = Uri.parse(encryptionKeyCoordinatorUrl);
-        } else {
-            mAggregateEncryptionKeyCoordinatorUrl = null;
-        }
+        mAggregationCoordinatorOriginList =
+                AdServicesConfig.getMeasurementAggregationCoordinatorOriginList();
+        mAggregationCoordinatorPath = AdServicesConfig.getMeasurementAggregationCoordinatorPath();
     }
 
     @VisibleForTesting
-    AggregateEncryptionKeyManager(DatastoreManager datastoreManager,
+    AggregateEncryptionKeyManager(
+            DatastoreManager datastoreManager,
             AggregateEncryptionKeyFetcher aggregateEncryptionKeyFetcher,
             Clock clock,
-            Uri aggregateEncryptionKeyCoordinatorUrl) {
+            String aggregationCoordinatorOriginList,
+            String aggregationCoordinatorPath) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyFetcher = aggregateEncryptionKeyFetcher;
         mClock = clock;
-        mAggregateEncryptionKeyCoordinatorUrl = aggregateEncryptionKeyCoordinatorUrl;
+        mAggregationCoordinatorOriginList = aggregationCoordinatorOriginList;
+        mAggregationCoordinatorPath = aggregationCoordinatorPath;
     }
 
     /**
      * Retrieves a {@link List<AggregateEncryptionKey>} in which the size of the collection matches
      * the numKeys specified in the parameters. If no keys are found, the collection would be empty.
      */
-    public List<AggregateEncryptionKey> getAggregateEncryptionKeys(int numKeys) {
-        if (mAggregateEncryptionKeyCoordinatorUrl == null) {
-            LogUtil.w("Fetching aggregate encryption keys failed, empty coordinator url.");
+    public List<AggregateEncryptionKey> getAggregateEncryptionKeys(
+            Uri coordinatorOrigin, int numKeys) {
+        if (!isAllowlisted(mAggregationCoordinatorOriginList, coordinatorOrigin.toString())) {
+            LoggerFactory.getMeasurementLogger()
+                    .w("Fetching aggregate encryption keys failed, invalid url.");
             return Collections.emptyList();
         }
+        Uri aggregationCoordinatorUrl = createURL(coordinatorOrigin, mAggregationCoordinatorPath);
 
         long eventTime = mClock.millis();
 
         Optional<List<AggregateEncryptionKey>> aggregateEncryptionKeysOptional =
-                mDatastoreManager.runInTransactionWithResult((dao) ->
-                        dao.getNonExpiredAggregateEncryptionKeys(eventTime));
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) ->
+                                dao.getNonExpiredAggregateEncryptionKeys(
+                                        coordinatorOrigin, eventTime));
 
         List<AggregateEncryptionKey> aggregateEncryptionKeys =
                 aggregateEncryptionKeysOptional.orElse(new ArrayList<>());
@@ -84,17 +94,21 @@ public final class AggregateEncryptionKeyManager {
         if (aggregateEncryptionKeys.size() == 0) {
             Optional<List<AggregateEncryptionKey>> fetchResult =
                     mAggregateEncryptionKeyFetcher.fetch(
-                            mAggregateEncryptionKeyCoordinatorUrl, eventTime);
+                            coordinatorOrigin, aggregationCoordinatorUrl, eventTime);
             if (fetchResult.isPresent()) {
                 aggregateEncryptionKeys = fetchResult.get();
-                for (AggregateEncryptionKey aggregateEncryptionKey : aggregateEncryptionKeys) {
-                    mDatastoreManager.runInTransaction((dao) ->
-                            dao.insertAggregateEncryptionKey(aggregateEncryptionKey));
+                // Do not cache keys provided by localhost
+                if (!WebAddresses.isLocalhost(aggregationCoordinatorUrl)) {
+                    for (AggregateEncryptionKey aggregateEncryptionKey : aggregateEncryptionKeys) {
+                        mDatastoreManager.runInTransaction((dao) ->
+                                dao.insertAggregateEncryptionKey(aggregateEncryptionKey));
+                    }
                 }
                 mDatastoreManager.runInTransaction((dao) ->
                         dao.deleteExpiredAggregateEncryptionKeys(eventTime));
             } else {
-                LogUtil.d("Fetching aggregate encryption keys over the network failed.");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Fetching aggregate encryption keys over the network failed.");
             }
         }
 
@@ -114,5 +128,25 @@ public final class AggregateEncryptionKeyManager {
             }
         }
         return result;
+    }
+
+    private boolean isAllowlisted(String allowlist, String origin) {
+        if (AllowLists.doesAllowListAllowAll(allowlist)) {
+            return true;
+        }
+        Set<String> elements = new HashSet<>(AllowLists.splitAllowList(allowlist));
+        return elements.contains(origin);
+    }
+
+    /**
+     * Creates complete Uri using origin and path
+     *
+     * @param origin origin for the operation
+     * @param path path to be appended
+     * @return the concatenated path
+     */
+    @VisibleForTesting
+    public static Uri createURL(Uri origin, String path) {
+        return Uri.withAppendedPath(origin, path);
     }
 }

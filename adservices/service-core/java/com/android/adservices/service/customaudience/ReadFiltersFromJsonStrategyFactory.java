@@ -16,15 +16,12 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.STRING_ERROR_FORMAT;
 
 import android.adservices.common.AdFilters;
 
 import com.android.adservices.data.common.DBAdData;
-import com.android.adservices.service.common.JsonUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,15 +45,11 @@ public class ReadFiltersFromJsonStrategyFactory {
         @Override
         public void readFilters(DBAdData.Builder adDataBuilder, JSONObject adDataJsonObj)
                 throws JSONException, NullPointerException, IllegalArgumentException {
-            Set<String> adCounterKeys = new HashSet<>();
+            Set<Integer> adCounterKeys = new HashSet<>();
             if (adDataJsonObj.has(AD_COUNTERS_KEY)) {
                 JSONArray adCounterKeysJson = adDataJsonObj.getJSONArray(AD_COUNTERS_KEY);
                 for (int j = 0; j < adCounterKeysJson.length(); j++) {
-                    adCounterKeys.add(
-                            JsonUtils.getStringFromJsonArrayAtIndex(
-                                    adCounterKeysJson,
-                                    j,
-                                    String.format(STRING_ERROR_FORMAT, AD_COUNTERS_KEY, ADS_KEY)));
+                    adCounterKeys.add(adCounterKeysJson.getInt(j));
                 }
             }
             AdFilters adFilters = null;

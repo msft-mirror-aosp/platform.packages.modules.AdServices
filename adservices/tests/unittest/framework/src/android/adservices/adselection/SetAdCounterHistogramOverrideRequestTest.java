@@ -26,13 +26,16 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
 
-// TODO(b/221876775): Move to CTS tests once public APIs are unhidden
+// TODO(b/265204820): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class SetAdCounterHistogramOverrideRequestTest {
     private static final ImmutableList<Instant> HISTOGRAM_TIMESTAMPS =
@@ -40,6 +43,9 @@ public class SetAdCounterHistogramOverrideRequestTest {
                     CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                     CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusMillis(500));
     private static final String NAME = "test_ca_name";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidRequest_success() {
@@ -77,7 +83,7 @@ public class SetAdCounterHistogramOverrideRequestTest {
 
         final String expected =
                 String.format(
-                        "SetAdCounterHistogramOverrideRequest{mAdEventType=%s, mAdCounterKey='%s',"
+                        "SetAdCounterHistogramOverrideRequest{mAdEventType=%d, mAdCounterKey=%d,"
                                 + " mHistogramTimestamps=%s, mBuyer=%s, mCustomAudienceOwner='%s',"
                                 + " mCustomAudienceName='%s'}",
                         FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
@@ -88,13 +94,6 @@ public class SetAdCounterHistogramOverrideRequestTest {
                         NAME);
 
         assertThat(originalRequest.toString()).isEqualTo(expected);
-    }
-
-    @Test
-    public void testSetNullAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () -> new SetAdCounterHistogramOverrideRequest.Builder().setAdCounterKey(null));
     }
 
     @Test
@@ -146,17 +145,24 @@ public class SetAdCounterHistogramOverrideRequestTest {
     }
 
     @Test
-    public void testBuildUnsetAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new SetAdCounterHistogramOverrideRequest.Builder()
-                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                                .setHistogramTimestamps(HISTOGRAM_TIMESTAMPS)
-                                .setBuyer(CommonFixture.VALID_BUYER_1)
-                                .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
-                                .setCustomAudienceName(NAME)
-                                .build());
+    public void testBuildUnsetAdCounterKey_success() {
+        final SetAdCounterHistogramOverrideRequest originalRequest =
+                new SetAdCounterHistogramOverrideRequest.Builder()
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
+                        .setHistogramTimestamps(HISTOGRAM_TIMESTAMPS)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCustomAudienceName(NAME)
+                        .build();
+
+        assertThat(originalRequest.getAdEventType())
+                .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
+        assertThat(originalRequest.getAdCounterKey()).isEqualTo(0);
+        assertThat(originalRequest.getHistogramTimestamps()).isEqualTo(HISTOGRAM_TIMESTAMPS);
+        assertThat(originalRequest.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(originalRequest.getCustomAudienceOwner())
+                .isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(originalRequest.getCustomAudienceName()).isEqualTo(NAME);
     }
 
     @Test

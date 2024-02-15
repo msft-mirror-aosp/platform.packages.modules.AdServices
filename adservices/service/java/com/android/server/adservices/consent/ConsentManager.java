@@ -15,18 +15,23 @@
  */
 package com.android.server.adservices.consent;
 
-
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
-import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Objects;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Stream;
 
 /**
  * Manager to handle user's consent. We will have one ConsentManager instance per user.
@@ -43,6 +48,8 @@ public final class ConsentManager {
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
     static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
+
+    static final String PAS_NOTIFICATION_DISPLAYED_ONCE = "PAS_NOTIFICATION_DISPLAYED_ONCE";
 
     static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
 
@@ -71,6 +78,8 @@ public final class ConsentManager {
     @VisibleForTesting
     static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
             "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
+
+    private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
     private ConsentManager(@NonNull BooleanFileDatastore datastore) {
         Objects.requireNonNull(datastore);
@@ -127,22 +136,24 @@ public final class ConsentManager {
     public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
         LogUtil.d("ConsentManager.getConsent() is invoked for consentApiType = " + consentApiType);
 
-        synchronized (this) {
-            try {
-                return new ConsentParcel.Builder()
-                        .setConsentApiType(consentApiType)
-                        .setIsGiven(mDatastore.get(getConsentApiTypeKey(consentApiType)))
-                        .build();
-            } catch (NullPointerException | IllegalArgumentException e) {
-                LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
-                return ConsentParcel.createRevokedConsent(consentApiType);
-            }
+        mReadWriteLock.readLock().lock();
+        try {
+            return new ConsentParcel.Builder()
+                    .setConsentApiType(consentApiType)
+                    .setIsGiven(mDatastore.get(getConsentApiTypeKey(consentApiType)))
+                    .build();
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
+            return ConsentParcel.createRevokedConsent(consentApiType);
+        } finally {
+            mReadWriteLock.readLock().unlock();
         }
     }
 
     /** Set Consent */
     public void setConsent(ConsentParcel consentParcel) throws IOException {
-        synchronized (this) {
+        mReadWriteLock.writeLock().lock();
+        try {
             mDatastore.put(
                     getConsentApiTypeKey(consentParcel.getConsentApiType()),
                     consentParcel.isIsGiven());
@@ -170,6 +181,8 @@ public final class ConsentManager {
                     mDatastore.put(getConsentApiTypeKey(ConsentParcel.ALL_API), false);
                 }
             }
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
     }
 
@@ -177,15 +190,11 @@ public final class ConsentManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    public void recordNotificationDisplayed() throws IOException {
-        synchronized (this) {
-            try {
-                // TODO(b/229725886): add metrics / logging
-                mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
-            } catch (IOException e) {
-                LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
-            }
-        }
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
+        setValueWithLock(
+                NOTIFICATION_DISPLAYED_ONCE,
+                wasNotificationDisplayed,
+                "recordNotificationDisplayed");
     }
 
     /**
@@ -194,24 +203,18 @@ public final class ConsentManager {
      * @return true if Consent Notification was displayed, otherwise false.
      */
     public boolean wasNotificationDisplayed() {
-        synchronized (this) {
-            return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
-        }
+        return getValueWithLock(NOTIFICATION_DISPLAYED_ONCE);
     }
 
     /**
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
      */
-    public void recordGaUxNotificationDisplayed() throws IOException {
-        synchronized (this) {
-            try {
-                // TODO(b/229725886): add metrics / logging
-                mDatastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-            } catch (IOException e) {
-                LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
-            }
-        }
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
+        setValueWithLock(
+                GA_UX_NOTIFICATION_DISPLAYED_ONCE,
+                wasNotificationDisplayed,
+                "recordGaUxNotificationDisplayed");
     }
 
     /**
@@ -220,117 +223,97 @@ public final class ConsentManager {
      * @return true if GA UX Consent Notification was displayed, otherwise false.
      */
     public boolean wasGaUxNotificationDisplayed() {
-        synchronized (this) {
-            Boolean displayed = mDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE);
-            return displayed != null ? displayed : false;
-        }
+        return getValueWithLock(GA_UX_NOTIFICATION_DISPLAYED_ONCE);
+    }
+
+    /**
+     * Saves information to the storage that PAS notification was displayed for the first time to
+     * the user.
+     */
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        setValueWithLock(
+                PAS_NOTIFICATION_DISPLAYED_ONCE,
+                wasNotificationDisplayed,
+                "recordPasNotificationDisplayed");
+    }
+
+    /**
+     * Returns information whether PAS Consent Notification was displayed or not.
+     *
+     * @return true if PAS Consent Notification was displayed, otherwise false.
+     */
+    public boolean wasPasNotificationDisplayed() {
+        return getValueWithLock(PAS_NOTIFICATION_DISPLAYED_ONCE);
     }
 
     /** Saves the default consent of a user. */
-    public void recordDefaultConsent(boolean defaultConsent) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(DEFAULT_CONSENT, defaultConsent);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record default consent failed due to IOException thrown by Datastore: "
-                                + e.getMessage());
-            }
-        }
+    public void recordDefaultConsent(boolean defaultConsent) {
+        setValueWithLock(DEFAULT_CONSENT, defaultConsent, /* callerName */ "recordDefaultConsent");
     }
 
     /** Saves the default topics consent of a user. */
-    public void recordTopicsDefaultConsent(boolean defaultConsent) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(TOPICS_DEFAULT_CONSENT, defaultConsent);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record topics default consent failed due to IOException thrown by"
-                                + " Datastore: "
-                                + e.getMessage());
-            }
-        }
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        setValueWithLock(
+                TOPICS_DEFAULT_CONSENT,
+                defaultConsent, /* callerName */
+                "recordTopicsDefaultConsent");
     }
 
     /** Saves the default FLEDGE consent of a user. */
-    public void recordFledgeDefaultConsent(boolean defaultConsent) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(FLEDGE_DEFAULT_CONSENT, defaultConsent);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record fledge default consent failed due to IOException thrown by"
-                                + " Datastore: "
-                                + e.getMessage());
-            }
-        }
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        setValueWithLock(
+                FLEDGE_DEFAULT_CONSENT,
+                defaultConsent, /* callerName */
+                "recordFledgeDefaultConsent");
     }
 
     /** Saves the default measurement consent of a user. */
-    public void recordMeasurementDefaultConsent(boolean defaultConsent) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record measurement default consent failed due to IOException thrown by"
-                                + " Datastore: "
-                                + e.getMessage());
-            }
-        }
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        setValueWithLock(
+                MEASUREMENT_DEFAULT_CONSENT,
+                defaultConsent, /* callerName */
+                "recordMeasurementDefaultConsent");
     }
 
     /** Saves the default AdId state of a user. */
-    public void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(DEFAULT_AD_ID_STATE, defaultAdIdState);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record default AdId failed due to IOException thrown by Datastore: "
-                                + e.getMessage());
-            }
-        }
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        setValueWithLock(
+                DEFAULT_AD_ID_STATE, defaultAdIdState, /* callerName */ "recordDefaultAdIdState");
     }
 
     /** Saves the information whether the user interated manually with the consent. */
     public void recordUserManualInteractionWithConsent(int interaction) {
-        synchronized (this) {
-            try {
-                switch (interaction) {
-                    case -1:
-                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
-                        break;
-                    case 0:
-                        mDatastore.remove(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
-                        break;
-                    case 1:
-                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
-                        break;
-                    default:
-                        throw new IllegalArgumentException(
-                                String.format(
-                                        "InteractionId < %d > can not be handled.", interaction));
-                }
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record manual interaction with consent failed due to IOException thrown"
-                                + " by Datastore: "
-                                + e.getMessage());
+        mReadWriteLock.writeLock().lock();
+        try {
+            switch (interaction) {
+                case -1:
+                    mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                    break;
+                case 0:
+                    mDatastore.remove(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                    break;
+                case 1:
+                    mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                            String.format("InteractionId < %d > can not be handled.", interaction));
             }
+        } catch (IOException e) {
+            LogUtil.e(
+                    e,
+                    "Record manual interaction with consent failed due to IOException thrown"
+                            + " by Datastore: "
+                            + e.getMessage());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
     }
 
     /** Returns information whether user interacted with consent manually. */
     public int getUserManualInteractionWithConsent() {
-        synchronized (this) {
+        mReadWriteLock.readLock().lock();
+        try {
             Boolean userManualInteractionWithConsent =
                     mDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
             if (userManualInteractionWithConsent == null) {
@@ -340,6 +323,8 @@ public final class ConsentManager {
             } else {
                 return -1;
             }
+        } finally {
+            mReadWriteLock.readLock().unlock();
         }
     }
 
@@ -349,10 +334,7 @@ public final class ConsentManager {
      * @return true if default consent is given, otherwise false.
      */
     public boolean getDefaultConsent() {
-        synchronized (this) {
-            Boolean defaultConsent = mDatastore.get(DEFAULT_CONSENT);
-            return defaultConsent != null ? defaultConsent : false;
-        }
+        return getValueWithLock(DEFAULT_CONSENT);
     }
 
     /**
@@ -361,11 +343,9 @@ public final class ConsentManager {
      * @return true if topics default consent is given, otherwise false.
      */
     public boolean getTopicsDefaultConsent() {
-        synchronized (this) {
-            Boolean topicsDefaultConsent = mDatastore.get(TOPICS_DEFAULT_CONSENT);
-            return topicsDefaultConsent != null ? topicsDefaultConsent : false;
-        }
+        return getValueWithLock(TOPICS_DEFAULT_CONSENT);
     }
+
 
     /**
      * Returns the FLEDGE default consent state.
@@ -373,10 +353,7 @@ public final class ConsentManager {
      * @return true if default consent is given, otherwise false.
      */
     public boolean getFledgeDefaultConsent() {
-        synchronized (this) {
-            Boolean fledgeDefaultConsent = mDatastore.get(DEFAULT_CONSENT);
-            return fledgeDefaultConsent != null ? fledgeDefaultConsent : false;
-        }
+        return getValueWithLock(FLEDGE_DEFAULT_CONSENT);
     }
 
     /**
@@ -385,10 +362,7 @@ public final class ConsentManager {
      * @return true if default consent is given, otherwise false.
      */
     public boolean getMeasurementDefaultConsent() {
-        synchronized (this) {
-            Boolean measurementDefaultConsent = mDatastore.get(DEFAULT_CONSENT);
-            return measurementDefaultConsent != null ? measurementDefaultConsent : false;
-        }
+        return getValueWithLock(MEASUREMENT_DEFAULT_CONSENT);
     }
 
     /**
@@ -397,45 +371,40 @@ public final class ConsentManager {
      * @return true if AdId is enabled by default, otherwise false.
      */
     public boolean getDefaultAdIdState() {
-        synchronized (this) {
-            Boolean defaultAdIdState = mDatastore.get(DEFAULT_AD_ID_STATE);
-            return defaultAdIdState != null ? defaultAdIdState : false;
-        }
+        return getValueWithLock(DEFAULT_AD_ID_STATE);
     }
 
     /** Set the current enabled privacy sandbox feature. */
     public void setCurrentPrivacySandboxFeature(String currentFeatureType) {
-        synchronized (this) {
+        mReadWriteLock.writeLock().lock();
+        try {
             for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
                 try {
-                    if (featureType.name().equals(currentFeatureType)) {
-                        mDatastore.put(featureType.name(), true);
-                    } else {
-                        mDatastore.put(featureType.name(), false);
-                    }
+                    mDatastore.put(
+                            featureType.name(), currentFeatureType.equals(featureType.name()));
                 } catch (IOException e) {
                     LogUtil.e(
                             "IOException caught while saving privacy sandbox feature."
                                     + e.getMessage());
                 }
             }
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
     }
 
     /** Returns whether a privacy sandbox feature is enabled. */
     public boolean isPrivacySandboxFeatureEnabled(PrivacySandboxFeatureType featureType) {
-        synchronized (this) {
-            Boolean isFeatureEnabled = mDatastore.get(featureType.name());
-            return isFeatureEnabled != null ? isFeatureEnabled : false;
-        }
+        return getValueWithLock(featureType.name());
     }
 
     /**
      * Deletes the user directory which contains consent information present at
      * /data/system/adservices/user_id
      */
-    public boolean deleteUserDirectory(File dir) throws IOException {
-        synchronized (this) {
+    public boolean deleteUserDirectory(File dir) {
+        mReadWriteLock.writeLock().lock();
+        try {
             boolean success = true;
             File[] files = dir.listFiles();
             // files will be null if dir is not a directory
@@ -448,6 +417,8 @@ public final class ConsentManager {
                 }
             }
             return success && dir.delete();
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
     }
 
@@ -459,8 +430,11 @@ public final class ConsentManager {
     /** tearDown method used for Testing only. */
     @VisibleForTesting
     public void tearDownForTesting() {
-        synchronized (this) {
+        mReadWriteLock.writeLock().lock();
+        try {
             mDatastore.tearDownForTesting();
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
     }
 
@@ -468,84 +442,51 @@ public final class ConsentManager {
 
     /** Returns whether the isAdIdEnabled bit is true. */
     public boolean isAdIdEnabled() {
-        synchronized (this) {
-            Boolean isAdIdEnabled = mDatastore.get(IS_AD_ID_ENABLED);
-            return isAdIdEnabled != null ? isAdIdEnabled : false;
-        }
+        return getValueWithLock(IS_AD_ID_ENABLED);
     }
 
     /** Set the AdIdEnabled bit in system server. */
-    public void setAdIdEnabled(boolean isAdIdEnabled) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(IS_AD_ID_ENABLED, isAdIdEnabled);
-            } catch (IOException e) {
-                LogUtil.e(e, "setAdIdEnabled operation failed: " + e.getMessage());
-            }
-        }
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        setValueWithLock(IS_AD_ID_ENABLED, isAdIdEnabled, /* callerName */ "setAdIdEnabled");
     }
 
     @VisibleForTesting static final String IS_U18_ACCOUNT = "IS_U18_ACCOUNT";
 
     /** Returns whether the isU18Account bit is true. */
     public boolean isU18Account() {
-        synchronized (this) {
-            Boolean isU18Account = mDatastore.get(IS_U18_ACCOUNT);
-            return isU18Account != null ? isU18Account : false;
-        }
+        return getValueWithLock(IS_U18_ACCOUNT);
     }
 
     /** Set the U18Account bit in system server. */
-    public void setU18Account(boolean isU18Account) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(IS_U18_ACCOUNT, isU18Account);
-            } catch (IOException e) {
-                LogUtil.e(e, "setU18Account operation failed: " + e.getMessage());
-            }
-        }
+    public void setU18Account(boolean isU18Account) {
+        setValueWithLock(IS_U18_ACCOUNT, isU18Account, /* callerName */ "setU18Account");
     }
 
     @VisibleForTesting static final String IS_ENTRY_POINT_ENABLED = "IS_ENTRY_POINT_ENABLED";
 
     /** Returns whether the isEntryPointEnabled bit is true. */
     public boolean isEntryPointEnabled() {
-        synchronized (this) {
-            Boolean isEntryPointEnabled = mDatastore.get(IS_ENTRY_POINT_ENABLED);
-            return isEntryPointEnabled != null ? isEntryPointEnabled : false;
-        }
+        return getValueWithLock(IS_ENTRY_POINT_ENABLED);
     }
 
     /** Set the EntryPointEnabled bit in system server. */
-    public void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
-            } catch (IOException e) {
-                LogUtil.e(e, "setEntryPointEnabled operation failed: " + e.getMessage());
-            }
-        }
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        setValueWithLock(
+                IS_ENTRY_POINT_ENABLED,
+                isEntryPointEnabled, /* callerName */
+                "setEntryPointEnabled");
     }
 
     @VisibleForTesting static final String IS_ADULT_ACCOUNT = "IS_ADULT_ACCOUNT";
 
     /** Returns whether the isAdultAccount bit is true. */
     public boolean isAdultAccount() {
-        synchronized (this) {
-            Boolean isAdultAccount = mDatastore.get(IS_ADULT_ACCOUNT);
-            return isAdultAccount != null ? isAdultAccount : false;
-        }
+        return getValueWithLock(IS_ADULT_ACCOUNT);
     }
 
     /** Set the AdultAccount bit in system server. */
-    public void setAdultAccount(boolean isAdultAccount) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(IS_ADULT_ACCOUNT, isAdultAccount);
-            } catch (IOException e) {
-                LogUtil.e(e, "setAdultAccount operation failed: " + e.getMessage());
-            }
-        }
+    public void setAdultAccount(boolean isAdultAccount) {
+        setValueWithLock(IS_ADULT_ACCOUNT, isAdultAccount, /* callerName */ "setAdultAccount");
     }
 
     @VisibleForTesting
@@ -553,21 +494,132 @@ public final class ConsentManager {
 
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
     public boolean wasU18NotificationDisplayed() {
-        synchronized (this) {
-            Boolean wasU18NotificationDisplayed = mDatastore.get(WAS_U18_NOTIFICATION_DISPLAYED);
-            return wasU18NotificationDisplayed != null ? wasU18NotificationDisplayed : false;
-        }
+        return getValueWithLock(WAS_U18_NOTIFICATION_DISPLAYED);
     }
 
     /** Set the U18NotificationDisplayed bit in system server. */
     public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed)
             throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(WAS_U18_NOTIFICATION_DISPLAYED, wasU18NotificationDisplayed);
-            } catch (IOException e) {
-                LogUtil.e(e, "setU18NotificationDisplayed operation failed: " + e.getMessage());
-            }
+        setValueWithLock(
+                WAS_U18_NOTIFICATION_DISPLAYED,
+                wasU18NotificationDisplayed,
+                /* callerName */ "setU18NotificationDisplayed");
+    }
+
+    /** Set the current enabled privacy sux. */
+    public void setUx(String eligibleUx) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            Stream.of(PrivacySandboxUxCollection.values())
+                    .forEach(
+                            ux -> {
+                                try {
+                                    mDatastore.put(ux.toString(), ux.toString().equals(eligibleUx));
+                                } catch (IOException e) {
+                                    LogUtil.e(
+                                            "IOException caught while setting the current UX."
+                                                    + e.getMessage());
+                                }
+                            });
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
+    }
+
+    /** Returns the current UX. */
+    public String getUx() {
+        mReadWriteLock.readLock().lock();
+        try {
+            return Stream.of(PrivacySandboxUxCollection.values())
+                    .filter(ux -> Boolean.TRUE.equals(mDatastore.get(ux.toString())))
+                    .findFirst()
+                    .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX)
+                    .toString();
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /** Set the current enrollment channel. */
+    public void setEnrollmentChannel(String enrollmentChannel) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                    .forEach(
+                            channel -> {
+                                try {
+                                    mDatastore.put(
+                                            channel.toString(),
+                                            channel.toString().equals(enrollmentChannel));
+                                } catch (IOException e) {
+                                    LogUtil.e(
+                                            "IOException caught while setting the current "
+                                                    + "enrollment channel."
+                                                    + e.getMessage());
+                                }
+                            });
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /** Returns the current enrollment channel. */
+    public String getEnrollmentChannel() {
+        mReadWriteLock.readLock().lock();
+        try {
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
+                    Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                            .filter(
+                                    channel ->
+                                            Boolean.TRUE.equals(mDatastore.get(channel.toString())))
+                            .findFirst()
+                            .orElse(null);
+            if (enrollmentChannel != null) {
+                return enrollmentChannel.toString();
+            }
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+        return null;
+    }
+
+    private boolean getValueWithLock(String key) {
+        mReadWriteLock.readLock().lock();
+        try {
+            Boolean value = mDatastore.get(key);
+            return value != null ? value : false;
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Sets the boolean value to the Datastore, using read write to make sure it is thread safe.
+     *
+     * @param key for the datastore
+     * @param value boolean value to set
+     * @param callerName the function name who call this setValueWithLock
+     */
+    private void setValueWithLock(String key, Boolean value, String callerName) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastore.put(key, value);
+        } catch (IOException e) {
+            LogUtil.e(
+                    e,
+                    callerName
+                            + " operation failed due to IOException thrown by Datastore: "
+                            + e.getMessage());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix) {
+        writer.printf("%sConsentManager:\n", prefix);
+        String prefix2 = prefix + "  ";
+
+        mDatastore.dump(writer, prefix2);
     }
 }

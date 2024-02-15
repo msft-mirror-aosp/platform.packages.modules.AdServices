@@ -26,6 +26,12 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import com.google.common.collect.ImmutableSet;
+
+import org.json.JSONArray;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -36,6 +42,9 @@ import java.util.Set;
 
 public class FledgeRoomConvertersTest {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testSerializeDeserializeInstant() {
@@ -113,12 +122,50 @@ public class FledgeRoomConvertersTest {
 
     @Test
     public void testSerializeDeserializeStringSet() {
-        String serializedStringSet =
-                FledgeRoomConverters.serializeStringSet(AdDataFixture.getAdCounterKeys());
+        final ImmutableSet<String> originalSet = ImmutableSet.of("one", "two", "three");
+
+        String serializedStringSet = FledgeRoomConverters.serializeStringSet(originalSet);
         Set<String> deserializeStringSet =
                 FledgeRoomConverters.deserializeStringSet(serializedStringSet);
 
-        assertThat(deserializeStringSet)
+        assertThat(deserializeStringSet).containsExactlyElementsIn(originalSet);
+    }
+
+    @Test
+    public void testSerializeNullIntegerSet() {
+        assertThat(FledgeRoomConverters.serializeIntegerSet(null)).isNull();
+    }
+
+    @Test
+    public void testDeserializeNullIntegerSet() {
+        assertThat(FledgeRoomConverters.deserializeIntegerSet(null)).isNull();
+    }
+
+    @Test
+    public void testDeserializeMangledIntegerSet() {
+        assertThat(FledgeRoomConverters.deserializeIntegerSet("This is not a JSON string"))
+                .isNull();
+    }
+
+    @Test
+    public void testSerializeDeserializeIntegerSet() {
+        final String serializedIntegerSet =
+                FledgeRoomConverters.serializeIntegerSet(AdDataFixture.getAdCounterKeys());
+        final Set<Integer> deserializeIntegerSet =
+                FledgeRoomConverters.deserializeIntegerSet(serializedIntegerSet);
+
+        assertThat(deserializeIntegerSet)
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
+    }
+
+    @Test
+    public void testSerializeDeserializeIntegerSet_invalidIntegerSkipped() {
+        final String serializedIntegerSet =
+                new JSONArray(AdDataFixture.getAdCounterKeys()).put("invalid").toString();
+        final Set<Integer> deserializeIntegerSet =
+                FledgeRoomConverters.deserializeIntegerSet(serializedIntegerSet);
+
+        assertThat(deserializeIntegerSet)
                 .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
     }
 }

@@ -501,7 +501,7 @@ public class SharedPreferencesSyncManagerUnitTest {
         @Override
         public synchronized void syncDataFromClient(
                 String callingPackageName,
-                long timeAppCalledSystemServer,
+                SandboxLatencyInfo sandboxLatencyInfo,
                 SharedPreferencesUpdate update,
                 ISharedPreferencesSyncCallback callback) {
             if (mCallingPackageName == null) {

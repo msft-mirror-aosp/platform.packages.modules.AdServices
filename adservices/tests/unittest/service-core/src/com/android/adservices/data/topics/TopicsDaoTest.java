@@ -17,6 +17,7 @@
 package com.android.adservices.data.topics;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -26,13 +27,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.MediumTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -40,11 +45,14 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,6 +71,9 @@ public final class TopicsDaoTest {
     // TODO: (b/232807776) Replace below hardcoded taxonomy version and model version
     private static final long TAXONOMY_VERSION = 1L;
     private static final long MODEL_VERSION = 1L;
+    private static final String PUBLIC_KEY = "publicKey";
+    private static final byte[] ENCAPSULATED_KEY =
+            "encapsulatedKey".getBytes(StandardCharsets.UTF_8);
 
     @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
@@ -71,6 +82,9 @@ public final class TopicsDaoTest {
 
     private final DbHelper mDBHelper = DbTestUtil.getDbHelperForTest();
     private final TopicsDao mTopicsDao = new TopicsDao(mDBHelper);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -87,6 +101,7 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.CallerCanLearnTopicsContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.TopTopicsContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.ReturnedEncryptedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
@@ -413,6 +428,47 @@ public final class TopicsDaoTest {
     }
 
     @Test
+    public void testRetrieveDistinctAppsFromEncryptedTables() {
+        // App Usages table has app1 and app2 as unique apps
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app1");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 2L, "app1");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app2");
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        EncryptedTopic encryptedTopic1 = buildEncryptedTopic(topic1);
+        EncryptedTopic encryptedTopic2 = buildEncryptedTopic(topic2);
+
+        // ReturnedEncryptedTopic tables have app2 and app3 as unique apps
+        Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopicsForEpoch1 =
+                new HashMap<>();
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app2", ""), encryptedTopic1);
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app2", "sdk1"), encryptedTopic1);
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app2", "sdk2"), encryptedTopic2);
+
+        // Setup for EpochId 2
+        Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopicsForEpoch2 =
+                new HashMap<>();
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app3", ""), encryptedTopic1);
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app3", "sdk1"), encryptedTopic2);
+
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                /* epoch Id */ 1L, returnedEncryptedTopicsForEpoch1);
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                /* epoch Id */ 2L, returnedEncryptedTopicsForEpoch2);
+
+        assertThat(
+                        (mTopicsDao.retrieveDistinctAppsFromTables(
+                                List.of(
+                                        TopicsTables.AppUsageHistoryContract.TABLE,
+                                        TopicsTables.ReturnedEncryptedTopicContract.TABLE),
+                                List.of(
+                                        TopicsTables.AppUsageHistoryContract.APP,
+                                        TopicsTables.ReturnedEncryptedTopicContract.APP))))
+                .isEqualTo(Set.of("app1", "app2", "app3"));
+    }
+
+    @Test
     public void testRetrieveDistinctAppsFromTables_unequalListSizes() {
         assertThrows(
                 IllegalArgumentException.class,
@@ -503,6 +559,49 @@ public final class TopicsDaoTest {
     }
 
     @Test
+    public void testPersistAndRetrieveReturnedAppEncryptedTopics_oneEpoch() {
+        EncryptedTopic encryptedTopic1 =
+                buildEncryptedTopic(Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION));
+        EncryptedTopic encryptedTopic2 =
+                buildEncryptedTopic(Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION));
+        EncryptedTopic encryptedTopic3 =
+                buildEncryptedTopic(Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION));
+        EncryptedTopic encryptedTopic5 =
+                buildEncryptedTopic(Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION));
+
+        // returnedAppSdkEncryptedTopics = Map<Pair<App, Sdk>, EncryptedTopic>
+        Map<Pair<String, String>, EncryptedTopic> returnedAppSdkEncryptedTopics = new HashMap<>();
+        returnedAppSdkEncryptedTopics.put(Pair.create("app1", ""), encryptedTopic1);
+        returnedAppSdkEncryptedTopics.put(Pair.create("app1", "sdk1"), encryptedTopic1);
+        returnedAppSdkEncryptedTopics.put(Pair.create("app1", "sdk2"), encryptedTopic1);
+
+        returnedAppSdkEncryptedTopics.put(Pair.create("app2", "sdk1"), encryptedTopic2);
+        returnedAppSdkEncryptedTopics.put(Pair.create("app2", "sdk3"), encryptedTopic2);
+        returnedAppSdkEncryptedTopics.put(Pair.create("app2", "sdk4"), encryptedTopic2);
+
+        returnedAppSdkEncryptedTopics.put(Pair.create("app3", "sdk1"), encryptedTopic3);
+
+        returnedAppSdkEncryptedTopics.put(Pair.create("app5", "sdk1"), encryptedTopic5);
+        returnedAppSdkEncryptedTopics.put(Pair.create("app5", "sdk5"), encryptedTopic5);
+
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                /* epochId = */ 1L, returnedAppSdkEncryptedTopics);
+
+        // Map<EpochId, Map<Pair<App, Sdk>, EncryptedTopic>
+        Map<Long, Map<Pair<String, String>, EncryptedTopic>> returnedEncryptedTopicsFromDb =
+                mTopicsDao.retrieveReturnedEncryptedTopics(
+                        /* epochId = */ 1L, /* numberOfLookBackEpochs = */ 1);
+
+        // There is 1 epoch.
+        assertThat(returnedEncryptedTopicsFromDb).hasSize(1);
+        Map<Pair<String, String>, EncryptedTopic> returnedAppSdkTopicsFromDb =
+                returnedEncryptedTopicsFromDb.get(1L);
+
+        // And the returnedAppSdkEncryptedTopics match.
+        assertThat(returnedAppSdkTopicsFromDb).isEqualTo(returnedAppSdkEncryptedTopics);
+    }
+
+    @Test
     public void testPersistAndRetrieveReturnedAppTopics_multipleEpochs() {
         // We will have 5 topics and set up the returned topics for epoch 3, 2, and 1.
         Topic topic1 =
@@ -586,6 +685,97 @@ public final class TopicsDaoTest {
     }
 
     @Test
+    public void testPersistAndRetrieveReturnedEncryptedAppTopics_multipleEpochs() {
+        // We will have 5 encrypted topics and set up the returned topics for epoch 3, 2, and 1.
+        EncryptedTopic encryptedTopic1 =
+                buildEncryptedTopic(Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION));
+        EncryptedTopic encryptedTopic2 =
+                buildEncryptedTopic(Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION));
+        EncryptedTopic encryptedTopic3 =
+                buildEncryptedTopic(Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION));
+        EncryptedTopic encryptedTopic4 =
+                buildEncryptedTopic(Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION));
+        EncryptedTopic encryptedTopic5 =
+                buildEncryptedTopic(Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION));
+
+        // Setup for EpochId 1
+        // Map<Pair<App, Sdk>, EncryptedTopic>
+        Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopicsForEpoch1 =
+                new HashMap<>();
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app1", ""), encryptedTopic1);
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app1", "sdk1"), encryptedTopic1);
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app1", "sdk2"), encryptedTopic1);
+
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app2", "sdk1"), encryptedTopic2);
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app2", "sdk3"), encryptedTopic2);
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app2", "sdk4"), encryptedTopic2);
+
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app3", "sdk1"), encryptedTopic3);
+
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app5", "sdk1"), encryptedTopic5);
+        returnedEncryptedTopicsForEpoch1.put(Pair.create("app5", "sdk5"), encryptedTopic5);
+
+        // Setup for EpochId 2
+        Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopicsForEpoch2 =
+                new HashMap<>();
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app1", ""), encryptedTopic2);
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app1", "sdk1"), encryptedTopic2);
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app1", "sdk2"), encryptedTopic2);
+
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app2", "sdk1"), encryptedTopic3);
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app2", "sdk3"), encryptedTopic3);
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app2", "sdk4"), encryptedTopic3);
+
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app3", "sdk1"), encryptedTopic4);
+
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app5", "sdk1"), encryptedTopic1);
+        returnedEncryptedTopicsForEpoch2.put(Pair.create("app5", "sdk5"), encryptedTopic1);
+
+        // Setup for EpochId 3
+        // epochId == 3 does not have any encryptedTopics. This could happen if the epoch
+        // computation failed
+        // or the device was offline and no epoch computation was done.
+        Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopicsForEpoch3 =
+                new HashMap<>();
+
+        // Now persist the returned encrypted topics for 3 epochs
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                /* epochId = */ 1L, returnedEncryptedTopicsForEpoch1);
+
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                /* epochId = */ 2L, returnedEncryptedTopicsForEpoch2);
+
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                /* epochId = */ 3L, returnedEncryptedTopicsForEpoch3);
+
+        // Now retrieve from DB and verify the result for reach epoch.
+        // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
+        // Since the epochId 3 is empty, the results are always empty.
+        Map<Long, Map<Pair<String, String>, EncryptedTopic>> returnedEncryptedTopicsFromDb =
+                mTopicsDao.retrieveReturnedEncryptedTopics(
+                        /* epochId = */ 3L, /* numberOfLookBackEpochs = */ 1);
+        assertThat(returnedEncryptedTopicsFromDb).isEmpty();
+
+        // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
+        returnedEncryptedTopicsFromDb =
+                mTopicsDao.retrieveReturnedEncryptedTopics(
+                        /* epochId = */ 3L, /* numberOfLookBackEpochs = */ 2);
+        Map<Long, Map<Pair<String, String>, EncryptedTopic>> expectedReturnedTopics =
+                new HashMap<>();
+        expectedReturnedTopics.put(2L, returnedEncryptedTopicsForEpoch2);
+        assertThat(returnedEncryptedTopicsFromDb).isEqualTo(expectedReturnedTopics);
+
+        // Now look at epochId in {3, 2, 1} only by setting numberOfLookBackEpochs = 3.
+        returnedEncryptedTopicsFromDb =
+                mTopicsDao.retrieveReturnedEncryptedTopics(
+                        /* epochId = */ 3L, /* numberOfLookBackEpochs = */ 3);
+        expectedReturnedTopics = new HashMap<>();
+        expectedReturnedTopics.put(1L, returnedEncryptedTopicsForEpoch1);
+        expectedReturnedTopics.put(2L, returnedEncryptedTopicsForEpoch2);
+        assertThat(returnedEncryptedTopicsFromDb).isEqualTo(expectedReturnedTopics);
+    }
+
+    @Test
     public void testRecordBlockedTopicAndRetrieveBlockedTopics() {
         final int topicId = 1;
         final long taxonomyVersion = 1L;
@@ -661,6 +851,32 @@ public final class TopicsDaoTest {
     }
 
     @Test
+    public void testDeleteAllTopicsTables_sqlExceptionOnDelete() {
+        // Setup required mocks.
+        DbHelper mockDbHelper = Mockito.mock(DbHelper.class);
+        SQLiteDatabase mockDatabase = Mockito.mock(SQLiteDatabase.class);
+        TopicsDao topicsDao = new TopicsDao(mockDbHelper);
+
+        // Do nothing for ErrorLogUtil calls.
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        // Throw exception on deletion of any table.
+        when(mockDbHelper.safeGetWritableDatabase()).thenReturn(mockDatabase);
+        when(mockDatabase.delete(any(), any(), any())).thenThrow(SQLException.class);
+
+        // Call topicsDao with empty exclusion list.
+        topicsDao.deleteAllTopicsTables(/*tablesToExclude*/ List.of());
+
+        // Verify the correct client error log is reported for all 11 tables.
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
+                times(11));
+    }
+
+    @Test
     public void testDeleteAllTopicsTables() {
         Topic topic1 =
                 Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
@@ -674,6 +890,8 @@ public final class TopicsDaoTest {
                 Topic.create(/* topic */ 5, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
         Topic topic6 =
                 Topic.create(/* topic */ 6, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        EncryptedTopic encryptedTopic1 = buildEncryptedTopic(topic1);
+        EncryptedTopic encryptedTopic2 = buildEncryptedTopic(topic2);
 
         final String app1 = "app1";
         final String app2 = "app2";
@@ -697,6 +915,11 @@ public final class TopicsDaoTest {
                             epochId, Map.of(Pair.create(app, sdk), topic1));
                     mTopicsDao.persistReturnedAppTopicsMap(
                             epochId, Map.of(Pair.create(app, sdk), topic2));
+                    // Insert encrypted topics.
+                    mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                            epochId, Map.of(Pair.create(app, sdk), encryptedTopic1));
+                    mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                            epochId, Map.of(Pair.create(app, sdk), encryptedTopic2));
                 }
             }
             mTopicsDao.persistAppClassificationTopics(
@@ -736,6 +959,10 @@ public final class TopicsDaoTest {
                         mTopicsDao.retrieveReturnedTopics(
                                 /* current Epoch ID */ 3, /* look back Epochs */ 3))
                 .isEmpty();
+        assertThat(
+                        mTopicsDao.retrieveReturnedEncryptedTopics(
+                                /* current Epoch ID */ 3, /* look back Epochs */ 3))
+                .isEmpty();
 
         mTopicsDao.deleteAllTopicsTables(/* tablesToExclude */ Collections.emptyList());
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
@@ -759,6 +986,8 @@ public final class TopicsDaoTest {
         Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        EncryptedTopic encryptedTopic1 = buildEncryptedTopic(topic1);
+        EncryptedTopic encryptedTopic2 = buildEncryptedTopic(topic2);
 
         appClassificationTopicsMap.put(app1, List.of(topic1, topic2));
         appClassificationTopicsMap.put(app2, List.of(topic1));
@@ -803,6 +1032,25 @@ public final class TopicsDaoTest {
                 List.of(app1, app2));
 
         assertThat(mTopicsDao.retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 1))
+                .isEmpty();
+
+        // Verify ReturnedEncryptedTopicContract
+        Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopics = new HashMap<>();
+        returnedEncryptedTopics.put(Pair.create(app1, sdk), encryptedTopic1);
+        returnedEncryptedTopics.put(Pair.create(app1, ""), encryptedTopic2);
+        returnedEncryptedTopics.put(Pair.create(app2, sdk), encryptedTopic1);
+        mTopicsDao.persistReturnedAppEncryptedTopicsMap(epochId, returnedEncryptedTopics);
+
+        mTopicsDao.deleteFromTableByColumn(
+                List.of(
+                        Pair.create(
+                                TopicsTables.ReturnedEncryptedTopicContract.TABLE,
+                                TopicsTables.ReturnedTopicContract.APP)),
+                List.of(app1, app2));
+
+        assertThat(
+                        mTopicsDao.retrieveReturnedEncryptedTopics(
+                                epochId, /* numberOfLookBackEpochs */ 1))
                 .isEmpty();
 
         // Verify TopicContributorsContract. This is also able to test a non-String value
@@ -1181,5 +1429,13 @@ public final class TopicsDaoTest {
 
         mTopicsDao.deleteAllEntriesFromTable(TopicsTables.BlockedTopicsContract.TABLE);
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+    }
+
+    // Build EncryptedTopic using Topic.toString to distinguish unique EncryptedTopics.
+    private EncryptedTopic buildEncryptedTopic(Topic topic) {
+        return EncryptedTopic.create(
+                /* cipherText */ topic.toString().getBytes(StandardCharsets.UTF_8),
+                PUBLIC_KEY,
+                ENCAPSULATED_KEY);
     }
 }

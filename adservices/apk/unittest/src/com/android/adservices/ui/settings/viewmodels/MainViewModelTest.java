@@ -16,7 +16,6 @@
 
 package com.android.adservices.ui.settings.viewmodels;
 
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
@@ -28,55 +27,37 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
-
-import java.io.IOException;
 
 /** Tests for {@link MainViewModel}. */
-public class MainViewModelTest {
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(ConsentManager.class)
+public final class MainViewModelTest extends AdServicesExtendedMockitoTestCase {
 
     private MainViewModel mMainViewModel;
-    @Mock
-    private ConsentManager mConsentManager;
+    @Mock private ConsentManager mConsentManager;
     @Mock private Flags mMockFlags;
-    private MockitoSession mStaticMockSession = null;
 
     /** Setup needed before every test in this class. */
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ConsentManager.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         mMainViewModel =
                 new MainViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
-    }
-
-    /** Teardown needed before every test in this class. */
-    @After
-    public void teardown() throws IOException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     /** Test if getConsent returns true if the {@link ConsentManager} always returns true. */

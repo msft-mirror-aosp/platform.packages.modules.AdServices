@@ -13,16 +13,17 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 genrule {
-  name: "statslog-sdksandbox-java-gen",
-  tools: ["stats-log-api-gen"],
-  cmd: "$(location stats-log-api-gen) --java $(out) --module sdksandbox" +
-       " --javaPackage com.android.sdksandbox.service.stats --javaClass SdkSandboxStatsLog" +
-       " --minApiLevel 33",
-  out: ["com/android/sdksandbox/service/stats/SdkSandboxStatsLog.java"],
+    name: "statslog-sdksandbox-java-gen",
+    tools: ["stats-log-api-gen"],
+    cmd: "$(location stats-log-api-gen) --java $(out) --module sdksandbox" +
+        " --javaPackage com.android.sdksandbox.service.stats --javaClass SdkSandboxStatsLog" +
+        " --minApiLevel 33",
+    out: ["com/android/sdksandbox/service/stats/SdkSandboxStatsLog.java"],
 }
 
 java_library {
@@ -58,7 +59,7 @@ java_sdk_library {
     ],
     aidl: {
         // TODO(b/161393989): Enable when TRACE_TAG_AIDL is exposed to mainline modules
-        generate_traces: false
+        generate_traces: false,
     },
     sdk_version: "system_server_current",
     permitted_packages: [
@@ -68,12 +69,13 @@ java_sdk_library {
     ],
     jarjar_rules: "jarjar_rules.txt",
     libs: [
-         "androidx.annotation_annotation",
+        "androidx.annotation_annotation",
         "framework-configinfrastructure",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "framework-statsd.stubs.module_lib",
         "jsr305",
+        "keepanno-annotations",
     ],
     static_libs: [
         "sdksandbox-statsd",
@@ -81,11 +83,16 @@ java_sdk_library {
         "modules-utils-backgroundthread",
         "modules-utils-build",
         "modules-utils-shell-command-handler",
+        "sdksandbox-service-proto-lite",
+        "sdk_sandbox_flags_lib",
     ],
     defaults: [
         "framework-system-server-module-defaults",
         "framework-system-server-module-optimize-defaults",
         "sdksandbox-java-defaults",
+    ],
+    java_resources: [
+        ":platform_api_allowlist_per_target_sdk_version_current.binarypb",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
@@ -105,5 +112,8 @@ java_sdk_library {
             "android.app.sdksandbox.**",
             "com.android.sdksandbox.**",
         ],
+    },
+    lint: {
+        baseline_filename: "lint-baseline.xml",
     },
 }

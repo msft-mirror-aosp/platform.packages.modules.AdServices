@@ -29,8 +29,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.ContextualAds;
-import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
@@ -43,6 +43,7 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import android.util.Pair;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -52,6 +53,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -91,8 +93,8 @@ public class AdFiltererImplTest {
                     .setMetadata(AD_DATA.getMetadata())
                     .build();
 
-    private static final ContextualAds.Builder CONTEXTUAL_ADS_BUILDER =
-            ContextualAdsFixture.aContextualAdBuilder()
+    private static final SignedContextualAds.Builder CONTEXTUAL_ADS_BUILDER =
+            SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder()
                     .setAdsWithBid(ImmutableList.of(new AdWithBid(AD_DATA, 1.0)))
                     .setBuyer(CommonFixture.VALID_BUYER_1)
                     .setDecisionLogicUri(
@@ -101,6 +103,9 @@ public class AdFiltererImplTest {
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     private AdFilterer mAdFilterer;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -114,7 +119,7 @@ public class AdFiltererImplTest {
     @Test
     public void testFilterContextualAdsDoesNotFilterNullAdFilters() {
         final AdData adData = AD_DATA_BUILDER.setAdFilters(null).build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -132,7 +137,7 @@ public class AdFiltererImplTest {
                                         .setFrequencyCapFilters(null)
                                         .build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -153,7 +158,7 @@ public class AdFiltererImplTest {
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters).build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -177,7 +182,7 @@ public class AdFiltererImplTest {
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters).build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -209,7 +214,7 @@ public class AdFiltererImplTest {
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters).build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -248,7 +253,7 @@ public class AdFiltererImplTest {
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters2).build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(
                                 ImmutableList.of(
@@ -268,9 +273,9 @@ public class AdFiltererImplTest {
 
     @Test
     public void testFilterContextualAdsWithEmptyFrequencyCapFilters() {
-        doReturn(KeyedFrequencyCapFixture.FILTER_COUNT)
+        doReturn(KeyedFrequencyCapFixture.FILTER_EXCEED_COUNT)
                 .when(mFrequencyCapDaoMock)
-                .getNumEventsForBuyerAfterTime(any(), any(), anyInt(), any());
+                .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
 
         final AdData adDataNotFiltered =
                 AD_DATA_BUILDER
@@ -285,7 +290,7 @@ public class AdFiltererImplTest {
                 ImmutableList.of(
                         new AdWithBid(adDataNotFiltered, 1.0), new AdWithBid(dataNoFilters, 2.0));
 
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER.setAdsWithBid(adsWithBid).build();
 
         assertThat(mAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
@@ -296,9 +301,9 @@ public class AdFiltererImplTest {
 
     @Test
     public void testFilterContextualAdsForNonMatchingFrequencyCap() {
-        doReturn(KeyedFrequencyCapFixture.FILTER_COUNT)
+        doReturn(KeyedFrequencyCapFixture.FILTER_UNDER_MAX_COUNT)
                 .when(mFrequencyCapDaoMock)
-                .getNumEventsForBuyerAfterTime(any(), any(), anyInt(), any());
+                .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
 
         final AdData adData =
                 AD_DATA_BUILDER
@@ -313,7 +318,7 @@ public class AdFiltererImplTest {
         List<AdWithBid> adsWithBid =
                 ImmutableList.of(new AdWithBid(adData, 1.0), new AdWithBid(dataNoFilters, 2.0));
 
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER.setAdsWithBid(adsWithBid).build();
 
         assertThat(mAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
@@ -321,19 +326,19 @@ public class AdFiltererImplTest {
 
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION), any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_VIEW), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_VIEW), any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK), any());
         verifyNoMoreInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
     }
 
@@ -341,7 +346,7 @@ public class AdFiltererImplTest {
     public void testFilterContextualAdsForMatchingFrequencyCap() {
         doReturn(KeyedFrequencyCapFixture.FILTER_EXCEED_COUNT)
                 .when(mFrequencyCapDaoMock)
-                .getNumEventsForBuyerAfterTime(any(), any(), anyInt(), any());
+                .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
 
         final AdData adData =
                 AD_DATA_BUILDER
@@ -355,12 +360,13 @@ public class AdFiltererImplTest {
         final AdData dataNoFilters = AD_DATA_NO_FILTER;
         List<AdWithBid> adsWithBid =
                 ImmutableList.of(new AdWithBid(adData, 1.0), new AdWithBid(dataNoFilters, 2.0));
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER.setAdsWithBid(adsWithBid).build();
 
         assertThat(mAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
                 .containsExactly(new AdWithBid(dataNoFilters, 2.0));
-        verify(mFrequencyCapDaoMock).getNumEventsForBuyerAfterTime(any(), any(), anyInt(), any());
+        verify(mFrequencyCapDaoMock)
+                .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
         verifyNoMoreInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
     }
 
@@ -380,7 +386,7 @@ public class AdFiltererImplTest {
                 ImmutableList.of(
                         new AdWithBid(adDataOnlyWinFilters, 1.0),
                         new AdWithBid(dataNoFilters, 2.0));
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER.setAdsWithBid(adsWithBid).build();
 
         assertThat(mAdFilterer.filterContextualAds(contextualAds).getAdsWithBid())
@@ -488,9 +494,9 @@ public class AdFiltererImplTest {
 
     @Test
     public void testFilterCustomAudiencesWithNonMatchingFrequencyCapFilters() {
-        doReturn(KeyedFrequencyCapFixture.FILTER_COUNT)
+        doReturn(KeyedFrequencyCapFixture.FILTER_UNDER_MAX_COUNT)
                 .when(mFrequencyCapDaoMock)
-                .getNumEventsForBuyerAfterTime(any(), any(), anyInt(), any());
+                .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
 
         DBAdData adDataNotFiltered =
                 DBAdDataFixture.getValidDbAdDataNoFiltersBuilder()
@@ -520,9 +526,9 @@ public class AdFiltererImplTest {
 
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForCustomAudienceAfterTime(
-                        any(),
+                        anyInt(),
                         any(),
                         any(),
                         any(),
@@ -530,19 +536,19 @@ public class AdFiltererImplTest {
                         any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION), any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_VIEW), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_VIEW), any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK), any());
         verifyNoMoreInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
     }
 
@@ -550,7 +556,7 @@ public class AdFiltererImplTest {
     public void testFilterCustomAudiencesWithMatchingNonWinFrequencyCapFilters() {
         doReturn(KeyedFrequencyCapFixture.FILTER_EXCEED_COUNT)
                 .when(mFrequencyCapDaoMock)
-                .getNumEventsForBuyerAfterTime(any(), any(), anyInt(), any());
+                .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
 
         DBAdData adDataWithImpressionFilter =
                 DBAdDataFixture.getValidDbAdDataNoFiltersBuilder()
@@ -609,13 +615,13 @@ public class AdFiltererImplTest {
 
         verify(mFrequencyCapDaoMock)
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION), any());
         verify(mFrequencyCapDaoMock)
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_VIEW), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_VIEW), any());
         verify(mFrequencyCapDaoMock)
                 .getNumEventsForBuyerAfterTime(
-                        any(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK), any());
+                        anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK), any());
         verifyNoMoreInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
     }
 
@@ -624,7 +630,7 @@ public class AdFiltererImplTest {
         doReturn(KeyedFrequencyCapFixture.FILTER_EXCEED_COUNT)
                 .when(mFrequencyCapDaoMock)
                 .getNumEventsForCustomAudienceAfterTime(
-                        any(),
+                        anyInt(),
                         any(),
                         any(),
                         any(),
@@ -666,7 +672,7 @@ public class AdFiltererImplTest {
 
         verify(mFrequencyCapDaoMock)
                 .getNumEventsForCustomAudienceAfterTime(
-                        any(),
+                        anyInt(),
                         any(),
                         any(),
                         any(),

@@ -16,15 +16,18 @@
 
 package com.android.adservices.service.topics;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import static com.google.common.truth.Truth.assertThat;
+import com.android.adservices.common.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -35,6 +38,9 @@ import java.io.IOException;
 public class TopicIdNameUtilTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static TopicIdNameUtil sTopicIdNameUtil;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws IOException {

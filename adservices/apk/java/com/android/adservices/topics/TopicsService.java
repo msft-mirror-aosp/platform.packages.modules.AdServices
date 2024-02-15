@@ -36,15 +36,17 @@ import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsServiceImpl;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.adservices.shared.util.Clock;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -67,9 +69,7 @@ public class TopicsService extends Service {
             sLogger.e("onCreate(): Topics API is disabled");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    "TopicsService",
-                    "onCreate");
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return;
         }
 
@@ -84,9 +84,9 @@ public class TopicsService extends Service {
                     new TopicsServiceImpl(
                             this,
                             TopicsWorker.getInstance(this),
-                            ConsentManager.getInstance(this),
+                            ConsentManager.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
-                            Clock.SYSTEM_CLOCK,
+                            Clock.getInstance(),
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(FlagsFactory.getFlags()),
                             EnrollmentDao.getInstance(this),
@@ -101,16 +101,13 @@ public class TopicsService extends Service {
 
     private void schedulePeriodicJobs() {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
-        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EncryptionKeyJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
     }
 
     private boolean hasUserConsent() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.TOPICS).isGiven();
-        } else {
-            return ConsentManager.getInstance(this).getConsent().isGiven();
-        }
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.TOPICS).isGiven();
     }
 
     @Override
@@ -119,9 +116,7 @@ public class TopicsService extends Service {
             sLogger.e("onBind(): Topics API is disabled, return nullBinding.");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                    "TopicsService",
-                    "onBind");
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             // Return null so that clients can not bind to the service.
             return null;
         }
@@ -133,7 +128,7 @@ public class TopicsService extends Service {
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         super.dump(fd, writer, args);
         FlagsFactory.getFlags().dump(writer, args);
-        if (Build.isDebuggable()) {
+        if (BuildCompatUtils.isDebuggable()) {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance(this).dump(writer, args);
             CacheManager.getInstance(this).dump(writer, args);

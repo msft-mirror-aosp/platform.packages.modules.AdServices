@@ -28,7 +28,6 @@
         <option name="test-file-name" value="SdkSandboxPerfScenarioTests.apk"/>
         <option name="test-file-name" value="SdkSandboxCodeProvider.apk"/>
         <option name="test-file-name" value="SdkSandboxMediateeProvider.apk"/>
-        <option name="test-file-name" value="SdkSandboxWebViewProvider.apk"/>
         <option name="test-file-name" value="SdkSandboxClient.apk"/>
     </target_preparer>
 

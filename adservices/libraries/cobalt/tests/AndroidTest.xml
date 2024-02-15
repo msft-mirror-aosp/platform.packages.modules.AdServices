@@ -14,17 +14,20 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Config for Cobalt unit test cases">
-    <option name="test-tag" value="CobaltUnitTests" />
-
+<configuration description="Config for Cobalt unit test cases in AdServices">
+    <object class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController"
+        type="module_controller">
+        <option name="mainline-module-package-name" value="com.google.android.adservices" />
+    </object>
+    <option name="test-tag" value="AdServicesCobaltUnitTests" />
+    <option name="config-descriptor:metadata" key="mainline-param"
+        value="com.google.android.adservices.apex" />
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="CobaltUnitTests.apk"/>
+        <option name="check-min-sdk" value="true" />
+        <option name="test-file-name" value="AdServicesCobaltUnitTests.apk" />
     </target_preparer>
-
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
-        <option name="hidden-api-checks" value="false" />
-        <option name="package" value="com.android.cobalt.tests"/>
+        <option name="package" value="com.android.cobalt.tests" />
     </test>
 </configuration>
-

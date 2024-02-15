@@ -15,35 +15,34 @@
  */
 package android.adservices.appsetid;
 
-import static org.junit.Assert.assertEquals;
+import static android.adservices.appsetid.GetAppSetIdResult.SCOPE_APP;
 
 import androidx.test.filters.SmallTest;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link android.adservices.appsetid.AppSetId} */
+@RequiresSdkLevelAtLeastS()
 @SmallTest
-public final class AppSetIdTest {
+public final class AppSetIdTest extends AdServicesUnitTestCase {
+    private static final String TEST_APP_SET_ID = "TEST_APP_SET_ID";
+
     @Test
-    public void testAppSetId() throws Exception {
-        AppSetId response = new AppSetId("TEST_APPSETID", GetAppSetIdResult.SCOPE_APP);
+    public void testAppSetId() {
+        AppSetId appSetId1 = new AppSetId(TEST_APP_SET_ID, SCOPE_APP);
 
         // Validate the returned response is same to what we created
-        assertEquals("TEST_APPSETID", response.getId());
-        assertEquals(GetAppSetIdResult.SCOPE_APP, response.getScope());
+        expect.that(appSetId1.getId()).isEqualTo(TEST_APP_SET_ID);
+        expect.that(appSetId1.getScope()).isEqualTo(SCOPE_APP);
 
-        AppSetId mirrorResponse = response;
-        assertEquals(true, response.equals(mirrorResponse));
-        assertEquals(
-                true, response.equals(new AppSetId("TEST_APPSETID", GetAppSetIdResult.SCOPE_APP)));
-        assertEquals(
-                false,
-                response.equals(new AppSetId("TEST_APPSETID", GetAppSetIdResult.SCOPE_DEVELOPER)));
-        assertEquals(false, response.equals("TEST_APPSETID"));
+        // Validate equals().
+        AppSetId appSetId2 = new AppSetId(TEST_APP_SET_ID, SCOPE_APP);
+        expect.that(appSetId1).isEqualTo(appSetId2);
 
-        assertEquals(
-                true,
-                response.hashCode()
-                        == new AppSetId("TEST_APPSETID", GetAppSetIdResult.SCOPE_APP).hashCode());
+        // Validate hashcode().
+        expect.that(appSetId1.hashCode()).isEqualTo(appSetId2.hashCode());
     }
 }

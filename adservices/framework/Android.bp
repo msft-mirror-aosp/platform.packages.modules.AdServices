@@ -20,8 +20,8 @@ filegroup {
     name: "framework-adservices-sources",
     defaults: ["framework-sources-module-defaults"],
     srcs: [
-      "java/**/*.aidl",
-      "java/**/*.java"
+        "java/**/*.aidl",
+        "java/**/*.java",
     ],
     visibility: [
         "//packages/modules/AdServices/adservices:__subpackages__",
@@ -37,6 +37,11 @@ java_sdk_library {
         "modules-utils-preconditions",
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
+        "error_prone_annotations",
+        "adservices_flags_lib",
+    ],
+    static_libs : [
+        "adservices-shared-exceptions",
     ],
     sdk_version: "module_current",
     min_sdk_version: "30",
@@ -49,7 +54,13 @@ java_sdk_library {
     impl_library_visibility: [
         "//packages/modules/AdServices:__subpackages__",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
+    aconfig_declarations: [
+        "adservices_flags",
+    ],
 }
 
 java_library {
@@ -59,29 +70,28 @@ java_library {
         "modules-utils-preconditions",
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
+        "error_prone_annotations",
+        "adservices_flags_lib",
+    ],
+    static_libs : [
+        "adservices-shared-exceptions",
     ],
     min_sdk_version: "30",
     defaults: ["framework-module-defaults"],
 }
 
-java_api_contribution {
-    name: "framework-adservices-public-stubs",
-    api_surface: "public",
-    api_file: "api/current.txt",
-    visibility: [
-        "//build/orchestrator/apis",
-    ],
-}
-
 java_library {
     name: "android.ext.adservices",
     static_libs: ["framework-adservices.impl"],
+    installable: true,
+    provides_uses_lib: "android.ext.adservices",
     sdk_version: "module_current",
     min_sdk_version: "30",
     max_sdk_version: "32",
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
+        "//vendor:__subpackages__",
     ],
     apex_available: ["com.android.extservices"],
 }

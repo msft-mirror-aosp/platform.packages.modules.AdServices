@@ -15,54 +15,58 @@
  */
 package android.adservices.appsetid;
 
-import static com.google.common.truth.Truth.assertThat;
+import static android.adservices.appsetid.GetAppSetIdResult.SCOPE_APP;
+
+import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link GetAppSetIdResult} */
+@RequiresSdkLevelAtLeastS()
 @SmallTest
-public final class GetAppSetIdResultTest {
+public final class GetAppSetIdResultTest extends AdServicesUnitTestCase {
+    private static final String TEST_APP_SET_ID = "TEST_APP_SET_ID";
+
     @Test
-    public void testWriteToParcel() throws Exception {
+    public void testWriteToParcel() {
         GetAppSetIdResult response =
                 new GetAppSetIdResult.Builder()
-                        .setAppSetId("UNITTEST_ID")
-                        .setAppSetIdScope(GetAppSetIdResult.SCOPE_APP)
+                        .setAppSetId(TEST_APP_SET_ID)
+                        .setAppSetIdScope(SCOPE_APP)
                         .build();
         Parcel p = Parcel.obtain();
-        response.writeToParcel(p, 0);
-        p.setDataPosition(0);
 
-        GetAppSetIdResult fromParcel = GetAppSetIdResult.CREATOR.createFromParcel(p);
-        assertEquals(GetAppSetIdResult.CREATOR.newArray(1).length, 1);
+        try {
+            response.writeToParcel(p, 0);
+            p.setDataPosition(0);
 
-        assertEquals(fromParcel.getAppSetId(), "UNITTEST_ID");
-        assertEquals(fromParcel.getAppSetIdScope(), GetAppSetIdResult.SCOPE_APP);
+            GetAppSetIdResult fromParcel = GetAppSetIdResult.CREATOR.createFromParcel(p);
+            expect.that(fromParcel.getAppSetId()).isEqualTo(TEST_APP_SET_ID);
+            expect.that(fromParcel.getAppSetIdScope()).isEqualTo(SCOPE_APP);
 
-        assertEquals(fromParcel.equals(response), true);
+            expect.that(fromParcel).isEqualTo(response);
+            expect.that(fromParcel.hashCode()).isEqualTo(response.hashCode());
 
-        GetAppSetIdResult mirrorFromParcel = fromParcel;
-        assertEquals(fromParcel.equals(mirrorFromParcel), true);
-        assertEquals(fromParcel.equals("UNITTEST_ID"), false);
+        } finally {
+            p.recycle();
+        }
 
-        assertEquals(fromParcel.hashCode(), response.hashCode());
+        expect.that(response.getErrorMessage()).isNull();
+        expect.that(response.describeContents()).isEqualTo(0);
+        expect.that(response.toString()).contains("GetAppSetIdResult{");
 
-        assertEquals(response.getErrorMessage(), null);
-
-        assertEquals(response.describeContents(), 0);
-
-        assertThat(response.toString()).isNotNull();
+        expect.that(GetAppSetIdResult.CREATOR.newArray(1).length).isEqualTo(1);
     }
 
     @Test
-    public void testWriteToParcel_nullableThrows() throws Exception {
+    public void testWriteToParcel_nullableThrows() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {

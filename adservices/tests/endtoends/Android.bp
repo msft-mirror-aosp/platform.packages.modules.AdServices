@@ -28,7 +28,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
@@ -36,7 +36,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -44,6 +44,7 @@ android_test {
 
 android_test {
     name: "AdExtServicesEndToEndTests",
+    defaults: ["mts-target-sdk-version-current"],
     srcs: [
         "src/**/*.java",
     ],
@@ -54,7 +55,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "truth-prebuilt",
+        "truth",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
@@ -63,11 +64,11 @@ android_test {
     libs: [
         "android.test.base",
         "android.ext.adservices",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",

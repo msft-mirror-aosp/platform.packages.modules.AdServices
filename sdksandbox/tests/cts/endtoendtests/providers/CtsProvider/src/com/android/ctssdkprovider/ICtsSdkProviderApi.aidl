@@ -14,6 +14,9 @@
 
 package com.android.ctssdkprovider;
 
+import android.os.Bundle;
+
+import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 
 interface ICtsSdkProviderApi {
@@ -21,9 +24,21 @@ interface ICtsSdkProviderApi {
     void checkResourcesAndAssets();
     boolean isPermissionGranted (String permissionName, boolean useApplicationContext);
     int getContextHashCode(boolean useApplicationContext);
+    int getContextUserId();
     void testStoragePaths();
     int getProcessImportance();
-    void startActivity(IActivityStarter callback);
+    void startSandboxActivityDirectlyByAction(String sandboxPackageName);
+    void startSandboxActivityDirectlyByComponent(String sandboxPackageName);
+    IActivityActionExecutor startActivity(IActivityStarter callback, in Bundle extras);
+    String getPackageName();
     String getOpPackageName();
-    void startActivityAfterUnregisterHandler(IActivityStarter callback);
+    String getClientPackageName();
+    void checkRoomDatabaseAccess();
+    void checkCanUseSharedPreferences();
+    void checkReadFileDescriptor(in ParcelFileDescriptor fd, String expectedValue);
+    ParcelFileDescriptor createFileDescriptor(String valueToWrite);
+    void createAndRegisterSdkSandboxClientImportanceListener();
+    void waitForStateChangeDetection(int expectedForegroundValue, int expectedBackgroundValue);
+    void unregisterSdkSandboxClientImportanceListener();
+    int getLauncherActivityCount();
 }

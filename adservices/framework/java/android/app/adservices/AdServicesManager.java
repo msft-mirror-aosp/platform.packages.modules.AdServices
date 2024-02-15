@@ -114,9 +114,9 @@ public final class AdServicesManager {
      * user.
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordNotificationDisplayed() {
+    public void recordNotificationDisplayed(boolean wasNotificationDisplayed) {
         try {
-            mService.recordNotificationDisplayed();
+            mService.recordNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -141,9 +141,9 @@ public final class AdServicesManager {
      * user.
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordGaUxNotificationDisplayed() {
+    public void recordGaUxNotificationDisplayed(boolean wasNotificationDisplayed) {
         try {
-            mService.recordGaUxNotificationDisplayed();
+            mService.recordGaUxNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -187,6 +187,33 @@ public final class AdServicesManager {
     public boolean wasGaUxNotificationDisplayed() {
         try {
             return mService.wasGaUxNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether Consent PAS Notification was displayed or not.
+     *
+     * @return true if PAS Notification was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationDisplayed() {
+        try {
+            return mService.wasPasNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that PAS notification was displayed for the first time to
+     * the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        try {
+            mService.recordPasNotificationDisplayed(wasNotificationDisplayed);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -591,6 +618,46 @@ public final class AdServicesManager {
     public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
         try {
             mService.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the current UX. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getUx() {
+        try {
+            return mService.getUx();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current UX. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setUx(String ux) {
+        try {
+            mService.setUx(ux);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the current enrollment channel. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getEnrollmentChannel() {
+        try {
+            return mService.getEnrollmentChannel();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current enrollment channel. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setEnrollmentChannel(String enrollmentChannel) {
+        try {
+            mService.setEnrollmentChannel(enrollmentChannel);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

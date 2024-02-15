@@ -20,7 +20,7 @@ android_test {
     name: "CtsAdServicesPermissionsValidEndToEndTests",
     defaults: [
         "cts_defaults",
-        "modules-utils-testable-device-config-defaults"
+        "modules-utils-testable-device-config-defaults",
     ],
     srcs: [
         "src/**/*.java",
@@ -31,7 +31,7 @@ android_test {
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.test.base",
@@ -41,18 +41,18 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
+        "mcts-adservices",
     ],
     min_sdk_version: "33",
     manifest: "AndroidManifest.xml",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
 }
 
 android_test {
     name: "CtsAdExtServicesPermissionsValidEndToEndTests",
     defaults: [
         "cts_defaults",
-        "modules-utils-testable-device-config-defaults"
+        "modules-utils-testable-device-config-defaults",
     ],
     srcs: [
         "src/**/*.java",
@@ -63,7 +63,7 @@ android_test {
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
-        "truth-prebuilt",
+        "truth",
     ],
     libs: [
         "android.ext.adservices",
@@ -75,6 +75,7 @@ android_test {
         "cts",
         "general-tests",
         "mts-extservices",
+        "mcts-extservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "31",

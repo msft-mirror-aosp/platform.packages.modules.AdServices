@@ -24,7 +24,7 @@ import androidx.room.Query;
 import java.time.Instant;
 import java.util.List;
 
-/** Dao to manage access to entities in the EncryptionKey table. */
+/** Dao to manage access to entities in the Auction Server Encryption Key table. */
 @Dao
 public abstract class EncryptionKeyDao {
     /**
@@ -37,22 +37,9 @@ public abstract class EncryptionKeyDao {
             "SELECT * FROM encryption_key "
                     + "WHERE encryption_key_type = :encryptionKeyType "
                     + "ORDER BY expiry_instant DESC "
-                    + "LIMIT 1")
-    public abstract DBEncryptionKey getLatestExpiryKeyOfType(
-            @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType);
-
-    /**
-     * Returns the EncryptionKey of given key type with the expiry instant higher than given instant
-     * and has the latest expiry instant .
-     */
-    @Query(
-            "SELECT * FROM encryption_key "
-                    + "WHERE encryption_key_type = :encryptionKeyType "
-                    + "AND expiry_instant >= :now "
-                    + "ORDER BY expiry_instant DESC "
-                    + "LIMIT 1")
-    public abstract DBEncryptionKey getLatestExpiryActiveKeyOfType(
-            @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType, Instant now);
+                    + "LIMIT :count ")
+    public abstract List<DBEncryptionKey> getLatestExpiryNKeysOfType(
+            @EncryptionKeyConstants.EncryptionKeyType int encryptionKeyType, int count);
 
     /**
      * Fetches N number of non-expired EncryptionKey of given key type.
@@ -110,5 +97,5 @@ public abstract class EncryptionKeyDao {
 
     /** Insert into the table all the given EnryptionKeys. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public abstract void insertAllKeys(DBEncryptionKey... keys);
+    public abstract void insertAllKeys(List<DBEncryptionKey> keys);
 }

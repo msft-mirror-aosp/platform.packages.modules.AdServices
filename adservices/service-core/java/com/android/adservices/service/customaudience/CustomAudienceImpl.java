@@ -22,12 +22,15 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.Validator;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -108,7 +111,9 @@ public class CustomAudienceImpl {
      *     application identifier
      */
     public void joinCustomAudience(
-            @NonNull CustomAudience customAudience, @NonNull String callerPackageName) {
+            @NonNull CustomAudience customAudience,
+            @NonNull String callerPackageName,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callerPackageName);
         Instant currentTime = mClock.instant();
@@ -118,20 +123,31 @@ public class CustomAudienceImpl {
         sLogger.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
+        boolean adSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        sLogger.v("Ad Selection filtering enabled flag is %s", adSelectionFilteringEnabled);
+        boolean adRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
+        sLogger.v("Ad render id enabled flag is %s", adRenderIdEnabled);
+        AdDataConversionStrategy dataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                        adSelectionFilteringEnabled, adRenderIdEnabled);
+
+        boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+        sLogger.v("Is debuggable custom audience: %b", isDebuggableCustomAudience);
+
         Duration customAudienceDefaultExpireIn =
                 Duration.ofMillis(mFlags.getFledgeCustomAudienceDefaultExpireInMs());
-
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
                         customAudience,
                         callerPackageName,
                         currentTime,
                         customAudienceDefaultExpireIn,
-                        mFlags);
+                        dataConversionStrategy,
+                        isDebuggableCustomAudience);
 
         sLogger.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dbCustomAudience, customAudience.getDailyUpdateUri());
+                dbCustomAudience, customAudience.getDailyUpdateUri(), isDebuggableCustomAudience);
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */

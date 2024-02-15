@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 /** Utility class to handle AllowList for Apps and SDKs. */
 public class AllowLists {
     @VisibleForTesting public static final String ALLOW_ALL = "*";
+    public static final String ALLOW_NONE = "";
 
     private static final String SPLITTER = ",";
     private static final String HASH_ALGORITHM = "SHA-256";

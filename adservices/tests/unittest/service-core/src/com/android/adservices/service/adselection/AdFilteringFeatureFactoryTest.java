@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
@@ -23,11 +25,17 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
+import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -43,6 +51,16 @@ public class AdFilteringFeatureFactoryTest {
             Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class)
                     .build()
                     .frequencyCapDao();
+    AdSelectionEntryDao mAdSelectionEntryDao =
+            Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
+                    .build()
+                    .adSelectionEntryDao();
+    private boolean mAuctionServerEnabledForUpdateHistogram =
+            new FlagsWithAdSelectionFilteringDisabled()
+                    .getFledgeAuctionServerEnabledForUpdateHistogram();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetAdFiltererFilteringEnabled() {
@@ -82,6 +100,50 @@ public class AdFilteringFeatureFactoryTest {
         assertTrue(
                 adFilteringFeatureFactory.getAdCounterKeyCopier()
                         instanceof AdCounterKeyCopierNoOpImpl);
+    }
+
+    @Test
+    public void testGetFrequencyCapAdDataValidatorFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithAdSelectionFilteringEnabled());
+        assertThat(adFilteringFeatureFactory.getFrequencyCapAdDataValidator())
+                .isInstanceOf(FrequencyCapAdDataValidatorImpl.class);
+    }
+
+    @Test
+    public void testGetFrequencyCapAdDataValidatorFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        null, null, new FlagsWithAdSelectionFilteringDisabled());
+        assertThat(adFilteringFeatureFactory.getFrequencyCapAdDataValidator())
+                .isInstanceOf(FrequencyCapAdDataValidatorNoOpImpl.class);
+    }
+
+    @Test
+    public void testGetAdCounterHistogramUpdaterFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithAdSelectionFilteringEnabled());
+        assertThat(
+                        adFilteringFeatureFactory.getAdCounterHistogramUpdater(
+                                mAdSelectionEntryDao, mAuctionServerEnabledForUpdateHistogram))
+                .isInstanceOf(AdCounterHistogramUpdaterImpl.class);
+    }
+
+    @Test
+    public void testGetAdCounterHistogramUpdaterFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        null, null, new FlagsWithAdSelectionFilteringDisabled());
+        assertThat(
+                        adFilteringFeatureFactory.getAdCounterHistogramUpdater(
+                                mAdSelectionEntryDao, mAuctionServerEnabledForUpdateHistogram))
+                .isInstanceOf(AdCounterHistogramUpdaterNoOpImpl.class);
     }
 
     private static class FlagsWithAdSelectionFilteringDisabled implements Flags {

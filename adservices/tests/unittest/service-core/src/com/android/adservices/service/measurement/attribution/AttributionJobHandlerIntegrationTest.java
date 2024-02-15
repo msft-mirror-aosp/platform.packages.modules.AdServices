@@ -22,16 +22,22 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Integration tests for {@link AttributionJobHandler}
@@ -39,28 +45,43 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
 
-    @Parameterized.Parameters(name = "{2}")
+    private final AdServicesLogger mLogger;
+    private final AdServicesErrorLogger mErrorLogger;
+
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open("attribution_service_test.json");
         return AbstractDbIntegrationTest.getTestCasesFrom(
-                inputStream, /*prepareAdditionalData=*/null);
+                inputStream, /*prepareAdditionalData=*/ null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public AttributionJobHandlerIntegrationTest(DbState input, DbState output, String name) {
-        super(input, output);
+    public AttributionJobHandlerIntegrationTest(
+            DbState input,
+            DbState output,
+            Map<String, String> flagsMap,
+            String name) {
+        super(input, output, flagsMap);
+        mLogger = Mockito.mock(AdServicesLogger.class);
+        mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
 
     @Override
     public void runActionToTest() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
-        Assert.assertTrue(
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
+        Assert.assertEquals(
                 "Attribution failed.",
+                AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED,
                 (new AttributionJobHandler(
                                 datastoreManager,
-                                new DebugReportApi(sContext, FlagsFactory.getFlagsForTest())))
-                        .performPendingAttributions());
+                                FlagsFactory.getFlags(),
+                                new DebugReportApi(sContext, FlagsFactory.getFlags()),
+                                new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
+                                new SourceNoiseHandler(FlagsFactory.getFlags()),
+                                mLogger,
+                                new XnaSourceCreator(FlagsFactory.getFlags()))
+                        .performPendingAttributions()));
     }
 }

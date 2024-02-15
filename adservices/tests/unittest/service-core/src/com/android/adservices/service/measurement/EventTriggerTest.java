@@ -16,7 +16,13 @@
 
 package com.android.adservices.service.measurement;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -79,28 +85,34 @@ public class EventTriggerTest {
         EventTrigger eventTrigger1 =
                 new EventTrigger.Builder(new UnsignedLong(101L))
                         .setTriggerPriority(1L)
+                        .setTriggerValue(100L)
                         .setDedupKey(new UnsignedLong(1001L))
-                        .setFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(sFilterMap1)
-                                        .build()))
-                        .setNotFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(sNotFilterMap1)
-                                        .build()))
+                        .setFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(sFilterMap1)
+                                                .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(sNotFilterMap1)
+                                                .build()))
                         .build();
         EventTrigger eventTrigger2 =
                 new EventTrigger.Builder(new UnsignedLong(101L))
                         .setTriggerPriority(1L)
+                        .setTriggerValue(100L)
                         .setDedupKey(new UnsignedLong(1001L))
-                        .setFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(sFilterMap1)
-                                        .build()))
-                        .setNotFilterSet(List.of(
-                                new FilterMap.Builder()
-                                        .buildFilterData(sNotFilterMap1)
-                                        .build()))
+                        .setFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(sFilterMap1)
+                                                .build()))
+                        .setNotFilterSet(
+                                List.of(
+                                        new FilterMap.Builder()
+                                                .buildFilterData(sNotFilterMap1)
+                                                .build()))
                         .build();
 
         assertEquals(eventTrigger1, eventTrigger2);
@@ -111,6 +123,9 @@ public class EventTriggerTest {
         assertNotEquals(
                 new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerPriority(1L).build(),
                 new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerPriority(2L).build());
+        assertNotEquals(
+                new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerValue(100L).build(),
+                new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerValue(120L).build());
         assertNotEquals(
                 new EventTrigger.Builder(new UnsignedLong(1L)).build(),
                 new EventTrigger.Builder(new UnsignedLong(2L)).build());

@@ -15,17 +15,20 @@
  */
 package com.android.adservices;
 
-import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
-
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_AD_EXT_DATA_STORAGE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SELECTION_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COMMON_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_PROTECTED_SIGNALS_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_SHELL_COMMAND_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
+import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW;
 
 import android.annotation.Nullable;
 import android.content.ComponentName;
@@ -35,8 +38,12 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemProperties;
+import android.text.TextUtils;
 
+import com.android.adservices.shared.common.ServiceUnavailableException;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.List;
@@ -74,14 +81,34 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @GuardedBy("mLock")
     private ServiceConnection mServiceConnection;
 
+    private final boolean mSimulatingLowRamDevice;
+
     protected AndroidServiceBinder(
             Context context, String serviceIntentAction, Function<IBinder, T> converter) {
         mServiceIntentAction = serviceIntentAction;
         mContext = context;
         mBinderConverter = converter;
+        if (!isDebuggable()) {
+            mSimulatingLowRamDevice = false;
+        } else {
+            String propValue = SystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+            mSimulatingLowRamDevice = !TextUtils.isEmpty(propValue) && Boolean.valueOf(propValue);
+        }
+        if (mSimulatingLowRamDevice) {
+            LogUtil.w(
+                    "Service %s disabled because of system property %s",
+                    serviceIntentAction, SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+        }
     }
 
     public T getService() {
+        if (mSimulatingLowRamDevice) {
+            throw new ServiceUnavailableException(
+                    "Service is not bound (because of SystemProperty "
+                            + SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW
+                            + ")");
+        }
+
         synchronized (mLock) {
             // If we already have a service, just return it.
             if (mService != null) {
@@ -143,7 +170,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
         synchronized (mLock) {
             if (mService == null) {
-                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                throw new ServiceUnavailableException();
             }
             return mService;
         }
@@ -193,7 +220,11 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                 && !mServiceIntentAction.equals(ACTION_ADID_PROVIDER_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_APPSETID_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_APPSETID_PROVIDER_SERVICE)
-                && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)) {
+                && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_AD_EXT_DATA_STORAGE_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_SHELL_COMMAND_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_PROTECTED_SIGNALS_SERVICE)) {
             LogUtil.e("Bad service intent action: " + mServiceIntentAction);
             return null;
         }
@@ -213,6 +244,12 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     @Override
     public void unbindFromService() {
+        if (mSimulatingLowRamDevice) {
+            LogUtil.d(
+                    "unbindFromService(): ignored because it's disabled by system property %s",
+                    SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);
+            return;
+        }
         synchronized (mLock) {
             if (mServiceConnection != null) {
                 LogUtil.d("unbinding...");
@@ -221,5 +258,23 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             mServiceConnection = null;
             mService = null;
         }
+    }
+
+    // TODO(b/293894199, b/284744130): members below were adapted from BuildCompatUtils, it would
+    // be better to move BuildCompatUtils to this package
+
+    private static final boolean IS_DEBUGGABLE = computeIsDebuggable();
+
+    private static boolean isDebuggable() {
+        return IS_DEBUGGABLE;
+    }
+
+    private static boolean computeIsDebuggable() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return Build.isDebuggable();
+        }
+
+        // Build.isDebuggable was added in S; duplicate that functionality for R.
+        return SystemProperties.getInt("ro.debuggable", 0) == 1;
     }
 }

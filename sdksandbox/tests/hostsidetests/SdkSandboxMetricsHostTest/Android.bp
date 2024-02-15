@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -25,11 +26,13 @@ java_test_host {
     static_libs: [
         "cts-install-lib-host",
         "modules-utils-build-testing",
+        "SdkSandboxHostTestUtils",
     ],
     test_suites: ["general-tests"],
     data: [
         ":CrashTestSdkProvider",
         ":SdkSandboxMetricsTestApp",
+        ":SdkSandboxMetricsSecondaryTestApp",
     ],
 }
 
@@ -55,11 +58,35 @@ android_test_helper_app {
     target_sdk_version: "33",
     test_suites: ["general-tests"],
 }
+
 java_library {
     name: "CrashTestSdkApi",
     srcs: [
         "sdkprovider/src/**/*.aidl",
     ],
+}
+
+android_test_helper_app {
+    name: "SdkSandboxMetricsSecondaryTestApp",
+    manifest: "app/SdkSandboxMetricsSecondaryTestAppManifest.xml",
+    srcs: [
+        "app/src/**/SdkSandboxMetricsSecondaryTestApp.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.ext.junit",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+        "CrashTestSdkApi",
+    ],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
+    test_suites: ["general-tests"],
 }
 
 android_test_helper_app {
@@ -70,7 +97,7 @@ android_test_helper_app {
         "framework-sdksandbox-jarjar-defaults",
     ],
     srcs: [
-       "sdkprovider/src/**/*.java",
+        "sdkprovider/src/**/*.java",
     ],
     static_libs: [
         "CrashTestSdkApi",

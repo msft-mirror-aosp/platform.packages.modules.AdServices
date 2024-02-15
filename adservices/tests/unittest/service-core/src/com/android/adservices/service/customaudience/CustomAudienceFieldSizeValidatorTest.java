@@ -26,6 +26,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -33,6 +34,7 @@ import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.ValidatorTestUtil;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -44,6 +46,9 @@ public class CustomAudienceFieldSizeValidatorTest {
 
     private CustomAudienceFieldSizeValidator mValidator =
             new CustomAudienceFieldSizeValidator(FLAGS);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testNameTooLong() {
@@ -138,7 +143,7 @@ public class CustomAudienceFieldSizeValidatorTest {
     @Test
     public void testAdsTooBig() {
         AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
         List<AdData> tooBigAds =
                 List.of(
                         new AdData.Builder()
@@ -158,7 +163,7 @@ public class CustomAudienceFieldSizeValidatorTest {
                         CustomAudienceFieldSizeValidator.VIOLATION_TOTAL_ADS_SIZE_TOO_BIG,
                         FLAGS.getFledgeCustomAudienceMaxAdsSizeB(),
                         tooBigAds.stream()
-                                .map(adDataConversionStrategy::fromServiceObject)
+                                .map(obj -> adDataConversionStrategy.fromServiceObject(obj).build())
                                 .mapToInt(DBAdData::size)
                                 .sum()));
     }

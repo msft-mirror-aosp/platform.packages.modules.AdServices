@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
 import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
@@ -25,7 +24,6 @@ import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermi
 import static com.android.adservices.service.measurement.E2ETest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.RegistrationRequest;
-import android.content.AttributionSource;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
@@ -51,11 +49,12 @@ public final class RegisterSource implements Action {
         JSONObject regParamsJson = obj.getJSONObject(
                 TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
 
-        AttributionSource attributionSource = getAttributionSource(
-                regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY,
-                        TestFormatJsonMapping.ATTRIBUTION_SOURCE_DEFAULT));
+        String packageName =
+                regParamsJson.optString(
+                        TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY,
+                        TestFormatJsonMapping.ATTRIBUTION_SOURCE_DEFAULT);
 
-        mPublisher = regParamsJson.optString(TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY);
+        mPublisher = regParamsJson.optString(TestFormatJsonMapping.CONTEXT_ORIGIN_URI_KEY);
 
         mRegistrationRequest =
                 new RegistrationRequest.Builder(
@@ -63,7 +62,7 @@ public final class RegisterSource implements Action {
                                 Uri.parse(
                                         regParamsJson.getString(
                                                 TestFormatJsonMapping.REGISTRATION_URI_KEY)),
-                                attributionSource.getPackageName(),
+                                packageName,
                                 /* sdkPackageName = */ "")
                         .setInputEvent(
                                 regParamsJson
@@ -71,6 +70,7 @@ public final class RegisterSource implements Action {
                                                 .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
                                         ? null
                                         : getInputEvent())
+                        .setAdIdValue(regParamsJson.optString(TestFormatJsonMapping.PLATFORM_AD_ID))
                         .build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);

@@ -16,20 +16,29 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
 
 import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,9 +48,16 @@ import java.util.Set;
 
 /** Unit tests for {@link AttributionConfig} */
 @SmallTest
+@RunWith(MockitoJUnitRunner.class)
 public final class AttributionConfigTest {
     private static final String SOURCE_AD_TECH = "AdTech1-Ads";
+    @Mock private Flags mFlags;
 
+    @Before
+    public void setup() {
+        when(mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+                .thenReturn(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+    }
     @Test
     public void testCreation() throws Exception {
         AttributionConfig attributionConfig = createExample();
@@ -58,8 +74,8 @@ public final class AttributionConfigTest {
         assertEquals(600000L, attributionConfig.getSourceExpiryOverride().longValue());
         assertEquals(99L, attributionConfig.getPriority().longValue());
         assertEquals(604800L, attributionConfig.getExpiry().longValue());
-        List<FilterMap> filterData = attributionConfig.getFilterData();
-        assertEquals(1, filterData.get(0).getAttributionFilterMap().get("campaign_type").size());
+        FilterMap filterData = attributionConfig.getFilterData();
+        assertEquals(1, filterData.getAttributionFilterMap().get("campaign_type").size());
         assertEquals(100000L, attributionConfig.getPostInstallExclusivityWindow().longValue());
     }
 
@@ -120,7 +136,7 @@ public final class AttributionConfigTest {
                         .setSourceExpiryOverride(600000L)
                         .setPriority(99L)
                         .setExpiry(604800L)
-                        .setFilterData(List.of(filterData))
+                        .setFilterData(filterData)
                         .setPostInstallExclusivityWindow(100000L)
                         .build();
 
@@ -138,7 +154,7 @@ public final class AttributionConfigTest {
 
         // Action
         AttributionConfig actual =
-                new AttributionConfig.Builder(createExampleAttributionConfigJson()).build();
+                new AttributionConfig.Builder(createExampleAttributionConfigJson(), mFlags).build();
 
         // Assertion
         assertEquals(expected, actual);
@@ -153,7 +169,7 @@ public final class AttributionConfigTest {
         // Assertion
         assertThrows(
                 JSONException.class,
-                () -> new AttributionConfig.Builder(attributionConfigJson).build());
+                () -> new AttributionConfig.Builder(attributionConfigJson, mFlags).build());
     }
 
     @Test
@@ -165,18 +181,18 @@ public final class AttributionConfigTest {
         // Assertion
         assertEquals(
                 new AttributionConfig.Builder().setSourceAdtech(SOURCE_AD_TECH).build(),
-                new AttributionConfig.Builder(attributionConfigJson).build());
+                new AttributionConfig.Builder(attributionConfigJson, mFlags).build());
     }
 
     @Test
     public void serializeAsJson_success() throws JSONException {
         // Setup
         AttributionConfig attributionConfig = createExample();
-
         // Assertion
         assertEquals(
                 attributionConfig,
-                new AttributionConfig.Builder(attributionConfig.serializeAsJson()).build());
+                new AttributionConfig.Builder(attributionConfig.serializeAsJson(mFlags), mFlags)
+                        .build());
     }
 
     private JSONObject createExampleAttributionConfigJson() throws JSONException {
@@ -203,9 +219,7 @@ public final class AttributionConfigTest {
         attributionConfig.put("expiry", 604800L);
         JSONObject filterDataJson = new JSONObject();
         filterDataJson.put("campaign_type", new JSONArray(Collections.singletonList("install")));
-        JSONArray filterDataSet = new JSONArray();
-        filterDataSet.put(filterDataJson);
-        attributionConfig.put("filter_data", filterDataSet);
+        attributionConfig.put("filter_data", filterDataJson);
         attributionConfig.put("post_install_exclusivity_window", 100000L);
         return attributionConfig;
     }
@@ -234,7 +248,7 @@ public final class AttributionConfigTest {
                 .setSourceExpiryOverride(600000L)
                 .setPriority(99L)
                 .setExpiry(604800L)
-                .setFilterData(List.of(filterData))
+                .setFilterData(filterData)
                 .setPostInstallExclusivityWindow(100000L)
                 .build();
     }
@@ -266,7 +280,7 @@ public final class AttributionConfigTest {
                 .setSourceExpiryOverride(600000L)
                 .setPriority(99L)
                 .setExpiry(604800L)
-                .setFilterData(List.of(filterData))
+                .setFilterData(filterData)
                 .setPostInstallExclusivityWindow(100000L)
                 .build();
     }
