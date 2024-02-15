@@ -19,11 +19,16 @@ package com.android.adservices.service;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.os.Build.VERSION.SDK_INT;
 
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.RAMPED_UP;
+
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
 import android.os.Build;
 
 import com.android.adservices.cobalt.CobaltConstants;
+import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -603,6 +608,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
     }
 
+    @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
 
     /** Returns the kill switch for Attribution Fallback Job . */
@@ -1970,6 +1976,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
     // M-2022-11), the value of this flag in the binary was false.
+    @FeatureFlag(LEGACY_KILL_SWITCH_GLOBAL)
     boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
@@ -1980,9 +1987,11 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /**
      * Measurement Kill Switch. This overrides all specific measurement kill switch. The default
-     * value is false which means that Measurement is enabled. This flag is used for emergency
-     * turning off the whole Measurement API.
+     * value is {@code false} which means that Measurement is enabled.
+     *
+     * <p>This flag is used for emergency turning off the whole Measurement API.
      */
+    @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
     boolean MEASUREMENT_KILL_SWITCH = false;
 
     /**
@@ -4519,7 +4528,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /**
      * @deprecated TODO(b/314962688): remove (will always be true)
      */
-    @Deprecated boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
+    @FeatureFlag(RAMPED_UP)
+    @Deprecated
+    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
 
     /**
      * Returns whether the API access checked by the AdServices XML config returns {@code true} by
