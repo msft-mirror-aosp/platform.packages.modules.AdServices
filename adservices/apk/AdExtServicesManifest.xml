@@ -215,6 +215,19 @@
             </intent-filter>
         </activity>
 
+        <!-- Activity for Adservices to run shell command. This is disabled by default.-->
+        <activity
+            android:name="com.android.adservices.shell.ShellCommandActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:theme="@style/Theme.SubSettingsBase"
+            android:process=".adservices">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.BACK_COMPACT_SHELL_COMMAND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
         <service android:name="com.android.adservices.adselection.AdSelectionService"
                  android:exported="true"
                  android:visibleToInstantApps="false"
