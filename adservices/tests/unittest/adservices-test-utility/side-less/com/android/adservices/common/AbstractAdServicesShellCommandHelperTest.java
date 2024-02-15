@@ -84,6 +84,17 @@ public final class AbstractAdServicesShellCommandHelperTest {
     }
 
     @Test
+    public void testRunCommand_deviceLevelT_usesSdkSandbox() {
+        FakeAdServicesShellCommandHelper adServicesShellCommandHelper =
+                new FakeAdServicesShellCommandHelper(
+                        mRealLogger, TIRAMISU, /* usesSdkSandbox= */ true);
+
+        String res = adServicesShellCommandHelper.runCommand("%s %s", CMD_ECHO, CMD_ECHO_OUT);
+
+        expect.that(res).isEqualTo(CMD_ECHO_OUT);
+    }
+
+    @Test
     public void testRunCommandRwe_deviceLevelTPlus() {
         CommandResult res =
                 mAdServicesShellCommandHelper.runCommandRwe("%s %s", CMD_ECHO, CMD_ECHO_OUT);
@@ -104,13 +115,33 @@ public final class AbstractAdServicesShellCommandHelperTest {
         expect.withMessage("err").that(res.getErr()).isEmpty();
     }
 
+    @Test
+    public void testRunCommandRwe_deviceLevelT_usesSdkSandbox() {
+        FakeAdServicesShellCommandHelper adServicesShellCommandHelper =
+                new FakeAdServicesShellCommandHelper(
+                        mRealLogger, TIRAMISU, /* usesSdkSandbox= */ true);
+
+        CommandResult res =
+                adServicesShellCommandHelper.runCommandRwe("%s %s", CMD_ECHO, CMD_ECHO_OUT);
+
+        expect.withMessage("out").that(res.getOut()).isEqualTo(CMD_ECHO_OUT);
+        expect.withMessage("err").that(res.getErr()).isEmpty();
+    }
+
     private static final class FakeAdServicesShellCommandHelper
             extends AbstractAdServicesShellCommandHelper {
 
         private final int mDeviceLevel;
+        private final boolean mUsesSdkSandbox;
 
         FakeAdServicesShellCommandHelper(Logger.RealLogger logger, int deviceLevel) {
+            this(logger, deviceLevel, /* usesSdkSandbox= */ false);
+        }
+
+        FakeAdServicesShellCommandHelper(
+                Logger.RealLogger logger, int deviceLevel, boolean usesSdkSandbox) {
             super(logger);
+            mUsesSdkSandbox = usesSdkSandbox;
             mDeviceLevel = deviceLevel;
         }
 
@@ -133,6 +164,10 @@ public final class AbstractAdServicesShellCommandHelperTest {
         private String sampleShellCommandOutput(String cmd) {
             if (cmd.contains("cmd adservices_manager")) {
                 return CMD_ECHO_OUT;
+            } else if (cmd.contains("cmd sdk_sandbox adservices")) {
+                return CMD_ECHO_OUT;
+            } else if (cmd.equals(ADSERVICES_MANAGER_SERVICE_CHECK)) {
+                return mUsesSdkSandbox ? " not found" : "found";
             } else if (cmd.equals(START_SHELL_COMMAND_SERVICE)) {
                 return "started";
             } else if (cmd.equals(
