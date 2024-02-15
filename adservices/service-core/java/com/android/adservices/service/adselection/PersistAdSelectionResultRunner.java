@@ -16,10 +16,10 @@
 
 package com.android.adservices.service.adselection;
 
+
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
-
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
@@ -34,6 +34,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
@@ -53,6 +54,9 @@ import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonMessageEntity;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.kanon.KAnonSignJoinManager;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
@@ -64,6 +68,7 @@ import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -74,6 +79,8 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,6 +114,7 @@ public class PersistAdSelectionResultRunner {
             "buyer interaction reporting uri";
     private static final String SELLER_INTERACTION_REPORTING_URI_FIELD_NAME =
             "seller interaction reporting uri";
+    private static final String SHA256 = "SHA-256";
 
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -130,7 +138,9 @@ public class PersistAdSelectionResultRunner {
 
     @NonNull private AuctionResultValidator mAuctionResultValidator;
 
+
     @NonNull private final FledgeAuctionServerExecutionLogger mFledgeAuctionServerExecutionLogger;
+    @NonNull KAnonSignJoinFactory mKAnonSignJoinFactory;
 
     public PersistAdSelectionResultRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
@@ -149,7 +159,8 @@ public class PersistAdSelectionResultRunner {
             @NonNull final AuctionResultValidator auctionResultValidator,
             @NonNull final Flags flags,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
+            @NonNull final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger,
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -164,6 +175,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
+        Objects.requireNonNull(kAnonSignJoinFactory);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -182,6 +194,7 @@ public class PersistAdSelectionResultRunner {
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
         mFledgeAuctionServerExecutionLogger = fledgeAuctionServerExecutionLogger;
+        mKAnonSignJoinFactory = kAnonSignJoinFactory;
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */
@@ -259,9 +272,44 @@ public class PersistAdSelectionResultRunner {
                         }
                     },
                     mLightweightExecutorService);
+
         } catch (Throwable t) {
             sLogger.v("PersistAdSelectionResult fails fast with exception %s.", t.toString());
             notifyFailureToCaller(t, callback);
+        }
+    }
+
+    private void makeKAnonSignJoin(AuctionResult auctionResult, long adSelectionId) {
+        if (mFlags.getFledgeKAnonSignJoinFeatureEnabled()) {
+            ListenableFuture<Void> signJoinFuture =
+                    Futures.submitAsync(
+                            () -> {
+                                List<KAnonMessageEntity> messageEntities =
+                                        getKAnonEntitiesFromAuctionResult(
+                                                auctionResult, adSelectionId);
+                                KAnonSignJoinManager kAnonSignJoinManager =
+                                        mKAnonSignJoinFactory.getKAnonSignJoinManager();
+                                kAnonSignJoinManager.processNewMessages(messageEntities);
+                                return null;
+                            },
+                            mBackgroundExecutorService);
+            Futures.addCallback(
+                    signJoinFuture,
+                    new FutureCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                            mAdServicesLogger.logKAnonSignJoinStatus();
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                            mAdServicesLogger.logKAnonSignJoinStatus();
+                        }
+                    },
+                    mBackgroundExecutorService);
+        } else {
+            mAdServicesLogger.logKAnonSignJoinStatus();
+            LogUtil.i("KAnon Sign Join feature is disabled");
         }
     }
 
@@ -290,6 +338,7 @@ public class PersistAdSelectionResultRunner {
                                 sLogger.e(err);
                                 throw new IllegalArgumentException(err);
                             } else {
+                                makeKAnonSignJoin(auctionResult, adSelectionId);
                                 validateAuctionResult(auctionResult);
                                 DBAdData winningAd = fetchWinningAd(auctionResult);
                                 int persistingCookie =
@@ -336,6 +385,20 @@ public class PersistAdSelectionResultRunner {
             throw new IllegalArgumentException(err);
         }
         return winningAd;
+    }
+
+    private List<KAnonMessageEntity> getKAnonEntitiesFromAuctionResult(
+            AuctionResult auctionResult, long adSelectionId) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance(SHA256);
+        String adRenderUrl = auctionResult.getAdRenderUrl();
+        byte[] digestedBytes = md.digest(adRenderUrl.getBytes(StandardCharsets.UTF_8));
+        KAnonMessageEntity kAnonMessageEntity =
+                KAnonMessageEntity.builder()
+                        .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
+                        .setAdSelectionId(adSelectionId)
+                        .setHashSet(BaseEncoding.base16().encode(digestedBytes))
+                        .build();
+        return List.of(kAnonMessageEntity);
     }
 
     @NonNull
@@ -617,8 +680,7 @@ public class PersistAdSelectionResultRunner {
                             .setAttemptedKeySizesRangeType(
                                     DestinationRegisteredBeaconsReportedStats
                                             .getInteractionKeySizeRangeTypeList(
-                                                    attemptedBuyerInteractionReportingUrls
-                                                            .keySet(),
+                                                    attemptedBuyerInteractionReportingUrls.keySet(),
                                                     maxInteractionKeySize))
                             .setTableNumRows(totalNumRegisteredAdInteractions)
                             .build());
@@ -867,10 +929,13 @@ public class PersistAdSelectionResultRunner {
     abstract static class ReportingRegistrationLimits {
         /** MaxRegisteredAdBeaconsTotalCount */
         public abstract long getMaxRegisteredAdBeaconsTotalCount();
+
         /** MaxInteractionKeySize */
         public abstract long getMaxInteractionKeySize();
+
         /** MaxInteractionReportingUriSize */
         public abstract long getMaxInteractionReportingUriSize();
+
         /** MaxRegisteredAdBeaconsPerAdTechCount */
         public abstract long getMaxRegisteredAdBeaconsPerAdTechCount();
 
@@ -885,14 +950,18 @@ public class PersistAdSelectionResultRunner {
             /** Sets MaxRegisteredAdBeaconsTotalCount */
             public abstract Builder setMaxRegisteredAdBeaconsTotalCount(
                     long maxRegisteredAdBeaconsTotalCount);
+
             /** Sets MaxInteractionKeySize */
             public abstract Builder setMaxInteractionKeySize(long maxInteractionKeySize);
+
             /** Sets MaxInteractionReportingUriSize */
             public abstract Builder setMaxInteractionReportingUriSize(
                     long maxInteractionReportingUriSize);
+
             /** Sets MaxRegisteredAdBeaconsPerAdTechCount */
             public abstract Builder setMaxRegisteredAdBeaconsPerAdTechCount(
                     long maxRegisteredAdBeaconsPerAdTechCount);
+
             /** Builds a {@link ReportingRegistrationLimits} */
             public abstract ReportingRegistrationLimits build();
         }

@@ -102,6 +102,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
@@ -168,6 +169,7 @@ public class ReportAndRegisterEventE2ETest {
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
     @Mock private AdIdFetcher mAdIdFetcher;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     private static final Instant ACTIVATION_TIME = Instant.now();
     private static final String CALLER_SDK_NAME = "sdk.package.name";
@@ -709,7 +711,7 @@ public class ReportAndRegisterEventE2ETest {
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
         ReportAndRegisterEventTestCallback callback =
-                callReportEvent(input, /* shouldCountLog = */ true);
+                callReportEvent(input, /* shouldCountLog= */ true);
 
         // Process async registration.
         mAsyncRegistrationQueueRunnerSpy.runAsyncRegistrationQueueWorker();
@@ -947,7 +949,7 @@ public class ReportAndRegisterEventE2ETest {
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
         ReportAndRegisterEventTestCallback callback =
-                callReportEvent(input, /* shouldCountLog = */ true);
+                callReportEvent(input, /* shouldCountLog= */ true);
 
         // Process async registration.
         mAsyncRegistrationQueueRunnerSpy.runAsyncRegistrationQueueWorker();
@@ -1001,6 +1003,7 @@ public class ReportAndRegisterEventE2ETest {
                 mObliviousHttpEncryptorMock,
                 mAdSelectionDebugReportDaoMock,
                 mAdIdFetcher,
+                mUnusedKAnonSignJoinFactory,
                 false);
     }
 
