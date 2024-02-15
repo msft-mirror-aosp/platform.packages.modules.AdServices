@@ -109,6 +109,8 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
+import com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerFactory;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -325,9 +327,21 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             GetAdSelectionDataCallback callback)
             throws RemoteException {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
+
+        FledgeAuctionServerExecutionLoggerFactory fledgeAuctionServerExecutionLoggerFactory =
+                new FledgeAuctionServerExecutionLoggerFactory(
+                        callerMetadata,
+                        Clock.getInstance(),
+                        mAdServicesLogger,
+                        mFlags,
+                        apiName);
+        final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger =
+                fledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
 
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED, 0);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
@@ -351,7 +365,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         final DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
                 () -> {
-                    runGetAdSelectionData(inputParams, callback, callingUid, devContext);
+                    runGetAdSelectionData(
+                            inputParams,
+                            callback,
+                            callingUid,
+                            devContext,
+                            fledgeAuctionServerExecutionLogger);
                     Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, traceCookie);
                 });
     }
@@ -363,7 +382,18 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             PersistAdSelectionResultCallback callback)
             throws RemoteException {
         int traceCookie = Tracing.beginAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT);
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        int apiName =
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+
+        FledgeAuctionServerExecutionLoggerFactory fledgeAuctionServerExecutionLoggerFactory =
+                new FledgeAuctionServerExecutionLoggerFactory(
+                        callerMetadata,
+                        Clock.getInstance(),
+                        mAdServicesLogger,
+                        mFlags,
+                        apiName);
+        final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger =
+                fledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
 
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
@@ -439,7 +469,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                             auctionServerEnabledForUpdateHistogram),
                                     auctionResultValidator,
                                     mFlags,
-                                    mAdServicesLogger);
+                                    mAdServicesLogger,
+                                    fledgeAuctionServerExecutionLogger);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
@@ -509,7 +540,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             GetAdSelectionDataInput inputParams,
             GetAdSelectionDataCallback callback,
             int callingUid,
-            DevContext devContext) {
+            DevContext devContext,
+            FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
         ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
                 AuctionServerDebugReporting.createInstance(
                         mFlags,
@@ -542,7 +574,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mFlags,
                                                 callingUid,
                                                 devContext,
-                                                auctionServerDebugReporting);
+                                                auctionServerDebugReporting,
+                                                fledgeAuctionServerExecutionLogger);
                                 runner.run(inputParams, callback);
                             }
 
@@ -568,7 +601,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 callingUid,
                                                 devContext,
                                                 AuctionServerDebugReporting
-                                                        .createForDebugReportingDisabled());
+                                                        .createForDebugReportingDisabled(),
+                                                fledgeAuctionServerExecutionLogger);
                                 runner.run(inputParams, callback);
                             }
                         },
