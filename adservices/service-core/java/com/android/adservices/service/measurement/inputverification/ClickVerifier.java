@@ -229,7 +229,12 @@ public class ClickVerifier {
     @VisibleForTesting
     boolean isInputEventUnderUsageLimit(
             InputEvent event, MeasurementClickVerificationStats.Builder stats) {
+        stats.setClickDeduplicationEnabled(mFlags.getMeasurementIsClickDeduplicationEnabled());
+        stats.setClickDeduplicationEnforced(mFlags.getMeasurementIsClickDeduplicationEnforced());
+        stats.setMaxSourcesPerClick(mFlags.getMeasurementMaxSourcesPerClick());
+
         if (!mFlags.getMeasurementIsClickDeduplicationEnabled()) {
+            stats.setCurrentRegistrationUnderClickDeduplicationLimit(/* value */ true);
             return true;
         }
 
@@ -273,7 +278,8 @@ public class ClickVerifier {
             }
         }
 
-        // TODO(324309950): Update stats for logging with click deduplication results.
+        stats.setCurrentRegistrationUnderClickDeduplicationLimit(
+                (numTimesPreviouslyUsed < mFlags.getMeasurementMaxSourcesPerClick()));
 
         return !mFlags.getMeasurementIsClickDeduplicationEnforced()
                 || (numTimesPreviouslyUsed < mFlags.getMeasurementMaxSourcesPerClick());
