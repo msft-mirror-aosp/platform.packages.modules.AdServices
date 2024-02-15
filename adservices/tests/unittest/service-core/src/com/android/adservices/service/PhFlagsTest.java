@@ -16,6 +16,10 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -9092,6 +9096,41 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getFledgeAuctionServerOmitAdsEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerMultiCloudEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getFledgeAuctionServerMultiCloudEnabled())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
+
+        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeAuctionServerMultiCloudEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerCoordinatorUrlAllowlist() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getFledgeAuctionServerCoordinatorUrlAllowlist())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST);
+
+        String phOverridingValue = "https://example.com";
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeAuctionServerCoordinatorUrlAllowlist())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test

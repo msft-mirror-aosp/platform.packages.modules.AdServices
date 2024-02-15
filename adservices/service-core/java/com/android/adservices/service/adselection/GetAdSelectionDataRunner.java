@@ -276,6 +276,17 @@ public class GetAdSelectionDataRunner {
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
                                             mDevContext);
+
+                                    boolean multiCloudEnabled =
+                                            mFlags.getFledgeAuctionServerMultiCloudEnabled();
+                                    String allowlist =
+                                            mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist();
+                                    // Validate the coordinator origin URI
+                                    MultiCloudSupportStrategyFactory.getStrategy(
+                                                    multiCloudEnabled, allowlist)
+                                            .getCoordinatorOriginUriValidator()
+                                            .validate(inputParams.getCoordinatorOriginUri());
+
                                 } finally {
                                     sLogger.v("Completed filtering.");
                                 }
