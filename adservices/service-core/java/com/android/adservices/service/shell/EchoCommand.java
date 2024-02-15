@@ -29,7 +29,7 @@ import java.io.PrintWriter;
  * <p>It just prints the given message.
  */
 final class EchoCommand extends AbstractShellCommand {
-
+    // This command is also used by the CTS and it should never change.
     static final String CMD_ECHO = "echo";
     static final String HELP_ECHO =
             CMD_ECHO + " <message>\n    Prints the given message (useful to check cmd is working).";
