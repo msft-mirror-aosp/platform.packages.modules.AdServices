@@ -472,4 +472,8 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     private interface AiPoweredKillSwitchAkaFeatureFlagTestatorPlus {
         boolean getFlagValue(Flags flags);
     }
+
+    // TODO(b/325135083): add a test to make sure all constants are annotated with FeatureFlag or
+    // ConfigFlag (and only one FeatureFlag is LEGACY_KILL_SWITCH_GLOBAL). Might need to be added in
+    // a separate file / Android.bp project as the annotation is currently retained on SOURCE only.
 }
