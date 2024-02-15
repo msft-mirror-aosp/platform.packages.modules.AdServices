@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.shell;
 
-import static com.android.adservices.service.shell.CustomAudienceHelper.fromJson;
+import static com.android.adservices.service.shell.CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson;
+import static com.android.adservices.service.shell.CustomAudienceHelper.getCustomAudienceFromJson;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -25,9 +26,11 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 
 import org.json.JSONObject;
 import org.junit.Test;
@@ -46,6 +49,12 @@ public final class CustomAudienceViewCommandTest
                     .setOwner(OWNER)
                     .setDebuggable(true)
                     .build();
+    private static final DBCustomAudienceBackgroundFetchData
+            CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1 =
+                    DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(BUYER)
+                            .setOwner(CUSTOM_AUDIENCE_1.getOwner())
+                            .setIsDebuggable(CUSTOM_AUDIENCE_1.isDebuggable())
+                            .build();
     @Mock private CustomAudienceDao mCustomAudienceDao;
 
     @Test
@@ -66,11 +75,19 @@ public final class CustomAudienceViewCommandTest
                         CUSTOM_AUDIENCE_1.getBuyer(),
                         CUSTOM_AUDIENCE_1.getName()))
                 .thenReturn(CUSTOM_AUDIENCE_1);
+        when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()))
+                .thenReturn(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
 
         Result actualResult = runCommandAndGetResult();
 
         expectSuccess(actualResult);
-        assertThat(fromJson(new JSONObject(actualResult.mOut))).isEqualTo(CUSTOM_AUDIENCE_1);
+        assertThat(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
+                .isEqualTo(CUSTOM_AUDIENCE_1);
+        assertThat(getCustomAudienceBackgroundFetchDataFromJson(new JSONObject(actualResult.mOut)))
+                .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
     }
 
     @Test
@@ -78,6 +95,11 @@ public final class CustomAudienceViewCommandTest
         when(mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(
                         CUSTOM_AUDIENCE_1.getOwner(), CUSTOM_AUDIENCE_1.getBuyer()))
                 .thenReturn(List.of(CUSTOM_AUDIENCE_1));
+        when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()))
+                .thenReturn(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
 
         Result actualResult = runCommandAndGetResult();
 
@@ -90,6 +112,31 @@ public final class CustomAudienceViewCommandTest
                         CUSTOM_AUDIENCE_1.getOwner(), CUSTOM_AUDIENCE_1.getBuyer()))
                 .thenReturn(
                         List.of(CUSTOM_AUDIENCE_1.cloneToBuilder().setDebuggable(false).build()));
+        when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()))
+                .thenReturn(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
+
+        Result actualResult = runCommandAndGetResult();
+
+        expectSuccess(actualResult, "{}");
+    }
+
+    @Test
+    public void testRun_presentButBackgroundFetchDataNotDebuggable_returnsEmpty() {
+        when(mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(
+                        CUSTOM_AUDIENCE_1.getOwner(), CUSTOM_AUDIENCE_1.getBuyer()))
+                .thenReturn(List.of(CUSTOM_AUDIENCE_1));
+        when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()))
+                .thenReturn(
+                        DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(BUYER)
+                                .setOwner(OWNER)
+                                .setIsDebuggable(false)
+                                .build());
 
         Result actualResult = runCommandAndGetResult();
 

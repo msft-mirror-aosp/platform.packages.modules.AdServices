@@ -1976,7 +1976,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * the Global Kill Switch or the Measurement Kill Switch value is true.
      */
     default boolean getMeasurementKillSwitch() {
-        return MEASUREMENT_KILL_SWITCH;
+        return getGlobalKillSwitch() || MEASUREMENT_KILL_SWITCH;
     }
 
     /**
@@ -3453,7 +3453,10 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     // New fledge beacon reporting metrics flag.
     boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED = false;
 
-    /** Returns whether the fledge beacon reporting metrics is enabled. */
+    /**
+     * Returns whether the fledge beacon reporting metrics is enabled.
+     * This flag should not be ramped on S- prior to M-2024-04.
+     */
     default boolean getFledgeBeaconReportingMetricsEnabled() {
         return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
     }
