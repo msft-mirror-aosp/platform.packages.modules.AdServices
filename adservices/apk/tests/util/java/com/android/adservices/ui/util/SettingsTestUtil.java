@@ -206,7 +206,7 @@ public final class SettingsTestUtil {
         pressBack(device);
     }
 
-    public static void topicsSubTitleTestUtil(UiDevice device) {
+    public static void topicsSubtitleTestUtil(UiDevice device) {
         runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
 
@@ -217,7 +217,7 @@ public final class SettingsTestUtil {
                 R.string.settingsUI_topics_ga_title);
     }
 
-    public static void appsSubTitleTestUtil(UiDevice device) {
+    public static void appsSubtitleTestUtil(UiDevice device) {
         runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
 
@@ -228,7 +228,7 @@ public final class SettingsTestUtil {
                 R.string.settingsUI_apps_ga_title);
     }
 
-    public static void measurementSubTitleTestUtil(UiDevice device) {
+    public static void measurementSubtitleTestUtil(UiDevice device) {
         runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
 
@@ -483,7 +483,7 @@ public final class SettingsTestUtil {
             assertToggleState(toggle, /* checked= */ false);
             toggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             pressBack(device);
-            subtitle = ApkTestUtil.getElement(device, regexResId);
+            subtitle = ApkTestUtil.scrollTo(device, regexResId);
             assertThat(
                             subtitle.getText()
                                     .equals(
@@ -496,7 +496,7 @@ public final class SettingsTestUtil {
             assertToggleState(toggle, /* checked= */ true);
             toggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             pressBack(device);
-            subtitle = ApkTestUtil.getElement(device, regexResId);
+            subtitle = ApkTestUtil.scrollTo(device, regexResId);
             assertThat(
                             subtitle.getText()
                                     .equals(
