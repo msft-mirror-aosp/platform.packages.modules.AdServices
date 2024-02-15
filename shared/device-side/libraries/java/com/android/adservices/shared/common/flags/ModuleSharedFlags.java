@@ -16,6 +16,8 @@
 
 package com.android.adservices.shared.common.flags;
 
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.SHARED;
+
 /**
  * This class contains common flags used by multiple modules. In principle if a module wants to use
  * a flag, it should implement the method in this class by pointing to the method to its own flags.
@@ -24,6 +26,7 @@ package com.android.adservices.shared.common.flags;
  */
 public interface ModuleSharedFlags {
     /** The default value of whether background job logging is enabled. */
+    @FeatureFlag(SHARED)
     boolean BACKGROUND_JOB_LOGGING_ENABLED = false;
 
     /** Get if background job logging is enabled or not. */
@@ -32,7 +35,7 @@ public interface ModuleSharedFlags {
     }
 
     /** The default value of background job sampling logging rate. */
-    int BACKGROUND_JOB_SAMPLING_LOGGING_RATE = 1;
+    @ConfigFlag int BACKGROUND_JOB_SAMPLING_LOGGING_RATE = 1;
 
     /** Gets the value of background job sampling logging rate. */
     default int getBackgroundJobSamplingLoggingRate() {
