@@ -72,6 +72,14 @@ class SdkSandboxRestrictionManager {
     }
 
     /** Cache and get the effectiveTargetSkdVersion for an app */
+    public int getEffectiveTargetSdkVersion(int uid) throws PackageManager.NameNotFoundException {
+        PackageManagerHelper packageManagerHelper = mInjector.getPackageManagerHelper(uid);
+        String packageName = packageManagerHelper.getPackageNameForUid(uid);
+        return getEffectiveTargetSdkVersion(
+                new CallingInfo(uid, packageName), packageManagerHelper);
+    }
+
+    /** Cache and get the effectiveTargetSkdVersion for an app */
     public int getEffectiveTargetSdkVersion(CallingInfo callingInfo)
             throws PackageManager.NameNotFoundException {
         synchronized (mLock) {
@@ -79,7 +87,14 @@ class SdkSandboxRestrictionManager {
                 return mEffectiveTargetSdkVersions.get(callingInfo);
             }
         }
+        PackageManagerHelper packageManagerHelper =
+                mInjector.getPackageManagerHelper(callingInfo.getUid());
+        return getEffectiveTargetSdkVersion(callingInfo, packageManagerHelper);
+    }
 
+    private int getEffectiveTargetSdkVersion(
+            CallingInfo callingInfo, PackageManagerHelper packageManagerHelper)
+            throws PackageManager.NameNotFoundException {
         // If the device's SDK version is equal to the default value, we can return it immediately.
         if (mInjector.getCurrentSdkLevel() <= DEFAULT_TARGET_SDK_VERSION) {
             synchronized (mLock) {
@@ -87,9 +102,6 @@ class SdkSandboxRestrictionManager {
                 return mEffectiveTargetSdkVersions.get(callingInfo);
             }
         }
-
-        PackageManagerHelper packageManagerHelper =
-                mInjector.getPackageManagerHelper(callingInfo.getUid());
 
         List<SharedLibraryInfo> sharedLibraries =
                 packageManagerHelper.getSdkSharedLibraryInfo(callingInfo.getPackageName());
