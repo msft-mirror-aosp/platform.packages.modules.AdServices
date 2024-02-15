@@ -5944,10 +5944,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getPasUxEnabled() {
-        return DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_PAS_UX_ENABLED,
-                /* defaultValue */ DEFAULT_PAS_UX_ENABLED);
+        return isEeaDeviceFeatureEnabled()
+                && !isEeaDevice()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ FlagsConstants.KEY_PAS_UX_ENABLED,
+                        /* defaultValue */ DEFAULT_PAS_UX_ENABLED);
     }
 
     @Override
