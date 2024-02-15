@@ -74,18 +74,18 @@ public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
     }
 
     @Test
-    public void topicsSubTitleTest() throws Exception {
-        SettingsTestUtil.topicsSubTitleTestUtil(mDevice);
+    public void topicsSubtitleTest() throws Exception {
+        SettingsTestUtil.topicsSubtitleTestUtil(mDevice);
     }
 
     @Test
-    public void appsSubTitleTest() throws Exception {
-        SettingsTestUtil.appsSubTitleTestUtil(mDevice);
+    public void appsSubtitleTest() throws Exception {
+        SettingsTestUtil.appsSubtitleTestUtil(mDevice);
     }
 
     @Test
-    public void measurementSubTitleTest() throws Exception {
-        SettingsTestUtil.measurementSubTitleTestUtil(mDevice);
+    public void measurementSubtitleTest() throws Exception {
+        SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
     }
 
     @Test
