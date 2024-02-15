@@ -151,4 +151,7 @@ public interface AdServicesLogger {
 
     /** Logs call to {@link AppManifestConfigHelper} to check if app is allowed to access an API. */
     void logAppManifestConfigCall(AppManifestConfigCall call);
+
+    /** Logs status for {@link com.android.adservices.service.kanon.KAnonSignJoinManager}. */
+    void logKAnonSignJoinStatus();
 }

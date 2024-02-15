@@ -41,8 +41,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -86,10 +88,11 @@ import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryp
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.kanon.KAnonSignJoinManager;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
@@ -102,6 +105,7 @@ import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
 import com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerFactory;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
 
 import com.google.common.collect.ImmutableList;
 
@@ -386,6 +390,8 @@ public class PersistAdSelectionResultRunnerTest {
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
+    @Mock private KAnonSignJoinManager mKAnonSignJoinManagerMock;
 
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private PersistAdSelectionResultRunner mPersistAdSelectionResultRunner;
@@ -432,7 +438,6 @@ public class PersistAdSelectionResultRunnerTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -483,7 +488,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mAuctionResultValidator,
                         mFlags,
                         mAdServicesLoggerSpy,
-                        mFledgeAuctionServerExecutionLogger);
+                        mFledgeAuctionServerExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
     }
 
     @After
@@ -1066,7 +1072,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mAuctionResultValidator,
                         mFlags,
                         mAdServicesLoggerSpy,
-                        mFledgeAuctionServerExecutionLogger);
+                        mFledgeAuctionServerExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1162,7 +1169,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mAuctionResultValidator,
                         mFlags,
                         mAdServicesLoggerSpy,
-                        mFledgeAuctionServerExecutionLogger);
+                        mFledgeAuctionServerExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1334,7 +1342,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mAuctionResultValidator,
                         mFlags,
                         mAdServicesLoggerSpy,
-                        mFledgeAuctionServerExecutionLogger);
+                        mFledgeAuctionServerExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1562,7 +1571,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mAuctionResultValidator,
                         mFlags,
                         mAdServicesLoggerSpy,
-                        mFledgeAuctionServerExecutionLogger);
+                        mFledgeAuctionServerExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
@@ -1613,13 +1623,146 @@ public class PersistAdSelectionResultRunnerTest {
                 .isEqualTo(
                         Arrays.asList(
                                 DestinationRegisteredBeaconsReportedStats
-                                        .InteractionKeySizeRangeType
-                                        .LARGER_THAN_MAXIMUM_KEY_SIZE));
+                                        .InteractionKeySizeRangeType.LARGER_THAN_MAXIMUM_KEY_SIZE));
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(0);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testRunner_withKAnonSignFlagedDisabled_doesNothing() throws Exception {
+        Flags flagsWithKAnonDisabled =
+                new PersistAdSelectionResultRunnerTestFlagsForKAnon(false, 100);
+        doReturn(flagsWithKAnonDisabled).when(FlagsFactory::getFlags);
+
+        PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithKAnonDisabled,
+                        mAdServicesLoggerSpy,
+                        mFledgeAuctionServerExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logKAnonSignJoinStatus();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+        countDownLatch.await();
+
+        Assert.assertTrue(callback.mIsSuccess);
+        verifyZeroInteractions(mUnusedKAnonSignJoinFactory);
+    }
+
+    @Test
+    public void testRunner_kanonSignJoinManagerThrowsException_persistSelectionRunnerIsSuccessful()
+            throws Exception {
+        Flags flagsWithKAnonEnabled =
+                new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
+        doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
+        doThrow(new RuntimeException("some random exception"))
+                .when(mKAnonSignJoinManagerMock)
+                .processNewMessages(anyList());
+        PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
+        KAnonSignJoinFactory kAnonSignJoinFactory =
+                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithKAnonEnabled,
+                        mAdServicesLoggerSpy,
+                        mFledgeAuctionServerExecutionLogger,
+                        kAnonSignJoinFactory);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logKAnonSignJoinStatus();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+        countDownLatch.await();
+
+        Assert.assertTrue(callback.mIsSuccess);
+    }
+
+    @Test
+    public void testRunner_withKAnonEnabled_makesSignAndJoinCalls() throws Exception {
+        Flags flagsWithKAnonEnabled =
+                new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
+        doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
+        PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
+        KAnonSignJoinFactory kAnonSignJoinFactory =
+                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithKAnonEnabled,
+                        mAdServicesLoggerSpy,
+                        mFledgeAuctionServerExecutionLogger,
+                        kAnonSignJoinFactory);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logKAnonSignJoinStatus();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+        countDownLatch.await();
+
+        Assert.assertTrue(callback.mIsSuccess);
+        verify(mKAnonSignJoinManagerMock, times(1)).processNewMessages(anyList());
     }
 
     private byte[] prepareDecryptedAuctionResultForRemarketingAd(
@@ -1700,7 +1843,8 @@ public class PersistAdSelectionResultRunnerTest {
                         mAuctionResultValidator,
                         mFlags,
                         mAdServicesLoggerSpy,
-                        mFledgeAuctionServerExecutionLogger);
+                        mFledgeAuctionServerExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
     }
 
     private void verifyPersistAdSelectionResultApiUsageLog(int resultCode)
@@ -1711,6 +1855,31 @@ public class PersistAdSelectionResultRunnerTest {
         assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
         assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(
                 PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS);
+    }
+
+    private PersistAdSelectionResultInput setupPersistRunnerMocksForKAnonTests() {
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+
+        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA);
+
+        return new PersistAdSelectionResultInput.Builder()
+                .setSeller(SELLER)
+                .setAdSelectionId(AD_SELECTION_ID)
+                .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                .build();
     }
 
     public static class PersistAdSelectionResultRunnerTestFlags implements Flags {
@@ -1732,6 +1901,28 @@ public class PersistAdSelectionResultRunnerTest {
         @Override
         public boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
             return FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED_IN_TEST;
+        }
+    }
+
+    public static class PersistAdSelectionResultRunnerTestFlagsForKAnon
+            extends PersistAdSelectionResultRunnerTestFlags {
+        private boolean mKAnonFeatureFlagEnabled;
+        private int mPercentageImmediateJoinValue;
+
+        public PersistAdSelectionResultRunnerTestFlagsForKAnon(
+                boolean kAnonFlagEnabled, int percentageImmediateJoinValue) {
+            mKAnonFeatureFlagEnabled = kAnonFlagEnabled;
+            mPercentageImmediateJoinValue = percentageImmediateJoinValue;
+        }
+
+        @Override
+        public boolean getFledgeKAnonSignJoinFeatureEnabled() {
+            return mKAnonFeatureFlagEnabled;
+        }
+
+        @Override
+        public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
+            return mPercentageImmediateJoinValue;
         }
     }
 

@@ -103,6 +103,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
@@ -170,6 +171,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @NonNull private final AdIdFetcher mAdIdFetcher;
+    @NonNull KAnonSignJoinFactory mKAnonSignJoinFactory;
     private final boolean mShouldUseUnifiedTables;
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -200,6 +202,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
             @NonNull AdIdFetcher adIdFetcher,
+            @NonNull KAnonSignJoinFactory kAnonSignJoinFactory,
             boolean shouldUseUnifiedTables) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
@@ -221,6 +224,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionDebugReportDao);
         Objects.requireNonNull(adIdFetcher);
+        Objects.requireNonNull(kAnonSignJoinFactory);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -248,6 +252,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mAdSelectionDebugReportDao = adSelectionDebugReportDao;
         mAdIdFetcher = adIdFetcher;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
+        mKAnonSignJoinFactory = kAnonSignJoinFactory;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -314,6 +319,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         AdIdWorker.getInstance(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler()),
+                new KAnonSignJoinFactory(context),
                 BinderFlagReader.readFlag(
                         () ->
                                 FlagsFactory.getFlags()
@@ -470,7 +476,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     auctionResultValidator,
                                     mFlags,
                                     mAdServicesLogger,
-                                    fledgeAuctionServerExecutionLogger);
+                                    fledgeAuctionServerExecutionLogger,
+                                    mKAnonSignJoinFactory);
                     runner.run(inputParams, callback);
                     Tracing.endAsyncSection(Tracing.PERSIST_AD_SELECTION_RESULT, traceCookie);
                 });
