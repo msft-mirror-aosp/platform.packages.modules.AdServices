@@ -296,7 +296,15 @@ public class JobServiceLogger {
             return;
         }
 
-        long executionPeriodMinute = executionPeriodMs / MILLISECONDS_PER_MINUTE;
+        // Since the execution period will be logged with unit of minute, it will be converted to 0
+        // if less than MILLISECONDS_PER_MINUTE. The negative period has two scenarios: 1) the first
+        // execution (as -1) or 2) invalid, which will be logged by CEL. As all negative values will
+        // be filtered out in the server's metric, keep the original value of them, to avoid a 0
+        // value due to small negative values.
+        long executionPeriodMinute =
+                executionPeriodMs >= 0
+                        ? executionPeriodMs / MILLISECONDS_PER_MINUTE
+                        : executionPeriodMs;
 
         ExecutionReportedStats stats =
                 ExecutionReportedStats.builder()
