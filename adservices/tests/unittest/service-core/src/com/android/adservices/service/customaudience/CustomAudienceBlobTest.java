@@ -28,6 +28,8 @@ import static android.adservices.customaudience.CustomAudienceFixture.getValidBi
 import static android.adservices.customaudience.CustomAudienceFixture.getValidDailyUpdateUriByBuyer;
 import static android.adservices.customaudience.TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer;
 
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +48,7 @@ import android.net.Uri;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
+import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -128,6 +131,27 @@ public class CustomAudienceBlobTest {
 
         assertThat(asJSONObject.toString())
                 .isEqualTo(mFetchAndJoinCustomAudienceInputAsJSONObjectString);
+    }
+
+    @Test
+    public void testOverrideFromPartialCustomAudience_validValues() {
+        mCustomAudienceBlob.overrideFromPartialCustomAudience(
+                VALID_OWNER,
+                VALID_BUYER_1,
+                DBPartialCustomAudience.getPartialCustomAudience(PARTIAL_CUSTOM_AUDIENCE_1));
+
+        assertEquals(mCustomAudienceBlob.getOwner(), VALID_OWNER);
+        assertEquals(mCustomAudienceBlob.getBuyer(), VALID_BUYER_1);
+        assertEquals(mCustomAudienceBlob.getName(), PARTIAL_CUSTOM_AUDIENCE_1.getName());
+        assertEquals(
+                mCustomAudienceBlob.getActivationTime(),
+                PARTIAL_CUSTOM_AUDIENCE_1.getActivationTime());
+        assertEquals(
+                mCustomAudienceBlob.getExpirationTime(),
+                PARTIAL_CUSTOM_AUDIENCE_1.getExpirationTime());
+        assertEquals(
+                mCustomAudienceBlob.getUserBiddingSignals(),
+                PARTIAL_CUSTOM_AUDIENCE_1.getUserBiddingSignals());
     }
 
     @Test
