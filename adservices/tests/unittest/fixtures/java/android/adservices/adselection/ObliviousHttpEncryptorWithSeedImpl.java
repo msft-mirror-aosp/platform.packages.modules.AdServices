@@ -68,7 +68,7 @@ public class ObliviousHttpEncryptorWithSeedImpl implements ObliviousHttpEncrypto
             byte[] plainText, long contextId, long keyFetchTimeoutMs) {
 
         return mEncryptionKeyManager
-                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs)
+                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, null)
                 .transform(
                         key -> createAndSerializeRequestWithSeed(key, plainText, contextId),
                         mLightweightExecutor);
