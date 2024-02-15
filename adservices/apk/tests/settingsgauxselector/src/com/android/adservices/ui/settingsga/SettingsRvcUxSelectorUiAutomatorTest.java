@@ -73,8 +73,8 @@ public final class SettingsRvcUxSelectorUiAutomatorTest extends AdServicesUiTest
     }
 
     @Test
-    public void measurementSubTitleTest() throws Exception {
-        SettingsTestUtil.measurementSubTitleTestUtil(mDevice);
+    public void measurementSubtitleTest() throws Exception {
+        SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
     }
 
     @Test
