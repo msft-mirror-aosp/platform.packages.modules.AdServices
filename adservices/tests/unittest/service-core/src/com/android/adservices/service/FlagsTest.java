@@ -307,8 +307,35 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "MEASUREMENT_KILL_SWITCH", flags -> flags.getMeasurementKillSwitch());
     }
 
+    private void testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
+            String getterName,
+            boolean defaultKillSwitchValue,
+            AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+        expect.withMessage("%s when global kill_switch is on", getterName)
+                .that(flaginator.getFlagValue(mGlobalKsEnabled))
+                .isFalse();
+        expect.withMessage("%s when global kill_switch is off", getterName)
+                .that(flaginator.getFlagValue(mGlobalKsDisabled))
+                .isEqualTo(!defaultKillSwitchValue);
+    }
+
+    @Test
+    public void testGetMeasurementEnabled() {
+        testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
+                "getMeasurementEnabled()",
+                MEASUREMENT_KILL_SWITCH,
+                flags -> flags.getMeasurementEnabled());
+        // TODO(b/325144327): remove once getMeasurementKillSwitch() is removed
+        expect.withMessage("getMeasurementEnabled() when global kill_switch is on")
+                .that(mGlobalKsEnabled.getMeasurementEnabled())
+                .isEqualTo(!mGlobalKsEnabled.getMeasurementKillSwitch());
+        expect.withMessage("getMeasurementEnabled() when global kill_switch is off")
+                .that(mGlobalKsDisabled.getMeasurementEnabled())
+                .isEqualTo(!mGlobalKsDisabled.getMeasurementKillSwitch());
+    }
+
     /* ********************************************************************************************
-     * Tests for new feature flags.
+     * Tests for feature flags                                                                    *
      * ********************************************************************************************/
 
     @Test

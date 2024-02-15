@@ -1638,6 +1638,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     // MEASUREMENT Killswitches
+
+    // TODO(b/325144327): make it private when callers don' use it anymore (ideally it should be
+    // removed and the logic moved to getMeasurementEnabled(), but this is a legacy flag that also
+    // reads system properties, which is not unit tested.
+    /*
+     * @deprecated use {@link #getMeasurementEnabled()} instead;
+     */
+    @Deprecated
     @Override
     public boolean getMeasurementKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
@@ -1650,6 +1658,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementEnabled() {
+        return !getMeasurementKillSwitch();
     }
 
     @Override
