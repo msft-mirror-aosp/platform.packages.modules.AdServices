@@ -25,6 +25,7 @@ import static com.android.adservices.service.adselection.AdSelectionFromOutcomes
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesE2ETest.SELECTION_WATERFALL_LOGIC_JS_PATH;
 import static com.android.adservices.service.adselection.AdSelectionServiceImpl.AUCTION_SERVER_API_IS_NOT_AVAILABLE;
 import static com.android.adservices.service.adselection.GetAdSelectionDataRunner.REVOKED_CONSENT_RANDOM_DATA_SIZE;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.sCallerMetadata;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
@@ -421,7 +422,8 @@ public class AuctionServerE2ETest {
                         eq(false),
                         eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AdServicesStatsLog
+                                .AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
                         eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA),
                         eq(DevContext.createForDevOptionsDisabled()));
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
@@ -432,7 +434,8 @@ public class AuctionServerE2ETest {
                         eq(false),
                         eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AdServicesStatsLog
+                                .AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
                         eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
                         eq(DevContext.createForDevOptionsDisabled()));
 
@@ -1804,7 +1807,7 @@ public class AuctionServerE2ETest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         GetAdSelectionDataTestCallback callback =
                 new GetAdSelectionDataTestCallback(countDownLatch);
-        service.getAdSelectionData(input, null, callback);
+        service.getAdSelectionData(input, sCallerMetadata, callback);
         callback.mCountDownLatch.await();
         return callback;
     }
@@ -1815,7 +1818,7 @@ public class AuctionServerE2ETest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultTestCallback callback =
                 new PersistAdSelectionResultTestCallback(countDownLatch);
-        service.persistAdSelectionResult(input, null, callback);
+        service.persistAdSelectionResult(input, sCallerMetadata, callback);
         callback.mCountDownLatch.await();
         return callback;
     }
