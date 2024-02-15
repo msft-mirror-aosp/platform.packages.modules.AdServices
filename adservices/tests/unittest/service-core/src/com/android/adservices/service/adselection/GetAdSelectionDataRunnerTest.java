@@ -359,7 +359,6 @@ public class GetAdSelectionDataRunnerTest {
     @Test
     public void testRunner_revokedUserConsent_returnsRandomResult() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
@@ -389,15 +388,12 @@ public class GetAdSelectionDataRunnerTest {
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
         verifyZeroInteractions(mAdFiltererSpy);
-
-        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
     public void testRunner_revokedUserConsent_returnsRandomResultWithExcessiveSizeFormatterVersion()
             throws InterruptedException, IOException {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
         mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -430,8 +426,6 @@ public class GetAdSelectionDataRunnerTest {
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
         verifyZeroInteractions(mAdFiltererSpy);
-
-        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test

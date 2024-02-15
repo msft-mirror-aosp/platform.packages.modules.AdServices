@@ -1352,7 +1352,6 @@ public class PersistAdSelectionResultRunnerTest {
     @Test
     public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -1384,8 +1383,6 @@ public class PersistAdSelectionResultRunnerTest {
         verifyZeroInteractions(mCustomAudienceDaoMock);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
-
-        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test

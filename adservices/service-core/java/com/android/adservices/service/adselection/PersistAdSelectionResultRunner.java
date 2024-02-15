@@ -813,7 +813,6 @@ public class PersistAdSelectionResultRunner {
             sLogger.v(
                     "Persist Ad Selection Result completed, attempted notifying success for a"
                             + " silent failure");
-            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
         }
     }
 
