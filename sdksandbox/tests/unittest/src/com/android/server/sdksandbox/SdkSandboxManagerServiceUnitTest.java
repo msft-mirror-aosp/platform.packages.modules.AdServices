@@ -68,6 +68,9 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.platform.test.annotations.RequiresFlagsEnabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -78,6 +81,7 @@ import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
+import com.android.sdksandbox.flags.Flags;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService.TargetUser;
 import com.android.server.am.ActivityManagerLocal;
@@ -157,6 +161,9 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before
     public void setup() {
@@ -1324,6 +1331,7 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    @RequiresFlagsEnabled(Flags.FLAG_GET_EFFECTIVE_TARGET_SDK_VERSION_API)
     public void testGetEffectiveTargetSdkVersion() throws Exception {
         assertThat(
                         sSdkSandboxManagerLocal.getEffectiveTargetSdkVersion(
