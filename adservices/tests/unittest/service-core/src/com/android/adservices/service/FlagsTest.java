@@ -24,8 +24,8 @@ import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
-import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
@@ -211,29 +211,23 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     @Test
     @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceToAppSearchMigration_isR() {
-        assertEnableAdExtServiceToAppSearchMigration(false);
+    public void testEnableMigrationFromAdExtService_isR() {
+        assertEnableMigrationFromAdExtService(false);
     }
 
     @Test
-    @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceToAppSearchMigration_isS() {
-        assertEnableAdExtServiceToAppSearchMigration(true);
+    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
+    public void testEnableMigrationFromAdExtService_isAtLeastS() {
+        assertEnableMigrationFromAdExtService(true);
     }
 
-    @Test
-    @RequiresSdkLevelAtLeastT(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceToAppSearchMigration_isAtLeastT() {
-        assertEnableAdExtServiceToAppSearchMigration(false);
-    }
-
-    private void assertEnableAdExtServiceToAppSearchMigration(boolean expected) {
-        expect.withMessage("ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION")
-                .that(ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION)
+    private void assertEnableMigrationFromAdExtService(boolean expected) {
+        expect.withMessage("ENABLE_MIGRATION_FROM_ADEXT_SERVICE")
+                .that(ENABLE_MIGRATION_FROM_ADEXT_SERVICE)
                 .isEqualTo(expected);
 
-        expect.withMessage("getEnableAdExtServiceToAppSearchMigration()")
-                .that(mFlags.getEnableAdExtServiceToAppSearchMigration())
+        expect.withMessage("getEnableMigrationFromAdExtService()")
+                .that(mFlags.getEnableMigrationFromAdExtService())
                 .isEqualTo(expected);
     }
 
