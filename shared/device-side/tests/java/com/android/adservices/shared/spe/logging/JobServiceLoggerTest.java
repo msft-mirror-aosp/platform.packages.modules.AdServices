@@ -393,6 +393,8 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                 .setExecutionPeriodMinute((int) executionPeriodMs)
                                 .setExecutionResultCode(resultCode)
                                 .setStopReason(stopReason)
+                                .setModuleName(
+                                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
                                 .build());
     }
 
