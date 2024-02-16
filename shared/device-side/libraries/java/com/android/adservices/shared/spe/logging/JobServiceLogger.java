@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
 import static com.android.adservices.shared.spe.JobServiceConstants.MAX_PERCENTAGE;
 import static com.android.adservices.shared.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
 import static com.android.adservices.shared.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
@@ -313,6 +314,9 @@ public class JobServiceLogger {
                         .setExecutionPeriodMinute(convertLongToInteger(executionPeriodMinute))
                         .setExecutionResultCode(resultCode)
                         .setStopReason(stopReason)
+                        // TODO(b/324323522): Populate correct module name.
+                        .setModuleName(
+                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
                         .build();
         mStatsdLogger.logExecutionReportedStats(stats);
 
