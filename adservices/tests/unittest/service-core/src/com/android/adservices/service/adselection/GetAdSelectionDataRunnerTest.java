@@ -137,6 +137,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
             Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     private static final boolean FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED_IN_TEST = true;
+    private static final String ALLOW_LIST_COORDINATORS = "https://example.com";
 
     private Flags mFlags;
     private Context mContext;
@@ -145,6 +146,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategyFlagOff;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategyFlagOn;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
@@ -170,6 +173,11 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         mFlags = new GetAdSelectionDataRunnerTestFlags();
+        mMultiCloudSupportStrategyFlagOff =
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
+        mMultiCloudSupportStrategyFlagOn =
+                MultiCloudTestStrategyFactory.getEnabledTestStrategy(
+                        mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS);
         mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -225,9 +233,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         mFledgeAuctionServerExecutionLogger =
                 mFledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
-        mGetAdSelectionDataRunner = initRunner(
-                mFlags,
-                mFledgeAuctionServerExecutionLogger);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
     }
 
     @After
@@ -240,11 +246,12 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Test
     public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
-
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
+
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -280,8 +287,11 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOn_invalidCoordinator_throwsError()
             throws InterruptedException {
-        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
-        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+        mGetAdSelectionDataRunner =
+                initRunner(
+                        mFlags,
+                        mFledgeAuctionServerExecutionLogger,
+                        mMultiCloudSupportStrategyFlagOn);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
@@ -307,8 +317,6 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOn_validCoordinator_IsSuccess()
             throws InterruptedException {
-        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
-        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
@@ -316,12 +324,19 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
 
+        mGetAdSelectionDataRunner =
+                initRunner(
+                        mFlags,
+                        mFledgeAuctionServerExecutionLogger,
+                        MultiCloudTestStrategyFactory.getEnabledTestStrategy(
+                                mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS));
+
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
                 new GetAdSelectionDataInput.Builder()
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setCoordinatorOriginUri(Uri.parse("https://example.com"))
+                        .setCoordinatorOriginUri(Uri.parse(ALLOW_LIST_COORDINATORS))
                         .build();
 
         GetAdSelectionDataTestCallback callback =
@@ -333,14 +348,19 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOn_nullCoordinator_IsSuccess()
             throws InterruptedException {
-        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
-        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
+
+        mGetAdSelectionDataRunner =
+                initRunner(
+                        mFlags,
+                        mFledgeAuctionServerExecutionLogger,
+                        MultiCloudTestStrategyFactory.getEnabledTestStrategy(
+                                mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -359,14 +379,19 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOff_invalidCoordinator_IsSuccess()
             throws InterruptedException {
-        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(false);
-        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
+
+        mGetAdSelectionDataRunner =
+                initRunner(
+                        mFlags,
+                        mFledgeAuctionServerExecutionLogger,
+                        MultiCloudTestStrategyFactory.getDisabledTestStrategy(
+                                mObliviousHttpEncryptorMock));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -385,15 +410,17 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Test
     public void testRunner_getAdSelectionData_returnsSuccessWithExcessiveSizeFormatterVersion()
             throws InterruptedException, IOException {
-        mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
-        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
-
-        doReturn(mFlags).when(FlagsFactory::getFlags);
-
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong());
+
+        mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock));
+
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -438,8 +465,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     public void testRunner_getAdSelectionData_returnsInternalErrorWhenEncounteringIOException()
             throws InterruptedException, IOException {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
-        mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+                mMultiCloudSupportStrategyFlagOff);
         doThrow(new IOException())
                 .when(() -> AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(any(), any()));
 
@@ -571,12 +598,11 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         boolean isDebugReportingEnabled = true;
         long adSelectionId = 234L;
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
-        GetAdSelectionDataRunner getAdSelectionDataRunner =
-                initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+                mMultiCloudSupportStrategyFlagOff);
 
         ProtectedAuctionInput result =
-                getAdSelectionDataRunner.composeProtectedAuctionInputBytes(
+                mGetAdSelectionDataRunner.composeProtectedAuctionInputBytes(
                         createTestBuyerInputs(),
                         CALLER_PACKAGE_NAME,
                         adSelectionId,
@@ -604,10 +630,13 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 new Returns(
                                         FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))));
 
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+                mMultiCloudSupportStrategyFlagOff);
         GetAdSelectionDataRunner getAdSelectionDataRunner =
                 new GetAdSelectionDataRunner(
-                        mObliviousHttpEncryptorMock,
+                        mContext,
+                        MultiCloudTestStrategyFactory.getDisabledTestStrategy(
+                                mObliviousHttpEncryptorMock),
                         mAdSelectionEntryDaoSpy,
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
@@ -653,8 +682,17 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     private GetAdSelectionDataRunner initRunner(
             Flags flags, FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
+        return initRunner(
+                flags, fledgeAuctionServerExecutionLogger, mMultiCloudSupportStrategyFlagOff);
+    }
+
+    private GetAdSelectionDataRunner initRunner(
+            Flags flags,
+            FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger,
+            MultiCloudSupportStrategy multiCloudSupportStrategy) {
         return new GetAdSelectionDataRunner(
-                mObliviousHttpEncryptorMock,
+                mContext,
+                multiCloudSupportStrategy,
                 mAdSelectionEntryDaoSpy,
                 mCustomAudienceDao,
                 mEncodedPayloadDao,
@@ -703,7 +741,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         return callback;
     }
 
-    private void mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger() {
+    private void mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+            MultiCloudSupportStrategy multiCloudSupportStrategy) {
         when(mFledgeAuctionServerExecutionLoggerClockMock.elapsedRealtime())
                 .thenReturn(
                         BINDER_ELAPSED_TIMESTAMP,
@@ -712,9 +751,8 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mFledgeAuctionServerExecutionLogger =
                 mFledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger();
-        mGetAdSelectionDataRunner = initRunner(
-                mFlags,
-                mFledgeAuctionServerExecutionLogger);
+        mGetAdSelectionDataRunner =
+                initRunner(mFlags, mFledgeAuctionServerExecutionLogger, multiCloudSupportStrategy);
     }
 
     private void verifyGetAdSelectionDataApiUsageLog(int resultCode) throws InterruptedException {

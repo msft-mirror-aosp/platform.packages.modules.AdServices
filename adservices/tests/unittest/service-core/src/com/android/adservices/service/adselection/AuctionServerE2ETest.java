@@ -277,6 +277,8 @@ public class AuctionServerE2ETest {
     private AdSelectionDebugReportDao mAdSelectionDebugReportDaoSpy;
     private AdIdFetcher mAdIdFetcher;
     private MockAdIdWorker mMockAdIdWorker;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
+
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     @Before
@@ -345,6 +347,8 @@ public class AuctionServerE2ETest {
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));
         mAdIdFetcher =
                 new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+        mMultiCloudSupportStrategy =
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
 
         mAdSelectionService = createAdSelectionService();
 
@@ -867,15 +871,16 @@ public class AuctionServerE2ETest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        new ObliviousHttpEncryptorWithSeedImpl(
-                                new AdSelectionEncryptionKeyManager(
-                                        mAuctionServerEncryptionKeyDao,
-                                        mFlags,
-                                        mAdServicesHttpsClientSpy,
-                                        mLightweightExecutorService),
-                                mEncryptionContextDao,
-                                seedBytes,
-                                mLightweightExecutorService),
+                        MultiCloudTestStrategyFactory.getDisabledTestStrategy(
+                                new ObliviousHttpEncryptorWithSeedImpl(
+                                        new AdSelectionEncryptionKeyManager(
+                                                mAuctionServerEncryptionKeyDao,
+                                                mFlags,
+                                                mAdServicesHttpsClientSpy,
+                                                mLightweightExecutorService),
+                                        mEncryptionContextDao,
+                                        seedBytes,
+                                        mLightweightExecutorService)),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
@@ -1512,15 +1517,16 @@ public class AuctionServerE2ETest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        new ObliviousHttpEncryptorWithSeedImpl(
-                                new AdSelectionEncryptionKeyManager(
-                                        mAuctionServerEncryptionKeyDao,
-                                        mFlags,
-                                        mAdServicesHttpsClientSpy,
-                                        mLightweightExecutorService),
-                                mEncryptionContextDao,
-                                seedBytes,
-                                mLightweightExecutorService),
+                        MultiCloudTestStrategyFactory.getDisabledTestStrategy(
+                                new ObliviousHttpEncryptorWithSeedImpl(
+                                        new AdSelectionEncryptionKeyManager(
+                                                mAuctionServerEncryptionKeyDao,
+                                                mFlags,
+                                                mAdServicesHttpsClientSpy,
+                                                mLightweightExecutorService),
+                                        mEncryptionContextDao,
+                                        seedBytes,
+                                        mLightweightExecutorService)),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
@@ -1632,15 +1638,16 @@ public class AuctionServerE2ETest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        new ObliviousHttpEncryptorWithSeedImpl(
-                                new AdSelectionEncryptionKeyManager(
-                                        mAuctionServerEncryptionKeyDao,
-                                        mFlags,
-                                        mAdServicesHttpsClientSpy,
-                                        mLightweightExecutorService),
-                                mEncryptionContextDao,
-                                seedBytes,
-                                mLightweightExecutorService),
+                        MultiCloudTestStrategyFactory.getDisabledTestStrategy(
+                                new ObliviousHttpEncryptorWithSeedImpl(
+                                        new AdSelectionEncryptionKeyManager(
+                                                mAuctionServerEncryptionKeyDao,
+                                                mFlags,
+                                                mAdServicesHttpsClientSpy,
+                                                mLightweightExecutorService),
+                                        mEncryptionContextDao,
+                                        seedBytes,
+                                        mLightweightExecutorService)),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
@@ -1704,7 +1711,7 @@ public class AuctionServerE2ETest {
                 mAdSelectionServiceFilterMock,
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock,
-                mObliviousHttpEncryptorMock,
+                mMultiCloudSupportStrategy,
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
                 mUnusedKAnonSignJoinFactory,

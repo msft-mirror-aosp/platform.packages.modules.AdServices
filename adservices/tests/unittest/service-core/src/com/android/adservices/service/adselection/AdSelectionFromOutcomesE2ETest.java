@@ -227,6 +227,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
 
@@ -267,6 +268,8 @@ public class AdSelectionFromOutcomesE2ETest {
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
         mEnrollmentDao = EnrollmentDao.getInstance(mContextSpy);
         mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
+        mMultiCloudSupportStrategy =
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         mAdServicesHttpsClient =
@@ -301,7 +304,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
@@ -433,7 +436,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
@@ -491,7 +494,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
