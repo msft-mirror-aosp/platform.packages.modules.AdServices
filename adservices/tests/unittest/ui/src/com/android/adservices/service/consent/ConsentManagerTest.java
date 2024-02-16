@@ -639,7 +639,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 () ->
                         AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
-        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)), times(2));
     }
 
     @Test
