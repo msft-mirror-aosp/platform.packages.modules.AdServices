@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.spe;
+package com.android.adservices.shared.spe.logging;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY;
@@ -23,14 +23,15 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__PUBLIC_STOP_REASON__STOP_REASON_UNDEFINED;
-import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
-import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
-import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
+import static com.android.adservices.shared.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
+import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
+import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
+import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_STOP_REASON;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,13 +43,11 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -57,6 +56,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
@@ -65,18 +65,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Unit test to test each flow for a job service using {@link AdServicesJobServiceLogger} to log the
- * metrics. This test creates an example {@link JobService} to use logging methods in {@link
- * AdServicesJobServiceLogger} and runs tests against this class.
+ * Unit test to test each flow for a job service using {@link JobServiceLogger} to log the metrics.
+ * This test creates an example {@link JobService} to use logging methods in {@link
+ * JobServiceLogger} and runs tests against this class.
  */
-@SpyStatic(FlagsFactory.class)
-public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class JobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
-    private static final int JOB_ID =
-            AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
+    private static final int JOB_ID = 1;
     // Below are constant timestamps passed to mocked Clock as returned value of
     // clock.currentTimeMillis(). They are timestamps of consecutive events in sequence.
     // Setting consecutive two values have a different difference in order to avoid interfering the
@@ -96,34 +94,44 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     private static final long BACKGROUND_EXECUTION_TIMEOUT = 500L;
     // The customized StopReason if onStopJob() is invoked.
     private static final int STOP_REASON = JobParameters.STOP_REASON_CANCELLED_BY_APP;
-    @Mock private Flags mMockFlags;
+    private static final ImmutableMap<Integer, String> sJobIdToNameMap =
+            new ImmutableMap.Builder<Integer, String>().put(JOB_ID, "job").build();
+    private static final StatsdJobServiceLogger sMockStatsdLogger =
+            mock(StatsdJobServiceLogger.class);
+    private static final ModuleSharedFlags sMockFlags = mock(ModuleSharedFlags.class);
+    private JobServiceLogger mLogger;
+
     @Mock private JobParameters mMockJobParameters;
     @Mock private Clock mMockClock;
-    @Mock StatsdAdServicesLogger mMockStatsdLogger;
-    private AdServicesJobServiceLogger mLogger;
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mMockFlags);
-
-        mLogger = spy(new AdServicesJobServiceLogger(CONTEXT, mMockClock, mMockStatsdLogger));
+        mLogger =
+                Mockito.spy(
+                        new JobServiceLogger(
+                                CONTEXT,
+                                mMockClock,
+                                sMockStatsdLogger,
+                                Executors.newCachedThreadPool(),
+                                sJobIdToNameMap,
+                                sMockFlags));
 
         // Clear shared preference
-        CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
+        CONTEXT.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+
+        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
     }
 
     @After
     public void teardown() {
         // Clear shared preference
-        CONTEXT.deleteSharedPreferences(JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS);
+        CONTEXT.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
     }
 
     /** To test 1) success as first execution 2) success result code */
     @Test
     public void testJobExecutionLifeCycle_succeedThenSucceed() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
-        // Enable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(false);
         // Mock clock to return mocked currentTimeStamp in sequence.
         when(mMockClock.currentTimeMillis())
                 .thenReturn(
@@ -168,13 +176,12 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
                         stopReason);
     }
+
     /** To test 1) Failure as first execution 2) failure w/o retry. */
     @Test
     public void testJobExecutionLifeCycle_FailWithRetryThenFailWithoutRetry()
             throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
-        // Enable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(false);
         // Mock clock to return mocked currentTimeStamp in sequence.
         when(mMockClock.currentTimeMillis())
                 .thenReturn(
@@ -217,13 +224,12 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY,
                         stopReason);
     }
+
     /** To test 1) onStopJob() is called as first execution 2) onStopJob w/o retry. */
     @Test
     public void testJobExecutionLifeCycle_onStopWithRetryThenOnStopWithoutRetry()
             throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
-        // Enable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(false);
         // Mock the stop reason on test purpose. It's assigned by JobScheduler in production.
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
@@ -233,7 +239,6 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                         END_TIMESTAMP_EXECUTION_1,
                         START_TIMESTAMP_EXECUTION_2,
                         END_TIMESTAMP_EXECUTION_2);
-        int stopReason = STOP_REASON;
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(true);
@@ -248,7 +253,7 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
         // StopReason was only introduced in Android S; prior to that it'll only log as Unknown.
         int expectedStopReason =
                 SdkLevel.isAtLeastS()
-                        ? stopReason
+                        ? STOP_REASON
                         : AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__PUBLIC_STOP_REASON__STOP_REASON_UNDEFINED;
         verify(mLogger)
                 .logJobStatsHelper(
@@ -275,12 +280,11 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY,
                         expectedStopReason);
     }
+
     /** To test the flow that execution is halted without calling onStopJob(). */
     @Test
     public void testJobExecutionLifeCycle_successThenHaltedByDevice() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
-        // Enable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(false);
         // Mock the stop reason on test purpose. It's assigned by JobScheduler in production.
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
@@ -337,6 +341,7 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         stopReason);
     }
+
     /**
      * To test execution halted by device issues as the first execution. And following execution can
      * log successfully
@@ -344,8 +349,6 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     @Test
     public void testJobExecutionLifeCycle_haltedThenSuccess() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
-        // Enable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(false);
         // Mock the stop reason on test purpose. It's assigned by JobScheduler in production.
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
@@ -411,8 +414,6 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     @Test
     public void testJobExecutionLifeCycle_skipThenSkip() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
-        // Enable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(false);
         // Mock clock to return mocked currentTimeStamp in sequence.
         when(mMockClock.currentTimeMillis())
                 .thenReturn(
@@ -455,10 +456,10 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testKillSwitchIsOn_successfulExecution() throws InterruptedException {
+    public void testLoggingNotEnabled_successfulExecution() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(true);
+        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
         // First Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
@@ -470,10 +471,10 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testKillSwitchIsOn_failedExecution() throws InterruptedException {
+    public void testLoggingNotEnabled_failedExecution() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(true);
+        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
         // First Execution -- Fail to execute with retry
         jobService.setOnSuccessCallback(false);
         jobService.setShouldRetryOnJobFinished(true);
@@ -486,10 +487,10 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testKillSwitchIsOn_executionCallingOnStop() throws InterruptedException {
+    public void testLoggingNotEnabled_executionCallingOnStop() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(true);
+        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(true);
@@ -503,10 +504,10 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testKillSwitchIsOn_skipExecution() throws InterruptedException {
+    public void testLoggingNotEnabled_skipExecution() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(true);
+        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldSkip(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
@@ -545,9 +546,9 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
         private boolean mShouldRetryOnJobFinished;
         private boolean mShouldOnStopJobHappen;
         private boolean mShouldSkip;
-        private final AdServicesJobServiceLogger mLogger;
+        private final JobServiceLogger mLogger;
 
-        TestJobService(AdServicesJobServiceLogger logger) {
+        TestJobService(JobServiceLogger logger) {
             mLogger = logger;
         }
 
@@ -567,7 +568,7 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
             }
 
             FutureCallback<Void> callback =
-                    new FutureCallback<Void>() {
+                    new FutureCallback<>() {
                         @Override
                         public void onSuccess(Void result) {
                             mLogger.recordJobFinished(

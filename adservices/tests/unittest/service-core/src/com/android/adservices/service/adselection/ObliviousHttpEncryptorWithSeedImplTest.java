@@ -76,7 +76,7 @@ public class ObliviousHttpEncryptorWithSeedImplTest {
 
     @Test
     public void test_encryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
         String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
         byte[] seedBytes = seed.getBytes(StandardCharsets.US_ASCII);
@@ -119,7 +119,7 @@ public class ObliviousHttpEncryptorWithSeedImplTest {
 
     @Test
     public void test_decryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";

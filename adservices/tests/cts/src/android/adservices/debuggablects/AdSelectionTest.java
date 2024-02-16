@@ -121,6 +121,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * reporting URI (Remarketing CUJ 160).
      */
     @Test
+    @FlakyTest(bugId = 325344134)
     public void testAdSelection_withAdCostInUrl_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(

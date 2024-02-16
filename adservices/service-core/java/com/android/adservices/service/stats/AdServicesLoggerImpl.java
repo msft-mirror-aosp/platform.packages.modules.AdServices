@@ -242,6 +242,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logAppManifestConfigCall(call);
     }
 
+    @Override
+    public void logKAnonSignJoinStatus() {
+        // TODO(b/324564459): add logging for KAnon Sign Join
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
         mAppNameApiErrorLogger =
