@@ -20,7 +20,6 @@ import static com.android.adservices.service.common.httpclient.AdServicesHttpUti
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -55,6 +54,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
@@ -122,6 +122,7 @@ public class KAnonCallerImplFullIntegrationTests {
 
     @Mock private Clock mockClock;
     @Mock private UserProfileIdDao mockUserProfileIdDao;
+    @Mock private AdServicesLogger mockAdServicesLogger;
     private UserProfileIdManager mUserProfileIdManager;
 
     private final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -196,16 +197,11 @@ public class KAnonCallerImplFullIntegrationTests {
                                 mBinaryHttpMessageDeserializer,
                                 mFlags,
                                 mKAnonObliviousHttpEncryptor,
-                                mKAnonMessageManager));
+                                mKAnonMessageManager,
+                                mockAdServicesLogger));
         CountDownLatch countDownLatch = new CountDownLatch(1);
         kAnonCaller.signAndJoinMessages(messageEntities);
-        doAnswer(
-                        (unused) -> {
-                            countDownLatch.countDown();
-                            return null;
-                        })
-                .when(kAnonCaller)
-                .logProcessStatus();
+
         countDownLatch.await();
 
         List<KAnonMessageEntity> messageEntitiesAfterProcessing =
@@ -240,7 +236,8 @@ public class KAnonCallerImplFullIntegrationTests {
                         mBinaryHttpMessageDeserializer,
                         mFlags,
                         mKAnonObliviousHttpEncryptor,
-                        mKAnonMessageManager);
+                        mKAnonMessageManager,
+                        mockAdServicesLogger);
         CountDownLatch countdownLatch = new CountDownLatch(1);
         runner.signAndJoinMessages(messageEntities);
         countdownLatch.await();

@@ -43,6 +43,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.database.sqlite.SQLiteConstraintException;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -2536,6 +2537,17 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getPartialAudienceListForUpdateId(updateId);
         assertThat(
                         partialCustomAudienceList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(partialCaName1, partialCaName2);
+
+        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
+                updateAndOverridesPair =
+                        mCustomAudienceDao.getScheduledUpdatesAndOverridesBeforeTime(
+                                anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertThat(updateAndOverridesPair.get(0).first.getUpdateId()).isEqualTo(updateId);
+        assertThat(
+                        updateAndOverridesPair.get(0).second.stream()
                                 .map(entry -> entry.getName())
                                 .collect(Collectors.toList()))
                 .containsExactly(partialCaName1, partialCaName2);

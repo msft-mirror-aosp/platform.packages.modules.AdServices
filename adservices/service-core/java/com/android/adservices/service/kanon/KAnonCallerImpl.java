@@ -53,7 +53,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.KAnonSignJoinException;
 import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus;
-import com.android.internal.annotations.VisibleForTesting;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
@@ -110,6 +110,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     @NonNull private ClientParametersDao mClientParametersDao;
     @NonNull private ServerParametersDao mServerParametersDao;
     @NonNull private BinaryHttpMessageDeserializer mBinaryHttpMessageDeserializer;
+    @NonNull private AdServicesLogger mAdServicesLogger;
     @NonNull private UUID mClientId;
     @Nullable private String mServerParamVersion;
     @Nullable private String mClientParamsVersion;
@@ -140,7 +141,8 @@ public class KAnonCallerImpl implements KAnonCaller {
             @NonNull BinaryHttpMessageDeserializer binaryHttpMessageDeserializer,
             @NonNull Flags flags,
             @NonNull ObliviousHttpEncryptor kAnonObliviousHttpEncryptor,
-            @NonNull KAnonMessageManager kAnonMessageManager) {
+            @NonNull KAnonMessageManager kAnonMessageManager,
+            @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(anonymousCountingTokens);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -151,6 +153,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         Objects.requireNonNull(binaryHttpMessageDeserializer);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(kAnonMessageManager);
+        Objects.requireNonNull(adServicesLogger);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mAnonymousCountingTokens = anonymousCountingTokens;
@@ -162,6 +165,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         mBinaryHttpMessageDeserializer = binaryHttpMessageDeserializer;
         mFlags = flags;
         mClientId = mUserProfileIdManager.getOrCreateId();
+        mAdServicesLogger = adServicesLogger;
         mRequestMetadata =
                 RequestMetadata.newBuilder()
                         .setAndroidRequestMetadata(
@@ -210,14 +214,14 @@ public class KAnonCallerImpl implements KAnonCaller {
                     @Override
                     public void onSuccess(Void result) {
                         LogUtil.d("Sign join process finished");
-                        logProcessStatus();
+                        mAdServicesLogger.logKAnonSignJoinStatus();
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
                         // Because we are using Futures#whenAllComplete, we will not be catching
                         // errors here.
-                        logProcessStatus();
+                        mAdServicesLogger.logKAnonSignJoinStatus();
                     }
                 },
                 mLightweightExecutorService);
@@ -811,10 +815,5 @@ public class KAnonCallerImpl implements KAnonCaller {
                     "Join called failed: Binary Http message status: "
                             + binaryHttpMessage.getResponseControlData().getFinalStatusCode());
         }
-    }
-
-    @VisibleForTesting
-    void logProcessStatus() {
-        // TODO(b/324564459): add logging for this class
     }
 }

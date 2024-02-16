@@ -82,12 +82,7 @@ public class KAnonMessageManager {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Updates the status of messages in the table.
-     *
-     * @param messageEntities
-     * @param status
-     */
+    /** Updates the status of messages in the table. */
     public void updateMessagesStatus(
             List<KAnonMessageEntity> messageEntities,
             @KAnonMessageEntity.KanonMessageEntityStatus int status) {
@@ -95,6 +90,7 @@ public class KAnonMessageManager {
                 messageEntities.stream()
                         .map(KAnonMessageEntity::getMessageId)
                         .collect(Collectors.toList());
+
         mKAnonMessageDao.updateMessagesStatus(
                 idsToUpdate, KAnonMessageConstants.fromKAnonMessageEntityStatus(status));
     }
