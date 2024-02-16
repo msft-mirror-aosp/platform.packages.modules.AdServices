@@ -28,14 +28,13 @@ import android.adservices.utils.ScenarioDispatcher;
 
 import androidx.test.filters.FlakyTest;
 
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
 
 /** End-to-end test for report impression. */
-public class AdSelectionReportingTest extends FledgeScenarioTest {
+public final class AdSelectionReportingTest extends FledgeScenarioTest {
 
     @FlakyTest(bugId = 303534327)
     @Test
@@ -174,13 +173,11 @@ public class AdSelectionReportingTest extends FledgeScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
-            overrideJsCachingEnabled(false);
             overrideRegisterAdBeaconEnabled(true);
             long adSelectionId = doSelectAds(config).getAdSelectionId();
             doReportImpression(adSelectionId, config);
             doReportEvent(adSelectionId, "click");
         } finally {
-            overrideJsCachingEnabled(true);
             overrideRegisterAdBeaconEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
@@ -203,13 +200,11 @@ public class AdSelectionReportingTest extends FledgeScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
-            overrideJsCachingEnabled(false);
             overrideRegisterAdBeaconEnabled(true);
             long adSelectionId = doSelectAds(config).getAdSelectionId();
             doReportImpression(adSelectionId, config);
             doReportEvent(adSelectionId, "click");
         } finally {
-            overrideJsCachingEnabled(true);
             overrideRegisterAdBeaconEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
@@ -232,13 +227,11 @@ public class AdSelectionReportingTest extends FledgeScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
-            overrideJsCachingEnabled(false);
             overrideRegisterAdBeaconEnabled(true);
             long adSelectionId = doSelectAds(config).getAdSelectionId();
             doReportImpression(adSelectionId, config);
             doReportEvent(adSelectionId, "click");
         } finally {
-            overrideJsCachingEnabled(true);
             overrideRegisterAdBeaconEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
@@ -261,13 +254,11 @@ public class AdSelectionReportingTest extends FledgeScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
-            overrideJsCachingEnabled(false);
             overrideRegisterAdBeaconEnabled(true);
             long adSelectionId = doSelectAds(config).getAdSelectionId();
             doReportImpression(adSelectionId, config);
             doReportEvent(adSelectionId, "click");
         } finally {
-            overrideJsCachingEnabled(true);
             overrideRegisterAdBeaconEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
@@ -329,12 +320,5 @@ public class AdSelectionReportingTest extends FledgeScenarioTest {
             overrideRegisterAdBeaconEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
-    }
-
-    private static void overrideJsCachingEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_http_cache_enable_js_caching %s",
-                        enabled ? "true" : "false"));
     }
 }
