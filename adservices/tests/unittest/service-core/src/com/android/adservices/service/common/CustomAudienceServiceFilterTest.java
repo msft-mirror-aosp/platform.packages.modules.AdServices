@@ -202,7 +202,12 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAdTechAllowed(mSpyContext, CALLER_PACKAGE_NAME, SELLER_VALID, API_NAME);
+                .assertAdTechAllowed(
+                        mSpyContext,
+                        CALLER_PACKAGE_NAME,
+                        SELLER_VALID,
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -289,7 +294,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         .build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
-                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
     }
 
     @Test
@@ -305,7 +310,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 DevContext.createForDevOptionsDisabled());
 
         verify(mFledgeAuthorizationFilterSpy, never())
-                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
     }
 
     @Test
