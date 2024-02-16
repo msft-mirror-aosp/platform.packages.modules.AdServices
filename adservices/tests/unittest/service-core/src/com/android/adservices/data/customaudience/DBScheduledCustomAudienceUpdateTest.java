@@ -36,6 +36,7 @@ public class DBScheduledCustomAudienceUpdateTest extends AdServicesUnitTestCase 
     private static final Uri UPDATE_URI = CommonFixture.getUri(BUYER, "/updateUri");
     private static final Instant CREATION_TIME = CommonFixture.FIXED_NOW;
     private static final Instant SCHEDULED_TIME = CommonFixture.FIXED_NEXT_ONE_DAY;
+    private static final boolean IS_DEBUGGABLE = false;
 
     @Test
     public void testBuildDBScheduledCustomAudienceUpdate_BuilderSuccess() {
@@ -47,6 +48,7 @@ public class DBScheduledCustomAudienceUpdateTest extends AdServicesUnitTestCase 
                         .setUpdateUri(UPDATE_URI)
                         .setScheduledTime(SCHEDULED_TIME)
                         .setCreationTime(CREATION_TIME)
+                        .setIsDebuggable(IS_DEBUGGABLE)
                         .build();
 
         expect.withMessage("Scheduled Update Id")
@@ -67,13 +69,22 @@ public class DBScheduledCustomAudienceUpdateTest extends AdServicesUnitTestCase 
         expect.withMessage("Scheduled Update Creation Time")
                 .that(dbScheduledCustomAudienceUpdate.getCreationTime())
                 .isEqualTo(CREATION_TIME);
+        expect.withMessage("Scheduled Update Is Debuggable")
+                .that(dbScheduledCustomAudienceUpdate.getIsDebuggable())
+                .isEqualTo(IS_DEBUGGABLE);
     }
 
     @Test
     public void testBuildDBScheduledCustomAudienceUpdate_CreateSuccess() {
         DBScheduledCustomAudienceUpdate dbScheduledCustomAudienceUpdate =
                 DBScheduledCustomAudienceUpdate.create(
-                        UPDATE_ID, OWNER, BUYER, UPDATE_URI, SCHEDULED_TIME, CREATION_TIME);
+                        UPDATE_ID,
+                        OWNER,
+                        BUYER,
+                        UPDATE_URI,
+                        SCHEDULED_TIME,
+                        CREATION_TIME,
+                        IS_DEBUGGABLE);
         expect.withMessage("Scheduled Update Id")
                 .that(dbScheduledCustomAudienceUpdate.getUpdateId())
                 .isEqualTo(UPDATE_ID);

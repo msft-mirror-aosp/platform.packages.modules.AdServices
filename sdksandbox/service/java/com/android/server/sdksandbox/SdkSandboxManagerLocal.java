@@ -200,4 +200,19 @@ public interface SdkSandboxManagerLocal {
      * @hide
      */
     void registerAdServicesManagerService(IBinder iBinder, boolean published);
+
+    /**
+     * Returns the effective target Sdk version for the sdk sandbox process.
+     *
+     * <p>Sdk sandbox process hosts multiple SDKs inside it with each having its own
+     * targetSdkVersion. We allocate a targetSdkVersion for the host process such that it is
+     * compatible with all the SDKs it's hosting.
+     *
+     * @param sdkSandboxUid uid of the sdk sandbox process.
+     * @return effective target Sdk version for the sdk sandbox process.
+     * @throws NameNotFoundException if the client package for the given sdk sandbox uid is not
+     *     found.
+     */
+    @FlaggedApi(Flags.FLAG_GET_EFFECTIVE_TARGET_SDK_VERSION_API)
+    int getEffectiveTargetSdkVersion(int sdkSandboxUid) throws NameNotFoundException;
 }

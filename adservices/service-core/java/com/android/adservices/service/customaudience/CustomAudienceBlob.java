@@ -251,7 +251,7 @@ public class CustomAudienceBlob {
         }
 
         if (partialCustomAudience.getExpirationTime() != null) {
-            this.setActivationTime(partialCustomAudience.getExpirationTime());
+            this.setExpirationTime(partialCustomAudience.getExpirationTime());
         }
 
         if (partialCustomAudience.getUserBiddingSignals() != null) {

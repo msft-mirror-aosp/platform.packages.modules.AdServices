@@ -17,6 +17,7 @@ package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
@@ -71,7 +72,8 @@ public final class AdServicesFlagsSetterRule
                 .setAdIdKillSwitchForTests(false)
                 .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
                 .setSystemProperty(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false);
+                .setSystemProperty(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
+                .setSystemProperty(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
     }
 
     // TODO(b/297085722): pass clearFlags() on forGlobalKillSwitchDisabledTests() by default?

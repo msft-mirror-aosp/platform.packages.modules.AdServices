@@ -16,6 +16,10 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -140,6 +144,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SCORING_T
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
@@ -556,6 +561,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECT
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
@@ -3746,6 +3752,51 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetFledgeBaApiUsageMetricsEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeAuctionServerApiUsageMetricsEnabled())
+                .isEqualTo(
+                        FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED
+                                && FLEDGE_AUCTION_SERVER_ENABLED);
+
+        // Now overriding with the FLEDGE_AUCTION_SERVER_ENABLED from PH.
+        boolean phOverridingFledgeAuctionServerEnabled = !FLEDGE_AUCTION_SERVER_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerEnabled),
+                /* makeDefault */ false);
+
+        // Only turn on FLEDGE_AUCTION_SERVER_ENABLED,
+        // getFledgeAuctionServerApiUsageMetricsEnabled() should still return false.
+        assertThat(mPhFlags.getFledgeAuctionServerApiUsageMetricsEnabled()).isEqualTo(false);
+
+        // Now overriding with the FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED from PH.
+        boolean phOverridingFledgeAuctionServerApiUsageMetricsEnabled =
+                phOverridingFledgeAuctionServerEnabled;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerApiUsageMetricsEnabled),
+                /* makeDefault */ false);
+
+        // Turn on both FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED and
+        // FLEDGE_AUCTION_SERVER_ENABLED, getFledgeAuctionServerApiUsageMetricsEnabled() should
+        // return true.
+        assertThat(mPhFlags.getFledgeAuctionServerApiUsageMetricsEnabled()).isEqualTo(true);
+
+        // Now flipping FLEDGE_AUCTION_SERVER_ENABLED,
+        // getFledgeAuctionServerApiUsageMetricsEnabled() should return false.
+        phOverridingFledgeAuctionServerEnabled = !phOverridingFledgeAuctionServerEnabled;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerEnabled),
+                /* makeDefault */ false);
+        assertThat(mPhFlags.getFledgeAuctionServerApiUsageMetricsEnabled()).isEqualTo(false);
+    }
+
+    @Test
     public void testGetFledgeEventLevelDebugReportingEnabled() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getFledgeEventLevelDebugReportingEnabled())
@@ -4274,37 +4325,72 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mPhFlags.getAdServicesEnabled()).isFalse();
     }
 
+    private void setMeasurementKillSwitch(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_KILL_SWITCH,
+                Boolean.toString(value),
+                /* makeDefault */ false);
+    }
+
     @Test
     public void testMeasurementKillSwitch() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
 
         // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementKillSwitch()).isEqualTo(MEASUREMENT_KILL_SWITCH);
+        boolean defaultValue = MEASUREMENT_KILL_SWITCH;
+        expect.withMessage("getMeasurementKillSwitch() by default")
+                .that(mPhFlags.getMeasurementKillSwitch())
+                .isEqualTo(defaultValue);
 
         // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
+        boolean phOverridingValue = !defaultValue;
+        setMeasurementKillSwitch(phOverridingValue);
 
-        assertThat(mPhFlags.getMeasurementKillSwitch()).isEqualTo(phOverridingValue);
+        expect.withMessage("getMeasurementKillSwitch() when set by device_config")
+                .that(mPhFlags.getMeasurementKillSwitch())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test
     public void testMeasurementKillSwitch_globalOverride() {
+        enableGlobalKillSwitch();
+        setMeasurementKillSwitch(false);
+
+        expect.withMessage("getMeasurementKillSwitch() when global kill switch is on")
+                .that(mPhFlags.getMeasurementKillSwitch())
+                .isTrue();
+    }
+
+    @Test
+    public void testGetMeasurementEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
 
+        boolean defaultKsValue = MEASUREMENT_KILL_SWITCH;
         // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getMeasurementKillSwitch()).isEqualTo(MEASUREMENT_KILL_SWITCH);
+        expect.withMessage("getMeasurementEnabled() by default")
+                .that(mPhFlags.getMeasurementEnabled())
+                .isEqualTo(!defaultKsValue);
 
-        boolean phOverridingValue = !MEASUREMENT_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
+        // Now overriding with the value from PH.
+        boolean phOverridingKsValue = !defaultKsValue;
+        setMeasurementKillSwitch(phOverridingKsValue);
 
-        assertThat(mPhFlags.getMeasurementKillSwitch()).isEqualTo(phOverridingValue);
+        expect.withMessage("getMeasurementEnabled() when set by device_config")
+                .that(mPhFlags.getMeasurementEnabled())
+                .isEqualTo(!phOverridingKsValue);
+    }
+
+    @Test
+    public void testGetMeasurementEnabled_globalOverride() {
+        enableGlobalKillSwitch();
+        setMeasurementKillSwitch(false);
+
+        expect.withMessage("getMeasurementEnabled() when global kill switch is on")
+                .that(mPhFlags.getMeasurementEnabled())
+                .isFalse();
     }
 
     @Test
@@ -4337,11 +4423,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementApiDeleteRegistrationsKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -4392,11 +4474,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_API_STATUS_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_API_STATUS_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementApiStatusKillSwitch()).isEqualTo(phOverridingValue);
     }
@@ -4446,11 +4524,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementApiRegisterSourceKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -4502,11 +4576,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementApiRegisterTriggerKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -4578,11 +4648,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementApiRegisterWebSourceKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -4634,11 +4700,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementApiRegisterWebTriggerKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -4690,11 +4752,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobAggregateFallbackReportingKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -4746,11 +4804,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobAggregateReportingKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -4801,11 +4855,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobAttributionKillSwitch()).isEqualTo(phOverridingValue);
     }
@@ -4857,11 +4907,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         // Now overriding with the value from PH.
         boolean phOverridingValue = !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementAttributionFallbackJobKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -4934,11 +4980,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         // Now overriding with the value from PH.
         boolean phOverridingValue = !MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementVerboseDebugReportingFallbackJobKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5011,11 +5053,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         // Now overriding with the value from PH.
         boolean phOverridingValue = !MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementDebugReportingFallbackJobKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5086,11 +5124,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobDeleteExpiredKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5142,11 +5176,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobDeleteUninstalledKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5198,11 +5228,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobEventFallbackReportingKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5254,11 +5280,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobEventReportingKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5310,11 +5332,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementReceiverInstallAttributionKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5366,11 +5384,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementReceiverDeletePackagesKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5422,11 +5436,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementRollbackDeletionKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -5589,11 +5599,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         // Now overriding with the value from PH.
         boolean phOverridingValue = !MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getAsyncRegistrationJobQueueKillSwitch()).isEqualTo(phOverridingValue);
     }
@@ -5646,11 +5652,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         // Now overriding with the value from PH.
         boolean phOverridingValue = !MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getAsyncRegistrationFallbackJobKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -9097,6 +9099,41 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetFledgeAuctionServerMultiCloudEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getFledgeAuctionServerMultiCloudEnabled())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
+
+        boolean phOverridingValue = !FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeAuctionServerMultiCloudEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeAuctionServerCoordinatorUrlAllowlist() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getFledgeAuctionServerCoordinatorUrlAllowlist())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST);
+
+        String phOverridingValue = "https://example.com";
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeAuctionServerCoordinatorUrlAllowlist())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetFledgeAuctionServerRequestFlagsEnabled() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getFledgeAuctionServerRequestFlagsEnabled())
@@ -9877,11 +9914,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobDebugReportingKillSwitch())
                 .isEqualTo(phOverridingValue);
@@ -9933,11 +9966,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .isEqualTo(MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH);
 
         boolean phOverridingValue = !MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                false);
+        setMeasurementKillSwitch(phOverridingValue);
 
         assertThat(mPhFlags.getMeasurementJobVerboseDebugReportingKillSwitch())
                 .isEqualTo(phOverridingValue);
