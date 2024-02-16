@@ -2666,6 +2666,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return ENABLE_APPSEARCH_CONSENT_DATA;
     }
 
+    /** Default U18 AppSearch migration feature flag. */
+    boolean DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION = false;
+
+    /** Returns value of enable U18 appsearch migration flag */
+    default boolean getEnableU18AppsearchMigration() {
+        return DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
+    }
+
     /**
      * Enable AdServicesExtDataStorageService read for consent data feature flag. The default value
      * on R devices is true as the consent source of truth is PPAPI_AND_ADEXT_SERVICE_ONLY. The
@@ -2681,17 +2689,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
-     * Enables data migration from AdServicesExtDataStorageService to AppSearch upon OTA to Android
-     * S. As a result this flag is only true on Android S.
+     * Enables data migration from AdServicesExtDataStorageService to AppSearch (on S) and System
+     * server (on T+) upon OTA from R.
      */
-    boolean ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION =
-            SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT();
+    boolean ENABLE_MIGRATION_FROM_ADEXT_SERVICE = SdkLevel.isAtLeastS();
 
     /**
-     * @return value of enable AdExt service to AppSearch migration flag.
+     * @return value of enable migration AdExt service.
      */
-    default boolean getEnableAdExtServiceToAppSearchMigration() {
-        return ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
+    default boolean getEnableMigrationFromAdExtService() {
+        return ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
     }
 
     /*
