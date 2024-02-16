@@ -249,10 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
-    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android는 최근 사용한 앱을 기반으로 관심분야 주제를 파악합니다. 또한 앱과 앱의 광고 파트너는 이 기기의 다른 앱에서 내 활동을 사용하여 광고를 맞춤설정할 수 있습니다. 이때 내 신분을 비공개로 안전하게 유지합니다."</string>
-    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  앱을 사용하면 앱 활동을 기반으로 내 관심분야를 파악할 수도 있습니다. 예를 들어 정기적으로 요리 앱을 사용하는 경우 다른 앱에 식료품 배달 광고나 관련 콘텐츠가 표시될 수 있습니다.\n\n앱에서는 다른 앱에서 광고 파트너가 광고를 맞춤설정하는 용도로만 이러한 정보를 사용하도록 정보를 안전하게 저장합니다."</string>
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android는 최근 사용한 앱을 기반으로 관심분야 주제를 파악합니다. 또한 앱과 앱의 광고 파트너는 이 기기에서 이루어지는 다른 앱에서의 내 활동을 사용하여 광고를 맞춤설정할 수 있습니다. 이때 내 신분을 비공개로 안전하게 유지합니다."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  앱을 사용하면 앱 활동을 기반으로 내 관심분야를 파악할 수도 있습니다. 예를 들어 정기적으로 요리 앱을 사용하는 경우 다른 앱에 식료품 배달 광고나 관련 콘텐츠가 표시될 수 있습니다.\n\n앱에서는 다른 앱에서 광고 파트너가 광고를 맞춤설정하는 용도로만 이러한 정보를 사용하도록 정보를 안전하게 저장할 수 있습니다."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"나중에 사용 중인 앱에서 사용자의 광고 주제나 사용자가 이용한 적이 있는 앱에서 추천한 광고에 관한 정보를 요청할 수 있습니다."</string>
-    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"사용하는 앱에서 광고 실적 측정에 도움이 되는 정보를 Android에 요구할 수 있습니다. Android는 앱 간에 공유할 수 있는 정보를 제한하여 내 개인 정보를 보호합니다."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"사용하는 앱에서 광고 실적 측정에 도움이 되는 정보를 Android에 요구할 수 있습니다. Android는 앱 간에 공유할 수 있는 정보를 제한하여 내 개인 정보를 보호하는 데 도움을 줍니다."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
