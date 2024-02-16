@@ -39,6 +39,7 @@ import android.content.SharedPreferences;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableMap;
@@ -66,6 +67,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
 
     @Mock private ModuleSharedFlags mMockFlags;
     @Mock private StatsdJobServiceLogger mMockStatsdLogger;
+    @Mock private AdServicesErrorLogger mMockErrorLogger;
 
     @Before
     public void setup() {
@@ -75,6 +77,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                 sContext,
                                 Clock.getInstance(),
                                 mMockStatsdLogger,
+                                mMockErrorLogger,
                                 Executors.newCachedThreadPool(),
                                 sJobIdToNameMap,
                                 mMockFlags));
