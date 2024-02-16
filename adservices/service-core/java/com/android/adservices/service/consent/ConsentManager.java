@@ -2199,6 +2199,12 @@ public class ConsentManager {
                 /* errorLogger= */ null);
     }
 
+    public boolean isPasFledgeConsentGiven() {
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.FLEDGE).isGiven();
+    }
+
     @FunctionalInterface
     interface ThrowableSetter {
         void apply() throws IOException, RuntimeException;
