@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.consent;
 
+import static com.android.adservices.service.consent.ConsentManagerV2Test.ENROLLMENT_CHANNEL_COUNT;
+import static com.android.adservices.service.consent.ConsentManagerV2Test.UX_TYPE_COUNT;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -204,8 +206,9 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
             }
         }
 
-        verify(mUxStatesDaoMock, times(20)).getEnrollmentChannel(any());
-        verify(mUxStatesDaoMock, times(20)).setEnrollmentChannel(any(), any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel(any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 
     @Test
@@ -277,8 +280,8 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
             mAppConsentStorageManager.setUx(ux);
         }
 
-        verify(mUxStatesDaoMock, times(5)).getUx();
-        verify(mUxStatesDaoMock, times(5)).setUx(any());
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
