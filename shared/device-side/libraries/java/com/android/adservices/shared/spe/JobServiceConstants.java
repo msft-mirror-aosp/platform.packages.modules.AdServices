@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.spe;
+package com.android.adservices.shared.spe;
 
 import android.app.job.JobParameters;
 
@@ -30,40 +30,44 @@ public final class JobServiceConstants {
     public static final int UNAVAILABLE_STOP_REASON = 0;
 
     /** The shared preference file name for background jobs */
-    static final String SHARED_PREFS_BACKGROUND_JOBS = "PPAPI_Background_Jobs";
+    public static final String SHARED_PREFS_BACKGROUND_JOBS = "PPAPI_Background_Jobs";
 
     /** The suffix to compose the key to store job start timestamp */
-    static final String SHARED_PREFS_START_TIMESTAMP_SUFFIX = "_job_start_timestamp";
+    public static final String SHARED_PREFS_START_TIMESTAMP_SUFFIX = "_job_start_timestamp";
 
     /** The suffix to compose the key to store job stop timestamp */
-    static final String SHARED_PREFS_STOP_TIMESTAMP_SUFFIX = "_job_stop_timestamp";
+    public static final String SHARED_PREFS_STOP_TIMESTAMP_SUFFIX = "_job_stop_timestamp";
 
     /** The suffix to compose the key to store job execution period */
-    static final String SHARED_PREFS_EXEC_PERIOD_SUFFIX = "_job_execution_period";
+    public static final String SHARED_PREFS_EXEC_PERIOD_SUFFIX = "_job_execution_period";
 
     /**
      * Value of the execution start timestamp when it's unavailable to achieve. For example, the
      * shared preference key doesn't exist.
      */
-    static final long UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP = -1L;
+    public static final long UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP = -1L;
 
     /**
      * Value of the execution stop timestamp when it's unavailable to achieve. For example, the
      * shared preference key doesn't exist.
      */
-    static final long UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP = -1L;
+    public static final long UNAVAILABLE_JOB_EXECUTION_STOP_TIMESTAMP = -1L;
 
     /**
      * Value of the execution period when it's unavailable to achieve, such as in the first
      * execution.
      */
-    static final long UNAVAILABLE_JOB_EXECUTION_PERIOD = -1L;
+    public static final long UNAVAILABLE_JOB_EXECUTION_PERIOD = -1L;
 
     /**
      * Value of the execution latency if it cannot be computed, such as an open-end execution caused
      * by system or device issue.
      */
-    static final long UNAVAILABLE_JOB_LATENCY = -1L;
+    public static final long UNAVAILABLE_JOB_LATENCY = -1L;
 
-    static final int MILLISECONDS_PER_MINUTE = 60 * 1000;
+    /** The number of milliseconds per minute. */
+    public static final int MILLISECONDS_PER_MINUTE = 60 * 1000;
+
+    /** Maximum possible percentage for percentage variables. */
+    public static final int MAX_PERCENTAGE = 100;
 }
