@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_UNSPECIFIED;
 import static com.android.adservices.service.common.AppManifestConfigCall.INVALID_API_TEMPLATE;
@@ -199,6 +200,9 @@ public final class AppManifestConfigCallTest extends AdServicesUnitTestCase {
         expect.withMessage("apiToString(%s)", API_ATTRIBUTION)
                 .that(apiToString(API_ATTRIBUTION))
                 .isEqualTo("ATTRIBUTION");
+        expect.withMessage("apiToString(%s)", API_PROTECTED_SIGNALS)
+                .that(apiToString(API_PROTECTED_SIGNALS))
+                .isEqualTo("PROTECTED_SIGNALS");
         expect.withMessage("apiToString(42)").that(apiToString(42)).isEqualTo("INVALID-42");
     }
 

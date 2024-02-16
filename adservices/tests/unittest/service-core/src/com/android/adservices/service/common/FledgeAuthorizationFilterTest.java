@@ -25,6 +25,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -756,7 +757,8 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 /* context= */ null,
                                 PACKAGE_NAME,
                                 URI_FOR_AD_TECH,
-                                API_NAME_LOGGING_ID));
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
@@ -771,7 +773,8 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 sContext,
                                 /* appPackageName= */ null,
                                 URI_FOR_AD_TECH,
-                                API_NAME_LOGGING_ID));
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
@@ -785,7 +788,8 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 sContext,
                                 PACKAGE_NAME,
                                 /* uriForAdTech= */ null,
-                                API_NAME_LOGGING_ID));
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
@@ -803,7 +807,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
                 () ->
                         mChecker.getAndAssertAdTechFromUriAllowed(
-                                sContext, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
+                                sContext,
+                                PACKAGE_NAME,
+                                URI_FOR_AD_TECH,
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verify(mEnrollmentUtilMock).getBuildId();
         verify(mEnrollmentUtilMock).getFileGroupStatus();
@@ -850,7 +858,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
                 () ->
                         mChecker.getAndAssertAdTechFromUriAllowed(
-                                sContext, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
+                                sContext,
+                                PACKAGE_NAME,
+                                URI_FOR_AD_TECH,
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verify(mEnrollmentUtilMock).getBuildId();
         verify(mEnrollmentUtilMock).getFileGroupStatus();
@@ -899,7 +911,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
                 () ->
                         mChecker.getAndAssertAdTechFromUriAllowed(
-                                sContext, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID));
+                                sContext,
+                                PACKAGE_NAME,
+                                URI_FOR_AD_TECH,
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verify(mEnrollmentUtilMock).getBuildId();
         verify(mEnrollmentUtilMock).getFileGroupStatus();
@@ -949,7 +965,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
 
         AdTechIdentifier returnedAdTechIdentifier =
                 mChecker.getAndAssertAdTechFromUriAllowed(
-                        sContext, PACKAGE_NAME, URI_FOR_AD_TECH, API_NAME_LOGGING_ID);
+                        sContext,
+                        PACKAGE_NAME,
+                        URI_FOR_AD_TECH,
+                        API_NAME_LOGGING_ID,
+                        API_CUSTOM_AUDIENCES);
 
         assertWithMessage("Returned AdTechIdentifier")
                 .that(returnedAdTechIdentifier)
