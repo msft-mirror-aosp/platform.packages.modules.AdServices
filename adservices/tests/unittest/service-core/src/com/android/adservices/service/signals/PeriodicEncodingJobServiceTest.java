@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
@@ -58,7 +58,6 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -97,10 +96,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
     private final PeriodicEncodingJobService mEncodingJobServiceSpy =
             new PeriodicEncodingJobService();
 
-    private AdServicesJobServiceLogger mSpyLogger;
-
     @Mock private PeriodicEncodingJobWorker mPeriodicEncodingJobWorker;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
 
@@ -110,8 +106,6 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID));
-
-        mSpyLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
     }
 
     @After
@@ -151,10 +145,13 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithPeriodicEncodingDisabledWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithPeriodicEncodingDisabledWithoutLogging);
 
         testOnStartJobFlagDisabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -189,11 +186,14 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithPeriodicEncodingDisabledWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithPeriodicEncodingDisabledWithLogging);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
 
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -247,10 +247,12 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithGaUxEnabledLoggingDisabled).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxEnabledLoggingDisabled);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -283,12 +285,14 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithGaUxEnabledLoggingEnabled).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxEnabledLoggingEnabled);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -410,12 +414,14 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateSuccess();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -448,10 +454,12 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -484,12 +492,14 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -611,6 +621,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
 
         doReturn(mPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
@@ -618,7 +630,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         assertTrue(mEncodingJobServiceSpy.onStopJob(mJobParametersMock));
         verify(mPeriodicEncodingJobWorker).stopWork();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -631,7 +643,9 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         doReturn(mPeriodicEncodingJobWorker)
                 .when(() -> PeriodicEncodingJobWorker.getInstance(any()));
@@ -639,7 +653,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
         assertTrue(mEncodingJobServiceSpy.onStopJob(mJobParametersMock));
         verify(mPeriodicEncodingJobWorker).stopWork();
 
-        verifyOnStopJobLogged(mSpyLogger, callback);
+        verifyOnStopJobLogged(logger, callback);
     }
 
     @Test
@@ -823,10 +837,12 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
 
         testOnStartJobShouldDisableJobTrue();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -839,12 +855,14 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMock
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
 
         testOnStartJobShouldDisableJobTrue();
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {

@@ -347,8 +347,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                CommonFixture.FLAGS_FOR_TEST),
-                        mDevContextFilter);
+                                CommonFixture.FLAGS_FOR_TEST));
     }
 
     @After
@@ -1426,7 +1425,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 caBlobs.stream()
                                         .map(b -> b.getName())
                                         .collect(Collectors.toList())
-                                        .containsAll(List.of(PARTIAL_CA_1, PARTIAL_CA_2)));
+                                        .containsAll(List.of(PARTIAL_CA_1)));
                         return new MockResponse().setBody(responsePayload);
                     }
                 };
@@ -1486,7 +1485,11 @@ public class CustomAudienceServiceEndToEndTest {
         DBCustomAudience persistedCustomAudience2 =
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2);
-        assertNull("The custom audience 2 should not have been joined", persistedCustomAudience2);
+        assertNotNull("The custom audience should have been joined", persistedCustomAudience2);
+        assertEquals(
+                "Invalid override should not have been applied",
+                AdSelectionSignals.EMPTY.toString(),
+                persistedCustomAudience2.getUserBiddingSignals().toString());
     }
 
     @Test

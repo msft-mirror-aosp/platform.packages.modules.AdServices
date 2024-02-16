@@ -183,7 +183,7 @@ public final class PartialCustomAudience implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        AdServicesParcelableUtil.writeNullableToParcel(dest, mName, Parcel::writeString);
+        dest.writeString(mName);
         AdServicesParcelableUtil.writeNullableToParcel(
                 dest,
                 mActivationTime,

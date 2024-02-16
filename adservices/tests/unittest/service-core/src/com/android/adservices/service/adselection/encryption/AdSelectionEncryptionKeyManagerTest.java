@@ -308,7 +308,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                null)
                         .get();
 
         byte[] expectedPublicKey =
@@ -330,7 +331,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                null)
                         .get();
 
         byte[] expectedPublicKey =

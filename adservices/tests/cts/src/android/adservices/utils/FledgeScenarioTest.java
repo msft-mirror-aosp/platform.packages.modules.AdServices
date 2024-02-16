@@ -32,6 +32,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.content.Context;
 import android.net.Uri;
@@ -216,6 +217,12 @@ public abstract class FledgeScenarioTest {
                 .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
                 .get(TIMEOUT, TimeUnit.SECONDS);
         Log.d(TAG, "Left Custom Audience: " + customAudienceName);
+    }
+
+    protected void doScheduleCustomAudienceUpdate(ScheduleCustomAudienceUpdateRequest request)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mCustomAudienceClient.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Scheduled Custom Audience Update: " + request);
     }
 
     protected String getServerBaseAddress() {

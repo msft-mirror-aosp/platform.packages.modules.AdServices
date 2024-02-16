@@ -175,6 +175,7 @@ android_library {
         "adservices-grpclib-lite",
         "adservices-shared-common",
         "adservices-shared-error-logging",
+        "adservices-shared-spe",
         "adservices-shared-storage",
         "adservices-shared-util",
         "modules-utils-build",
