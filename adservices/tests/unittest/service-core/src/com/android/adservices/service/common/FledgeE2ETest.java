@@ -164,6 +164,7 @@ import com.android.adservices.service.customaudience.CustomAudienceValidator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -358,6 +359,7 @@ public class FledgeE2ETest {
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     private MockAdIdWorker mMockAdIdWorker;
     private AdIdFetcher mAdIdFetcher;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -1256,6 +1258,7 @@ public class FledgeE2ETest {
                         mObliviousHttpEncryptorMock,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         mAdSelectionConfig =
@@ -1417,6 +1420,7 @@ public class FledgeE2ETest {
                         mObliviousHttpEncryptorMock,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         mAdSelectionConfig =
@@ -1939,18 +1943,26 @@ public class FledgeE2ETest {
         MockWebServer server =
                 getMockWebServer(
                         getDecisionLogicJsWithDebugReporting(
-                                mLocalhostBuyerDomain.buildUpon().path(
-                                        SELLER_DEBUG_REPORT_WIN_PATH).build()
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(SELLER_DEBUG_REPORT_WIN_PATH)
+                                                .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM,
-                                mLocalhostBuyerDomain.buildUpon().path(
-                                        SELLER_DEBUG_REPORT_LOSS_PATH).build()
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(SELLER_DEBUG_REPORT_LOSS_PATH)
+                                                .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM),
                         getBiddingLogicWithDebugReporting(
-                                mLocalhostBuyerDomain.buildUpon().path(
-                                        BUYER_DEBUG_REPORT_WIN_PATH).build()
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(BUYER_DEBUG_REPORT_WIN_PATH)
+                                                .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM,
-                                mLocalhostBuyerDomain.buildUpon().path(
-                                        BUYER_DEBUG_REPORT_LOSS_PATH).build()
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(BUYER_DEBUG_REPORT_LOSS_PATH)
+                                                .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM),
                         /* debugReportingLatch= */ debugReportingLatch);
         doNothing()
@@ -2436,7 +2448,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
-                        /*debugReportingLatch=*/ null,
+                        /* debugReportingLatch= */ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2598,7 +2610,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
-                        /*debugReportingLatch=*/ null,
+                        /* debugReportingLatch= */ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2762,7 +2774,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
-                        /*debugReportingLatch=*/ null,
+                        /* debugReportingLatch= */ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2936,7 +2948,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
-                        /*debugReportingLatch=*/ null,
+                        /* debugReportingLatch= */ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -3023,6 +3035,7 @@ public class FledgeE2ETest {
                         mObliviousHttpEncryptorMock,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         doReturn(AdServicesApiConsent.GIVEN)
@@ -3856,8 +3869,12 @@ public class FledgeE2ETest {
         return "function scoreAd(ad, bid, auction_config, seller_signals,"
                 + " trusted_scoring_signals, contextual_signal, user_signal,"
                 + " custom_audience_signal) { \n"
-                + "  forDebuggingOnly.reportAdAuctionWin('" + reportWinUrl + "');"
-                + "  forDebuggingOnly.reportAdAuctionLoss('" + reportLossUrl + "');"
+                + "  forDebuggingOnly.reportAdAuctionWin('"
+                + reportWinUrl
+                + "');"
+                + "  forDebuggingOnly.reportAdAuctionLoss('"
+                + reportLossUrl
+                + "');"
                 + "  return {'status': 0, 'score': bid };\n"
                 + "}";
     }
@@ -3889,8 +3906,12 @@ public class FledgeE2ETest {
                 + "    for (const ad of ads) {\n"
                 + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
                 + "            result = ad;\n"
-                + "            forDebuggingOnly.reportAdAuctionWin('" + reportWinUrl + "');"
-                + "            forDebuggingOnly.reportAdAuctionLoss('" + reportLossUrl + "');"
+                + "            forDebuggingOnly.reportAdAuctionWin('"
+                + reportWinUrl
+                + "');"
+                + "            forDebuggingOnly.reportAdAuctionLoss('"
+                + reportLossUrl
+                + "');"
                 + "        }\n"
                 + "    }\n"
                 + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
@@ -3994,9 +4015,7 @@ public class FledgeE2ETest {
     }
 
     private MockWebServer getMockWebServer(
-            String decisionLogicJs,
-            String biddingLogicJs,
-            CountDownLatch debugReportingLatch)
+            String decisionLogicJs, String biddingLogicJs, CountDownLatch debugReportingLatch)
             throws Exception {
         return getMockWebServer(
                 new HashMap<>(),
@@ -4388,6 +4407,7 @@ public class FledgeE2ETest {
                         mObliviousHttpEncryptorMock,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
     }
 

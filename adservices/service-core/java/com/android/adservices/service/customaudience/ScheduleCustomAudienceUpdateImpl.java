@@ -121,7 +121,8 @@ public class ScheduleCustomAudienceUpdateImpl {
                     FluentFuture.from(filterAndValidateRequest(input, devContext));
             buyerFuture
                     .transformAsync(
-                            buyer -> scheduleUpdate(buyer, input), mBackgroundExecutorService)
+                            buyer -> scheduleUpdate(buyer, input, devContext),
+                            mBackgroundExecutorService)
                     .addCallback(
                             new FutureCallback<Void>() {
                                 @Override
@@ -208,7 +209,9 @@ public class ScheduleCustomAudienceUpdateImpl {
     }
 
     private ListenableFuture<Void> scheduleUpdate(
-            AdTechIdentifier buyer, ScheduleCustomAudienceUpdateInput input) {
+            AdTechIdentifier buyer,
+            ScheduleCustomAudienceUpdateInput input,
+            DevContext devContext) {
         String owner = input.getCallerPackageName();
         Uri updateUri = input.getUpdateUri();
         Instant now = Instant.now();
@@ -221,6 +224,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                         .setBuyer(buyer)
                         .setCreationTime(Instant.now())
                         .setScheduledTime(scheduledTime)
+                        .setIsDebuggable(devContext.getDevOptionsEnabled())
                         .build();
 
         sLogger.d(

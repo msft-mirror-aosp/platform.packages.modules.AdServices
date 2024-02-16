@@ -1718,6 +1718,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED = false;
+
+    default boolean getFledgeAuctionServerMultiCloudEnabled() {
+        return FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
+    }
+
+    String FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST =
+            "https://publickeyservice-v150"
+                + ".coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
+
+    default String getFledgeAuctionServerCoordinatorUrlAllowlist() {
+        return FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
@@ -1974,9 +1988,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /**
      * Returns the kill switch value for Global Measurement. Measurement will be disabled if either
      * the Global Kill Switch or the Measurement Kill Switch value is true.
+     *
+     * @deprecated use {@link #getMeasurementEnabled()} instead;
      */
+    @Deprecated
     default boolean getMeasurementKillSwitch() {
         return getGlobalKillSwitch() || MEASUREMENT_KILL_SWITCH;
+    }
+
+    /**
+     * Returns whether the Global Measurement feature is enabled. Measurement will be disabled if
+     * either the Global Kill Switch or the Measurement Kill Switch value is {@code true}.
+     */
+    default boolean getMeasurementEnabled() {
+        return getGlobalKillSwitch() ? false : !MEASUREMENT_KILL_SWITCH;
     }
 
     /**
@@ -3459,6 +3484,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getFledgeBeaconReportingMetricsEnabled() {
         return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
+    }
+
+    // Fledge auction server API usage metrics flag.
+    boolean FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge B&A API usage metrics is enabled */
+    default boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
+        return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED;
     }
 
     /**

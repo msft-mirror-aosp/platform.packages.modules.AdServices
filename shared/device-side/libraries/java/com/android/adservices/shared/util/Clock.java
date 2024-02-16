@@ -19,43 +19,26 @@ package com.android.adservices.shared.util;
 import android.os.SystemClock;
 
 /** Class for SystemClock call. */
-public abstract class Clock {
-    /** Elapsed Realtime, see SystemClock.elapsedRealtime() */
-    public long elapsedRealtime() {
-        throw new UnsupportedOperationException();
-    }
-
-    /** Uptime, see SystemClock.uptimeMillis() */
-    public long uptimeMillis() {
-        throw new UnsupportedOperationException();
-    }
-
-    /** Wall-clock time as per System.currentTimeMillis() */
-    public long currentTimeMillis() {
-        throw new UnsupportedOperationException();
-    }
-
-    private static final Clock SYSTEM_CLOCK =
-            new Clock() {
-
-                @Override
-                public long elapsedRealtime() {
-                    return SystemClock.elapsedRealtime();
-                }
-
-                @Override
-                public long uptimeMillis() {
-                    return SystemClock.uptimeMillis();
-                }
-
-                @Override
-                public long currentTimeMillis() {
-                    return System.currentTimeMillis();
-                }
-            };
+public final class Clock {
+    private static final Clock SYSTEM_CLOCK = new Clock();
 
     /** Returns the static instance of the {@link Clock} using {@link SystemClock}. */
     public static Clock getInstance() {
         return SYSTEM_CLOCK;
+    }
+
+    /** Wrapper for {@link SystemClock#elapsedRealtime()}. */
+    public long elapsedRealtime() {
+        return SystemClock.elapsedRealtime();
+    }
+
+    /** Wrapper for {@link SystemClock#uptimeMillis()}. */
+    public long uptimeMillis() {
+        return SystemClock.uptimeMillis();
+    }
+
+    /** Wrapper for {@link System#currentTimeMillis()}. */
+    public long currentTimeMillis() {
+        return System.currentTimeMillis();
     }
 }

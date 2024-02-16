@@ -87,6 +87,7 @@ android_test {
         "service-sdksandbox.impl",
         "services.core",
         "modules-utils-build",
+        "sdk_sandbox_flags_lib",
     ],
     data: [
         ":SampleCodeProviderApp",

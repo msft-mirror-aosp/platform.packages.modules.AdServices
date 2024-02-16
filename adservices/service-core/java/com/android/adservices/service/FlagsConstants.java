@@ -703,6 +703,12 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED =
             "fledge_auction_server_request_flags_enabled";
 
+    public static final String KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED =
+            "fledge_auction_server_multi_cloud_enabled";
+
+    public static final String KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST =
+            "fledge_auction_server_coordinator_url_allowlist";
+
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -1039,6 +1045,10 @@ public final class FlagsConstants {
     // New fledge beacon reporting metrics flag
     public static final String KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED =
             "fledge_beacon_reporting_metrics_enabled";
+
+    // Fledge auction server API usage metrics flag
+    public static final String KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED =
+            "fledge_auction_server_api_usage_metrics_enabled";
 
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
