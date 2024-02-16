@@ -32,18 +32,15 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.utils.CustomAudienceTestFixture;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
+import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.common.annotations.SetIntegerFlag;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -53,45 +50,29 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
 import java.util.List;
 
-public class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
+@SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
+@SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
+@RequiresSdkLevelAtLeastT
+public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {
     private static final String OWNER = "android.adservices.debuggablects";
     private CustomAudience mShirtsCustomAudience;
     private CustomAudience mShoesCustomAudience;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private CustomAudienceTestFixture mCustomAudienceTestFixture;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName())
-                    .setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true)
-                    .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, PPAPI_AND_SYSTEM_SERVER)
-                    .setFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true)
-                    .setFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED, true);
-
     @Before
     public void setUp() throws Exception {
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        if (SdkLevel.isAtLeastT()) {
-            assertForegroundActivityStarted();
-        }
+        assertForegroundActivityStarted();
 
-        mCustomAudienceTestFixture = new CustomAudienceTestFixture(CONTEXT);
+        mCustomAudienceTestFixture = new CustomAudienceTestFixture(sContext);
         mShirtsCustomAudience =
                 mCustomAudienceTestFixture.createCustomAudience(
                         "shirts",
