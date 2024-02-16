@@ -40,7 +40,11 @@ java_library {
         "//packages/modules/ExtServices:__subpackages__",
         "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization"
+    ],
 }
 
 java_library {
@@ -69,7 +73,45 @@ java_library {
         "//packages/modules/ExtServices:__subpackages__",
         "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization"
+    ],
+}
+
+java_library {
+    name: "adservices-shared-spe",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/spe/**/*.java",
+        ":statslog-adservices-java-gen",
+    ],
+    static_libs: [
+        "adservices-shared-common",
+        "adservices-shared-util",
+        "guava",
+    ],
+    libs: [
+        "framework-annotations-lib",
+        "framework-statsd.stubs.module_lib",
+        "auto_value_annotations",
+    ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+     ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization"
+    ],
 }
 
 // NOTE: currently there's just one library for everything (which for
@@ -94,7 +136,11 @@ java_library {
         "framework-annotations-lib",
         "jsr305", // for @ThreadSafe",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization"
+    ],
 }
 
 java_library {
@@ -104,7 +150,11 @@ java_library {
     srcs: [
         "java/com/android/adservices/shared/common/ServiceUnavailableException.java",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization"
+    ],
 }
 
 java_library {
@@ -143,7 +193,11 @@ java_library {
         "//packages/modules/ExtServices:__subpackages__",
         "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization"
+    ],
 }
 
 // NOTE: this util library only have one Preconditions class now. If we add more classes, we should
@@ -163,5 +217,9 @@ java_library {
         "modules-utils-build",
         "error_prone_annotations", // For @FormatMethod
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices", "com.android.ondevicepersonalization"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization"
+    ],
 }

@@ -27,6 +27,8 @@ import static org.mockito.Mockito.spy;
 
 import android.security.keystore.KeyProperties;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.SdkLevelSupportRule;
 
@@ -89,6 +91,7 @@ public final class KeyAttestationTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324701756)
     public void testGenerateAttestationRecord_success() throws Exception {
         KeyAttestationCertificateChainRecord record =
                 mKeyAttestation.generateAttestationRecord(CHALLENGE);
@@ -106,6 +109,7 @@ public final class KeyAttestationTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324701756)
     public void testGenerateHybridKey_success() {
         KeyPair keyPair = mKeyAttestation.generateHybridKey(CHALLENGE, KEY_ALIAS);
 
@@ -126,6 +130,7 @@ public final class KeyAttestationTest {
     }
 
     @Test
+    @FlakyTest(bugId = 324701756)
     public void testGetAttestationRecordFromKeyAlias_success() throws Exception {
         KeyPair unused = mKeyAttestation.generateHybridKey(CHALLENGE, KEY_ALIAS);
 

@@ -20,6 +20,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,6 +44,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -814,6 +816,25 @@ public abstract class CustomAudienceDao {
                                                 .build())
                         .collect(Collectors.toList());
         insertPartialCustomAudiencesForUpdate(dbPartialCustomAudienceList);
+    }
+
+    /** Gets updates schedule before a given time along with its corresponding overrides */
+    @Transaction
+    public List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
+            getScheduledUpdatesAndOverridesBeforeTime(@NonNull Instant timestamp) {
+
+        List<DBScheduledCustomAudienceUpdate> scheduledUpdates =
+                getCustomAudienceUpdatesScheduledBeforeTime(timestamp);
+
+        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>> updatesList =
+                new ArrayList<>();
+        scheduledUpdates.forEach(
+                update ->
+                        updatesList.add(
+                                new Pair(
+                                        update,
+                                        getPartialAudienceListForUpdateId(update.getUpdateId()))));
+        return updatesList;
     }
 
     /** Persists a delayed Custom Audience Update and generated a unique update_id */

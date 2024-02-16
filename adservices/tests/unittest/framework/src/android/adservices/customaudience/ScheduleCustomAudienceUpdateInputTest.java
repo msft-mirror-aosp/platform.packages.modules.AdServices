@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
+import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 
@@ -80,6 +81,25 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
         expect.withMessage("Partial Custom Audience List")
                 .that(request.getPartialCustomAudienceList())
                 .isEmpty();
+    }
+
+    @Test
+    public void testBuildValidRequestParcel_Success() {
+        ScheduleCustomAudienceUpdateInput request =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                VALID_UPDATE_URI_1,
+                                CustomAudienceFixture.VALID_OWNER,
+                                VALID_DELAY,
+                                VALID_PARTIAL_CA_LIST)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        request.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        ScheduleCustomAudienceUpdateInput fromParcel =
+                ScheduleCustomAudienceUpdateInput.CREATOR.createFromParcel(p);
+
+        expect.that(request).isEqualTo(fromParcel);
     }
 
     @Test

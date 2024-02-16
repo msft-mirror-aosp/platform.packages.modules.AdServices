@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
@@ -47,6 +52,7 @@ import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -100,6 +106,8 @@ public class GetAdSelectionDataRunner {
     @NonNull private final Clock mClock;
     private final int mPayloadFormatterVersion;
 
+    @NonNull private final FledgeAuctionServerExecutionLogger mFledgeAuctionServerExecutionLogger;
+
     public GetAdSelectionDataRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
@@ -114,7 +122,8 @@ public class GetAdSelectionDataRunner {
             @NonNull final Flags flags,
             final int callerUid,
             @NonNull final DevContext devContext,
-            @NonNull final AuctionServerDebugReporting auctionServerDebugReporting) {
+            @NonNull final AuctionServerDebugReporting auctionServerDebugReporting,
+            @NonNull final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -127,6 +136,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(auctionServerDebugReporting);
+        Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -165,6 +175,7 @@ public class GetAdSelectionDataRunner {
                         mPayloadFormatterVersion,
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mAuctionServerDebugReporting = auctionServerDebugReporting;
+        mFledgeAuctionServerExecutionLogger = fledgeAuctionServerExecutionLogger;
     }
 
     @VisibleForTesting
@@ -183,7 +194,8 @@ public class GetAdSelectionDataRunner {
             final int callerUid,
             @NonNull final DevContext devContext,
             @NonNull Clock clock,
-            @NonNull AuctionServerDebugReporting auctionServerDebugReporting) {
+            @NonNull AuctionServerDebugReporting auctionServerDebugReporting,
+            @NonNull FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -197,6 +209,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(auctionServerDebugReporting);
+        Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -235,6 +248,7 @@ public class GetAdSelectionDataRunner {
                         mPayloadFormatterVersion,
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mAuctionServerDebugReporting = auctionServerDebugReporting;
+        mFledgeAuctionServerExecutionLogger = fledgeAuctionServerExecutionLogger;
     }
 
     /** Orchestrates GetAdSelectionData process. */
@@ -244,8 +258,9 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
         long adSelectionId = mAdSelectionIdGenerator.generateId();
+
         try {
             ListenableFuture<Void> filteredRequest =
                     Futures.submit(
@@ -437,6 +452,8 @@ public class GetAdSelectionDataRunner {
             byte[] result, long adSelectionId, GetAdSelectionDataCallback callback) {
         Objects.requireNonNull(result);
 
+        int resultCode = STATUS_SUCCESS;
+
         try {
             if (mPayloadFormatterVersion == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
                 sLogger.d("Creating response with AssetFileDescriptor");
@@ -450,6 +467,7 @@ public class GetAdSelectionDataRunner {
                 } catch (IOException e) {
                     sLogger.e(e, "Encountered error creating response with AssetFileDescriptor");
                     notifyFailureToCaller(e, callback);
+                    resultCode = STATUS_IO_ERROR;
                     return;
                 }
                 callback.onSuccess(
@@ -466,12 +484,18 @@ public class GetAdSelectionDataRunner {
             }
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Get Ad Selection Data completed and attempted notifying success");
+            // The STATUS_IO_ERROR will be logged by notifyFailureToCaller.
+            if (resultCode != STATUS_IO_ERROR) {
+                mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
+            }
         }
     }
 
     private void notifyEmptySuccessToCaller(@NonNull GetAdSelectionDataCallback callback) {
+        int resultCode = STATUS_SUCCESS;
         try {
             // TODO(b/259522822): Determine what is an appropriate empty response for revoked
             //  consent for selectAdsFromOutcomes
@@ -484,17 +508,20 @@ public class GetAdSelectionDataRunner {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v(
                     "Get Ad Selection Data completed, attempted notifying success for a"
                             + " silent failure");
+            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
         }
     }
 
     private void notifyFailureToCaller(Throwable t, GetAdSelectionDataCallback callback) {
+        int resultCode = STATUS_UNSET;
         try {
             sLogger.e("Notify caller of error: " + t);
-            int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+            resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
 
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
@@ -505,8 +532,10 @@ public class GetAdSelectionDataRunner {
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Get Ad Selection Data failed");
+            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
         }
     }
 }

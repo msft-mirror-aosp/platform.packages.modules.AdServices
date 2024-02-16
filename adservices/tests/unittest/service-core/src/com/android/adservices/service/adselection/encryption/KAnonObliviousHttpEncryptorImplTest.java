@@ -72,7 +72,8 @@ public class KAnonObliviousHttpEncryptorImplTest {
 
     @Test
     public void test_encryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(JOIN, KEY_FETCH_TIMEOUT_MS))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
+                        JOIN, KEY_FETCH_TIMEOUT_MS, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -122,7 +123,8 @@ public class KAnonObliviousHttpEncryptorImplTest {
 
     @Test
     public void test_decryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(JOIN, KEY_FETCH_TIMEOUT_MS))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
+                        JOIN, KEY_FETCH_TIMEOUT_MS, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";

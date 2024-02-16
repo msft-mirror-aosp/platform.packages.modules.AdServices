@@ -57,7 +57,8 @@ public class KAnonObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
         return mEncryptionKeyManager
                 .getLatestOhttpKeyConfigOfType(
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
-                        keyFetchTimeoutMs)
+                        keyFetchTimeoutMs,
+                        null)
                 .transform(key -> createAndSerializeRequest(key, plainText), mLightweightExecutor);
     }
 

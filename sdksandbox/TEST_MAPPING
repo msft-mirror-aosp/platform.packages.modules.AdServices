@@ -163,6 +163,9 @@
   "sdksandbox-postsubmit": [
     {
       "name": "CtsViewTestCases"
+    },
+    {
+      "name": "CtsContentTestCases"
     }
   ]
 }

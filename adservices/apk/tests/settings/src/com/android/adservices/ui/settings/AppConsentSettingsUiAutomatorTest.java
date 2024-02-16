@@ -315,6 +315,9 @@ public class AppConsentSettingsUiAutomatorTest {
                 "device_config put adservices"
                         + " fledge_custom_audience_service_kill_switch false");
         ShellUtils.runShellCommand(
+                "device_config put adservices"
+                        + " fledge_schedule_custom_audience_update_enabled true");
+        ShellUtils.runShellCommand(
                 "device_config put adservices disable_fledge_enrollment_check true");
 
         ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
