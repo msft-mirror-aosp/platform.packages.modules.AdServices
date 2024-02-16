@@ -74,7 +74,7 @@ import java.util.concurrent.TimeoutException;
 public abstract class FledgeScenarioTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    protected static final String TAG = "FledgeScenarioTest";
+    protected static final String TAG = FledgeScenarioTest.class.getSimpleName();
     protected static final int TIMEOUT = 120;
     protected static final String SHOES_CA = "shoes";
     protected static final String SHIRTS_CA = "shirts";
@@ -235,13 +235,6 @@ public abstract class FledgeScenarioTest {
         ShellUtils.runShellCommand(
                 String.format(
                         "device_config put adservices fledge_cpc_billing_enabled %s",
-                        enabled ? "true" : "false"));
-    }
-
-    protected void overrideRegisterAdBeaconEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_register_ad_beacon_enabled %s",
                         enabled ? "true" : "false"));
     }
 
