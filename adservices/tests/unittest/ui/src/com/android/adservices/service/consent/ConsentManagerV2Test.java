@@ -591,7 +591,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     public void testJobsAreScheduledAfterEnablingKillSwitchOff() {
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
-        doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+        mockMeasurementEnabled(true);
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
@@ -643,7 +643,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     public void testJobsAreNotScheduledAfterEnablingKillSwitchOn() {
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
-        doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
+        mockMeasurementEnabled(false);
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
 
@@ -3488,6 +3488,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         () ->
                                 PackageManagerCompatUtils.getPackageUid(
                                         any(), eq(packageName), anyInt()));
+    }
+
+    private void mockMeasurementEnabled(boolean value) {
+        when(mMockFlags.getMeasurementEnabled()).thenReturn(value);
     }
 
     private List<ApplicationInfo> createApplicationInfos(String... packageNames) {
