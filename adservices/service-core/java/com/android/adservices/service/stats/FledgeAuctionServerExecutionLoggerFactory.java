@@ -40,6 +40,8 @@ public class FledgeAuctionServerExecutionLoggerFactory {
     @VisibleForTesting
     static final String UNKNOWN_API_NAME = "UNKNOWN_API_NAME";
 
+    private final String mCallerAppPackageName;
+
     private final CallerMetadata mCallerMetadata;
 
     private final Clock mClock;
@@ -53,15 +55,18 @@ public class FledgeAuctionServerExecutionLoggerFactory {
     private final boolean mFledgeAuctionServerApiUsageMetricsEnabled;
 
     public FledgeAuctionServerExecutionLoggerFactory(
+            @NonNull String callerAppPackageName,
             @NonNull CallerMetadata callerMetadata,
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
             int apiNameCode) {
+        Objects.requireNonNull(callerAppPackageName);
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        mCallerAppPackageName = callerAppPackageName;
         mFledgeAuctionServerApiUsageMetricsEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeAuctionServerApiUsageMetricsEnabled);
         mCallerMetadata = callerMetadata;
@@ -88,7 +93,12 @@ public class FledgeAuctionServerExecutionLoggerFactory {
     public FledgeAuctionServerExecutionLogger getFledgeAuctionServerExecutionLogger() {
         if (mFledgeAuctionServerApiUsageMetricsEnabled) {
             return new FledgeAuctionServerExecutionLoggerImpl(
-                    mCallerMetadata, mClock, mAdServicesLogger, mApiName, mApiNameCode);
+                    mCallerAppPackageName,
+                    mCallerMetadata,
+                    mClock,
+                    mAdServicesLogger,
+                    mApiName,
+                    mApiNameCode);
         } else {
             return new FledgeAuctionServerExecutionLoggerNoLoggingImpl(mApiName);
         }

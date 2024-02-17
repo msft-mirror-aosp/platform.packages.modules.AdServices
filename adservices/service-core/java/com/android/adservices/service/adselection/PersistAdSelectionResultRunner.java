@@ -20,6 +20,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
@@ -875,7 +876,6 @@ public class PersistAdSelectionResultRunner {
             sLogger.v(
                     "Persist Ad Selection Result completed, attempted notifying success for a"
                             + " silent failure");
-            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
         }
     }
 

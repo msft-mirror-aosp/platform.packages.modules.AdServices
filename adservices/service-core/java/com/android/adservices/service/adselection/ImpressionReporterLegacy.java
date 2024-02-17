@@ -18,6 +18,10 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
@@ -112,12 +116,13 @@ public class ImpressionReporterLegacy {
     @NonNull private final RegisterAdBeaconSupportHelper mRegisterAdBeaconSupportHelper;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final JsFetcher mJsFetcher;
-    private int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final DevContext mDevContext;
     @NonNull private final ReportingComputationHelper mReportingComputationHelper;
+    private int mCallerUid;
+    @NonNull private String mCallerAppPackageName;
 
     public ImpressionReporterLegacy(
             @NonNull Context context,
@@ -250,6 +255,7 @@ public class ImpressionReporterLegacy {
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
         sLogger.v("Executing reportImpressionLegacy API");
+        mCallerAppPackageName = requestParams.getCallerPackageName();
         long adSelectionId = requestParams.getAdSelectionId();
         long timeoutMs = BinderFlagReader.readFlag(mFlags::getReportImpressionOverallTimeoutMs);
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
@@ -337,8 +343,9 @@ public class ImpressionReporterLegacy {
                         sLogger.d("Reporting finished successfully!");
                         mAdServicesLogger.logFledgeApiCallStats(
                                 AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                AdServicesStatusUtils.STATUS_SUCCESS,
-                                0);
+                                mCallerAppPackageName,
+                                STATUS_SUCCESS,
+                                /*latencyMs=*/ 0);
                     }
 
                     @Override
@@ -347,13 +354,15 @@ public class ImpressionReporterLegacy {
                         if (t instanceof IOException) {
                             mAdServicesLogger.logFledgeApiCallStats(
                                     AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                    AdServicesStatusUtils.STATUS_IO_ERROR,
-                                    0);
+                                    mCallerAppPackageName,
+                                    STATUS_IO_ERROR,
+                                    /*latencyMs=*/ 0);
                         }
                         mAdServicesLogger.logFledgeApiCallStats(
                                 AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                                0);
+                                mCallerAppPackageName,
+                                STATUS_INTERNAL_ERROR,
+                                /*latencyMs=*/ 0);
                     }
                 },
                 mLightweightExecutorService);
@@ -376,9 +385,9 @@ public class ImpressionReporterLegacy {
         if (isFilterException) {
             resultCode = FilterException.getResultCode(t);
         } else if (t instanceof IllegalArgumentException) {
-            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            resultCode = STATUS_INVALID_ARGUMENT;
         } else {
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            resultCode = STATUS_INTERNAL_ERROR;
         }
 
         // Skip logging if a FilterException occurs.
@@ -386,7 +395,10 @@ public class ImpressionReporterLegacy {
         // Note: Failure is logged before the callback to ensure deterministic testing.
         if (!isFilterException) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    resultCode,
+                    /*latencyMs=*/ 0);
         }
 
         invokeFailure(callback, resultCode, t.getMessage());

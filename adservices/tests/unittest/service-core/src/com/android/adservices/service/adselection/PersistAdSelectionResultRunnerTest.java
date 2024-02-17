@@ -23,6 +23,7 @@ import static android.adservices.adselection.DataHandlersFixture.getWinningCusto
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -67,6 +68,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -106,7 +108,6 @@ import com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerFa
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
@@ -133,7 +134,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class PersistAdSelectionResultRunnerTest {
+public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String DIFFERENT_CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME_2;
@@ -463,6 +464,7 @@ public class PersistAdSelectionResultRunnerTest {
         mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
         mFledgeAuctionServerExecutionLoggerFactory =
                 new FledgeAuctionServerExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mFledgeAuctionServerExecutionLoggerClockMock,
                         mAdServicesLoggerSpy,
@@ -1365,7 +1367,6 @@ public class PersistAdSelectionResultRunnerTest {
     @Test
     public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -1397,8 +1398,6 @@ public class PersistAdSelectionResultRunnerTest {
         verifyZeroInteractions(mCustomAudienceDaoMock);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
-
-        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
@@ -1852,6 +1851,7 @@ public class PersistAdSelectionResultRunnerTest {
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getApiName()).isEqualTo(
                 AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
+        assertThat(apiCallStats.getAppPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
         assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
         assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(
                 PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS);
