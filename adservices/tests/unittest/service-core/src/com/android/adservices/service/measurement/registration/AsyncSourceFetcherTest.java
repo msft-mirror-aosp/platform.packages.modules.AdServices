@@ -1068,6 +1068,52 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
+    public void sourceRequest_expiryCloserToLowerBound_roundsToOneDayAtLeast() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\""
+                                                + DEFAULT_EVENT_ID
+                                                + "\","
+                                                + "\"expiry\":\""
+                                                + String.valueOf(
+                                                        TimeUnit.DAYS.toSeconds(1) / 2L - 1L)
+                                                + "\""
+                                                + "}")));
+        // Make sure the expiry bound does not already round the value up before rounding.
+        doReturn(TimeUnit.HOURS.toSeconds(1))
+                .when(mFlags).getMeasurementMinReportingRegisterSourceExpirationInSeconds();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(0, result.getPriority());
+        long expiry = result.getEventTime() + TimeUnit.DAYS.toMillis(1);
+        assertEquals(expiry, result.getExpiryTime());
+        assertNull(result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void sourceRequest_navigationType_doesNotRoundExpiry() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));

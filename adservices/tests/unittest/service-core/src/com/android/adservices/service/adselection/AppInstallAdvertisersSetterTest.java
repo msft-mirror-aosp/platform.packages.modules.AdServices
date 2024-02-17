@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
+
 import static com.android.adservices.service.adselection.AppInstallAdvertisersSetter.FILTERING_IS_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -274,13 +276,19 @@ public class AppInstallAdvertisersSetterTest {
     private void verifyLog(int status) {
         verify(mAdServicesLogger, atMost(1))
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, status, 0);
+                        AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
+                        TEST_PACKAGE_NAME,
+                        status,
+                        0);
     }
 
     private void verifyLog(int status, VerificationMode verificationMode) {
         verify(mAdServicesLogger, verificationMode)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, status, 0);
+                        AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
+                        TEST_PACKAGE_NAME,
+                        status,
+                        0);
     }
 
     private SetAppInstallAdvertisersTestCallback callSetAppInstallAdvertisers(

@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
@@ -51,7 +52,6 @@ import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.AssetFileDescriptorUtil;
-import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.content.Context;
 import android.net.Uri;
@@ -61,6 +61,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.NoFailureSyncCallback;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -121,9 +122,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class GetAdSelectionDataRunnerTest {
+public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
-    private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private static final ExecutorService BLOCKING_EXECUTOR =
             AdServicesExecutors.getBlockingExecutor();
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER_1;
@@ -216,6 +217,7 @@ public class GetAdSelectionDataRunnerTest {
         mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
         mFledgeAuctionServerExecutionLoggerFactory =
                 new FledgeAuctionServerExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mFledgeAuctionServerExecutionLoggerClockMock,
                         mAdServicesLoggerSpy,
@@ -466,7 +468,6 @@ public class GetAdSelectionDataRunnerTest {
     @Test
     public void testRunner_revokedUserConsent_returnsRandomResult() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
@@ -496,15 +497,12 @@ public class GetAdSelectionDataRunnerTest {
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
         verifyZeroInteractions(mAdFiltererSpy);
-
-        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
     public void testRunner_revokedUserConsent_returnsRandomResultWithExcessiveSizeFormatterVersion()
             throws InterruptedException, IOException {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
-        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger();
         mGetAdSelectionDataRunner = initRunner(mFlags, mFledgeAuctionServerExecutionLogger);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
@@ -537,8 +535,6 @@ public class GetAdSelectionDataRunnerTest {
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
         verifyZeroInteractions(mAdFiltererSpy);
-
-        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
@@ -725,6 +721,7 @@ public class GetAdSelectionDataRunnerTest {
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getApiName()).isEqualTo(
                 AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
+        assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_PACKAGE_NAME);
         assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
         assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(
                 GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS);

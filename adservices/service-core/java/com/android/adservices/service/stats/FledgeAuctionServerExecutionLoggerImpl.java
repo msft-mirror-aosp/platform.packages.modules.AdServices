@@ -63,23 +63,26 @@ public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCal
     private long mAuctionServerApiEndTimestamp;
 
     private AdServicesLogger mAdServicesLogger;
-
+    private String mCallerAppPackageName;
     private int mApiNameCode;
     private String mApiName;
 
     private boolean isLatencyAvailable;
 
     public FledgeAuctionServerExecutionLoggerImpl(
+            @NonNull String callerAppPackageName,
             @NonNull CallerMetadata callerMetadata,
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull String apiName,
             int apiNameCode) {
         super(clock);
+        Objects.requireNonNull(callerAppPackageName);
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(apiName);
+        this.mCallerAppPackageName = callerAppPackageName;
         this.mBinderElapsedTimestamp = callerMetadata.getBinderElapsedTimestamp();
         this.mAdServicesLogger = adServicesLogger;
         this.mApiName = apiName;
@@ -113,7 +116,7 @@ public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCal
                         .setApiName(mApiNameCode)
                         .setLatencyMillisecond(overallAuctionServerApiLatency)
                         .setResult(auctionServerApiResultCode, FAILURE_REASON_UNSET)
-                        .setAppPackageName("")
+                        .setAppPackageName(mCallerAppPackageName)
                         .setSdkPackageName("")
                         .build());
     }

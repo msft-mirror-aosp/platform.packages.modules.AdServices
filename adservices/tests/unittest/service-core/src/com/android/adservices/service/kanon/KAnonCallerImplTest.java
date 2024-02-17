@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.kanon;
 
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_SERVER;
+
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.EMPTY_BODY;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_OHTTP_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
@@ -29,12 +31,12 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
+import android.adservices.exceptions.AdServicesNetworkException;
 import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.common.UserProfileIdDao;
@@ -67,6 +69,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -83,6 +86,7 @@ import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
 import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
 import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
 import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
 import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
 import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
@@ -176,7 +180,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void test_signedJoinedSuccessfully_shouldUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         KAnonCallerImpl kAnonCaller =
@@ -214,7 +217,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void test_multipleBatches_shouldSignAndJoinMessages()
             throws IOException, InterruptedException {
         Flags flagsWithBatchSizeOne = new KAnonSignAndJoinRunnerTestFlags(1);
@@ -254,7 +256,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void test_signSuccessfulButJoinUnsuccessful_shouldUpdateKAnonMessageStatusToSignedDB()
             throws IOException, InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -286,7 +287,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void test_signUnsuccessfulVerifyTokenFails_shouldUpdateKAnonMessageStatusToFailedInDB()
             throws IOException, InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -310,7 +310,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void signUnsuccessfulCannotRecoverTokens_shouldUpdateKAnonMessageStatusToFailedInDB()
             throws IOException, InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -334,7 +333,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void actGenerateClientParamsFails_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -348,9 +346,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         mKAnonCaller.signAndJoinMessages(kanonMessageList);
-        countdownLatch.await();
+        countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -360,7 +357,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void registerClientUnsuccessful_httpCallFails_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -386,7 +382,9 @@ public class KAnonCallerImplTest {
                         registerClientRequest.toByteArray());
         when(mockAdServicesHttpClient.performRequestGetResponseInBase64String(
                         registerClientParametersRequest))
-                .thenThrow(new RuntimeException());
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new AdServicesNetworkException(ERROR_SERVER)));
 
         List<KAnonMessageEntity> kanonMessageList =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -403,7 +401,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void fetchServerParamsUnsuccessful_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -422,7 +419,9 @@ public class KAnonCallerImplTest {
                         AdServicesHttpUtil.EMPTY_BODY);
         when(mockAdServicesHttpClient.performRequestGetResponseInBase64String(
                         fetchServerPublicParametersRequest))
-                .thenThrow(new RuntimeException());
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new AdServicesNetworkException(ERROR_SERVER)));
 
         List<KAnonMessageEntity> kanonMessageList =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -516,6 +515,13 @@ public class KAnonCallerImplTest {
                                 generatedTokensRequestProto.getFingerprintsBytesList())
                         .build();
 
+        AdServicesHttpClientRequest getServerParamsRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(mFlags.getFledgeKAnonFetchServerParamsUrl()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .build();
+
         AdServicesHttpClientRequest httpGetTokensRequest =
                 AdServicesHttpClientRequest.create(
                         Uri.parse(mFlags.getFledgeKAnonGetTokensUrl()),
@@ -560,6 +566,19 @@ public class KAnonCallerImplTest {
                                                 BaseEncoding.base64()
                                                         .encode(
                                                                 GetTokensResponse.newBuilder()
+                                                                        .build()
+                                                                        .toByteArray()))
+                                        .build()));
+        when(mockAdServicesHttpClient.performRequestGetResponseInBase64String(
+                        getServerParamsRequest))
+                .thenReturn(
+                        immediateFuture(
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody(
+                                                BaseEncoding.base64()
+                                                        .encode(
+                                                                GetServerPublicParamsResponse
+                                                                        .newBuilder()
                                                                         .build()
                                                                         .toByteArray()))
                                         .build()));
