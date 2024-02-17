@@ -18,6 +18,8 @@ package com.android.adservices.service.customaudience;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
@@ -204,7 +206,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -216,7 +218,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 apiName,
                 AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
-        final int callerUid = getCallingUid(apiName);
+        final int callerUid = getCallingUid(apiName, ownerPackageName);
         final DevContext devContext = mDevContextFilter.createDevContext();
         sLogger.v("Running service");
         mExecutorService.execute(
@@ -284,7 +286,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             callback.onSuccess();
         } catch (Exception exception) {
             sLogger.e(exception, "Unable to send result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
@@ -313,7 +315,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -325,7 +328,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 apiName,
                 AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
-        final int callerUid = getCallingUid(apiName);
+        final int callerUid = getCallingUid(apiName, input.getCallerPackageName());
         final DevContext devContext = mDevContextFilter.createDevContext();
         mExecutorService.execute(
                 () -> {
@@ -357,7 +360,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         int resultCode;
         if (exception instanceof NullPointerException
                 || exception instanceof IllegalArgumentException) {
-            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            resultCode = STATUS_INVALID_ARGUMENT;
         } else if (exception instanceof WrongCallingApplicationStateException) {
             resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
         } else if (exception instanceof FledgeAuthorizationFilter.CallerMismatchException) {
@@ -368,10 +371,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } else if (exception instanceof LimitExceededException) {
             resultCode = AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
         } else if (exception instanceof IllegalStateException) {
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            resultCode = STATUS_INTERNAL_ERROR;
         } else {
             sLogger.e(exception, "Unexpected error during operation");
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            resultCode = STATUS_INTERNAL_ERROR;
         }
         callback.onFailure(
                 new FledgeErrorResponse.Builder()
@@ -391,7 +394,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+                    apiName,
+                    input.getCallerPackageName(),
+                    STATUS_INVALID_ARGUMENT,
+                    /*latencyMs=*/ 0);
+
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -403,7 +410,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 apiName,
                 AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
-        final int callerUid = getCallingUid(apiName);
+        final int callerUid = getCallingUid(apiName, input.getCallerPackageName());
         final DevContext devContext = mDevContextFilter.createDevContext();
 
         mExecutorService.execute(
@@ -443,7 +450,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -455,7 +463,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 apiName,
                 AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
 
-        final int callerUid = getCallingUid(apiName);
+        final int callerUid = getCallingUid(apiName, ownerPackageName);
         final DevContext devContext = mDevContextFilter.createDevContext();
         mExecutorService.execute(
                 () ->
@@ -522,13 +530,13 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             } catch (Exception exception) {
                 // For all other exceptions, report success
                 sLogger.e(exception, "Unexpected error leaving custom audience");
-                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+                resultCode = STATUS_INTERNAL_ERROR;
             }
 
             callback.onSuccess();
         } catch (Exception exception) {
             sLogger.e(exception, "Unable to send result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
@@ -566,7 +574,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -575,7 +583,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -630,7 +638,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -639,7 +647,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -680,7 +688,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -691,7 +699,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -719,11 +727,19 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     }
 
     private int getCallingUid(int apiNameLoggingId) throws IllegalStateException {
+        return getCallingUid(apiNameLoggingId, null);
+    }
+
+    private int getCallingUid(int apiNameLoggingId, String callerAppPackageName)
+            throws IllegalStateException {
         try {
             return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    apiNameLoggingId,
+                    callerAppPackageName,
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw illegalStateException;
         }
     }

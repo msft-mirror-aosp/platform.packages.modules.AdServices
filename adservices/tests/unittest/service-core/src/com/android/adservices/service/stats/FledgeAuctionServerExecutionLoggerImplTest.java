@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
@@ -93,6 +94,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         // Start the Ad selection execution logger and set start state of the process.
         FledgeAuctionServerExecutionLoggerImpl getAdSelectionDataLogger =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -125,6 +127,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         // Start the Ad selection execution logger and set start state of the process.
         FledgeAuctionServerExecutionLoggerImpl persistAdSelectionResultLogger =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -149,6 +152,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         when(mMockClockMock.elapsedRealtime()).thenReturn(BINDER_ELAPSED_TIMESTAMP);
         FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -181,6 +185,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
         FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -209,6 +214,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
         when(mMockClockMock.elapsedRealtime()).thenReturn(BINDER_ELAPSED_TIMESTAMP);
         FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,
@@ -241,6 +247,7 @@ public class FledgeAuctionServerExecutionLoggerImplTest {
                         PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP);
         FledgeAuctionServerExecutionLoggerImpl fledgeAuctionServerExecutionLoggerImpl =
                 new FledgeAuctionServerExecutionLoggerImpl(
+                        TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         mMockClockMock,
                         mAdServicesLoggerMock,

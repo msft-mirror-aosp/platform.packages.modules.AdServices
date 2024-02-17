@@ -29,6 +29,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -208,7 +209,7 @@ public class OnDeviceAdSelectionRunnerTest {
     private static final Long AD_SELECTION_ID = 1234L;
     private static final String ERROR_INVALID_JSON = "Invalid Json Exception";
     private static final int CALLER_UID = Process.myUid();
-    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String MY_APP_PACKAGE_NAME = TEST_PACKAGE_NAME;
 
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
@@ -499,6 +500,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -638,6 +640,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -779,6 +782,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -906,6 +910,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -1062,6 +1067,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -1228,6 +1234,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -1444,6 +1451,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -1754,6 +1762,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -1886,6 +1895,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -2324,6 +2334,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
@@ -2754,6 +2765,7 @@ public class OnDeviceAdSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }

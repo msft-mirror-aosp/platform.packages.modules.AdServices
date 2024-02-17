@@ -524,7 +524,6 @@ public class GetAdSelectionDataRunner {
             sLogger.v(
                     "Get Ad Selection Data completed, attempted notifying success for a"
                             + " silent failure");
-            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
         }
     }
 

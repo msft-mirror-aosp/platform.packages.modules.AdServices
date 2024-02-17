@@ -807,6 +807,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
     }
 
+    /** Default FLEDGE app package name logging flag. */
+    boolean FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED = false;
+
+    /** Returns whether FLEDGE app package name logging is enabled. */
+    default boolean getFledgeAppPackageNameLoggingEnabled() {
+        return FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
