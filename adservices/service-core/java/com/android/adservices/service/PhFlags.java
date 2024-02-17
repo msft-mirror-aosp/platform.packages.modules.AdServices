@@ -859,8 +859,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW);
     }
 
-    @Override
-    public boolean getMeasurementAttributionFallbackJobKillSwitch() {
+    // TODO(b/325144327): ideally it should be removed and the logic moved to
+    // getMeasurementEnabled(), but this is a legacy flag that also reads system properties, and
+    // the system properties workflow is not unit tested.
+    private boolean getMeasurementAttributionFallbackJobKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
