@@ -17,6 +17,7 @@
 package com.android.adservices.spe;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__MODULE_NAME_ADSERVICES;
 
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -35,6 +36,6 @@ public final class AdServicesStatsdJobServiceLogger implements StatsdJobServiceL
                 stats.getExecutionPeriodMinute(),
                 stats.getExecutionResultCode(),
                 stats.getStopReason(),
-                stats.getModuleName());
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__MODULE_NAME_ADSERVICES);
     }
 }
