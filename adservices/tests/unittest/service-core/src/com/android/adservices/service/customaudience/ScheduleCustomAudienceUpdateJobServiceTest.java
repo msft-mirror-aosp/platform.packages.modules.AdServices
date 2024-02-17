@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
@@ -58,7 +58,6 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
@@ -96,21 +95,18 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
     private final ScheduleCustomAudienceUpdateJobService mUpdateServiceSpy =
             new ScheduleCustomAudienceUpdateJobService();
 
-    private AdServicesJobServiceLogger mSpyLogger;
-
     @Mock private ScheduleCustomAudienceUpdateWorker mUpdateWorker;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
 
     @Before
     public void setup() {
         Assume.assumeNotNull(JOB_SCHEDULER);
+        // Reduces flake, in scenario the first test run encounters job already scheduled
+        JOB_SCHEDULER.cancelAll();
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID));
-
-        mSpyLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
     }
 
     @After
@@ -150,10 +146,13 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithScheduleUpdateDisabledWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithScheduleUpdateDisabledWithoutLogging);
 
         testOnStartJobFlagDisabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -188,11 +187,14 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithScheduleUpdateDisabledWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithScheduleUpdateDisabledWithLogging);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
 
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -248,10 +250,12 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithGaUxEnabledLoggingDisabled).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxEnabledLoggingDisabled);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -279,12 +283,14 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithGaUxEnabledLoggingEnabled).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxEnabledLoggingEnabled);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -399,12 +405,14 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateSuccess();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -432,10 +440,12 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -463,12 +473,14 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -580,13 +592,15 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
 
         doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
         doNothing().when(mUpdateWorker).stopWork();
         assertTrue(mUpdateServiceSpy.onStopJob(mJobParametersMock));
         verify(mUpdateWorker).stopWork();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -599,14 +613,16 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
         doNothing().when(mUpdateWorker).stopWork();
         assertTrue(mUpdateServiceSpy.onStopJob(mJobParametersMock));
         verify(mUpdateWorker).stopWork();
 
-        verifyOnStopJobLogged(mSpyLogger, callback);
+        verifyOnStopJobLogged(logger, callback);
     }
 
     @Test
@@ -759,10 +775,12 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
 
         testOnStartJobShouldDisableJobTrue();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -775,12 +793,14 @@ public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtend
                     }
                 };
         doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
 
         testOnStartJobShouldDisableJobTrue();
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {

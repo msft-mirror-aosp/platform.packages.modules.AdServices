@@ -43,6 +43,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.database.sqlite.SQLiteConstraintException;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -2320,6 +2321,30 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
+    public void testDeleteScheduledCustomAudienceUpdate_Success() {
+        DBScheduledCustomAudienceUpdate anUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(anUpdate);
+
+        List<DBScheduledCustomAudienceUpdate> updates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertEquals("There should have been 1 entry", 1, updates.size());
+
+        for (DBScheduledCustomAudienceUpdate updatesToDelete : updates) {
+            mCustomAudienceDao.deleteScheduledCustomAudienceUpdate(updatesToDelete);
+        }
+
+        assertTrue(
+                "All updates should have been deleted",
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledBeforeTime(
+                                anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES))
+                        .isEmpty());
+    }
+
+    @Test
     public void testInsertAndQueryScheduledCustomAudienceUpdate_SimilarUpdateReplaces() {
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
@@ -2512,6 +2537,17 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getPartialAudienceListForUpdateId(updateId);
         assertThat(
                         partialCustomAudienceList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(partialCaName1, partialCaName2);
+
+        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
+                updateAndOverridesPair =
+                        mCustomAudienceDao.getScheduledUpdatesAndOverridesBeforeTime(
+                                anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertThat(updateAndOverridesPair.get(0).first.getUpdateId()).isEqualTo(updateId);
+        assertThat(
+                        updateAndOverridesPair.get(0).second.stream()
                                 .map(entry -> entry.getName())
                                 .collect(Collectors.toList()))
                 .containsExactly(partialCaName1, partialCaName2);

@@ -23,6 +23,7 @@ import android.util.Log;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -30,7 +31,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Command to list custom audiences created in Protected Audience. */
 // TODO(b/318496217): Merge with background fetch data in follow-up CL.
@@ -45,7 +48,8 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
                     + CustomAudienceArgs.OWNER
                     + " <owner> --"
                     + CustomAudienceArgs.BUYER
-                    + " <buyer>";
+                    + " <buyer>"
+                    + "\n    List custom audiences. See documentation for `view` for more info.";
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final CustomAudienceArgParser mCustomAudienceArgParser;
@@ -76,7 +80,10 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
                 AdTechIdentifier.fromString(
                         mCustomAudienceArgParser.getValue(CustomAudienceArgs.BUYER));
         try {
-            out.print(createOutputJson(queryForCustomAudiences(owner, buyer)));
+            out.print(
+                    createOutputJson(
+                            queryForDebuggableCustomAudiences(owner, buyer),
+                            queryForDebuggableBackgroundFetchData(owner, buyer)));
         } catch (JSONException e) {
             err.printf("Failed to generate output: %s\n", e.getMessage());
             Log.e(TAG, "Failed to generate JSON: " + e.getMessage());
@@ -85,7 +92,8 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
         return RESULT_OK;
     }
 
-    private List<DBCustomAudience> queryForCustomAudiences(String owner, AdTechIdentifier buyer) {
+    private List<DBCustomAudience> queryForDebuggableCustomAudiences(
+            String owner, AdTechIdentifier buyer) {
         Log.d(TAG, String.format("Querying for CA with owner %s and buyer %s", owner, buyer));
         List<DBCustomAudience> customAudienceList =
                 mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(owner, buyer);
@@ -96,12 +104,52 @@ final class CustomAudienceListCommand extends AbstractShellCommand {
         return customAudienceList;
     }
 
-    private static JSONObject createOutputJson(List<DBCustomAudience> customAudienceList)
+    private Map<String, DBCustomAudienceBackgroundFetchData> queryForDebuggableBackgroundFetchData(
+            String owner, AdTechIdentifier buyer) {
+        Log.d(
+                TAG,
+                String.format(
+                        "Querying for CA background fetch data with owner %s and buyer %s",
+                        owner, buyer));
+        List<DBCustomAudienceBackgroundFetchData> backgroundFetchDataList =
+                mCustomAudienceDao.listDebuggableCustomAudienceBackgroundFetchData(owner, buyer);
+        Map<String, DBCustomAudienceBackgroundFetchData> backgroundFetchDataHashMap =
+                new HashMap<>();
+        if (backgroundFetchDataList == null || backgroundFetchDataList.isEmpty()) {
+            backgroundFetchDataList = List.of();
+        }
+        for (DBCustomAudienceBackgroundFetchData backgroundFetchData : backgroundFetchDataList) {
+            backgroundFetchDataHashMap.put(backgroundFetchData.getName(), backgroundFetchData);
+        }
+        Log.d(
+                TAG,
+                String.format(
+                        "%d custom audience background fetch data found.",
+                        backgroundFetchDataList.size()));
+        return backgroundFetchDataHashMap;
+    }
+
+    private static JSONObject createOutputJson(
+            List<DBCustomAudience> customAudienceList,
+            Map<String, DBCustomAudienceBackgroundFetchData> backgroundFetchDataMap)
             throws JSONException {
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         for (DBCustomAudience customAudience : customAudienceList) {
-            jsonArray.put(CustomAudienceHelper.toJson(customAudience));
+            if (!backgroundFetchDataMap.containsKey(customAudience.getName())) {
+                Log.d(
+                        TAG,
+                        String.format(
+                                "Background fetch data missing for CA with name %s owner %s and"
+                                        + " buyer %s",
+                                customAudience.getName(),
+                                customAudience.getOwner(),
+                                customAudience.getBuyer()));
+                continue;
+            }
+            jsonArray.put(
+                    CustomAudienceHelper.toJson(
+                            customAudience, backgroundFetchDataMap.get(customAudience.getName())));
         }
         jsonObject.put("custom_audiences", jsonArray);
         return jsonObject;
