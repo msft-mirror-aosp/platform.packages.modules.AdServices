@@ -5332,9 +5332,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getEnableAdExtServiceDebugProxy());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION
+                        + FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION
                         + " = "
-                        + getEnableAdExtServiceToAppSearchMigration());
+                        + getEnableU18AppsearchMigration());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE
+                        + " = "
+                        + getEnableMigrationFromAdExtService());
         writer.println(
                 "\t"
                         + FlagsConstants.ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
@@ -5675,11 +5680,20 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableAdExtServiceToAppSearchMigration() {
+    public boolean getEnableU18AppsearchMigration() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION,
-                /* defaultValue */ ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION);
+                /* flagName */ FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION,
+                /* defaultValue */ DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION);
+    }
+
+    @Override
+    public boolean getEnableMigrationFromAdExtService() {
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE,
+                /* defaultValue */ ENABLE_MIGRATION_FROM_ADEXT_SERVICE);
     }
 
     @Override

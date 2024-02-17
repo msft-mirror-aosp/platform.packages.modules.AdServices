@@ -55,7 +55,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * f58e0cafee4735139dfa8081a24e5abd38e2a3c1.
+ * 4b823a4852665b1fba719401c99b56ca8b9b28f1.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -130,10 +130,14 @@ public class E2EInteropMockTest extends E2EMockTest {
                 START_TIME);
     }
 
-    private static Map<String, String> sPhFlagsForInterop = Map.of(
-            // TODO (b/295382171): remove this after the flag is removed.
-            "measurement_enable_max_aggregate_reports_per_source", "true",
-            "measurement_min_event_report_delay_millis", "0");
+    private static Map<String, String> sPhFlagsForInterop =
+            Map.of(
+                    // TODO (b/295382171): remove this after the flag is removed.
+                    "measurement_enable_max_aggregate_reports_per_source", "true",
+                    "measurement_min_event_report_delay_millis", "0",
+                    "measurement_source_registration_time_optional_for_agg_reports_enabled",
+                            "true",
+                    "measurement_flexible_event_reporting_api_enabled", "true");
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
