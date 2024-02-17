@@ -40,11 +40,11 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.adservices.spe.AdServicesStatsdJobServiceLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import java.util.concurrent.Executors;
 
@@ -54,7 +54,7 @@ public final class MockitoExpectations {
     private static final String TAG = MockitoExpectations.class.getSimpleName();
 
     /**
-     * Not a expectation itself, but it sets a mock as the application context on {@link
+     * Not an expectation itself, but it sets a mock as the application context on {@link
      * ApplicationContextSingleton}, and returns it.
      */
     public static Context setApplicationContextSingleton() {
@@ -227,7 +227,8 @@ public final class MockitoExpectations {
                 new AdServicesJobServiceLogger(
                         context,
                         Clock.getInstance(),
-                        ExtendedMockito.mock(AdServicesStatsdJobServiceLogger.class),
+                        mock(AdServicesStatsdJobServiceLogger.class),
+                        mock(AdServicesErrorLogger.class),
                         Executors.newCachedThreadPool(),
                         AdServicesJobInfo.getJobIdToJobNameMap(),
                         flags));

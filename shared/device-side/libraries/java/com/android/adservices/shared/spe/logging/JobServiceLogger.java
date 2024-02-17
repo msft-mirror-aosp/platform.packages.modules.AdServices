@@ -22,6 +22,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_FAIL_TO_COMMIT_JOB_EXECUTION_START_TIME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_FAIL_TO_COMMIT_JOB_EXECUTION_STOP_TIME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_EXECUTION_PERIOD;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.spe.JobServiceConstants.MAX_PERCENTAGE;
 import static com.android.adservices.shared.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
 import static com.android.adservices.shared.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
@@ -41,6 +47,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.spe.JobServiceConstants;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.shared.util.LogUtil;
@@ -56,7 +63,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /** Class for logging methods used by background jobs. */
-// TODO(b/323029425): make this class final.
+// TODO(b/325292968): make this class final.
+// TODO(b/325292968): Remove Executor, flags, jobIdToNameMap from constructor as it's included in
+// JobServiceConfig, after all jobs migrated to use SPE.
 public class JobServiceLogger {
     private static final ReadWriteLock sReadWriteLock = new ReentrantReadWriteLock();
     private static final Random sRandom = new Random();
@@ -67,6 +76,7 @@ public class JobServiceLogger {
     // JobService runs the execution on the main thread, so the logging part should be offloaded to
     // a separated thread. However, these logging events should be in sequence, respecting to the
     // start and the end of an execution.
+    private final AdServicesErrorLogger mErrorLogger;
     private final Executor mLoggingExecutor;
     private final Map<Integer, String> mJobInfoMap;
     private final ModuleSharedFlags mFlags;
@@ -76,12 +86,14 @@ public class JobServiceLogger {
             Context context,
             Clock clock,
             StatsdJobServiceLogger statsdLogger,
+            AdServicesErrorLogger errorLogger,
             Executor executor,
             Map<Integer, String> jobIdToNameMap,
             ModuleSharedFlags flags) {
         mContext = context;
         mClock = clock;
         mStatsdLogger = statsdLogger;
+        mErrorLogger = errorLogger;
         mLoggingExecutor = MoreExecutors.newSequentialExecutor(executor);
         mJobInfoMap = jobIdToNameMap;
         mFlags = flags;
@@ -229,11 +241,13 @@ public class JobServiceLogger {
         // Stop telemetry the metrics and log error in logcat if the stat is not valid.
         if (jobStartExecutionTimestamp == UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP
                 || jobStartExecutionTimestamp > jobStopExecutionTimestamp) {
-            // TODO(b/279231865): Log CEL with SPE_UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP
             LogUtil.e(
                     "Execution Stat is INVALID for job %s, jobStartTimestamp: %d, jobStopTimestamp:"
                             + " %d.",
                     mJobInfoMap.get(jobId), jobStartExecutionTimestamp, jobStopExecutionTimestamp);
+            mErrorLogger.logError(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return;
         }
 
@@ -248,11 +262,13 @@ public class JobServiceLogger {
             if (!editor.commit()) {
                 // The commitment failure should be rare. It may result in 1 problematic data but
                 // the impact could be ignored compared to a job's lifecycle.
-                // TODO(b/279231865): Log CEL with SPE_FAIL_TO_COMMIT_JOB_STOP_TIME
                 LogUtil.e(
                         "Failed to update job Ending Execution Logging Data for Job %s, Job ID ="
                                 + " %d.",
                         mJobInfoMap.get(jobId), jobId);
+                mErrorLogger.logError(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_FAIL_TO_COMMIT_JOB_EXECUTION_STOP_TIME,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             }
         } finally {
             sReadWriteLock.writeLock().unlock();
@@ -313,6 +329,9 @@ public class JobServiceLogger {
                         .setExecutionPeriodMinute(convertLongToInteger(executionPeriodMinute))
                         .setExecutionResultCode(resultCode)
                         .setStopReason(stopReason)
+                        // TODO(b/324323522): Populate correct module name.
+                        .setModuleName(
+                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
                         .build();
         mStatsdLogger.logExecutionReportedStats(stats);
 
@@ -390,8 +409,16 @@ public class JobServiceLogger {
             // Compute execution period if there has been multiple executions.
             // Define the execution period = difference of the timestamp of two consecutive
             // invocations of onStartJob().
-            // TODO(b/279231865): TODO log to CEL: SPE_INVALID_EXECUTION_PERIOD
             long executionPeriodInMs = startJobTimestamp - previousJobStartTimestamp;
+            if (executionPeriodInMs < 0) {
+                LogUtil.e(
+                        "Invalid execution period = %d! Start time for current execution should be"
+                                + " later than previous execution!",
+                        executionPeriodInMs);
+                mErrorLogger.logError(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_INVALID_EXECUTION_PERIOD,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+            }
 
             // Store the execution period into shared preference.
             editor.putLong(executionPeriodKey, executionPeriodInMs);
@@ -404,10 +431,12 @@ public class JobServiceLogger {
             if (!editor.commit()) {
                 // The commitment failure should be rare. It may result in 1 problematic data but
                 // the impact could be ignored compared to a job's lifecycle.
-                // TODO(b/279231865): Log CEL with SPE_FAIL_TO_COMMIT_JOB_START_TIME.
                 LogUtil.e(
                         "Failed to update onStartJob() Logging Data for Job %s, Job ID = %d",
                         mJobInfoMap.get(jobId), jobId);
+                mErrorLogger.logError(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_FAIL_TO_COMMIT_JOB_EXECUTION_START_TIME,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             }
         } finally {
             sReadWriteLock.writeLock().unlock();

@@ -34,6 +34,7 @@ public final class AdServicesStatsdJobServiceLogger implements StatsdJobServiceL
                 stats.getExecutionLatencyMs(),
                 stats.getExecutionPeriodMinute(),
                 stats.getExecutionResultCode(),
-                stats.getStopReason());
+                stats.getStopReason(),
+                stats.getModuleName());
     }
 }

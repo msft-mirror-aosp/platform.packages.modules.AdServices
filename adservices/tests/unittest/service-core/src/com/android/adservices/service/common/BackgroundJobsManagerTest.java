@@ -169,7 +169,9 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // Encryption key job is scheduled in scheduleTopicsBackgroundJobs, and
         // scheduleMeasurementBackgroundJobs.
         assertEncryptionKeyJobsScheduled(2);
-        assertCobaltJobScheduled(1);
+        // Cobalt Job is scheduled in scheduleTopicsBackgroundJobs, and
+        // scheduleMeasurementBackgroundJobs.
+        assertCobaltJobScheduled(2);
         assertAdSelectionDebugReportSenderJobScheduled(0);
     }
 
@@ -228,7 +230,8 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         assertMddJobsScheduled(2);
         // Encryption key job is scheduled in scheduleMeasurementBackgroundJobs.
         assertEncryptionKeyJobsScheduled(1);
-        assertCobaltJobScheduled(0);
+        // Cobalt Job is scheduled in scheduleMeasurementBackgroundJobs.
+        assertCobaltJobScheduled(1);
         assertAdSelectionDebugReportSenderJobScheduled(0);
     }
 
@@ -254,7 +257,9 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // in fact only one maintenance job will be scheduled (due to deduplication)
         assertMaintenanceJobScheduled(2);
         assertMddJobsScheduled(0);
-        assertCobaltJobScheduled(1);
+        // Cobalt Job is scheduled in scheduleTopicsBackgroundJobs, and
+        // scheduleMeasurementBackgroundJobs.
+        assertCobaltJobScheduled(2);
         assertAdSelectionDebugReportSenderJobScheduled(0);
     }
 
@@ -283,7 +288,9 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         assertMaintenanceJobScheduled(2);
         assertMddJobsScheduled(3);
         assertEncryptionKeyJobsScheduled(0);
-        assertCobaltJobScheduled(1);
+        // Cobalt Job is scheduled in scheduleTopicsBackgroundJobs, and
+        // scheduleMeasurementBackgroundJobs.
+        assertCobaltJobScheduled(2);
         assertAdSelectionDebugReportSenderJobScheduled(0);
     }
 
@@ -311,7 +318,9 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // Encryption key job is scheduled in scheduleTopicsBackgroundJobs, and
         // scheduleMeasurementBackgroundJobs.
         assertEncryptionKeyJobsScheduled(2);
-        assertCobaltJobScheduled(1);
+        // Cobalt Job is scheduled in scheduleTopicsBackgroundJobs, and
+        // scheduleMeasurementBackgroundJobs.
+        assertCobaltJobScheduled(2);
         assertAdSelectionDebugReportSenderJobScheduled(0);
     }
 
@@ -336,7 +345,8 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         assertMddJobsScheduled(2);
         // Encryption key job is scheduled in scheduleMeasurementBackgroundJobs.
         assertEncryptionKeyJobsScheduled(1);
-        assertCobaltJobScheduled(0);
+        // Cobalt Job is scheduled in scheduleMeasurementBackgroundJobs.
+        assertCobaltJobScheduled(1);
         assertAdSelectionDebugReportSenderJobScheduled(0);
     }
 

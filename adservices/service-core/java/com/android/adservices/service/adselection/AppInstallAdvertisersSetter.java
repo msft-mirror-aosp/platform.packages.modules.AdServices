@@ -40,6 +40,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -57,6 +58,9 @@ import java.util.concurrent.ExecutorService;
 public class AppInstallAdvertisersSetter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
+    @VisibleForTesting
+    public static final String FILTERING_IS_DISABLED = "Ad selection filtering disabled";
+
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_SCOPE = "app install adtech set";
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_ROLE = "adtech";
 
@@ -67,6 +71,7 @@ public class AppInstallAdvertisersSetter {
     @NonNull private final ConsentManager mConsentManager;
     private final int mCallerUid;
     private DevContext mDevContext;
+    @NonNull private final Flags mFlags;
 
     public AppInstallAdvertisersSetter(
             @NonNull AppInstallDao appInstallDao,
@@ -92,6 +97,7 @@ public class AppInstallAdvertisersSetter {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mConsentManager = consentManager;
         mDevContext = devContext;
+        mFlags = flags;
     }
 
     /**
@@ -213,6 +219,11 @@ public class AppInstallAdvertisersSetter {
 
     private Void doSetAppInstallAdvertisers(
             Set<AdTechIdentifier> advertisers, String callerPackageName) {
+        if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
+            sLogger.v(FILTERING_IS_DISABLED);
+            throw new IllegalStateException(FILTERING_IS_DISABLED);
+        }
+
         validateRequest(advertisers, callerPackageName);
 
         sLogger.v(

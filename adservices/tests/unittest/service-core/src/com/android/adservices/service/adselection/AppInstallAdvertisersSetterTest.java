@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AppInstallAdvertisersSetter.FILTERING_IS_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
@@ -51,8 +52,6 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -86,14 +85,10 @@ public class AppInstallAdvertisersSetterTest {
                                             .setPackageName(SAMPLE_INPUT.getCallerPackageName())
                                             .build())
                     .collect(Collectors.toList());
-
-    private final AdServicesLogger mAdServicesLoggerMock =
-            ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private final ListeningExecutorService mExecutorService =
             AdServicesExecutors.getBackgroundExecutor();
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private AdServicesLogger mAdServicesLogger;
-    @Mock private Flags mFlags;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Mock private ConsentManager mConsentManager;
@@ -105,12 +100,14 @@ public class AppInstallAdvertisersSetterTest {
 
     @Before
     public void setup() {
+        boolean filteringEnabled = true;
+        Flags flags = new AppInstallAdvertisersSetterTestFlags(filteringEnabled);
         mAppInstallAdvertisersSetter =
                 new AppInstallAdvertisersSetter(
                         mAppInstallDaoMock,
                         mExecutorService,
                         mAdServicesLogger,
-                        mFlags,
+                        flags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -138,6 +135,29 @@ public class AppInstallAdvertisersSetterTest {
         verify(mAppInstallDaoMock)
                 .setAdTechsForPackage(
                         eq(CommonFixture.TEST_PACKAGE_NAME_1), eq(DB_WRITE_FOR_SAMPLE_INPUT));
+    }
+
+    @Test
+    public void testSetAppInstallAdvertisersDisabledFailure() throws Exception {
+        boolean filteringEnabled = false;
+        Flags flags = new AppInstallAdvertisersSetterTestFlags(filteringEnabled);
+        when(mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
+                .thenReturn(false);
+        AppInstallAdvertisersSetter appInstallAdvertisersSetter =
+                new AppInstallAdvertisersSetter(
+                        mAppInstallDaoMock,
+                        mExecutorService,
+                        mAdServicesLogger,
+                        flags,
+                        mAdSelectionServiceFilter,
+                        mConsentManager,
+                        UID,
+                        DevContext.createForDevOptionsDisabled());
+        SetAppInstallAdvertisersTestCallback callback =
+                callSetAppInstallAdvertisers(SAMPLE_INPUT, appInstallAdvertisersSetter);
+
+        assertFalse(callback.mIsSuccess);
+        assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(FILTERING_IS_DISABLED));
     }
 
     @Test
@@ -274,6 +294,19 @@ public class AppInstallAdvertisersSetterTest {
         return callback;
     }
 
+    private SetAppInstallAdvertisersTestCallback callSetAppInstallAdvertisers(
+            SetAppInstallAdvertisersInput request,
+            AppInstallAdvertisersSetter appInstallAdvertisersSetter)
+            throws Exception {
+        CountDownLatch callbackLatch = new CountDownLatch(1);
+        SetAppInstallAdvertisersTestCallback callback =
+                new SetAppInstallAdvertisersTestCallback(callbackLatch);
+
+        appInstallAdvertisersSetter.setAppInstallAdvertisers(request, callback);
+        callbackLatch.await();
+        return callback;
+    }
+
     private static SetAppInstallAdvertisersInput.Builder
             getSampleSetAppInstallAdvertisersInputBuilder() {
         return new SetAppInstallAdvertisersInput.Builder()
@@ -301,6 +334,19 @@ public class AppInstallAdvertisersSetterTest {
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
+        }
+    }
+
+    private static class AppInstallAdvertisersSetterTestFlags implements Flags {
+        private final boolean mAdSelectionFilteringEnabled;
+
+        AppInstallAdvertisersSetterTestFlags(boolean filteringEnabled) {
+            mAdSelectionFilteringEnabled = filteringEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return mAdSelectionFilteringEnabled;
         }
     }
 }
