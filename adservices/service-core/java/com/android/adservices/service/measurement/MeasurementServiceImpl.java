@@ -76,7 +76,7 @@ import com.android.adservices.service.measurement.access.UserConsentAccessResolv
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
@@ -599,7 +599,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         .setAppPackageName(appPackageName)
                         .setSdkPackageName(sdkPackageName)
                         .setLatencyMillisecond(latency)
-                        .setResult(new ApiCallStats.Result(resultCode, failureReason))
+                        .setResult(resultCode, failureReason)
                         .build());
     }
 

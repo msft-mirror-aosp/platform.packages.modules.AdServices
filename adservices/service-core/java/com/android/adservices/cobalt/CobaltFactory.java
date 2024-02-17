@@ -90,7 +90,7 @@ public final class CobaltFactory {
                                 getSystemData(context),
                                 getExecutor(),
                                 new SystemClockImpl(),
-                                flags.getTopicsCobaltLoggingEnabled());
+                                flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltLogger;
         }
@@ -128,7 +128,7 @@ public final class CobaltFactory {
                                 CobaltApiKeys.copyFromHexApiKey(
                                         flags.getCobaltAdservicesApiKeyHex()),
                                 Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
-                                flags.getTopicsCobaltLoggingEnabled());
+                                flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;
         }

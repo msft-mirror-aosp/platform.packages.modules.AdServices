@@ -95,18 +95,15 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUiTestC
     public void notificationRowGaTest() throws Exception {
         NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
         UiObject2 notificationGaTitle =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_header_ga_title);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title);
         assertThat(notificationGaTitle).isNotNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_left_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_left_control_button_text);
         UiObject2 rightControlButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_right_control_button_text);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_right_control_button_text);
         assertThat(leftControlButton).isNotNull();
         assertThat(rightControlButton).isNotNull();
     }
@@ -119,12 +116,10 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUiTestC
 
         UiObject2 leftControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_confirmation_left_control_button_text);
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_confirmation_right_control_button_text);
         assertThat(leftControlButton).isNotNull();
@@ -133,20 +128,17 @@ public final class NotificationActivityUiAutomatorTest extends AdServicesUiTestC
         rightControlButton.clickAndWait(Until.newWindow(), LAUNCH_TIMEOUT);
 
         UiObject2 acceptedTitle =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.notificationUI_header_ga_title_eu_v2);
+                ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
         assertThat(acceptedTitle).isNotNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButtonOnSecondPage =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_left_control_button_text_eu_v2);
         UiObject2 rightControlButtonOnSecondPage =
                 ApkTestUtil.getElement(
-                        mSpyContext,
                         mDevice,
                         R.string.notificationUI_right_control_button_ga_text_eu_v2);
         assertThat(leftControlButtonOnSecondPage).isNotNull();

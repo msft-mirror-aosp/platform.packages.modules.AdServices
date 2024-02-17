@@ -25,6 +25,7 @@ import static com.android.adservices.service.adselection.AdSelectionFromOutcomes
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesE2ETest.SELECTION_WATERFALL_LOGIC_JS_PATH;
 import static com.android.adservices.service.adselection.AdSelectionServiceImpl.AUCTION_SERVER_API_IS_NOT_AVAILABLE;
 import static com.android.adservices.service.adselection.GetAdSelectionDataRunner.REVOKED_CONSENT_RANDOM_DATA_SIZE;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.sCallerMetadata;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
@@ -126,9 +127,10 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAudienceInput;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -275,6 +277,7 @@ public class AuctionServerE2ETest {
     private AdSelectionDebugReportDao mAdSelectionDebugReportDaoSpy;
     private AdIdFetcher mAdIdFetcher;
     private MockAdIdWorker mMockAdIdWorker;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     @Before
     public void setUp() {
@@ -421,7 +424,8 @@ public class AuctionServerE2ETest {
                         eq(false),
                         eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AdServicesStatsLog
+                                .AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
                         eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA),
                         eq(DevContext.createForDevOptionsDisabled()));
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
@@ -432,7 +436,8 @@ public class AuctionServerE2ETest {
                         eq(false),
                         eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AdServicesStatsLog
+                                .AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
                         eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
                         eq(DevContext.createForDevOptionsDisabled()));
 
@@ -873,6 +878,7 @@ public class AuctionServerE2ETest {
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         GetAdSelectionDataInput input =
@@ -1517,6 +1523,7 @@ public class AuctionServerE2ETest {
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         GetAdSelectionDataInput input =
@@ -1529,12 +1536,12 @@ public class AuctionServerE2ETest {
 
         byte[] adSelectionResponse = callback.mGetAdSelectionDataResponse.getAdSelectionData();
 
-        ProtectedAudienceInput protectedAudienceInput =
-                getProtectedAudienceInputFromCipherText(adSelectionResponse, privKey);
+        ProtectedAuctionInput protectedAuctionInput =
+                getProtectedAuctionInputFromCipherText(adSelectionResponse, privKey);
 
-        Map<String, BuyerInput> buyerInputs = getDecompressedBuyerInputs(protectedAudienceInput);
+        Map<String, BuyerInput> buyerInputs = getDecompressedBuyerInputs(protectedAuctionInput);
 
-        Assert.assertEquals(CALLER_PACKAGE_NAME, protectedAudienceInput.getPublisherName());
+        Assert.assertEquals(CALLER_PACKAGE_NAME, protectedAuctionInput.getPublisherName());
         Assert.assertEquals(2, buyerInputs.size());
         Assert.assertTrue(buyerInputs.containsKey(DIFFERENT_BUYER.toString()));
         Assert.assertTrue(buyerInputs.containsKey(WINNER_BUYER.toString()));
@@ -1551,7 +1558,7 @@ public class AuctionServerE2ETest {
         Assert.assertTrue(expected.containsAll(actual));
     }
 
-    private ProtectedAudienceInput getProtectedAudienceInputFromCipherText(
+    private ProtectedAuctionInput getProtectedAuctionInputFromCipherText(
             byte[] adSelectionResponse, OhttpGatewayPrivateKey privKey) throws Exception {
         byte[] decrypted = ObliviousHttpGateway.decrypt(privKey, adSelectionResponse);
         AuctionServerPayloadExtractor extractor =
@@ -1559,14 +1566,14 @@ public class AuctionServerE2ETest {
                         AuctionServerPayloadFormatterV0.VERSION);
         AuctionServerPayloadUnformattedData unformatted =
                 extractor.extract(AuctionServerPayloadFormattedData.create(decrypted));
-        return ProtectedAudienceInput.parseFrom(unformatted.getData());
+        return ProtectedAuctionInput.parseFrom(unformatted.getData());
     }
 
     private Map<String, BuyerInput> getDecompressedBuyerInputs(
-            ProtectedAudienceInput protectedAudienceInput) throws Exception {
+            ProtectedAuctionInput protectedAuctionInput) throws Exception {
         Map<String, BuyerInput> decompressedBuyerInputs = new HashMap<>();
         for (Map.Entry<String, ByteString> entry :
-                protectedAudienceInput.getBuyerInputMap().entrySet()) {
+                protectedAuctionInput.getBuyerInputMap().entrySet()) {
             byte[] buyerInputBytes = entry.getValue().toByteArray();
             AuctionServerDataCompressor compressor =
                     AuctionServerDataCompressorFactory.getDataCompressor(
@@ -1636,6 +1643,7 @@ public class AuctionServerE2ETest {
                                 mLightweightExecutorService),
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         GetAdSelectionDataInput input =
@@ -1699,6 +1707,7 @@ public class AuctionServerE2ETest {
                 mObliviousHttpEncryptorMock,
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
+                mUnusedKAnonSignJoinFactory,
                 false);
     }
 
@@ -1709,9 +1718,9 @@ public class AuctionServerE2ETest {
                     mPayloadExtractor
                             .extract(AuctionServerPayloadFormattedData.create(decryptedBytes))
                             .getData();
-            ProtectedAudienceInput protectedAudienceInput =
-                    ProtectedAudienceInput.parseFrom(unformatted);
-            Map<String, ByteString> buyerInputBytesMap = protectedAudienceInput.getBuyerInputMap();
+            ProtectedAuctionInput protectedAuctionInput =
+                    ProtectedAuctionInput.parseFrom(unformatted);
+            Map<String, ByteString> buyerInputBytesMap = protectedAuctionInput.getBuyerInputMap();
             Function<Map.Entry<String, ByteString>, AdTechIdentifier> entryToAdTechIdentifier =
                     entry -> AdTechIdentifier.fromString(entry.getKey());
             Function<Map.Entry<String, ByteString>, BuyerInput> entryToBuyerInput =
@@ -1804,7 +1813,7 @@ public class AuctionServerE2ETest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         GetAdSelectionDataTestCallback callback =
                 new GetAdSelectionDataTestCallback(countDownLatch);
-        service.getAdSelectionData(input, null, callback);
+        service.getAdSelectionData(input, sCallerMetadata, callback);
         callback.mCountDownLatch.await();
         return callback;
     }
@@ -1815,7 +1824,7 @@ public class AuctionServerE2ETest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultTestCallback callback =
                 new PersistAdSelectionResultTestCallback(countDownLatch);
-        service.persistAdSelectionResult(input, null, callback);
+        service.persistAdSelectionResult(input, sCallerMetadata, callback);
         callback.mCountDownLatch.await();
         return callback;
     }

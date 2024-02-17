@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.kanon;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnJobFinishedLogged;
@@ -34,6 +34,7 @@ import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -51,7 +52,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -81,8 +81,6 @@ public class KAnonSignJoinBackgroundJobServiceTest {
 
     @Mock private KAnonSignJoinBackgroundJobWorker mKAnonSignJoinBackgroundJobWorkerMock;
     @Mock private JobParameters mJobParametersMock;
-    @Mock private AdServicesJobServiceLogger mSpyLogger;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     @Mock private ConsentManager mConsentManagerMock;
     private MockitoSession mStaticMockSession = null;
 
@@ -102,7 +100,6 @@ public class KAnonSignJoinBackgroundJobServiceTest {
         doReturn(JOB_SCHEDULER)
                 .when(mKAnonSignJoinBackgroundJobService)
                 .getSystemService(JobScheduler.class);
-        mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
     }
 
     @After
@@ -135,14 +132,15 @@ public class KAnonSignJoinBackgroundJobServiceTest {
                         })
                 .when(mKAnonSignJoinBackgroundJobService)
                 .jobFinished(mJobParametersMock, false);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(CONTEXT, testFlags);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         mKAnonSignJoinBackgroundJobService.onStartJob(mJobParametersMock);
         jobFinishedCountDown.await();
 
         verify(mKAnonSignJoinBackgroundJobService).jobFinished(mJobParametersMock, false);
         verify(mKAnonSignJoinBackgroundJobWorkerMock).runSignJoinBackgroundProcess();
-        verifyOnJobFinishedLogged(mSpyLogger, onJobDoneCallback);
+        verifyOnJobFinishedLogged(logger, onJobDoneCallback);
     }
 
     @Test
@@ -150,7 +148,9 @@ public class KAnonSignJoinBackgroundJobServiceTest {
             throws InterruptedException {
         doReturn(true).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
         doNothing().when(mKAnonSignJoinBackgroundJobService).jobFinished(mJobParametersMock, false);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(CONTEXT, mock(Flags.class));
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID,
@@ -165,7 +165,7 @@ public class KAnonSignJoinBackgroundJobServiceTest {
 
         assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID));
         verify(mKAnonSignJoinBackgroundJobWorkerMock, never()).runSignJoinBackgroundProcess();
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -176,7 +176,9 @@ public class KAnonSignJoinBackgroundJobServiceTest {
         doReturn(testWithBackgroundDisabled).when(() -> FlagsFactory.getFlags());
         doReturn(false).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
         doNothing().when(mKAnonSignJoinBackgroundJobService).jobFinished(mJobParametersMock, false);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(CONTEXT, testWithBackgroundDisabled);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID,
@@ -191,7 +193,7 @@ public class KAnonSignJoinBackgroundJobServiceTest {
 
         assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID));
         verify(mKAnonSignJoinBackgroundJobWorkerMock, never()).runSignJoinBackgroundProcess();
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test

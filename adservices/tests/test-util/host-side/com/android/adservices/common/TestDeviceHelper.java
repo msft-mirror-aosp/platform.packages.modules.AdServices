@@ -17,6 +17,7 @@ package com.android.adservices.common;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 
@@ -58,6 +59,7 @@ public final class TestDeviceHelper {
     }
 
     // cmdFmt must be final because it's being passed to a method taking @FormatString
+    /** Executes AdServices shell command and returns the standard output. */
     @FormatMethod
     public static String runShellCommand(
             @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
@@ -76,6 +78,35 @@ public final class TestDeviceHelper {
         }
         sLogger.d("runShellCommand(%s): %s", cmd, result);
         return result;
+    }
+
+    // cmdFmt must be final because it's being passed to a method taking @FormatString
+    /**
+     * Executes AdServices shell command and returns the standard output and standard error wrapped
+     * in a {@link CommandResult}.
+     */
+    @FormatMethod
+    public static CommandResult runShellCommandRwe(
+            @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
+        return runShellCommandRwe(getTestDevice(), cmdFmt, cmdArgs);
+    }
+
+    /**
+     * Executes AdServices shell command and returns the standard output and standard error wrapped
+     * in a {@link CommandResult}.
+     */
+    @FormatMethod
+    public static CommandResult runShellCommandRwe(
+            ITestDevice device, @FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+        String cmd = String.format(cmdFmt, cmdArgs);
+        com.android.tradefed.util.CommandResult result;
+        try {
+            result = device.executeShellV2Command(cmd);
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+        sLogger.d("runShellCommandRwe(%s): %s", cmd, result);
+        return asCommandResult(result);
     }
 
     public static int getApiLevel() {
@@ -174,5 +205,11 @@ public final class TestDeviceHelper {
 
     private TestDeviceHelper() {
         throw new UnsupportedOperationException("Provides only static methods");
+    }
+
+    private static CommandResult asCommandResult(com.android.tradefed.util.CommandResult input) {
+        String out = input.getStdout() != null ? input.getStdout() : "";
+        String err = input.getStderr() != null ? input.getStderr() : "";
+        return new CommandResult(out, err);
     }
 }

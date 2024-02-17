@@ -1283,6 +1283,14 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testGetEffectiveTargetSdkVersion() throws Exception {
+        assertThat(
+                        sSdkSandboxManagerLocal.getEffectiveTargetSdkVersion(
+                                Process.toSdkSandboxUid(mClientAppUid)))
+                .isEqualTo(34);
+    }
+
+    @Test
     public void testGetSandboxedSdks_afterLoadSdkSuccess() throws Exception {
         loadSdk(SDK_NAME);
         assertThat(mService.getSandboxedSdks(TEST_PACKAGE, mSandboxLatencyInfo)).hasSize(1);

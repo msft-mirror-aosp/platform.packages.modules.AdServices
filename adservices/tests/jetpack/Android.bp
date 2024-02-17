@@ -414,7 +414,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
-    min_sdk_version: "30",
+    min_sdk_version: "Tiramisu",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -446,7 +446,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
-    min_sdk_version: "30",
+    min_sdk_version: "Tiramisu",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -478,7 +478,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
-    min_sdk_version: "30",
+    min_sdk_version: "Tiramisu",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -510,7 +510,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
-    min_sdk_version: "30",
+    min_sdk_version: "Tiramisu",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -542,7 +542,7 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
-    min_sdk_version: "30",
+    min_sdk_version: "Tiramisu",
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -567,4 +567,70 @@ android_test {
         "general-tests",
     ],
     test_config: "AndroidTest-1.1.0-beta04.xml",
+}
+
+android_test {
+    name: "AdServicesJetpackTests-1.1.0-beta03-S",
+    srcs: [
+        "src/**/*.java",
+    ],
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    sdk_version: "module_current",
+    static_libs: [
+        "adservices-clients",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta03",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta03",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "kotlinx-coroutines-android",
+        "mockito-target-extended-minus-junit4",
+        "truth",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+    ],
+    libs: [
+        "android.test.base",
+        "framework-sdkextensions",
+    ],
+    test_suites: [
+        "general-tests",
+    ],
+    test_config: "AndroidTest-1.1.0-beta03-S.xml",
+}
+
+android_test {
+    name: "AdServicesJetpackTests-1.1.0-beta04-S",
+    srcs: [
+        "src/**/*.java",
+    ],
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    sdk_version: "module_current",
+    static_libs: [
+        "adservices-clients",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta04",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta04",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "kotlinx-coroutines-android",
+        "mockito-target-extended-minus-junit4",
+        "truth",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+    ],
+    libs: [
+        "android.test.base",
+        "framework-sdkextensions",
+    ],
+    test_suites: [
+        "general-tests",
+    ],
+    test_config: "AndroidTest-1.1.0-beta04-S.xml",
 }
