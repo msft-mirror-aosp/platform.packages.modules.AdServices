@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
@@ -282,7 +283,8 @@ public class OutcomeSelectionRunner {
                     new FutureCallback<>() {
                         @Override
                         public void onSuccess(AdSelectionOutcome result) {
-                            notifySuccessToCaller(result, callback);
+                            notifySuccessToCaller(
+                                    inputParams.getCallerPackageName(), result, callback);
                         }
 
                         @Override
@@ -346,14 +348,16 @@ public class OutcomeSelectionRunner {
         throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 
-    private void notifySuccessToCaller(AdSelectionOutcome result, AdSelectionCallback callback) {
+    private void notifySuccessToCaller(
+            String callerAppPackageName, AdSelectionOutcome result, AdSelectionCallback callback) {
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             // Note: Success is logged before the callback to ensure deterministic testing.
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                    AdServicesStatusUtils.STATUS_SUCCESS,
-                    0);
+                    callerAppPackageName,
+                    STATUS_SUCCESS,
+                    /*latencyMs=*/ 0);
             if (result == null) {
                 callback.onSuccess(null);
             } else {
