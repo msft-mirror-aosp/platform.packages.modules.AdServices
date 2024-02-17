@@ -4336,36 +4336,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testMeasurementKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        boolean defaultValue = MEASUREMENT_KILL_SWITCH;
-        expect.withMessage("getMeasurementKillSwitch() by default")
-                .that(mPhFlags.getMeasurementKillSwitch())
-                .isEqualTo(defaultValue);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !defaultValue;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        expect.withMessage("getMeasurementKillSwitch() when set by device_config")
-                .that(mPhFlags.getMeasurementKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testMeasurementKillSwitch_globalOverride() {
-        enableGlobalKillSwitch();
-        setMeasurementKillSwitch(false);
-
-        expect.withMessage("getMeasurementKillSwitch() when global kill switch is on")
-                .that(mPhFlags.getMeasurementKillSwitch())
-                .isTrue();
-    }
-
-    @Test
     public void testGetMeasurementEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();

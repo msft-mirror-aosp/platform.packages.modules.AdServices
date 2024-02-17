@@ -38,7 +38,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -69,7 +68,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 
@@ -194,7 +192,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
             boolean consentStatus,
             TestUtils.RunnableWithThrow execute)
             throws Exception {
-        doReturn(killSwitchStatus).when(mMockFlags).getMeasurementKillSwitch();
+        doReturn(!killSwitchStatus).when(mMockFlags).getMeasurementEnabled();
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
