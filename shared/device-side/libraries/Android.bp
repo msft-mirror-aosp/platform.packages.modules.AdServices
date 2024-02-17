@@ -90,8 +90,9 @@ java_library {
     ],
     static_libs: [
         "adservices-shared-common",
-        "adservices-shared-util",
-        "guava",
+        "adservices-shared-error-logging",
+        "adservices-shared-proto-utils",
+        "guava", // MoreExecutors, Executors...
     ],
     libs: [
         "framework-annotations-lib",

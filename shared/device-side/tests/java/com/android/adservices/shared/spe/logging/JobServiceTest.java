@@ -44,6 +44,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -103,6 +104,7 @@ public final class JobServiceTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private JobParameters mMockJobParameters;
     @Mock private Clock mMockClock;
+    @Mock private AdServicesErrorLogger mMockErrorLogger;
 
     @Before
     public void setup() {
@@ -112,6 +114,7 @@ public final class JobServiceTest extends AdServicesExtendedMockitoTestCase {
                                 CONTEXT,
                                 mMockClock,
                                 sMockStatsdLogger,
+                                mMockErrorLogger,
                                 Executors.newCachedThreadPool(),
                                 sJobIdToNameMap,
                                 sMockFlags));

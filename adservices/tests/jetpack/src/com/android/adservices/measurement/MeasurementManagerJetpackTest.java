@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.ext.SdkExtensions;
 
 import androidx.privacysandbox.ads.adservices.java.measurement.MeasurementManagerFutures;
@@ -58,7 +59,10 @@ public class MeasurementManagerJetpackTest {
 
     @Before
     public void setup() throws Exception {
-        Assume.assumeTrue(SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 5);
+        int adServicesVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES);
+        int extServicesVersion = SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S);
+        Assume.assumeTrue(adServicesVersion >= 4 || extServicesVersion >= 9);
+
         // To grant access to all pp api app
         mTestUtil.overrideAllowlists(true);
         // We need to turn the Consent Manager into debug mode

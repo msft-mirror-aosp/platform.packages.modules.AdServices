@@ -18,6 +18,7 @@ package com.android.adservices.shared.spe.logging;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
 import static com.android.adservices.shared.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
 import static com.android.adservices.shared.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
 import static com.android.adservices.shared.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
@@ -38,6 +39,7 @@ import android.content.SharedPreferences;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableMap;
@@ -65,6 +67,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
 
     @Mock private ModuleSharedFlags mMockFlags;
     @Mock private StatsdJobServiceLogger mMockStatsdLogger;
+    @Mock private AdServicesErrorLogger mMockErrorLogger;
 
     @Before
     public void setup() {
@@ -74,6 +77,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                 sContext,
                                 Clock.getInstance(),
                                 mMockStatsdLogger,
+                                mMockErrorLogger,
                                 Executors.newCachedThreadPool(),
                                 sJobIdToNameMap,
                                 mMockFlags));
@@ -334,6 +338,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                         (int) (executionFrequencyInMs / MILLISECONDS_PER_MINUTE))
                                 .setExecutionResultCode(resultCode)
                                 .setStopReason(stopReason)
+                                .setModuleName(AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
                                 .build());
     }
 
@@ -362,6 +367,7 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                 .setExecutionPeriodMinute(Integer.MAX_VALUE)
                                 .setExecutionResultCode(resultCode)
                                 .setStopReason(stopReason)
+                                .setModuleName(AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
                                 .build());
     }
 
@@ -390,6 +396,8 @@ public final class JobServiceLoggerTest extends AdServicesExtendedMockitoTestCas
                                 .setExecutionPeriodMinute((int) executionPeriodMs)
                                 .setExecutionResultCode(resultCode)
                                 .setStopReason(stopReason)
+                                .setModuleName(
+                                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME)
                                 .build());
     }
 

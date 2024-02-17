@@ -17,6 +17,7 @@
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -39,6 +40,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.annotations.SetFlagEnabled;
 
 import com.google.mockwebserver.MockWebServer;
 
@@ -52,7 +54,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
+@SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
+public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String POSTFIX = "signals";
