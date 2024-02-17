@@ -19,8 +19,10 @@ package com.android.adservices.spe;
 import android.content.Context;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.spe.logging.StatsdJobServiceLogger;
 import com.android.adservices.shared.util.Clock;
@@ -43,10 +45,11 @@ public final class AdServicesJobServiceLogger extends JobServiceLogger {
             Context context,
             Clock clock,
             StatsdJobServiceLogger statsdLogger,
+            AdServicesErrorLogger errorLogger,
             Executor executor,
             Map<Integer, String> jobIdToNameMap,
             ModuleSharedFlags flags) {
-        super(context, clock, statsdLogger, executor, jobIdToNameMap, flags);
+        super(context, clock, statsdLogger, errorLogger, executor, jobIdToNameMap, flags);
     }
 
     /** Get a singleton instance of {@link JobServiceLogger} to be used. */
@@ -58,6 +61,7 @@ public final class AdServicesJobServiceLogger extends JobServiceLogger {
                                 context,
                                 Clock.getInstance(),
                                 new AdServicesStatsdJobServiceLogger(),
+                                AdServicesErrorLoggerImpl.getInstance(),
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 AdServicesJobInfo.getJobIdToJobNameMap(),
                                 FlagsFactory.getFlags());

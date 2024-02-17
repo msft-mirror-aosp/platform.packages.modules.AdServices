@@ -48,6 +48,11 @@ public abstract class ExecutionReportedStats {
      */
     public abstract int getStopReason();
 
+    /**
+     * @return The module name for which the job run is being reported.
+     */
+    public abstract int getModuleName();
+
     /** Create an instance for {@link ExecutionReportedStats.Builder}. */
     public static ExecutionReportedStats.Builder builder() {
         return new AutoValue_ExecutionReportedStats.Builder();
@@ -70,6 +75,9 @@ public abstract class ExecutionReportedStats {
 
         /** Set job stop reason. */
         public abstract Builder setStopReason(int value);
+
+        /** Set module name. */
+        public abstract Builder setModuleName(int value);
 
         /** Build an instance of {@link ExecutionReportedStats}. */
         public abstract ExecutionReportedStats build();

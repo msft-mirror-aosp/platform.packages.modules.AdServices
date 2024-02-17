@@ -19,11 +19,17 @@ package com.android.adservices.service;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.os.Build.VERSION.SDK_INT;
 
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.RAMPED_UP;
+
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
 import android.os.Build;
 
 import com.android.adservices.cobalt.CobaltConstants;
+import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -603,6 +609,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
     }
 
+    @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
 
     /** Returns the kill switch for Attribution Fallback Job . */
@@ -1970,6 +1977,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
     // M-2022-11), the value of this flag in the binary was false.
+    @FeatureFlag(LEGACY_KILL_SWITCH_GLOBAL)
     boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
@@ -1980,9 +1988,11 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /**
      * Measurement Kill Switch. This overrides all specific measurement kill switch. The default
-     * value is false which means that Measurement is enabled. This flag is used for emergency
-     * turning off the whole Measurement API.
+     * value is {@code false} which means that Measurement is enabled.
+     *
+     * <p>This flag is used for emergency turning off the whole Measurement API.
      */
+    @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
     boolean MEASUREMENT_KILL_SWITCH = false;
 
     /**
@@ -2471,10 +2481,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     // TOPICS Killswitches
 
     /**
-     * Topics API Kill Switch. The default value is false which means the Topics API is enabled.
-     * This flag is used for emergency turning off the Topics API.
+     * Topics API Kill Switch. The default value is {@code true} which means the Topics API is
+     * disabled.
+     *
+     * <p>This flag is used for emergency turning off the Topics API.
      */
-    boolean TOPICS_KILL_SWITCH = false; // By default, the Topics API is enabled.
+    @FeatureFlag(LEGACY_KILL_SWITCH)
+    boolean TOPICS_KILL_SWITCH = true;
 
     /** Returns value of Topics API kill switch */
     default boolean getTopicsKillSwitch() {
@@ -2575,8 +2588,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Protected signals API feature flag. The default value is {@code false}, which means that
      * protected signals is disabled by default.
      */
-    // TODO(b/323972771): change to false after developer preview
-    boolean PROTECTED_SIGNALS_ENABLED = true;
+    @FeatureFlag boolean PROTECTED_SIGNALS_ENABLED = false;
 
     /** Returns value of the protected signals feature flag. */
     default boolean getProtectedSignalsEnabled() {
@@ -2654,6 +2666,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return ENABLE_APPSEARCH_CONSENT_DATA;
     }
 
+    /** Default U18 AppSearch migration feature flag. */
+    boolean DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION = false;
+
+    /** Returns value of enable U18 appsearch migration flag */
+    default boolean getEnableU18AppsearchMigration() {
+        return DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
+    }
+
     /**
      * Enable AdServicesExtDataStorageService read for consent data feature flag. The default value
      * on R devices is true as the consent source of truth is PPAPI_AND_ADEXT_SERVICE_ONLY. The
@@ -2669,17 +2689,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
-     * Enables data migration from AdServicesExtDataStorageService to AppSearch upon OTA to Android
-     * S. As a result this flag is only true on Android S.
+     * Enables data migration from AdServicesExtDataStorageService to AppSearch (on S) and System
+     * server (on T+) upon OTA from R.
      */
-    boolean ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION =
-            SdkLevel.isAtLeastS() && !SdkLevel.isAtLeastT();
+    boolean ENABLE_MIGRATION_FROM_ADEXT_SERVICE = SdkLevel.isAtLeastS();
 
     /**
-     * @return value of enable AdExt service to AppSearch migration flag.
+     * @return value of enable migration AdExt service.
      */
-    default boolean getEnableAdExtServiceToAppSearchMigration() {
-        return ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
+    default boolean getEnableMigrationFromAdExtService() {
+        return ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
     }
 
     /*
@@ -4519,7 +4538,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /**
      * @deprecated TODO(b/314962688): remove (will always be true)
      */
-    @Deprecated boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
+    @FeatureFlag(RAMPED_UP)
+    @Deprecated
+    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
 
     /**
      * Returns whether the API access checked by the AdServices XML config returns {@code true} by

@@ -71,15 +71,16 @@ class SdkSandboxRestrictionManager {
         }
     }
 
-    /** Cache and get the effectiveTargetSkdVersion for an app */
-    public int getEffectiveTargetSdkVersion(int uid) throws PackageManager.NameNotFoundException {
-        PackageManagerHelper packageManagerHelper = mInjector.getPackageManagerHelper(uid);
-        String packageName = packageManagerHelper.getPackageNameForUid(uid);
+    /** Cache and get the effectiveTargetSdkVersion for the sdk sandbox process */
+    public int getEffectiveTargetSdkVersion(int appUid)
+            throws PackageManager.NameNotFoundException {
+        PackageManagerHelper packageManagerHelper = mInjector.getPackageManagerHelper(appUid);
+        String packageName = packageManagerHelper.getPackageNameForUid(appUid);
         return getEffectiveTargetSdkVersion(
-                new CallingInfo(uid, packageName), packageManagerHelper);
+                new CallingInfo(appUid, packageName), packageManagerHelper);
     }
 
-    /** Cache and get the effectiveTargetSkdVersion for an app */
+    /** Cache and get the effectiveTargetSdkVersion for the sdk sandbox process */
     public int getEffectiveTargetSdkVersion(CallingInfo callingInfo)
             throws PackageManager.NameNotFoundException {
         synchronized (mLock) {
