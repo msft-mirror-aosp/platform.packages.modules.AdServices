@@ -105,7 +105,6 @@ public class FetchCustomAudienceImpl {
                     .build();
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final ListeningExecutorService mExecutorService;
-    private final int mCallingAppUid;
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
     @NonNull private final AdServicesHttpsClient mHttpClient;
     @NonNull private final Clock mClock;
@@ -140,6 +139,8 @@ public class FetchCustomAudienceImpl {
     @NonNull private CustomAudienceBlob mRequestCustomAudience;
     @NonNull private CustomAudienceBlob mResponseCustomAudience;
     @NonNull private CustomAudienceBlob mFusedCustomAudience;
+    private final int mCallingAppUid;
+    @NonNull private String mCallerAppPackageName;
 
     public FetchCustomAudienceImpl(
             @NonNull Flags flags,
@@ -246,6 +247,7 @@ public class FetchCustomAudienceImpl {
             @NonNull FetchAndJoinCustomAudienceCallback callback,
             @NonNull DevContext devContext) {
         try {
+            mCallerAppPackageName = request.getCallerPackageName();
             // Failing fast and silently if fetchCustomAudience is disabled.
             if (!mFledgeFetchCustomAudienceEnabled) {
                 sLogger.v("fetchCustomAudience is disabled.");
@@ -562,7 +564,8 @@ public class FetchCustomAudienceImpl {
             // AdSelectionServiceFilter ensures the failing assertion is logged internally.
             // Note: Failure is logged before the callback to ensure deterministic testing.
             if (!isFilterException) {
-                mAdServicesLogger.logFledgeApiCallStats(API_NAME, resultCode, 0);
+                mAdServicesLogger.logFledgeApiCallStats(
+                        API_NAME, mCallerAppPackageName, resultCode, 0);
             }
 
             callback.onFailure(
@@ -573,7 +576,10 @@ public class FetchCustomAudienceImpl {
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    API_NAME,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    0);
             throw new RuntimeException(e);
         }
     }
@@ -582,12 +588,15 @@ public class FetchCustomAudienceImpl {
     private void notifySuccess(@NonNull FetchAndJoinCustomAudienceCallback callback) {
         try {
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+                    API_NAME, mCallerAppPackageName, AdServicesStatusUtils.STATUS_SUCCESS, 0);
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    API_NAME,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    0);
             throw new RuntimeException(e);
         }
     }

@@ -145,7 +145,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleAllBackgroundJobs_killSwitchOff() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
+        mockMeasurementEnabled(true);
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(false);
         when(mMockFlags.getMddBackgroundTaskKillSwitch()).thenReturn(false);
@@ -177,7 +177,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleAllBackgroundJobs_measurementKillSwitchOn() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(true);
+        mockMeasurementEnabled(false);
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(false);
 
@@ -209,7 +209,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleAllBackgroundJobs_topicsKillSwitchOn() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
+        mockMeasurementEnabled(true);
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(true);
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(false);
 
@@ -237,7 +237,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleAllBackgroundJobs_mddKillSwitchOn() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
+        mockMeasurementEnabled(true);
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(false);
 
@@ -265,7 +265,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleAllBackgroundJobs_encryptionKeyKillSwitchOn() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
+        mockMeasurementEnabled(true);
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(false);
 
@@ -296,7 +296,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleAllBackgroundJobs_selectAdsKillSwitchOn() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
+        mockMeasurementEnabled(true);
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(true);
 
@@ -326,7 +326,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleAllBackgroundJobs_topicsAndSelectAdsKillSwitchOn() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
+        mockMeasurementEnabled(true);
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(true);
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(true);
 
@@ -352,7 +352,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleAllBackgroundJobs_cobaltLoggingDisabled() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
+        mockMeasurementEnabled(true);
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
         when(mMockFlags.getFledgeSelectAdsKillSwitch()).thenReturn(false);
 
@@ -377,7 +377,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleMeasurementBackgroundJobs_measurementKillSwitchOn() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(true);
+        mockMeasurementEnabled(false);
 
         BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mMockContext);
 
@@ -392,7 +392,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleMeasurementBackgroundJobs_measurementKillSwitchOff() throws Exception {
-        when(mMockFlags.getMeasurementKillSwitch()).thenReturn(false);
+        mockMeasurementEnabled(true);
 
         BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mMockContext);
 
@@ -609,5 +609,9 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     private void assertCobaltJobScheduled(int numberOfTimes) {
         verify(() -> CobaltJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
+    }
+
+    private void mockMeasurementEnabled(boolean value) {
+        when(mMockFlags.getMeasurementEnabled()).thenReturn(value);
     }
 }

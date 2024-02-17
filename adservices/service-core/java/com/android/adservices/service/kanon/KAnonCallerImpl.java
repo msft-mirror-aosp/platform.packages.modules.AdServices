@@ -219,8 +219,11 @@ public class KAnonCallerImpl implements KAnonCaller {
 
                     @Override
                     public void onFailure(Throwable t) {
-                        // Because we are using Futures#whenAllComplete, we will not be catching
-                        // errors here.
+                        // We will only be catching errors for
+                        // getOrUpdateClientAndServerParametersFuture, because in
+                        // performSignAndJoinInBatches we are using Futures#whenAllComplete which
+                        // will not throw any error
+                        // TODO(b/324560484): Refactor KAnon Caller Impl
                         mAdServicesLogger.logKAnonSignJoinStatus();
                     }
                 },
@@ -419,10 +422,17 @@ public class KAnonCallerImpl implements KAnonCaller {
                                         fetchParamRequest),
                         mLightweightExecutorService)
                 .catchingAsync(
-                        AdServicesNetworkException.class,
-                        e -> {
-                            LogUtil.d("Failure in http call");
-                            return immediateFailedFuture(e);
+                        Throwable.class,
+                        t -> {
+                            if (t.getCause() instanceof AdServicesNetworkException exception) {
+                                LogUtil.d(
+                                        "Error while making the http call, status code is :"
+                                                + exception.getErrorCode());
+                            }
+                            LogUtil.d("error while fetching the server param");
+                            return immediateFailedFuture(
+                                    new KAnonSignJoinException(
+                                            "Error while making the http call", t));
                         },
                         mLightweightExecutorService)
                 .transformAsync(
@@ -491,10 +501,16 @@ public class KAnonCallerImpl implements KAnonCaller {
                                         registerClientParametersRequest),
                         mLightweightExecutorService)
                 .catchingAsync(
-                        AdServicesNetworkException.class,
-                        e -> {
-                            LogUtil.d("Failure in http call");
-                            return immediateFailedFuture(e);
+                        Throwable.class,
+                        t -> {
+                            if (t.getCause() instanceof AdServicesNetworkException exception) {
+                                LogUtil.d(
+                                        "Error while making the http call, status code is :"
+                                                + exception.getErrorCode());
+                            }
+                            return immediateFailedFuture(
+                                    new KAnonSignJoinException(
+                                            "Error while making the http call", t));
                         },
                         mLightweightExecutorService)
                 .transformAsync(
@@ -548,10 +564,16 @@ public class KAnonCallerImpl implements KAnonCaller {
                         mAdServicesHttpsClient.performRequestGetResponseInBase64String(
                                 httpGetTokenRequest))
                 .catchingAsync(
-                        AdServicesNetworkException.class,
-                        e -> {
-                            LogUtil.d("Failure in http call");
-                            return immediateFailedFuture(e);
+                        Throwable.class,
+                        t -> {
+                            if (t.getCause() instanceof AdServicesNetworkException exception) {
+                                LogUtil.d(
+                                        "Error while making the http call, status code is :"
+                                                + exception.getErrorCode());
+                            }
+                            return immediateFailedFuture(
+                                    new KAnonSignJoinException(
+                                            "Error while making the http call", t));
                         },
                         mLightweightExecutorService)
                 .transformAsync(
@@ -778,8 +800,17 @@ public class KAnonCallerImpl implements KAnonCaller {
                                             joinRequest),
                             mLightweightExecutorService)
                     .catchingAsync(
-                            AdServicesNetworkException.class,
-                            Futures::immediateFailedFuture,
+                            Throwable.class,
+                            t -> {
+                                if (t.getCause() instanceof AdServicesNetworkException exception) {
+                                    LogUtil.d(
+                                            "Error while making the http call, status code is :"
+                                                    + exception.getErrorCode());
+                                }
+                                return immediateFailedFuture(
+                                        new KAnonSignJoinException(
+                                                "Error while making the http call", t));
+                            },
                             mLightweightExecutorService);
         } catch (Throwable t) {
             throw new KAnonSignJoinException("Error while making the join request", t);

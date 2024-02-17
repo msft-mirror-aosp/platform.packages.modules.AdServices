@@ -56,6 +56,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 
 import android.adservices.adid.AdId;
 import android.adservices.adselection.AdSelectionCallback;
@@ -166,7 +167,6 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -296,7 +296,7 @@ public class FledgeE2ETest {
     private static final AdCost AD_COST_1 = new AdCost(1.2, NUM_BITS_STOCHASTIC_ROUNDING);
     private static final AdCost AD_COST_2 = new AdCost(2.2, NUM_BITS_STOCHASTIC_ROUNDING);
 
-    private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -342,17 +342,10 @@ public class FledgeE2ETest {
                     false, true, true, true, false, false, false, false, false, false);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
-
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
-
-    @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLogger);
-
+    private FledgeAllowListsFilter mFledgeAllowListsFilterSpy;
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-
     @Mock private File mMockDBAdSelectionFile;
-
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
@@ -375,7 +368,11 @@ public class FledgeE2ETest {
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
+
         doReturn(DEFAULT_FLAGS).when(FlagsFactory::getFlags);
+
+        mFledgeAllowListsFilterSpy =
+                spy(new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLoggerMock));
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT_SPY, CustomAudienceDatabase.class)
@@ -1248,7 +1245,7 @@ public class FledgeE2ETest {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         CONTEXT_SPY,
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -1410,7 +1407,7 @@ public class FledgeE2ETest {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         CONTEXT_SPY,
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -3025,7 +3022,7 @@ public class FledgeE2ETest {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         CONTEXT_SPY,
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -4383,7 +4380,7 @@ public class FledgeE2ETest {
                         mConsentManagerMock,
                         mDevContextFilterMock,
                         MoreExecutors.newDirectExecutorService(),
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4419,7 +4416,7 @@ public class FledgeE2ETest {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         CONTEXT_SPY,
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,

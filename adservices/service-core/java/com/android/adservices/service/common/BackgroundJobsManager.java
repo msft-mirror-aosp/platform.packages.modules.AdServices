@@ -217,7 +217,7 @@ public class BackgroundJobsManager {
      * @param context application context.
      */
     public static void scheduleMeasurementBackgroundJobs(@NonNull Context context) {
-        if (!FlagsFactory.getFlags().getMeasurementKillSwitch()) {
+        if (FlagsFactory.getFlags().getMeasurementEnabled()) {
             AggregateReportingJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             AggregateFallbackReportingJobService.scheduleIfNeeded(
                     context, /* forceSchedule= */ false);

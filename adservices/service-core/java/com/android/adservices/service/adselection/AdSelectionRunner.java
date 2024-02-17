@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResultCodeFromException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
@@ -304,6 +305,8 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
+        String callerAppPackageName = inputParams.getCallerPackageName();
+
         try {
             ListenableFuture<Void> filterAndValidateRequestFuture =
                     Futures.submit(
@@ -348,7 +351,9 @@ public abstract class AdSelectionRunner {
                                         adSelectionAndOrchestrationResultPair) {
                             Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
                             notifySuccessToCaller(
-                                    adSelectionAndOrchestrationResultPair.first, callback);
+                                    callerAppPackageName,
+                                    adSelectionAndOrchestrationResultPair.first,
+                                    callback);
                             if (mDebugReporting.isEnabled()) {
                                 sendDebugReports(
                                         adSelectionAndOrchestrationResultPair.second, fullCallback);
@@ -438,7 +443,9 @@ public abstract class AdSelectionRunner {
     }
 
     private void notifySuccessToCaller(
-            @NonNull DBAdSelection result, @NonNull AdSelectionCallback callback) {
+            @NonNull String callerAppPackageName,
+            @NonNull DBAdSelection result,
+            @NonNull AdSelectionCallback callback) {
         try {
             int overallLatencyMs =
                     mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
@@ -451,7 +458,8 @@ public abstract class AdSelectionRunner {
             // Note: Success is logged before the callback to ensure deterministic testing.
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                    AdServicesStatusUtils.STATUS_SUCCESS,
+                    callerAppPackageName,
+                    STATUS_SUCCESS,
                     overallLatencyMs);
 
             callback.onSuccess(
