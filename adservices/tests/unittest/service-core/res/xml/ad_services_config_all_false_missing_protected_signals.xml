@@ -17,10 +17,10 @@
 <ad-services-config>
     <attribution allowAllToAccess="false" />
     <custom-audiences allowAllToAccess="false"/>
-    <protected-signals allowAllToAccess="false"/>
     <!--
-    <topics allowAllToAccess="false"/>
+    <protected-signals allowAllToAccess="false"/>
     -->
+    <topics allowAllToAccess="false"/>
     <adid allowAllToAccess="false"/>
     <appsetid allowAllToAccess="false"/>
 </ad-services-config>

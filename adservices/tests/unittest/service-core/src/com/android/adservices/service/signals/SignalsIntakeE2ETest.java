@@ -67,9 +67,9 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
@@ -144,7 +144,7 @@ public class SignalsIntakeE2ETest {
     private SignalEvictionController mSignalEvictionController;
     private AdTechUriValidator mAdtechUriValidator;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
+    private ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
     private EncoderLogicHandler mEncoderLogicHandler;
     private EncoderPersistenceDao mEncoderPersistenceDao;
     private ExecutorService mLightweightExecutorService;
@@ -206,8 +206,8 @@ public class SignalsIntakeE2ETest {
                                         DbTestUtil.getSharedDbHelperForTest(),
                                         FlagsFactory.getFlagsForTest()),
                                 mAdServicesLoggerMock));
-        mCustomAudienceServiceFilter =
-                new CustomAudienceServiceFilter(
+        mProtectedSignalsServiceFilter =
+                new ProtectedSignalsServiceFilter(
                         mContextSpy,
                         mConsentManagerMock,
                         FlagsFactory.getFlagsForTest(),
@@ -253,7 +253,7 @@ public class SignalsIntakeE2ETest {
                         AdServicesLoggerImpl.getInstance(),
                         FlagsFactory.getFlagsForTest(),
                         CallingAppUidSupplierProcessImpl.create(),
-                        mCustomAudienceServiceFilter);
+                        mProtectedSignalsServiceFilter);
     }
 
     @Test
