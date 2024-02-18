@@ -47,8 +47,8 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.CallingAppUidSupplier;
-import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -91,7 +91,7 @@ public class ProtectedSignalsServiceImplTest {
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     @Mock private Flags mFlagsMock;
     @Mock private CallingAppUidSupplier mCallingAppUidSupplierMock;
-    @Mock private CustomAudienceServiceFilter mCustomAudienceServiceFilterMock;
+    @Mock private ProtectedSignalsServiceFilter mProtectedSignalsServiceFilterMock;
     @Mock private UpdateSignalsCallback mUpdateSignalsCallbackMock;
 
     @Captor ArgumentCaptor<FledgeErrorResponse> mErrorCaptor;
@@ -124,7 +124,7 @@ public class ProtectedSignalsServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlagsMock,
                         mCallingAppUidSupplierMock,
-                        mCustomAudienceServiceFilterMock);
+                        mProtectedSignalsServiceFilterMock);
 
         mDevContext =
                 DevContext.builder()
@@ -138,7 +138,7 @@ public class ProtectedSignalsServiceImplTest {
         when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
         when(mFlagsMock.getEnforceForegroundStatusForSignals()).thenReturn(true);
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
-        when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
                         eq(false),
@@ -184,7 +184,7 @@ public class ProtectedSignalsServiceImplTest {
         verify(mCallingAppUidSupplierMock).getCallingAppUid();
         verify(mDevContextFilterMock).createDevContext();
         verify(mFlagsMock).getDisableFledgeEnrollmentCheck();
-        verify(mCustomAudienceServiceFilterMock)
+        verify(mProtectedSignalsServiceFilterMock)
                 .filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
@@ -247,7 +247,7 @@ public class ProtectedSignalsServiceImplTest {
 
     @Test
     public void testUpdateSignalsFilterException() throws Exception {
-        when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
                         eq(false),
