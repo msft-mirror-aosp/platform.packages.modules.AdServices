@@ -79,10 +79,17 @@ public abstract class DBScheduledCustomAudienceUpdate {
     @NonNull
     public abstract Instant getCreationTime();
 
+    /** Tracks if the update was created by a debuggable app or not */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "is_debuggable", defaultValue = "false")
+    public abstract boolean getIsDebuggable();
+
     /** Provides a {@link DBScheduledCustomAudienceUpdate.Builder} */
     @NonNull
     public static DBScheduledCustomAudienceUpdate.Builder builder() {
-        return new AutoValue_DBScheduledCustomAudienceUpdate.Builder().setUpdateId(null);
+        return new AutoValue_DBScheduledCustomAudienceUpdate.Builder()
+                .setUpdateId(null)
+                .setIsDebuggable(false);
     }
 
     /** Creates an instance of {@link DBScheduledCustomAudienceUpdate} */
@@ -93,7 +100,8 @@ public abstract class DBScheduledCustomAudienceUpdate {
             @NonNull AdTechIdentifier buyer,
             @NonNull Uri updateUri,
             @NonNull Instant scheduledTime,
-            @NonNull Instant creationTime) {
+            @NonNull Instant creationTime,
+            boolean isDebuggable) {
         return builder()
                 .setUpdateId(updateId)
                 .setOwner(owner)
@@ -101,6 +109,7 @@ public abstract class DBScheduledCustomAudienceUpdate {
                 .setUpdateUri(updateUri)
                 .setScheduledTime(scheduledTime)
                 .setCreationTime(creationTime)
+                .setIsDebuggable(isDebuggable)
                 .build();
     }
 
@@ -129,6 +138,10 @@ public abstract class DBScheduledCustomAudienceUpdate {
         /** see {@link #getCreationTime()} */
         @NonNull
         public abstract Builder setCreationTime(@NonNull Instant creationTime);
+
+        /** see {@link #getIsDebuggable()} */
+        @NonNull
+        public abstract Builder setIsDebuggable(boolean value);
 
         /** Builds a {@link DBScheduledCustomAudienceUpdate.Builder} */
         @NonNull

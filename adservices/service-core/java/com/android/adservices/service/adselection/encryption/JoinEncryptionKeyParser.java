@@ -38,7 +38,7 @@ public class JoinEncryptionKeyParser implements EncryptionKeyParser {
 
     // As per OHTTP key format
     // https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-02.html#section-3.1
-    private static int sJoinKeyIdSizeInBytes = 1;
+    private static final int JOIN_KEY_ID_SIZE_IN_BYTES = 1;
     private final Flags mFlags;
 
     public JoinEncryptionKeyParser(Flags flags) {
@@ -81,8 +81,8 @@ public class JoinEncryptionKeyParser implements EncryptionKeyParser {
         byte[] keyInBytes = BaseEncoding.base64().decode(response.getResponseBody());
         // As per OHTTP format, the first byte in the response bytes is the key identifier.
         // https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-02.html#section-3.1
-        byte[] keyId = new byte[sJoinKeyIdSizeInBytes];
-        System.arraycopy(keyInBytes, 0, keyId, 0, sJoinKeyIdSizeInBytes);
+        byte[] keyId = new byte[JOIN_KEY_ID_SIZE_IN_BYTES];
+        System.arraycopy(keyInBytes, 0, keyId, 0, JOIN_KEY_ID_SIZE_IN_BYTES);
 
         keyBuilder
                 .setEncryptionKeyType(

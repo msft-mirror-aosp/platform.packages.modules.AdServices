@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.spe.stats;
-
-import com.android.adservices.spe.AdServicesJobServiceLogger;
+package com.android.adservices.shared.spe.logging;
 
 import com.google.auto.value.AutoValue;
 
 /**
  * Class for AdServicesBackgroundJobsExecutionReportedStats atom. It's used by {@link
- * AdServicesJobServiceLogger}.
+ * JobServiceLogger}.
  */
 @AutoValue
 public abstract class ExecutionReportedStats {
@@ -50,6 +48,11 @@ public abstract class ExecutionReportedStats {
      */
     public abstract int getStopReason();
 
+    /**
+     * @return The module name for which the job run is being reported.
+     */
+    public abstract int getModuleName();
+
     /** Create an instance for {@link ExecutionReportedStats.Builder}. */
     public static ExecutionReportedStats.Builder builder() {
         return new AutoValue_ExecutionReportedStats.Builder();
@@ -72,6 +75,9 @@ public abstract class ExecutionReportedStats {
 
         /** Set job stop reason. */
         public abstract Builder setStopReason(int value);
+
+        /** Set module name. */
+        public abstract Builder setModuleName(int value);
 
         /** Build an instance of {@link ExecutionReportedStats}. */
         public abstract ExecutionReportedStats build();

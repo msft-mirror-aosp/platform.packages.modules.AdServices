@@ -37,20 +37,20 @@ import java.util.concurrent.ExecutorService;
 /** Class to encrypt and decrypt bytes using OHTTP. */
 public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private AdSelectionEncryptionKeyManager mEncryptionKeyManager;
+    private ProtectedServersEncryptionConfigManagerBase mEncryptionConfigManager;
     private ObliviousHttpRequestContextMarshaller mObliviousHttpRequestContextMarshaller;
 
     private ExecutorService mLightweightExecutor;
 
     public ObliviousHttpEncryptorImpl(
-            AdSelectionEncryptionKeyManager encryptionKeyManager,
+            ProtectedServersEncryptionConfigManagerBase encryptionConfigManager,
             EncryptionContextDao encryptionContextDao,
             ExecutorService lightweightExecutor) {
-        Objects.requireNonNull(encryptionKeyManager);
+        Objects.requireNonNull(encryptionConfigManager);
         Objects.requireNonNull(encryptionContextDao);
         Objects.requireNonNull(lightweightExecutor);
 
-        mEncryptionKeyManager = encryptionKeyManager;
+        mEncryptionConfigManager = encryptionConfigManager;
         mObliviousHttpRequestContextMarshaller =
                 new ObliviousHttpRequestContextMarshaller(encryptionContextDao);
         mLightweightExecutor = lightweightExecutor;
@@ -61,8 +61,8 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     public FluentFuture<byte[]> encryptBytes(
             byte[] plainText, long contextId, long keyFetchTimeoutMs) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.OHTTP_ENCRYPT_BYTES);
-        return mEncryptionKeyManager
-                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs)
+        return mEncryptionConfigManager
+                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, null)
                 .transform(
                         key -> {
                             byte[] serializedRequest =
