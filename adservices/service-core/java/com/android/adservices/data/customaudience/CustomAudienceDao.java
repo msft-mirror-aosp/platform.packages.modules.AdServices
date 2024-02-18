@@ -20,11 +20,13 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -42,6 +44,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -342,7 +345,6 @@ public abstract class CustomAudienceDao {
             "SELECT * FROM custom_audience_background_fetch_data WHERE owner = :owner AND buyer ="
                     + " :buyer AND name = :name AND is_debuggable = 1")
     @Nullable
-    @VisibleForTesting
     public abstract DBCustomAudienceBackgroundFetchData
             getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
                     @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
@@ -356,7 +358,6 @@ public abstract class CustomAudienceDao {
             "SELECT * FROM custom_audience_background_fetch_data "
                     + "WHERE owner = :owner AND buyer = :buyer AND is_debuggable = 1")
     @Nullable
-    @VisibleForTesting
     public abstract List<DBCustomAudienceBackgroundFetchData>
             listDebuggableCustomAudienceBackgroundFetchData(
                     @NonNull String owner, @NonNull AdTechIdentifier buyer);
@@ -817,6 +818,25 @@ public abstract class CustomAudienceDao {
         insertPartialCustomAudiencesForUpdate(dbPartialCustomAudienceList);
     }
 
+    /** Gets updates schedule before a given time along with its corresponding overrides */
+    @Transaction
+    public List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
+            getScheduledUpdatesAndOverridesBeforeTime(@NonNull Instant timestamp) {
+
+        List<DBScheduledCustomAudienceUpdate> scheduledUpdates =
+                getCustomAudienceUpdatesScheduledBeforeTime(timestamp);
+
+        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>> updatesList =
+                new ArrayList<>();
+        scheduledUpdates.forEach(
+                update ->
+                        updatesList.add(
+                                new Pair(
+                                        update,
+                                        getPartialAudienceListForUpdateId(update.getUpdateId()))));
+        return updatesList;
+    }
+
     /** Persists a delayed Custom Audience Update and generated a unique update_id */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract long insertScheduledCustomAudienceUpdate(
@@ -839,6 +859,14 @@ public abstract class CustomAudienceDao {
     /** Gets list of delayed Custom Audience Updates created before the given time */
     @Query("DELETE FROM scheduled_custom_audience_update WHERE creation_time <= :timestamp")
     public abstract void deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(Instant timestamp);
+
+    /**
+     * Removes a Custom Audience Update from storage and cascades the deletion to associated Partial
+     * Custom Audiences for overrides
+     */
+    @Delete
+    public abstract void deleteScheduledCustomAudienceUpdate(
+            @NonNull DBScheduledCustomAudienceUpdate update);
 
     @VisibleForTesting
     static class BiddingLogicJsWithVersion {

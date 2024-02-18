@@ -21,7 +21,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.SingletonRunner;
@@ -30,7 +29,6 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 
-import java.time.Clock;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -56,15 +54,7 @@ public class KAnonSignJoinBackgroundJobWorker {
                         new KAnonSignJoinBackgroundJobWorker(
                                 context,
                                 FlagsFactory.getFlags(),
-                                new KAnonSignJoinManager(
-                                        new KAnonCallerImpl(),
-                                        new KAnonMessageManager(
-                                                KAnonDatabase.getInstance(context)
-                                                        .kAnonMessageDao(),
-                                                FlagsFactory.getFlags(),
-                                                Clock.systemUTC()),
-                                        FlagsFactory.getFlags(),
-                                        Clock.systemUTC()));
+                                new KAnonSignJoinFactory(context).getKAnonSignJoinManager());
             }
         }
         return sKAnonSignJoinBackgroundJobWorker;

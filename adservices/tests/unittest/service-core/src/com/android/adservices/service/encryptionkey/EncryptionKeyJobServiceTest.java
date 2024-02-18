@@ -17,6 +17,7 @@
 package com.android.adservices.service.encryptionkey;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
+import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -40,7 +41,6 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -48,8 +48,6 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -86,10 +84,9 @@ public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockito
     public void setUp() {
         extendedMockito.mockGetFlags(mMockFlags);
         mSpyService = spy(new EncryptionKeyJobService());
-        mSpyLogger =
-                spy(
-                        new AdServicesJobServiceLogger(
-                                sContext, Clock.SYSTEM_CLOCK, mock(StatsdAdServicesLogger.class)));
+
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(sContext, mMockFlags);
+
         setDefaultExpectations();
     }
 

@@ -597,13 +597,9 @@ public class AsyncSourceFetcher {
 
             summaryBuckets = TriggerSpec.getLongListFromJSON(maybeSummaryBucketsJson.get());
 
-            if (summaryBuckets.size() > maxEventLevelReports) {
+            if (summaryBuckets.isEmpty() || summaryBuckets.size() > maxEventLevelReports) {
                 return Optional.empty();
             }
-        }
-        if ((summaryBuckets == null || summaryBuckets.isEmpty())
-                && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
-            return Optional.empty();
         }
 
         if (summaryBuckets != null && !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
@@ -945,7 +941,8 @@ public class AsyncSourceFetcher {
 
     private static long roundSecondsToWholeDays(long seconds) {
         long remainder = seconds % ONE_DAY_IN_SECONDS;
-        boolean roundUp = remainder >= ONE_DAY_IN_SECONDS / 2L;
+        // Return value should be at least one whole day.
+        boolean roundUp = (remainder >= ONE_DAY_IN_SECONDS / 2L) || (seconds == remainder);
         return seconds - remainder + (roundUp ? ONE_DAY_IN_SECONDS : 0);
     }
 

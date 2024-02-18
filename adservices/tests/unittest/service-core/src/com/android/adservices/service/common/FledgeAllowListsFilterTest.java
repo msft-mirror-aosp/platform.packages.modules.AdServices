@@ -107,7 +107,7 @@ public class FledgeAllowListsFilterTest {
                         eq(API_NAME_LOGGING_ID),
                         anyInt(),
                         eq(
-                                new ApiCallStats.Result(
+                                ApiCallStats.failureResult(
                                         STATUS_CALLER_NOT_ALLOWED,
                                         FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST)));
 

@@ -23,6 +23,9 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
@@ -225,7 +228,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND));
             if (mEnrollmentUtil != null) {
                 mEnrollmentUtil.logEnrollmentFailedStats(
@@ -248,7 +251,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED,
                             FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION));
             mEnrollmentUtil.logEnrollmentFailedStats(
@@ -270,7 +273,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_ENROLLMENT_BLOCKLISTED));
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
@@ -299,7 +302,8 @@ public class FledgeAuthorizationFilter {
             @NonNull Context context,
             @NonNull String appPackageName,
             @NonNull Uri uriForAdTech,
-            int apiNameLoggingId)
+            int apiNameLoggingId,
+            @AppManifestConfigCall.ApiType int apiType)
             throws AdTechNotAllowedException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appPackageName);
@@ -312,6 +316,7 @@ public class FledgeAuthorizationFilter {
             dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
         }
         int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
+        // TODO(b/322358157): Check PAS enrollment if apiType = API_PROTECTED_SIGNALS
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(uriForAdTech);
 
@@ -322,7 +327,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND));
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
@@ -338,18 +343,29 @@ public class FledgeAuthorizationFilter {
         EnrollmentData enrollmentData = enrollmentResult.second;
 
         int failureReason;
-        boolean isAllowedCustomAudiencesAccess =
-                AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                        appPackageName, enrollmentData.getEnrollmentId());
+
+        boolean isAllowedAccess;
+        if (apiType == API_CUSTOM_AUDIENCES) {
+            isAllowedAccess =
+                    AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                            appPackageName, enrollmentData.getEnrollmentId());
+        } else if (apiType == API_PROTECTED_SIGNALS) {
+            isAllowedAccess =
+                    AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
+                            appPackageName, enrollmentData.getEnrollmentId());
+        } else {
+            throw new IllegalStateException(String.format("Invalid apiType: %d", apiType));
+        }
+
         boolean isEnrollmentBlocklisted =
                 FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
         int errorCause = EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue();
-        if (!isAllowedCustomAudiencesAccess || isEnrollmentBlocklisted) {
+        if (!isAllowedAccess || isEnrollmentBlocklisted) {
             sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" from URI \"%s\" not"
                             + " authorized to call API %d",
                     appPackageName, adTechIdentifier.toString(), uriForAdTech, apiNameLoggingId);
-            if (!isAllowedCustomAudiencesAccess) {
+            if (!isAllowedAccess) {
                 failureReason = FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
             } else {
                 failureReason = FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
@@ -359,7 +375,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(STATUS_CALLER_NOT_ALLOWED, failureReason));
+                    ApiCallStats.failureResult(STATUS_CALLER_NOT_ALLOWED, failureReason));
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
                     buildId,
@@ -395,7 +411,7 @@ public class FledgeAuthorizationFilter {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     /* latencyMs= */ 0,
-                    new ApiCallStats.Result(
+                    ApiCallStats.failureResult(
                             STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND));
 
             int buildId = -1;

@@ -20,8 +20,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
-
-
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
@@ -46,66 +45,70 @@ public final class SettingsGaUxSelectorUiAutomatorTest extends AdServicesUiTestC
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
+                    .setFlag(KEY_PAS_UX_ENABLED, false)
                     .setCompatModeFlags();
 
     @Test
     public void settingsRemoveMainToggleAndMeasurementEntryTest() throws Exception {
-        SettingsTestUtil.settingsRemoveMainToggleAndMeasurementEntryTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.settingsRemoveMainToggleAndMeasurementEntryTestUtil(mDevice);
     }
 
     @Test
     @FlakyTest(bugId = 299829948)
     public void measurementDialogTest() throws Exception {
-        SettingsTestUtil.measurementDialogTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.measurementDialogTestUtil(mDevice);
     }
 
     @Test
     public void topicsToggleTest() throws Exception {
-        SettingsTestUtil.topicsToggleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.topicsToggleTestUtil(mDevice);
     }
 
     @Test
-    @FlakyTest(bugId = 299152923)
     public void fledgeToggleTest() throws Exception {
-        SettingsTestUtil.fledgeToggleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.fledgeToggleTestUtil(mDevice);
     }
 
     @Test
     public void measurementToggleTest() throws Exception {
-        SettingsTestUtil.measurementToggleTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.measurementToggleTestUtil(mDevice);
     }
 
     @Test
-    public void topicsSubTitleTest() throws Exception {
-        SettingsTestUtil.topicsSubTitleTestUtil(mSpyContext, mDevice);
+    public void topicsSubtitleTest() throws Exception {
+        SettingsTestUtil.topicsSubtitleTestUtil(mDevice);
     }
 
     @Test
-    @FlakyTest(bugId = 299152542)
-    public void appsSubTitleTest() throws Exception {
-        SettingsTestUtil.appsSubTitleTestUtil(mSpyContext, mDevice);
+    public void appsSubtitleTest() throws Exception {
+        SettingsTestUtil.appsSubtitleTestUtil(mDevice);
     }
 
     @Test
-    public void measurementSubTitleTest() throws Exception {
-        SettingsTestUtil.measurementSubTitleTestUtil(mSpyContext, mDevice);
+    public void measurementSubtitleTest() throws Exception {
+        SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
     }
 
     @Test
     public void topicsToggleDialogTest() throws Exception {
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
-        SettingsTestUtil.topicsToggleDialogTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.topicsToggleDialogTestUtil(mDevice);
     }
 
     @Test
     @FlakyTest(bugId = 299153376)
     public void appsToggleDialogTest() throws Exception {
-        SettingsTestUtil.appsToggleDialogTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.appsToggleDialogTestUtil(mDevice);
     }
 
     @Test
     @FlakyTest(bugId = 301779357)
     public void measurementToggleDialogTest() throws Exception {
-        SettingsTestUtil.measurementToggleDialogTestUtil(mSpyContext, mDevice);
+        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice);
+    }
+
+    @Test
+    public void fledgeViewTextPasEnabledTest() throws Exception {
+        SettingsTestUtil.fledgeViewTextPasEnabledTest(mDevice);
     }
 }

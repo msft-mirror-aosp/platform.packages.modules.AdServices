@@ -30,6 +30,7 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -50,7 +51,7 @@ public final class AdServicesExtDataStorageServiceWorker {
     private AdServicesExtDataStorageServiceWorker(Context context) {
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
-                        context,
+                        ApplicationContextSingleton.get(),
                         AdServicesExtDataStorageService.SERVICE_INTERFACE,
                         IAdServicesExtDataStorageService.Stub::asInterface);
         mDebugProxy = AdServicesExtDataStorageServiceDebugProxy.getInstance(context);

@@ -154,6 +154,7 @@ public class BackgroundJobsManager {
      *   <li>{@link EpochJobService}
      *   <li>{@link MaintenanceJobService}
      *   <li>{@link MddJobService}
+     *   <li>{@link EncryptionKeyJobService}
      *   <li>{@link CobaltJobService}
      * </ul>
      *
@@ -209,12 +210,14 @@ public class BackgroundJobsManager {
      *   <li>{@link DeleteUninstalledJobService}
      *   <li>{@link AsyncRegistrationQueueJobService}
      *   <li>{@link MddJobService}
+     *   <li>{@link EncryptionKeyJobService}
+     *   <li>{@link CobaltJobService}
      * </ul>
      *
      * @param context application context.
      */
     public static void scheduleMeasurementBackgroundJobs(@NonNull Context context) {
-        if (!FlagsFactory.getFlags().getMeasurementKillSwitch()) {
+        if (FlagsFactory.getFlags().getMeasurementEnabled()) {
             AggregateReportingJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             AggregateFallbackReportingJobService.scheduleIfNeeded(
                     context, /* forceSchedule= */ false);
@@ -232,6 +235,7 @@ public class BackgroundJobsManager {
             DebugReportingFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             scheduleMddBackgroundJobs(context);
             scheduleEncryptionKeyBackgroundJobs(context);
+            scheduleCobaltBackgroundJob(context);
         }
     }
 

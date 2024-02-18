@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection.encryption;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -52,7 +52,6 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -104,9 +103,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
     @Mock private BackgroundKeyFetchWorker mBgFWorkerMock;
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     @Mock private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setup() {
@@ -114,8 +111,6 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID));
-
-        mSpyLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
     }
 
     @After
@@ -210,6 +205,9 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
                 new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
         extendedMockito.mockGetFlags(flagsWithEnabledBgFGaUxDisabledWithoutLogging);
+        AdServicesJobServiceLogger spyLogger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
@@ -235,7 +233,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(spyLogger);
     }
 
     @Test

@@ -30,6 +30,12 @@ public interface AdServicesLogger {
     /** log UIStats which has stats about UI events. */
     void logUIStats(UIStats uiStats);
 
+    /**
+     * Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object with app
+     * package name, if enabled.
+     */
+    void logFledgeApiCallStats(int apiName, String appPackageName, int resultCode, int latencyMs);
+
     /** Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object. */
     void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs);
 
@@ -151,4 +157,7 @@ public interface AdServicesLogger {
 
     /** Logs call to {@link AppManifestConfigHelper} to check if app is allowed to access an API. */
     void logAppManifestConfigCall(AppManifestConfigCall call);
+
+    /** Logs status for {@link com.android.adservices.service.kanon.KAnonSignJoinManager}. */
+    void logKAnonSignJoinStatus();
 }

@@ -96,7 +96,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -2012,7 +2012,7 @@ public final class MeasurementServiceImplTest {
         return new MeasurementServiceImpl(
                 mMockMeasurementImpl,
                 mMockContext,
-                Clock.SYSTEM_CLOCK,
+                Clock.getInstance(),
                 mMockConsentManager,
                 mMockThrottler,
                 new CachedFlags(mMockFlags),

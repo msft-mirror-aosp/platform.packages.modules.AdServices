@@ -88,8 +88,9 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -184,6 +185,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     @Mock private File mAdSelectionDbFileMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private FledgeAllowListsFilter mFledgeAllowListsFilterMock;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private CustomAudienceDao mCustomAudienceDao;
@@ -278,6 +280,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         mInputParams =
@@ -297,7 +300,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                 .createDevContext();
 
         // Required stubs for Ad Selection loggers
-        doReturn(Clock.SYSTEM_CLOCK.elapsedRealtime() - 100)
+        doReturn(Clock.getInstance().elapsedRealtime() - 100)
                 .when(mCallerMetadataMock)
                 .getBinderElapsedTimestamp();
         doReturn(mAdSelectionDbFileMock).when(mSpyContext).getDatabasePath(any());
@@ -440,6 +443,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
@@ -510,6 +514,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                             mObliviousHttpEncryptor,
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
+                            mUnusedKAnonSignJoinFactory,
                             false);
 
             UpdateAdCounterHistogramTestCallback callback =
@@ -761,6 +766,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Persist ad selections
@@ -877,6 +883,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Persist ad selections

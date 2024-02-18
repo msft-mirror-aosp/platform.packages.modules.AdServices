@@ -225,7 +225,7 @@ public class EnrollmentDataDownloadManager {
                     EnrollmentData enrollmentData =
                             new EnrollmentData.Builder()
                                     .setEnrollmentId(enrollmentId)
-                                    .setCompanyId(data[1])
+                                    .setEnrolledAPIs(data[1])
                                     .setSdkNames(data[2])
                                     .setAttributionSourceRegistrationUrl(
                                             data[3].contains(" ")

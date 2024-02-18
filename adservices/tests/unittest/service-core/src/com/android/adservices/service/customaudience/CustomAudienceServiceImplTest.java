@@ -29,6 +29,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
@@ -104,7 +105,6 @@ import org.mockito.Mockito;
 import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
-
 @RequiresSdkLevelAtLeastS()
 @MockStatic(BackgroundFetchJobService.class)
 public final class CustomAudienceServiceImplTest extends AdServicesExtendedMockitoTestCase {
@@ -339,7 +339,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
+                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -382,7 +384,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 mICustomAudienceCallbackMock));
 
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -394,7 +398,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 VALID_CUSTOM_AUDIENCE, null, mICustomAudienceCallbackMock));
 
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                null,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -406,7 +412,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, null));
 
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -648,6 +656,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+                TEST_PACKAGE_NAME,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -783,7 +792,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         eq(AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE),
                         eq(AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE));
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
+                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -828,7 +839,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 mICustomAudienceCallbackMock));
 
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                null,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -843,7 +856,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 mICustomAudienceCallbackMock));
 
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -858,7 +873,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 mICustomAudienceCallbackMock));
 
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -873,7 +890,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 null));
 
         verifyLoggerMock(
-                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_INVALID_ARGUMENT);
+                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -1995,12 +2014,17 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verify(mAdServicesLoggerMock).logFledgeApiCallStats(eq(apiName), eq(statusCode), anyInt());
     }
 
+    private void verifyLoggerMock(int apiName, String appPackageName, int statusCode) {
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(eq(apiName), eq(appPackageName), eq(statusCode), anyInt());
+    }
+
     private void verifyLoggerMock(int apiName, int statusCode, int failureReason) {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(apiName),
                         anyInt(),
-                        eq(new ApiCallStats.Result(statusCode, failureReason)));
+                        eq(ApiCallStats.failureResult(statusCode, failureReason)));
     }
 
     private static class FlagsWithCheckEnabledSwitch implements Flags {

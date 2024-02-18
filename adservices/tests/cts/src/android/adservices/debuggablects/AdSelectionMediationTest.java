@@ -18,7 +18,6 @@ package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
-
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -27,6 +26,8 @@ import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
+
+import androidx.test.filters.FlakyTest;
 
 import org.junit.Test;
 
@@ -69,6 +70,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
      * CUJ 075.
      */
     @Test
+    @FlakyTest(bugId = 325497525)
     public void testSelectAds_withImpressionReporting_eventsAreReceived() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
