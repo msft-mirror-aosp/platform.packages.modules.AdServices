@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.adservices.shared.common;
+package com.android.adservices.shared.proto;
 
 import android.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
+
+import com.android.adservices.shared.util.LogUtil;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
@@ -29,14 +30,13 @@ import java.util.Objects;
 
 /** Helper class that provides utility to parse Base64 encoded string to a proto. */
 public final class ProtoParser {
-
-    private static final String TAG = ProtoParser.class.getSimpleName();
-
     private ProtoParser() {
         throw new UnsupportedOperationException("static methods present");
     }
 
     /**
+     * Parses Base64 encoded string to a proto object.
+     *
      * @param parser A protobuf parser object. e.g. MyProto.parser()
      * @param property The property which needs to be decoded
      * @param value Base64 encoded String
@@ -46,7 +46,7 @@ public final class ProtoParser {
     public static <T extends MessageLite> T parseBase64EncodedStringToProto(
             Parser<T> parser, String property, String value) {
         if (TextUtils.isEmpty(value)) {
-            Log.d(TAG, "Property " + property + " is empty.");
+            LogUtil.d("Property %s is empty.", property);
             return null;
         }
 
@@ -60,7 +60,7 @@ public final class ProtoParser {
             proto = parser.parseFrom(decode);
         } catch (InvalidProtocolBufferException e) {
             // TODO(b/315382750): Add CEL for this
-            Log.e(TAG, "Error while parsing " + property + ". Error: ", e);
+            LogUtil.e(e, "Error while parsing %s. Error: ", property);
         }
 
         return proto;
@@ -78,7 +78,7 @@ public final class ProtoParser {
             return Base64.decode(base64value, Base64.NO_PADDING | Base64.NO_WRAP);
         } catch (IllegalArgumentException e) {
             // TODO(b/315382750): Add CEL for this
-            Log.e(TAG, "Error while decoding " + property + " Error: " + e);
+            LogUtil.e(e, "Error while decoding %s. Error: ", property);
         }
         return null;
     }

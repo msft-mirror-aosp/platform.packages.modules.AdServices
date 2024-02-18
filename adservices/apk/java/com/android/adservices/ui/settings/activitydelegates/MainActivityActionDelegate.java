@@ -163,7 +163,9 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initGaUxWithPas() {}
+    public void initGaUxWithPas() {
+        initGA();
+    }
 
     private void listenToMainViewModelUiEvents() {
         Observer<MainViewModel.MainViewModelUiEvent> observer =

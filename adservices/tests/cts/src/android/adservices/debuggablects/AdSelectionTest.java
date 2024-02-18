@@ -16,6 +16,8 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -37,6 +39,7 @@ import android.util.Log;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.MoreExecutors;
@@ -121,6 +124,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * reporting URI (Remarketing CUJ 160).
      */
     @Test
+    @FlakyTest(bugId = 325344134)
     public void testAdSelection_withAdCostInUrl_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
@@ -151,6 +155,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
      */
     @FlakyTest(bugId = 299871209)
     @Test
+    @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testAdSelection_withAdCostInUrl_adCostIsReported() throws Exception {
         ScenarioDispatcher dispatcher =
                 ScenarioDispatcher.fromScenario(
@@ -160,7 +165,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
         long adSelectionId;
 
         try {
-            overrideRegisterAdBeaconEnabled(true);
             overrideCpcBillingEnabled(true);
             joinCustomAudience(SHOES_CA);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
@@ -168,7 +172,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
             doReportImpression(adSelectionId, adSelectionConfig);
             doReportEvent(adSelectionId, "click");
         } finally {
-            overrideRegisterAdBeaconEnabled(false);
             overrideCpcBillingEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
