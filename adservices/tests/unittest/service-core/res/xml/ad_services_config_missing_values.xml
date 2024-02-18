@@ -17,6 +17,7 @@
 <ad-services-config>
     <attribution />
     <custom-audiences />
+    <protected-signals />
     <topics />
     <adid />
     <appsetid />

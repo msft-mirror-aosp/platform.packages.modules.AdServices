@@ -43,9 +43,9 @@ import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
-import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
@@ -86,7 +86,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     @NonNull private final Flags mFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
 
-    @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
+    @NonNull private final ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
 
     private ProtectedSignalsServiceImpl(@NonNull Context context) {
         this(
@@ -115,7 +115,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 AdServicesLoggerImpl.getInstance(),
                 FlagsFactory.getFlags(),
                 CallingAppUidSupplierBinderImpl.create(),
-                new CustomAudienceServiceFilter(
+                new ProtectedSignalsServiceFilter(
                         context,
                         ConsentManager.getInstance(),
                         FlagsFactory.getFlags(),
@@ -143,14 +143,14 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
-            @NonNull CustomAudienceServiceFilter customAudienceServiceFilter) {
+            @NonNull ProtectedSignalsServiceFilter protectedSignalsServiceFilter) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(updateSignalsOrchestrator);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(customAudienceServiceFilter);
+        Objects.requireNonNull(protectedSignalsServiceFilter);
 
         mContext = context;
         mUpdateSignalsOrchestrator = updateSignalsOrchestrator;
@@ -161,7 +161,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
         mCallingAppUidSupplier = callingAppUidSupplier;
-        mCustomAudienceServiceFilter = customAudienceServiceFilter;
+        mProtectedSignalsServiceFilter = protectedSignalsServiceFilter;
     }
 
     /** Creates a new instance of {@link ProtectedSignalsServiceImpl}. */
@@ -222,11 +222,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             try {
                 AdTechIdentifier buyer;
                 try {
-                    /* Filter and validate request -- the custom audience filter does what we need
-                     * so I don't see much value in creating a new one.
-                     */
                     buyer =
-                            mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
+                            mProtectedSignalsServiceFilter.filterRequestAndExtractIdentifier(
                                     input.getUpdateUri(),
                                     input.getCallerPackageName(),
                                     mFlags.getDisableFledgeEnrollmentCheck(),
