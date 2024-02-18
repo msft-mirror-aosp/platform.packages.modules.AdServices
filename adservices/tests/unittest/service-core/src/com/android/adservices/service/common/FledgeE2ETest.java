@@ -2337,7 +2337,7 @@ public class FledgeE2ETest {
         initClients(true, true, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
-                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2499,7 +2499,7 @@ public class FledgeE2ETest {
         initClients(true, true, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
-                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2663,7 +2663,7 @@ public class FledgeE2ETest {
         initClients(true, true, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
-                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2837,7 +2837,7 @@ public class FledgeE2ETest {
         initClients(true, true, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
-                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
