@@ -68,6 +68,18 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
 import private_join_and_compute.anonymous_counting_tokens.ClientPrivateParameters;
@@ -85,18 +97,6 @@ import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters
 import private_join_and_compute.anonymous_counting_tokens.Token;
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
-
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 public class KAnonCallerImpl implements KAnonCaller {
 
@@ -778,7 +778,8 @@ public class KAnonCallerImpl implements KAnonCaller {
                             mKAnonObliviousHttpEncryptor.encryptBytes(
                                     dataInBinaryHttpMessage,
                                     message.getAdSelectionId(),
-                                    mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs()))
+                                    mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs(),
+                                    null))
                     .transformAsync(
                             byteRequest ->
                                     immediateFuture(
