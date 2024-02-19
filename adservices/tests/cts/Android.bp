@@ -159,6 +159,7 @@ android_test {
         "android.test.runner",
         "android.test.base",
         "framework-adservices-lib",
+        "framework-configinfrastructure",
     ],
     srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
@@ -205,6 +206,7 @@ android_test {
         "android.test.runner",
         "android.test.base",
         "framework-adservices-lib",
+        "framework-configinfrastructure",
     ],
     srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
