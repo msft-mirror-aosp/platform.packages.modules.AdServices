@@ -263,4 +263,19 @@ public class KAnonMessageDaoTest {
         assertThat(idsNotDeleted).contains(messageIdToNotDelete1);
         assertThat(idsNotDeleted).contains(messageIdToNotDelete2);
     }
+
+    @Test
+    public void testInsertAllMessages_generatesAndReturnsMessageId() {
+        DBKAnonMessage message1 = mDefaultDBKAnonMessageBuilder.build();
+
+        long[] messageIds = mKAnonMessageDao.insertAllKAnonMessages(List.of(message1));
+
+        List<DBKAnonMessage> fetchedDBKAnonMessagesList =
+                mKAnonMessageDao.getNLatestKAnonMessagesWithStatus(
+                        2, KAnonMessageConstants.MessageStatus.SIGNED);
+
+        assertThat(messageIds.length).isEqualTo(1);
+        assertThat(fetchedDBKAnonMessagesList.size()).isEqualTo(1);
+        assertThat(fetchedDBKAnonMessagesList.get(0).getMessageId()).isEqualTo(messageIds[0]);
+    }
 }
