@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import android.net.Uri;
+
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ohttp.ObliviousHttpClient;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
@@ -53,7 +57,10 @@ public class KAnonObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
      */
     @Override
     public FluentFuture<byte[]> encryptBytes(
-            byte[] plainText, long contextId, long keyFetchTimeoutMs) {
+            byte[] plainText,
+            long contextId,
+            long keyFetchTimeoutMs,
+            @Nullable Uri unusedCoordinatorUri) {
         return mEncryptionKeyManager
                 .getLatestOhttpKeyConfigOfType(
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,

@@ -32,6 +32,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -291,7 +292,6 @@ public class GetAdSelectionDataRunner {
                                     // Validate the coordinator origin URI
                                     mCoordinatorOriginUriValidator.validate(
                                             inputParams.getCoordinatorOriginUri());
-
                                 } finally {
                                     sLogger.v("Completed filtering.");
                                 }
@@ -305,7 +305,8 @@ public class GetAdSelectionDataRunner {
                                             orchestrateGetAdSelectionDataRunner(
                                                     inputParams.getSeller(),
                                                     adSelectionId,
-                                                    inputParams.getCallerPackageName()),
+                                                    inputParams.getCallerPackageName(),
+                                                    inputParams.getCoordinatorOriginUri()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -346,7 +347,10 @@ public class GetAdSelectionDataRunner {
     }
 
     private ListenableFuture<byte[]> orchestrateGetAdSelectionDataRunner(
-            @NonNull AdTechIdentifier seller, long adSelectionId, @NonNull String packageName) {
+            @NonNull AdTechIdentifier seller,
+            long adSelectionId,
+            @NonNull String packageName,
+            @Nullable Uri coordinatorUrl) {
         Objects.requireNonNull(seller);
         Objects.requireNonNull(packageName);
 
@@ -362,7 +366,10 @@ public class GetAdSelectionDataRunner {
                         formatted -> {
                             sLogger.v("Encrypting composed proto bytes");
                             return mObliviousHttpEncryptor.encryptBytes(
-                                    formatted.getData(), adSelectionId, keyFetchTimeout);
+                                    formatted.getData(),
+                                    adSelectionId,
+                                    keyFetchTimeout,
+                                    coordinatorUrl);
                         },
                         mLightweightExecutorService)
                 .transformAsync(
