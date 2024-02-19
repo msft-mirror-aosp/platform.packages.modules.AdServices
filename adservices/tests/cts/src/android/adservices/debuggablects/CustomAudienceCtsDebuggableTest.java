@@ -67,7 +67,7 @@ public class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest
 
     @Rule(order = 2)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+            AdServicesFlagsSetterRule.forAllApisEnabledTests()
                     .setCompatModeFlags()
                     .setPpapiAppAllowList(sContext.getPackageName());
 
