@@ -81,7 +81,7 @@ public class ObliviousHttpEncryptorImplTest {
     public void test_encryptBytes_invalidPlainText() {
         assertThrows(
                 NullPointerException.class,
-                () -> mObliviousHttpEncryptor.encryptBytes(null, 1L, 1000L));
+                () -> mObliviousHttpEncryptor.encryptBytes(null, 1L, 1000L, null));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class ObliviousHttpEncryptorImplTest {
                                 .lowerCase()
                                 .encode(
                                         mObliviousHttpEncryptor
-                                                .encryptBytes(plainTextBytes, 1L, 1000L)
+                                                .encryptBytes(plainTextBytes, 1L, 1000L, null)
                                                 .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
@@ -134,7 +134,7 @@ public class ObliviousHttpEncryptorImplTest {
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
 
         byte[] encryptedBytes =
-                mObliviousHttpEncryptor.encryptBytes(plainTextBytes, 1L, 1000L).get();
+                mObliviousHttpEncryptor.encryptBytes(plainTextBytes, 1L, 1000L, null).get();
 
         assertThat(encryptedBytes).isNotNull();
         assertThat(encryptedBytes).isNotEmpty();
