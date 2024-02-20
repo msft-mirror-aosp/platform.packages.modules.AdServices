@@ -910,6 +910,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
+import android.util.Log;
 
 import androidx.test.filters.SmallTest;
 
@@ -4348,32 +4349,37 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mPhFlags.getAdServicesEnabled()).isFalse();
     }
 
-    private void setMeasurementKillSwitch(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_KILL_SWITCH,
-                Boolean.toString(value),
-                /* makeDefault */ false);
-    }
-
     @Test
     public void testGetMeasurementEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
 
         boolean defaultKsValue = MEASUREMENT_KILL_SWITCH;
+        boolean phOverridingKsValue = !defaultKsValue;
+        boolean expectedDefaultValue = !defaultKsValue;
+        boolean expectedOverriddenValue = !expectedDefaultValue;
+        Log.v(
+                mTag,
+                "defaultKsValue(MEASUREMENT_KILL_SWITCH)="
+                        + defaultKsValue
+                        + ", phOverridingKsValue="
+                        + phOverridingKsValue
+                        + ", expectedDefaultValue="
+                        + expectedDefaultValue
+                        + ", expectedOverriddenValue="
+                        + expectedOverriddenValue);
+
         // Without any overriding, the value is the hard coded constant.
         expect.withMessage("getMeasurementEnabled() by default")
                 .that(mPhFlags.getMeasurementEnabled())
-                .isEqualTo(!defaultKsValue);
+                .isEqualTo(expectedDefaultValue);
 
         // Now overriding with the value from PH.
-        boolean phOverridingKsValue = !defaultKsValue;
         setMeasurementKillSwitch(phOverridingKsValue);
 
         expect.withMessage("getMeasurementEnabled() when set by device_config")
                 .that(mPhFlags.getMeasurementEnabled())
-                .isEqualTo(!phOverridingKsValue);
+                .isEqualTo(expectedOverriddenValue);
     }
 
     @Test
@@ -4960,6 +4966,68 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         assertThat(mPhFlags.getMeasurementVerboseDebugReportingFallbackJobKillSwitch())
                 .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionFallbackJobEnabled() {
+        // Disable kill_switches so that this flag can be tested.
+        disableGlobalKillSwitch();
+        setMeasurementKillSwitch(false);
+
+        boolean defaultKsValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        boolean phOverridingKsValue = !defaultKsValue;
+        boolean expectedDefaultValue = !defaultKsValue;
+        boolean expectedOverriddenValue = !expectedDefaultValue;
+        Log.v(
+                mTag,
+                "defaultKsValue(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH)="
+                        + defaultKsValue
+                        + ", phOverridingKsValue="
+                        + phOverridingKsValue
+                        + ", expectedDefaultValue="
+                        + expectedDefaultValue
+                        + ", expectedOverriddenValue="
+                        + expectedOverriddenValue);
+
+        // Without any overriding, the value is the hard coded constant.
+        expect.withMessage("getMeasurementAttributionFallbackJobEnabled() by default")
+                .that(mPhFlags.getMeasurementAttributionFallbackJobEnabled())
+                .isEqualTo(expectedDefaultValue);
+
+        // Now overriding with the value from PH.
+        setMeasurementAttributionFallbackJobKillSwitch(phOverridingKsValue);
+
+        expect.withMessage(
+                        "getMeasurementAttributionFallbackJobEnabled() when set by device_config")
+                .that(mPhFlags.getMeasurementAttributionFallbackJobEnabled())
+                .isEqualTo(expectedOverriddenValue);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionFallbackJobEnabled_measurementOverride() {
+        disableGlobalKillSwitch();
+        setMeasurementKillSwitch(true);
+        setMeasurementAttributionFallbackJobKillSwitch(false);
+
+        // should be false because global kill-switch is on
+        expect.withMessage(
+                        "getMeasurementAttributionFallbackJobEnabled() when msmt_kill_switch is on")
+                .that(mPhFlags.getMeasurementAttributionFallbackJobEnabled())
+                .isFalse();
+    }
+
+    @Test
+    public void testGetMeasurementAttributionFallbackJobEnabled_globalOverride() {
+        enableGlobalKillSwitch();
+        setMeasurementKillSwitch(false);
+        setMeasurementAttributionFallbackJobKillSwitch(false);
+
+        // should be false because msmt kill-switch is on
+        expect.withMessage(
+                        "getMeasurementAttributionFallbackJobEnabled() when global kill switch is"
+                                + " on")
+                .that(mPhFlags.getMeasurementAttributionFallbackJobEnabled())
+                .isFalse();
     }
 
     @Test
@@ -10593,5 +10661,27 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         assertThat(mPhFlags.getBackgroundJobsLoggingKillSwitch()).isEqualTo(overridingValue);
         assertThat(mPhFlags.getBackgroundJobsLoggingEnabled()).isEqualTo(!overridingValue);
+    }
+
+    private void setMeasurementKillSwitch(boolean value) {
+        setDeviceConfigFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
+    }
+
+    private void setMeasurementAttributionFallbackJobKillSwitch(boolean value) {
+        setDeviceConfigFlag(KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH, value);
+    }
+
+    private void setDeviceConfigFlag(String name, boolean value) {
+        Log.d(
+                mTag,
+                "setDeviceConfigFlag(): "
+                        + KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH
+                        + " to "
+                        + value);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                name,
+                Boolean.toString(value),
+                /* makeDefault= */ false);
     }
 }

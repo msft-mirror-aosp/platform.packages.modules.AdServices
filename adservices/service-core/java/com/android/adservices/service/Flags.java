@@ -613,11 +613,22 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
 
-    /** Returns the kill switch for Attribution Fallback Job . */
+    /**
+     * @deprecated TODO(b/325074749): remove in the CL that change callers to use
+     *     getMeasurementAttributionFallbackJobEnabled()
+     */
+    @Deprecated
     default boolean getMeasurementAttributionFallbackJobKillSwitch() {
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    /** Returns the feature flag for Attribution Fallback Job . */
+    default boolean getMeasurementAttributionFallbackJobEnabled() {
+        return getGlobalKillSwitch()
+                ? false
+                : getMeasurementEnabled() && !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
     }
 
     long MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
