@@ -208,8 +208,11 @@ public class AuctionServerE2ETest {
     private static final String SELLER_INTERACTION_URI =
             CommonFixture.getUri(SELLER, "/interaction").toString();
 
-    private static final String COORDINATOR_URL = "https://example.com";
-    private static final String DEFAULT_FETCH_URI = "https://default-example.com";
+    private static final String COORDINATOR_URL = "https://example.com/keys";
+    private static final String COORDINATOR_HOST = "https://example.com";
+    private static final String DEFAULT_FETCH_URI = "https://default-example.com/keys";
+    private static final String DEFAULT_FETCH_HOST = "https://default-example.com";
+
     private static final String COORDINATOR_ALLOWLIST = COORDINATOR_URL + "," + DEFAULT_FETCH_URI;
 
     private static final WinReportingUrls WIN_REPORTING_URLS =
@@ -1645,7 +1648,7 @@ public class AuctionServerE2ETest {
                 new GetAdSelectionDataInput.Builder()
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setCoordinatorOriginUri(Uri.parse(COORDINATOR_URL))
+                        .setCoordinatorOriginUri(Uri.parse(COORDINATOR_HOST))
                         .build();
 
         GetAdSelectionDataTestCallback callback = invokeGetAdSelectionData(service, input);
@@ -1869,7 +1872,7 @@ public class AuctionServerE2ETest {
                 new GetAdSelectionDataInput.Builder()
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setCoordinatorOriginUri(Uri.parse(COORDINATOR_URL))
+                        .setCoordinatorOriginUri(Uri.parse(COORDINATOR_HOST))
                         .build();
 
         GetAdSelectionDataTestCallback callback = invokeGetAdSelectionData(service, input);
