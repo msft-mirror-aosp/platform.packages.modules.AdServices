@@ -30,7 +30,9 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 
@@ -44,6 +46,7 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.CoordinatorOriginUriValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -106,10 +109,12 @@ public class GetAdSelectionDataRunner {
     @NonNull private final Clock mClock;
     private final int mPayloadFormatterVersion;
 
+    @NonNull private final CoordinatorOriginUriValidator mCoordinatorOriginUriValidator;
     @NonNull private final FledgeAuctionServerExecutionLogger mFledgeAuctionServerExecutionLogger;
 
     public GetAdSelectionDataRunner(
-            @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
+            @NonNull final Context context,
+            @NonNull final MultiCloudSupportStrategy multiCloudSupportStrategy,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final EncodedPayloadDao encodedPayloadDao,
@@ -124,7 +129,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final DevContext devContext,
             @NonNull final AuctionServerDebugReporting auctionServerDebugReporting,
             @NonNull final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
-        Objects.requireNonNull(obliviousHttpEncryptor);
+        Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedPayloadDao);
@@ -138,7 +143,10 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
 
-        mObliviousHttpEncryptor = obliviousHttpEncryptor;
+        mObliviousHttpEncryptor =
+                multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
+        mCoordinatorOriginUriValidator =
+                multiCloudSupportStrategy.getCoordinatorOriginUriValidator();
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
         mEncodedPayloadDao = encodedPayloadDao;
@@ -180,7 +188,8 @@ public class GetAdSelectionDataRunner {
 
     @VisibleForTesting
     GetAdSelectionDataRunner(
-            @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
+            @NonNull final Context context,
+            @NonNull final MultiCloudSupportStrategy multiCloudSupportStrategy,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final EncodedPayloadDao encodedPayloadDao,
@@ -196,7 +205,7 @@ public class GetAdSelectionDataRunner {
             @NonNull Clock clock,
             @NonNull AuctionServerDebugReporting auctionServerDebugReporting,
             @NonNull FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
-        Objects.requireNonNull(obliviousHttpEncryptor);
+        Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedPayloadDao);
@@ -211,7 +220,10 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
 
-        mObliviousHttpEncryptor = obliviousHttpEncryptor;
+        mObliviousHttpEncryptor =
+                multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
+        mCoordinatorOriginUriValidator =
+                multiCloudSupportStrategy.getCoordinatorOriginUriValidator();
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
         mEncodedPayloadDao = encodedPayloadDao;
@@ -277,16 +289,9 @@ public class GetAdSelectionDataRunner {
                                             Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
                                             mDevContext);
 
-                                    boolean multiCloudEnabled =
-                                            mFlags.getFledgeAuctionServerMultiCloudEnabled();
-                                    String allowlist =
-                                            mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist();
                                     // Validate the coordinator origin URI
-                                    MultiCloudSupportStrategyFactory.getStrategy(
-                                                    multiCloudEnabled, allowlist)
-                                            .getCoordinatorOriginUriValidator()
-                                            .validate(inputParams.getCoordinatorOriginUri());
-
+                                    mCoordinatorOriginUriValidator.validate(
+                                            inputParams.getCoordinatorOriginUri());
                                 } finally {
                                     sLogger.v("Completed filtering.");
                                 }
@@ -300,7 +305,8 @@ public class GetAdSelectionDataRunner {
                                             orchestrateGetAdSelectionDataRunner(
                                                     inputParams.getSeller(),
                                                     adSelectionId,
-                                                    inputParams.getCallerPackageName()),
+                                                    inputParams.getCallerPackageName(),
+                                                    inputParams.getCoordinatorOriginUri()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -341,7 +347,10 @@ public class GetAdSelectionDataRunner {
     }
 
     private ListenableFuture<byte[]> orchestrateGetAdSelectionDataRunner(
-            @NonNull AdTechIdentifier seller, long adSelectionId, @NonNull String packageName) {
+            @NonNull AdTechIdentifier seller,
+            long adSelectionId,
+            @NonNull String packageName,
+            @Nullable Uri coordinatorUrl) {
         Objects.requireNonNull(seller);
         Objects.requireNonNull(packageName);
 
@@ -357,7 +366,10 @@ public class GetAdSelectionDataRunner {
                         formatted -> {
                             sLogger.v("Encrypting composed proto bytes");
                             return mObliviousHttpEncryptor.encryptBytes(
-                                    formatted.getData(), adSelectionId, keyFetchTimeout);
+                                    formatted.getData(),
+                                    adSelectionId,
+                                    keyFetchTimeout,
+                                    coordinatorUrl);
                         },
                         mLightweightExecutorService)
                 .transformAsync(
