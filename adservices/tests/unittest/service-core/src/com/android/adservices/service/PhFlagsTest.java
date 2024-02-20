@@ -4875,61 +4875,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetMeasurementAttributionFallbackJobKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Attribution Fallback Job kill switch should be off
-        assertThat(mPhFlags.getMeasurementAttributionFallbackJobKillSwitch())
-                .isEqualTo(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getMeasurementAttributionFallbackJobKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementAttributionFallbackJobKillSwitch_measurementOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Attribution Fallback Job kill switch should be off
-        assertThat(mPhFlags.getMeasurementAttributionFallbackJobKillSwitch())
-                .isEqualTo(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        setMeasurementKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementAttributionFallbackJobKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMeasurementAttributionFallbackJobKillSwitch_globalOverride() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // without any overrides the Attribution Fallback Job  kill switch should be off
-        assertThat(mPhFlags.getMeasurementAttributionFallbackJobKillSwitch())
-                .isEqualTo(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        overrideGlobalKillSwitch(phOverridingValue);
-
-        assertThat(mPhFlags.getMeasurementAttributionFallbackJobKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
     public void testGetMeasurementAttributionFallbackJobPeriodMs() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getMeasurementAttributionFallbackJobPeriodMs())

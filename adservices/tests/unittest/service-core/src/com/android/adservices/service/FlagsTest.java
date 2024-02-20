@@ -418,19 +418,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s", killSwitchName).that(defaultKillSwitchValue).isFalse();
     }
 
-    /**
-     * @deprecated TODO(b/325074749): remove in the CL that change callers to use
-     *     getMeasurementAttributionFallbackJobEnabled()
-     */
-    @Deprecated
-    @Test
-    public void testGetMeasurementAttributionFallbackJobKillSwitch() {
-        testLegacyMsmtKillSwitchGuardedByMsmtKillSwitch(
-                "getMeasurementAttributionFallbackJobKillSwitch()",
-                "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
-                flag -> flag.getMeasurementAttributionFallbackJobKillSwitch());
-    }
-
     @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testMsmtFeatureFlagBasedUpLegacyKillSwitchAndGuardedByMsmtEnabled(
