@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import android.annotation.NonNull;
+import android.content.Context;
+
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
 
 /** Interface for strategy related to multi-cloud support */
@@ -26,4 +31,9 @@ public interface MultiCloudSupportStrategy {
      * the coordinator origin URI.
      */
     CoordinatorOriginUriValidator getCoordinatorOriginUriValidator();
+
+    /** Returns an instance of {@link ObliviousHttpEncryptor} to encrypt the payload */
+    // TODO(b/297025763) : Use process stable flags
+    ObliviousHttpEncryptor getObliviousHttpEncryptor(
+            @NonNull Context context, @NonNull Flags flags);
 }
