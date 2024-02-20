@@ -71,6 +71,11 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initRvc() {}
 
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+    }
+
     private void configureSharedElements(Boolean isGA) {
         // no blocked topics message
         configureElement(
@@ -111,7 +116,7 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
                         if (event == BlockedTopicsViewModelUiEvent.RESTORE_TOPIC) {
                             UiStatsLogger.logUnblockTopicSelected();
                             mBlockedTopicsViewModel.restoreTopicConsent(topic);
-                            if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                            if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                     DialogFragmentManager.showUnblockTopicDialog(mActivity, topic);
                                 } else {

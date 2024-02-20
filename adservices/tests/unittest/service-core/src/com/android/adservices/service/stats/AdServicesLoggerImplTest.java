@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.stats;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
@@ -87,12 +89,19 @@ import static com.android.adservices.service.stats.RunAdSelectionProcessReported
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.RUN_AD_SELECTION_RESULT_CODE;
 import static com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStatsTest.DATA_SIZE_OF_ADS_IN_BYTES;
 import static com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStatsTest.NUM_OF_ADS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.ReportEventRequest;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.cobalt.AppNameApiErrorLogger;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
@@ -109,9 +118,13 @@ import java.util.Arrays;
 import java.util.List;
 
 /** Unit tests for {@link AdServicesLoggerImpl}. */
-public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AppNameApiErrorLogger.class)
+public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private StatsdAdServicesLogger mStatsdLoggerMock;
+    @Mock private Flags mMockFlags;
+    @Mock private AppNameApiErrorLogger mMockAppNameApiErrorLogger;
 
     @Test
     public void testLogFledgeApiCallStats() {
@@ -122,6 +135,36 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
         verify(mStatsdLoggerMock)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_SUCCESS, latencyMs);
+    }
+
+    @Test
+    public void testLogFledgeApiCallStatsWithAppPackageNameLogging() {
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = TEST_PACKAGE_NAME;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        adServicesLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        // Verify method logging app package name is called.
+        verify(mStatsdLoggerMock)
+                .logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+    }
+
+    @Test
+    public void testLogFledgeApiCallStatsWithFailureReason() {
+        final int latencyMs = 10;
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logFledgeApiCallStats(
+                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                latencyMs,
+                ApiCallStats.successResult());
+        verify(mStatsdLoggerMock)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        latencyMs,
+                        ApiCallStats.successResult());
     }
 
     @Test
@@ -395,6 +438,10 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
         String packageName = "com.android.test";
         String sdkName = "com.android.container";
         int latency = 100;
+
+        extendedMockito.mockGetFlags(mMockFlags);
+        mockAppNameApiErrorLogger();
+
         ApiCallStats stats =
                 new ApiCallStats.Builder()
                         .setCode(AD_SERVICES_API_CALLED)
@@ -403,7 +450,10 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
                         .setAppPackageName(packageName)
                         .setSdkPackageName(sdkName)
                         .setLatencyMillisecond(latency)
-                        .setResultCode(STATUS_SUCCESS)
+                        .setResult(
+                                ApiCallStats.failureResult(
+                                        STATUS_SUCCESS,
+                                        FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND))
                         .build();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         adServicesLogger.logApiCallStats(stats);
@@ -419,6 +469,13 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
         expect.that(loggedStats.getSdkPackageName()).isEqualTo(sdkName);
         expect.that(loggedStats.getLatencyMillisecond()).isEqualTo(latency);
         expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
+        expect.that(loggedStats.getFailureReason())
+                .isEqualTo(FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND);
+
+        verify(() -> AppNameApiErrorLogger.getInstance(any(), any()));
+        verify(mMockAppNameApiErrorLogger)
+                .logErrorOccurrence(
+                        packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
     }
 
     @Test
@@ -636,7 +693,6 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
     @Test
     public void testLogEncryptionKeyFetchedStats() {
         String enrollmentId = "enrollmentId";
-        String companyId = "companyId";
         String encryptionKeyUrl = "https://www.adtech1.com/.well-known/encryption-keys";
 
         AdServicesEncryptionKeyFetchedStats stats =
@@ -645,7 +701,6 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
                         .setFetchStatus(IO_EXCEPTION)
                         .setIsFirstTimeFetch(false)
                         .setAdtechEnrollmentId(enrollmentId)
-                        .setCompanyId(companyId)
                         .setEncryptionKeyUrl(encryptionKeyUrl)
                         .build();
 
@@ -679,16 +734,14 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
     @Test
     public void testLogDestinationRegisteredBeaconsReportedStats() {
         List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
-                keySizeRangeTypeList = Arrays.asList(
-                DestinationRegisteredBeaconsReportedStats
-                        .InteractionKeySizeRangeType
-                        .LARGER_THAN_MAXIMUM_KEY_SIZE,
-                DestinationRegisteredBeaconsReportedStats
-                        .InteractionKeySizeRangeType
-                        .SMALLER_THAN_MAXIMUM_KEY_SIZE,
-                DestinationRegisteredBeaconsReportedStats
-                        .InteractionKeySizeRangeType
-                        .EQUAL_TO_MAXIMUM_KEY_SIZE);
+                keySizeRangeTypeList =
+                        Arrays.asList(
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType.LARGER_THAN_MAXIMUM_KEY_SIZE,
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType.SMALLER_THAN_MAXIMUM_KEY_SIZE,
+                                DestinationRegisteredBeaconsReportedStats
+                                        .InteractionKeySizeRangeType.EQUAL_TO_MAXIMUM_KEY_SIZE);
 
         DestinationRegisteredBeaconsReportedStats stats =
                 DestinationRegisteredBeaconsReportedStats.builder()
@@ -705,8 +758,8 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
 
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
                 ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
-        verify(mStatsdLoggerMock).logDestinationRegisteredBeaconsReportedStats(
-                argumentCaptor.capture());
+        verify(mStatsdLoggerMock)
+                .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         expect.that(stats).isEqualTo(argumentCaptor.getValue());
     }
 
@@ -741,8 +794,8 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
 
         ArgumentCaptor<InteractionReportingTableClearedStats> argumentCaptor =
                 ArgumentCaptor.forClass(InteractionReportingTableClearedStats.class);
-        verify(mStatsdLoggerMock).logInteractionReportingTableClearedStats(
-                argumentCaptor.capture());
+        verify(mStatsdLoggerMock)
+                .logInteractionReportingTableClearedStats(argumentCaptor.capture());
         expect.that(stats).isEqualTo(argumentCaptor.getValue());
     }
 
@@ -761,5 +814,12 @@ public final class AdServicesLoggerImplTest extends AdServicesMockitoTestCase {
                 ArgumentCaptor.forClass(AppManifestConfigCall.class);
         verify(mStatsdLoggerMock).logAppManifestConfigCall(argumentCaptor.capture());
         expect.that(argumentCaptor.getValue()).isEqualTo(call);
+    }
+
+    private void mockAppNameApiErrorLogger() {
+        when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
+        when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);
+        doReturn(mMockAppNameApiErrorLogger)
+                .when(() -> AppNameApiErrorLogger.getInstance(any(), any()));
     }
 }

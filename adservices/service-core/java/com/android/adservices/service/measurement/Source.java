@@ -1232,7 +1232,7 @@ public class Source {
             builder.setMaxEventLevelReports(copyFrom.mMaxEventLevelReports);
             builder.setAggregatableReportWindow(copyFrom.mAggregatableReportWindow);
             builder.setEnrollmentId(copyFrom.mEnrollmentId);
-            builder.setFilterData(copyFrom.mFilterDataString);
+            builder.setFilterDataString(copyFrom.mFilterDataString);
             builder.setSharedFilterDataKeys(copyFrom.mSharedFilterDataKeys);
             builder.setInstallTime(copyFrom.mInstallTime);
             builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
@@ -1450,7 +1450,7 @@ public class Source {
         }
 
         /** See {@link Source#getFilterDataString()}. */
-        public Builder setFilterData(@Nullable String filterMap) {
+        public Builder setFilterDataString(@Nullable String filterMap) {
             mBuilding.mFilterDataString = filterMap;
             return this;
         }

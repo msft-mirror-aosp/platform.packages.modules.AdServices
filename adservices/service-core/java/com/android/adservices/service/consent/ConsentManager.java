@@ -251,13 +251,17 @@ public class ConsentManager {
                     if (enableAdExtServiceConsentData) {
                         adServicesExtDataManager =
                                 AdServicesExtDataStorageServiceManager.getInstance(context);
-                        if (FlagsFactory.getFlags().getEnableAdExtServiceToAppSearchMigration()) {
-                            ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
+                        // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
+                        // builds, use the deprecated flag
+                        // enable_adext_service_to_appsearch_migration.
+                        if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
+                            ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                                     context,
                                     datastore,
                                     appSearchConsentManager,
                                     adServicesExtDataManager,
-                                    statsdAdServicesLogger);
+                                    statsdAdServicesLogger,
+                                    adServicesManager);
                         }
                     }
 
@@ -1026,6 +1030,47 @@ public class ConsentManager {
     }
 
     /**
+     * Saves information to the storage that GA UX notification was displayed for the first time to
+     * the user.
+     */
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        executeSettersByConsentSourceOfTruth(
+                () ->
+                        mDatastore.put(
+                                ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, wasPasDisplayed),
+                () -> mAdServicesManager.recordPasNotificationDisplayed(wasPasDisplayed),
+                () -> {
+                    // APPSEARCH_ONLY is only set on S which has not implemented PAS updates.
+                    throw new IllegalStateException(
+                            getAppSearchExceptionMessage(
+                                    /* illegalAction */ "store if PAS notification was displayed"));
+                },
+                () -> {
+                    // PPAPI_AND_ADEXT_SERVICE is only set on R which has not implemented PAS
+                    // updates.
+                    throw new IllegalStateException(
+                            getAdExtExceptionMessage(
+                                    /* illegalAction */ "store if PAS notification was displayed"));
+                },
+                /* errorLogger= */ null);
+    }
+
+    /**
+     * Retrieves if PAS notification has been displayed.
+     *
+     * @return true if PAS Consent Notification was displayed, otherwise false.
+     */
+    public Boolean wasPasNotificationDisplayed() {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ true,
+                () -> mDatastore.get(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE),
+                () -> mAdServicesManager.wasPasNotificationDisplayed(),
+                () -> false, // PAS update not supported on S yet
+                () -> false, // PAS update not supported on R yet
+                /* errorLogger= */ null);
+    }
+
+    /**
      * Retrieves the PP API default consent.
      *
      * @return true if the default consent is true, false otherwise.
@@ -1352,6 +1397,10 @@ public class ConsentManager {
             if (booleanFileDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED) == null) {
                 booleanFileDatastore.put(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, false);
             }
+            if (booleanFileDatastore.get(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE)
+                    == null) {
+                booleanFileDatastore.put(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, false);
+            }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);
         }
@@ -1497,7 +1546,6 @@ public class ConsentManager {
         adServicesManager.setConsent(consentParcel);
     }
 
-    @VisibleForTesting
     static void setPerApiConsentToSystemServer(
             @NonNull AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType,
@@ -1552,7 +1600,11 @@ public class ConsentManager {
                                     /* default= */ false)
                             || sharedPreferences.getBoolean(
                                     ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED,
-                                    /* default= */ false);
+                                    /* default= */ false)
+                            || sharedPreferences.getBoolean(
+                                    ConsentConstants
+                                            .SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER,
+                                    /* defValue= */ false);
             if (shouldSkipMigration) {
                 LogUtil.v(
                         "Consent migration has happened to user %d, skip...",
@@ -2318,6 +2370,11 @@ public class ConsentManager {
                         .setRegion(getConsentRegion(context))
                         .build();
         return consentMigrationStats;
+    }
+
+    private static String getAppSearchExceptionMessage(String illegalAction) {
+        return String.format(
+                "Attempting to %s using APPSEARCH_ONLY consent source of truth!", illegalAction);
     }
 
     private static String getAdExtExceptionMessage(String illegalAction) {

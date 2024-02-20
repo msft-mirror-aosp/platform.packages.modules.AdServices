@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.LoggerFactory.Logger;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Class for logging the update a signal custom audience process during background fetch. */

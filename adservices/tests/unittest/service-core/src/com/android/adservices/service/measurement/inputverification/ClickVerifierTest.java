@@ -18,12 +18,15 @@ package com.android.adservices.service.measurement.inputverification;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.hardware.input.InputManager;
+import android.os.Parcel;
 import android.view.InputEvent;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.VerifiedMotionEvent;
 
@@ -58,6 +61,9 @@ public final class ClickVerifierTest {
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(100L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(false);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(false);
         mClickVerifier = new ClickVerifier(mInputManager, mFlags, mAdServicesLogger);
     }
 
@@ -114,6 +120,262 @@ public final class ClickVerifierTest {
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
         when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+    }
+
+    @Test
+    public void testVerifiedInputEvent_underUseLimit_verified() {
+        // Setup
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        // Execution and verification.
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+    }
+
+    @Test
+    public void testVerifiedInputEvent_overUseLimit_notVerified() {
+        // Setup
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        // Execution and verification
+        mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isFalse();
+    }
+
+    @Test
+    public void testMultipleUnverifiedInputEvents_allVerified() {
+        // Setup
+        InputEvent inputEvent1 = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        InputEvent inputEvent2 = MotionEvent.obtain(10, 10, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        InputEvent inputEvent3 = MotionEvent.obtain(20, 20, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
+        when(mInputManager.verifyInputEvent(any())).thenReturn(null);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent1, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent2, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent3, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+    }
+
+    @Test
+    public void testUnverifiedInputEvent_motionEvent_underUseLimit_verified() {
+        // Setup
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        // Execution and verification.
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+    }
+
+    @Test
+    public void testUnverifiedInputEvent_keyEvent_underUseLimit_verified() {
+        // Setup
+        InputEvent inputEvent = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        // Execution and verification.
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+    }
+
+    @Test
+    public void testUnverifiedInputEvent_motionEvent_overUseLimit_notVerified() {
+        // Setup
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        // Execution and verification.
+        mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isFalse();
+    }
+
+    @Test
+    public void testCopiedUnverifiedInputEvent_overUseLimit_notVerified() {
+        // Setup
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
+        when(mInputManager.verifyInputEvent(any())).thenReturn(null);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        // Execution and verification.
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+
+        // Copied InputEvent should be equal to the original InputEvent.
+        InputEvent copiedInputEvent = MotionEvent.obtain((MotionEvent) inputEvent);
+
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                copiedInputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isFalse();
+
+        // Parcelled and un-parcelled InputEvent should be equal to the original InputEvent.
+        Parcel p = Parcel.obtain();
+        inputEvent.writeToParcel(p, /* flags */ 0);
+        p.setDataPosition(0);
+        InputEvent parcelInputEvent = InputEvent.CREATOR.createFromParcel(p);
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                parcelInputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isFalse();
+    }
+
+    @Test
+    public void testClickDeduplicationNotEnabled_inputEventStillVerified() {
+        // Setup
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(false);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        // Execution and verification.
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+    }
+
+    @Test
+    public void testClickDeduplicationNotEnforced_inputEventStillVerified() {
+        // Setup
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long registerTimestamp =
+                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(registerTimestamp);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(false);
+
+        // Execution and verification.
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+    }
+
+    @Test
+    public void testClickDeduplication_cachedInputEventIsEvictedAfterWindowHasPassed()
+            throws InterruptedException {
+        // Setup
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(/* value */ 200L);
+        long registerTimestamp = mFlags.getMeasurementRegistrationInputEventValidWindowMs();
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+
+        // Execute
+        assertThat(
+                        mClickVerifier.isInputEventVerifiable(
+                                inputEvent, registerTimestamp, SOURCE_REGISTRANT))
+                .isTrue();
+
+        // Wait enough time has passed that the InputEvent should have been evicted from the cache.
+        Thread.sleep(mFlags.getMeasurementRegistrationInputEventValidWindowMs());
+
+        // The second call should pass since the entry has been evicted.
         assertThat(
                         mClickVerifier.isInputEventVerifiable(
                                 inputEvent, registerTimestamp, SOURCE_REGISTRANT))
@@ -194,4 +456,6 @@ public final class ClickVerifierTest {
 
         verify(mAdServicesLogger).logMeasurementClickVerificationStats(eq(stats));
     }
+
+    // TODO(324309950): Add tests for click deduplication logging.
 }

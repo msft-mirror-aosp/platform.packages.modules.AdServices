@@ -30,9 +30,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+            <View
+                android:id="@+id/adservices_ppapi_title_spacing"
+                android:visibility="@integer/adservices_ppapi_title_spacing"
+                android:layout_height="18dp"
+                android:layout_width="match_parent"/>
             <TextView
                 android:id="@+id/apps_introduction"
-                android:layout_marginTop="18dp"
                 android:paddingHorizontal="24dp"
                 android:text="@string/settingsUI_apps_view_subtitle"
                 style="@style/MainStyle.Body2" />
@@ -173,6 +177,7 @@
                         android:src="@drawable/ic_info_icon"
                         tools:ignore="ContentDescription" />
                     <TextView
+                        android:id="@+id/apps_view_ga_footer_text"
                         android:text="@string/settingsUI_apps_view_footer"
                         style="@style/MainStyle.Body2" />
                 </LinearLayout>

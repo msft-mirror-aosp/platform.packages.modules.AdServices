@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -60,7 +61,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
@@ -139,9 +139,7 @@ public class MaintenanceJobServiceTest {
 
         mockGetFlags(mMockFlags);
 
-        mSpyLogger =
-                ExtendedMockitoExpectations.mockAdservicesJobServiceLogger(
-                        CONTEXT, mMockStatsdLogger);
+        mSpyLogger = mockAdServicesJobServiceLogger(CONTEXT, mMockFlags);
     }
 
     @After

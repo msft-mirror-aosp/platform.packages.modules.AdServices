@@ -17,6 +17,8 @@ package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -25,6 +27,7 @@ import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
@@ -271,7 +274,7 @@ public class AsyncSourceFetcher {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
-                builder.setFilterData(maybeFilterData.toString());
+                builder.setFilterDataString(maybeFilterData.toString());
             } else {
                 if (!FetcherUtil.areValidAttributionFilters(
                         json.optJSONObject(SourceHeaderContract.FILTER_DATA),
@@ -280,7 +283,7 @@ public class AsyncSourceFetcher {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
-                builder.setFilterData(
+                builder.setFilterDataString(
                         json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
             }
         }
@@ -594,13 +597,9 @@ public class AsyncSourceFetcher {
 
             summaryBuckets = TriggerSpec.getLongListFromJSON(maybeSummaryBucketsJson.get());
 
-            if (summaryBuckets.size() > maxEventLevelReports) {
+            if (summaryBuckets.isEmpty() || summaryBuckets.size() > maxEventLevelReports) {
                 return Optional.empty();
             }
-        }
-        if ((summaryBuckets == null || summaryBuckets.isEmpty())
-                && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
-            return Optional.empty();
         }
 
         if (summaryBuckets != null && !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
@@ -878,6 +877,9 @@ public class AsyncSourceFetcher {
                             "fetchSource: Valid enrollment id not found. Registration URI: %s",
                             asyncRegistration.getRegistrationUri());
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return Optional.empty();
         }
 
@@ -939,7 +941,8 @@ public class AsyncSourceFetcher {
 
     private static long roundSecondsToWholeDays(long seconds) {
         long remainder = seconds % ONE_DAY_IN_SECONDS;
-        boolean roundUp = remainder >= ONE_DAY_IN_SECONDS / 2L;
+        // Return value should be at least one whole day.
+        boolean roundUp = (remainder >= ONE_DAY_IN_SECONDS / 2L) || (seconds == remainder);
         return seconds - remainder + (roundUp ? ONE_DAY_IN_SECONDS : 0);
     }
 

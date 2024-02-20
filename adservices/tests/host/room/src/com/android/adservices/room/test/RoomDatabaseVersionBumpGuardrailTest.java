@@ -23,15 +23,13 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 import com.android.tradefed.util.FileUtil;
 
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -76,44 +74,36 @@ public class RoomDatabaseVersionBumpGuardrailTest extends BaseHostJUnit4Test {
 
     @Test
     public void roomDatabaseVersionBumpGuardrailTest() throws Exception {
-
         ZipFile baseSchemas = getTestPackageFromFile(mBaseSchemaLib);
         ZipFile newSchemas = getTestPackageFromFile(mNewSchemaLib);
 
-        Map<String, ZipEntry> baseVersions = extractVersionMap(baseSchemas);
-        Map<String, ZipEntry> newVersions = extractVersionMap(newSchemas);
-
         StringBuilder errors = new StringBuilder();
-        for (Map.Entry<String, ZipEntry> e : baseVersions.entrySet()) {
-            String name = e.getKey();
-            ZipEntry baseFile = e.getValue();
-            ZipEntry newFile = newVersions.get(name);
+        Map<String, ZipEntry> newSchemasByFileName =
+                newSchemas.stream()
+                        .filter(f -> SCHEMA_FILE_PATTERN.matcher(f.getName()).matches())
+                        .collect(Collectors.toMap(ZipEntry::getName, e -> e));
 
+        for (ZipEntry baseFile :
+                baseSchemas.stream()
+                        .filter(f -> SCHEMA_FILE_PATTERN.matcher(f.getName()).matches())
+                        .collect(Collectors.toList())) {
+            ZipEntry newFile = newSchemasByFileName.get(baseFile.getName());
             if (newFile == null) {
-                errors.append(String.format("Database file '%s' missing in new version!\n", name));
-                continue;
-            }
-
-            int baseFileVersion = getVersionFromFile(baseFile);
-            int newFileVersion = getVersionFromFile(newFile);
-
-            if (baseFileVersion == newFileVersion) {
-                if (!Arrays.equals(
-                        baseSchemas.getInputStream(baseFile).readAllBytes(),
-                        newSchemas.getInputStream(newFile).readAllBytes())) {
-                    errors.append(
-                            String.format(
-                                    "Database file '%s' changed between major build. Please bump up"
-                                            + " DB version.\n",
-                                    name));
-                }
-            }
-
-            if (getVersionFromFile(baseFile) > getVersionFromFile(newFile)) {
                 errors.append(
                         String.format(
-                                "Database %s version was turned down from %d to %d\n",
-                                name, baseFileVersion, newFileVersion));
+                                "Database json file %s is removed in the new version. Please add"
+                                        + " back.\n",
+                                baseFile.getName()));
+                continue;
+            }
+            if (!Arrays.equals(
+                    baseSchemas.getInputStream(baseFile).readAllBytes(),
+                    newSchemas.getInputStream(newFile).readAllBytes())) {
+                errors.append(
+                        String.format(
+                                "Database json file '%s' changed between major build. Please revert"
+                                        + " change and/or bump up DB version.\n",
+                                baseFile.getName()));
             }
         }
 
@@ -123,59 +113,7 @@ public class RoomDatabaseVersionBumpGuardrailTest extends BaseHostJUnit4Test {
     }
 
     private ZipFile getTestPackageFromFile(String lib) throws IOException {
-        byte[] bytes;
         File testPackage = mHostUtils.getTestFile(lib);
-        if (testPackage.isFile()) {
-            try (ZipFile zipFile = new ZipFile(testPackage)) {
-                ZipEntry entry = getZipEntry(zipFile, mSchemaApkName);
-                bytes = zipFile.getInputStream(entry).readAllBytes();
-            }
-            File tempFile = File.createTempFile("schemaFiles", ".zip");
-            tempFile.setWritable(true);
-            new FileOutputStream(tempFile).write(bytes);
-            return new ZipFile(tempFile);
-        } else {
-            return new ZipFile(FileUtil.findFile(testPackage, mSchemaApkName));
-        }
-    }
-
-    private static ZipEntry getZipEntry(ZipFile zipFile, String fileName) {
-        Iterator<? extends ZipEntry> iterator = zipFile.entries().asIterator();
-        while (iterator.hasNext()) {
-            ZipEntry current = iterator.next();
-            if (current.getName().contains(fileName)) {
-                return current;
-            }
-        }
-        return null;
-    }
-
-    private static Map<String, ZipEntry> extractVersionMap(ZipFile files) {
-
-        return files.stream()
-                .filter(f -> SCHEMA_FILE_PATTERN.matcher(f.getName()).matches())
-                .collect(
-                        Collectors.groupingBy(
-                                RoomDatabaseVersionBumpGuardrailTest::getDatabaseNameFromFile))
-                .entrySet()
-                .stream()
-                .collect(
-                        Collectors.toMap(
-                                Map.Entry::getKey,
-                                e ->
-                                        e.getValue().stream()
-                                                .max(
-                                                        Comparator.comparing(
-                                                                RoomDatabaseVersionBumpGuardrailTest
-                                                                        ::getVersionFromFile))
-                                                .get()));
-    }
-
-    private static String getDatabaseNameFromFile(ZipEntry f) {
-        return f.getName().split("/")[1];
-    }
-
-    private static int getVersionFromFile(ZipEntry fileName) {
-        return Integer.parseInt(fileName.getName().split("/")[2].split("\\.")[0]);
+        return new ZipFile(FileUtil.findFile(testPackage, mSchemaApkName));
     }
 }

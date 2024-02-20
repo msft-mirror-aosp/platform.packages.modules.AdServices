@@ -24,6 +24,9 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -41,6 +44,11 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
             UxStatesManager uxStatesManager) {
         switch (uxCollection) {
             case GA_UX:
+                if (FlagsFactory.getFlags().getPasUxEnabled()) {
+                    // PreNotificationManualUsers should be in PasReconsentNotificationChannel.
+                    return consentManager.wasPasNotificationDisplayed()
+                            || isManuallyOptedOutOfPaAndMsmt(consentManager);
+                }
                 return consentManager.wasGaUxNotificationDisplayed()
                         || isPreNotificationManualUser(consentManager, uxStatesManager);
             case BETA_UX:
@@ -52,6 +60,18 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
                 // Unsupported and non-valid UXs can never have enrollment channels.
                 return false;
         }
+    }
+
+    private static boolean isManuallyOptedOutOfPaAndMsmt(ConsentManager consentManager) {
+        return consentManager.wasGaUxNotificationDisplayed()
+                && consentManager.getUserManualInteractionWithConsent()
+                        == MANUAL_INTERACTIONS_RECORDED
+                && consentManager
+                        .getConsent(AdServicesApiType.FLEDGE)
+                        .equals(AdServicesApiConsent.REVOKED)
+                && consentManager
+                        .getConsent(AdServicesApiType.MEASUREMENTS)
+                        .equals(AdServicesApiConsent.REVOKED);
     }
 
     private static boolean isPreNotificationManualUser(

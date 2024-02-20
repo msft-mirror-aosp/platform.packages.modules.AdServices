@@ -41,6 +41,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
+import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
@@ -232,6 +233,29 @@ public class CustomAudienceBlob {
         }
         if (input.getUserBiddingSignals() != null) {
             this.setUserBiddingSignals(input.getUserBiddingSignals());
+        }
+    }
+
+    /**
+     * Utility methods to override a {@link CustomAudienceBlob} from a {@link PartialCustomAudience}
+     */
+    public void overrideFromPartialCustomAudience(
+            String owner, AdTechIdentifier buyer, PartialCustomAudience partialCustomAudience) {
+        this.setOwner(owner);
+        this.setBuyer(buyer);
+
+        this.setName(partialCustomAudience.getName());
+
+        if (partialCustomAudience.getActivationTime() != null) {
+            this.setActivationTime(partialCustomAudience.getActivationTime());
+        }
+
+        if (partialCustomAudience.getExpirationTime() != null) {
+            this.setExpirationTime(partialCustomAudience.getExpirationTime());
+        }
+
+        if (partialCustomAudience.getUserBiddingSignals() != null) {
+            this.setUserBiddingSignals(partialCustomAudience.getUserBiddingSignals());
         }
     }
 

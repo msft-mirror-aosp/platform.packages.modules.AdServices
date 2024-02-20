@@ -250,4 +250,9 @@ public abstract class TestOnlyDao {
     @VisibleForTesting
     @Query("SELECT * FROM StringHashes")
     public abstract List<StringHashEntity> getStringHashes();
+
+    /** Gets all system profiles from the system profile table. */
+    @VisibleForTesting
+    @Query("SELECT * FROM SystemProfiles")
+    public abstract List<SystemProfileEntity> getSystemProfiles();
 }

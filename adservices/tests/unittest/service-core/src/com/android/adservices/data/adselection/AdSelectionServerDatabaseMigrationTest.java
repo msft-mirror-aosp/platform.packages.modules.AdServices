@@ -27,6 +27,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +45,10 @@ public class AdSelectionServerDatabaseMigrationTest {
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public MigrationTestHelper helper =
             new MigrationTestHelper(INSTRUMENTATION, AdSelectionServerDatabase.class);
 
@@ -94,5 +99,31 @@ public class AdSelectionServerDatabaseMigrationTest {
         }
         cursor.close();
         assertTrue(creationInstantColumnExists);
+    }
+
+    @Test
+    public void testMigration3To4() throws IOException {
+        String protectedServersEncryptionConfigTable = "protected_servers_encryption_config";
+
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 3);
+        Cursor c =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                protectedServersEncryptionConfigTable));
+        assertEquals(0, c.getCount());
+
+        // Re-open the database with version 4 and provide MIGRATION_3_4 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 4, true);
+        c =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                protectedServersEncryptionConfigTable));
+        assertEquals(1, c.getCount());
+        c.moveToFirst();
+        assertEquals(
+                protectedServersEncryptionConfigTable,
+                c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
     }
 }

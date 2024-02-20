@@ -15,8 +15,11 @@
  */
 package com.android.adservices.shared.testing.common;
 
+import static com.android.adservices.shared.util.LogUtil.DEBUG;
+
 import android.os.Environment;
-import android.util.Log;
+
+import com.android.adservices.shared.util.LogUtil;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -25,9 +28,6 @@ import java.nio.file.Paths;
 
 /** Provides helpers for file-related operations. */
 public final class FileHelper {
-
-    private static final String TAG = FileHelper.class.getSimpleName();
-
     private static final String SD_CARD_DIR = "/sdcard";
     private static final String ADSERVICES_TEST_DIR =
             Environment.DIRECTORY_DOCUMENTS + "/adservices-tests";
@@ -40,14 +40,18 @@ public final class FileHelper {
             File dir = getAdServicesTestsOutputDir();
             Path filePath = Paths.get(dir.getAbsolutePath(), filename);
             userFriendlyFilename = filePath.toString();
-            Log.i(TAG, "Creating file " + userFriendlyFilename);
+            LogUtil.i("Creating file %s", userFriendlyFilename);
             Files.createFile(filePath);
             byte[] bytes = contents.getBytes();
-            Log.d(TAG, "Writing " + bytes.length + " bytes to " + filePath);
+            if (DEBUG) {
+                LogUtil.d("Writing %s bytes to %s", bytes.length, filePath);
+            }
             Files.write(filePath, bytes);
-            Log.d(TAG, "Saul Goodman!");
+            if (DEBUG) {
+                LogUtil.d("Saul Goodman!");
+            }
         } catch (Exception e) {
-            Log.e(TAG, "Failed to save " + userFriendlyFilename, e);
+            LogUtil.e(e, "Failed to save %s", userFriendlyFilename);
         }
     }
 
@@ -65,9 +69,9 @@ public final class FileHelper {
         if (dir.exists()) {
             return dir;
         }
-        Log.d(TAG, "Directory " + path + " doesn't exist, creating it");
+        LogUtil.d("Directory %s doesn't exist, creating it", path);
         if (dir.mkdirs()) {
-            Log.i(TAG, "Created directory " + path);
+            LogUtil.i("Created directory %s", path);
             return dir;
         }
         throw new IllegalStateException("Could not create directory " + path);

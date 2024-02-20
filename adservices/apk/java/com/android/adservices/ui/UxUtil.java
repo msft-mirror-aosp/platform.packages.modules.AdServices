@@ -16,6 +16,7 @@
 
 package com.android.adservices.ui;
 
+
 import android.content.Context;
 import android.os.Build;
 
@@ -63,5 +64,10 @@ public class UxUtil {
         } else {
             return UxStatesManager.getInstance().getUx();
         }
+    }
+
+    /** Returns the specified UX flag. */
+    public static boolean getFlag(String uxFlagKey) {
+        return UxStatesManager.getInstance().getFlag(uxFlagKey);
     }
 }

@@ -187,7 +187,8 @@ public class SdkSandboxStatsdLoggerUnitTest {
                 SdkSandboxStatsLog
                         .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
                 SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
-                0);
+                0,
+                mClientAppUid);
 
         ExtendedMockito.verify(
                 () ->

@@ -65,7 +65,7 @@ public class BlockedTopicsActionDelegate {
                         if (event == BlockedTopicsViewModelUiEvent.RESTORE_TOPIC) {
                             UiStatsLogger.logUnblockTopicSelected();
                             mBlockedTopicsViewModel.restoreTopicConsent(topic);
-                            if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                            if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                     DialogFragmentManager.showUnblockTopicDialog(
                                             mBlockedTopicsActivity, topic);
