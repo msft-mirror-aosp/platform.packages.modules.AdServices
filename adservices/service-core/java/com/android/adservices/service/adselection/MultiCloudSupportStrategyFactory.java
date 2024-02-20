@@ -47,6 +47,19 @@ public class MultiCloudSupportStrategyFactory {
         }
 
         @Override
+        public ProtectedServersEncryptionConfigManagerBase getEncryptionConfigManager(
+                @NonNull Context context,
+                @NonNull Flags flags,
+                @NonNull AdServicesHttpsClient adServicesHttpsClient) {
+            return new ProtectedServersEncryptionConfigManager(
+                    AdSelectionServerDatabase.getInstance(context)
+                            .protectedServersEncryptionConfigDao(),
+                    flags,
+                    adServicesHttpsClient,
+                    AdServicesExecutors.getLightWeightExecutor());
+        }
+
+        @Override
         // TODO(b/297025763) : Use process stable flags
         public ObliviousHttpEncryptor getObliviousHttpEncryptor(
                 @NonNull Context context, @NonNull Flags flags) {
@@ -86,6 +99,18 @@ public class MultiCloudSupportStrategyFactory {
             return new ObliviousHttpEncryptorImpl(
                     getProtectedServersEncryptionConfigManager(context, flags),
                     AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
+                    AdServicesExecutors.getLightWeightExecutor());
+        }
+
+        @Override
+        public ProtectedServersEncryptionConfigManagerBase getEncryptionConfigManager(
+                @NonNull Context context,
+                @NonNull Flags flags,
+                @NonNull AdServicesHttpsClient adServicesHttpsClient) {
+            return new AdSelectionEncryptionKeyManager(
+                    AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
+                    flags,
+                    adServicesHttpsClient,
                     AdServicesExecutors.getLightWeightExecutor());
         }
 
