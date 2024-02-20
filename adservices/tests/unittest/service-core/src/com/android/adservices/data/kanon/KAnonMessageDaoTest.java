@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class KAnonMessageDaoTest {
 
@@ -192,5 +193,74 @@ public class KAnonMessageDaoTest {
         assertThat(fetchedMessagesWithNotProcessedStatus.size()).isEqualTo(1);
         assertThat(fetchedMessagesWithNotProcessedStatus.get(0).getMessageId())
                 .isEqualTo(messageIdNotToUpdate);
+    }
+
+    @Test
+    public void testRemoveExpiredEntities_removesExpiredEntities() {
+        Long messageIdToDelete1 = 1L;
+        Long messageIdToDelete2 = 2L;
+        Long messageIdToNotDelete1 = 3L;
+        Long messageIdToNotDelete2 = 4L;
+        Instant currentTime = Instant.now();
+        // To be deleted because of expiry instant.
+        DBKAnonMessage messageToDelete1 =
+                DBKAnonMessage.builder()
+                        .setKanonHashSet(KANON_HASH_SET)
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setCreatedAt(INSTANT_2)
+                        .setStatus(KAnonMessageConstants.MessageStatus.NOT_PROCESSED)
+                        .setExpiryInstant(currentTime.minusSeconds(10))
+                        .setMessageId(messageIdToDelete1)
+                        .build();
+        // To be deleted because of corresponding client params expiry instant
+        DBKAnonMessage messageToDelete2 =
+                DBKAnonMessage.builder()
+                        .setKanonHashSet(KANON_HASH_SET)
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setCreatedAt(INSTANT_2)
+                        .setStatus(KAnonMessageConstants.MessageStatus.NOT_PROCESSED)
+                        .setMessageId(messageIdToDelete2)
+                        .setExpiryInstant(currentTime.plusSeconds(10))
+                        .setCorrespondingClientParametersExpiryInstant(currentTime.minusSeconds(10))
+                        .build();
+        DBKAnonMessage messageToNotDelete1 =
+                DBKAnonMessage.builder()
+                        .setKanonHashSet(KANON_HASH_SET)
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setCreatedAt(INSTANT_2)
+                        .setStatus(KAnonMessageConstants.MessageStatus.NOT_PROCESSED)
+                        .setExpiryInstant(currentTime.plusSeconds(10))
+                        .setMessageId(messageIdToNotDelete1)
+                        .build();
+        DBKAnonMessage messageToNotDelete2 =
+                DBKAnonMessage.builder()
+                        .setKanonHashSet(KANON_HASH_SET)
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setCreatedAt(INSTANT_2)
+                        .setStatus(KAnonMessageConstants.MessageStatus.NOT_PROCESSED)
+                        .setExpiryInstant(currentTime.plusSeconds(100))
+                        .setMessageId(messageIdToNotDelete2)
+                        .setCorrespondingClientParametersExpiryInstant(currentTime.plusSeconds(10))
+                        .build();
+        mKAnonMessageDao.insertAllKAnonMessages(
+                List.of(
+                        messageToDelete1,
+                        messageToDelete2,
+                        messageToNotDelete1,
+                        messageToNotDelete2));
+
+        mKAnonMessageDao.removeExpiredEntities(currentTime);
+
+        List<DBKAnonMessage> fetchedMessagesWithNotProcessedStatus =
+                mKAnonMessageDao.getNLatestKAnonMessagesWithStatus(
+                        10, KAnonMessageConstants.MessageStatus.NOT_PROCESSED);
+        List<Long> idsNotDeleted =
+                fetchedMessagesWithNotProcessedStatus.stream()
+                        .map(DBKAnonMessage::getMessageId)
+                        .collect(Collectors.toList());
+
+        assertThat(fetchedMessagesWithNotProcessedStatus.size()).isEqualTo(2);
+        assertThat(idsNotDeleted).contains(messageIdToNotDelete1);
+        assertThat(idsNotDeleted).contains(messageIdToNotDelete2);
     }
 }
