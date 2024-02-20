@@ -270,7 +270,10 @@ public class AsyncSourceFetcher {
                     return false;
                 }
                 if (!FetcherUtil.areValidAttributionFilters(
-                        maybeFilterData, mFlags, /* canIncludeLookbackWindow= */ false)) {
+                        maybeFilterData,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true)) {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
@@ -279,7 +282,8 @@ public class AsyncSourceFetcher {
                 if (!FetcherUtil.areValidAttributionFilters(
                         json.optJSONObject(SourceHeaderContract.FILTER_DATA),
                         mFlags,
-                        /* canIncludeLookbackWindow= */ false)) {
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true)) {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
