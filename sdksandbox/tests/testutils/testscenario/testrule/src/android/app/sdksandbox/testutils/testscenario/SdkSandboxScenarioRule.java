@@ -256,7 +256,8 @@ public class SdkSandboxScenarioRule implements TestRule {
             // the getLoadSdkErrorCode call will likely fail as the callback would not have
             // resolved yet.
             throw e;
-        } catch (Exception e) {
+        } catch (AssertionError | Exception e) {
+            // The {@link FakeLoadSdkCallback} will throw an AssertionError if load SDK failed.
             Assume.assumeTrue(
                     "Skipping test because Sdk Sandbox is disabled",
                     callback.getLoadSdkErrorCode()
