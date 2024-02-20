@@ -153,7 +153,7 @@ public class SourceTest {
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                        .setFilterData(filterMap.toString())
+                        .setFilterDataString(filterMap.toString())
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
@@ -204,7 +204,7 @@ public class SourceTest {
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                        .setFilterData(filterMap.toString())
+                        .setFilterDataString(filterMap.toString())
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
@@ -519,7 +519,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -542,7 +542,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -569,7 +569,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -593,7 +593,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -617,7 +617,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -641,7 +641,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -667,7 +667,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -693,7 +693,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -719,7 +719,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -742,7 +742,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -768,7 +768,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
+                SourceFixture.ValidSourceParams.buildFilterDataString(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
@@ -829,7 +829,7 @@ public class SourceTest {
         final Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregateSource(aggregatableSource.toString())
-                        .setFilterData(filterMapJson.toString())
+                        .setFilterDataString(filterMapJson.toString())
                         .build();
 
         Trigger trigger = TriggerFixture.getValidTrigger();
@@ -893,7 +893,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setFilterData(filterMapJson.toString())
+                        .setFilterDataString(filterMapJson.toString())
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
         FilterMap filterMap = source.getFilterData(trigger, mFlags);
@@ -916,7 +916,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setFilterData(filterMapJson.toString())
+                        .setFilterDataString(filterMapJson.toString())
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
         FilterMap filterMap = source.getFilterData(trigger, mFlags);
@@ -960,7 +960,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setFilterData(filterMapJson.toString())
+                        .setFilterDataString(filterMapJson.toString())
                         .setSharedFilterDataKeys(sharedFilterDataKeys)
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
@@ -979,7 +979,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
-                        .setFilterData(filterMapJson.toString())
+                        .setFilterDataString(filterMapJson.toString())
                         .setSharedFilterDataKeys(sharedFilterDataKeys)
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
@@ -1006,7 +1006,7 @@ public class SourceTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
-                        .setFilterData("")
+                        .setFilterDataString("")
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
         FilterMap filterMap = source.getFilterData(trigger, mFlags);
@@ -1030,7 +1030,7 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setAggregateSource(aggregatableSource.toString())
-                        .setFilterData(filterMap.toString())
+                        .setFilterDataString(filterMap.toString())
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
         Optional<AggregatableAttributionSource> aggregatableAttributionSource =
@@ -1257,7 +1257,7 @@ public class SourceTest {
             @Nullable UnsignedLong debugKey,
             @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource,
-            @Nullable String filterData,
+            @Nullable String filterDataString,
             @Nullable String registrationId,
             @Nullable String sharedAggregationKeys,
             @Nullable String sharedFilterDataKeys,
@@ -1281,7 +1281,7 @@ public class SourceTest {
                                 .setInstallCooldownWindow(installCooldownWindow)
                                 .setAttributionMode(attributionMode)
                                 .setAggregateSource(aggregateSource)
-                                .setFilterData(filterData)
+                                .setFilterDataString(filterDataString)
                                 .setDebugKey(debugKey)
                                 .setRegistrationId(registrationId)
                                 .setSharedAggregationKeys(sharedAggregationKeys)
