@@ -30,6 +30,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
@@ -39,6 +40,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -50,6 +52,9 @@ public class AuctionEncryptionKeyParserTest {
 
     private Flags mFlags = new AuctionEncryptionKeyParserTestFlags();
     private AuctionEncryptionKeyParser mAuctionEncryptionKeyParser;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

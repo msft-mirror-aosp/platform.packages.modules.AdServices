@@ -358,7 +358,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         sLogger.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
 
         if (validBiddingOutcomes.isEmpty()
-                && adSelectionConfig.getBuyerSignedContextualAds().isEmpty()) {
+                && adSelectionConfig.getPerBuyerSignedContextualAds().isEmpty()) {
             sLogger.w("Received empty list of successful bidding outcomes and contextual ads");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING);
         }
@@ -373,7 +373,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         sLogger.v(
                 "Invoking score generator with %s bids and %s contextual ads.",
                 validBiddingOutcomes.size(),
-                adSelectionConfig.getBuyerSignedContextualAds().size());
+                adSelectionConfig.getPerBuyerSignedContextualAds().size());
         return mAdsScoreGenerator
                 .runAdScoring(validBiddingOutcomes, adSelectionConfig)
                 .transform(
@@ -516,7 +516,9 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
      * clean up cache.
      */
     private void cleanUpCache() {
-        mAdServicesHttpsClient.getAssociatedCache().cleanUp();
+        ListenableFuture<?> unused =
+                mBackgroundExecutorService.submit(
+                        () -> mAdServicesHttpsClient.getAssociatedCache().cleanUp());
     }
 
     private static class AdSelectionContext {

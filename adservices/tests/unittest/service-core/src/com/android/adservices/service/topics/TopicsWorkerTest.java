@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -96,6 +97,9 @@ public class TopicsWorkerTest {
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
     @Mock TopicsCobaltLogger mTopicsCobaltLogger;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

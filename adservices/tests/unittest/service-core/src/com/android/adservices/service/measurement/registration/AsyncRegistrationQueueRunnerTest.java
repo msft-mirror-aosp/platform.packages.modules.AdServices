@@ -15,7 +15,11 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -44,7 +48,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.RemoteException;
 
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
@@ -55,6 +58,7 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -3071,9 +3075,11 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
+    @SpyStatic(ErrorLogUtil.class)
     public void testRegisterWebSource_failsWebAndOsDestinationVerification()
             throws DatastoreException, IOException {
         // Setup
+        doNothingOnErrorLogUtilError();
         AsyncSourceFetcher mFetcher = spy(new AsyncSourceFetcher(sContext, mEnrollmentDao, mFlags));
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -3146,6 +3152,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 null)) {
             Assert.assertFalse(cursor.moveToNext());
         }
+        verifyErrorLogUtilError(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 
     @Test
@@ -3159,11 +3168,11 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         + "\"start_time\": \"0\", "
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(30))
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3]}]\n";
+                        + "\"summary_buckets\": [1, 2]}]\n";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 2;
         Source testSource =
@@ -3224,11 +3233,11 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         + "\"start_time\": \"0\", "
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(30))
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 4]}]\n";
+                        + "\"summary_buckets\": [1, 2, 3]}]\n";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
         Source testSource =
@@ -3389,12 +3398,12 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         + "\"start_time\": \"0\", "
                         + String.format(
                                 "\"end_times\": [%s, %s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(14),
-                                TimeUnit.DAYS.toMillis(30))
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(14),
+                                TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1, 2, 3, 5, 6]}]\n";
+                        + "\"summary_buckets\": [1, 2, 3, 5]}]\n";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 4;
         Source testSource =
@@ -3452,9 +3461,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         + "\"start_time\": \"0\", "
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(30))
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
@@ -3516,9 +3525,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         + "\"start_time\": \"0\", "
                         + String.format(
                                 "\"end_times\": [%s, %s, %s]}, ",
-                                TimeUnit.DAYS.toMillis(2),
-                                TimeUnit.DAYS.toMillis(7),
-                                TimeUnit.DAYS.toMillis(30))
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]\n";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
@@ -3576,7 +3585,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 "[{\"trigger_data\": [1, 2],"
                         + "\"event_report_windows\": { "
                         + "\"start_time\": \"0\", "
-                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(7))
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toSeconds(7))
                         + "\"summary_window_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]\n";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);

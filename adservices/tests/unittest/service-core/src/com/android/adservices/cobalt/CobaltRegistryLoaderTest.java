@@ -25,6 +25,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.cobalt.domain.Project;
 
 import com.google.cobalt.IntegerBuckets;
@@ -39,6 +40,7 @@ import com.google.cobalt.StringSketchParameters;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -47,6 +49,9 @@ import java.util.List;
 @RunWith(AndroidJUnit4.class)
 public class CobaltRegistryLoaderTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void cobaltRegistryIsValidated_isTrue() throws Exception {

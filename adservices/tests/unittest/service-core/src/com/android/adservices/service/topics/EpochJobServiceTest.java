@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -58,14 +59,13 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -102,10 +102,12 @@ public class EpochJobServiceTest {
     @Mock private JobParameters mMockJobParameters;
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule extendedMockito =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(EpochJobService.class)
@@ -131,9 +133,7 @@ public class EpochJobServiceTest {
                 .when(mSpyEpochJobService)
                 .getSystemService(JobScheduler.class);
 
-        mSpyLogger =
-                ExtendedMockitoExpectations.mockAdservicesJobServiceLogger(
-                        CONTEXT, mMockStatsdLogger);
+        mSpyLogger = mockAdServicesJobServiceLogger(CONTEXT, mMockFlags);
     }
 
     @After

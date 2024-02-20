@@ -134,14 +134,18 @@ public abstract class AbstractFledgeServiceFilter {
      *
      * @param uriForAdTech a {@link Uri} matching the ad tech to check against
      * @param callerPackageName the package name to check against
+     * @param apiType The type of API calling: custom audience or protect signals
      * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
      *     to perform the operation
      */
     protected AdTechIdentifier getAndAssertAdTechFromUriAllowed(
-            String callerPackageName, Uri uriForAdTech, int apiName)
+            String callerPackageName,
+            Uri uriForAdTech,
+            int apiName,
+            @AppManifestConfigCall.ApiType int apiType)
             throws FledgeAuthorizationFilter.AdTechNotAllowedException {
         return mFledgeAuthorizationFilter.getAndAssertAdTechFromUriAllowed(
-                mContext, callerPackageName, uriForAdTech, apiName);
+                mContext, callerPackageName, uriForAdTech, apiName, apiType);
     }
 
     /**

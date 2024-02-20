@@ -82,19 +82,33 @@ public class KAnonMessageManager {
                 .collect(Collectors.toList());
     }
 
+    /** Updates the status of messages in the table. */
+    public void updateMessagesStatus(
+            List<KAnonMessageEntity> messageEntities,
+            @KAnonMessageEntity.KanonMessageEntityStatus int status) {
+        List<Long> idsToUpdate =
+                messageEntities.stream()
+                        .map(KAnonMessageEntity::getMessageId)
+                        .collect(Collectors.toList());
+
+        mKAnonMessageDao.updateMessagesStatus(
+                idsToUpdate, KAnonMessageConstants.fromKAnonMessageEntityStatus(status));
+    }
+
     private DBKAnonMessage parseKAnonMessageEntityToNewDBKAnonMessage(
             KAnonMessageEntity kAnonMessageEntity) {
         if (kAnonMessageEntity == null) {
             return null;
         }
-        // TODO(b/321942045) Calculate expiry instant by picking up values from flag.
         return DBKAnonMessage.builder()
                 .setAdSelectionId(kAnonMessageEntity.getAdSelectionId())
                 .setKanonHashSet(kAnonMessageEntity.getHashSet())
                 .setStatus(
                         KAnonMessageConstants.fromKAnonMessageEntityStatus(
                                 kAnonMessageEntity.getStatus()))
-                .setExpiryInstant(mClock.instant())
+                // TODO(b/325606196): stable kanon flags.
+                .setExpiryInstant(
+                        mClock.instant().plusSeconds(mFlags.getFledgeKAnonMessageTtlSeconds()))
                 .setCreatedAt(mClock.instant())
                 .build();
     }

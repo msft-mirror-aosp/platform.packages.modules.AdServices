@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.extdata;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
@@ -53,7 +54,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -109,7 +110,7 @@ public final class AdServicesExtDataStorageServiceManager {
         mDataWorker = Objects.requireNonNull(dataWorker);
         mAdServicesLogger = Objects.requireNonNull(adServicesLogger);
         mPackageName = Objects.requireNonNull(packageName);
-        mClock = Clock.SYSTEM_CLOCK;
+        mClock = Clock.getInstance();
     }
 
     /** Init {@link AdServicesExtDataStorageServiceManager}. */
@@ -456,7 +457,7 @@ public final class AdServicesExtDataStorageServiceManager {
                             .setAppPackageName(mPackageName)
                             .setSdkPackageName(UNKNOWN_PACKAGE_NAME)
                             .setLatencyMillisecond(apiLatency)
-                            .setResultCode(resultCode)
+                            .setResult(resultCode, FAILURE_REASON_UNSET)
                             .build());
         }
     }

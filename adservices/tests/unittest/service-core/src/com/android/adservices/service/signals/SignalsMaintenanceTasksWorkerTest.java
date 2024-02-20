@@ -26,6 +26,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.pm.PackageManager;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
@@ -58,6 +59,9 @@ public class SignalsMaintenanceTasksWorkerTest {
     SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorker;
     Instant mNow;
     Instant mExpirationTime;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

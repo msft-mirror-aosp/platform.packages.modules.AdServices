@@ -27,10 +27,12 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.adid.AdIdCacheManager;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -46,6 +48,9 @@ public class AdIdFetcherTest {
     private ExecutorService mLightweightExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private AdIdFetcher mAdIdFetcher;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

@@ -39,13 +39,13 @@ abstract class ShellCommandTest<T extends ShellCommand> extends AdServicesMockit
     }
 
     void expectSuccess(Result actual, String expectedOut) {
-        expect.withMessage("result").that(actual.mStatus).isAtLeast(0);
+        expect.withMessage("result").that(actual.mStatus).isEqualTo(0);
         expect.withMessage("out").that(actual.mOut).isEqualTo(expectedOut);
         expect.withMessage("err").that(actual.mErr).isEmpty();
     }
 
     void expectSuccess(Result actual) {
-        expect.withMessage("result").that(actual.mStatus).isAtLeast(0);
+        expect.withMessage("result").that(actual.mStatus).isEqualTo(0);
         expect.withMessage("err").that(actual.mErr).isEmpty();
     }
 

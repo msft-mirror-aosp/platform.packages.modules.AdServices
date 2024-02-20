@@ -871,9 +871,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                             + "Expected debug aggregate report objects: %s\n\n"
                             + "Actual debug aggregate report objects: %s\n\n"
                             + "Expected debug report objects: %s\n\n"
-                            + "Actual debug report objects: %s\n\n"
-                            + "Expected unparsable registration objects: %s\n\n"
-                            + "Actual unparsable registration objects: %s\n",
+                            + "Actual debug report objects: %s\n",
                         prettify(
                                 expectedOutput.mEventReportObjects,
                                 actualOutput.mEventReportObjects),
@@ -885,9 +883,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         expectedOutput.mDebugAggregateReportObjects,
                         actualOutput.mDebugAggregateReportObjects,
                         expectedOutput.mDebugReportObjects,
-                        actualOutput.mDebugReportObjects,
-                        expectedOutput.mUnparsableRegistrationObjects,
-                        actualOutput.mUnparsableRegistrationObjects)
+                        actualOutput.mDebugReportObjects)
                 + getDatastoreState();
     }
 

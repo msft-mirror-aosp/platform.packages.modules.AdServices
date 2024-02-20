@@ -22,7 +22,10 @@ import static org.junit.Assert.assertNotEquals;
 import android.adservices.common.AdSelectionSignals;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AdSelectionSignalsTest {
@@ -31,6 +34,9 @@ public class AdSelectionSignalsTest {
     private static final String DIFFERENT_SIGNALS_STRING = "{\"a\":\"c\"}";
     private static final int ARRAY_SIZE = 10;
     private static final int DESCRIBE_CONTENTS_EXPECTATION = 0;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testAdSelectionSignalsGetSizeInBytes() {

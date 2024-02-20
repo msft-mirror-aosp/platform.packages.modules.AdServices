@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
@@ -30,12 +31,15 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.MockitoSession;
 
@@ -48,6 +52,9 @@ public class FledgeAllowListsFilterTest {
     private FledgeAllowListsFilter mFledgeAllowListsFilter;
 
     public MockitoSession mMockitoSession;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -97,7 +104,12 @@ public class FledgeAllowListsFilterTest {
                 exception.getMessage());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+                        eq(API_NAME_LOGGING_ID),
+                        anyInt(),
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_CALLER_NOT_ALLOWED,
+                                        FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST)));
 
         verifyNoMoreInteractions(mAdServicesLoggerMock);
     }

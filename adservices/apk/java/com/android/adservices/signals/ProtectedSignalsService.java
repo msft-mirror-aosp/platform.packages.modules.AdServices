@@ -58,7 +58,7 @@ public class ProtectedSignalsService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (mFlags.getProtectedSignalsServiceKillSwitch()) {
+        if (!mFlags.getProtectedSignalsEnabled()) {
             sLogger.e("Protected Signals API is disabled");
             return;
         }
@@ -75,7 +75,7 @@ public class ProtectedSignalsService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        if (mFlags.getProtectedSignalsServiceKillSwitch()) {
+        if (!mFlags.getProtectedSignalsEnabled()) {
             sLogger.e("Protected signals API is disabled");
             // Return null so that clients can not bind to the service.
             return null;

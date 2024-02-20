@@ -580,8 +580,7 @@
               "key": "0x559",
               "value": 1
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"
@@ -594,8 +593,7 @@
               "key": "0x559",
               "value": 2
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601001"
@@ -608,8 +606,7 @@
               "key": "0x559",
               "value": 3
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601002"
@@ -622,8 +619,7 @@
               "key": "0x559",
               "value": 4
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601003"
@@ -636,8 +632,7 @@
               "key": "0x559",
               "value": 5
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601004"
@@ -650,8 +645,7 @@
               "key": "0x559",
               "value": 6
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601005"
@@ -664,8 +658,7 @@
               "key": "0x559",
               "value": 7
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601006"
@@ -678,8 +671,7 @@
               "key": "0x559",
               "value": 8
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601007"
@@ -692,8 +684,7 @@
               "key": "0x559",
               "value": 9
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601008"
@@ -706,8 +697,7 @@
               "key": "0x559",
               "value": 10
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601009"
@@ -720,8 +710,7 @@
               "key": "0x559",
               "value": 11
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601010"
@@ -734,8 +723,7 @@
               "key": "0x559",
               "value": 12
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601011"
@@ -748,8 +736,7 @@
               "key": "0x559",
               "value": 13
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601012"
@@ -762,8 +749,7 @@
               "key": "0x559",
               "value": 14
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601013"
@@ -776,8 +762,7 @@
               "key": "0x559",
               "value": 15
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601014"
@@ -790,8 +775,7 @@
               "key": "0x559",
               "value": 16
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601015"
@@ -804,8 +788,7 @@
               "key": "0x559",
               "value": 17
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601016"
@@ -818,8 +801,7 @@
               "key": "0x559",
               "value": 18
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601017"
@@ -832,8 +814,7 @@
               "key": "0x559",
               "value": 19
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601018"
@@ -846,8 +827,7 @@
               "key": "0x559",
               "value": 20
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601019"

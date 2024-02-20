@@ -59,14 +59,12 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -78,7 +76,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class MeasurementCompatibleManagerTest {
     private static final String CLIENT_PACKAGE_NAME = "com.android.adservices.endtoendtest";
@@ -117,12 +114,6 @@ public class MeasurementCompatibleManagerTest {
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
                     .setMsmtApiAppAllowList(sContext.getPackageName());
-
-    @Before
-    public void setUp() throws TimeoutException {
-        // TODO(b/290394919): disable AppSearch & MeasurementRollback until implemented on R
-        disableAppSearchOnR();
-    }
 
     @After
     public void tearDown() {
@@ -1547,16 +1538,5 @@ public class MeasurementCompatibleManagerTest {
 
     private void resetOverrideConsentManagerDebugMode() {
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
-    }
-
-    private void disableAppSearchOnR() {
-        if (SdkLevel.isAtLeastS()) {
-            return;
-        }
-
-        flags.setFlag(FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, 1)
-                .setFlag(FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 1)
-                .setFlag(FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA, false)
-                .setMeasurementRollbackDeletionAppSearchKillSwitch(true);
     }
 }

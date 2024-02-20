@@ -36,8 +36,8 @@ import android.adservices.common.CommonFixture;
 import android.os.LimitExceededException;
 import android.os.Process;
 
-
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -57,6 +57,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 
+@RequiresSdkLevelAtLeastS
 public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
