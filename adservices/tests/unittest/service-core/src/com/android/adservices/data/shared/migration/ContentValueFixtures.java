@@ -25,12 +25,12 @@ import static com.android.adservices.data.shared.migration.ContentValueFixtures.
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ATTRIBUTION_TRIGGER_REGISTRATION_URL;
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ATTRIBUTION_TRIGGER_REGISTRATION_URL_CS;
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ATTRIBUTION_TRIGGER_REGISTRATION_URL_U;
-import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.COMPANY_ID;
-import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.COMPANY_ID_CS;
-import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.COMPANY_ID_U;
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENCRYPTION_KEY_URL;
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENCRYPTION_KEY_URL_CS;
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENCRYPTION_KEY_URL_U;
+import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENROLLED_APIS;
+import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENROLLED_APIS_CS;
+import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENROLLED_APIS_U;
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENROLLMENT_ID;
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENROLLMENT_ID_CS;
 import static com.android.adservices.data.shared.migration.ContentValueFixtures.EnrollmentValues.ENROLLMENT_ID_U;
@@ -55,7 +55,7 @@ public class ContentValueFixtures {
 
         // Default Enrollment Example Data
         public static final String ENROLLMENT_ID = "enrollment_id";
-        public static final String COMPANY_ID = "COMPANY_ID";
+        public static final String ENROLLED_APIS = "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING";
         public static final String SDK_NAMES = "SDK_NAMES";
         public static final String ATTRIBUTION_SOURCE_REGISTRATION_URL =
                 WebUtil.validUrl("https://subdomain.example.test/source");
@@ -70,7 +70,7 @@ public class ContentValueFixtures {
 
         // Cross Site to Default Enrollment Data
         public static final String ENROLLMENT_ID_CS = "enrollment_id_cs";
-        public static final String COMPANY_ID_CS = "COMPANY_ID";
+        public static final String ENROLLED_APIS_CS = "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING";
         public static final String SDK_NAMES_CS = "SDK_NAMES";
         public static final String ATTRIBUTION_SOURCE_REGISTRATION_URL_CS =
                 WebUtil.validUrl("https://subdomain2.example.test/source");
@@ -85,7 +85,7 @@ public class ContentValueFixtures {
 
         // Cross Site to Default Enrollment Data
         public static final String ENROLLMENT_ID_U = "enrollment_id_u";
-        public static final String COMPANY_ID_U = "COMPANY_ID";
+        public static final String ENROLLED_APIS_U = "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING";
         public static final String SDK_NAMES_U = "SDK_NAMES";
         public static final String ATTRIBUTION_SOURCE_REGISTRATION_URL_U =
                 WebUtil.validUrl("https://subdomain.unique-example.test/source");
@@ -102,7 +102,7 @@ public class ContentValueFixtures {
     public static ContentValues generateEnrollmentDefaultExampleContentValuesV1() {
         ContentValues values = new ContentValues();
         values.put(EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID, ENROLLMENT_ID);
-        values.put(EnrollmentTables.EnrollmentDataContract.COMPANY_ID, COMPANY_ID);
+        values.put(EnrollmentTables.EnrollmentDataContract.COMPANY_ID, ENROLLED_APIS);
         values.put(EnrollmentTables.EnrollmentDataContract.SDK_NAMES, SDK_NAMES);
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
@@ -124,7 +124,7 @@ public class ContentValueFixtures {
     public static ContentValues generateEnrollmentUniqueExampleContentValuesV1() {
         ContentValues values = new ContentValues();
         values.put(EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID, ENROLLMENT_ID_U);
-        values.put(EnrollmentTables.EnrollmentDataContract.COMPANY_ID, COMPANY_ID_U);
+        values.put(EnrollmentTables.EnrollmentDataContract.COMPANY_ID, ENROLLED_APIS_U);
         values.put(EnrollmentTables.EnrollmentDataContract.SDK_NAMES, SDK_NAMES_U);
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
@@ -147,7 +147,7 @@ public class ContentValueFixtures {
     public static ContentValues generateEnrollmentCrossSiteExampleContentValuesV1() {
         ContentValues values = new ContentValues();
         values.put(EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID, ENROLLMENT_ID_CS);
-        values.put(EnrollmentTables.EnrollmentDataContract.COMPANY_ID, COMPANY_ID_CS);
+        values.put(EnrollmentTables.EnrollmentDataContract.COMPANY_ID, ENROLLED_APIS_CS);
         values.put(EnrollmentTables.EnrollmentDataContract.SDK_NAMES, SDK_NAMES_CS);
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,

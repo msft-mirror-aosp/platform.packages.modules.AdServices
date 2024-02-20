@@ -162,6 +162,14 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initRvc() {}
 
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+        configureElement(R.id.apps_ga_introduction, R.string.settingsUI_pas_apps_view_body_text);
+        configureElement(R.id.apps_view_ga_footer_text, R.string.settingsUI_pas_apps_view_footer);
+        configureLink(R.id.apps_view_ga_footer_text);
+    }
+
     private void configureSharedElements() {
         // recycler view (apps list)
         Function<App, OnClickListener> getOnclickListener =
@@ -231,7 +239,7 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
                                 break;
                             case BLOCK_APP:
                                 UiStatsLogger.logBlockAppSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockAppDialog(
                                                 mActivity, mAppsViewModel, app);
@@ -245,7 +253,7 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
                                 break;
                             case RESET_APPS:
                                 UiStatsLogger.logResetAppSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetAppDialog(
                                                 mActivity, mAppsViewModel);

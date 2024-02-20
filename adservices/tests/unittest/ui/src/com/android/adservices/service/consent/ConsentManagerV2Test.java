@@ -201,7 +201,8 @@ import java.util.stream.Collectors;
 @MockStatic(SdkLevel.class)
 @SmallTest
 public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCase {
-
+    public static final int UX_TYPE_COUNT = 5;
+    public static final int ENROLLMENT_CHANNEL_COUNT = 22;
     private BooleanFileDatastore mDatastore;
     private BooleanFileDatastore mConsentDatastore;
     private ConsentManagerV2 mConsentManager;
@@ -590,7 +591,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     public void testJobsAreScheduledAfterEnablingKillSwitchOff() {
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
-        doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+        mockMeasurementEnabled(true);
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
@@ -642,7 +643,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     public void testJobsAreNotScheduledAfterEnablingKillSwitchOn() {
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
-        doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
+        mockMeasurementEnabled(false);
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
 
@@ -3489,6 +3490,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                                         any(), eq(packageName), anyInt()));
     }
 
+    private void mockMeasurementEnabled(boolean value) {
+        when(mMockFlags.getMeasurementEnabled()).thenReturn(value);
+    }
+
     private List<ApplicationInfo> createApplicationInfos(String... packageNames) {
         return Arrays.stream(packageNames)
                 .map(s -> ApplicationInfoBuilder.newBuilder().setPackageName(s).build())
@@ -4153,8 +4158,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             spyConsentManager.setUx(ux);
         }
 
-        verify(mUxStatesDaoMock, times(5)).getUx();
-        verify(mUxStatesDaoMock, times(5)).setUx(any());
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4171,8 +4176,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             spyConsentManager.setUx(ux);
         }
 
-        verify(mMockIAdServicesManager, times(5)).getUx();
-        verify(mMockIAdServicesManager, times(5)).setUx(any());
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).getUx();
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4189,8 +4194,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             spyConsentManager.setUx(ux);
         }
 
-        verify(mMockIAdServicesManager, times(5)).getUx();
-        verify(mMockIAdServicesManager, times(5)).setUx(any());
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).getUx();
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4208,8 +4213,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             spyConsentManager.setUx(ux);
         }
 
-        verify(mAppSearchConsentManagerMock, times(5)).getUx();
-        verify(mAppSearchConsentManagerMock, times(5)).setUx(any());
+        verify(mAppSearchConsentManagerMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mAppSearchConsentManagerMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4240,8 +4245,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             }
         }
 
-        verify(mUxStatesDaoMock, times(20)).getEnrollmentChannel(any());
-        verify(mUxStatesDaoMock, times(20)).setEnrollmentChannel(any(), any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel(any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 
     @Test
@@ -4261,8 +4267,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             }
         }
 
-        verify(mMockIAdServicesManager, times(20)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(20)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4282,8 +4289,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             }
         }
 
-        verify(mMockIAdServicesManager, times(20)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(20)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4304,7 +4312,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
             }
         }
 
-        verify(mAppSearchConsentManagerMock, times(20)).getEnrollmentChannel(any());
-        verify(mAppSearchConsentManagerMock, times(20)).setEnrollmentChannel(any(), any());
+        verify(mAppSearchConsentManagerMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .getEnrollmentChannel(any());
+        verify(mAppSearchConsentManagerMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 }

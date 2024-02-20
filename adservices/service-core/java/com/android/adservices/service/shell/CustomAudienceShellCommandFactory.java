@@ -16,31 +16,68 @@
 
 package com.android.adservices.service.shell;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.Flags;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
-public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-    static ShellCommandFactory getInstance() {
-        return new CustomAudienceShellCommandFactory();
+public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
+    public static final String COMMAND_PREFIX = "custom-audience";
+    private final Map<String, ShellCommand> mAllCommandsMap;
+    private final boolean mIsCustomAudienceCliEnabled;
+
+    @VisibleForTesting
+    CustomAudienceShellCommandFactory(
+            boolean isCustomAudienceCliEnabled, @NonNull CustomAudienceDao customAudienceDao) {
+        mIsCustomAudienceCliEnabled = isCustomAudienceCliEnabled;
+        Set<ShellCommand> allCommands =
+                ImmutableSet.of(
+                        new CustomAudienceListCommand(customAudienceDao),
+                        new CustomAudienceViewCommand(customAudienceDao));
+        mAllCommandsMap =
+                allCommands.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        ShellCommand::getCommandName, Function.identity()));
+    }
+
+    static ShellCommandFactory getInstance(Flags flags) {
+        return new CustomAudienceShellCommandFactory(
+                flags.getFledgeCustomAudienceCLIEnabledStatus(),
+                CustomAudienceDatabase.getInstance(ApplicationContextSingleton.get())
+                        .customAudienceDao());
     }
 
     @Nullable
     @Override
     public ShellCommand getShellCommand(String cmd) {
-        switch (cmd) {
-            case CustomAudienceListCommand.CMD:
-                return new CustomAudienceListCommand();
-            case CustomAudienceViewCommand.CMD:
-                return new CustomAudienceViewCommand();
-            default:
-                return null;
+        if (!mAllCommandsMap.containsKey(cmd)) {
+            Log.d(
+                    AdServicesShellCommandHandler.TAG,
+                    String.format("Invalid command for Custom Audience Shell Factory: %s", cmd));
+            return null;
         }
+        if (!mIsCustomAudienceCliEnabled) {
+            return new NoOpShellCommand(cmd);
+        }
+        return mAllCommandsMap.getOrDefault(cmd, null);
     }
 
     @Override
-    public ImmutableSet<String> getAllCommands() {
-        return ImmutableSet.of(CustomAudienceListCommand.CMD, CustomAudienceViewCommand.CMD);
+    public String getCommandPrefix() {
+        return COMMAND_PREFIX;
     }
 }

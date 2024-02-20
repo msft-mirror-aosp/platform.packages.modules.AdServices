@@ -20,6 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdTechIdentifier;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class PersistAdSelectionResultRequestTest {
@@ -27,17 +30,54 @@ public class PersistAdSelectionResultRequestTest {
     private static final long AD_SELECTION_ID = 123456789L;
     private static final byte[] AD_SELECTION_RESULT = new byte[10];
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
-    public void testPersistAdSelectionResultRequest_validInput_success() {
+    public void testPersistAdSelectionResultRequest_validInput_successWithDeprecatedField() {
         PersistAdSelectionResultRequest request =
                 new PersistAdSelectionResultRequest.Builder()
                         .setSeller(SELLER)
+                        // using deprecated method
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionResult(AD_SELECTION_RESULT)
                         .build();
 
         assertThat(request.getSeller()).isEqualTo(SELLER);
         assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
+        assertThat(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
+    }
+
+    @Test
+    public void testPersistAdSelectionResultRequest_validInput_successWithUpdatedField() {
+        PersistAdSelectionResultRequest request =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionDataId(AD_SELECTION_ID)
+                        .setAdSelectionResult(AD_SELECTION_RESULT)
+                        .build();
+
+        assertThat(request.getSeller()).isEqualTo(SELLER);
+        assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
+        assertThat(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
+    }
+
+    @Test
+    public void
+            testPersistAdSelectionResultRequest_validInput_valueOfIdGettersIsSameAfterCallingBothSetters() {
+        PersistAdSelectionResultRequest request =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionDataId(AD_SELECTION_ID + 1)
+                        .setAdSelectionResult(AD_SELECTION_RESULT)
+                        .build();
+
+        assertThat(request.getSeller()).isEqualTo(SELLER);
+        assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID + 1);
+        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID + 1);
         assertThat(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
     }
 }

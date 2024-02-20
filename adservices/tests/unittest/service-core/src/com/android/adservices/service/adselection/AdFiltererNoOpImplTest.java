@@ -27,12 +27,14 @@ import android.adservices.common.AdFilters;
 import android.adservices.common.AppInstallFilters;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -55,6 +57,9 @@ public class AdFiltererNoOpImplTest {
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/decisionPath/"));
 
     private AdFilterer mAdFilterer;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

@@ -16,9 +16,10 @@
 
 package com.android.adservices.spe;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /** Enum class to store background jobs metadata. */
 public enum AdServicesJobInfo {
@@ -76,20 +77,30 @@ public enum AdServicesJobInfo {
 
     EXT_APPSEARCH_DELETE_INITIAL_SCHEDULER_JOB("EXT_APPSEARCH_DELETE_INITIAL_SCHEDULER_JOB", 27),
 
-    EXT_APPSEARCH_DELETE_PERIODIC_SCHEDULER_JOB("EXT_APPSEARCH_DELETE_PERIODIC_SCHEDULER_JOB", 28),
-
-    EXT_APPSEARCH_DELETE_JOB("EXT_APPSEARCH_DELETE_JOB", 28),
-
     PERIODIC_SIGNALS_ENCODING_JOB("PERIODIC_SIGNALS_ENCODING_JOB", 29),
 
-    ENCRYPTION_KEY_PERIODIC_JOB("ENCRYPTION_KEY_PERIODIC_JOB", 30);
+    ENCRYPTION_KEY_PERIODIC_JOB("ENCRYPTION_KEY_PERIODIC_JOB", 30),
+
+    FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB("FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB", 31),
+
+    SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB(
+            "SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB", 32);
 
     private final String mJobServiceName;
     private final int mJobId;
 
-    // The reverse mapping to get Job Info by Job ID.
+    // The reverse mapping to get job name by job ID.
+    private static final Map<Integer, String> JOB_ID_TO_NAME_MAP =
+            Arrays.stream(AdServicesJobInfo.values())
+                    .collect(
+                            Collectors.toMap(
+                                    AdServicesJobInfo::getJobId,
+                                    AdServicesJobInfo::getJobServiceName));
+
+    // The reverse mapping to get job info by job ID.
     private static final Map<Integer, AdServicesJobInfo> JOB_ID_TO_INFO_MAP =
-            Collections.unmodifiableMap(initializeMapping());
+            Arrays.stream(AdServicesJobInfo.values())
+                    .collect(Collectors.toMap(AdServicesJobInfo::getJobId, Function.identity()));
 
     AdServicesJobInfo(String jobServiceName, int jobId) {
         mJobServiceName = jobServiceName;
@@ -114,16 +125,11 @@ public enum AdServicesJobInfo {
         return mJobId;
     }
 
-    static Map<Integer, AdServicesJobInfo> getJobIdToInfoMap() {
+    public static Map<Integer, AdServicesJobInfo> getJobIdToJobInfoMap() {
         return JOB_ID_TO_INFO_MAP;
     }
 
-    private static Map<Integer, AdServicesJobInfo> initializeMapping() {
-        Map<Integer, AdServicesJobInfo> map = new HashMap<>();
-        for (AdServicesJobInfo info : AdServicesJobInfo.values()) {
-            map.put(info.getJobId(), info);
-        }
-
-        return map;
+    public static Map<Integer, String> getJobIdToJobNameMap() {
+        return JOB_ID_TO_NAME_MAP;
     }
 }

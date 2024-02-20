@@ -23,7 +23,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOverrideCallback;
-import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.PersistAdSelectionResultCallback;
@@ -197,7 +197,7 @@ interface AdSelectionService {
      */
     void overrideAdSelectionConfigRemoteInfo(in AdSelectionConfig adSelectionConfig,
             in String decisionLogicJS, in AdSelectionSignals trustedScoringSignals,
-            in BuyersDecisionLogic buyersDecisionLogic, in AdSelectionOverrideCallback callback);
+            in PerBuyerDecisionLogic perBuyerDecisionLogic, in AdSelectionOverrideCallback callback);
     /**
      * Gives the provided list of adtechs permission do app install filtering based on the presence
      * of the calling app.

@@ -31,7 +31,7 @@ import java.util.Objects;
 
 /** Deserialize the message from a binary representation according to the framing indicator. */
 @AutoValue
-class BinaryHttpMessageDeserializer {
+public class BinaryHttpMessageDeserializer {
 
     /**
      * Deserialize the message from a binary representation according to the framing indicator.
@@ -43,7 +43,7 @@ class BinaryHttpMessageDeserializer {
      *     HTTP Padding And Truncation</a>
      */
     @NonNull
-    public static BinaryHttpMessage deserialize(@NonNull final byte[] data) {
+    public BinaryHttpMessage deserialize(@NonNull final byte[] data) {
         final BinaryHttpByteArrayReader reader = new BinaryHttpByteArrayReader(data);
         switch (reader.getFramingIndicatorByte()) {
             case FramingIndicator.FRAMING_INDICATOR_REQUEST_OF_KNOWN_LENGTH:

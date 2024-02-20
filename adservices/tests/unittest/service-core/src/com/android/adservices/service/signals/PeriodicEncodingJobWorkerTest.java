@@ -34,6 +34,7 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogicMetadata;
@@ -129,6 +130,9 @@ public class PeriodicEncodingJobWorkerTest {
             AdServicesExecutors.getLightWeightExecutor();
 
     private PeriodicEncodingJobWorker mJobWorker;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

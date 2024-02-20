@@ -56,6 +56,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 
 import android.adservices.adid.AdId;
 import android.adservices.adselection.AdSelectionCallback;
@@ -64,8 +65,8 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.DecisionLogic;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -111,6 +112,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -147,6 +149,8 @@ import com.android.adservices.service.adselection.EventReporter;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.adselection.MockAdIdWorker;
+import com.android.adservices.service.adselection.MultiCloudSupportStrategy;
+import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -163,8 +167,8 @@ import com.android.adservices.service.customaudience.CustomAudienceValidator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -261,8 +265,8 @@ public class FledgeE2ETest {
                             + "\t\"render_uri_1\": \"signals_for_1\",\n"
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
-    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
-            new BuyersDecisionLogic(
+    private static final PerBuyerDecisionLogic BUYERS_DECISION_LOGIC =
+            new PerBuyerDecisionLogic(
                     ImmutableMap.of(
                             CommonFixture.VALID_BUYER_1, new DecisionLogic("reportWin()"),
                             CommonFixture.VALID_BUYER_2, new DecisionLogic("reportWin()")));
@@ -294,9 +298,12 @@ public class FledgeE2ETest {
     private static final AdCost AD_COST_1 = new AdCost(1.2, NUM_BITS_STOCHASTIC_ROUNDING);
     private static final AdCost AD_COST_2 = new AdCost(2.2, NUM_BITS_STOCHASTIC_ROUNDING);
 
-    private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
 
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule deviceSupportRule =
             new AdServicesDeviceSupportedRule();
 
@@ -337,23 +344,19 @@ public class FledgeE2ETest {
                     false, true, true, true, false, false, false, false, false, false);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
-
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
-
-    @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLogger);
-
+    private FledgeAllowListsFilter mFledgeAllowListsFilterSpy;
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-
     @Mock private File mMockDBAdSelectionFile;
-
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
-    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy =
+            MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     private MockAdIdWorker mMockAdIdWorker;
     private AdIdFetcher mAdIdFetcher;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     @Before
     public void setUp() throws Exception {
@@ -369,7 +372,11 @@ public class FledgeE2ETest {
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
+
         doReturn(DEFAULT_FLAGS).when(FlagsFactory::getFlags);
+
+        mFledgeAllowListsFilterSpy =
+                spy(new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLoggerMock));
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT_SPY, CustomAudienceDatabase.class)
@@ -1242,16 +1249,17 @@ public class FledgeE2ETest {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         CONTEXT_SPY,
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptorMock,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         mAdSelectionConfig =
@@ -1403,16 +1411,17 @@ public class FledgeE2ETest {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         CONTEXT_SPY,
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptorMock,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         mAdSelectionConfig =
@@ -1935,18 +1944,26 @@ public class FledgeE2ETest {
         MockWebServer server =
                 getMockWebServer(
                         getDecisionLogicJsWithDebugReporting(
-                                mLocalhostBuyerDomain.buildUpon().path(
-                                        SELLER_DEBUG_REPORT_WIN_PATH).build()
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(SELLER_DEBUG_REPORT_WIN_PATH)
+                                                .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM,
-                                mLocalhostBuyerDomain.buildUpon().path(
-                                        SELLER_DEBUG_REPORT_LOSS_PATH).build()
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(SELLER_DEBUG_REPORT_LOSS_PATH)
+                                                .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM),
                         getBiddingLogicWithDebugReporting(
-                                mLocalhostBuyerDomain.buildUpon().path(
-                                        BUYER_DEBUG_REPORT_WIN_PATH).build()
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(BUYER_DEBUG_REPORT_WIN_PATH)
+                                                .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM,
-                                mLocalhostBuyerDomain.buildUpon().path(
-                                        BUYER_DEBUG_REPORT_LOSS_PATH).build()
+                                mLocalhostBuyerDomain
+                                                .buildUpon()
+                                                .path(BUYER_DEBUG_REPORT_LOSS_PATH)
+                                                .build()
                                         + DEBUG_REPORT_WINNING_BID_PARAM),
                         /* debugReportingLatch= */ debugReportingLatch);
         doNothing()
@@ -2324,7 +2341,7 @@ public class FledgeE2ETest {
         initClients(true, true, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
-                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2432,7 +2449,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
-                        /*debugReportingLatch=*/ null,
+                        /* debugReportingLatch= */ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2486,7 +2503,7 @@ public class FledgeE2ETest {
         initClients(true, true, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
-                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2594,7 +2611,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
-                        /*debugReportingLatch=*/ null,
+                        /* debugReportingLatch= */ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2650,7 +2667,7 @@ public class FledgeE2ETest {
         initClients(true, true, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
-                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2758,7 +2775,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
-                        /*debugReportingLatch=*/ null,
+                        /* debugReportingLatch= */ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -2824,7 +2841,7 @@ public class FledgeE2ETest {
         initClients(true, true, false, false, false);
         doReturn(LOCALHOST_BUYER)
                 .when(mFledgeAuthorizationFilterMock)
-                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt());
+                .getAndAssertAdTechFromUriAllowed(any(), any(), any(), anyInt(), anyInt());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -2932,7 +2949,7 @@ public class FledgeE2ETest {
                         getV3BiddingLogicJs(),
                         impressionReportingSemaphore,
                         interactionReportingSemaphore,
-                        /*debugReportingLatch=*/ null,
+                        /* debugReportingLatch= */ null,
                         true);
 
         // TODO(b/289276159): Schedule background fetch if needed once added to fetchCA.
@@ -3009,16 +3026,17 @@ public class FledgeE2ETest {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         CONTEXT_SPY,
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptorMock,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         doReturn(AdServicesApiConsent.GIVEN)
@@ -3049,7 +3067,7 @@ public class FledgeE2ETest {
                                         AdTechIdentifier.fromString(
                                                 mLocalhostBuyerDomain.getHost()),
                                         AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .setBuyerSignedContextualAds(createContextualAds())
+                        .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
 
         String decisionLogicJs =
@@ -3304,7 +3322,11 @@ public class FledgeE2ETest {
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
         // Registers the test app for app install filtering
-        registerForAppInstallFiltering();
+        // Should fail since flag is turned off
+        // Everything else should pass
+        AppInstallResultCapturingCallback callback = invokeSetAppInstallAdvertisers();
+        assertFalse(callback.isSuccess());
+        assertTrue(callback.getException() instanceof IllegalStateException);
 
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);
@@ -3764,15 +3786,33 @@ public class FledgeE2ETest {
                         .setAdvertisers(advertisers)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                         .build();
-        CountDownLatch appInstallDone = new CountDownLatch(1);
         AppInstallResultCapturingCallback appInstallCallback =
-                new AppInstallResultCapturingCallback(appInstallDone);
-        mAdSelectionService.setAppInstallAdvertisers(
-                setAppInstallAdvertisersInput, appInstallCallback);
-        assertTrue(appInstallDone.await(5, TimeUnit.SECONDS));
+                invokeSetAppInstallAdvertisers(setAppInstallAdvertisersInput);
         assertTrue(
                 "App Install call failed with: " + appInstallCallback.getException(),
                 appInstallCallback.isSuccess());
+    }
+
+    private AppInstallResultCapturingCallback invokeSetAppInstallAdvertisers()
+            throws RemoteException, InterruptedException {
+        Set<AdTechIdentifier> advertisers =
+                Collections.singleton(AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()));
+        SetAppInstallAdvertisersInput setAppInstallAdvertisersInput =
+                new SetAppInstallAdvertisersInput.Builder()
+                        .setAdvertisers(advertisers)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+        return invokeSetAppInstallAdvertisers(setAppInstallAdvertisersInput);
+    }
+
+    private AppInstallResultCapturingCallback invokeSetAppInstallAdvertisers(
+            SetAppInstallAdvertisersInput input) throws RemoteException, InterruptedException {
+        CountDownLatch appInstallDone = new CountDownLatch(1);
+        AppInstallResultCapturingCallback appInstallCallback =
+                new AppInstallResultCapturingCallback(appInstallDone);
+        mAdSelectionService.setAppInstallAdvertisers(input, appInstallCallback);
+        assertTrue(appInstallDone.await(5, TimeUnit.SECONDS));
+        return appInstallCallback;
     }
 
     private String getV3BiddingLogicJs() {
@@ -3852,8 +3892,12 @@ public class FledgeE2ETest {
         return "function scoreAd(ad, bid, auction_config, seller_signals,"
                 + " trusted_scoring_signals, contextual_signal, user_signal,"
                 + " custom_audience_signal) { \n"
-                + "  forDebuggingOnly.reportAdAuctionWin('" + reportWinUrl + "');"
-                + "  forDebuggingOnly.reportAdAuctionLoss('" + reportLossUrl + "');"
+                + "  forDebuggingOnly.reportAdAuctionWin('"
+                + reportWinUrl
+                + "');"
+                + "  forDebuggingOnly.reportAdAuctionLoss('"
+                + reportLossUrl
+                + "');"
                 + "  return {'status': 0, 'score': bid };\n"
                 + "}";
     }
@@ -3885,8 +3929,12 @@ public class FledgeE2ETest {
                 + "    for (const ad of ads) {\n"
                 + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
                 + "            result = ad;\n"
-                + "            forDebuggingOnly.reportAdAuctionWin('" + reportWinUrl + "');"
-                + "            forDebuggingOnly.reportAdAuctionLoss('" + reportLossUrl + "');"
+                + "            forDebuggingOnly.reportAdAuctionWin('"
+                + reportWinUrl
+                + "');"
+                + "            forDebuggingOnly.reportAdAuctionLoss('"
+                + reportLossUrl
+                + "');"
                 + "        }\n"
                 + "    }\n"
                 + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
@@ -3990,9 +4038,7 @@ public class FledgeE2ETest {
     }
 
     private MockWebServer getMockWebServer(
-            String decisionLogicJs,
-            String biddingLogicJs,
-            CountDownLatch debugReportingLatch)
+            String decisionLogicJs, String biddingLogicJs, CountDownLatch debugReportingLatch)
             throws Exception {
         return getMockWebServer(
                 new HashMap<>(),
@@ -4338,7 +4384,7 @@ public class FledgeE2ETest {
                         mConsentManagerMock,
                         mDevContextFilterMock,
                         MoreExecutors.newDirectExecutorService(),
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4374,16 +4420,17 @@ public class FledgeE2ETest {
                         mBackgroundExecutorService,
                         mScheduledExecutor,
                         CONTEXT_SPY,
-                        mAdServicesLogger,
+                        mAdServicesLoggerMock,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptorMock,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
     }
 
@@ -4445,7 +4492,7 @@ public class FledgeE2ETest {
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS,
             AdSelectionSignals trustedScoringSignals,
-            BuyersDecisionLogic buyerDecisionLogicMap)
+            PerBuyerDecisionLogic buyerDecisionLogicMap)
             throws Exception {
         // Counted down in 1) callback
         CountDownLatch resultLatch = new CountDownLatch(1);

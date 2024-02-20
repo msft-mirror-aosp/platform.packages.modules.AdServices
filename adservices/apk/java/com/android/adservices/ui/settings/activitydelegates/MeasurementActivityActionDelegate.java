@@ -69,6 +69,13 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
         initU18();
     }
 
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+        configureElement(R.id.measurement_footer, R.string.settingsUI_pas_msmt_view_footer);
+        configureLink(R.id.measurement_footer);
+    }
+
     private void configureSharedElements() {
         // consent switch
         configureElement(

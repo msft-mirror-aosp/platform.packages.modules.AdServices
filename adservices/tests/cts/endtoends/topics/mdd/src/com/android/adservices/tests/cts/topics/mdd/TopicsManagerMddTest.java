@@ -17,6 +17,7 @@
 package com.android.adservices.tests.cts.topics;
 
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -92,10 +93,10 @@ public class TopicsManagerMddTest {
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
                     // We need to turn off random topic so that we can verify the returned topic.
                     .setTopicsPercentageForRandomTopicForTests(
                             TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
+                    .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS)
                     .setFlag(
                             KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL, TEST_MDD_MANIFEST_FILE_URL)
                     .setCompatModeFlags();

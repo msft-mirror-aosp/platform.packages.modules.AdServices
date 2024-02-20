@@ -16,9 +16,15 @@
 
 package com.android.adservices.service.appsetid;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
@@ -61,7 +67,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -135,7 +141,10 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
         // Empty allow list.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
         invokeGetAppSetIdAndVerifyError(
-                mContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+                mContext,
+                STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */
+                true,
+                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
     }
 
     @Test
@@ -153,7 +162,11 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                 .thenReturn(false);
         // We don't log STATUS_RATE_LIMIT_REACHED for getAppSetId API.
         invokeGetAppSetIdAndVerifyError(
-                mContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
+                mContext,
+                STATUS_RATE_LIMIT_REACHED,
+                request, /* checkLoggingStatus */
+                false,
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -233,20 +246,67 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         invokeGetAppSetIdAndVerifyError(
-                mContext, STATUS_CALLER_NOT_ALLOWED, mRequest, /* checkLoggingStatus */ true);
+                mContext,
+                STATUS_CALLER_NOT_ALLOWED,
+                mRequest, /* checkLoggingStatus */
+                true,
+                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+    }
+
+    @Test
+    public void testGetAppSetId_enforceCallingPackage_logCallingPackageNotFound() throws Exception {
+        doNothingOnErrorLogUtilError();
+        when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0))
+                .thenThrow(new PackageManager.NameNotFoundException());
+
+        mRequest =
+                new GetAppSetIdParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkPackageName(SOME_SDK_NAME)
+                        .build();
+
+        invokeGetAppSetIdAndVerifyError(
+                mSpyContext,
+                STATUS_UNAUTHORIZED,
+                mRequest, /* checkLoggingStatus */
+                true,
+                FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND);
+    }
+
+    @Test
+    public void testGetAppSetId_enforceCallingPackage_logCallingPackageIdMismatch()
+            throws Exception {
+        when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(/* uid */ -1);
+
+        mRequest =
+                new GetAppSetIdParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkPackageName(SOME_SDK_NAME)
+                        .build();
+
+        invokeGetAppSetIdAndVerifyError(
+                mSpyContext,
+                STATUS_UNAUTHORIZED,
+                mRequest, /* checkLoggingStatus */
+                true,
+                FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID);
     }
 
     private void invokeGetAppSetIdAndVerifyError(
-            Context context, int expectedResultCode, boolean checkLoggingStatus)
+            Context context, int expectedResultCode, boolean checkLoggingStatus, int failureReason)
             throws InterruptedException {
-        invokeGetAppSetIdAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
+        invokeGetAppSetIdAndVerifyError(
+                context, expectedResultCode, mRequest, checkLoggingStatus, failureReason);
     }
 
     private void invokeGetAppSetIdAndVerifyError(
             Context context,
             int expectedResultCode,
             GetAppSetIdParam request,
-            boolean checkLoggingStatus)
+            boolean checkLoggingStatus,
+            int failureReason)
             throws InterruptedException {
         SyncIGetAppSetIdCallback callback =
                 new SyncIGetAppSetIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
@@ -292,6 +352,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                     .isEqualTo(request.getAppPackageName());
             assertThat(argument.getValue().getSdkPackageName())
                     .isEqualTo(request.getSdkPackageName());
+            assertThat(argument.getValue().getFailureReason()).isEqualTo(failureReason);
         }
     }
 

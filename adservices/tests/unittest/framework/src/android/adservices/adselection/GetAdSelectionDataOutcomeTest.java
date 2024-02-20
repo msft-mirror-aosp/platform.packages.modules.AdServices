@@ -18,12 +18,17 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class GetAdSelectionDataOutcomeTest {
     private static final long AD_SELECTION_ID = 123456789L;
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
-    ;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetAdSelectionDataRequest_validInput_success() {
@@ -34,6 +39,7 @@ public class GetAdSelectionDataOutcomeTest {
                         .build();
 
         assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
         assertThat(request.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
     }
 

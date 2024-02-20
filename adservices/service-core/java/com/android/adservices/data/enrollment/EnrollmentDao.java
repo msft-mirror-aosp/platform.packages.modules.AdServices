@@ -18,6 +18,7 @@ package com.android.adservices.data.enrollment;
 
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
@@ -599,6 +600,219 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
+    @Nullable
+    public Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForPASByMatchingAdTechIdentifier(
+            Uri originalUri) {
+        if (originalUri == null) {
+            return null;
+        }
+
+        Optional<Uri> topDomainUri = WebAddresses.topPrivateDomainAndScheme(originalUri);
+        if (topDomainUri.isEmpty()) {
+            return null;
+        }
+        String originalUriHost = topDomainUri.get().getHost();
+
+        int buildId = mEnrollmentUtil.getBuildId();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(
+                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(
+                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
+
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract.COMPANY_ID
+                                + " LIKE '%"
+                                + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
+                                + "%'"
+                                + " AND "
+                                + EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
+                                + " LIKE '%"
+                                + originalUriHost
+                                + "%'",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d("Failed to match enrollment for PAS URI \"%s\" ", originalUri);
+                mEnrollmentUtil.logEnrollmentMatchStats(
+                        mLogger, /* isSuccessful= */ false, buildId);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching URI \"%s\".",
+                    cursor.getCount(), originalUri);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                // EncryptionKeyUrl contains adtech site
+                String pasUriString = potentialMatch.getEncryptionKeyUrl();
+                try {
+                    // Make sure the URI can be parsed and the parsed host matches the ad tech
+                    String pasUriHost = Uri.parse(pasUriString).getHost();
+                    if (originalUriHost.equalsIgnoreCase(pasUriHost)
+                            || originalUriHost
+                                    .toLowerCase(Locale.ENGLISH)
+                                    .endsWith("." + pasUriHost.toLowerCase(Locale.ENGLISH))) {
+                        LogUtil.v(
+                                "Found positive match PAS URL \"%s\" for given URI \"%s\"",
+                                pasUriString, originalUri);
+                        mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
+
+                        // AdTechIdentifiers are currently expected to only contain eTLD+1
+                        return new Pair<>(
+                                AdTechIdentifier.fromString(originalUriHost), potentialMatch);
+                    }
+                } catch (IllegalArgumentException exception) {
+                    LogUtil.v(
+                            "Error while matching URI %s to PAS URI %s; skipping URI. "
+                                    + "Error message: %s",
+                            originalUri, pasUriString, exception.getMessage());
+                }
+            }
+
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+    }
+
+    @Override
+    @Nullable
+    // TODO (b/325661647): Remove if not used in PAS implementation
+    public EnrollmentData getEnrollmentDataForPASByAdTechIdentifier(
+            AdTechIdentifier adTechIdentifier) {
+        int buildId = mEnrollmentUtil.getBuildId();
+        String adTechIdentifierString = adTechIdentifier.toString();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(
+                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(
+                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
+
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract.COMPANY_ID
+                                + " LIKE '%"
+                                + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
+                                + "%'"
+                                + " AND "
+                                + EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
+                                + " LIKE '%"
+                                + adTechIdentifierString
+                                + "%'",
+                        null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d(
+                        "Failed to match enrollment for ad tech identifier \"%s\"",
+                        adTechIdentifierString);
+                mEnrollmentUtil.logEnrollmentMatchStats(
+                        mLogger, /* isSuccessful= */ false, buildId);
+                return null;
+            }
+
+            LogUtil.v(
+                    "Found %d rows potentially matching ad tech identifier \"%s\"",
+                    cursor.getCount(), adTechIdentifierString);
+
+            while (cursor.moveToNext()) {
+                EnrollmentData potentialMatch =
+                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                // EncryptionKeyUrl contains adtech site
+                String pasUriString = potentialMatch.getEncryptionKeyUrl();
+                try {
+                    // Make sure the URI can be parsed and the parsed host matches the ad tech
+                    if (adTechIdentifierString.equalsIgnoreCase(
+                            Uri.parse(pasUriString).getHost())) {
+                        LogUtil.v(
+                                "Found positive match PAS URL \"%s\" for ad tech identifier"
+                                        + " \"%s\"",
+                                pasUriString, adTechIdentifierString);
+                        mEnrollmentUtil.logEnrollmentMatchStats(
+                                mLogger, /* isSuccessful= */ true, buildId);
+
+                        return potentialMatch;
+                    }
+                } catch (IllegalArgumentException exception) {
+                    LogUtil.v(
+                            "Error while matching ad tech %s to PAS URI %s; skipping"
+                                    + " URI. Error message: %s",
+                            adTechIdentifierString, pasUriString, exception.getMessage());
+                }
+            }
+            mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
+            return null;
+        }
+    }
+
+    @Override
+    @NonNull
+    public Set<AdTechIdentifier> getAllPASEnrolledAdTechs() {
+        int buildId = mEnrollmentUtil.getBuildId();
+        Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            mEnrollmentUtil.logEnrollmentDataStats(
+                    mLogger, READ_QUERY, /* isSuccessful= */ false, buildId);
+            return enrolledAdTechIdentifiers;
+        }
+        mEnrollmentUtil.logEnrollmentDataStats(
+                mLogger, READ_QUERY, /* isSuccessful= */ true, buildId);
+
+        try (Cursor cursor =
+                db.query(
+                        /*distinct=*/ true,
+                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ new String[] {
+                            EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
+                        },
+                        /*selection=*/ EnrollmentTables.EnrollmentDataContract.COMPANY_ID
+                                + " LIKE '%"
+                                + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
+                                + "%'",
+                        /*selectionArgs=*/ null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() <= 0) {
+                LogUtil.d("Failed to find any PAS-enrolled ad techs");
+                return enrolledAdTechIdentifiers;
+            }
+
+            LogUtil.v("Found %d PAS enrollment entries", cursor.getCount());
+
+            while (cursor.moveToNext()) {
+                enrolledAdTechIdentifiers.add(
+                        SqliteObjectMapper.getAdTechIdentifierFromPASCursor(cursor));
+            }
+
+            LogUtil.v(
+                    "Found %d PAS enrolled ad tech identifiers", enrolledAdTechIdentifiers.size());
+
+            return enrolledAdTechIdentifiers;
+        }
+    }
+
+    @Override
     public Long getEnrollmentRecordsCount() {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -634,7 +848,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         try {
             insertToDb(enrollmentData, db);
         } catch (SQLException e) {
-            LogUtil.e("Failed to insert EnrollmentData. Exception : " + e.getMessage());
+            LogUtil.e(e, "Failed to insert EnrollmentData.");
             return false;
         }
         return true;
@@ -645,8 +859,10 @@ public class EnrollmentDao implements IEnrollmentDao {
         values.put(
                 EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
                 enrollmentData.getEnrollmentId());
+        // Deprecating company_id, temporarily being reused by enrolled_apis
         values.put(
-                EnrollmentTables.EnrollmentDataContract.COMPANY_ID, enrollmentData.getCompanyId());
+                EnrollmentTables.EnrollmentDataContract.COMPANY_ID,
+                enrollmentData.getEnrolledAPIsString());
         values.put(
                 EnrollmentTables.EnrollmentDataContract.SDK_NAMES,
                 String.join(" ", enrollmentData.getSdkNames()));
@@ -675,6 +891,10 @@ public class EnrollmentDao implements IEnrollmentDao {
         } catch (SQLException e) {
             int buildId = mEnrollmentUtil.getBuildId();
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             throw e;
         }
         int buildId = mEnrollmentUtil.getBuildId();
@@ -697,7 +917,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                     EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " = ?",
                     new String[] {enrollmentId});
         } catch (SQLException e) {
-            LogUtil.e("Failed to delete EnrollmentData." + e.getMessage());
+            LogUtil.e(e, "Failed to delete EnrollmentData.");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
@@ -729,7 +949,7 @@ public class EnrollmentDao implements IEnrollmentDao {
             // Mark the transaction successful.
             db.setTransactionSuccessful();
         } catch (SQLiteException e) {
-            LogUtil.e("Failed to perform delete all on EnrollmentData" + e.getMessage());
+            LogUtil.e(e, "Failed to perform delete all on EnrollmentData.");
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
@@ -751,17 +971,26 @@ public class EnrollmentDao implements IEnrollmentDao {
 
         boolean success = false;
         db.beginTransaction();
+        String[] ids =
+                newEnrollments.stream().map(EnrollmentData::getEnrollmentId).toArray(String[]::new);
         try {
-            String[] ids =
-                    newEnrollments.stream()
-                            .map(EnrollmentData::getEnrollmentId)
-                            .toArray(String[]::new);
-
             db.delete(
                     EnrollmentTables.EnrollmentDataContract.TABLE,
                     EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " NOT IN (?)",
                     new String[] {String.join(",", ids)});
+            db.setTransactionSuccessful();
+        } catch (SQLException e) {
+            LogUtil.e(e, "Failed to delete EnrollmentData during overwriting.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        } finally {
+            db.endTransaction();
+        }
 
+        db.beginTransaction();
+        try {
             for (EnrollmentData enrollmentData : newEnrollments) {
                 insertToDb(enrollmentData, db);
             }
@@ -770,7 +999,7 @@ public class EnrollmentDao implements IEnrollmentDao {
             unSeed();
             success = true;
         } catch (SQLException e) {
-            LogUtil.e("Failed to overwrite EnrollmentData." + e.getMessage());
+            LogUtil.e(e, "Failed to overwrite EnrollmentData.");
         } finally {
             db.endTransaction();
         }

@@ -17,16 +17,16 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Represents input parameters to the setAppInstallAdvertiser API.
- *
- * @hide
- */
+/** Represents input parameters to the setAppInstallAdvertiser API. */
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public class SetAppInstallAdvertisersRequest {
     @NonNull private final Set<AdTechIdentifier> mAdvertisers;
 

@@ -24,6 +24,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.BaseEncoding;
 
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
@@ -32,12 +33,12 @@ import java.util.List;
 /** Class to parse JOIN encryption key. */
 public class JoinEncryptionKeyParser implements EncryptionKeyParser {
 
-    private static final String CONTENT_TYPE_HEADER_LABEL = "content-type";
+    private static final String CONTENT_TYPE_HEADER_LABEL = "Content-Type";
     private static final String CONTENT_TYPE = "application/ohttp-keys";
 
     // As per OHTTP key format
     // https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-02.html#section-3.1
-    private static int sJoinKeyIdSizeInBytes = 1;
+    private static final int JOIN_KEY_ID_SIZE_IN_BYTES = 1;
     private final Flags mFlags;
 
     public JoinEncryptionKeyParser(Flags flags) {
@@ -55,7 +56,8 @@ public class JoinEncryptionKeyParser implements EncryptionKeyParser {
         return AdSelectionEncryptionKey.builder()
                 .setKeyIdentifier(dbEncryptionKey.getKeyIdentifier())
                 .setKeyType(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN)
-                .setPublicKey(dbEncryptionKey.getPublicKey().getBytes(StandardCharsets.UTF_8))
+                .setPublicKey(
+                        BaseEncoding.base16().lowerCase().decode(dbEncryptionKey.getPublicKey()))
                 .build();
     }
 
@@ -76,20 +78,16 @@ public class JoinEncryptionKeyParser implements EncryptionKeyParser {
 
         DBEncryptionKey.Builder keyBuilder = DBEncryptionKey.builder();
 
+        byte[] keyInBytes = BaseEncoding.base64().decode(response.getResponseBody());
         // As per OHTTP format, the first byte in the response bytes is the key identifier.
         // https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-02.html#section-3.1
-        byte[] keyId = new byte[sJoinKeyIdSizeInBytes];
-        System.arraycopy(
-                response.getResponseBody().getBytes(StandardCharsets.UTF_8),
-                0,
-                keyId,
-                0,
-                sJoinKeyIdSizeInBytes);
+        byte[] keyId = new byte[JOIN_KEY_ID_SIZE_IN_BYTES];
+        System.arraycopy(keyInBytes, 0, keyId, 0, JOIN_KEY_ID_SIZE_IN_BYTES);
 
         keyBuilder
                 .setEncryptionKeyType(
                         EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN)
-                .setPublicKey(response.getResponseBody())
+                .setPublicKey(BaseEncoding.base16().lowerCase().encode(keyInBytes))
                 .setKeyIdentifier(new String(keyId, StandardCharsets.UTF_8))
                 .setExpiryTtlSeconds(mFlags.getFledgeAuctionServerEncryptionKeyMaxAgeSeconds())
                 .build();

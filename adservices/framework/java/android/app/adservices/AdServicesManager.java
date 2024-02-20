@@ -193,6 +193,33 @@ public final class AdServicesManager {
     }
 
     /**
+     * Returns information whether Consent PAS Notification was displayed or not.
+     *
+     * @return true if PAS Notification was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationDisplayed() {
+        try {
+            return mService.wasPasNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that PAS notification was displayed for the first time to
+     * the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        try {
+            mService.recordPasNotificationDisplayed(wasNotificationDisplayed);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Record a blocked topic.
      *
      * @param blockedTopicParcels the blocked topic to record
