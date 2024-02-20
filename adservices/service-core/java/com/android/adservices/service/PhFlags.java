@@ -865,14 +865,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        final String flagName = FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        final boolean defaultValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        String flagName = FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        boolean defaultValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementAttributionFallbackJobEnabled() {
+        // TODO(b/325144327): ideally logic should be here, but this is a legacy flag that also
+        // reads system properties, and the system properties workflow is not unit tested.
+        return !getMeasurementAttributionFallbackJobKillSwitch();
     }
 
     @Override
