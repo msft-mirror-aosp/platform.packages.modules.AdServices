@@ -30,6 +30,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MES
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
@@ -5734,9 +5735,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonMessagesPerBackgroundProcess());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
+                        + KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED
                         + " = "
                         + getFledgeKAnonBackgroundProcessEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN
+                        + " = "
+                        + getFledgeKAnonSetTypeToSignJoin());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
@@ -6800,7 +6806,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public long getFledgeKAnonMessageTtlSeconds() {
         return DeviceConfig.getLong(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS,
                 /* defaultValue */ FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS);
     }
 
@@ -6828,12 +6834,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ GET_ADSERVICES_COMMON_STATES_ALLOW_LIST);
     }
 
+    @Override
     public boolean getFledgeKAnonBackgroundProcessEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
                 && DeviceConfig.getBoolean(
                         FlagsConstants.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
                         /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
+    }
+
+    @Override
+    public String getFledgeKAnonSetTypeToSignJoin() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN);
     }
 
     @Override
