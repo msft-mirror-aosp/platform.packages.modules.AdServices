@@ -18,7 +18,6 @@ package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
@@ -52,7 +51,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigCall;
-import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -137,6 +135,23 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 /* @deprecated feature_type= */ 0,
                 uiStats.getUx(),
                 uiStats.getEnrollmentChannel());
+    }
+
+    @Override
+    public void logFledgeApiCallStats(
+            int apiName, String appPackageName, int resultCode, int latencyMs) {
+        if (mFlags.getFledgeAppPackageNameLoggingEnabled() && (appPackageName != null)) {
+            AdServicesStatsLog.write(
+                    AD_SERVICES_API_CALLED,
+                    AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN,
+                    apiName,
+                    appPackageName,
+                    "",
+                    latencyMs,
+                    resultCode);
+        } else {
+            logFledgeApiCallStats(apiName, resultCode, latencyMs);
+        }
     }
 
     @Override
@@ -381,17 +396,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 getAllowlistedAppPackageName(stats.getSourceRegistrant()));
     }
 
-    /** Logging method for AdServices background job execution stats. */
-    public void logExecutionReportedStats(ExecutionReportedStats stats) {
-        AdServicesStatsLog.write(
-                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED,
-                stats.getJobId(),
-                stats.getExecutionLatencyMs(),
-                stats.getExecutionPeriodMinute(),
-                stats.getExecutionResultCode(),
-                stats.getStopReason());
-    }
-
     /** log method for measurement attribution. */
     public void logMeasurementAttributionStats(
             MeasurementAttributionStats measurementAttributionStats) {
@@ -502,7 +506,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getFetchStatus().getValue(),
                 stats.getIsFirstTimeFetch(),
                 stats.getAdtechEnrollmentId(),
-                stats.getCompanyId(),
+                "",
                 stats.getEncryptionKeyUrl());
     }
 
@@ -523,10 +527,13 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
             DestinationRegisteredBeaconsReportedStats stats) {
         int[] attemptedKeySizesRangeType = new int[] {};
         if (stats.getAttemptedKeySizesRangeType() != null) {
-            attemptedKeySizesRangeType = stats.getAttemptedKeySizesRangeType().stream()
-                    .mapToInt(DestinationRegisteredBeaconsReportedStats
-                            .InteractionKeySizeRangeType::getValue)
-                    .toArray();
+            attemptedKeySizesRangeType =
+                    stats.getAttemptedKeySizesRangeType().stream()
+                            .mapToInt(
+                                    DestinationRegisteredBeaconsReportedStats
+                                                    .InteractionKeySizeRangeType
+                                            ::getValue)
+                            .toArray();
         }
         // TODO: b/325098723 - Add support for DestinationRegisteredBeacons for S- devices
         if (SdkLevel.isAtLeastT()) {
@@ -563,6 +570,11 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     public void logAppManifestConfigCall(AppManifestConfigCall call) {
         AdServicesStatsLog.write(
                 APP_MANIFEST_CONFIG_HELPER_CALLED, call.packageName, call.api, call.result);
+    }
+
+    @Override
+    public void logKAnonSignJoinStatus() {
+        // TODO(b/324564459): add logging for KAnon Sign Join
     }
 
     @NonNull

@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
@@ -134,6 +135,21 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         verify(mStatsdLoggerMock)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, STATUS_SUCCESS, latencyMs);
+    }
+
+    @Test
+    public void testLogFledgeApiCallStatsWithAppPackageNameLogging() {
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = TEST_PACKAGE_NAME;
+        int resultCode = STATUS_SUCCESS;
+        int latencyMs = 10;
+
+        adServicesLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        // Verify method logging app package name is called.
+        verify(mStatsdLoggerMock)
+                .logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
     }
 
     @Test
@@ -677,7 +693,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     @Test
     public void testLogEncryptionKeyFetchedStats() {
         String enrollmentId = "enrollmentId";
-        String companyId = "companyId";
         String encryptionKeyUrl = "https://www.adtech1.com/.well-known/encryption-keys";
 
         AdServicesEncryptionKeyFetchedStats stats =
@@ -686,7 +701,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setFetchStatus(IO_EXCEPTION)
                         .setIsFirstTimeFetch(false)
                         .setAdtechEnrollmentId(enrollmentId)
-                        .setCompanyId(companyId)
                         .setEncryptionKeyUrl(encryptionKeyUrl)
                         .build();
 

@@ -71,7 +71,16 @@ class SdkSandboxRestrictionManager {
         }
     }
 
-    /** Cache and get the effectiveTargetSkdVersion for an app */
+    /** Cache and get the effectiveTargetSdkVersion for the sdk sandbox process */
+    public int getEffectiveTargetSdkVersion(int appUid)
+            throws PackageManager.NameNotFoundException {
+        PackageManagerHelper packageManagerHelper = mInjector.getPackageManagerHelper(appUid);
+        String packageName = packageManagerHelper.getPackageNameForUid(appUid);
+        return getEffectiveTargetSdkVersion(
+                new CallingInfo(appUid, packageName), packageManagerHelper);
+    }
+
+    /** Cache and get the effectiveTargetSdkVersion for the sdk sandbox process */
     public int getEffectiveTargetSdkVersion(CallingInfo callingInfo)
             throws PackageManager.NameNotFoundException {
         synchronized (mLock) {
@@ -79,7 +88,14 @@ class SdkSandboxRestrictionManager {
                 return mEffectiveTargetSdkVersions.get(callingInfo);
             }
         }
+        PackageManagerHelper packageManagerHelper =
+                mInjector.getPackageManagerHelper(callingInfo.getUid());
+        return getEffectiveTargetSdkVersion(callingInfo, packageManagerHelper);
+    }
 
+    private int getEffectiveTargetSdkVersion(
+            CallingInfo callingInfo, PackageManagerHelper packageManagerHelper)
+            throws PackageManager.NameNotFoundException {
         // If the device's SDK version is equal to the default value, we can return it immediately.
         if (mInjector.getCurrentSdkLevel() <= DEFAULT_TARGET_SDK_VERSION) {
             synchronized (mLock) {
@@ -87,9 +103,6 @@ class SdkSandboxRestrictionManager {
                 return mEffectiveTargetSdkVersions.get(callingInfo);
             }
         }
-
-        PackageManagerHelper packageManagerHelper =
-                mInjector.getPackageManagerHelper(callingInfo.getUid());
 
         List<SharedLibraryInfo> sharedLibraries =
                 packageManagerHelper.getSdkSharedLibraryInfo(callingInfo.getPackageName());

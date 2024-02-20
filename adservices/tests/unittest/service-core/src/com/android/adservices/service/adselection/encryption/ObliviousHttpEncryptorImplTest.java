@@ -81,12 +81,12 @@ public class ObliviousHttpEncryptorImplTest {
     public void test_encryptBytes_invalidPlainText() {
         assertThrows(
                 NullPointerException.class,
-                () -> mObliviousHttpEncryptor.encryptBytes(null, 1L, 1000L));
+                () -> mObliviousHttpEncryptor.encryptBytes(null, 1L, 1000L, null));
     }
 
     @Test
     public void test_encryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -97,7 +97,7 @@ public class ObliviousHttpEncryptorImplTest {
                                 .lowerCase()
                                 .encode(
                                         mObliviousHttpEncryptor
-                                                .encryptBytes(plainTextBytes, 1L, 1000L)
+                                                .encryptBytes(plainTextBytes, 1L, 1000L, null)
                                                 .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
@@ -127,14 +127,14 @@ public class ObliviousHttpEncryptorImplTest {
 
     @Test
     public void test_decryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
 
         byte[] encryptedBytes =
-                mObliviousHttpEncryptor.encryptBytes(plainTextBytes, 1L, 1000L).get();
+                mObliviousHttpEncryptor.encryptBytes(plainTextBytes, 1L, 1000L, null).get();
 
         assertThat(encryptedBytes).isNotNull();
         assertThat(encryptedBytes).isNotEmpty();

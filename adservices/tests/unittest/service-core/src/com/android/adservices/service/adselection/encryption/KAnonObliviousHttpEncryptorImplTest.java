@@ -67,12 +67,13 @@ public class KAnonObliviousHttpEncryptorImplTest {
                 NullPointerException.class,
                 () ->
                         mKAnonObliviousHttpEncryptor.encryptBytes(
-                                null, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS));
+                                null, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS, null));
     }
 
     @Test
     public void test_encryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(JOIN, KEY_FETCH_TIMEOUT_MS))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
+                        JOIN, KEY_FETCH_TIMEOUT_MS, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -86,7 +87,8 @@ public class KAnonObliviousHttpEncryptorImplTest {
                                                 .encryptBytes(
                                                         plainTextBytes,
                                                         UNUSED_CONTEXT_ID,
-                                                        KEY_FETCH_TIMEOUT_MS)
+                                                        KEY_FETCH_TIMEOUT_MS,
+                                                        null)
                                                 .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
@@ -122,7 +124,8 @@ public class KAnonObliviousHttpEncryptorImplTest {
 
     @Test
     public void test_decryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(JOIN, KEY_FETCH_TIMEOUT_MS))
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
+                        JOIN, KEY_FETCH_TIMEOUT_MS, null))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -130,7 +133,7 @@ public class KAnonObliviousHttpEncryptorImplTest {
 
         byte[] encryptedBytes =
                 mKAnonObliviousHttpEncryptor
-                        .encryptBytes(plainTextBytes, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS)
+                        .encryptBytes(plainTextBytes, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS, null)
                         .get();
 
         assertThat(encryptedBytes).isNotNull();

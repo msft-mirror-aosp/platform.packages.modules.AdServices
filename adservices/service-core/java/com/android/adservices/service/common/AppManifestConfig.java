@@ -25,6 +25,7 @@ import static com.android.adservices.service.common.AppManifestConfigParser.TAG_
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_APPSETID;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_CUSTOM_AUDIENCES;
+import static com.android.adservices.service.common.AppManifestConfigParser.TAG_PROTECTED_SIGNALS;
 import static com.android.adservices.service.common.AppManifestConfigParser.TAG_TOPICS;
 
 import android.annotation.NonNull;
@@ -40,6 +41,7 @@ public final class AppManifestConfig {
     @NonNull private final AppManifestIncludesSdkLibraryConfig mIncludesSdkLibraryConfig;
     @Nullable private final AppManifestAttributionConfig mAttributionConfig;
     @Nullable private final AppManifestCustomAudiencesConfig mCustomAudiencesConfig;
+    @Nullable private final AppManifestProtectedSignalsConfig mProtectedSignalsConfig;
     @Nullable private final AppManifestTopicsConfig mTopicsConfig;
     @Nullable private final AppManifestAdIdConfig mAdIdConfig;
     @Nullable private final AppManifestAppSetIdConfig mAppSetIdConfig;
@@ -57,6 +59,7 @@ public final class AppManifestConfig {
      * @param includesSdkLibraryConfig the list of Sdk Libraries included in the app.
      * @param attributionConfig the config for Attribution.
      * @param customAudiencesConfig the config for Custom Audiences.
+     * @param protectedSignalsConfig the config for Protected Signals.
      * @param topicsConfig the config for Topics.
      * @param adIdConfig the config for adId.
      * @param appSetIdConfig the config for appSetId.
@@ -66,6 +69,7 @@ public final class AppManifestConfig {
             @NonNull AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig,
             @Nullable AppManifestAttributionConfig attributionConfig,
             @Nullable AppManifestCustomAudiencesConfig customAudiencesConfig,
+            @Nullable AppManifestProtectedSignalsConfig protectedSignalsConfig,
             @Nullable AppManifestTopicsConfig topicsConfig,
             @Nullable AppManifestAdIdConfig adIdConfig,
             @Nullable AppManifestAppSetIdConfig appSetIdConfig,
@@ -73,6 +77,7 @@ public final class AppManifestConfig {
         mIncludesSdkLibraryConfig = includesSdkLibraryConfig;
         mAttributionConfig = attributionConfig;
         mCustomAudiencesConfig = customAudiencesConfig;
+        mProtectedSignalsConfig = protectedSignalsConfig;
         mTopicsConfig = topicsConfig;
         mAdIdConfig = adIdConfig;
         mAppSetIdConfig = appSetIdConfig;
@@ -122,6 +127,19 @@ public final class AppManifestConfig {
     }
 
     /**
+     * Getter for ProtectedSignalsConfig.
+     *
+     * <p>If the tag is not found in the app manifest config, this config is {@code null}.
+     */
+    @Nullable
+    public AppManifestProtectedSignalsConfig getProtectedSignalsConfig() {
+        return getConfig(
+                TAG_PROTECTED_SIGNALS,
+                mProtectedSignalsConfig,
+                AppManifestProtectedSignalsConfig::getEnabledByDefaultInstance);
+    }
+
+    /**
      * Returns {@code true} if an ad tech with the given enrollment ID is permitted to access Custom
      * Audience API for config represented by this object.
      *
@@ -129,6 +147,16 @@ public final class AppManifestConfig {
      */
     public @Result int isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
         return isAllowedAccess(TAG_CUSTOM_AUDIENCES, mCustomAudiencesConfig, enrollmentId);
+    }
+
+    /**
+     * Returns a status code indication if an ad tech with the given enrollment ID is permitted to
+     * access the protected signals API for config represented by this object.
+     *
+     * <p>See constants in {@link AppManifestConfigCall} for the returned value.
+     */
+    public @Result int isAllowedProtectedSignalsAccess(@NonNull String enrollmentId) {
+        return isAllowedAccess(TAG_PROTECTED_SIGNALS, mProtectedSignalsConfig, enrollmentId);
     }
 
     /**

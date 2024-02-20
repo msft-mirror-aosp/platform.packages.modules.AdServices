@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
@@ -446,7 +447,8 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
-                        API_NAME);
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
                 .when(mAppImportanceFilter)
@@ -472,7 +474,8 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
-                        API_NAME);
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
@@ -480,7 +483,8 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
-                        API_NAME);
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -521,7 +525,8 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
-                        API_NAME);
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
     }
 
     @Test
@@ -532,7 +537,8 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
-                        API_NAME);
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
@@ -561,7 +567,8 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
-                        API_NAME);
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -587,7 +594,8 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
-                        API_NAME);
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         doReturn(true)
                 .when(mConsentManagerMock)
@@ -616,7 +624,8 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         mSpyContext,
                         CALLER_PACKAGE_NAME,
                         getValidFetchUriByBuyer(SELLER_VALID),
-                        API_NAME);
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         doReturn(true)
                 .when(mConsentManagerMock)

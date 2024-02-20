@@ -100,6 +100,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -195,11 +196,13 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Rule(order = 2)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
     @Mock CallerMetadata mMockCallerMetadata;
     @Mock private File mMockDBAdSelectionFile;
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             new FledgeAuthorizationFilter(
@@ -219,11 +222,12 @@ public class AdSelectionFromOutcomesE2ETest {
     private EnrollmentDao mEnrollmentDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private AdServicesHttpsClient mAdServicesHttpsClient;
-    private AdSelectionService mAdSelectionService;
+    private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
 
@@ -264,6 +268,8 @@ public class AdSelectionFromOutcomesE2ETest {
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
         mEnrollmentDao = EnrollmentDao.getInstance(mContextSpy);
         mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
+        mMultiCloudSupportStrategy =
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         mAdServicesHttpsClient =
@@ -298,9 +304,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
@@ -429,9 +436,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
@@ -486,9 +494,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         true);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =

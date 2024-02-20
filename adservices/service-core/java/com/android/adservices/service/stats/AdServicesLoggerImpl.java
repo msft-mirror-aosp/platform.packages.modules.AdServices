@@ -82,6 +82,14 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logFledgeApiCallStats(
+            int apiName, String appPackageName, int resultCode, int latencyMs) {
+        mStatsdAdServicesLogger.logFledgeApiCallStats(
+                apiName, appPackageName, resultCode, latencyMs);
+        // TODO(b/324155747): Add Cobalt app name api error logging.
+    }
+
+    @Override
     public void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, latencyMs, result);
     }
@@ -240,6 +248,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logAppManifestConfigCall(AppManifestConfigCall call) {
         mStatsdAdServicesLogger.logAppManifestConfigCall(call);
+    }
+
+    @Override
+    public void logKAnonSignJoinStatus() {
+        // TODO(b/324564459): add logging for KAnon Sign Join
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */

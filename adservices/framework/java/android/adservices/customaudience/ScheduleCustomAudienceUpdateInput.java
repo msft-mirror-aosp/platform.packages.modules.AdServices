@@ -71,7 +71,7 @@ public final class ScheduleCustomAudienceUpdateInput implements Parcelable {
 
         mUpdateUri = Uri.CREATOR.createFromParcel(in);
         mCallerPackageName = in.readString();
-        mMinDelay = Duration.ofSeconds(in.readLong());
+        mMinDelay = Duration.ofMillis(in.readLong());
         mPartialCustomAudienceList = in.createTypedArrayList(PartialCustomAudience.CREATOR);
     }
 
@@ -86,8 +86,8 @@ public final class ScheduleCustomAudienceUpdateInput implements Parcelable {
 
         mUpdateUri.writeToParcel(dest, flags);
         dest.writeString(mCallerPackageName);
-        dest.writeLong(mMinDelay.toSeconds());
-        dest.createTypedArrayList(PartialCustomAudience.CREATOR);
+        dest.writeLong(mMinDelay.toMillis());
+        dest.writeTypedList(mPartialCustomAudienceList);
     }
 
     /** Returns the {@link Uri} from which the Custom Audience is to be fetched */

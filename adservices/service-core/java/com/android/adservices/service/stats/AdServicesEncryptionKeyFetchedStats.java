@@ -45,11 +45,6 @@ public abstract class AdServicesEncryptionKeyFetchedStats {
     public abstract String getAdtechEnrollmentId();
 
     /**
-     * @return company id for the adtech corresponding to this encryption key.
-     */
-    public abstract String getCompanyId();
-
-    /**
      * @return encryption key url.
      */
     @Nullable
@@ -114,9 +109,6 @@ public abstract class AdServicesEncryptionKeyFetchedStats {
 
         /** Set enrollment id for the adtech corresponding to the encryption key. */
         public abstract Builder setAdtechEnrollmentId(String value);
-
-        /** Set company id for the adtech corresponding to this encryption key. */
-        public abstract Builder setCompanyId(String value);
 
         /** Set encryption key url. */
         public abstract Builder setEncryptionKeyUrl(@Nullable String value);

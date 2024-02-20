@@ -38,4 +38,8 @@ public final class ModuleSharedFlagsTest {
         assertThat(sFlags.getBackgroundJobSamplingLoggingRate())
                 .isEqualTo(BACKGROUND_JOB_SAMPLING_LOGGING_RATE);
     }
+
+    // TODO(b/325135083): add a test to make sure all constants are annotated with FeatureFlag or
+    // ConfigFlag. Might need to be added in a separate file / Android.bp project as the annotation
+    // is currently retained on SOURCE only.
 }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.kanon;
 
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_SERVER;
+
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.EMPTY_BODY;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_OHTTP_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
@@ -29,10 +31,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
+import android.adservices.exceptions.AdServicesNetworkException;
 import android.content.Context;
 import android.net.Uri;
-import androidx.test.filters.FlakyTest;
-
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -63,10 +64,12 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -78,17 +81,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
-import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
-import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.TokensSet;
-import private_join_and_compute.anonymous_counting_tokens.Transcript;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
@@ -97,6 +89,18 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+
+import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
+import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
+import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.TokensSet;
+import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KAnonCallerImplTest {
@@ -126,6 +130,7 @@ public class KAnonCallerImplTest {
     @Mock private AnonymousCountingTokens mockAnonymousCountingTokens;
     @Mock private BinaryHttpMessageDeserializer mockBinaryHttpMessageDeserializer;
     @Mock private ObliviousHttpEncryptor mockKAnonOblivivousHttpEncryptorImpl;
+    @Mock private AdServicesLogger mockAdServicesLogger;
     private UserProfileIdManager mUserProfileIdManager;
     private KAnonCallerImpl mKAnonCaller;
 
@@ -170,11 +175,11 @@ public class KAnonCallerImplTest {
                                 mockBinaryHttpMessageDeserializer,
                                 mFlags,
                                 mockKAnonOblivivousHttpEncryptorImpl,
-                                mKAnonMessageManager));
+                                mKAnonMessageManager,
+                                mockAdServicesLogger));
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void test_signedJoinedSuccessfully_shouldUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
         KAnonCallerImpl kAnonCaller =
@@ -189,25 +194,19 @@ public class KAnonCallerImplTest {
                                 mockBinaryHttpMessageDeserializer,
                                 mFlags,
                                 mockKAnonOblivivousHttpEncryptorImpl,
-                                mKAnonMessageManager));
-        setupMocks();
+                                mKAnonMessageManager,
+                                mockAdServicesLogger));
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong()))
+                        any(byte[].class), anyLong(), anyLong(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         createAndPersistKAnonMessages();
         List<KAnonMessageEntity> kanonMessageList =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         kAnonCaller.signAndJoinMessages(kanonMessageList);
-        doAnswer(
-                        (unused) -> {
-                            countdownLatch.countDown();
-                            return null;
-                        })
-                .when(kAnonCaller)
-                .logProcessStatus();
         countdownLatch.await();
 
         List<KAnonMessageEntity> messagesFromDBAfter =
@@ -218,7 +217,6 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void test_multipleBatches_shouldSignAndJoinMessages()
             throws IOException, InterruptedException {
         Flags flagsWithBatchSizeOne = new KAnonSignAndJoinRunnerTestFlags(1);
@@ -234,10 +232,12 @@ public class KAnonCallerImplTest {
                                 mockBinaryHttpMessageDeserializer,
                                 flagsWithBatchSizeOne,
                                 mockKAnonOblivivousHttpEncryptorImpl,
-                                mKAnonMessageManager));
-        setupMocks();
+                                mKAnonMessageManager,
+                                mockAdServicesLogger));
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong()))
+                        any(byte[].class), anyLong(), anyLong(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         // we are persisting 2 messages and setting match size as 1
         createAndPersistKAnonMessages();
@@ -245,15 +245,7 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         kAnonCaller.signAndJoinMessages(kanonMessageList);
-        doAnswer(
-                        (unused) -> {
-                            countdownLatch.countDown();
-                            return null;
-                        })
-                .when(kAnonCaller)
-                .logProcessStatus();
         countdownLatch.await();
 
         List<KAnonMessageEntity> messagesFromDBAfter =
@@ -264,13 +256,13 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void test_signSuccessfulButJoinUnsuccessful_shouldUpdateKAnonMessageStatusToSignedDB()
             throws IOException, InterruptedException {
-        setupMocks();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countDownLatch);
         createAndPersistKAnonMessages();
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong()))
+                        any(byte[].class), anyLong(), anyLong(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         BinaryHttpMessage binaryHttpMessage =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -284,16 +276,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         mKAnonCaller.signAndJoinMessages(kanonMessageList);
-        doAnswer(
-                        (unused) -> {
-                            countdownLatch.countDown();
-                            return null;
-                        })
-                .when(mKAnonCaller)
-                .logProcessStatus();
-        countdownLatch.await();
+        countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -303,10 +287,10 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void test_signUnsuccessfulVerifyTokenFails_shouldUpdateKAnonMessageStatusToFailedInDB()
             throws IOException, InterruptedException {
-        setupMocks();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countDownLatch);
         when(mockAnonymousCountingTokens.verifyTokensResponse(
                         any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(false);
@@ -315,16 +299,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         mKAnonCaller.signAndJoinMessages(kanonMessageList);
-        doAnswer(
-                        (unused) -> {
-                            countdownLatch.countDown();
-                            return null;
-                        })
-                .when(mKAnonCaller)
-                .logProcessStatus();
-        countdownLatch.await();
+        countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -334,10 +310,10 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void signUnsuccessfulCannotRecoverTokens_shouldUpdateKAnonMessageStatusToFailedInDB()
             throws IOException, InterruptedException {
-        setupMocks();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countDownLatch);
         when(mockAnonymousCountingTokens.recoverTokens(
                         any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenThrow(new InvalidProtocolBufferException("some error"));
@@ -346,16 +322,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         mKAnonCaller.signAndJoinMessages(kanonMessageList);
-        doAnswer(
-                        (unused) -> {
-                            countdownLatch.countDown();
-                            return null;
-                        })
-                .when(mKAnonCaller)
-                .logProcessStatus();
-        countdownLatch.await();
+        countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -365,10 +333,10 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void actGenerateClientParamsFails_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
-        setupMocks();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countDownLatch);
         createAndPersistKAnonMessages();
         mClientParametersDao.deleteAllClientParameters();
         when(mockAnonymousCountingTokens.generateClientParameters(any(), any()))
@@ -378,16 +346,8 @@ public class KAnonCallerImplTest {
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         mKAnonCaller.signAndJoinMessages(kanonMessageList);
-        doAnswer(
-                        (unused) -> {
-                            countdownLatch.countDown();
-                            return null;
-                        })
-                .when(mKAnonCaller)
-                .logProcessStatus();
-        countdownLatch.await();
+        countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -397,10 +357,10 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void registerClientUnsuccessful_httpCallFails_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
-        setupMocks();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countDownLatch);
         createAndPersistKAnonMessages();
         mClientParametersDao.deleteAllClientParameters();
         mServerParametersDao.deleteAllServerParameters();
@@ -422,22 +382,16 @@ public class KAnonCallerImplTest {
                         registerClientRequest.toByteArray());
         when(mockAdServicesHttpClient.performRequestGetResponseInBase64String(
                         registerClientParametersRequest))
-                .thenThrow(new RuntimeException());
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new AdServicesNetworkException(ERROR_SERVER)));
 
         List<KAnonMessageEntity> kanonMessageList =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         mKAnonCaller.signAndJoinMessages(kanonMessageList);
-        doAnswer(
-                        (unused) -> {
-                            countdownLatch.countDown();
-                            return null;
-                        })
-                .when(mKAnonCaller)
-                .logProcessStatus();
-        countdownLatch.await();
+        countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -447,10 +401,10 @@ public class KAnonCallerImplTest {
     }
 
     @Test
-    @FlakyTest(bugId = 324875845)
     public void fetchServerParamsUnsuccessful_shouldNotUpdateKAnonMessageStatusInDB()
             throws IOException, InterruptedException {
-        setupMocks();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setupMockWithCountDownLatch(countDownLatch);
         createAndPersistKAnonMessages();
         mServerParametersDao.deleteAllServerParameters();
         mClientParameters = mTranscript.getClientParameters();
@@ -465,22 +419,16 @@ public class KAnonCallerImplTest {
                         AdServicesHttpUtil.EMPTY_BODY);
         when(mockAdServicesHttpClient.performRequestGetResponseInBase64String(
                         fetchServerPublicParametersRequest))
-                .thenThrow(new RuntimeException());
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new AdServicesNetworkException(ERROR_SERVER)));
 
         List<KAnonMessageEntity> kanonMessageList =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         2, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
 
-        CountDownLatch countdownLatch = new CountDownLatch(1);
         mKAnonCaller.signAndJoinMessages(kanonMessageList);
-        doAnswer(
-                        (unused) -> {
-                            countdownLatch.countDown();
-                            return null;
-                        })
-                .when(mKAnonCaller)
-                .logProcessStatus();
-        countdownLatch.await();
+        countDownLatch.await();
 
         List<KAnonMessageEntity> kanonMessageListAfter =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
@@ -513,7 +461,14 @@ public class KAnonCallerImplTest {
         mKAnonMessageDao.insertAllKAnonMessages(List.of(dbKAnonMessage, dbKAnonMessageSecond));
     }
 
-    private void setupMocks() throws IOException {
+    private void setupMockWithCountDownLatch(CountDownLatch countDownLatch) throws IOException {
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            return null;
+                        })
+                .when(mockAdServicesLogger)
+                .logKAnonSignJoinStatus();
         GeneratedTokensRequestProto generatedTokensRequestProto =
                 GeneratedTokensRequestProto.newBuilder()
                         .addAllFingerprintsBytes(mTranscript.getFingerprintsList())
@@ -560,6 +515,13 @@ public class KAnonCallerImplTest {
                                 generatedTokensRequestProto.getFingerprintsBytesList())
                         .build();
 
+        AdServicesHttpClientRequest getServerParamsRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(mFlags.getFledgeKAnonFetchServerParamsUrl()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .build();
+
         AdServicesHttpClientRequest httpGetTokensRequest =
                 AdServicesHttpClientRequest.create(
                         Uri.parse(mFlags.getFledgeKAnonGetTokensUrl()),
@@ -592,7 +554,7 @@ public class KAnonCallerImplTest {
         when(mockAnonymousCountingTokens.generateTokensRequest(any(), any(), any(), any(), any()))
                 .thenReturn(generatedTokensRequestProto);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyInt(), anyInt()))
+                        any(byte[].class), anyInt(), anyInt(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(new byte[0])));
         when(mockKAnonOblivivousHttpEncryptorImpl.decryptBytes(any(), anyInt()))
                 .thenReturn(new byte[0]);
@@ -604,6 +566,19 @@ public class KAnonCallerImplTest {
                                                 BaseEncoding.base64()
                                                         .encode(
                                                                 GetTokensResponse.newBuilder()
+                                                                        .build()
+                                                                        .toByteArray()))
+                                        .build()));
+        when(mockAdServicesHttpClient.performRequestGetResponseInBase64String(
+                        getServerParamsRequest))
+                .thenReturn(
+                        immediateFuture(
+                                AdServicesHttpClientResponse.builder()
+                                        .setResponseBody(
+                                                BaseEncoding.base64()
+                                                        .encode(
+                                                                GetServerPublicParamsResponse
+                                                                        .newBuilder()
                                                                         .build()
                                                                         .toByteArray()))
                                         .build()));

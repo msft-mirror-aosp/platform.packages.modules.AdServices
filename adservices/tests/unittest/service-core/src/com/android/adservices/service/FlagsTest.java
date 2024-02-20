@@ -19,22 +19,18 @@ package com.android.adservices.service;
 import static com.android.adservices.common.AndroidSdk.RVC;
 import static com.android.adservices.common.AndroidSdk.SC;
 import static com.android.adservices.common.AndroidSdk.SC_V2;
-import static com.android.adservices.service.Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
-import static com.android.adservices.service.Flags.COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
-import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
-import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENABLED;
-import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
 
 import android.util.Log;
 
@@ -42,10 +38,16 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.common.RequiresSdkRange;
+import com.android.internal.util.Preconditions;
 
 import org.junit.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
 public final class FlagsTest extends AdServicesUnitTestCase {
+
+    private static final String TAG = FlagsTest.class.getSimpleName();
 
     static final String REASON_TO_NOT_MOCK_SDK_LEVEL =
             "Uses Flags.java constant that checks SDK level when the class is instantiated, hence"
@@ -53,8 +55,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     private final Flags mFlags = new Flags() {};
 
-    private final Flags mGlobalKsEnabled = new GlobalKillSwitchAwareFlags(true);
-    private final Flags mGlobalKsDisabled = new GlobalKillSwitchAwareFlags(false);
+    private final Flags mGlobalKsOnFlags = new GlobalKillSwitchAwareFlags(true);
+    private final Flags mGlobalKsOffFlags = new GlobalKillSwitchAwareFlags(false);
+
+    private final Flags mMsmtEnabledFlags = new MsmtFeatureAwareFlags(true);
+    private final Flags mMsmtDisabledFlags = new MsmtFeatureAwareFlags(false);
+
+    private final Flags mMsmtKsOnFlags = new MsmtKillSwitchAwareFlags(true);
+    private final Flags mMsmtKsOffFlags = new MsmtKillSwitchAwareFlags(false);
 
     @Test
     @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
@@ -206,29 +214,23 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     @Test
     @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceToAppSearchMigration_isR() {
-        assertEnableAdExtServiceToAppSearchMigration(false);
+    public void testEnableMigrationFromAdExtService_isR() {
+        assertEnableMigrationFromAdExtService(false);
     }
 
     @Test
-    @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceToAppSearchMigration_isS() {
-        assertEnableAdExtServiceToAppSearchMigration(true);
+    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
+    public void testEnableMigrationFromAdExtService_isAtLeastS() {
+        assertEnableMigrationFromAdExtService(true);
     }
 
-    @Test
-    @RequiresSdkLevelAtLeastT(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceToAppSearchMigration_isAtLeastT() {
-        assertEnableAdExtServiceToAppSearchMigration(false);
-    }
-
-    private void assertEnableAdExtServiceToAppSearchMigration(boolean expected) {
-        expect.withMessage("ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION")
-                .that(ENABLE_ADEXT_SERVICE_TO_APPSEARCH_MIGRATION)
+    private void assertEnableMigrationFromAdExtService(boolean expected) {
+        expect.withMessage("ENABLE_MIGRATION_FROM_ADEXT_SERVICE")
+                .that(ENABLE_MIGRATION_FROM_ADEXT_SERVICE)
                 .isEqualTo(expected);
 
-        expect.withMessage("getEnableAdExtServiceToAppSearchMigration()")
-                .that(mFlags.getEnableAdExtServiceToAppSearchMigration())
+        expect.withMessage("getEnableMigrationFromAdExtService()")
+                .that(mFlags.getEnableMigrationFromAdExtService())
                 .isEqualTo(expected);
     }
 
@@ -236,26 +238,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
      * Tests for (legacy) kill-switch flags that are already in production - the flag name cannot
      * change, but their underlying getter / constants might.
      * ********************************************************************************************/
-
-    @Test
-    public void testGetTopicsKillSwitch() {
-        // Getter
-        expect.withMessage("getTopicsKillSwitch() when global kill_switch is enabled")
-                .that(mGlobalKsEnabled.getTopicsKillSwitch())
-                .isTrue();
-
-        expect.withMessage("getTopicsKillSwitch() when global kill_switch is" + " disabled")
-                .that(mGlobalKsDisabled.getTopicsKillSwitch())
-                .isEqualTo(TOPICS_KILL_SWITCH);
-
-        // Constant
-        if (true) { // TODO(b/325149426): fix constant and remove this statement
-            expect.withMessage("TOPICS_KILL_SWITCH").that(TOPICS_KILL_SWITCH).isFalse();
-            return;
-        }
-        // Constant
-        expect.withMessage("TOPICS_KILL_SWITCH").that(TOPICS_KILL_SWITCH).isTrue();
-    }
 
     @Test
     public void testGetGlobalKillSwitch() {
@@ -266,105 +248,296 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("GLOBAL_KILL_SWITCH").that(GLOBAL_KILL_SWITCH).isTrue();
     }
 
-    @Test
-    public void testGetMeasurementKillSwitch() {
+    // Should not be called directly
+    private void internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
+            String name,
+            AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator,
+            boolean rampedUp) {
+        boolean defaultValue = getConstantValue(name);
+
         // Getter
-        expect.withMessage("getMeasurementKillSwitch()")
-                .that(mGlobalKsEnabled.getMeasurementKillSwitch())
+        expect.withMessage("getter for %s when global kill_switch is on", name)
+                .that(flaginator.getFlagValue(mGlobalKsOnFlags))
                 .isTrue();
-        expect.withMessage("getMeasurementKillSwitch()")
-                .that(mGlobalKsDisabled.getMeasurementKillSwitch())
-                .isEqualTo(MEASUREMENT_KILL_SWITCH);
+
+        expect.withMessage("getter for %s when global kill_switch is off", name)
+                .that(flaginator.getFlagValue(mGlobalKsOffFlags))
+                .isEqualTo(defaultValue);
 
         // Constant
-        if (true) { // TODO(b/325144327): fix constant and remove this statement
-            expect.withMessage("MEASUREMENT_KILL_SWITCH").that(MEASUREMENT_KILL_SWITCH).isFalse();
-            return;
-        }
-        expect.withMessage("MEASUREMENT_KILL_SWITCH").that(MEASUREMENT_KILL_SWITCH).isTrue();
+        expect.withMessage("%s", name).that(defaultValue).isEqualTo(!rampedUp);
+    }
+
+    private void testRampedUpKillSwitchGuardedByGlobalKillSwitch(
+            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+        internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
+                name, flaginator, /* rampedUp= */ true);
+    }
+
+    private void testNewKillSwitchGuardedByGlobalKillSwitch(
+            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+        internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
+                name, flaginator, /* rampedUp= */ false);
+    }
+
+    @Test
+    public void testGetTopicsKillSwitch() {
+        testNewKillSwitchGuardedByGlobalKillSwitch(
+                "TOPICS_KILL_SWITCH", flags -> flags.getTopicsKillSwitch());
+    }
+
+    @Test
+    public void testGetLegacyMeasurementKillSwitch() {
+        testRampedUpKillSwitchGuardedByGlobalKillSwitch(
+                "MEASUREMENT_KILL_SWITCH", flags -> flags.getLegacyMeasurementKillSwitch());
+        expect.withMessage("getLegacyMeasurementKillSwitch()")
+                .that(mFlags.getLegacyMeasurementKillSwitch())
+                .isEqualTo(!mFlags.getMeasurementEnabled());
+        expect.withMessage("getLegacyMeasurementKillSwitch() when global kill_switch is enabled")
+                .that(mGlobalKsOnFlags.getLegacyMeasurementKillSwitch())
+                .isEqualTo(!mGlobalKsOnFlags.getMeasurementEnabled());
+        expect.withMessage("getLegacyMeasurementKillSwitch() when global kill_switch is enabled")
+                .that(mGlobalKsOffFlags.getLegacyMeasurementKillSwitch())
+                .isEqualTo(!mGlobalKsOffFlags.getMeasurementEnabled());
+    }
+
+    private void testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
+            String getterName,
+            boolean defaultKillSwitchValue,
+            AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+        expect.withMessage("%s when global kill_switch is on", getterName)
+                .that(flaginator.getFlagValue(mGlobalKsOnFlags))
+                .isFalse();
+        expect.withMessage("%s when global kill_switch is off", getterName)
+                .that(flaginator.getFlagValue(mGlobalKsOffFlags))
+                .isEqualTo(!defaultKillSwitchValue);
+    }
+
+    @Test
+    public void testGetMeasurementEnabled() {
+        testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
+                "getMeasurementEnabled()",
+                MEASUREMENT_KILL_SWITCH,
+                flags -> flags.getMeasurementEnabled());
     }
 
     /* ********************************************************************************************
-     * Tests for new feature flags.
+     * Tests for feature flags                                                                    *
      * ********************************************************************************************/
 
     @Test
     public void testGetProtectedSignalsEnabled() {
-        // Getter
-        expect.withMessage(
-                        "getProtectedSignalsServiceKillSwitch() when global kill_switch is enabled")
-                .that(mGlobalKsEnabled.getProtectedSignalsEnabled())
-                .isFalse();
-
-        expect.withMessage(
-                        "getProtectedSignalsServiceKillSwitch() when global kill_switch is"
-                                + " disabled")
-                .that(mGlobalKsDisabled.getProtectedSignalsEnabled())
-                .isEqualTo(PROTECTED_SIGNALS_ENABLED);
-
-        if (true) { // TODO(b/323972771): fix constant and remove this statement
-            expect.withMessage("PROTECTED_SIGNALS_ENABLED")
-                    .that(PROTECTED_SIGNALS_ENABLED)
-                    .isTrue();
-            return;
-        }
-        // Constant
-        expect.withMessage("PROTECTED_SIGNALS_ENABLED").that(PROTECTED_SIGNALS_ENABLED).isFalse();
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "PROTECTED_SIGNALS_ENABLED", flags -> flags.getProtectedSignalsEnabled());
     }
 
     @Test
     public void testGetCobaltLoggingEnabled() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "COBALT_LOGGING_ENABLED", flags -> flags.getCobaltLoggingEnabled());
+    }
+
+    private void testFeatureFlagGuardedByGlobalKillSwitch(
+            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+        boolean defaultValue = getConstantValue(name);
+
         // Getter
-        expect.withMessage("getCobaltLoggingEnabled() when global kill_switch is enabled")
-                .that(mGlobalKsEnabled.getCobaltLoggingEnabled())
+        expect.withMessage("getter for %s when global kill_switch is on", name)
+                .that(flaginator.getFlagValue(mGlobalKsOnFlags))
                 .isFalse();
 
-        expect.withMessage("getCobaltLoggingEnabled() when global kill_switch is" + " disabled")
-                .that(mGlobalKsDisabled.getCobaltLoggingEnabled())
-                .isEqualTo(COBALT_LOGGING_ENABLED);
+        expect.withMessage("getter for %s when global kill_switch is off", name)
+                .that(flaginator.getFlagValue(mGlobalKsOffFlags))
+                .isEqualTo(defaultValue);
 
         // Constant
-        expect.withMessage("COBALT_LOGGING_ENABLED").that(COBALT_LOGGING_ENABLED).isFalse();
+        expect.withMessage("%s", name).that(defaultValue).isFalse();
     }
 
-    /*
-     * Tests for feature flags that already launched - they will eventually be removed (once the
-     * underlying getter is removed)
+    /* ********************************************************************************************
+     * Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should be
+     * move to the block above once refactored.
+     * ********************************************************************************************/
+
+    // TODO(b/325074749) - remove once all flags have been converted
+    /**
+     * @deprecated - flags that are converted should call some method like {@code
+     *     testFeatureFlagGuardedByMsmtFeatureFlag} instead.
      */
+    private void testLegacyKillSwitchGuardedByMsmtKillSwitch(
+            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+        boolean defaultValue = getConstantValue(name);
+
+        // Getter
+        expect.withMessage("getter for %s when global kill_switch is on", name)
+                .that(flaginator.getFlagValue(mGlobalKsOnFlags))
+                .isTrue();
+
+        expect.withMessage("getter for %s when msmt_enabled is true", name)
+                .that(flaginator.getFlagValue(mMsmtEnabledFlags))
+                .isEqualTo(defaultValue);
+        expect.withMessage("getter for %s when msmt enabled is false", name)
+                .that(flaginator.getFlagValue(mMsmtDisabledFlags))
+                .isFalse();
+
+        // TODO(b/325074749): remove 2 checks below once Flags.getLegacyMeasurementKillSwitch() is
+        // gone
+        // Getter using msmt_kill_switch
+        expect.withMessage("getter for %s when msmt kill_switch is on", name)
+                .that(flaginator.getFlagValue(mMsmtKsOnFlags))
+                .isTrue();
+        expect.withMessage("getter for %s when msmt kill_switch is off", name)
+                .that(flaginator.getFlagValue(mMsmtKsOffFlags))
+                .isEqualTo(defaultValue);
+
+        // Constant
+        expect.withMessage("%s", name).that(defaultValue).isFalse();
+    }
 
     @Test
-    public void testgetAppConfigReturnsEnabledByDefault() {
-        // Getter
-        expect.withMessage("getAppConfigReturnsEnabledByDefault()")
-                .that(mFlags.getAppConfigReturnsEnabledByDefault())
-                .isEqualTo(APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT);
-
-        // Constant
-        expect.withMessage("APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT")
-                .that(APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT)
-                .isTrue();
+    public void testGetMeasurementAttributionFallbackJobKillSwitch() {
+        testLegacyKillSwitchGuardedByMsmtKillSwitch(
+                "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
+                flag -> flag.getMeasurementAttributionFallbackJobKillSwitch());
     }
 
-    private final class GlobalKillSwitchAwareFlags implements Flags {
-        private final boolean mEnabled;
+    /* ********************************************************************************************
+     * Tests for feature flags that already launched - they will eventually be removed (once the
+     * underlying getter is removed)
+     * ********************************************************************************************/
+    @Test
+    public void testGetAppConfigReturnsEnabledByDefault() {
+        testRetiredFeatureFlag(
+                "APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT",
+                flags -> flags.getAppConfigReturnsEnabledByDefault());
+    }
 
-        GlobalKillSwitchAwareFlags(boolean enabled) {
-            mEnabled = enabled;
+    private void testRetiredFeatureFlag(
+            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+        boolean defaultValue = getConstantValue(name);
+
+        // Getter
+        expect.withMessage("getter for %s", name)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+
+        // Constant
+        expect.withMessage("%s", name).that(defaultValue).isTrue();
+    }
+
+    // Not passing type (and using type.cast(value)) because most of the flags are primitive types
+    // (like boolean) and T would be their object equivalent (like Boolean)
+    @SuppressWarnings("TypeParameterUnusedInFormals")
+    private static <T> T getConstantValue(String name) {
+        Field field;
+        try {
+            field = Flags.class.getDeclaredField(name);
+        } catch (NoSuchFieldException | SecurityException e) {
+            throw new IllegalArgumentException("Could not get field " + name + ": " + e);
+        }
+
+        int modifiers = field.getModifiers();
+        Preconditions.checkArgument(
+                Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers),
+                "field %s is not static final",
+                name);
+
+        Object value;
+        try {
+            value = field.get(null);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            throw new IllegalArgumentException("Could not get value of field " + name + ": " + e);
+        }
+
+        Log.v(TAG, "getConstant(): " + name + "=" + value);
+
+        @SuppressWarnings("unchecked")
+        T castValue = (T) value;
+
+        return castValue;
+    }
+
+    private static class GlobalKillSwitchAwareFlags implements Flags {
+        private final boolean mGlobalKsOnFlags;
+
+        GlobalKillSwitchAwareFlags(boolean globalKsEnabled) {
+            mGlobalKsOnFlags = globalKsEnabled;
         }
 
         @Override
         public boolean getGlobalKillSwitch() {
-            Log.d(
-                    mTag,
-                    GlobalKillSwitchAwareFlags.this
-                            + ".getGlobalKillSwitch(): returning "
-                            + mEnabled);
-            return mEnabled;
+            Log.d(TAG, this + ".getGlobalKillSwitch(): returning " + mGlobalKsOnFlags);
+            return mGlobalKsOnFlags;
         }
 
         @Override
         public String toString() {
-            return getClass().getSimpleName() + "[enabled=" + mEnabled + "]";
+            StringBuilder string = new StringBuilder(getClass().getSimpleName()).append('[');
+            decorateToString(string);
+            return string.append(']').toString();
+        }
+
+        protected void decorateToString(StringBuilder toString) {
+            toString.append("globalKsEnabled=").append(mGlobalKsOnFlags);
         }
     }
+
+    private static final class MsmtFeatureAwareFlags extends GlobalKillSwitchAwareFlags {
+        private final boolean mMsmtEnabled;
+
+        MsmtFeatureAwareFlags(boolean msmtEnabled) {
+            super(false);
+            mMsmtEnabled = msmtEnabled;
+        }
+
+        @Override
+        public boolean getMeasurementEnabled() {
+            Log.d(TAG, this + ".getMeasurementEnabled(): returning " + mMsmtEnabled);
+            return mMsmtEnabled;
+        }
+
+        @Override
+        protected void decorateToString(StringBuilder toString) {
+            super.decorateToString(toString);
+            toString.append(", msmtEnabled=").append(mMsmtEnabled);
+        }
+    }
+
+    /**
+     * @deprecated - TODO(b/325074749): remove once all methods are changed to use
+     *     !getMeasurementEnabled()
+     */
+    @Deprecated
+    private static final class MsmtKillSwitchAwareFlags extends GlobalKillSwitchAwareFlags {
+        private final boolean mMsmtKsEnabled;
+
+        MsmtKillSwitchAwareFlags(boolean msmtKsEnabled) {
+            super(false);
+            mMsmtKsEnabled = msmtKsEnabled;
+        }
+
+        @Override
+        public boolean getLegacyMeasurementKillSwitch() {
+            Log.d(TAG, this + ".getLegacyMeasurementKillSwitch(): returning " + mMsmtKsEnabled);
+            return mMsmtKsEnabled;
+        }
+
+        @Override
+        protected void decorateToString(StringBuilder toString) {
+            super.decorateToString(toString);
+            toString.append(", msmtKsEnabled=").append(mMsmtKsEnabled);
+        }
+    }
+
+    /**
+     * "Fancy" interface used to build lambdas that can test a speficic flag on multiple {@code
+     * Flag} objects.
+     */
+    private interface AiPoweredKillSwitchAkaFeatureFlagTestatorPlus {
+        boolean getFlagValue(Flags flags);
+    }
+
+    // TODO(b/325135083): add a test to make sure all constants are annotated with FeatureFlag or
+    // ConfigFlag (and only one FeatureFlag is LEGACY_KILL_SWITCH_GLOBAL). Might need to be added in
+    // a separate file / Android.bp project as the annotation is currently retained on SOURCE only.
 }
