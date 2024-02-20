@@ -84,7 +84,7 @@ public class KAnonSignJoinManagerTest {
                         .build()
                         .kAnonMessageDao();
         when(mockClock.instant()).thenReturn(FIXED_TIME);
-        mFlags = FlagsFactory.getFlags();
+        mFlags = new KanonSignJoinManagerTestFlags(100);
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
     }
 
@@ -227,6 +227,11 @@ public class KAnonSignJoinManagerTest {
         @Override
         public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
             return percentageImmediateSignJoinCalls;
+        }
+
+        @Override
+        public long getFledgeKAnonMessageTtlSeconds() {
+            return 10000;
         }
     }
 }
