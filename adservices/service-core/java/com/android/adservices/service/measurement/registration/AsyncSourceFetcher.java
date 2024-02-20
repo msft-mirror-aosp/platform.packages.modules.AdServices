@@ -274,7 +274,7 @@ public class AsyncSourceFetcher {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
-                builder.setFilterData(maybeFilterData.toString());
+                builder.setFilterDataString(maybeFilterData.toString());
             } else {
                 if (!FetcherUtil.areValidAttributionFilters(
                         json.optJSONObject(SourceHeaderContract.FILTER_DATA),
@@ -283,7 +283,7 @@ public class AsyncSourceFetcher {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
-                builder.setFilterData(
+                builder.setFilterDataString(
                         json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
             }
         }
