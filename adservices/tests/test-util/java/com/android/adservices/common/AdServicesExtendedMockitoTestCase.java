@@ -36,10 +36,10 @@ import java.util.function.Supplier;
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
  * AdServicesMockitoTestCase} instead).
  *
- * <p><b>NOTE:</b> subclasses MUST use
- * {@link com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or
- * (@link com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static
- * classes are mocked ad/or spied.
+ * <p><b>NOTE:</b> subclasses MUST use {@link
+ * com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or {@link
+ * com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static classes are
+ * mocked ad/or spied.
  */
 @ClearInlineMocksMode(CLEAR_AFTER_TEST_CLASS)
 public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTestCase {
