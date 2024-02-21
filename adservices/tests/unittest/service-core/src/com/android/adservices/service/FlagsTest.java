@@ -19,6 +19,7 @@ package com.android.adservices.service;
 import static com.android.adservices.common.AndroidSdk.RVC;
 import static com.android.adservices.common.AndroidSdk.SC;
 import static com.android.adservices.common.AndroidSdk.SC_V2;
+import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
@@ -27,8 +28,8 @@ import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 
@@ -232,6 +233,16 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("getEnableMigrationFromAdExtService()")
                 .that(mFlags.getEnableMigrationFromAdExtService())
                 .isEqualTo(expected);
+    }
+
+    @Test
+    public void testGetAdServicesModuleJobPolicy() {
+        expect.withMessage("AD_SERVICES_MODULE_JOB_POLICY")
+                .that(AD_SERVICES_MODULE_JOB_POLICY)
+                .isEqualTo("");
+        expect.withMessage("getAdServicesModuleJobPolicy()")
+                .that(mFlags.getAdServicesModuleJobPolicy())
+                .isEqualTo(AD_SERVICES_MODULE_JOB_POLICY);
     }
 
     /* ********************************************************************************************
