@@ -23,6 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
 
@@ -48,6 +49,7 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Objects;
 
 /** Verify caller of FLEDGE API has the permission of performing certain behaviour. */
@@ -205,7 +207,8 @@ public class FledgeAuthorizationFilter {
             @NonNull Context context,
             @NonNull String appPackageName,
             @NonNull AdTechIdentifier adTechIdentifier,
-            int apiNameLoggingId)
+            int apiNameLoggingId,
+            @AppManifestConfigCall.ApiType int apiType)
             throws AdTechNotAllowedException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appPackageName);
@@ -242,8 +245,25 @@ public class FledgeAuthorizationFilter {
             throw new AdTechNotAllowedException();
         }
 
-        if (!AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                appPackageName, enrollmentData.getEnrollmentId())) {
+        boolean isAllowedAccess;
+        if (apiType == API_CUSTOM_AUDIENCES) {
+            isAllowedAccess =
+                    AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                            appPackageName, enrollmentData.getEnrollmentId());
+        } else if (apiType == API_PROTECTED_SIGNALS) {
+            isAllowedAccess =
+                    AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
+                            appPackageName, enrollmentData.getEnrollmentId());
+        } else if (apiType == API_AD_SELECTION) {
+            isAllowedAccess =
+                    AppManifestConfigHelper.isAllowedAdSelectionAccess(
+                            appPackageName, enrollmentData.getEnrollmentId());
+        } else {
+            throw new IllegalStateException(
+                    String.format(Locale.ENGLISH, "Invalid apiType: %d", apiType));
+        }
+
+        if (!isAllowedAccess) {
             sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
@@ -353,8 +373,13 @@ public class FledgeAuthorizationFilter {
             isAllowedAccess =
                     AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
                             appPackageName, enrollmentData.getEnrollmentId());
+        } else if (apiType == API_AD_SELECTION) {
+            isAllowedAccess =
+                    AppManifestConfigHelper.isAllowedAdSelectionAccess(
+                            appPackageName, enrollmentData.getEnrollmentId());
         } else {
-            throw new IllegalStateException(String.format("Invalid apiType: %d", apiType));
+            throw new IllegalStateException(
+                    String.format(Locale.ENGLISH, "Invalid apiType: %d", apiType));
         }
 
         boolean isEnrollmentBlocklisted =
