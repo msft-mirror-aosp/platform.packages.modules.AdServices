@@ -1289,6 +1289,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED =
             "fledge_kanon_background_process_enabled";
 
+    /** Key for kanon set type to join for sign join process. */
+    public static final String KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN =
+            "fledge_kanon_set_type_to_sign_join";
+
     /** key for allow list of get adservices common states. */
     public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
             "get_adservices_common_states_allow_list";

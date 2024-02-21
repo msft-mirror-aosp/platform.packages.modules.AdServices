@@ -437,6 +437,25 @@ public class KAnonCallerImplTest {
         assertThat(kanonMessageListAfter.size()).isEqualTo(kanonMessageList.size());
     }
 
+    @Test
+    public void getPathToJoinInBinaryHttp_shouldReturnCorrectString() {
+
+        String expectedString =
+                "/v2/types/fledge/sets/nEW2Xx96S2B1zRqAgXsX4mRl0MAhgKcYZBb-Lsa5djg:join";
+        KAnonMessageEntity kAnonMessageEntity =
+                KAnonMessageEntity.builder()
+                        .setMessageId(1L)
+                        .setAdSelectionId(12L)
+                        .setCorrespondingClientParametersExpiryInstant(Instant.now())
+                        .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
+                        .setHashSet("nEW2Xx96S2B1zRqAgXsX4mRl0MAhgKcYZBb-Lsa5djg")
+                        .build();
+
+        String actualString = mKAnonCaller.getPathToJoinInBinaryHttp(kAnonMessageEntity);
+
+        assertThat(actualString).isEqualTo(expectedString);
+    }
+
     private void createAndPersistKAnonMessages() {
         DBKAnonMessage dbKAnonMessage =
                 DBKAnonMessage.builder()

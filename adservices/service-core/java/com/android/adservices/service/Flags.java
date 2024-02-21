@@ -4707,6 +4707,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value for kanon background process flag */
     boolean FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED = false;
 
+    /** Default value for kanon sign join set type */
+    String FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN = "fledge";
+
     /**
      * This is a feature flag for KAnon Sign/Join feature.
      *
@@ -4746,7 +4749,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
-     * This method returns the url that needs to be used to make k-anon JOIN join call.
+     * This method returns the url that needs to be used to make k-anon join call.
      *
      * @return default value of get tokens url
      */
@@ -4800,6 +4803,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getFledgeKAnonBackgroundProcessEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
                 && FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
+    }
+
+    /**
+     * This method returns the type of set we need to join during kanon sign join process. eg: In
+     * the following example, fledge is the set type to join. "types/fledge/set/hashset"
+     */
+    default String getFledgeKAnonSetTypeToSignJoin() {
+        return FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN;
     }
 
     /*
