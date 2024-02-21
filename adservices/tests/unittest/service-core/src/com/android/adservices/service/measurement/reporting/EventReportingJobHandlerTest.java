@@ -39,7 +39,6 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -48,7 +47,6 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -84,10 +82,6 @@ public class EventReportingJobHandlerTest {
     private static final List<Uri> ATTRIBUTION_DESTINATIONS = List.of(
             Uri.parse("https://destination.test"));
 
-    private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
-            .setAttributionReportingUrl(List.of("https://ad-tech.test"))
-            .build();
-
     private static final String SOURCE_REGISTRANT = "android-app://com.registrant";
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -97,7 +91,6 @@ public class EventReportingJobHandlerTest {
 
     @Mock ITransaction mTransaction;
 
-    @Mock EnrollmentDao mEnrollmentDao;
     @Mock private Flags mMockFlags;
 
     @Mock Flags mFlags;
@@ -143,7 +136,6 @@ public class EventReportingJobHandlerTest {
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         mDatastoreManager = new FakeDatasoreManager();
-        when(mEnrollmentDao.getEnrollmentData(any())).thenReturn(ENROLLMENT);
         when(mMeasurementDao.getSourceRegistrant(any())).thenReturn(SOURCE_REGISTRANT);
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowCryptoException();
@@ -152,7 +144,6 @@ public class EventReportingJobHandlerTest {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mEventReportingJobHandler =
                 new EventReportingJobHandler(
-                        mEnrollmentDao,
                         mDatastoreManager,
                         mFlags,
                         mLogger,
@@ -163,7 +154,6 @@ public class EventReportingJobHandlerTest {
         mSpyDebugEventReportingJobHandler =
                 Mockito.spy(
                         new EventReportingJobHandler(
-                                        mEnrollmentDao,
                                         mDatastoreManager,
                                         mFlags,
                                         mLogger,
