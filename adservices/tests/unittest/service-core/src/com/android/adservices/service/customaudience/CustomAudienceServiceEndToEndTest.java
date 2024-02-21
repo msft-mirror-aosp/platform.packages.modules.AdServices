@@ -977,10 +977,12 @@ public class CustomAudienceServiceEndToEndTest {
         // Wire the mock web server
         String responsePayload =
                 createJsonResponsePayload(
-                        LOCALHOST_BUYER,
-                        VALID_OWNER,
-                        List.of(PARTIAL_CA_1, PARTIAL_CA_2),
-                        List.of(LEAVE_CA_1, LEAVE_CA_2));
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
 
         Dispatcher dispatcher =
                 new Dispatcher() {
@@ -1087,11 +1089,21 @@ public class CustomAudienceServiceEndToEndTest {
         // Wire the mock web server for handling two updates
         String responsePayload1 =
                 createJsonResponsePayload(
-                        LOCALHOST_BUYER, VALID_OWNER, List.of(PARTIAL_CA_1), List.of(LEAVE_CA_1));
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1),
+                                List.of(LEAVE_CA_1),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
 
         String responsePayload2 =
                 createJsonResponsePayload(
-                        LOCALHOST_BUYER, VALID_OWNER, List.of(PARTIAL_CA_2), List.of(LEAVE_CA_2));
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_2),
+                                List.of(LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
 
         Dispatcher dispatcher =
                 new Dispatcher() {
@@ -1304,10 +1316,12 @@ public class CustomAudienceServiceEndToEndTest {
         // Wire the mock web server
         String responsePayload =
                 createJsonResponsePayload(
-                        LOCALHOST_BUYER,
-                        VALID_OWNER,
-                        List.of(nonOverriddenCaName, PARTIAL_CA_1),
-                        List.of(LEAVE_CA_1));
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(nonOverriddenCaName, PARTIAL_CA_1),
+                                List.of(LEAVE_CA_1),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
 
         Dispatcher dispatcher =
                 new Dispatcher() {
@@ -1405,10 +1419,12 @@ public class CustomAudienceServiceEndToEndTest {
         // Wire the mock web server
         String responsePayload =
                 createJsonResponsePayload(
-                        LOCALHOST_BUYER,
-                        VALID_OWNER,
-                        List.of(PARTIAL_CA_1, PARTIAL_CA_2),
-                        List.of(LEAVE_CA_1, LEAVE_CA_2));
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
 
         Dispatcher dispatcher =
                 new Dispatcher() {
@@ -1494,10 +1510,12 @@ public class CustomAudienceServiceEndToEndTest {
         // Wire the mock web server
         String responsePayload =
                 createJsonResponsePayload(
-                        LOCALHOST_BUYER,
-                        VALID_OWNER,
-                        List.of(PARTIAL_CA_1, PARTIAL_CA_2),
-                        List.of(LEAVE_CA_1, LEAVE_CA_2));
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
 
         Dispatcher dispatcher =
                 new Dispatcher() {
