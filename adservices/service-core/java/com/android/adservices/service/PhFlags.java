@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -3773,6 +3774,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getFledgeMeasurementReportAndRegisterEventApiEnabled()
                 && DeviceConfig.getBoolean(
                         FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue);
+    }
+
+    @Override
+    public String getAdServicesModuleJobPolicy() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_AD_SERVICES_MODULE_JOB_POLICY,
+                /* defaultValue */ AD_SERVICES_MODULE_JOB_POLICY);
     }
 
     @Override

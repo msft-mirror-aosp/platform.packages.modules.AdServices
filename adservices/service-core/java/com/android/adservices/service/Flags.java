@@ -29,6 +29,7 @@ import android.app.job.JobInfo;
 import android.os.Build;
 
 import com.android.adservices.cobalt.CobaltConstants;
+import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.internal.annotations.VisibleForTesting;
@@ -3506,8 +3507,8 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED = false;
 
     /**
-     * Returns whether the fledge beacon reporting metrics is enabled.
-     * This flag should not be ramped on S- prior to M-2024-04.
+     * Returns whether the fledge beacon reporting metrics is enabled. This flag should not be
+     * ramped on S- prior to M-2024-04.
      */
     default boolean getFledgeBeaconReportingMetricsEnabled() {
         return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
@@ -4838,5 +4839,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getFledgeCustomAudienceCLIEnabledStatus() {
         return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
+    }
+
+    /** Default value for the base64 encoded Job Policy proto for AdServices. */
+    @ConfigFlag String AD_SERVICES_MODULE_JOB_POLICY = "";
+
+    /** Returns the base64 encoded Job Policy proto for AdServices. */
+    default String getAdServicesModuleJobPolicy() {
+        return AD_SERVICES_MODULE_JOB_POLICY;
     }
 }
