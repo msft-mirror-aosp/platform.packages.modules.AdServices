@@ -31,8 +31,8 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /**
- * Class for logging the Fledge auction server process. It provides the functions to collect and
- * log the corresponding auction server process and log the data into the statsd logs.
+ * Class for logging the Ads Relevance API metrics. It provides the functions to collect and
+ * log the corresponding Ads Relevance API process and log the data into the statsd logs.
  * This class collect data for the telemetry atoms:
  *
  * <ul>
@@ -44,23 +44,23 @@ import java.util.Objects;
  * object, and call its corresponding end method to record its states and log the generated atom
  * proto into the statsd logger.
  */
-public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCalculator
-        implements FledgeAuctionServerExecutionLogger {
+public class AdsRelevanceExecutionLoggerImpl extends ApiServiceLatencyCalculator
+        implements AdsRelevanceExecutionLogger {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
     static final int UNAVAILABLE_LATENCY = -1;
     @VisibleForTesting
-    static final String MISSING_AUCTION_SERVER_API_PROCESS =
-            "The logger should set the start of auction server API process: ";
+    static final String MISSING_ADS_RELEVANCE_API_PROCESS =
+            "The logger should set the start of Ads Relevance API process: ";
     @VisibleForTesting
-    static final String REPEATED_END_AUCTION_SERVER_API_PROCESS =
-            "The logger has already set the end of auction server API process: ";
+    static final String REPEATED_ADS_RELEVANCE_API_PROCESS =
+            "The logger has already set the end of Ads Relevance API process: ";
 
     private final long mBinderElapsedTimestamp;
 
-    private long mAuctionServerApiStartTimestamp;
-    private long mAuctionServerApiEndTimestamp;
+    private long mAdsRelevanceApiStartTimestamp;
+    private long mAdsRelevanceApiEndTimestamp;
 
     private AdServicesLogger mAdServicesLogger;
     private String mCallerAppPackageName;
@@ -69,7 +69,7 @@ public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCal
 
     private boolean isLatencyAvailable;
 
-    public FledgeAuctionServerExecutionLoggerImpl(
+    public AdsRelevanceExecutionLoggerImpl(
             @NonNull String callerAppPackageName,
             @NonNull CallerMetadata callerMetadata,
             @NonNull Clock clock,
@@ -88,66 +88,66 @@ public class FledgeAuctionServerExecutionLoggerImpl extends ApiServiceLatencyCal
         this.mApiName = apiName;
         this.mApiNameCode = apiNameCode;
         isLatencyAvailable = true;
-        sLogger.v("FledgeAuctionServerExecutionLogger starts.");
+        sLogger.v("AdsRelevanceExecutionLogger starts.");
         sLogger.v("Start the execution of " + mApiName);
-        this.mAuctionServerApiStartTimestamp = getServiceElapsedTimestamp();
+        this.mAdsRelevanceApiStartTimestamp = getServiceElapsedTimestamp();
     }
 
-    /** end a complete Fledge auction server Api process. */
+    /** end a complete Ad Relevance Api process. */
     @Override
-    public void endAuctionServerApi(int resultCode) {
-        if (mAuctionServerApiStartTimestamp == 0L) {
-            sLogger.e(MISSING_AUCTION_SERVER_API_PROCESS + mApiName);
+    public void endAdsRelevanceApi(int resultCode) {
+        if (mAdsRelevanceApiStartTimestamp == 0L) {
+            sLogger.e(MISSING_ADS_RELEVANCE_API_PROCESS + mApiName);
             isLatencyAvailable = false;
         }
-        if (mAuctionServerApiEndTimestamp > 0L) {
-            sLogger.e(REPEATED_END_AUCTION_SERVER_API_PROCESS + mApiName);
+        if (mAdsRelevanceApiEndTimestamp > 0L) {
+            sLogger.e(REPEATED_ADS_RELEVANCE_API_PROCESS + mApiName);
             isLatencyAvailable = false;
         }
         sLogger.v("End the execution of " + mApiName);
-        this.mAuctionServerApiEndTimestamp = getServiceElapsedTimestamp();
-        int overallAuctionServerApiLatency =
-                isLatencyAvailable ? getAuctionServerApiOverallLatencyInMs() : UNAVAILABLE_LATENCY;
-        int auctionServerApiResultCode = isLatencyAvailable ? resultCode : STATUS_UNSET;
+        this.mAdsRelevanceApiEndTimestamp = getServiceElapsedTimestamp();
+        int overallAdsRelevanceApiLatency =
+                isLatencyAvailable ? getAdsRelevanceApiOverallLatencyInMs() : UNAVAILABLE_LATENCY;
+        int adsRelevanceApiResultCode = isLatencyAvailable ? resultCode : STATUS_UNSET;
         mAdServicesLogger.logApiCallStats(
                 new ApiCallStats.Builder()
                         .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
                         .setApiName(mApiNameCode)
-                        .setLatencyMillisecond(overallAuctionServerApiLatency)
-                        .setResult(auctionServerApiResultCode, FAILURE_REASON_UNSET)
+                        .setLatencyMillisecond(overallAdsRelevanceApiLatency)
+                        .setResult(adsRelevanceApiResultCode, FAILURE_REASON_UNSET)
                         .setAppPackageName(mCallerAppPackageName)
                         .setSdkPackageName("")
                         .build());
     }
 
-    private int getAuctionServerApiOverallLatencyInMs() {
+    private int getAdsRelevanceApiOverallLatencyInMs() {
         return getBinderLatencyInMs(mBinderElapsedTimestamp)
-                + getAuctionServerApiInternalFinalLatencyInMs();
+                + getAdsRelevanceApiInternalFinalLatencyInMs();
     }
 
     /**
-     * @return the latency in milliseconds of the get-ad-selection-data process if started,
+     * @return the latency in milliseconds of the Ads Relevance Api process if started,
      *      otherwise the {@link AdServicesLoggerUtil#FIELD_UNSET}.
      */
-    private int getAuctionServerApiInternalFinalLatencyInMs() {
-        if (mAuctionServerApiEndTimestamp == 0L) {
-            return (int) (getServiceElapsedTimestamp() - mAuctionServerApiStartTimestamp);
+    private int getAdsRelevanceApiInternalFinalLatencyInMs() {
+        if (mAdsRelevanceApiEndTimestamp == 0L) {
+            return (int) (getServiceElapsedTimestamp() - mAdsRelevanceApiStartTimestamp);
         }
-        return (int) (mAuctionServerApiEndTimestamp - mAuctionServerApiStartTimestamp);
+        return (int) (mAdsRelevanceApiEndTimestamp - mAdsRelevanceApiStartTimestamp);
     }
 
     private int getBinderLatencyInMs(long binderElapsedTimestamp) {
-        return (int) (mAuctionServerApiStartTimestamp - binderElapsedTimestamp) * 2;
+        return (int) (mAdsRelevanceApiStartTimestamp - binderElapsedTimestamp) * 2;
     }
 
     @VisibleForTesting
-    void setAuctionServerApiStartTimestamp(long timestamp) {
-        mAuctionServerApiStartTimestamp = timestamp;
+    void setAdsRelevanceApiStartTimestamp(long timestamp) {
+        mAdsRelevanceApiStartTimestamp = timestamp;
     }
 
     @VisibleForTesting
-    void setAuctionServerApiEndTimestamp(long timestamp) {
-        mAuctionServerApiEndTimestamp = timestamp;
+    void setAdsRelevanceApiEndTimestamp(long timestamp) {
+        mAdsRelevanceApiEndTimestamp = timestamp;
     }
 }
