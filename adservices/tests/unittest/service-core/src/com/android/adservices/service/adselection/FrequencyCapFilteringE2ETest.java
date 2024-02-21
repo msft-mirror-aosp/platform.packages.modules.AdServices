@@ -475,7 +475,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
 
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAdTechAllowed(any(), any(), any(), anyInt());
+                .assertAdTechAllowed(any(), any(), any(), anyInt(), anyInt());
 
         try {
             Flags flagsWithLowRateLimit = new FlagsWithLowRateLimit();
