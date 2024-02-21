@@ -97,7 +97,11 @@ public class ProtectedServersEncryptionConfigManager
             @Nullable Uri coordinatorUrl) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_LATEST_OHTTP_KEY_CONFIG);
 
-        Uri fetchUri = getKeyFetchUriOfType(adSelectionEncryptionKeyType, coordinatorUrl);
+        Uri fetchUri =
+                getKeyFetchUriOfType(
+                        adSelectionEncryptionKeyType,
+                        coordinatorUrl,
+                        mFlags.getFledgeAuctionServerCoordinatorUrlAllowlist());
         if (fetchUri == null) {
             sLogger.e(
                     "Fetch URI shouldn't have been null."

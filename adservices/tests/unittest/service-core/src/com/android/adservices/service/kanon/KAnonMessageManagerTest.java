@@ -108,6 +108,11 @@ public class KAnonMessageManagerTest {
 
     @Test
     public void testPersistNewAnonMessageEntities_shouldPersistSuccessfully() {
+        long secondsTtl = 100;
+        Instant fixedInstant = Instant.now();
+        when(mockClock.instant()).thenReturn(fixedInstant);
+        when(mockFlags.getFledgeKAnonMessageTtlSeconds()).thenReturn(secondsTtl);
+        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mockFlags, mockClock);
         mKAnonMessageManager.persistNewAnonMessageEntities(List.of(mKAnonMessageEntity));
 
         List<DBKAnonMessage> dbkAnonMessages =
@@ -184,5 +189,24 @@ public class KAnonMessageManagerTest {
 
         assertThat(dbkAnonMessages.size()).isEqualTo(1);
         assertThat(dbkAnonMessages.get(0).getMessageId()).isNotNull();
+    }
+
+    @Test
+    public void testPersistNewAnonMessageEntities_ttlIsPickedUpFromDatabase() {
+        long secondsTtl = 100;
+        Instant fixedInstant = Instant.now();
+        when(mockClock.instant()).thenReturn(fixedInstant);
+        when(mockFlags.getFledgeKAnonMessageTtlSeconds()).thenReturn(secondsTtl);
+        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mockFlags, mockClock);
+
+        mKAnonMessageManager.persistNewAnonMessageEntities(List.of(mKAnonMessageEntity));
+
+        List<DBKAnonMessage> dbkAnonMessages =
+                mKAnonMessageDao.getNLatestKAnonMessagesWithStatus(
+                        5, KAnonMessageConstants.MessageStatus.NOT_PROCESSED);
+
+        assertThat(dbkAnonMessages.size()).isEqualTo(1);
+        assertThat(dbkAnonMessages.get(0).getExpiryInstant().toEpochMilli())
+                .isEqualTo(fixedInstant.plusSeconds(secondsTtl).toEpochMilli());
     }
 }

@@ -80,7 +80,7 @@ public final class MaintenanceJobService extends JobService {
             LogUtil.d(
                     "Disabling MaintenanceJobService job because it's running in ExtServices on"
                             + " T+");
-            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
+            return skipAndCancelBackgroundJob(params, /* skipReason= */ 0, /* doRecord= */ false);
         }
 
         Flags flags = FlagsFactory.getFlags();
@@ -97,7 +97,7 @@ public final class MaintenanceJobService extends JobService {
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
-                    /* doRecord=*/ true);
+                    /* doRecord= */ true);
         }
 
         ListenableFuture<Void> appReconciliationFuture;
@@ -288,6 +288,7 @@ public final class MaintenanceJobService extends JobService {
         getFledgeMaintenanceTasksWorker().clearExpiredAdSelectionData();
         getFledgeMaintenanceTasksWorker()
                 .clearInvalidFrequencyCapHistogramData(this.getPackageManager());
+        getFledgeMaintenanceTasksWorker().clearExpiredKAnonMessageEntities();
     }
 
     private void doProtectedSignalsDataMaintenanceTasks() {
