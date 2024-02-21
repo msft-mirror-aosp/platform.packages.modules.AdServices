@@ -221,6 +221,7 @@ import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_MESSAGE_
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS;
@@ -641,6 +642,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MES
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
@@ -10449,6 +10451,17 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Boolean.toString(phOverridingValue), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
 
         assertThat(mPhFlags.getFledgeKAnonBackgroundProcessEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testFledgeKAnonSetTypeToSignJoinFlag() {
+        assertThat(mPhFlags.getFledgeKAnonSetTypeToSignJoin())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN);
+
+        String phOverridingValue = "testing-set";
+        overrideKAnonFlags(phOverridingValue, KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN);
+
+        assertThat(mPhFlags.getFledgeKAnonSetTypeToSignJoin()).isEqualTo(phOverridingValue);
     }
 
     @Test

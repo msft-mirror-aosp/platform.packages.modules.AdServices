@@ -228,7 +228,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Instant keyExpiryInstant,
             long timeoutMs) {
-        Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, null);
+        Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, null, null);
         if (fetchUri == null) {
             throw new IllegalStateException(
                     "Uri to fetch active key of type " + adSelectionKeyType + " is null.");

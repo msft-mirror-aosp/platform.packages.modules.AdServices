@@ -31,6 +31,7 @@ import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
+import android.app.sdksandbox.StatsdUtil;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -307,6 +308,29 @@ public class SdkSandboxControllerUnitTest {
     }
 
     @Test
+    public void testRegisterSdkSandboxActivityHandler_CallsStatsd() throws RemoteException {
+        final SdkSandboxController controller = new SdkSandboxController(mSandboxedSdkContext);
+
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        SdkSandboxActivityHandler handler = activity -> {};
+
+        controller.registerSdkSandboxActivityHandler(handler);
+
+        Mockito.verify(mServiceCallback)
+                .logSandboxActivityApiLatencyFromSandbox(
+                        Mockito.eq(
+                                StatsdUtil
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__REGISTER_SDK_SANDBOX_ACTIVITY_HANDLER),
+                        Mockito.eq(
+                                StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS),
+                        Mockito.anyInt());
+
+        // cleaning
+        controller.unregisterSdkSandboxActivityHandler(handler);
+    }
+
+    @Test
     public void testUnregisterSdkSandboxActivityHandler() {
         SdkSandboxController controller = new SdkSandboxController(mSandboxedSdkContext);
 
@@ -321,6 +345,29 @@ public class SdkSandboxControllerUnitTest {
 
         IBinder token2 = controller.registerSdkSandboxActivityHandler(handler);
         assertThat(token2).isNotEqualTo(token1);
+    }
+
+    @Test
+    public void testUnregisterSdkSandboxActivityHandler_CallsStatsd() throws RemoteException {
+        SdkSandboxController controller = new SdkSandboxController(mSandboxedSdkContext);
+
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        SdkSandboxActivityHandler handler = activity -> {};
+
+        IBinder token1 = controller.registerSdkSandboxActivityHandler(handler);
+        assertThat(token1).isNotNull();
+
+        controller.unregisterSdkSandboxActivityHandler(handler);
+
+        Mockito.verify(mServiceCallback)
+                .logSandboxActivityApiLatencyFromSandbox(
+                        Mockito.eq(
+                                StatsdUtil
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__UNREGISTER_SDK_SANDBOX_ACTIVITY_HANDLER),
+                        Mockito.eq(
+                                StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS),
+                        Mockito.anyInt());
     }
 
     @Test

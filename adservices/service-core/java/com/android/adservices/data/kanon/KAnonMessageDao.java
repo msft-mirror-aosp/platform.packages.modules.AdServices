@@ -21,6 +21,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import java.time.Instant;
 import java.util.List;
 
 /** Dao to manage access to entities in Client parameters table. */
@@ -56,4 +57,10 @@ public abstract class KAnonMessageDao {
     @Query("UPDATE kanon_messages SET status = :status WHERE message_id IN (:idsToUpdate)")
     public abstract void updateMessagesStatus(
             List<Long> idsToUpdate, @KAnonMessageConstants.MessageStatus int status);
+
+    @Query(
+            "DELETE from kanon_messages WHERE expiry_instant < :currentTime OR"
+                    + " (corresponding_client_parameters_expiry_instant is NOT NULL AND"
+                    + " corresponding_client_parameters_expiry_instant < :currentTime)")
+    public abstract void removeExpiredEntities(Instant currentTime);
 }
