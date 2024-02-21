@@ -57,6 +57,7 @@ import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntit
 import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -204,6 +205,8 @@ public class KAnonCallerImpl implements KAnonCaller {
      */
     @Override
     public void signAndJoinMessages(List<KAnonMessageEntity> messageEntities) {
+        Preconditions.checkArgument(messageEntities.size() > 0);
+
         ListenableFuture<Void> signJoinFuture =
                 FluentFuture.from(initializeClientAndServerParameters())
                         .transformAsync(
