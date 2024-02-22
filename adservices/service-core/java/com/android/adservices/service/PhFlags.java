@@ -2180,6 +2180,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 /* defaultValue */ MDD_LOGGER_KILL_SWITCH));
     }
 
+    @Override
+    public boolean getMddLoggerEnabled() {
+        return !getMddLoggerKillSwitch();
+    }
+
     // FLEDGE Kill switches
 
     @Override
