@@ -497,17 +497,17 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void testMddLoggerKillSwitchIsOn() {
-        // Killswitch is on. MddLogger should be disabled.
-        doReturn(true).when(mMockFlags).getMddLoggerKillSwitch();
+    public void testMddLoggerFeatureFlagIsOff() {
+        // The feature flag is off. MddLogger should be disabled.
+        doReturn(false).when(mMockFlags).getMddLoggerEnabled();
         Optional<Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);
         assertThat(mddLogger).isAbsent();
     }
 
     @Test
-    public void testMddLoggerKillSwitchIsOff() {
-        // Killswitch is off. MddLogger should be enabled.
-        doReturn(false).when(mMockFlags).getMddLoggerKillSwitch();
+    public void testMddLoggerFeatureFlagIsOn() {
+        // The feature flag is on. MddLogger should be enabled.
+        doReturn(true).when(mMockFlags).getMddLoggerEnabled();
         Optional<Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);
         assertThat(mddLogger).isPresent();
     }
