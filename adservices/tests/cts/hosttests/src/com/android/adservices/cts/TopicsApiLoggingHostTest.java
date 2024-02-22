@@ -286,7 +286,10 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
                         "device_config put adservices enable_back_compat " + isEnabled);
     }
 
+    /**
+     * The test is unsupported if the device is configured as a low-RAM device.
+     */
     private boolean isDeviceSupported() throws DeviceNotAvailableException {
-        return !getDevice().getProperty(LOW_RAM_DEVICE_CONFIG).equals("true");
+        return !"true".equals(getDevice().getProperty(LOW_RAM_DEVICE_CONFIG));
     }
 }
