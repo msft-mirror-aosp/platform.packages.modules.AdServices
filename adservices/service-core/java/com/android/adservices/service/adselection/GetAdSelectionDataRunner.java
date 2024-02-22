@@ -55,7 +55,7 @@ import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.FledgeAuctionServerExecutionLogger;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -110,7 +110,7 @@ public class GetAdSelectionDataRunner {
     private final int mPayloadFormatterVersion;
 
     @NonNull private final CoordinatorOriginUriValidator mCoordinatorOriginUriValidator;
-    @NonNull private final FledgeAuctionServerExecutionLogger mFledgeAuctionServerExecutionLogger;
+    @NonNull private final AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
 
     public GetAdSelectionDataRunner(
             @NonNull final Context context,
@@ -128,7 +128,7 @@ public class GetAdSelectionDataRunner {
             final int callerUid,
             @NonNull final DevContext devContext,
             @NonNull final AuctionServerDebugReporting auctionServerDebugReporting,
-            @NonNull final FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
+            @NonNull final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -141,7 +141,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(auctionServerDebugReporting);
-        Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
+        Objects.requireNonNull(adsRelevanceExecutionLogger);
 
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
@@ -183,7 +183,7 @@ public class GetAdSelectionDataRunner {
                         mPayloadFormatterVersion,
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mAuctionServerDebugReporting = auctionServerDebugReporting;
-        mFledgeAuctionServerExecutionLogger = fledgeAuctionServerExecutionLogger;
+        mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
     }
 
     @VisibleForTesting
@@ -204,7 +204,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final DevContext devContext,
             @NonNull Clock clock,
             @NonNull AuctionServerDebugReporting auctionServerDebugReporting,
-            @NonNull FledgeAuctionServerExecutionLogger fledgeAuctionServerExecutionLogger) {
+            @NonNull AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -218,7 +218,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(auctionServerDebugReporting);
-        Objects.requireNonNull(fledgeAuctionServerExecutionLogger);
+        Objects.requireNonNull(adsRelevanceExecutionLogger);
 
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
@@ -260,7 +260,7 @@ public class GetAdSelectionDataRunner {
                         mPayloadFormatterVersion,
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mAuctionServerDebugReporting = auctionServerDebugReporting;
-        mFledgeAuctionServerExecutionLogger = fledgeAuctionServerExecutionLogger;
+        mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
     }
 
     /** Orchestrates GetAdSelectionData process. */
@@ -512,7 +512,7 @@ public class GetAdSelectionDataRunner {
             sLogger.v("Get Ad Selection Data completed and attempted notifying success");
             // The STATUS_IO_ERROR will be logged by notifyFailureToCaller.
             if (resultCode != STATUS_IO_ERROR) {
-                mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
+                mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
             }
         }
     }
@@ -557,7 +557,7 @@ public class GetAdSelectionDataRunner {
             resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Get Ad Selection Data failed");
-            mFledgeAuctionServerExecutionLogger.endAuctionServerApi(resultCode);
+            mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
         }
     }
 }
