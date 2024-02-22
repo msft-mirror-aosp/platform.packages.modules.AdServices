@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -10693,28 +10694,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void setMeasurementKillSwitch(boolean value) {
-        setDeviceConfigFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
+        setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
 
     private void setMeasurementAttributionFallbackJobKillSwitch(boolean value) {
-        setDeviceConfigFlag(KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH, value);
+        setAdservicesFlag(KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH, value);
     }
 
     private void setMddLoggerKillSwitch(boolean value) {
-        setDeviceConfigFlag(KEY_MDD_LOGGER_KILL_SWITCH, value);
-    }
-
-    private void setDeviceConfigFlag(String name, boolean value) {
-        Log.d(
-                mTag,
-                "setDeviceConfigFlag(): "
-                        + KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH
-                        + " to "
-                        + value);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                name,
-                Boolean.toString(value),
-                /* makeDefault= */ false);
+        setAdservicesFlag(KEY_MDD_LOGGER_KILL_SWITCH, value);
     }
 }
