@@ -28,6 +28,7 @@ import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
@@ -346,6 +347,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementEnabled()",
                 MEASUREMENT_KILL_SWITCH,
                 flags -> flags.getMeasurementEnabled());
+    }
+
+    @Test
+    public void testGetMddLoggerEnabled() {
+        testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
+                "getMddLoggerEnabled()",
+                MDD_LOGGER_KILL_SWITCH,
+                flags -> flags.getMddLoggerEnabled());
     }
 
     /* ********************************************************************************************
