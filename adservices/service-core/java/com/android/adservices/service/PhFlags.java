@@ -119,12 +119,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getTopicsEpochJobPeriodMs() {
-        // The priority of applying the flag values: PH (DeviceConfig), then hard-coded value.
         long topicsEpochJobPeriodMs =
-                DeviceConfig.getLong(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
-                        /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TOPICS_EPOCH_JOB_PERIOD_MS);
         if (topicsEpochJobPeriodMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobPeriodMs should > 0");
         }
@@ -133,15 +130,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getTopicsEpochJobFlexMs() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         long topicsEpochJobFlexMs =
                 SystemProperties.getLong(
                         getSystemPropertyName(FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS),
-                        /* defaultValue */ DeviceConfig.getLong(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS,
-                                /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                                TOPICS_EPOCH_JOB_FLEX_MS));
         if (topicsEpochJobFlexMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobFlexMs should > 0");
         }
@@ -150,17 +144,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public int getTopicsPercentageForRandomTopic() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         int topicsPercentageForRandomTopic =
                 SystemProperties.getInt(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC),
-                        /* defaultValue */ DeviceConfig.getInt(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
-                                /* defaultValue */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                                TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
         if (topicsPercentageForRandomTopic < 0 || topicsPercentageForRandomTopic > MAX_PERCENTAGE) {
             throw new IllegalArgumentException(
                     "topicsPercentageForRandomTopic should be between 0 and 100");
@@ -170,12 +160,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public int getTopicsNumberOfTopTopics() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         int topicsNumberOfTopTopics =
-                DeviceConfig.getInt(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
-                        /* defaultValue */ TOPICS_NUMBER_OF_TOP_TOPICS);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
+                        TOPICS_NUMBER_OF_TOP_TOPICS);
         if (topicsNumberOfTopTopics < 0) {
             throw new IllegalArgumentException("topicsNumberOfTopTopics should >= 0");
         }
@@ -185,12 +173,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public int getTopicsNumberOfRandomTopics() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         int topicsNumberOfTopTopics =
-                DeviceConfig.getInt(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
-                        /* defaultValue */ TOPICS_NUMBER_OF_RANDOM_TOPICS);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
+                        TOPICS_NUMBER_OF_RANDOM_TOPICS);
         if (topicsNumberOfTopTopics < 0) {
             throw new IllegalArgumentException("topicsNumberOfTopTopics should >= 0");
         }
@@ -200,12 +186,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public int getTopicsNumberOfLookBackEpochs() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         int topicsNumberOfLookBackEpochs =
-                DeviceConfig.getInt(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
-                        /* defaultValue */ TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
+                        TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
         if (topicsNumberOfLookBackEpochs < 1) {
             throw new IllegalArgumentException("topicsNumberOfLookBackEpochs should  >= 1");
         }
@@ -215,13 +199,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public float getTopicsPrivacyBudgetForTopicIdDistribution() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         float topicsPrivacyBudgetForTopicIdDistribution =
-                DeviceConfig.getFloat(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants
-                                .KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
-                        /* defaultValue */ TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
+                        TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION);
 
         if (topicsPrivacyBudgetForTopicIdDistribution <= 0) {
             throw new IllegalArgumentException(
@@ -260,26 +241,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public int getClassifierType() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return SystemProperties.getInt(
                 getSystemPropertyName(FlagsConstants.KEY_CLASSIFIER_TYPE),
-                DeviceConfig.getInt(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_CLASSIFIER_TYPE,
-                        /* defaultValue */ DEFAULT_CLASSIFIER_TYPE));
+                getDeviceConfigFlag(FlagsConstants.KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE));
     }
 
     @Override
     public int getClassifierNumberOfTopLabels() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return SystemProperties.getInt(
                 getSystemPropertyName(FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS),
-                DeviceConfig.getInt(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
-                        /* defaultValue */ CLASSIFIER_NUMBER_OF_TOP_LABELS));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
+                        CLASSIFIER_NUMBER_OF_TOP_LABELS));
     }
 
     @Override
@@ -346,12 +319,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getCobaltLoggingJobPeriodMs() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         long cobaltLoggingJobPeriodMs =
-                DeviceConfig.getLong(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_COBALT_LOGGING_JOB_PERIOD_MS,
-                        /* defaultValue */ COBALT_LOGGING_JOB_PERIOD_MS);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_COBALT_LOGGING_JOB_PERIOD_MS,
+                        COBALT_LOGGING_JOB_PERIOD_MS);
         if (cobaltLoggingJobPeriodMs < 0) {
             throw new IllegalArgumentException(
                     String.format(
@@ -363,12 +334,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getCobaltUploadServiceUnbindDelayMs() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         long cobaltUploadServiceUnbindDelayMs =
-                DeviceConfig.getLong(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
-                        /* defaultValue */ COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
+                        COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS);
         if (cobaltUploadServiceUnbindDelayMs < 0) {
             throw new IllegalArgumentException(
                     String.format(
@@ -382,15 +351,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getCobaltLoggingEnabled() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return !getGlobalKillSwitch()
                 && SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_COBALT_LOGGING_ENABLED),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_COBALT_LOGGING_ENABLED,
-                                /* defaultValue */ COBALT_LOGGING_ENABLED));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_COBALT_LOGGING_ENABLED, COBALT_LOGGING_ENABLED));
     }
 
     @Override
@@ -400,14 +365,12 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         long maintenanceJobPeriodMs =
                 SystemProperties.getLong(
                         getSystemPropertyName(FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS),
-                        /* defaultValue */ DeviceConfig.getLong(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS,
-                                /* defaultValue */ MAINTENANCE_JOB_PERIOD_MS));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS,
+                                MAINTENANCE_JOB_PERIOD_MS));
         if (maintenanceJobPeriodMs < 0) {
             throw new IllegalArgumentException("maintenanceJobPeriodMs should  >= 0");
         }
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return maintenanceJobPeriodMs;
     }
 
@@ -418,16 +381,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         long maintenanceJobFlexMs =
                 SystemProperties.getLong(
                         getSystemPropertyName(FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS),
-                        /* defaultValue */ DeviceConfig.getLong(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS,
-                                /* defaultValue */ MAINTENANCE_JOB_FLEX_MS));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS,
+                                MAINTENANCE_JOB_FLEX_MS));
 
         if (maintenanceJobFlexMs <= 0) {
             throw new IllegalArgumentException("maintenanceJobFlexMs should  > 0");
         }
 
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return maintenanceJobFlexMs;
     }
 
@@ -1346,15 +1307,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     // Group of All Killswitches
     @Override
     public boolean getGlobalKillSwitch() {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return SdkLevel.isAtLeastT()
                 ? SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_GLOBAL_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_GLOBAL_KILL_SWITCH,
-                                /* defaultValue */ GLOBAL_KILL_SWITCH))
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_GLOBAL_KILL_SWITCH, GLOBAL_KILL_SWITCH))
                 : !getEnableBackCompat();
     }
 
@@ -1377,8 +1334,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementApiDeleteRegistrationsKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final boolean defaultValue = MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
@@ -1386,10 +1341,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         getSystemPropertyName(
                                 FlagsConstants
                                         .KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
                                 defaultValue));
     }
 
@@ -1397,72 +1350,56 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementApiStatusKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_API_STATUS_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
+                                MEASUREMENT_API_STATUS_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementApiRegisterSourceKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
+                                MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementApiRegisterTriggerKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
+                                MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementApiRegisterWebSourceKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final boolean defaultValue = MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
                                 defaultValue));
     }
 
@@ -1470,18 +1407,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementApiRegisterSourcesKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final boolean defaultValue = MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
                                 defaultValue));
     }
 
@@ -1489,8 +1422,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementApiRegisterWebTriggerKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final boolean defaultValue = MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
@@ -1498,10 +1429,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         getSystemPropertyName(
                                 FlagsConstants
                                         .KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
                                 defaultValue));
     }
 
@@ -1509,8 +1438,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementJobAggregateFallbackReportingKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final String flagName =
                 FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
         final boolean defaultValue = MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
@@ -1518,26 +1445,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue));
+                        getDeviceConfigFlag(flagName, defaultValue));
     }
 
     @Override
     public boolean getMeasurementJobAggregateReportingKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final boolean defaultValue = MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
                                 defaultValue));
     }
 
@@ -1545,62 +1467,48 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementJobAttributionKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
+                                MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementJobDeleteExpiredKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
+                                MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementJobDeleteUninstalledKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
+                                MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementJobEventFallbackReportingKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final String flagName =
                 FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
         final boolean defaultValue = MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
@@ -1608,68 +1516,54 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue));
+                        getDeviceConfigFlag(flagName, defaultValue));
     }
 
     @Override
     public boolean getMeasurementJobEventReportingKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
+                                MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH));
     }
 
     @Override
     public boolean getAsyncRegistrationJobQueueKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final String flagName = FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
         final boolean defaultValue = MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue));
+                        getDeviceConfigFlag(flagName, defaultValue));
     }
 
     @Override
     public boolean getAsyncRegistrationFallbackJobKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final String flagName =
                 FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                flagName,
-                                MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                flagName, MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementReceiverInstallAttributionKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final String flagName =
                 FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
         final boolean defaultValue = MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
@@ -1677,16 +1571,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue));
+                        getDeviceConfigFlag(flagName, defaultValue));
     }
 
     @Override
     public boolean getMeasurementReceiverDeletePackagesKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         final boolean defaultValue = MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
@@ -1694,10 +1585,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         getSystemPropertyName(
                                 FlagsConstants
                                         .KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
                                 defaultValue));
     }
 
@@ -1709,10 +1598,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
                                 defaultValue));
     }
 
@@ -1725,8 +1612,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         getSystemPropertyName(
                                 FlagsConstants
                                         .KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH),
-                        /* def= */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* def= */ getDeviceConfigFlag(
+
                                 /* name= */ FlagsConstants
                                         .KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
                                 defaultValue));
@@ -1739,10 +1626,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 && !getLegacyMeasurementKillSwitch()
                 && SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        /* def= */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                flagName,
-                                MEASUREMENT_ROLLBACK_DELETION_R_ENABLED));
+                        /* def= */ getDeviceConfigFlag(
+                                flagName, MEASUREMENT_ROLLBACK_DELETION_R_ENABLED));
     }
 
     @Override
@@ -1783,72 +1668,52 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getAdIdKillSwitch() {
         // Ignore Global Killswitch for adid.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ADID_KILL_SWITCH),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_ADID_KILL_SWITCH,
-                        /* defaultValue */ ADID_KILL_SWITCH));
+                getDeviceConfigFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, ADID_KILL_SWITCH));
     }
 
     // APPSETID Killswitch.
     @Override
     public boolean getAppSetIdKillSwitch() {
         // Ignore Global Killswitch for appsetid.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_APPSETID_KILL_SWITCH),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_APPSETID_KILL_SWITCH,
-                        /* defaultValue */ APPSETID_KILL_SWITCH));
+                getDeviceConfigFlag(FlagsConstants.KEY_APPSETID_KILL_SWITCH, APPSETID_KILL_SWITCH));
     }
 
     // TOPICS Killswitches
     @Override
     public boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_TOPICS_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_TOPICS_KILL_SWITCH,
-                                /* defaultValue */ TOPICS_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_TOPICS_KILL_SWITCH, TOPICS_KILL_SWITCH));
     }
 
     @Override
     public boolean getTopicsOnDeviceClassifierKillSwitch() {
         // This is an emergency flag that could be used to divert all traffic from on-device
         // classifier to precomputed classifier in case of fatal ML model crashes in Topics.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
-                        /* defaultValue */ TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
+                        TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH));
     }
 
     // MDD Killswitches
     @Override
     public boolean getMddBackgroundTaskKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
-                                /* defaultValue */ MDD_BACKGROUND_TASK_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
+                                MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
 
     // TODO(b/326254556): ideally it should be removed and the logic moved to getBillEnabled(), but
@@ -1856,15 +1721,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     // is not unit tested.
     private boolean getMddLoggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH,
-                                /* defaultValue */ MDD_LOGGER_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH, MDD_LOGGER_KILL_SWITCH));
     }
 
     @Override
@@ -1877,46 +1738,36 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getFledgeSelectAdsKillSwitch() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
-                                /* defaultValue */ FLEDGE_SELECT_ADS_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
+                                FLEDGE_SELECT_ADS_KILL_SWITCH));
     }
 
     @Override
     public boolean getFledgeCustomAudienceServiceKillSwitch() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH,
-                                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH,
+                                FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH));
     }
 
     @Override
     public boolean getProtectedSignalsEnabled() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 ? false
                 : SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED,
-                                /* defaultValue */ PROTECTED_SIGNALS_ENABLED));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED,
+                                PROTECTED_SIGNALS_ENABLED));
     }
 
     @Override
@@ -1924,16 +1775,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // We check the Global Kill switch and the Fledge Select Ads Kill switch.
         // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
         // On device and Server Auction Kill switches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
-                                /* defaultValue */ FLEDGE_AUCTION_SERVER_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
+                                FLEDGE_AUCTION_SERVER_KILL_SWITCH));
     }
 
     @Override
@@ -1941,31 +1789,24 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // We check the Global Kill switch and the Fledge Select Ads Kill switch.
         // Global Kill switch overrides all other kill switches & Fledge Select Ads Kill overrides
         // On device and Server Auction Kill switches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
-                                /* defaultValue */ FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
+                                FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH));
     }
 
     @Override
     public boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH),
-                        DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
+                        getDeviceConfigFlag(
                                 FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH,
                                 ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH));
     }
@@ -1973,17 +1814,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getEncryptionKeyPeriodicFetchKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
-                                /* defaultValue */ ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
+                                ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH));
     }
 
     // Encryption key related flags.
@@ -2006,12 +1843,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public String getPasAppAllowList() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getString(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_PAS_APP_ALLOW_LIST,
-                // default to using the same fixed list as custom audiences
-                /* defaultValue */ PPAPI_APP_ALLOW_LIST);
+        // default to using the same fixed list as custom audiences
+        return getDeviceConfigFlag(FlagsConstants.KEY_PAS_APP_ALLOW_LIST, PPAPI_APP_ALLOW_LIST);
     }
 
     @Override
@@ -2132,8 +1965,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     private float getPermitsPerSecond(String flagName, float defaultValue) {
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         try {
             final String permitString = SystemProperties.get(getSystemPropertyName(flagName));
             if (!TextUtils.isEmpty(permitString)) {
@@ -2151,10 +1982,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public String getUiOtaStringsManifestFileUrl() {
         return SystemProperties.get(
                 getSystemPropertyName(FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
-                /* defaultValue */ DeviceConfig.getString(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
-                        /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
+                        UI_OTA_STRINGS_MANIFEST_FILE_URL));
     }
 
     @Override
@@ -2164,10 +1994,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         }
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
-                        /* defaultValue */ UI_OTA_STRINGS_FEATURE_ENABLED));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
+                        UI_OTA_STRINGS_FEATURE_ENABLED));
     }
 
     @Override
@@ -2203,10 +2032,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public int getNumberOfEpochsToKeepInHistory() {
         int numberOfEpochsToKeepInHistory =
-                DeviceConfig.getInt(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
-                        /* defaultValue */ NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
+                        NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
 
         if (numberOfEpochsToKeepInHistory < 1) {
             throw new IllegalArgumentException("numberOfEpochsToKeepInHistory should  >= 0");
@@ -2232,10 +2060,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public ImmutableList<Integer> getFledgeAuctionServerPayloadBucketSizes() {
         String bucketSizesString =
-                DeviceConfig.getString(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
-                        null);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES, null);
         // TODO(b/290401812): Decide the fate of malformed bucket size config string.
         return Optional.ofNullable(bucketSizesString)
                 .map(
@@ -2270,8 +2096,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getFledgeAuctionServerEnabledForReportImpression() {
         return getFledgeAuctionServerEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
+                && getDeviceConfigFlag(
                         FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION,
                         FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION);
     }
@@ -2279,8 +2104,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getFledgeAuctionServerEnabledForReportEvent() {
         return getFledgeAuctionServerEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
+                && getDeviceConfigFlag(
                         FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT,
                         FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT);
     }
@@ -2288,8 +2112,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
         return getFledgeAuctionServerEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
+                && getDeviceConfigFlag(
                         FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM,
                         FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM);
     }
@@ -2297,8 +2120,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
         return getFledgeAuctionServerEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
+                && getDeviceConfigFlag(
                         FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION,
                         FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION);
     }
@@ -2340,55 +2162,48 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
-        return DeviceConfig.getLong(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS,
                 FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS);
     }
 
     @Override
     public int getFledgeAuctionServerAuctionKeySharding() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING,
                 FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING);
     }
 
     public int getFledgeAuctionServerEncryptionAlgorithmKemId() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID,
                 FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KEM_ID);
     }
 
     @Override
     public int getFledgeAuctionServerEncryptionAlgorithmKdfId() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID,
                 FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_KDF_ID);
     }
 
     @Override
     public int getFledgeAuctionServerEncryptionAlgorithmAeadId() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID,
                 FLEDGE_AUCTION_SERVER_ENCRYPTION_ALGORITHM_AEAD_ID);
     }
 
     @Override
     public long getFledgeAuctionServerAuctionKeyFetchTimeoutMs() {
-        return DeviceConfig.getLong(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS,
                 FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS);
     }
 
     @Override
     public long getFledgeAuctionServerOverallTimeoutMs() {
-        return DeviceConfig.getLong(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS,
                 FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS);
     }
@@ -2416,8 +2231,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public int getFledgeAuctionServerBackgroundKeyFetchNetworkConnectTimeoutMs() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants
                         .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS,
                 FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS);
@@ -2425,8 +2239,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public int getFledgeAuctionServerBackgroundKeyFetchNetworkReadTimeoutMs() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants
                         .KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS,
                 FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS);
@@ -2434,48 +2247,42 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public int getFledgeAuctionServerBackgroundKeyFetchMaxResponseSizeB() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B,
                 FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RESPONSE_SIZE_B);
     }
 
     @Override
     public long getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs() {
-        return DeviceConfig.getLong(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS,
                 FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_MAX_RUNTIME_MS);
     }
 
     @Override
     public long getFledgeAuctionServerBackgroundKeyFetchJobPeriodMs() {
-        return DeviceConfig.getLong(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS,
                 FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_PERIOD_MS);
     }
 
     @Override
     public long getFledgeAuctionServerBackgroundKeyFetchJobFlexMs() {
-        return DeviceConfig.getLong(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS,
                 FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS);
     }
 
     @Override
     public int getFledgeAuctionServerCompressionAlgorithmVersion() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION,
                 FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION);
     }
 
     @Override
     public int getFledgeAuctionServerPayloadFormatVersion() {
-        return DeviceConfig.getInt(
-                FlagsConstants.NAMESPACE_ADSERVICES,
+        return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION,
                 FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION);
     }
@@ -2527,20 +2334,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
-                        /* defaultValue */ DISABLE_TOPICS_ENROLLMENT_CHECK));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
+                        DISABLE_TOPICS_ENROLLMENT_CHECK));
     }
 
     @Override
     public boolean isDisableMeasurementEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK,
-                        /* defaultValue */ DISABLE_MEASUREMENT_ENROLLMENT_CHECK));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK,
+                        DISABLE_MEASUREMENT_ENROLLMENT_CHECK));
     }
 
     @Override
@@ -2567,50 +2372,45 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getDisableFledgeEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
-                        /* defaultValue */ DISABLE_FLEDGE_ENROLLMENT_CHECK));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
+                        DISABLE_FLEDGE_ENROLLMENT_CHECK));
     }
 
     @Override
     public boolean getEnforceForegroundStatusForTopics() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS,
-                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_TOPICS));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS,
+                        ENFORCE_FOREGROUND_STATUS_TOPICS));
     }
 
     @Override
     public boolean getEnforceForegroundStatusForSignals() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS,
-                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_SIGNALS));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS,
+                        ENFORCE_FOREGROUND_STATUS_SIGNALS));
     }
 
     @Override
     public boolean getEnforceForegroundStatusForAdId() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_ADID),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_ADID,
-                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_ADID));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_ADID,
+                        ENFORCE_FOREGROUND_STATUS_ADID));
     }
 
     @Override
     public boolean getEnforceForegroundStatusForAppSetId() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_APPSETID,
-                        /* defaultValue */ ENFORCE_FOREGROUND_STATUS_APPSETID));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_APPSETID,
+                        ENFORCE_FOREGROUND_STATUS_APPSETID));
     }
 
     @Override
@@ -2740,19 +2540,17 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getFledgeBeaconReportingMetricsEnabled() {
         return getFledgeRegisterAdBeaconEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED,
-                        /* defaultValue */ FLEDGE_BEACON_REPORTING_METRICS_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED,
+                        FLEDGE_BEACON_REPORTING_METRICS_ENABLED);
     }
 
     @Override
     public boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
         return getFledgeAuctionServerEnabled()
-                && DeviceConfig.getBoolean(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED,
-                /* defaultValue */ FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED,
+                        FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED);
     }
 
     @Override
@@ -2889,8 +2687,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getConsentNotifiedDebugMode() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE),
-                DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
+                getDeviceConfigFlag(
                         FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE,
                         CONSENT_NOTIFIED_DEBUG_MODE));
     }
@@ -2899,7 +2696,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getConsentManagerDebugMode() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE),
-                /* defaultValue */ CONSENT_MANAGER_DEBUG_MODE);
+                CONSENT_MANAGER_DEBUG_MODE);
     }
 
     @Override
@@ -2984,12 +2781,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @SuppressWarnings("InlinedApi")
     public boolean isBackCompatActivityFeatureEnabled() {
         // Check if enable Back compat is true first and then check flag value
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return getEnableBackCompat()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
-                        /* defaultValue */ IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
+                        IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
     }
 
     @Override
@@ -2999,13 +2794,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getGaUxFeatureEnabled() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_GA_UX_FEATURE_ENABLED,
-                        /* defaultValue */ GA_UX_FEATURE_ENABLED));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, GA_UX_FEATURE_ENABLED));
     }
 
     @Override
@@ -3260,8 +3052,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         boolean defaultValue = FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 
         return getFledgeMeasurementReportAndRegisterEventApiEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue);
+                && getDeviceConfigFlag(flagName, defaultValue);
     }
 
     @Override
@@ -5278,11 +5069,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @VisibleForTesting
     @Override
     public ImmutableList<String> getEnrollmentBlocklist() {
-        String blocklistFlag =
-                DeviceConfig.getString(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        FlagsConstants.KEY_ENROLLMENT_BLOCKLIST_IDS,
-                        "");
+        String blocklistFlag = getDeviceConfigFlag(FlagsConstants.KEY_ENROLLMENT_BLOCKLIST_IDS, "");
+
         if (TextUtils.isEmpty(blocklistFlag)) {
             return ImmutableList.of();
         }
@@ -5307,12 +5095,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getEnableBackCompat() {
         // If SDK is T+, the value should always be false
         // Check the flag value for S Minus
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return !SdkLevel.isAtLeastT()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_ENABLE_BACK_COMPAT,
-                        /* defaultValue */ ENABLE_BACK_COMPAT);
+                && getDeviceConfigFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, ENABLE_BACK_COMPAT);
     }
 
     @Override
@@ -5344,13 +5128,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getEnableAdExtServiceDebugProxy() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY),
-                DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY,
-                        /* defaultValue */ DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY));
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY,
+                        DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY));
     }
 
     @Override
@@ -5361,10 +5143,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         .collect(Collectors.joining(FlagsConstants.ARRAY_SPLITTER_COMMA));
 
         String globalBlockedTopicIds =
-                DeviceConfig.getString(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        FlagsConstants.KEY_GLOBAL_BLOCKED_TOPIC_IDS,
-                        defaultGlobalBlockedTopicIds);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_GLOBAL_BLOCKED_TOPIC_IDS, defaultGlobalBlockedTopicIds);
         if (TextUtils.isEmpty(globalBlockedTopicIds)) {
             return ImmutableList.of();
         }
@@ -5394,8 +5174,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         .collect(Collectors.joining(FlagsConstants.ARRAY_SPLITTER_COMMA));
 
         String errorCodeLoggingDenyStr =
-                DeviceConfig.getString(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
+                getDeviceConfigFlag(
                         FlagsConstants.KEY_ERROR_CODE_LOGGING_DENY_LIST,
                         defaultErrorCodeLoggingDenyStr);
         if (TextUtils.isEmpty(errorCodeLoggingDenyStr)) {
@@ -5443,28 +5222,21 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getU18UxEnabled() {
         return getEnableAdServicesSystemApi()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_U18_UX_ENABLED,
-                        /* defaultValue */ DEFAULT_U18_UX_ENABLED);
+                && getDeviceConfigFlag(FlagsConstants.KEY_U18_UX_ENABLED, DEFAULT_U18_UX_ENABLED);
     }
 
     @Override
     public boolean getEnableRvcUx() {
         return getEnableAdServicesSystemApi()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_RVC_UX_ENABLED,
-                        /* defaultValue */ DEFAULT_RVC_UX_ENABLED);
+                && getDeviceConfigFlag(FlagsConstants.KEY_RVC_UX_ENABLED, DEFAULT_RVC_UX_ENABLED);
     }
 
     @Override
     public boolean getEnableRvcPostOtaNotification() {
         return getEnableAdServicesSystemApi()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                        /* defaultValue */ DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
+                        DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
     }
 
     @Override
@@ -5478,10 +5250,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getPasUxEnabled() {
         return isEeaDeviceFeatureEnabled()
                 && !isEeaDevice()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_PAS_UX_ENABLED,
-                        /* defaultValue */ DEFAULT_PAS_UX_ENABLED);
+                && getDeviceConfigFlag(FlagsConstants.KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
     }
 
     @Override
@@ -5930,38 +5699,32 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
                                         .KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
+                        getDeviceConfigFlag(
+                                FlagsConstants
                                         .KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
+                                MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
                                         .KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
+                        getDeviceConfigFlag(
+                                FlagsConstants
                                         .KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
+                                MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
@@ -5985,30 +5748,24 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
-                                        .KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH));
+                        getDeviceConfigFlag(
+                                FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                                MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
         // We check the Global kill-switch first then Measurement kill-switch.
         // As a result, it overrides all other kill-switches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
         return getGlobalKillSwitch()
                 || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
                                         .KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants
+                        getDeviceConfigFlag(
+                                FlagsConstants
                                         .KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
-                                /* defaultValue */
                                 MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
     }
 
@@ -6097,10 +5854,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public int getBackgroundJobSamplingLoggingRate() {
         int loggingRatio =
-                DeviceConfig.getInt(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
-                        /* defaultValue */ DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE);
+                getDeviceConfigFlag(
+                        FlagsConstants.KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
+                        DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE);
 
         // TODO(b/323187832): Calling JobServiceConstants.MAX_PERCENTAGE meets dependency error.
         if (loggingRatio < 0 || loggingRatio > MAX_PERCENTAGE) {
@@ -6133,8 +5889,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getFledgeKAnonSignJoinFeatureEnabled() {
         return getFledgeAuctionServerEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
+                && getDeviceConfigFlag(
+
                         /*flagName */ FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
                         /*defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
     }
@@ -6148,10 +5904,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public String getFledgeKAnonGetChallengeUrl() {
-        return DeviceConfig.getString(
-                FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ FlagsConstants.KEY_ANON_GET_CHALLENGE_URl,
-                /* defaultValue */ FLEDGE_DEFAULT_GET_CHALLENGE_URL);
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ANON_GET_CHALLENGE_URl, FLEDGE_DEFAULT_GET_CHALLENGE_URL);
     }
 
     @Override
@@ -6219,10 +5973,9 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getFledgeKAnonBackgroundProcessEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
-                        /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
+                && getDeviceConfigFlag(
+                        KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
+                        FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
     }
 
     @Override
