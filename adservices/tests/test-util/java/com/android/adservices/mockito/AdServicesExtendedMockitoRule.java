@@ -20,6 +20,10 @@ import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.sh
 import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -27,6 +31,7 @@ import android.app.ActivityManager;
 import android.os.Binder;
 import android.os.Process;
 import android.os.SystemProperties;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -196,6 +201,106 @@ public class AdServicesExtendedMockitoRule
         logV("mockGetSystemProperty(key=%s, value=%s)", key, value);
         assertSpiedOrMocked(SystemProperties.class);
         doReturn(value).when(() -> SystemProperties.getLong(eq(key), anyLong()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getBoolean()} using the AdServices namespace and
+     * returning {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, boolean value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getBoolean(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyBoolean()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getString()} using the AdServices namespace and returning
+     * {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, String value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getString(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ any()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getInt()} using the AdServices namespace and returning
+     * {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, int value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getInt(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyInt()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getLong()} using the AdServices namespace and returning
+     * {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, long value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getLong(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyLong()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getFloat()} using the AdServices namespace and returning
+     * {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, float value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getFloat(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyFloat()));
     }
 
     /**
