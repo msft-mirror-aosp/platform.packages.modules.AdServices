@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -267,7 +268,12 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAdTechAllowed(mSpyContext, CALLER_PACKAGE_NAME, SELLER_VALID, API_NAME);
+                .assertAdTechAllowed(
+                        mSpyContext,
+                        CALLER_PACKAGE_NAME,
+                        SELLER_VALID,
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
         FilterException exception =
                 assertThrows(
                         FilterException.class,
@@ -393,7 +399,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 DevContext.createForDevOptionsDisabled());
 
         verify(mFledgeAuthorizationFilterSpy, never())
-                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
     }
 
     @Test
@@ -468,6 +474,6 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                         .build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
-                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
     }
 }

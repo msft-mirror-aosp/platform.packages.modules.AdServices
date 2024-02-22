@@ -25,7 +25,8 @@ public class AsyncFetchStatus {
         SUCCESS,
         SERVER_UNAVAILABLE,
         NETWORK_ERROR,
-        INVALID_URL
+        INVALID_URL,
+        HEADER_SIZE_LIMIT_EXCEEDED
     }
 
     public enum EntityStatus {

@@ -30,7 +30,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
@@ -191,11 +190,9 @@ public class DebugReportingFallbackJobService extends JobService {
         final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
         if (lock.tryLock()) {
             try {
-                EnrollmentDao enrollmentDao = EnrollmentDao.getInstance(getApplicationContext());
                 DatastoreManager datastoreManager =
                         DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
                 new EventReportingJobHandler(
-                                enrollmentDao,
                                 datastoreManager,
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
@@ -205,7 +202,6 @@ public class DebugReportingFallbackJobService extends JobService {
                         .setIsDebugInstance(true)
                         .performScheduledPendingReportsInWindow(0, 0);
                 new AggregateReportingJobHandler(
-                                enrollmentDao,
                                 datastoreManager,
                                 new AggregateEncryptionKeyManager(
                                         datastoreManager, getApplicationContext()),

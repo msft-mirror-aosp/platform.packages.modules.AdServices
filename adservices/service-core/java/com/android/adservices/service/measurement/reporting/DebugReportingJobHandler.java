@@ -27,7 +27,6 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -49,7 +48,6 @@ import java.util.concurrent.ThreadLocalRandom;
 /** Class for handling debug reporting. */
 public class DebugReportingJobHandler {
 
-    private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
     private ReportingStatus.UploadMethod mUploadMethod;
@@ -59,13 +57,11 @@ public class DebugReportingJobHandler {
 
     @VisibleForTesting
     DebugReportingJobHandler(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
             AdServicesLogger logger,
             Context context) {
         this(
-                enrollmentDao,
                 datastoreManager,
                 flags,
                 logger,
@@ -74,13 +70,11 @@ public class DebugReportingJobHandler {
     }
 
     DebugReportingJobHandler(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             Flags flags,
             AdServicesLogger logger,
             ReportingStatus.UploadMethod uploadMethod,
             Context context) {
-        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;

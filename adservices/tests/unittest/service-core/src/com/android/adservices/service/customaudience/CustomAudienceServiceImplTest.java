@@ -31,6 +31,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
@@ -241,7 +242,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         verify(mFledgeAllowListsFilterMock)
                 .assertAppCanUsePpapi(
@@ -281,7 +283,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         verify(mFledgeAllowListsFilterMock)
                 .assertAppCanUsePpapi(
@@ -458,7 +461,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(
                         MY_UID, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, null);
@@ -508,7 +512,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(
                         MY_UID, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, null);
@@ -566,7 +571,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         verify(mFledgeAllowListsFilterMock)
                 .assertAppCanUsePpapi(
@@ -690,7 +696,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(
                         MY_UID, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, null);
@@ -733,7 +740,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mFledgeAllowListsFilterMock)
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
@@ -932,7 +940,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(
                         MY_UID, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, null);
@@ -983,7 +992,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mFledgeAllowListsFilterMock)
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1074,7 +1084,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mFledgeAllowListsFilterMock)
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1178,7 +1189,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mFledgeAllowListsFilterMock)
                 .assertAppCanUsePpapi(
                         CustomAudienceFixture.VALID_OWNER,
@@ -1643,7 +1655,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
 
         mService.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE,
@@ -1666,7 +1679,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(
                         MY_UID, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, null);
@@ -1749,7 +1763,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
@@ -1773,7 +1788,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(
                         MY_UID, AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, null);
@@ -1865,7 +1881,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mFledgeAuthorizationFilterMock)
                 .assertAppDeclaredPermission(
                         sContext,
@@ -1906,7 +1923,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         sContext,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
-                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        API_CUSTOM_AUDIENCES);
         verify(mFledgeAuthorizationFilterMock)
                 .assertAppDeclaredPermission(
                         sContext,
