@@ -3388,7 +3388,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void testBasicTriggerRequest_debugKey_negative() throws Exception {
+    public void testBasicTriggerRequest_debugKeyNegative_setToNull() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -3400,6 +3400,39 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         "{\"event_trigger_data\":"
                                 + EVENT_TRIGGERS_1
                                 + ",\"debug_key\":\"-376\"}"));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertNull(result.getDebugKey());
+        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequest_debugKeyNotAString_setToNull() throws Exception {
+        Assume.assumeTrue(mAraParsingAlignmentV1Enabled);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{\"event_trigger_data\":"
+                                + EVENT_TRIGGERS_1
+                                + ",\"debug_key\":376}"));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
 
