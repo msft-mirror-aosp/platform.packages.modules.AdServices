@@ -76,7 +76,7 @@ public class AttributionFallbackJobService extends JobService {
         AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStartJob(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
 
-        if (FlagsFactory.getFlags().getMeasurementAttributionFallbackJobKillSwitch()) {
+        if (!FlagsFactory.getFlags().getMeasurementAttributionFallbackJobEnabled()) {
             LoggerFactory.getMeasurementLogger().e("AttributionFallbackJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
@@ -163,7 +163,7 @@ public class AttributionFallbackJobService extends JobService {
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
-        if (flags.getMeasurementAttributionFallbackJobKillSwitch()) {
+        if (!flags.getMeasurementAttributionFallbackJobEnabled()) {
             LoggerFactory.getMeasurementLogger()
                     .e("AttributionFallbackJobService is disabled, skip scheduling");
             return;

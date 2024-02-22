@@ -508,7 +508,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .thenReturn(true);
 
         mChecker.assertAdTechAllowed(
-                sContext, PACKAGE_NAME, CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID);
+                sContext,
+                PACKAGE_NAME,
+                CommonFixture.VALID_BUYER_1,
+                API_NAME_LOGGING_ID,
+                API_CUSTOM_AUDIENCES);
         verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
@@ -533,7 +537,8 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                         sContext,
                                         PACKAGE_NAME,
                                         CommonFixture.VALID_BUYER_1,
-                                        API_NAME_LOGGING_ID));
+                                        API_NAME_LOGGING_ID,
+                                        API_CUSTOM_AUDIENCES));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
@@ -584,7 +589,8 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                         sContext,
                                         PACKAGE_NAME,
                                         CommonFixture.VALID_BUYER_1,
-                                        API_NAME_LOGGING_ID));
+                                        API_NAME_LOGGING_ID,
+                                        API_CUSTOM_AUDIENCES));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
@@ -634,7 +640,8 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 sContext,
                                 PACKAGE_NAME,
                                 CommonFixture.VALID_BUYER_1,
-                                API_NAME_LOGGING_ID));
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verify(mEnrollmentUtilMock).getBuildId();
         verify(mEnrollmentUtilMock).getFileGroupStatus();
@@ -672,7 +679,8 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                                 null,
                                 PACKAGE_NAME,
                                 CommonFixture.VALID_BUYER_1,
-                                API_NAME_LOGGING_ID));
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
@@ -683,7 +691,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 NullPointerException.class,
                 () ->
                         mChecker.assertAdTechAllowed(
-                                sContext, null, CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID));
+                                sContext,
+                                null,
+                                CommonFixture.VALID_BUYER_1,
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
@@ -694,7 +706,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 NullPointerException.class,
                 () ->
                         mChecker.assertAdTechAllowed(
-                                sContext, PACKAGE_NAME, null, API_NAME_LOGGING_ID));
+                                sContext,
+                                PACKAGE_NAME,
+                                null,
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
 
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }

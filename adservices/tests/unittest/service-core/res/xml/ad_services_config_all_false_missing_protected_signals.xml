@@ -20,6 +20,7 @@
     <!--
     <protected-signals allowAllToAccess="false"/>
     -->
+    <ad-selection allowAllToAccess="false"/>
     <topics allowAllToAccess="false"/>
     <adid allowAllToAccess="false"/>
     <appsetid allowAllToAccess="false"/>

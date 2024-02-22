@@ -23,7 +23,6 @@ import static org.mockito.Mockito.verify;
 import android.content.Context;
 import android.net.Uri;
 
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventReport;
@@ -40,7 +39,6 @@ import java.io.IOException;
  */
 public class EventReportingJobHandlerWrapper {
     public static Object[] spyPerformScheduledPendingReportsInWindow(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             long windowStartTime,
             long windowEndTime,
@@ -51,8 +49,7 @@ public class EventReportingJobHandlerWrapper {
         // Set up event reporting job handler spy
         EventReportingJobHandler eventReportingJobHandler =
                 Mockito.spy(
-                        new EventReportingJobHandler(
-                                        enrollmentDao, datastoreManager, flags, context)
+                        new EventReportingJobHandler(datastoreManager, flags, context)
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200).when(eventReportingJobHandler)
                 .makeHttpPostRequest(any(), any());

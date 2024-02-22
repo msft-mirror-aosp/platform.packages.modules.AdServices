@@ -34,7 +34,7 @@ public abstract class KAnonMessageDao {
 
     /** Inserts the given KAnonMessages in the table. */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public abstract void insertAllKAnonMessages(List<DBKAnonMessage> messages);
+    public abstract long[] insertAllKAnonMessages(List<DBKAnonMessage> messages);
 
     /** Returns latest N messages with given status. */
     @Query("SELECT * FROM kanon_messages WHERE status = :status ORDER BY created_at LIMIT :count")

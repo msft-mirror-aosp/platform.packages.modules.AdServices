@@ -65,6 +65,18 @@ public class KAnonMessageManagerTest {
                     .setHashSet(HASH_SET_1)
                     .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
                     .build();
+    private final KAnonMessageEntity mKAnonMessageEntity2 =
+            KAnonMessageEntity.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_2)
+                    .setHashSet(HASH_SET_2)
+                    .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
+                    .build();
+    private final KAnonMessageEntity mKAnonMessageEntity3 =
+            KAnonMessageEntity.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_3)
+                    .setHashSet(HASH_SET_3)
+                    .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
+                    .build();
     private final DBKAnonMessage mDbkAnonMessage1 =
             DBKAnonMessage.builder()
                     .setKanonHashSet(HASH_SET_1)
@@ -181,14 +193,41 @@ public class KAnonMessageManagerTest {
 
     @Test
     public void testPersistNewAnonMessageEntities_messageWithUnsetId_shouldHaveIdGenerated() {
-        mKAnonMessageManager.persistNewAnonMessageEntities(List.of(mKAnonMessageEntity));
+        List<KAnonMessageEntity> insertedEntries =
+                mKAnonMessageManager.persistNewAnonMessageEntities(List.of(mKAnonMessageEntity));
 
         List<DBKAnonMessage> dbkAnonMessages =
                 mKAnonMessageDao.getNLatestKAnonMessagesWithStatus(
                         5, KAnonMessageConstants.MessageStatus.NOT_PROCESSED);
 
+        assertThat(insertedEntries.size()).isEqualTo(1);
         assertThat(dbkAnonMessages.size()).isEqualTo(1);
-        assertThat(dbkAnonMessages.get(0).getMessageId()).isNotNull();
+        assertThat(dbkAnonMessages.get(0).getMessageId())
+                .isEqualTo(insertedEntries.get(0).getMessageId());
+    }
+
+    @Test
+    public void persistNewAnonMessageEntities_multipleMessages_returnsEntriesWithCorrectId() {
+        List<KAnonMessageEntity> insertedEntries =
+                mKAnonMessageManager.persistNewAnonMessageEntities(
+                        List.of(mKAnonMessageEntity, mKAnonMessageEntity2, mKAnonMessageEntity3));
+
+        List<KAnonMessageEntity> messageEntitiesFromDB =
+                mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
+                        10, KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED);
+
+        assertThat(insertedEntries.size()).isEqualTo(3);
+        assertThat(messageEntitiesFromDB.size()).isEqualTo(3);
+        for (KAnonMessageEntity entityInDB : messageEntitiesFromDB) {
+            String hashSet = entityInDB.getHashSet();
+            List<KAnonMessageEntity> entityWithSameHashSet =
+                    insertedEntries.stream()
+                            .filter(message -> message.getHashSet().equals(hashSet))
+                            .collect(Collectors.toList());
+            assertThat(entityWithSameHashSet.size()).isEqualTo(1);
+            assertThat(entityWithSameHashSet.get(0).getMessageId())
+                    .isEqualTo(entityInDB.getMessageId());
+        }
     }
 
     @Test

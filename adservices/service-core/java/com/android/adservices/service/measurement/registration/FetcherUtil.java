@@ -202,14 +202,20 @@ public class FetcherUtil {
 
     /** Validate attribution filters JSONArray. */
     static boolean areValidAttributionFilters(
-            @NonNull JSONArray filterSet, Flags flags, boolean canIncludeLookbackWindow) {
+            @NonNull JSONArray filterSet,
+            Flags flags,
+            boolean canIncludeLookbackWindow,
+            boolean shouldCheckFilterSize) {
         if (filterSet.length()
                 > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
             if (!areValidAttributionFilters(
-                    filterSet.optJSONObject(i), flags, canIncludeLookbackWindow)) {
+                    filterSet.optJSONObject(i),
+                    flags,
+                    canIncludeLookbackWindow,
+                    shouldCheckFilterSize)) {
                 return false;
             }
         }
@@ -218,7 +224,10 @@ public class FetcherUtil {
 
     /** Validate attribution filters JSONObject. */
     static boolean areValidAttributionFilters(
-            JSONObject filtersObj, Flags flags, boolean canIncludeLookbackWindow) {
+            JSONObject filtersObj,
+            Flags flags,
+            boolean canIncludeLookbackWindow,
+            boolean shouldCheckFilterSize) {
         if (filtersObj == null
                 || filtersObj.length()
                         > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
@@ -227,8 +236,10 @@ public class FetcherUtil {
         Iterator<String> keys = filtersObj.keys();
         while (keys.hasNext()) {
             String key = keys.next();
-            if (key.getBytes().length
-                    > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
+            if (shouldCheckFilterSize
+                    && key.getBytes().length
+                            > FlagsFactory.getFlags()
+                                    .getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
             }
             // Process known reserved keys that start with underscore first, then invalidate on
@@ -245,16 +256,22 @@ public class FetcherUtil {
                 return false;
             }
             JSONArray values = filtersObj.optJSONArray(key);
-            if (values == null
-                    || values.length()
+            if (values == null) {
+                return false;
+            }
+            if (shouldCheckFilterSize
+                    && values.length()
                             > FlagsFactory.getFlags()
                                     .getMeasurementMaxValuesPerAttributionFilter()) {
                 return false;
             }
             for (int i = 0; i < values.length(); i++) {
                 String value = values.optString(i);
-                if (value == null
-                        || value.getBytes().length
+                if (value == null) {
+                    return false;
+                }
+                if (shouldCheckFilterSize
+                        && value.getBytes().length
                                 > FlagsFactory.getFlags()
                                         .getMeasurementMaxBytesPerAttributionFilterString()) {
                     return false;
@@ -273,15 +290,14 @@ public class FetcherUtil {
     }
 
     static void emitHeaderMetrics(
-            Flags flags,
+            long headerSizeLimitBytes,
             AdServicesLogger logger,
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus) {
         long headerSize = asyncFetchStatus.getResponseSize();
-        long maxSize = flags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         String adTechDomain = null;
 
-        if (headerSize > maxSize) {
+        if (headerSize > headerSizeLimitBytes) {
             adTechDomain =
                     WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
                             .map(Uri::toString)
@@ -403,6 +419,9 @@ public class FetcherUtil {
                 || asyncFetchStatus.getResponseStatus()
                         == AsyncFetchStatus.ResponseStatus.INVALID_URL) {
             return RegistrationEnumsValues.FAILURE_TYPE_NETWORK;
+        } else if (asyncFetchStatus.getResponseStatus()
+                == AsyncFetchStatus.ResponseStatus.HEADER_SIZE_LIMIT_EXCEEDED) {
+            return RegistrationEnumsValues.FAILURE_TYPE_HEADER_SIZE_LIMIT_EXCEEDED;
         } else if (asyncFetchStatus.getEntityStatus()
                 == AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT) {
             return RegistrationEnumsValues.FAILURE_TYPE_ENROLLMENT;
@@ -442,5 +461,6 @@ public class FetcherUtil {
         int FAILURE_TYPE_ENROLLMENT = 3;
         int FAILURE_TYPE_REDIRECT = 4;
         int FAILURE_TYPE_STORAGE = 5;
+        int FAILURE_TYPE_HEADER_SIZE_LIMIT_EXCEEDED = 7;
     }
 }
