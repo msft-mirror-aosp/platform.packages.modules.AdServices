@@ -2165,9 +2165,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 /* defaultValue */ MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
 
-    // MDD Logger Killswitches
-    @Override
-    public boolean getMddLoggerKillSwitch() {
+    // TODO(b/326254556): ideally it should be removed and the logic moved to getBillEnabled(), but
+    // this is a legacy flag that also reads system properties, and the system properties workflow
+    // is not unit tested.
+    private boolean getMddLoggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.

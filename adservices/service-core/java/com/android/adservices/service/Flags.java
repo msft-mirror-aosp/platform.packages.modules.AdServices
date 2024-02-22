@@ -2538,21 +2538,10 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean MDD_LOGGER_KILL_SWITCH = false;
 
     /**
-     * Returns value of MDD Logger Kill Switch.
-     *
-     * @deprecated - use !{@link #getMddLoggerEnabled()} instead.
-     */
-    @Deprecated
-    default boolean getMddLoggerKillSwitch() {
-        return getGlobalKillSwitch() || MDD_LOGGER_KILL_SWITCH;
-    }
-
-    /**
      * Returns whether the MDD Logger feature is enabled.
      *
      * <p>MDD Logger will be disabled if either the {@link #getGlobalKillSwitch() Global Kill
-     * Switch} or the {@link #getMddLoggerKillSwitch() MDD Logger Kill Switch} value is {@code
-     * true}.
+     * Switch} or the {@link #MDD_LOGGER_KILL_SWITCH} value is {@code true}.
      */
     default boolean getMddLoggerEnabled() {
         return getGlobalKillSwitch() ? false : !MDD_LOGGER_KILL_SWITCH;

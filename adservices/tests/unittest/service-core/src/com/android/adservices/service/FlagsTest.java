@@ -309,12 +309,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testGetMddLoggerKillSwitch() {
-        testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(
-                "MDD_LOGGER_KILL_SWITCH", flags -> flags.getMddLoggerKillSwitch());
-    }
-
-    @Test
     public void testGetLegacyMeasurementKillSwitch() {
         testRampedUpKillSwitchGuardedByGlobalKillSwitch(
                 "MEASUREMENT_KILL_SWITCH", flags -> flags.getLegacyMeasurementKillSwitch());
