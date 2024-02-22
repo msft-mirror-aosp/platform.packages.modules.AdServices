@@ -177,18 +177,6 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     }
 
     @Override
-    public void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result) {
-        AdServicesStatsLog.write(
-                AD_SERVICES_API_CALLED,
-                AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN,
-                apiName,
-                "",
-                "",
-                latencyMs,
-                result.getResultCode());
-    }
-
-    @Override
     public void logMeasurementRegistrationsResponseSize(
             MeasurementRegistrationResponseStats stats) {
         AdServicesStatsLog.write(

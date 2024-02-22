@@ -44,12 +44,6 @@ public interface AdServicesLogger {
     /** Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object. */
     void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs);
 
-    /**
-     * Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object with
-     * failure reason.
-     */
-    void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result);
-
     /** Logs measurement registrations response size. */
     void logMeasurementRegistrationsResponseSize(MeasurementRegistrationResponseStats stats);
 

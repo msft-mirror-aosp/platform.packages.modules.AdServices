@@ -570,41 +570,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 
-    @Test
-    public void testlogFledgeApiCallStatsWithFailureReason() {
-        doNothing()
-                .when(
-                        () ->
-                                AdServicesStatsLog.write(
-                                        anyInt(),
-                                        anyInt(),
-                                        anyInt(),
-                                        anyString(),
-                                        anyString(),
-                                        anyInt(),
-                                        anyInt()));
-
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
-        int latencyMs = 10;
-        ApiCallStats.Result result = ApiCallStats.successResult();
-
-        // Log api call with result.
-        mLogger.logFledgeApiCallStats(apiName, latencyMs, result);
-
-        // Verify result is logged.
-        verify(
-                () ->
-                        AdServicesStatsLog.write(
-                                eq(AD_SERVICES_API_CALLED),
-                                eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
-                                eq(apiName),
-                                eq(""),
-                                eq(""),
-                                eq(latencyMs),
-                                eq(result.getResultCode())));
-
-        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
-    }
 
     @Test
     public void logMeasurementDebugKeysMatch_success() {
