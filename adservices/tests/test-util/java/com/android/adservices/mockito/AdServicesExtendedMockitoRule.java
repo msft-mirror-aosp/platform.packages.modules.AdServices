@@ -20,9 +20,13 @@ import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.sh
 import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+
 import android.app.ActivityManager;
 import android.os.Binder;
 import android.os.Process;
+import android.os.SystemProperties;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -180,6 +184,18 @@ public class AdServicesExtendedMockitoRule
         logV("mockGetCurrentUser(user=%d)", user);
         assertSpiedOrMocked(ActivityManager.class);
         doReturn(user).when(ActivityManager::getCurrentUser);
+    }
+
+    /**
+     * Mocks a call to {@link SystemProperties#getLong(String, long)}, returning {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link SystemProperties}.
+     */
+    public final void mockGetSystemProperty(String key, long value) {
+        logV("mockGetSystemProperty(key=%s, value=%s)", key, value);
+        assertSpiedOrMocked(SystemProperties.class);
+        doReturn(value).when(() -> SystemProperties.getLong(eq(key), anyLong()));
     }
 
     /**
