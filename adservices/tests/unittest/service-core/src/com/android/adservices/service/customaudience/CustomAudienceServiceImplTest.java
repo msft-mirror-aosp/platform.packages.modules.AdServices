@@ -1265,6 +1265,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
+                /* appPackageName= */ "",
                 STATUS_BACKGROUND_CALLER);
     }
 
@@ -1336,6 +1337,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verify(mCustomAudienceOverrideCallbackMock).onSuccess();
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
+                TEST_PACKAGE_NAME,
                 STATUS_SUCCESS);
     }
 
@@ -1372,7 +1374,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 .assertCallerIsInForeground(CustomAudienceFixture.VALID_OWNER, apiName, null);
         verifyErrorResponseCustomAudienceOverrideCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
-        verifyLoggerMock(apiName, STATUS_BACKGROUND_CALLER);
+        verifyLoggerMock(apiName, "", STATUS_BACKGROUND_CALLER);
     }
 
     @Test
@@ -1431,7 +1433,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME, CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceOverrideCallbackMock).onSuccess();
-        verifyLoggerMock(apiName, STATUS_SUCCESS);
+        verifyLoggerMock(apiName, TEST_PACKAGE_NAME, STATUS_SUCCESS);
     }
 
     @Test
@@ -1459,7 +1461,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verify(mDevContextFilterMock).createDevContext();
         verify(mCustomAudienceImplMock).getCustomAudienceDao();
         verify(mAppImportanceFilterMock).assertCallerIsInForeground(Process.myUid(), apiName, null);
-        verifyLoggerMock(apiName, STATUS_BACKGROUND_CALLER);
+        verifyLoggerMock(apiName, TEST_PACKAGE_NAME, STATUS_BACKGROUND_CALLER);
         verifyErrorResponseCustomAudienceOverrideCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
     }
@@ -1515,6 +1517,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verify(mCustomAudienceOverrideCallbackMock).onSuccess();
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
+                TEST_PACKAGE_NAME,
                 STATUS_SUCCESS);
     }
 

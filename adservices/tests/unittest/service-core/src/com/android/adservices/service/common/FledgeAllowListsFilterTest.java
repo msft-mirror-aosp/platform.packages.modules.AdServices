@@ -156,7 +156,6 @@ public class FledgeAllowListsFilterTest {
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         anyInt());
 
-
         verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 

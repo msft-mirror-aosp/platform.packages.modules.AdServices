@@ -568,7 +568,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -632,7 +635,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -684,7 +690,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INTERNAL_ERROR, /*latencyMs=*/ 0);
+                    apiName,
+                    devContext.getCallingAppPackageName(),
+                    STATUS_INTERNAL_ERROR,
+                    /*latencyMs=*/ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 

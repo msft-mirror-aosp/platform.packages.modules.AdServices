@@ -4620,7 +4620,11 @@ public class AdSelectionServiceImplTest {
                         TEST_PACKAGE_NAME));
 
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -4684,7 +4688,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -4743,7 +4750,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
+                        eq(SHORT_API_NAME_OVERRIDE),
+                        eq(null), // Actually logged as ""
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -4815,7 +4825,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -4890,6 +4903,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -4958,7 +4972,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(null), // Actually logged as ""
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
     }
 
     @Test
@@ -5033,7 +5050,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
+                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
+                        eq(incorrectPackageName),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -5152,7 +5172,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(incorrectPackageName),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -5268,7 +5291,10 @@ public class AdSelectionServiceImplTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
+                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
     }
 
     @Test
@@ -5387,6 +5413,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -5499,6 +5526,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -7661,6 +7689,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7727,6 +7756,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -7788,6 +7818,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -7864,6 +7895,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -7942,6 +7974,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -8012,6 +8045,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -8090,6 +8124,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(incorrectPackageName),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8211,6 +8246,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8335,6 +8371,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -8452,6 +8489,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(null), // Actually logged as ""
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
@@ -8576,6 +8614,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(incorrectPackageName),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -8656,6 +8695,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -9019,7 +9059,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.setAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9029,6 +9069,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -9059,8 +9100,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9141,7 +9183,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9151,6 +9193,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -9179,8 +9222,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9237,7 +9281,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdCounterHistogramOverrides(callback);
         assertTrue(
@@ -9247,6 +9291,7 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INTERNAL_ERROR),
                         eq(0));
     }
@@ -9268,8 +9313,9 @@ public class AdSelectionServiceImplTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
-                        eq(0));
+                        anyInt());
     }
 
     @Test
@@ -9487,7 +9533,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
                 adSelectionConfig,
@@ -9517,7 +9563,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.overrideAdSelectionFromOutcomesConfigRemoteInfo(
                 adSelectionFromOutcomesConfig, selectionLogic, selectionSignals, callback);
@@ -9540,7 +9586,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionConfigRemoteInfoOverride(adSelectionConfig, callback);
         resultLatch.await();
@@ -9562,7 +9608,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdSelectionFromOutcomesConfigRemoteInfoOverride(config, callback);
         resultLatch.await();
@@ -9583,7 +9629,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -9604,7 +9650,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdSelectionFromOutcomesConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -9702,7 +9748,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.updateAdCounterHistogram(inputParams, callback);
         assertTrue(
@@ -9727,7 +9773,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.setAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9752,7 +9798,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.removeAdCounterHistogramOverride(inputParams, callback);
         assertTrue(
@@ -9775,7 +9821,7 @@ public class AdSelectionServiceImplTest {
                 };
         doAnswer(countDownAnswer)
                 .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+                .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
 
         adSelectionService.resetAllAdCounterHistogramOverrides(callback);
         assertTrue(

@@ -123,7 +123,7 @@ public class FledgeAuthorizationFilter {
 
         sLogger.v("No match found, failing calling package name match in API %d", apiNameLoggingId);
         mAdServicesLogger.logFledgeApiCallStats(
-                apiNameLoggingId, STATUS_UNAUTHORIZED, /* latencyMs= */ 0);
+                apiNameLoggingId, callingPackageName, STATUS_UNAUTHORIZED, /*latencyMs=*/ 0);
         throw new CallerMismatchException();
     }
 
@@ -145,7 +145,7 @@ public class FledgeAuthorizationFilter {
         Objects.requireNonNull(permission);
 
         if (!PermissionHelper.hasPermission(context, appPackageName, permission)) {
-            logAndThrowPermissionFailure(apiNameLoggingId, permission);
+            logAndThrowPermissionFailure(appPackageName, apiNameLoggingId, permission);
         }
     }
 
@@ -173,22 +173,29 @@ public class FledgeAuthorizationFilter {
                 return; // Found a valid permission
             }
         }
-        logAndThrowMultiplePermissionFailure(apiNameLoggingId, permissions);
+        logAndThrowMultiplePermissionFailure(appPackageName, apiNameLoggingId, permissions);
     }
 
-    private void logAndThrowPermissionFailure(int apiNameLoggingId, String permission) {
+    private void logAndThrowPermissionFailure(
+            String callerAppPackageName, int apiNameLoggingId, String permission) {
         sLogger.v("Permission %s not declared by caller in API %d", permission, apiNameLoggingId);
         mAdServicesLogger.logFledgeApiCallStats(
-                apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
+                apiNameLoggingId,
+                callerAppPackageName,
+                STATUS_PERMISSION_NOT_REQUESTED,
+                /*latencyMs=*/ 0);
         throw new SecurityException(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
     }
 
     private void logAndThrowMultiplePermissionFailure(
-            int apiNameLoggingId, Collection<String> permissions) {
+            String callerAppPackageName, int apiNameLoggingId, Collection<String> permissions) {
         sLogger.v("Permissions %s not declared by caller in API %d", permissions, apiNameLoggingId);
         mAdServicesLogger.logFledgeApiCallStats(
-                apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
+                apiNameLoggingId,
+                callerAppPackageName,
+                STATUS_PERMISSION_NOT_REQUESTED,
+                /*latencyMs=*/ 0);
         throw new SecurityException(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
     }
