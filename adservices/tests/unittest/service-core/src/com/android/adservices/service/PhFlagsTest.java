@@ -1415,6 +1415,17 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetCobaltLoggingEnabled_cobaltLoggingDisabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+        setCobaltLoggingEnabled(false);
+
+        assertThat(mPhFlags.getCobaltLoggingEnabled()).isFalse();
+
+        verifyGetBooleanNotCalled(FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED);
+    }
+
+    @Test
     public void testGetAppNameApiErrorCobaltLoggingEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
@@ -1442,7 +1453,9 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         setCobaltLoggingEnabled(false);
 
         // APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED is guarded by COBALT_LOGGING_ENABLED.
-        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isEqualTo(false);
+        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isFalse();
+
+        verifyGetBooleanNotCalled(FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
     }
 
     @Test
@@ -10716,5 +10729,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 name,
                 Boolean.toString(value),
                 /* makeDefault= */ false);
+    }
+
+    private void verifyGetBooleanNotCalled(String name) {
+        extendedMockito.unsafeVerifyGetBooleanDeviceConfigFlagNotCalled(
+                DeviceConfig.NAMESPACE_ADSERVICES, name);
     }
 }
