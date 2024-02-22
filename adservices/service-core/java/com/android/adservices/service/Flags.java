@@ -2770,6 +2770,11 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return PPAPI_APP_ALLOW_LIST;
     }
 
+    default String getPasAppAllowList() {
+        // default to using the same fixed list as custom audiences
+        return PPAPI_APP_ALLOW_LIST;
+    }
+
     String AD_ID_API_APP_BLOCK_LIST = "";
 
     /** Get the app allow list for the AD ID API. */

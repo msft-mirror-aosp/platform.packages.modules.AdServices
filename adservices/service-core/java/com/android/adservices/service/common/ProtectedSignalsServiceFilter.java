@@ -130,7 +130,7 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
         }
 
         sLogger.v("Validating caller package is in allow list.");
-        assertAppInAllowList(callerPackageName, apiName);
+        assertAppInAllowList(callerPackageName, apiName, API_PROTECTED_SIGNALS);
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");
