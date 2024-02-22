@@ -263,7 +263,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     private void internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
             String name,
             AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator,
-            boolean rampedUp) {
+            boolean expectedValue) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -276,25 +276,41 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 .isEqualTo(defaultValue);
 
         // Constant
-        expect.withMessage("%s", name).that(defaultValue).isEqualTo(!rampedUp);
+        expect.withMessage("%s", name).that(defaultValue).isEqualTo(expectedValue);
     }
 
     private void testRampedUpKillSwitchGuardedByGlobalKillSwitch(
             String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
-                name, flaginator, /* rampedUp= */ true);
+                name, flaginator, /* expectedValue= */ false);
     }
 
     private void testNewKillSwitchGuardedByGlobalKillSwitch(
             String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
-                name, flaginator, /* rampedUp= */ false);
+                name, flaginator, /* expectedValue= */ true);
+    }
+
+    /**
+     * @deprecated TODO(b/324077542) - remove once all kill-switches have been converted
+     */
+    @Deprecated
+    private void testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(
+            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+        internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
+                name, flaginator, /* expectedValue= */ false);
     }
 
     @Test
     public void testGetTopicsKillSwitch() {
         testNewKillSwitchGuardedByGlobalKillSwitch(
                 "TOPICS_KILL_SWITCH", flags -> flags.getTopicsKillSwitch());
+    }
+
+    @Test
+    public void testGetMddLoggerKillSwitch() {
+        testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(
+                "MDD_LOGGER_KILL_SWITCH", flags -> flags.getMddLoggerKillSwitch());
     }
 
     @Test
