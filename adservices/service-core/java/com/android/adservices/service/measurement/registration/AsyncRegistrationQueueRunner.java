@@ -238,7 +238,10 @@ public class AsyncRegistrationQueueRunner {
 
         asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         FetcherUtil.emitHeaderMetrics(
-                FlagsFactory.getFlags(), mLogger, asyncRegistration, asyncFetchStatus);
+                mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes(),
+                mLogger,
+                asyncRegistration,
+                asyncFetchStatus);
     }
 
     /** Visible only for testing. */
@@ -301,8 +304,12 @@ public class AsyncRegistrationQueueRunner {
         }
 
         asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
+        long headerSizeLimitBytes =
+                mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()
+                        ? mFlags.getMaxTriggerRegistrationHeaderSizeBytes()
+                        : mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         FetcherUtil.emitHeaderMetrics(
-                FlagsFactory.getFlags(), mLogger, asyncRegistration, asyncFetchStatus);
+                headerSizeLimitBytes, mLogger, asyncRegistration, asyncFetchStatus);
     }
 
     /** Visible only for testing. */

@@ -43,6 +43,7 @@ java_library {
     apex_available: [
         "com.android.adservices",
         "com.android.extservices",
+        "com.android.ondevicepersonalization"
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

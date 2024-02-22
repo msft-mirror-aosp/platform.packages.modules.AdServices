@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -859,20 +860,29 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW);
     }
 
-    @Override
-    public boolean getMeasurementAttributionFallbackJobKillSwitch() {
+    // TODO(b/325144327): ideally it should be removed and the logic moved to
+    // getMeasurementEnabled(), but this is a legacy flag that also reads system properties, and
+    // the system properties workflow is not unit tested.
+    private boolean getMeasurementAttributionFallbackJobKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        final String flagName = FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        final boolean defaultValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        String flagName = FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        boolean defaultValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementAttributionFallbackJobEnabled() {
+        // TODO(b/325144327): ideally logic should be here, but this is a legacy flag that also
+        // reads system properties, and the system properties workflow is not unit tested.
+        return !getMeasurementAttributionFallbackJobKillSwitch();
     }
 
     @Override
@@ -3764,6 +3774,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return getFledgeMeasurementReportAndRegisterEventApiEnabled()
                 && DeviceConfig.getBoolean(
                         FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue);
+    }
+
+    @Override
+    public String getAdServicesModuleJobPolicy() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_AD_SERVICES_MODULE_JOB_POLICY,
+                /* defaultValue */ AD_SERVICES_MODULE_JOB_POLICY);
     }
 
     @Override

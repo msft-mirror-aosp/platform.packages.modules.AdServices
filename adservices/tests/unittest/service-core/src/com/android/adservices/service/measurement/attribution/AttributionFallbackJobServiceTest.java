@@ -118,18 +118,20 @@ public class AttributionFallbackJobServiceTest {
         mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
     }
 
+    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
-                    onStartJob_killSwitchOn();
+                    onStartJob_featureDisabled();
 
                     verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
+    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
@@ -137,24 +139,26 @@ public class AttributionFallbackJobServiceTest {
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
-                    onStartJob_killSwitchOn();
+                    onStartJob_featureDisabled();
 
                     verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
                 });
     }
 
+    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
-                    onStartJob_killSwitchOff();
+                    onStartJob_featureEnabled();
 
                     verifyLoggingNotHappened(mSpyLogger);
                 });
     }
 
+    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
@@ -164,18 +168,19 @@ public class AttributionFallbackJobServiceTest {
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
-                    onStartJob_killSwitchOff();
+                    onStartJob_featureEnabled();
 
                     verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
                 });
     }
 
+    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOff_unlockingCheck() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
-                    disableKillSwitch();
+                    enableFeature();
 
                     ExtendedMockito.doNothing()
                             .when(
@@ -233,12 +238,13 @@ public class AttributionFallbackJobServiceTest {
                 });
     }
 
+    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void scheduleIfNeeded_killSwitchOn_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
-                    enableKillSwitch();
+                    disableFeature();
 
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
@@ -266,7 +272,7 @@ public class AttributionFallbackJobServiceTest {
         runWithMocks(
                 () -> {
                     // Setup
-                    disableKillSwitch();
+                    enableFeature();
 
                     final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
@@ -306,7 +312,7 @@ public class AttributionFallbackJobServiceTest {
         runWithMocks(
                 () -> {
                     // Setup
-                    disableKillSwitch();
+                    enableFeature();
 
                     final Context mockContext = spy(ApplicationProvider.getApplicationContext());
                     doReturn(mMockJobScheduler)
@@ -344,7 +350,7 @@ public class AttributionFallbackJobServiceTest {
         runWithMocks(
                 () -> {
                     // Setup
-                    disableKillSwitch();
+                    enableFeature();
 
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
@@ -373,7 +379,7 @@ public class AttributionFallbackJobServiceTest {
         runWithMocks(
                 () -> {
                     // Setup
-                    disableKillSwitch();
+                    enableFeature();
 
                     final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
@@ -400,7 +406,7 @@ public class AttributionFallbackJobServiceTest {
         runWithMocks(
                 () -> {
                     // Setup
-                    disableKillSwitch();
+                    enableFeature();
                     Context spyContext = spy(CONTEXT);
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
                     doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
@@ -429,7 +435,7 @@ public class AttributionFallbackJobServiceTest {
     public void testOnStopJob_stopsExecutingThread() throws Exception {
         runWithMocks(
                 () -> {
-                    disableKillSwitch();
+                    enableFeature();
 
                     doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
                             .when(mSpyService)
@@ -447,9 +453,9 @@ public class AttributionFallbackJobServiceTest {
                 });
     }
 
-    private void onStartJob_killSwitchOn() throws Exception {
+    private void onStartJob_featureDisabled() throws Exception {
         // Setup
-        enableKillSwitch();
+        disableFeature();
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -472,9 +478,9 @@ public class AttributionFallbackJobServiceTest {
         verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
     }
 
-    private void onStartJob_killSwitchOff() throws Exception {
+    private void onStartJob_featureEnabled() throws Exception {
         // Setup
-        disableKillSwitch();
+        enableFeature();
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -553,19 +559,19 @@ public class AttributionFallbackJobServiceTest {
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
+    private void enableFeature() {
+        toggleFeature(true);
     }
 
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
+    private void disableFeature() {
+        toggleFeature(false);
     }
 
-    private void toggleKillSwitch(boolean value) {
+    private void toggleFeature(boolean value) {
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(value)
                 .when(mMockFlags)
-                .getMeasurementAttributionFallbackJobKillSwitch();
+                .getMeasurementAttributionFallbackJobEnabled();
     }
 
     private CountDownLatch createCountDownLatch() {
