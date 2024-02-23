@@ -604,10 +604,16 @@ public class AsyncSourceFetcher {
             if (summaryBuckets.isEmpty() || summaryBuckets.size() > maxEventLevelReports) {
                 return Optional.empty();
             }
-        }
 
-        if (summaryBuckets != null && !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
-            return Optional.empty();
+            for (Long bucket : summaryBuckets) {
+                if (bucket < 0L || bucket > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                    return Optional.empty();
+                }
+            }
+
+            if (!TriggerSpec.isStrictIncreasing(summaryBuckets)) {
+                return Optional.empty();
+            }
         }
 
         return Optional.of(
