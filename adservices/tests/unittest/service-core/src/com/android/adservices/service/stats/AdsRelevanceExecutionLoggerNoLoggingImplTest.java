@@ -18,7 +18,7 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerFactory.GET_AD_SELECTION_DATA_API_NAME;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory.GET_AD_SELECTION_DATA_API_NAME;
 
 import static org.mockito.Mockito.verifyZeroInteractions;
 
@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-public class FledgeAuctionServerExecutionLoggerNoLoggingImplTest {
+public class AdsRelevanceExecutionLoggerNoLoggingImplTest {
 
     private AdServicesLogger mAdServicesLoggerMock;
 
@@ -39,11 +39,11 @@ public class FledgeAuctionServerExecutionLoggerNoLoggingImplTest {
 
     @Test
     public void testFledgeAuctionServerExecutionLoggerNoLogging() {
-        FledgeAuctionServerExecutionLoggerNoLoggingImpl getAdSelectionDataLogger
-                = new FledgeAuctionServerExecutionLoggerNoLoggingImpl(
+        AdsRelevanceExecutionLoggerNoLoggingImpl getAdSelectionDataLogger
+                = new AdsRelevanceExecutionLoggerNoLoggingImpl(
                         GET_AD_SELECTION_DATA_API_NAME);
 
-        getAdSelectionDataLogger.endAuctionServerApi(STATUS_SUCCESS);
+        getAdSelectionDataLogger.endAdsRelevanceApi(STATUS_SUCCESS);
         verifyZeroInteractions(mAdServicesLoggerMock);
     }
 }
