@@ -856,26 +856,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW);
     }
 
-    // TODO(b/326254556): logic will be moved to getMeasurementEnabled() (after new unit tests
-    // are added on PhFlagsSystemPropertyOverrideTest)
-    private boolean getMeasurementAttributionFallbackJobKillSwitch() {
-        // We check the Global Killswitch first then Measurement Killswitch.
-        // As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
-        String flagName = FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        boolean defaultValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(flagName),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue));
-    }
-
     @Override
     public boolean getMeasurementAttributionFallbackJobEnabled() {
-        return !getMeasurementAttributionFallbackJobKillSwitch();
+        return (getGlobalKillSwitch() || getLegacyMeasurementKillSwitch())
+                ? false
+                : !getFlagFromSystemPropertiesOrDeviceConfig(
+                        FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
+                        MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH);
     }
 
     @Override
@@ -1652,29 +1639,17 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     // MEASUREMENT Killswitches
 
-    // TODO(b/326254556): logic will be moved to getMeasurementEnabled() (after new unit tests
-    // are added on PhFlagsSystemPropertyOverrideTest)
     @Override
     public boolean getLegacyMeasurementKillSwitch() {
-        return getMeasurementKillSwitch();
-    }
-
-    private boolean getMeasurementKillSwitch() {
-        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
-        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
-        // hard-coded value.
-        return getGlobalKillSwitch()
-                || SystemProperties.getBoolean(
-                        getSystemPropertyName(FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH),
-                        /* defaultValue */ DeviceConfig.getBoolean(
-                                FlagsConstants.NAMESPACE_ADSERVICES,
-                                /* flagName */ FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH,
-                                /* defaultValue */ MEASUREMENT_KILL_SWITCH));
+        return !getMeasurementEnabled();
     }
 
     @Override
     public boolean getMeasurementEnabled() {
-        return !getMeasurementKillSwitch();
+        return getGlobalKillSwitch()
+                ? false
+                : !getFlagFromSystemPropertiesOrDeviceConfig(
+                        FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH, MEASUREMENT_KILL_SWITCH);
     }
 
     @Override
@@ -1685,7 +1660,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // hard-coded value.
         final boolean defaultValue = MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
@@ -1704,7 +1679,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH),
@@ -1722,7 +1697,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH),
@@ -1740,7 +1715,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH),
@@ -1759,7 +1734,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // hard-coded value.
         final boolean defaultValue = MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH),
@@ -1778,7 +1753,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // hard-coded value.
         final boolean defaultValue = MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH),
@@ -1797,7 +1772,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // hard-coded value.
         final boolean defaultValue = MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
@@ -1819,7 +1794,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
         final boolean defaultValue = MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
@@ -1834,7 +1809,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // hard-coded value.
         final boolean defaultValue = MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH),
@@ -1852,7 +1827,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH),
@@ -1870,7 +1845,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH),
@@ -1888,7 +1863,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH),
@@ -1909,7 +1884,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
         final boolean defaultValue = MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
@@ -1923,7 +1898,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH),
@@ -1943,7 +1918,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         final String flagName = FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
         final boolean defaultValue = MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
@@ -1959,7 +1934,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         final String flagName =
                 FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
@@ -1978,7 +1953,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
         final boolean defaultValue = MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
@@ -1993,7 +1968,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // hard-coded value.
         final boolean defaultValue = MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
@@ -2009,7 +1984,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementRollbackDeletionKillSwitch() {
         final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH),
@@ -2024,7 +1999,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
         final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
@@ -2040,7 +2015,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public boolean getMeasurementRollbackDeletionREnabled() {
         String flagName = FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
         return !getGlobalKillSwitch()
-                && !getMeasurementKillSwitch()
+                && !getLegacyMeasurementKillSwitch()
                 && SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* def= */ DeviceConfig.getBoolean(
@@ -4509,8 +4484,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH
-                        + " = "
-                        + getMeasurementAttributionFallbackJobKillSwitch());
+                        + " = !"
+                        + getMeasurementAttributionFallbackJobEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS
@@ -6554,7 +6529,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
@@ -6573,7 +6548,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
@@ -6606,7 +6581,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getMeasurementJobDebugReportingKillSwitch() {
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH),
@@ -6624,7 +6599,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return getGlobalKillSwitch()
-                || getMeasurementKillSwitch()
+                || getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 FlagsConstants
@@ -6943,6 +6918,19 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @VisibleForTesting
     static float getDeviceConfigFlag(String name, float defaultValue) {
         return DeviceConfig.getFloat(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    /**
+     * @deprecated - reading a flag from {@link SystemProperties} first is deprecated - this method
+     *     should only be used to refactor existing methods in this class, not on new ones.
+     */
+    @Deprecated
+    private static boolean getFlagFromSystemPropertiesOrDeviceConfig(
+            String name, boolean defaultValue) {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(name),
+                /* def= */ DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue));
     }
 
     @VisibleForTesting
