@@ -73,8 +73,6 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
@@ -1286,6 +1284,7 @@ public class KAnonE2ETest {
                         mAdServicesLoggerMock);
         KAnonSignJoinManager mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
+                        mContext,
                         kAnonCaller,
                         mKAnonMessageManager,
                         mFlags,

@@ -83,6 +83,7 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
+                        mContext,
                         mockKanonCaller,
                         mKAnonMessageManager,
                         mFlags,
@@ -161,6 +162,11 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         @Override
         public int getFledgeKAnonMessagesPerBackgroundProcess() {
             return mMessagesPerBackgroundRun;
+        }
+
+        @Override
+        public boolean getFledgeKAnonBackgroundProcessEnabled() {
+            return true;
         }
     }
 }
