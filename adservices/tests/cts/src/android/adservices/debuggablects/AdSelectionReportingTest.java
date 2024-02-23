@@ -40,21 +40,8 @@ import java.util.concurrent.ExecutionException;
 
 /** End-to-end test for report impression. */
 public final class AdSelectionReportingTest extends FledgeScenarioTest {
-    private boolean mRegisterAdBeaconEnabledFlagSetting;
-    private boolean mCacheEnableFlagSetting;
-
     @Override
     public void setOtherFlags() {
-        mRegisterAdBeaconEnabledFlagSetting =
-                DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
-                        false);
-        mCacheEnableFlagSetting =
-                DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        KEY_FLEDGE_HTTP_CACHE_ENABLE,
-                        false);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
@@ -72,12 +59,12 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
-                Boolean.toString(mRegisterAdBeaconEnabledFlagSetting),
+                Boolean.toString(false),
                 false);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_HTTP_CACHE_ENABLE,
-                Boolean.toString(mCacheEnableFlagSetting),
+                Boolean.toString(false),
                 false);
     }
 
