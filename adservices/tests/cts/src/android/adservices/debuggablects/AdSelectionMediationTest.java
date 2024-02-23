@@ -39,15 +39,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class AdSelectionMediationTest extends FledgeScenarioTest {
-    private boolean mCacheEnableFlagSetting;
-
     @Override
     public void setOtherFlags() {
-        mCacheEnableFlagSetting =
-                DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        KEY_FLEDGE_HTTP_CACHE_ENABLE,
-                        false);
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_HTTP_CACHE_ENABLE,
@@ -60,7 +53,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_HTTP_CACHE_ENABLE,
-                Boolean.toString(mCacheEnableFlagSetting),
+                Boolean.toString(false),
                 false);
     }
 
