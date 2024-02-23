@@ -16,6 +16,8 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -31,6 +33,7 @@ import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
+import android.provider.DeviceConfig;
 import android.net.Uri;
 import android.util.Log;
 
@@ -52,6 +55,30 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class AdSelectionTest extends FledgeScenarioTest {
+    private boolean mCacheEnableFlagSetting;
+
+    @Override
+    public void setOtherFlags() {
+        mCacheEnableFlagSetting =
+                DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                        false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                Boolean.toString(false),
+                false);
+    }
+
+    @Override
+    public void resetOtherFlags() {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                Boolean.toString(mCacheEnableFlagSetting),
+                false);
+    }
 
     /**
      * End-to-end test for ad selection.

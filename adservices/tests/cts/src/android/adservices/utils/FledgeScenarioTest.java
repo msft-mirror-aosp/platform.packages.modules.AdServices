@@ -138,6 +138,8 @@ public abstract class FledgeScenarioTest {
                 /* scoringTimeoutMs= */ 5_000,
                 /* overallTimeoutMs= */ 10_000);
 
+        setOtherFlags();
+
         AdservicesTestHelper.killAdservicesProcess(sContext);
         ExecutorService executor = Executors.newCachedThreadPool();
         mCustomAudienceClient =
@@ -150,12 +152,18 @@ public abstract class FledgeScenarioTest {
         mCacheBuster = mCacheBusterRandom.nextInt();
     }
 
+    public void setOtherFlags() {}
+
     @After
     public void tearDown() throws IOException {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
         }
+
+        resetOtherFlags();
     }
+
+    public void resetOtherFlags() {}
 
     protected AdSelectionOutcome doSelectAds(AdSelectionConfig adSelectionConfig)
             throws ExecutionException, InterruptedException, TimeoutException {
