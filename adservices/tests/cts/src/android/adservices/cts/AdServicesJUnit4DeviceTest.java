@@ -36,7 +36,7 @@ import org.junit.runner.RunWith;
  * features.
  */
 @RunWith(AndroidJUnit4.class)
-public class AdServicesJUnit4DeviceTest {
+public class AdServicesJUnit4DeviceTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testApiVersion() {
         // Note that this version constant has been @removed from the public API,

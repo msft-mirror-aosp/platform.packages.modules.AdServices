@@ -49,6 +49,7 @@ import com.google.common.util.concurrent.Futures;
 @SuppressLint("LineLength")
 @RequiresApi(Build.VERSION_CODES.S)
 public class KAnonSignJoinBackgroundJobService extends JobService {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -63,6 +64,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
                     true);
         }
         if (!flags.getFledgeKAnonBackgroundProcessEnabled()) {
+            sLogger.v("KAnon background job is disabled; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
@@ -71,8 +73,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
         // Skip the execution and cancel the job if user consent is revoked.
         // Use the per-API consent with GA UX.
         if (!ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven()) {
-            LoggerFactory.getFledgeLogger()
-                    .d("User Consent is revoked ; skipping and cancelling job");
+            sLogger.v("User Consent is revoked ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED,
@@ -156,6 +157,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
         if (!flags.getFledgeKAnonBackgroundProcessEnabled()) {
             return;
         }
+        sLogger.v("Scheduling KAnon sign join background job");
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         final JobInfo job =
                 new JobInfo.Builder(
@@ -171,6 +173,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
     }
 
     private FluentFuture<Void> doSignJoinBackgroundJob() {
+        sLogger.v("Running the KAnon sign join background job");
         return KAnonSignJoinBackgroundJobWorker.getInstance(this).runSignJoinBackgroundProcess();
     }
 }

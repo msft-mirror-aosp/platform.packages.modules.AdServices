@@ -29,7 +29,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
-public class FledgeAuctionServerExecutionLoggerFactory {
+public class AdsRelevanceExecutionLoggerFactory {
 
     @VisibleForTesting
     static final String GET_AD_SELECTION_DATA_API_NAME = "GET_AD_SELECTION_DATA";
@@ -54,7 +54,7 @@ public class FledgeAuctionServerExecutionLoggerFactory {
 
     private final boolean mFledgeAuctionServerApiUsageMetricsEnabled;
 
-    public FledgeAuctionServerExecutionLoggerFactory(
+    public AdsRelevanceExecutionLoggerFactory(
             @NonNull String callerAppPackageName,
             @NonNull CallerMetadata callerMetadata,
             @NonNull Clock clock,
@@ -83,16 +83,16 @@ public class FledgeAuctionServerExecutionLoggerFactory {
     }
 
     /**
-     * Gets the {@link FledgeAuctionServerExecutionLogger} implementation to use,
-     * dependent on whether the fledge auction server metrics is enabled.
+     * Gets the {@link AdsRelevanceExecutionLogger} implementation to use,
+     * dependent on whether the Ads Relevance Api metrics is enabled.
      *
-     * @return an {@link FledgeAuctionServerExecutionLoggerImpl} instance if the fledge auction
-     *      server metrics is enabled, or {@link FledgeAuctionServerExecutionLoggerNoLoggingImpl}
+     * @return an {@link AdsRelevanceExecutionLoggerImpl} instance if the Ads Relevance
+     *      metrics is enabled, or {@link AdsRelevanceExecutionLoggerNoLoggingImpl}
      *      instance otherwise
      */
-    public FledgeAuctionServerExecutionLogger getFledgeAuctionServerExecutionLogger() {
+    public AdsRelevanceExecutionLogger getAdsRelevanceExecutionLogger() {
         if (mFledgeAuctionServerApiUsageMetricsEnabled) {
-            return new FledgeAuctionServerExecutionLoggerImpl(
+            return new AdsRelevanceExecutionLoggerImpl(
                     mCallerAppPackageName,
                     mCallerMetadata,
                     mClock,
@@ -100,7 +100,7 @@ public class FledgeAuctionServerExecutionLoggerFactory {
                     mApiName,
                     mApiNameCode);
         } else {
-            return new FledgeAuctionServerExecutionLoggerNoLoggingImpl(mApiName);
+            return new AdsRelevanceExecutionLoggerNoLoggingImpl(mApiName);
         }
     }
 }

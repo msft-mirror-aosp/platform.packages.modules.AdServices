@@ -18,7 +18,7 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.service.stats.FledgeAuctionServerExecutionLoggerImplTest.sCallerMetadata;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertTrue;
@@ -35,7 +35,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-public class FledgeAuctionServerExecutionLoggerFactoryTest {
+public class AdsRelevanceExecutionLoggerFactoryTest {
     private MockitoSession mStaticMockSession = null;
 
     private static int UNKNOWN_API_CODE = -1;
@@ -65,30 +65,30 @@ public class FledgeAuctionServerExecutionLoggerFactoryTest {
 
     @Test
     public void testGetFledgeAuctionServerApiUsageMetricsEnabled() {
-        FledgeAuctionServerExecutionLoggerFactory fledgeAuctionServerExecutionLoggerFactory =
-                new FledgeAuctionServerExecutionLoggerFactory(
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         Clock.getInstance(),
                         mAdServicesLoggerMock,
                         new FlagsWithGetFledgeAuctionServerApiUsageMetricsEnabled(),
                         UNKNOWN_API_CODE);
-        assertTrue(fledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger()
-                instanceof FledgeAuctionServerExecutionLoggerImpl);
+        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                instanceof AdsRelevanceExecutionLoggerImpl);
     }
 
     @Test
     public void testGetFledgeAuctionServerApiUsageMetricsDisabled() {
-        FledgeAuctionServerExecutionLoggerFactory fledgeAuctionServerExecutionLoggerFactory =
-                new FledgeAuctionServerExecutionLoggerFactory(
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
                         TEST_PACKAGE_NAME,
                         sCallerMetadata,
                         Clock.getInstance(),
                         mAdServicesLoggerMock,
                         new FlagsWithGetFledgeAuctionServerApiUsageMetricsDisabled(),
                         UNKNOWN_API_CODE);
-        assertTrue(fledgeAuctionServerExecutionLoggerFactory.getFledgeAuctionServerExecutionLogger()
-                instanceof FledgeAuctionServerExecutionLoggerNoLoggingImpl);
+        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
     }
 
     private static class FlagsWithGetFledgeAuctionServerApiUsageMetricsEnabled implements Flags {
