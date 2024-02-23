@@ -268,6 +268,7 @@ import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MDD_BACKGROUND_TASK_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
@@ -681,6 +682,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
@@ -10627,12 +10629,79 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mPhFlags.getAdServicesModuleJobPolicy()).isEqualTo(phOverridingValue);
     }
 
+    @Test
+    public void testGetMddLoggerKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        // Without any overriding, the value is the hard coded constant.
+        boolean defaultValue = MDD_LOGGER_KILL_SWITCH;
+        expect.withMessage("getMddLoggerKillSwitch() by default")
+                .that(mPhFlags.getMddLoggerKillSwitch())
+                .isEqualTo(defaultValue);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !defaultValue;
+        setMddLoggerKillSwitch(phOverridingValue);
+        expect.withMessage("getMddLoggerKillSwitch() when set by device config")
+                .that(mPhFlags.getMddLoggerKillSwitch())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMddLoggerKillSwitch_globalOverride() {
+        enableGlobalKillSwitch();
+        setMddLoggerKillSwitch(false);
+
+        // should be true because global kill-switch is on
+        expect.withMessage("getMddLoggerKillSwitch() when the global kill switch is on")
+                .that(mPhFlags.getMddLoggerKillSwitch())
+                .isTrue();
+    }
+
+    @Test
+    public void testGetMddLoggerEnabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        // Without any overriding, the value is the hard coded constant.
+        boolean defaultKsValue = MDD_LOGGER_KILL_SWITCH;
+        boolean phOverridingKsValue = !defaultKsValue;
+        boolean expectedDefaultValue = !defaultKsValue;
+        boolean expectedOverriddenValue = !expectedDefaultValue;
+
+        expect.withMessage("getMddLoggerEnabled() by default")
+                .that(mPhFlags.getMddLoggerEnabled())
+                .isEqualTo(expectedDefaultValue);
+
+        // Now overriding with the value from PH.
+        setMddLoggerKillSwitch(phOverridingKsValue);
+        expect.withMessage("getMddLoggerEnabled() when set by device config")
+                .that(mPhFlags.getMddLoggerEnabled())
+                .isEqualTo(expectedOverriddenValue);
+    }
+
+    @Test
+    public void testGetMddLoggerEnabled_globalOverride() {
+        enableGlobalKillSwitch();
+        setMddLoggerKillSwitch(false);
+
+        // should be true because global kill-switch is on
+        expect.withMessage("getMddLoggerEnabled() when the global kill switch is on")
+                .that(mPhFlags.getMddLoggerEnabled())
+                .isFalse();
+    }
+
     private void setMeasurementKillSwitch(boolean value) {
         setDeviceConfigFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
 
     private void setMeasurementAttributionFallbackJobKillSwitch(boolean value) {
         setDeviceConfigFlag(KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH, value);
+    }
+
+    private void setMddLoggerKillSwitch(boolean value) {
+        setDeviceConfigFlag(KEY_MDD_LOGGER_KILL_SWITCH, value);
     }
 
     private void setDeviceConfigFlag(String name, boolean value) {

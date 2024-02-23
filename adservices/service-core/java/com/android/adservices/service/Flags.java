@@ -20,6 +20,7 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.os.Build.VERSION.SDK_INT;
 
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_BEING_CONVERTED;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.RAMPED_UP;
@@ -2533,11 +2534,28 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * MDD Logger Kill Switch. The default value is false which means the MDD Logger is enabled.
      * This flag is used for emergency turning off the MDD Logger.
      */
+    @FeatureFlag(LEGACY_KILL_SWITCH_BEING_CONVERTED)
     boolean MDD_LOGGER_KILL_SWITCH = false;
 
-    /** Returns value of MDD Logger Kill Switch */
+    /**
+     * Returns value of MDD Logger Kill Switch.
+     *
+     * @deprecated - use !{@link #getMddLoggerEnabled()} instead.
+     */
+    @Deprecated
     default boolean getMddLoggerKillSwitch() {
         return getGlobalKillSwitch() || MDD_LOGGER_KILL_SWITCH;
+    }
+
+    /**
+     * Returns whether the MDD Logger feature is enabled.
+     *
+     * <p>MDD Logger will be disabled if either the {@link #getGlobalKillSwitch() Global Kill
+     * Switch} or the {@link #getMddLoggerKillSwitch() MDD Logger Kill Switch} value is {@code
+     * true}.
+     */
+    default boolean getMddLoggerEnabled() {
+        return getGlobalKillSwitch() ? false : !MDD_LOGGER_KILL_SWITCH;
     }
 
     // FLEDGE Kill switches

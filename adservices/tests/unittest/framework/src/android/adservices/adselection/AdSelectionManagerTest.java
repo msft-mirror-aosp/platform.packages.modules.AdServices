@@ -36,6 +36,7 @@ import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -44,6 +45,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
+
+import com.google.common.base.Strings;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -231,6 +234,42 @@ public class AdSelectionManagerTest {
         assertNotNull(outcomeReceiver.getResult());
         assertThat(outcomeReceiver.getResult().getAdSelectionId()).isEqualTo(expectedAdSelectionId);
         assertArrayEquals(expectedByteArray, outcomeReceiver.getResult().getAdSelectionData());
+    }
+
+    @Test
+    public void testAdSelectionManagerGetAdSelectionDataCoordinatorWasPassed() throws Exception {
+        // TODO(b/296852054): Remove assumption once AdServicesOutcomeReceiver is used by FLEDGE.
+        Assume.assumeTrue(Build.VERSION.SDK_INT > Build.VERSION_CODES.R);
+
+        // Initialize manager with mocks
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(CONTEXT);
+        MockServiceGetAdSelectionData mockServiceGetAdSelectionData =
+                new MockServiceGetAdSelectionData();
+
+        byte[] expectedByteArray = getRandomByteArray(TYPICAL_PAYLOAD_SIZE_BYTES);
+        int expectedAdSelectionId = 1;
+        mockServiceGetAdSelectionData.setResult(
+                getAdSelectionDataResponseWithByteArray(expectedAdSelectionId, expectedByteArray));
+
+        AdSelectionManager adSelectionManager =
+                AdSelectionManager.get(CONTEXT, mockAdIdManager, mockServiceGetAdSelectionData);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdSelectionConfigFixture.SELLER)
+                        .setCoordinatorOriginUri(Uri.parse("https://example.com"))
+                        .build();
+
+        MockOutcomeReceiverGetAdSelectionData<GetAdSelectionDataOutcome, Exception>
+                outcomeReceiver = new MockOutcomeReceiverGetAdSelectionData<>();
+
+        adSelectionManager.getAdSelectionData(request, CALLBACK_EXECUTOR, outcomeReceiver);
+
+        // Need time to sleep to allow time for outcome receiver to get setup
+        doSleep(SLEEP_TIME_MS);
+
+        assertNotNull(outcomeReceiver.getResult());
+        assertThat(mockServiceGetAdSelectionData.wasCoordinatorSet()).isTrue();
     }
 
     @Test
@@ -528,6 +567,7 @@ public class AdSelectionManagerTest {
         MockServiceGetAdSelectionData() {}
 
         private GetAdSelectionDataResponse mGetAdSelectionDataResponse;
+        private boolean mWasCoordinatorSet;
 
         @Override
         public void getAdSelectionData(
@@ -535,11 +575,19 @@ public class AdSelectionManagerTest {
                 CallerMetadata callerMetadata,
                 GetAdSelectionDataCallback getAdSelectionDataCallback)
                 throws RemoteException {
+            mWasCoordinatorSet =
+                    getAdSelectionDataInput.getCoordinatorOriginUri() != null
+                            && !Strings.isNullOrEmpty(
+                                    getAdSelectionDataInput.getCoordinatorOriginUri().toString());
             getAdSelectionDataCallback.onSuccess(mGetAdSelectionDataResponse);
         }
 
         public void setResult(GetAdSelectionDataResponse response) {
             mGetAdSelectionDataResponse = response;
+        }
+
+        public boolean wasCoordinatorSet() {
+            return mWasCoordinatorSet;
         }
     }
 
