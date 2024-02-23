@@ -16,13 +16,16 @@
 
 package com.android.adservices.service.signals;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 
 import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CallerMetadata;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.signals.IProtectedSignalsService;
 import android.adservices.signals.UpdateSignalsCallback;
@@ -31,6 +34,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
@@ -57,6 +61,10 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -74,6 +82,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     public static final String ADTECH_CALLER_NAME = "caller";
     public static final String CLASS_NAME = "ProtectedSignalsServiceImpl";
     public static final String FIELD_NAME = "updateUri";
+    private static final String EMPTY_PACKAGE_NAME = "";
+    private static final String EMPTY_SDK_NAME = "";
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Context mContext;
@@ -176,18 +186,42 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             throws RemoteException {
         sLogger.v("Entering updateSignals");
 
-        // TODO(b/296586554) Add API id
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+        String callerPackageName = updateSignalsInput == null ?
+                EMPTY_PACKAGE_NAME : updateSignalsInput.getCallerPackageName();
 
         try {
             Objects.requireNonNull(updateSignalsInput);
             Objects.requireNonNull(updateSignalsCallback);
         } catch (NullPointerException exception) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            mAdServicesLogger.logApiCallStats(
+                    new ApiCallStats.Builder()
+                            .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
+                            .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
+                            .setApiName(apiName)
+                            .setLatencyMillisecond(0)
+                            .setResult(
+                                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
+                                    FAILURE_REASON_UNSET)
+                            .setAppPackageName(callerPackageName)
+                            .setSdkPackageName(EMPTY_SDK_NAME)
+                            .build());
             // Rethrow because we want to fail fast
             throw exception;
         }
+
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
+                        callerPackageName,
+                        new CallerMetadata.Builder()
+                                .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                                .build(),
+                        com.android.adservices.shared.util.Clock.getInstance(),
+                        mAdServicesLogger,
+                        mFlags,
+                        apiName);
+        AdsRelevanceExecutionLogger adsRelevanceExecutionLogger =
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
@@ -196,24 +230,28 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 apiName,
                 AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
 
-        final int callerUid = getCallingUid(apiName);
+        final int callerUid = getCallingUid(adsRelevanceExecutionLogger);
         final DevContext devContext = mDevContextFilter.createDevContext();
         sLogger.v("Running updateSignals");
         mExecutorService.execute(
                 () ->
                         doUpdateSignals(
-                                updateSignalsInput, updateSignalsCallback, callerUid, devContext));
+                                updateSignalsInput,
+                                updateSignalsCallback,
+                                callerUid,
+                                devContext,
+                                adsRelevanceExecutionLogger));
     }
 
     private void doUpdateSignals(
             UpdateSignalsInput input,
             UpdateSignalsCallback callback,
             int callerUid,
-            DevContext devContext) {
+            DevContext devContext,
+            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
         sLogger.v("Entering doUpdateSignals");
 
-        // TODO(b/296586554) Add API id
-        final int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         // The filters log internally, so don't accidentally log again
@@ -274,18 +312,19 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
-                mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
+                adsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
             }
         }
     }
 
     // TODO(b/297055198) Refactor this method into a utility class
-    private int getCallingUid(int apiNameLoggingId) throws IllegalStateException {
+    private int getCallingUid(AdsRelevanceExecutionLogger adsRelevanceExecutionLogger)
+            throws IllegalStateException {
         try {
             return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+            adsRelevanceExecutionLogger.endAdsRelevanceApi(
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             throw illegalStateException;
         }
     }
