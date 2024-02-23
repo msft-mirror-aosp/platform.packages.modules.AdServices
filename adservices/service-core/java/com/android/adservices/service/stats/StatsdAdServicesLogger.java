@@ -140,6 +140,23 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     }
 
     @Override
+    public void logFledgeApiCallStats(
+            int apiName, String appPackageName, int resultCode, int latencyMs) {
+        if (mFlags.getFledgeAppPackageNameLoggingEnabled() && (appPackageName != null)) {
+            AdServicesStatsLog.write(
+                    AD_SERVICES_API_CALLED,
+                    AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN,
+                    apiName,
+                    appPackageName,
+                    "",
+                    latencyMs,
+                    resultCode);
+        } else {
+            logFledgeApiCallStats(apiName, resultCode, latencyMs);
+        }
+    }
+
+    @Override
     public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
         AdServicesStatsLog.write(
                 AD_SERVICES_API_CALLED,

@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 
@@ -125,7 +128,10 @@ public class AppInstallAdvertisersSetter {
                                 // Note: Success is logged before the callback to ensure
                                 // deterministic testing.
                                 mAdServicesLogger.logFledgeApiCallStats(
-                                        shortApiName, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+                                        shortApiName,
+                                        input.getCallerPackageName(),
+                                        STATUS_SUCCESS,
+                                        /*latencyMs=*/ 0);
                                 invokeSuccess(callback);
                             }
 
@@ -146,11 +152,13 @@ public class AppInstallAdvertisersSetter {
                                     // component.
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             shortApiName,
-                                            AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED,
-                                            0);
+                                            input.getCallerPackageName(),
+                                            STATUS_USER_CONSENT_REVOKED,
+                                            /*latencyMs=*/ 0);
                                     invokeSuccess(callback);
                                 } else {
-                                    notifyFailureToCaller(callback, t);
+                                    notifyFailureToCaller(
+                                            input.getCallerPackageName(), callback, t);
                                 }
                             }
                         },
@@ -187,7 +195,9 @@ public class AppInstallAdvertisersSetter {
     }
 
     private void notifyFailureToCaller(
-            @NonNull SetAppInstallAdvertisersCallback callback, @NonNull Throwable t) {
+            @NonNull String callerAppPackageName,
+            @NonNull SetAppInstallAdvertisersCallback callback,
+            @NonNull Throwable t) {
         int resultCode;
 
         boolean isFilterException = t instanceof FilterException;
@@ -205,7 +215,10 @@ public class AppInstallAdvertisersSetter {
         // Note: Failure is logged before the callback to ensure deterministic testing.
         if (!isFilterException) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, resultCode, 0);
+                    AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
+                    callerAppPackageName,
+                    resultCode,
+                    /*latencyMs=*/ 0);
         }
 
         invokeFailure(callback, resultCode, t.getMessage());

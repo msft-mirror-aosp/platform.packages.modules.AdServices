@@ -991,6 +991,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAppPackageNameLoggingEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED,
+                /* defaultValue */ FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED);
+    }
+
+    @Override
     public long getFledgeCustomAudienceMaxCount() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -3044,6 +3053,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
+        return getFledgeAuctionServerEnabled()
+                && DeviceConfig.getBoolean(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED,
+                /* defaultValue */ FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED);
+    }
+
+    @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -4625,6 +4643,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT
                         + " = "
                         + getFledgeCustomAudiencePerAppMaxCount());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED
+                        + " = "
+                        + getFledgeAppPackageNameLoggingEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS

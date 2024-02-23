@@ -142,8 +142,10 @@ import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_T
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
@@ -552,9 +554,11 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECT
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
@@ -2900,6 +2904,23 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testFledgeAppPackageNameLoggingEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getFledgeAppPackageNameLoggingEnabled())
+                .isEqualTo(FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED);
+
+        boolean phOverridingValue = !FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getFledgeAppPackageNameLoggingEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetFledgeCustomAudienceMaxCount() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(mPhFlags.getFledgeCustomAudienceMaxCount())
@@ -3742,6 +3763,51 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Boolean.toString(phOverridingFledgeRegisterAdBeaconEnabled),
                 /* makeDefault */ false);
         assertThat(mPhFlags.getFledgeBeaconReportingMetricsEnabled()).isEqualTo(false);
+    }
+
+    @Test
+    public void testGetFledgeBaApiUsageMetricsEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeAuctionServerApiUsageMetricsEnabled())
+                .isEqualTo(
+                        FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED
+                                && FLEDGE_AUCTION_SERVER_ENABLED);
+
+        // Now overriding with the FLEDGE_AUCTION_SERVER_ENABLED from PH.
+        boolean phOverridingFledgeAuctionServerEnabled = !FLEDGE_AUCTION_SERVER_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerEnabled),
+                /* makeDefault */ false);
+
+        // Only turn on FLEDGE_AUCTION_SERVER_ENABLED,
+        // getFledgeAuctionServerApiUsageMetricsEnabled() should still return false.
+        assertThat(mPhFlags.getFledgeAuctionServerApiUsageMetricsEnabled()).isEqualTo(false);
+
+        // Now overriding with the FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED from PH.
+        boolean phOverridingFledgeAuctionServerApiUsageMetricsEnabled =
+                phOverridingFledgeAuctionServerEnabled;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerApiUsageMetricsEnabled),
+                /* makeDefault */ false);
+
+        // Turn on both FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED and
+        // FLEDGE_AUCTION_SERVER_ENABLED, getFledgeAuctionServerApiUsageMetricsEnabled() should
+        // return true.
+        assertThat(mPhFlags.getFledgeAuctionServerApiUsageMetricsEnabled()).isEqualTo(true);
+
+        // Now flipping FLEDGE_AUCTION_SERVER_ENABLED,
+        // getFledgeAuctionServerApiUsageMetricsEnabled() should return false.
+        phOverridingFledgeAuctionServerEnabled = !phOverridingFledgeAuctionServerEnabled;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_ENABLED,
+                Boolean.toString(phOverridingFledgeAuctionServerEnabled),
+                /* makeDefault */ false);
+        assertThat(mPhFlags.getFledgeAuctionServerApiUsageMetricsEnabled()).isEqualTo(false);
     }
 
     @Test

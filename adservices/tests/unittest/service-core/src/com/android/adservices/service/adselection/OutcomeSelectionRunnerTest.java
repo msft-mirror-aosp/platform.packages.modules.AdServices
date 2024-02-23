@@ -217,6 +217,7 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
@@ -263,6 +264,7 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -334,6 +336,7 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_TIMEOUT),
                         anyInt());
     }

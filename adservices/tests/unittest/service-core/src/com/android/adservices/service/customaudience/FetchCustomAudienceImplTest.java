@@ -31,6 +31,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 import static android.adservices.common.CommonFixture.VALID_BUYER_2;
 import static android.adservices.customaudience.CustomAudienceFixture.CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN;
@@ -286,7 +287,8 @@ public class FetchCustomAudienceImplTest {
         assertEquals(0, mockWebServer.getRequestCount());
         assertFalse(callback.mIsSuccess);
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INTERNAL_ERROR), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INTERNAL_ERROR), anyInt());
     }
 
     @Test
@@ -319,7 +321,8 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_UNAUTHORIZED), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_UNAUTHORIZED), anyInt());
     }
 
     @Test
@@ -347,7 +350,11 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_RATE_LIMIT_REACHED), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_RATE_LIMIT_REACHED),
+                        anyInt());
     }
 
     @Test
@@ -376,7 +383,11 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_BACKGROUND_CALLER), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_BACKGROUND_CALLER),
+                        anyInt());
     }
 
     @Test
@@ -405,7 +416,11 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        anyInt());
     }
 
     @Test
@@ -434,7 +449,11 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        anyInt());
     }
 
     @Test
@@ -459,7 +478,11 @@ public class FetchCustomAudienceImplTest {
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
     }
 
     @Test
@@ -499,7 +522,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
     }
 
     @Test
@@ -533,7 +557,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
     }
 
     @Test
@@ -564,7 +589,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
     }
 
     @Test
@@ -592,7 +618,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
     }
 
     @Test
@@ -626,7 +653,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
     }
 
     @Test
@@ -651,7 +679,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
     }
 
     @Test
@@ -674,7 +703,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_OBJECT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_OBJECT), anyInt());
     }
 
     @Test
@@ -698,7 +728,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_OBJECT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_OBJECT), anyInt());
     }
 
     @Test
@@ -737,7 +768,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_ARGUMENT), anyInt());
     }
 
     @Test
@@ -769,7 +801,8 @@ public class FetchCustomAudienceImplTest {
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_INVALID_OBJECT), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_OBJECT), anyInt());
     }
 
     @Test
@@ -797,7 +830,8 @@ public class FetchCustomAudienceImplTest {
                         getValidDailyUpdateUriByBuyer(BUYER),
                         DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -823,7 +857,8 @@ public class FetchCustomAudienceImplTest {
                         getValidDailyUpdateUriByBuyer(BUYER),
                         DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -845,7 +880,8 @@ public class FetchCustomAudienceImplTest {
                         getValidDailyUpdateUriByBuyer(BUYER),
                         DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -873,7 +909,8 @@ public class FetchCustomAudienceImplTest {
                         getValidDailyUpdateUriByBuyer(BUYER),
                         /*debuggable=*/ true);
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -921,7 +958,8 @@ public class FetchCustomAudienceImplTest {
                         DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
 
         verify(mAdServicesLoggerMock, times(2))
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
     @Test
@@ -941,7 +979,10 @@ public class FetchCustomAudienceImplTest {
                         any(DBCustomAudienceQuarantine.class), anyLong());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(API_NAME), eq(STATUS_SERVER_RATE_LIMIT_REACHED), anyInt());
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SERVER_RATE_LIMIT_REACHED),
+                        anyInt());
     }
 
     @Test
@@ -963,7 +1004,10 @@ public class FetchCustomAudienceImplTest {
         verify(mCustomAudienceDaoMock).getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(API_NAME), eq(STATUS_SERVER_RATE_LIMIT_REACHED), anyInt());
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SERVER_RATE_LIMIT_REACHED),
+                        anyInt());
     }
 
     @Test
@@ -997,7 +1041,8 @@ public class FetchCustomAudienceImplTest {
                         DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
 
         verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(eq(API_NAME), eq(STATUS_SUCCESS), anyInt());
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
     }
 
     private FetchCustomAudienceTestCallback callFetchCustomAudience(
