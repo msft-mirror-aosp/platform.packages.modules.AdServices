@@ -58,7 +58,8 @@ public class FledgeAllowListsFilter {
             sLogger.v(
                     "App package name \"%s\" not authorized to call API %d",
                     appPackageName, apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId, appPackageName, STATUS_CALLER_NOT_ALLOWED, /*latencyMs=*/ 0);
             throw new AppNotAllowedException();
         }
     }

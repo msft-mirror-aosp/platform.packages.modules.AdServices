@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import android.annotation.NonNull;
 
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -43,7 +44,7 @@ public class CustomAudienceLoggerFactory {
             if (sSingleton == null) {
                 sSingleton =
                         new CustomAudienceLoggerFactory(
-                                Clock.SYSTEM_CLOCK, AdServicesLoggerImpl.getInstance());
+                                Clock.getInstance(), AdServicesLoggerImpl.getInstance());
             }
         }
 

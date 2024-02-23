@@ -97,5 +97,10 @@ public class FlagsFactory {
         public boolean getFledgeBeaconReportingMetricsEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getFledgeAppPackageNameLoggingEnabled() {
+            return true;
+        }
     }
 }

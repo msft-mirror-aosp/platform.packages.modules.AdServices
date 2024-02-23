@@ -448,6 +448,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES =
             "key_measurement_enable_session_stable_kill_switches";
 
+    public static final String KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED =
+            "fledge_app_package_name_logging_enabled";
+
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -1029,6 +1032,10 @@ public final class FlagsConstants {
     // New fledge beacon reporting metrics flag
     public static final String KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED =
             "fledge_beacon_reporting_metrics_enabled";
+
+    // Fledge auction server API usage metrics flag
+    public static final String KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED =
+            "fledge_auction_server_api_usage_metrics_enabled";
 
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
