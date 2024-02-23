@@ -10648,36 +10648,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetMddLoggerKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        boolean defaultValue = MDD_LOGGER_KILL_SWITCH;
-        expect.withMessage("getMddLoggerKillSwitch() by default")
-                .that(mPhFlags.getMddLoggerKillSwitch())
-                .isEqualTo(defaultValue);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !defaultValue;
-        setMddLoggerKillSwitch(phOverridingValue);
-        expect.withMessage("getMddLoggerKillSwitch() when set by device config")
-                .that(mPhFlags.getMddLoggerKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMddLoggerKillSwitch_globalOverride() {
-        enableGlobalKillSwitch();
-        setMddLoggerKillSwitch(false);
-
-        // should be true because global kill-switch is on
-        expect.withMessage("getMddLoggerKillSwitch() when the global kill switch is on")
-                .that(mPhFlags.getMddLoggerKillSwitch())
-                .isTrue();
-    }
-
-    @Test
     public void testGetMddLoggerEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
