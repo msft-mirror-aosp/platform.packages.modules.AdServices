@@ -26,6 +26,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Build;
 import android.util.Pair;
 
@@ -132,11 +133,16 @@ public class FledgeAuthorizationFilter {
 
         if (!PermissionHelper.hasCustomAudiencesPermission(context, appPackageName)) {
             sLogger.v("Permission not declared by caller in API %d", apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId,
-                    appPackageName,
-                    STATUS_PERMISSION_NOT_REQUESTED,
-                    /*latencyMs=*/ 0);
+            final long token = Binder.clearCallingIdentity();
+            try {
+                mAdServicesLogger.logFledgeApiCallStats(
+                        apiNameLoggingId,
+                        appPackageName,
+                        STATUS_PERMISSION_NOT_REQUESTED,
+                        /*latencyMs=*/ 0);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
             throw new SecurityException(
                     AdServicesStatusUtils
                             .SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
