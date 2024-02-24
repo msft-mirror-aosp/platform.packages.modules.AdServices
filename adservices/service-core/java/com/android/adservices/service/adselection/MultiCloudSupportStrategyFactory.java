@@ -16,13 +16,26 @@
 
 package com.android.adservices.service.adselection;
 
+import android.annotation.NonNull;
+import android.content.Context;
+
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptorImpl;
+import com.android.adservices.service.adselection.encryption.ProtectedServersEncryptionConfigManager;
+import com.android.adservices.service.adselection.encryption.ProtectedServersEncryptionConfigManagerBase;
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 
 /** Factory for {@link MultiCloudSupportStrategy} */
 public class MultiCloudSupportStrategyFactory {
 
     private static class MultiCloudEnabledStrategy implements MultiCloudSupportStrategy {
-        private String mAllowlist;
+        private final String mAllowlist;
 
         MultiCloudEnabledStrategy(String allowlist) {
             this.mAllowlist = allowlist;
@@ -32,12 +45,62 @@ public class MultiCloudSupportStrategyFactory {
         public CoordinatorOriginUriValidator getCoordinatorOriginUriValidator() {
             return CoordinatorOriginUriValidator.createEnabledInstance(mAllowlist);
         }
+
+        @Override
+        // TODO(b/297025763) : Use process stable flags
+        public ObliviousHttpEncryptor getObliviousHttpEncryptor(
+                @NonNull Context context, @NonNull Flags flags) {
+            return new ObliviousHttpEncryptorImpl(
+                    getProtectedServersEncryptionConfigManager(context, flags),
+                    AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
+                    AdServicesExecutors.getLightWeightExecutor());
+        }
+
+        private ProtectedServersEncryptionConfigManagerBase
+                getProtectedServersEncryptionConfigManager(
+                        @NonNull Context context, @NonNull Flags flags) {
+            AdServicesHttpsClient adServicesHttpsClient =
+                    new AdServicesHttpsClient(
+                            AdServicesExecutors.getBlockingExecutor(),
+                            CacheProviderFactory.create(context, flags));
+            return new ProtectedServersEncryptionConfigManager(
+                    AdSelectionServerDatabase.getInstance(context)
+                            .protectedServersEncryptionConfigDao(),
+                    flags,
+                    adServicesHttpsClient,
+                    AdServicesExecutors.getLightWeightExecutor());
+        }
     }
 
     private static class MultiCloudDisabledStrategy implements MultiCloudSupportStrategy {
         @Override
         public CoordinatorOriginUriValidator getCoordinatorOriginUriValidator() {
             return CoordinatorOriginUriValidator.createDisabledInstance();
+        }
+
+        @Override
+        // TODO(b/297025763) : Use process stable flags
+        public ObliviousHttpEncryptor getObliviousHttpEncryptor(
+                @androidx.annotation.NonNull Context context,
+                @androidx.annotation.NonNull Flags flags) {
+            return new ObliviousHttpEncryptorImpl(
+                    getProtectedServersEncryptionConfigManager(context, flags),
+                    AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
+                    AdServicesExecutors.getLightWeightExecutor());
+        }
+
+        private ProtectedServersEncryptionConfigManagerBase
+                getProtectedServersEncryptionConfigManager(
+                        @NonNull Context context, @NonNull Flags flags) {
+            AdServicesHttpsClient adServicesHttpsClient =
+                    new AdServicesHttpsClient(
+                            AdServicesExecutors.getBlockingExecutor(),
+                            CacheProviderFactory.create(context, flags));
+            return new AdSelectionEncryptionKeyManager(
+                    AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
+                    flags,
+                    adServicesHttpsClient,
+                    AdServicesExecutors.getLightWeightExecutor());
         }
     }
 
@@ -50,4 +113,6 @@ public class MultiCloudSupportStrategyFactory {
 
         return new MultiCloudDisabledStrategy();
     }
+
+
 }

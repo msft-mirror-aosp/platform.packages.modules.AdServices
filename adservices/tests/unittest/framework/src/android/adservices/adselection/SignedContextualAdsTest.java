@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
@@ -55,6 +56,17 @@ public class SignedContextualAdsTest {
         assertThat(contextualAds.getAdsWithBid())
                 .isEqualTo(SignedContextualAdsFixture.ADS_WITH_BID);
         assertThat(contextualAds.getSignature()).isEqualTo(TEST_SIGNATURE);
+    }
+
+    @Test
+    public void testBuildContextualAdsBuilderSuccess() {
+        AdTechIdentifier newAdTech = AdTechIdentifier.fromString("new-buyer");
+        SignedContextualAds contextualAds = SignedContextualAdsFixture.aSignedContextualAds();
+        assertThat(contextualAds.getBuyer()).isNotEqualTo(newAdTech);
+
+        SignedContextualAds anotherContextualAds =
+                new SignedContextualAds.Builder(contextualAds).setBuyer(newAdTech).build();
+        assertThat(anotherContextualAds.getBuyer()).isEqualTo(newAdTech);
     }
 
     @Test

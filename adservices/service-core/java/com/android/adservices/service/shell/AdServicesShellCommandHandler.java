@@ -65,6 +65,9 @@ public final class AdServicesShellCommandHandler {
             "is-allowed-protected-signals-access";
 
     @VisibleForTesting
+    static final String CMD_IS_ALLOWED_AD_SELECTION_ACCESS = "is-allowed-ad-selection-access";
+
+    @VisibleForTesting
     static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
 
     @VisibleForTesting
@@ -87,6 +90,13 @@ public final class AdServicesShellCommandHandler {
                     + " <package_name> <enrollment_id>\n"
                     + "    Checks if the given enrollment id is allowed to use the Protected "
                     + "Signals APIs in the given app.";
+
+    @VisibleForTesting
+    static final String HELP_IS_ALLOWED_AD_SELECTION_ACCESS =
+            CMD_IS_ALLOWED_AD_SELECTION_ACCESS
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Ad "
+                    + "Selection APIs in the given app.";
 
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
@@ -212,6 +222,7 @@ public final class AdServicesShellCommandHandler {
         pw.printf("%s\n\n", HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
         pw.printf("%s\n\n", HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
         pw.printf("%s\n\n", HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_AD_SELECTION_ACCESS);
         pw.printf("%s\n\n", HELP_IS_ALLOWED_TOPICS_ACCESS);
         pw.printf("%s\n\n", CustomAudienceListCommand.HELP);
         pw.printf("%s\n\n", CustomAudienceViewCommand.HELP);
@@ -229,6 +240,7 @@ public final class AdServicesShellCommandHandler {
             case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
             case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
             default:
@@ -263,6 +275,9 @@ public final class AdServicesShellCommandHandler {
                 break;
             case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
                 helpMsg = HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+                break;
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
+                helpMsg = HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
                 break;
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 expectedArgs = 3;
@@ -314,6 +329,17 @@ public final class AdServicesShellCommandHandler {
                 Log.i(
                         TAG,
                         "isAllowedProtectedSignalsAccess("
+                                + pkgName
+                                + ", "
+                                + enrollmentId
+                                + ": "
+                                + isValid);
+                break;
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
+                isValid = AppManifestConfigHelper.isAllowedAdSelectionAccess(pkgName, enrollmentId);
+                Log.i(
+                        TAG,
+                        "isAllowedAdSelectionAccess("
                                 + pkgName
                                 + ", "
                                 + enrollmentId

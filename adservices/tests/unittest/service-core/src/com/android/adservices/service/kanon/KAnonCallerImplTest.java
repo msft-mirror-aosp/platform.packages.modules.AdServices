@@ -81,18 +81,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
-import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
-import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
-import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.TokensSet;
-import private_join_and_compute.anonymous_counting_tokens.Transcript;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
@@ -101,6 +89,18 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+
+import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
+import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
+import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.TokensSet;
+import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KAnonCallerImplTest {
@@ -199,7 +199,7 @@ public class KAnonCallerImplTest {
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong()))
+                        any(byte[].class), anyLong(), anyLong(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         createAndPersistKAnonMessages();
         List<KAnonMessageEntity> kanonMessageList =
@@ -237,7 +237,7 @@ public class KAnonCallerImplTest {
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong()))
+                        any(byte[].class), anyLong(), anyLong(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         // we are persisting 2 messages and setting match size as 1
         createAndPersistKAnonMessages();
@@ -262,7 +262,7 @@ public class KAnonCallerImplTest {
         setupMockWithCountDownLatch(countDownLatch);
         createAndPersistKAnonMessages();
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong()))
+                        any(byte[].class), anyLong(), anyLong(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         BinaryHttpMessage binaryHttpMessage =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -437,6 +437,25 @@ public class KAnonCallerImplTest {
         assertThat(kanonMessageListAfter.size()).isEqualTo(kanonMessageList.size());
     }
 
+    @Test
+    public void getPathToJoinInBinaryHttp_shouldReturnCorrectString() {
+
+        String expectedString =
+                "/v2/types/fledge/sets/nEW2Xx96S2B1zRqAgXsX4mRl0MAhgKcYZBb-Lsa5djg:join";
+        KAnonMessageEntity kAnonMessageEntity =
+                KAnonMessageEntity.builder()
+                        .setMessageId(1L)
+                        .setAdSelectionId(12L)
+                        .setCorrespondingClientParametersExpiryInstant(Instant.now())
+                        .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
+                        .setHashSet("nEW2Xx96S2B1zRqAgXsX4mRl0MAhgKcYZBb-Lsa5djg")
+                        .build();
+
+        String actualString = mKAnonCaller.getPathToJoinInBinaryHttp(kAnonMessageEntity);
+
+        assertThat(actualString).isEqualTo(expectedString);
+    }
+
     private void createAndPersistKAnonMessages() {
         DBKAnonMessage dbKAnonMessage =
                 DBKAnonMessage.builder()
@@ -554,7 +573,7 @@ public class KAnonCallerImplTest {
         when(mockAnonymousCountingTokens.generateTokensRequest(any(), any(), any(), any(), any()))
                 .thenReturn(generatedTokensRequestProto);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyInt(), anyInt()))
+                        any(byte[].class), anyInt(), anyInt(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(new byte[0])));
         when(mockKAnonOblivivousHttpEncryptorImpl.decryptBytes(any(), anyInt()))
                 .thenReturn(new byte[0]);

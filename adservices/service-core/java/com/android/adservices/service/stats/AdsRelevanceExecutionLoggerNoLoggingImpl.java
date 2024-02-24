@@ -20,16 +20,16 @@ import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 
-/** Replacement for {@link FledgeAuctionServerExecutionLoggerImpl} if
- * Fledge auction server metrics is disabled. */
-public class FledgeAuctionServerExecutionLoggerNoLoggingImpl
-        implements FledgeAuctionServerExecutionLogger{
+/** Replacement for {@link AdsRelevanceExecutionLoggerImpl} if
+ * Ads Relevance metrics is disabled. */
+public class AdsRelevanceExecutionLoggerNoLoggingImpl
+        implements AdsRelevanceExecutionLogger {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private String mApiName;
 
-    public FledgeAuctionServerExecutionLoggerNoLoggingImpl(@NonNull String apiName) {
+    public AdsRelevanceExecutionLoggerNoLoggingImpl(@NonNull String apiName) {
         this.mApiName = apiName;
     }
 
@@ -39,7 +39,7 @@ public class FledgeAuctionServerExecutionLoggerNoLoggingImpl
      * @param resultCode Api usage status code.
      */
     @Override
-    public void endAuctionServerApi(int resultCode) {
-        sLogger.v("Disabled end of auction server API logging process for API: " + mApiName);
+    public void endAdsRelevanceApi(int resultCode) {
+        sLogger.v("Disabled end of Ads Relevance API logging process for API: " + mApiName);
     }
 }

@@ -32,4 +32,5 @@ interface ISdkToServiceCallback {
                    in Bundle params,
                    in ILoadSdkCallback callback);
    oneway void logLatenciesFromSandbox(in SandboxLatencyInfo sandboxLatencyInfo);
+   oneway void logSandboxActivityApiLatencyFromSandbox(int method, int callResult, int latencyMillis);
 }

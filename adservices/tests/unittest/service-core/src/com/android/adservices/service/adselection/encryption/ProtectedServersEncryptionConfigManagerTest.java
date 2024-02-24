@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection.encryption;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.AUCTION_KEY_1;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.AUCTION_KEY_2;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION;
+import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION_ORIGIN;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR;
 
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.COORDINATOR_URL_JOIN;
@@ -297,7 +298,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
                         .get();
 
         byte[] expectedPublicKey =
@@ -322,7 +323,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
                         .get();
 
         byte[] expectedPublicKey =
@@ -345,7 +346,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
                         .get();
 
         byte[] expectedPublicKey =
@@ -400,6 +401,11 @@ public class ProtectedServersEncryptionConfigManagerTest {
         @Override
         public String getFledgeAuctionServerAuctionKeyFetchUri() {
             return AUCTION_KEY_FETCH_DEFAULT_URI;
+        }
+
+        @Override
+        public String getFledgeAuctionServerCoordinatorUrlAllowlist() {
+            return COORDINATOR_URL_AUCTION;
         }
 
         @Override

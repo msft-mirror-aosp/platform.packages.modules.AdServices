@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
@@ -29,13 +30,16 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
-public class FledgeAuctionServerExecutionLoggerFactory {
+public class AdsRelevanceExecutionLoggerFactory {
 
     @VisibleForTesting
     static final String GET_AD_SELECTION_DATA_API_NAME = "GET_AD_SELECTION_DATA";
 
     @VisibleForTesting
     static final String PERSIST_AD_SELECTION_RESULT_API_NAME = "PERSIST_AD_SELECTION_RESULT";
+
+    @VisibleForTesting
+    static final String UPDATE_SIGNALS_API_NAME = "UPDATE_SIGNALS";
 
     @VisibleForTesting
     static final String UNKNOWN_API_NAME = "UNKNOWN_API_NAME";
@@ -50,11 +54,9 @@ public class FledgeAuctionServerExecutionLoggerFactory {
 
     private final int mApiNameCode;
 
-    private String mApiName;
-
     private final boolean mFledgeAuctionServerApiUsageMetricsEnabled;
 
-    public FledgeAuctionServerExecutionLoggerFactory(
+    public AdsRelevanceExecutionLoggerFactory(
             @NonNull String callerAppPackageName,
             @NonNull CallerMetadata callerMetadata,
             @NonNull Clock clock,
@@ -73,34 +75,51 @@ public class FledgeAuctionServerExecutionLoggerFactory {
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
         mApiNameCode = apiNameCode;
-        if (apiNameCode == AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT) {
-            mApiName = PERSIST_AD_SELECTION_RESULT_API_NAME;
-        } else if (apiNameCode == AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA) {
-            mApiName = GET_AD_SELECTION_DATA_API_NAME;
-        } else {
-            mApiName = UNKNOWN_API_NAME;
-        }
     }
 
     /**
-     * Gets the {@link FledgeAuctionServerExecutionLogger} implementation to use,
-     * dependent on whether the fledge auction server metrics is enabled.
+     * Gets the {@link AdsRelevanceExecutionLogger} implementation to use,
+     * dependent on whether the Ads Relevance Api metrics is enabled.
      *
-     * @return an {@link FledgeAuctionServerExecutionLoggerImpl} instance if the fledge auction
-     *      server metrics is enabled, or {@link FledgeAuctionServerExecutionLoggerNoLoggingImpl}
+     * @return an {@link AdsRelevanceExecutionLoggerImpl} instance if the Ads Relevance
+     *      metrics is enabled, or {@link AdsRelevanceExecutionLoggerNoLoggingImpl}
      *      instance otherwise
      */
-    public FledgeAuctionServerExecutionLogger getFledgeAuctionServerExecutionLogger() {
+    public AdsRelevanceExecutionLogger getAdsRelevanceExecutionLogger() {
+        return switch (mApiNameCode) {
+            case AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT ->
+                    getAuctionServerApiExecutionLogger(PERSIST_AD_SELECTION_RESULT_API_NAME);
+            case AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA ->
+                    getAuctionServerApiExecutionLogger(GET_AD_SELECTION_DATA_API_NAME);
+            case AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS ->
+                    getProtectedSignalsApiExecutionLogger(UPDATE_SIGNALS_API_NAME);
+            default -> new AdsRelevanceExecutionLoggerNoLoggingImpl(UNKNOWN_API_NAME);
+        };
+    }
+
+    private AdsRelevanceExecutionLogger getAuctionServerApiExecutionLogger(
+            @NonNull String apiName) {
         if (mFledgeAuctionServerApiUsageMetricsEnabled) {
-            return new FledgeAuctionServerExecutionLoggerImpl(
+            return new AdsRelevanceExecutionLoggerImpl(
                     mCallerAppPackageName,
                     mCallerMetadata,
                     mClock,
                     mAdServicesLogger,
-                    mApiName,
+                    apiName,
                     mApiNameCode);
         } else {
-            return new FledgeAuctionServerExecutionLoggerNoLoggingImpl(mApiName);
+            return new AdsRelevanceExecutionLoggerNoLoggingImpl(apiName);
         }
+    }
+
+    private AdsRelevanceExecutionLogger getProtectedSignalsApiExecutionLogger(
+            @NonNull String apiName) {
+        return new AdsRelevanceExecutionLoggerImpl(
+                mCallerAppPackageName,
+                mCallerMetadata,
+                mClock,
+                mAdServicesLogger,
+                apiName,
+                mApiNameCode);
     }
 }

@@ -18,6 +18,10 @@ package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
 
+import android.net.Uri;
+
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.ohttp.ObliviousHttpClient;
@@ -59,10 +63,10 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     /** Encrypts the given byte and stores the encryption context data keyed by given contextId */
     @Override
     public FluentFuture<byte[]> encryptBytes(
-            byte[] plainText, long contextId, long keyFetchTimeoutMs) {
+            byte[] plainText, long contextId, long keyFetchTimeoutMs, @Nullable Uri coordinator) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.OHTTP_ENCRYPT_BYTES);
         return mEncryptionConfigManager
-                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, null)
+                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, coordinator)
                 .transform(
                         key -> {
                             byte[] serializedRequest =

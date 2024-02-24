@@ -16,6 +16,7 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -30,6 +31,7 @@ import android.adservices.utils.ScenarioDispatcher;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.annotations.SetFlagDisabled;
 import com.android.adservices.common.annotations.SetFlagEnabled;
 
 import org.junit.Test;
@@ -38,6 +40,7 @@ import java.util.concurrent.ExecutionException;
 
 /** End-to-end test for report impression. */
 @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+@SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
 public final class AdSelectionReportingTest extends FledgeScenarioTest {
 
     @FlakyTest(bugId = 303534327)
