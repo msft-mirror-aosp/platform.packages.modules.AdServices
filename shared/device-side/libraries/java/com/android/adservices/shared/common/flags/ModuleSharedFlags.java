@@ -58,4 +58,13 @@ public interface ModuleSharedFlags {
     default int getJobSchedulingLoggingSamplingRate() {
         return DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
     }
+
+    /**
+     * Base64 encoded String which describes a map of sampling interval to a list of error codes.
+     */
+    @ConfigFlag String ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL = "";
+
+    default String getEncodedErrorCodeListPerSampleInterval() {
+        return ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
+    }
 }

@@ -57,6 +57,9 @@ java_library {
     ],
     static_libs: [
         "adservices-shared-util",
+        "adservices-shared-proto-lite",
+        "adservices-shared-proto-utils",
+        "adservices-shared-common",
     ],
     libs: [
         "androidx.annotation_annotation",
