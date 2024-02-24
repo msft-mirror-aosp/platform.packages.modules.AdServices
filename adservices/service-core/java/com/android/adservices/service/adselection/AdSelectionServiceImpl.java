@@ -356,7 +356,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
-        int callingUid = getCallingUid(apiName);
+        int callingUid = getCallingUid(apiName, inputParams.getCallerPackageName());
         final DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
                 () -> {
@@ -414,7 +414,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
-        int callingUid = getCallingUid(apiName);
+        int callingUid = getCallingUid(apiName, inputParams.getCallerPackageName());
         final DevContext devContext = mDevContextFilter.createDevContext();
         final long overallTimeout =
                 BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerOverallTimeoutMs);
@@ -521,7 +521,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
-        int callingUid = getCallingUid(apiName);
+        int callingUid = getCallingUid(apiName, inputParams.getCallerPackageName());
 
         DevContext devContext = mDevContextFilter.createDevContext();
         final boolean auctionServerEnabledForUpdateHistogram =
@@ -816,7 +816,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
-        int callingUid = getCallingUid(apiName);
+        int callingUid = getCallingUid(apiName, inputParams.getCallerPackageName());
 
         DevContext devContext = mDevContextFilter.createDevContext();
         mLightweightExecutor.execute(
@@ -862,7 +862,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        int callingUid = getCallingUid(apiName);
+        int callingUid = getCallingUid(apiName, requestParams.getCallerPackageName());
 
         // ImpressionReporter enables Auction Server flow reporting and sets the stage for Phase 2
         // in go/rb-rm-unified-flow-reporting whereas ImpressionReporterLegacy is the logic before
@@ -927,7 +927,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
-        int callerUid = getCallingUid(apiName);
+        int callerUid = getCallingUid(apiName, inputParams.getCallerPackageName());
         DevContext devContext = mDevContextFilter.createDevContext();
 
         // Get an instance of measurement service
@@ -993,7 +993,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
-                        getCallingUid(apiName),
+                        getCallingUid(apiName, request.getCallerPackageName()),
                         mDevContextFilter.createDevContext());
         setter.setAppInstallAdvertisers(request, callback);
     }
@@ -1018,7 +1018,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(
                 mContext, inputParams.getCallerPackageName(), apiName);
 
-        final int callingUid = getCallingUid(apiName);
+        final int callingUid = getCallingUid(apiName, inputParams.getCallerPackageName());
         final int adCounterHistogramAbsoluteMaxTotalEventCount =
                 BinderFlagReader.readFlag(
                         mFlags::getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount);
@@ -1120,11 +1120,25 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 callback);
     }
 
-    private int getCallingUid(int apiNameLoggingId) {
+    private int getCallingUid(int apiNameLoggingId) throws IllegalStateException {
+        return getCallingUid(apiNameLoggingId, null);
+    }
+
+    private int getCallingUid(int apiNameLoggingId, String callerAppPackageName)
+            throws IllegalStateException {
         try {
             return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
-            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_INTERNAL_ERROR, 0);
+            final long token = Binder.clearCallingIdentity();
+            try {
+                mAdServicesLogger.logFledgeApiCallStats(
+                        apiNameLoggingId,
+                        callerAppPackageName,
+                        STATUS_INTERNAL_ERROR,
+                        /*latencyMs=*/ 0);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
             throw illegalStateException;
         }
     }

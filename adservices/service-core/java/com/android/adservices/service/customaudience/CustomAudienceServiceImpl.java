@@ -41,6 +41,7 @@ import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceService;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
@@ -648,11 +649,16 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         try {
             return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId,
-                    callerAppPackageName,
-                    STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+            final long token = Binder.clearCallingIdentity();
+            try {
+                mAdServicesLogger.logFledgeApiCallStats(
+                        apiNameLoggingId,
+                        callerAppPackageName,
+                        STATUS_INTERNAL_ERROR,
+                        /*latencyMs=*/ 0);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
             throw illegalStateException;
         }
     }
