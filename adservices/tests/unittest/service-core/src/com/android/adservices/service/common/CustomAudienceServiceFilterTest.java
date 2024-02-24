@@ -202,7 +202,12 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAdTechAllowed(mSpyContext, CALLER_PACKAGE_NAME, SELLER_VALID, API_NAME);
+                .assertAdTechAllowed(
+                        mSpyContext,
+                        CALLER_PACKAGE_NAME,
+                        SELLER_VALID,
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -289,7 +294,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         .build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
-                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
     }
 
     @Test
@@ -305,14 +310,14 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 DevContext.createForDevOptionsDisabled());
 
         verify(mFledgeAuthorizationFilterSpy, never())
-                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
     }
 
     @Test
     public void testFilterRequest_appNotInAllowlist_throws() {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
-                .assertAppCanUsePpapi(CALLER_PACKAGE_NAME, API_NAME);
+                .assertAppInAllowlist(CALLER_PACKAGE_NAME, API_NAME, API_CUSTOM_AUDIENCES);
 
         assertThrows(
                 FledgeAllowListsFilter.AppNotAllowedException.class,
@@ -542,7 +547,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
-                .assertAppCanUsePpapi(CALLER_PACKAGE_NAME, API_NAME);
+                .assertAppInAllowlist(CALLER_PACKAGE_NAME, API_NAME, API_CUSTOM_AUDIENCES);
 
         assertThrows(
                 FledgeAllowListsFilter.AppNotAllowedException.class,

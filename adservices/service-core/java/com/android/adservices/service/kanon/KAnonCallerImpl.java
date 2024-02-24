@@ -55,6 +55,7 @@ import com.android.adservices.service.exception.KAnonSignJoinException;
 import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -67,6 +68,18 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
@@ -85,18 +98,6 @@ import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters
 import private_join_and_compute.anonymous_counting_tokens.Token;
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
-
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 public class KAnonCallerImpl implements KAnonCaller {
 
@@ -124,12 +125,13 @@ public class KAnonCallerImpl implements KAnonCaller {
     // TODO(b/324536970): Control this via flag
     private final String BINARY_HTTP_AUTHORITY_URL =
             "staging-chromekanonymity-pa.sandbox.googleapis.com";
-    private final String JOIN_VERSION = "/v2/";
+    private final String JOIN_VERSION = "v2";
     private final String BB_SIGNATURE_JSON_KEY = "bb_signature";
     private final String NONCE_BYTES_JSON_KEY = "nonce_bytes";
     private final String TOKEN_V0_JSON_KEY = "token_v0";
     private final String ACT_JSON_KEY = "act";
     private final String HTTPS = "https";
+    private final String SET_TYPE;
 
     public KAnonCallerImpl(
             @NonNull ExecutorService lightweightExecutorService,
@@ -178,6 +180,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                         .build();
         mFlags = flags;
         SIGN_BATCH_SIZE = mFlags.getFledgeKAnonSignBatchSize();
+        SET_TYPE = mFlags.getFledgeKAnonSetTypeToSignJoin();
         mAdServicesHttpsClient = adServicesHttpsClient;
         mSchemeParameters = KAnonUtil.getSchemeParameters();
     }
@@ -550,7 +553,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         // Generate Tokens Request using ACT JNI wrapper
         List<String> messagesInString =
                 messageEntities.stream()
-                        .map(KAnonMessageEntity::getHashSet)
+                        .map(this::getStringToSignJoinFromMessage)
                         .collect(Collectors.toList());
         MessagesSet messagesSet = MessagesSet.newBuilder().addAllMessage(messagesInString).build();
         Pair<GeneratedTokensRequestProto, AdServicesHttpClientRequest>
@@ -591,6 +594,10 @@ public class KAnonCallerImpl implements KAnonCaller {
                             return immediateFailedFuture(e);
                         },
                         mLightweightExecutorService);
+    }
+
+    private String getStringToSignJoinFromMessage(KAnonMessageEntity kAnonMessageEntity) {
+        return String.format("types/%s/sets/%s", SET_TYPE, kAnonMessageEntity.getHashSet());
     }
 
     private Pair<GeneratedTokensRequestProto, AdServicesHttpClientRequest> generateTokenRequest(
@@ -749,7 +756,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                                 .setMethod(AdServicesHttpUtil.HttpMethodType.POST.name())
                                 .setScheme(HTTPS)
                                 .setAuthority(BINARY_HTTP_AUTHORITY_URL)
-                                .setPath(JOIN_VERSION + message.getHashSet() + ":join")
+                                .setPath(getPathToJoinInBinaryHttp(message))
                                 .build())
                 .setHeaderFields(
                         Fields.builder()
@@ -768,6 +775,11 @@ public class KAnonCallerImpl implements KAnonCaller {
                 .build();
     }
 
+    @VisibleForTesting
+    String getPathToJoinInBinaryHttp(KAnonMessageEntity message) {
+        return String.format("/%s/%s:join", JOIN_VERSION, getStringToSignJoinFromMessage(message));
+    }
+
     /** This method makes a JOIN for the given message and token. */
     private FluentFuture<AdServicesHttpClientResponse> doJoinRequest(
             KAnonMessageEntity message, Token currentToken) {
@@ -778,7 +790,8 @@ public class KAnonCallerImpl implements KAnonCaller {
                             mKAnonObliviousHttpEncryptor.encryptBytes(
                                     dataInBinaryHttpMessage,
                                     message.getAdSelectionId(),
-                                    mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs()))
+                                    mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs(),
+                                    null))
                     .transformAsync(
                             byteRequest ->
                                     immediateFuture(

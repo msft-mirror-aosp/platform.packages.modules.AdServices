@@ -98,7 +98,9 @@ public class ProtectedAudienceSignatureManagerTest {
     public void testVerifySignature_invalidSignature_returnFalse() {
         byte[] invalidSignature = new byte[] {1, 2, 3};
         SignedContextualAds signedContextualAds =
-                aSignedContextualAds().cloneToBuilder().setSignature(invalidSignature).build();
+                new SignedContextualAds.Builder(aSignedContextualAds())
+                        .setSignature(invalidSignature)
+                        .build();
         String enrollmentId = "enrollment1";
         AdTechIdentifier buyer = signedContextualAds.getBuyer();
 

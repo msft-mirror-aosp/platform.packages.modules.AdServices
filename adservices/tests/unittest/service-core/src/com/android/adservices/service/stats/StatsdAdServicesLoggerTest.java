@@ -1096,6 +1096,10 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         long inputEventDelayMs = 200L;
         long validDelayWindowMs = 1000L;
         String sourceRegistrant = "test_source_registrant";
+        boolean clickDeduplicationEnabled = true;
+        boolean clickDeduplicationEnforced = true;
+        long maxSourcesPerClick = 1;
+        boolean clickUnderLimit = true;
 
         MeasurementClickVerificationStats stats =
                 MeasurementClickVerificationStats.builder()
@@ -1106,6 +1110,10 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setInputEventDelayMillis(inputEventDelayMs)
                         .setValidDelayWindowMillis(validDelayWindowMs)
                         .setSourceRegistrant(sourceRegistrant)
+                        .setClickDeduplicationEnabled(clickDeduplicationEnabled)
+                        .setClickDeduplicationEnforced(clickDeduplicationEnforced)
+                        .setMaxSourcesPerClick(maxSourcesPerClick)
+                        .setCurrentRegistrationUnderClickDeduplicationLimit(clickUnderLimit)
                         .build();
 
         doNothing()
@@ -1119,7 +1127,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyBoolean(),
                                         anyLong(),
                                         anyLong(),
-                                        anyString()));
+                                        anyString(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyLong(),
+                                        anyBoolean()));
 
         // Invoke logging call.
         mLogger.logMeasurementClickVerificationStats(stats);
@@ -1135,8 +1147,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(systemClickVerificationEnabled),
                                 eq(inputEventDelayMs),
                                 eq(validDelayWindowMs),
-                                eq("")); // App package name not in allow list.
-
+                                eq(""), // App package name not in allow list.
+                                eq(clickDeduplicationEnabled),
+                                eq(clickDeduplicationEnforced),
+                                eq(maxSourcesPerClick),
+                                eq(clickUnderLimit));
         verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
