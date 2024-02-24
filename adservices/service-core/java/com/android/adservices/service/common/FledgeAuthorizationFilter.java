@@ -56,6 +56,8 @@ import java.util.Objects;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class FledgeAuthorizationFilter {
+
+    @VisibleForTesting public static final String INVALID_API_TYPE = "Invalid apiType: %d";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final PackageManager mPackageManager;
     @NonNull private final EnrollmentDao mEnrollmentDao;
@@ -221,8 +223,7 @@ public class FledgeAuthorizationFilter {
             dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
         }
         int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
-        EnrollmentData enrollmentData =
-                mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
+        EnrollmentData enrollmentData = getEnrollmentData(adTechIdentifier, apiType);
 
         if (enrollmentData == null) {
             sLogger.v(
@@ -245,25 +246,7 @@ public class FledgeAuthorizationFilter {
             throw new AdTechNotAllowedException();
         }
 
-        boolean isAllowedAccess;
-        if (apiType == API_CUSTOM_AUDIENCES) {
-            isAllowedAccess =
-                    AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                            appPackageName, enrollmentData.getEnrollmentId());
-        } else if (apiType == API_PROTECTED_SIGNALS) {
-            isAllowedAccess =
-                    AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
-                            appPackageName, enrollmentData.getEnrollmentId());
-        } else if (apiType == API_AD_SELECTION) {
-            isAllowedAccess =
-                    AppManifestConfigHelper.isAllowedAdSelectionAccess(
-                            appPackageName, enrollmentData.getEnrollmentId());
-        } else {
-            throw new IllegalStateException(
-                    String.format(Locale.ENGLISH, "Invalid apiType: %d", apiType));
-        }
-
-        if (!isAllowedAccess) {
+        if (!isAllowedAccess(appPackageName, apiType, enrollmentData)) {
             sLogger.v(
                     "App package name \"%s\" with ad tech identifier \"%s\" not authorized to call"
                             + " API %d",
@@ -306,6 +289,64 @@ public class FledgeAuthorizationFilter {
         }
     }
 
+    private EnrollmentData getEnrollmentData(AdTechIdentifier adTechIdentifier, int apiType) {
+        if (apiType == API_CUSTOM_AUDIENCES) {
+            return mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
+        } else if (apiType == API_PROTECTED_SIGNALS) {
+            return mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(adTechIdentifier);
+        } else if (apiType == API_AD_SELECTION) {
+            EnrollmentData caEnrollment =
+                    mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
+            if (caEnrollment == null) {
+                return mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(adTechIdentifier);
+            }
+            return caEnrollment;
+        } else {
+            throw new IllegalStateException(String.format(INVALID_API_TYPE, apiType));
+        }
+    }
+
+    private Pair<AdTechIdentifier, EnrollmentData> getAdTechIdentifierEnrollmentDataPair(
+            Uri uriForAdTech, int apiType) {
+        if (apiType == API_CUSTOM_AUDIENCES) {
+            return mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                    uriForAdTech);
+        } else if (apiType == API_PROTECTED_SIGNALS) {
+            return mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(uriForAdTech);
+        } else if (apiType == API_AD_SELECTION) {
+            Pair<AdTechIdentifier, EnrollmentData> caEnrollment =
+                    mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                            uriForAdTech);
+            if (caEnrollment == null) {
+                return mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        uriForAdTech);
+            }
+            return caEnrollment;
+        } else {
+            throw new IllegalStateException(
+                    String.format(Locale.ENGLISH, INVALID_API_TYPE, apiType));
+        }
+    }
+
+    private boolean isAllowedAccess(
+            String appPackageName,
+            @AppManifestConfigCall.ApiType int apiType,
+            EnrollmentData enrollmentData) {
+        if (apiType == API_CUSTOM_AUDIENCES) {
+            return AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
+                    appPackageName, enrollmentData.getEnrollmentId());
+        } else if (apiType == API_PROTECTED_SIGNALS) {
+            return AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
+                    appPackageName, enrollmentData.getEnrollmentId());
+        } else if (apiType == API_AD_SELECTION) {
+            return AppManifestConfigHelper.isAllowedAdSelectionAccess(
+                    appPackageName, enrollmentData.getEnrollmentId());
+        } else {
+            throw new IllegalStateException(
+                    String.format(Locale.ENGLISH, INVALID_API_TYPE, apiType));
+        }
+    }
+
     /**
      * Extract and return an {@link AdTechIdentifier} from the given {@link Uri} after checking if
      * the ad tech is enrolled and authorized to perform the operation for the package.
@@ -336,9 +377,8 @@ public class FledgeAuthorizationFilter {
             dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
         }
         int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
-        // TODO(b/322358157): Check PAS enrollment if apiType = API_PROTECTED_SIGNALS
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
-                mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(uriForAdTech);
+                getAdTechIdentifierEnrollmentDataPair(uriForAdTech, apiType);
 
         if (enrollmentResult == null) {
             sLogger.v(
@@ -364,23 +404,7 @@ public class FledgeAuthorizationFilter {
 
         int failureReason;
 
-        boolean isAllowedAccess;
-        if (apiType == API_CUSTOM_AUDIENCES) {
-            isAllowedAccess =
-                    AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                            appPackageName, enrollmentData.getEnrollmentId());
-        } else if (apiType == API_PROTECTED_SIGNALS) {
-            isAllowedAccess =
-                    AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
-                            appPackageName, enrollmentData.getEnrollmentId());
-        } else if (apiType == API_AD_SELECTION) {
-            isAllowedAccess =
-                    AppManifestConfigHelper.isAllowedAdSelectionAccess(
-                            appPackageName, enrollmentData.getEnrollmentId());
-        } else {
-            throw new IllegalStateException(
-                    String.format(Locale.ENGLISH, "Invalid apiType: %d", apiType));
-        }
+        boolean isAllowedAccess = isAllowedAccess(appPackageName, apiType, enrollmentData);
 
         boolean isEnrollmentBlocklisted =
                 FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());

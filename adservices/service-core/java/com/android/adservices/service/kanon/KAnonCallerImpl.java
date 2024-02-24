@@ -33,7 +33,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.LoggerFactory;
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.kanon.ClientParametersDao;
 import com.android.adservices.data.kanon.DBClientParameters;
 import com.android.adservices.data.kanon.DBServerParameters;
@@ -100,7 +100,6 @@ import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 
 public class KAnonCallerImpl implements KAnonCaller {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @NonNull private ObliviousHttpEncryptor mKAnonObliviousHttpEncryptor;
     @NonNull private ListeningExecutorService mLightweightExecutorService;
@@ -217,7 +216,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                 new FutureCallback<>() {
                     @Override
                     public void onSuccess(Void result) {
-                        sLogger.v("Sign join process finished");
+                        LogUtil.d("Sign join process finished");
                         mAdServicesLogger.logKAnonSignJoinStatus();
                     }
 
@@ -251,7 +250,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             .catchingAsync(
                                     KAnonSignJoinException.class,
                                     e -> {
-                                        sLogger.v("Error in sign request method");
+                                        LogUtil.d("Error in sign request method");
                                         return FluentFuture.from(
                                                         updateMessagesStatusInDatabase(
                                                                 messagesSublist, FAILED))
@@ -391,14 +390,14 @@ public class KAnonCallerImpl implements KAnonCaller {
         List<DBClientParameters> clientParametersFromDb =
                 mClientParametersDao.getActiveClientParameters(Instant.now());
         if (clientParametersFromDb.isEmpty()) {
-            sLogger.v("Client parameters not found in the database");
+            LogUtil.d("Client parameters not found in the database");
             return Optional.empty();
         } else {
             // TODO(b/324392549): Remove this after updating client param fetch query to search
             // with client id as well.
             DBClientParameters dbClientParameters = clientParametersFromDb.get(0);
             if (!mClientId.equals(dbClientParameters.getClientId())) {
-                sLogger.v(
+                LogUtil.d(
                         "Active client parameters found, but clientId  does not match with"
                                 + " userProfileId");
                 return Optional.empty();
@@ -409,7 +408,7 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     private ListenableFuture<GetServerPublicParamsResponse> fetchNewServerParameters()
             throws KAnonSignJoinException {
-        sLogger.v("Fetching server parameters for KAnon Sign requests");
+        LogUtil.d("Fetching server parameters for KAnon Sign requests");
         Uri getServerParamsUri = Uri.parse(mFlags.getFledgeKAnonFetchServerParamsUrl());
         return FluentFuture.from(
                         immediateFuture(
@@ -429,11 +428,11 @@ public class KAnonCallerImpl implements KAnonCaller {
                         Throwable.class,
                         t -> {
                             if (t.getCause() instanceof AdServicesNetworkException exception) {
-                                sLogger.v(
+                                LogUtil.d(
                                         "Error while making the http call, status code is :"
                                                 + exception.getErrorCode());
                             }
-                            sLogger.v("error while fetching the server param");
+                            LogUtil.d("error while fetching the server param");
                             return immediateFailedFuture(
                                     new KAnonSignJoinException(
                                             "Error while making the http call", t));
@@ -508,7 +507,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                         Throwable.class,
                         t -> {
                             if (t.getCause() instanceof AdServicesNetworkException exception) {
-                                sLogger.v(
+                                LogUtil.d(
                                         "Error while making the http call, status code is :"
                                                 + exception.getErrorCode());
                             }
@@ -538,7 +537,7 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     private ListenableFuture<Void> updateMessagesStatusInDatabase(
             List<KAnonMessageEntity> messages, @KanonMessageEntityStatus int status) {
-        sLogger.v("Updating message status to : " + status);
+        LogUtil.d("Updating message status to : " + status);
         return Futures.submit(
                 () -> mKAnonMessageManager.updateMessagesStatus(messages, status),
                 mLightweightExecutorService);
@@ -571,7 +570,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                         Throwable.class,
                         t -> {
                             if (t.getCause() instanceof AdServicesNetworkException exception) {
-                                sLogger.v(
+                                LogUtil.d(
                                         "Error while making the http call, status code is :"
                                                 + exception.getErrorCode());
                             }
@@ -591,7 +590,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                 .catchingAsync(
                         KAnonSignJoinException.class,
                         e -> {
-                            sLogger.v("Cannot recover tokens");
+                            LogUtil.d("Cannot recover tokens");
                             return immediateFailedFuture(e);
                         },
                         mLightweightExecutorService);
@@ -639,7 +638,7 @@ public class KAnonCallerImpl implements KAnonCaller {
             GeneratedTokensRequestProto generatedTokensRequestProto,
             AdServicesHttpClientResponse getTokensResponseHTTP)
             throws KAnonSignJoinException {
-        sLogger.v("Starting to recover tokens from the GetTokensResponse");
+        LogUtil.d("Starting to recover tokens from the GetTokensResponse");
         GetTokensResponse getTokensResponse;
         try {
             getTokensResponse =
@@ -661,7 +660,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                         mServerPublicParameters);
 
         if (isTokensResponseVerified) {
-            sLogger.v("Tokens have been verified");
+            LogUtil.d("Tokens have been verified");
             return FluentFuture.from(updateMessagesStatusInDatabase(messageEntities, SIGNED))
                     .transformAsync(
                             ignoredVoid ->
@@ -680,7 +679,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                     .catchingAsync(
                             InvalidProtocolBufferException.class,
                             t -> {
-                                sLogger.v("Error while recovering tokens, marking them as failed");
+                                LogUtil.d("Error while recovering tokens, marking them as failed");
                                 return FluentFuture.from(
                                                 updateMessagesStatusInDatabase(
                                                         messageEntities, FAILED))
@@ -695,7 +694,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             },
                             mLightweightExecutorService);
         } else {
-            sLogger.v("Verify tokens failed");
+            LogUtil.d("Verify tokens failed");
             return FluentFuture.from(updateMessagesStatusInDatabase(messageEntities, FAILED))
                     .transformAsync(
                             ignoredVoid ->
@@ -710,7 +709,7 @@ public class KAnonCallerImpl implements KAnonCaller {
             List<KAnonMessageEntity> messageEntities, TokensSet tokensSet) {
         List<ListenableFuture<Void>> joinFuturesList = new ArrayList<>();
         for (int i = 0; i < messageEntities.size(); i++) {
-            sLogger.v(
+            LogUtil.d(
                     "Making join request for message with message adselection id: "
                             + messageEntities.get(i).getAdSelectionId());
             Token token = tokensSet.getTokens(i);
@@ -817,7 +816,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             Throwable.class,
                             t -> {
                                 if (t.getCause() instanceof AdServicesNetworkException exception) {
-                                    sLogger.v(
+                                    LogUtil.d(
                                             "Error while making the http call, status code is :"
                                                     + exception.getErrorCode());
                                 }
@@ -837,7 +836,7 @@ public class KAnonCallerImpl implements KAnonCaller {
      */
     private ListenableFuture<BinaryHttpMessage> deserializeJoinRequest(
             AdServicesHttpClientResponse joinResponse, long contextId) {
-        sLogger.v("Deserializing the decrypted response");
+        LogUtil.d("Deserializing the decrypted response");
         byte[] decryptedOhttpResponse =
                 mKAnonObliviousHttpEncryptor.decryptBytes(
                         BaseEncoding.base64().decode(joinResponse.getResponseBody()), contextId);
@@ -851,7 +850,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     private ListenableFuture<Void> readAndUpdateStatusFromBinaryHttp(
             BinaryHttpMessage binaryHttpMessage, KAnonMessageEntity kAnonMessageEntity) {
         if (binaryHttpMessage.getResponseControlData().getFinalStatusCode() == 200) {
-            sLogger.v(
+            LogUtil.d(
                     "Updating message status in database for message : "
                             + kAnonMessageEntity.getAdSelectionId());
             return updateMessagesStatusInDatabase(List.of(kAnonMessageEntity), JOINED);
