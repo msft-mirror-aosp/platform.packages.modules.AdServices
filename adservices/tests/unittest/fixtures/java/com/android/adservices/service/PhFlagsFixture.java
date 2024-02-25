@@ -265,6 +265,15 @@ public final class PhFlagsFixture {
                 false);
     }
 
+    /** Enables or disables the HTTP cache */
+    public static void overrideHttpClientCacheEnabled(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                Boolean.toString(value),
+                false);
+    }
+
     public static void overrideSdkRequestPermitsPerSecond(int value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,

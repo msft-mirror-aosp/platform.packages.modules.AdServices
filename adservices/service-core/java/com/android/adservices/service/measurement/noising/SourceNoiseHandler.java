@@ -75,7 +75,7 @@ public class SourceNoiseHandler {
             @NonNull Source source) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
         double value = rand.nextDouble();
-        if (value > getRandomAttributionProbability(source)) {
+        if (value >= getRandomizedSourceResponsePickRate(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
             return Collections.emptyList();
         }
@@ -131,13 +131,18 @@ public class SourceNoiseHandler {
         return fakeReports;
     }
 
-    /** @return Probability of selecting random state for attribution */
-    public double getRandomAttributionProbability(@NonNull Source source) {
+    @VisibleForTesting
+    double getRandomizedSourceResponsePickRate(Source source) {
         // Methods on Source and EventReportWindowCalcDelegate that calculate flip probability for
         // the source rely on reporting windows and max reports that are obtained with consideration
         // to install-state and its interaction with configurable report windows and configurable
         // max reports.
-        return convertToDoubleAndLimitDecimal(source.getFlipProbability(mFlags));
+        return source.getFlipProbability(mFlags);
+    }
+
+    /** @return Probability of selecting random state for attribution */
+    public double getRandomizedTriggerRate(@NonNull Source source) {
+        return convertToDoubleAndLimitDecimal(getRandomizedSourceResponsePickRate(source));
     }
 
     private double convertToDoubleAndLimitDecimal(double probability) {

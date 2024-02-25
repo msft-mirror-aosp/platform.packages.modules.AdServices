@@ -149,6 +149,8 @@ import com.android.adservices.service.adselection.EventReporter;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.adselection.MockAdIdWorker;
+import com.android.adservices.service.adselection.MultiCloudSupportStrategy;
+import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -348,7 +350,9 @@ public class FledgeE2ETest {
     @Mock private File mMockDBAdSelectionFile;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
-    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
+    @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy =
+            MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     private MockAdIdWorker mMockAdIdWorker;
     private AdIdFetcher mAdIdFetcher;
@@ -1252,7 +1256,7 @@ public class FledgeE2ETest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptorMock,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
@@ -1414,7 +1418,7 @@ public class FledgeE2ETest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptorMock,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
@@ -3029,7 +3033,7 @@ public class FledgeE2ETest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptorMock,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
@@ -4423,7 +4427,7 @@ public class FledgeE2ETest {
                         mAdSelectionServiceFilterMock,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptorMock,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,

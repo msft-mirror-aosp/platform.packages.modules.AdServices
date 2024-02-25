@@ -119,6 +119,7 @@ public final class AdservicesTestHelper {
      * @deprecated use {@link AdServicesDeviceSupportedRule} instead.
      */
     @Deprecated
+    @SuppressWarnings("InlineMeSuggester")
     public static boolean isDeviceSupported() {
         return AdServicesSupportHelper.getInstance().isDeviceSupported();
     }

@@ -18,8 +18,10 @@ package com.android.adservices.service.measurement.inputverification;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +42,7 @@ import com.android.modules.utils.testing.TestableDeviceConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -389,6 +392,9 @@ public final class ClickVerifierTest {
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
         long registerTimestamp = mFlags.getMeasurementRegistrationInputEventValidWindowMs() / 2;
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
         mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
 
         MeasurementClickVerificationStats stats =
@@ -402,6 +408,10 @@ public final class ClickVerifierTest {
                         .setValidDelayWindowMillis(
                                 mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                         .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .setClickDeduplicationEnabled(true)
+                        .setClickDeduplicationEnforced(true)
+                        .setMaxSourcesPerClick(mFlags.getMeasurementMaxSourcesPerClick())
+                        .setCurrentRegistrationUnderClickDeduplicationLimit(true)
                         .build();
 
         verify(mAdServicesLogger).logMeasurementClickVerificationStats(eq(stats));
@@ -414,6 +424,9 @@ public final class ClickVerifierTest {
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
         long registerTimestamp = mFlags.getMeasurementRegistrationInputEventValidWindowMs() / 2;
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
         mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
 
         MeasurementClickVerificationStats stats =
@@ -427,6 +440,10 @@ public final class ClickVerifierTest {
                         .setValidDelayWindowMillis(
                                 mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                         .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .setClickDeduplicationEnabled(true)
+                        .setClickDeduplicationEnforced(true)
+                        .setMaxSourcesPerClick(mFlags.getMeasurementMaxSourcesPerClick())
+                        .setCurrentRegistrationUnderClickDeduplicationLimit(true)
                         .build();
 
         verify(mAdServicesLogger).logMeasurementClickVerificationStats(eq(stats));
@@ -439,6 +456,9 @@ public final class ClickVerifierTest {
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
         long registerTimestamp = mFlags.getMeasurementRegistrationInputEventValidWindowMs() * 2;
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
         mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
 
         MeasurementClickVerificationStats stats =
@@ -452,10 +472,49 @@ public final class ClickVerifierTest {
                         .setValidDelayWindowMillis(
                                 mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                         .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .setClickDeduplicationEnabled(true)
+                        .setClickDeduplicationEnforced(true)
+                        .setMaxSourcesPerClick(mFlags.getMeasurementMaxSourcesPerClick())
+                        .setCurrentRegistrationUnderClickDeduplicationLimit(true)
                         .build();
 
         verify(mAdServicesLogger).logMeasurementClickVerificationStats(eq(stats));
     }
 
-    // TODO(324309950): Add tests for click deduplication logging.
+    @Test
+    public void testLogClickVerification_inputEventIsDuplicate() {
+        InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
+        when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
+        when(mFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
+        long registerTimestamp = mFlags.getMeasurementRegistrationInputEventValidWindowMs() * 2;
+        when(mFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
+        when(mFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
+        mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
+        mClickVerifier.isInputEventVerifiable(inputEvent, registerTimestamp, SOURCE_REGISTRANT);
+
+        MeasurementClickVerificationStats stats =
+                MeasurementClickVerificationStats.builder()
+                        .setSourceType(Source.SourceType.EVENT.getIntValue())
+                        .setInputEventPresent(true)
+                        .setSystemClickVerificationEnabled(
+                                mFlags.getMeasurementIsClickVerifiedByInputEvent())
+                        .setSystemClickVerificationSuccessful(true)
+                        .setInputEventDelayMillis(registerTimestamp)
+                        .setValidDelayWindowMillis(
+                                mFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                        .setSourceRegistrant(SOURCE_REGISTRANT)
+                        .setClickDeduplicationEnabled(true)
+                        .setClickDeduplicationEnforced(true)
+                        .setMaxSourcesPerClick(mFlags.getMeasurementMaxSourcesPerClick())
+                        .setCurrentRegistrationUnderClickDeduplicationLimit(false)
+                        .build();
+
+        ArgumentCaptor<MeasurementClickVerificationStats> argCaptor =
+                ArgumentCaptor.forClass(MeasurementClickVerificationStats.class);
+        verify(mAdServicesLogger, times(2))
+                .logMeasurementClickVerificationStats(argCaptor.capture());
+        assertEquals(stats, argCaptor.getAllValues().get(1));
+    }
 }

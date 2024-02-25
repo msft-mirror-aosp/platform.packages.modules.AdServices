@@ -23,7 +23,7 @@ abstract class AdServicesDebuggableTestCase extends AdServicesCtsTestCase {
     // extend this, then clean up that XML
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
                 .setCompatModeFlags()
                 .setPpapiAppAllowList(sPackageName);
     }
