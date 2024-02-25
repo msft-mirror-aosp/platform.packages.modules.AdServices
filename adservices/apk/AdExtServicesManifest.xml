@@ -425,6 +425,13 @@
                  android:process=".adservices">
         </service>
 
+        <!-- FLEDGE Background Key Fetch Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
         <!-- Measurement Registration Job -->
         <service android:name=
                      "com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService"

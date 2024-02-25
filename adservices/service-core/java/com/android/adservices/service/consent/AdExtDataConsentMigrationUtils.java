@@ -49,10 +49,9 @@ import java.util.Objects;
  * Utility methods for consent migration from AdExtDataStorage (Android R) to AppSearch (Android S)
  * and System Server (Android T+)
  */
-// TODO(b/324479645): Refactor by renaming this class to include AdExtData reference.
-public final class ConsentMigrationUtils {
-    private ConsentMigrationUtils() {
-        // prevent instantiation
+public final class AdExtDataConsentMigrationUtils {
+    private AdExtDataConsentMigrationUtils() {
+        // prevent instantiations
     }
 
     /**

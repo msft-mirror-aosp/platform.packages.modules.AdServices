@@ -30,6 +30,8 @@ import android.net.Uri;
 
 import com.android.adservices.common.SdkLevelSupportRule;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,7 +40,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -127,7 +128,7 @@ public class BinarySerializerSignedContextualAdsTest {
                         .setBuyer(AdTechIdentifier.fromString(buyer))
                         .setDecisionLogicUri(Uri.parse(decisionLogicUri))
                         .setAdsWithBid(
-                                List.of(
+                                ImmutableList.of(
                                         new AdWithBid(
                                                 new AdData.Builder()
                                                         .setMetadata(metadata)
@@ -195,7 +196,7 @@ public class BinarySerializerSignedContextualAdsTest {
                         .setBuyer(AdTechIdentifier.fromString(buyer))
                         .setDecisionLogicUri(Uri.parse(decisionLogicUri))
                         .setAdsWithBid(
-                                List.of(
+                                ImmutableList.of(
                                         new AdWithBid(
                                                 new AdData.Builder()
                                                         .setMetadata(metadata)

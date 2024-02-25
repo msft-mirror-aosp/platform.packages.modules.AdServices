@@ -101,10 +101,10 @@ public class KAnonSignJoinManager {
     public void processNewMessages(List<KAnonMessageEntity> newMessages) {
         List<KAnonMessageEntity> messageAfterFiltering =
                 newMessages.stream().filter(this::filterRequest).collect(Collectors.toList());
+        List<KAnonMessageEntity> insertedMessages =
+                mKAnonMessageManager.persistNewAnonMessageEntities(messageAfterFiltering);
         if (shouldMakeKAnonCallsNow()) {
-            mKAnonCaller.signAndJoinMessages(messageAfterFiltering);
-        } else {
-            mKAnonMessageManager.persistNewAnonMessageEntities(messageAfterFiltering);
+            mKAnonCaller.signAndJoinMessages(insertedMessages);
         }
     }
 
