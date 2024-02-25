@@ -447,7 +447,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 measurementClickVerificationStats.getInputEventDelayMillis(),
                 measurementClickVerificationStats.getValidDelayWindowMillis(),
                 getAllowlistedAppPackageName(
-                        measurementClickVerificationStats.getSourceRegistrant()));
+                        measurementClickVerificationStats.getSourceRegistrant()),
+                measurementClickVerificationStats.isClickDeduplicationEnabled(),
+                measurementClickVerificationStats.isClickDeduplicationEnforced(),
+                measurementClickVerificationStats.getMaxSourcesPerClick(),
+                measurementClickVerificationStats
+                        .isCurrentRegistrationUnderClickDeduplicationLimit());
     }
 
     /** log method for consent migrations. */
