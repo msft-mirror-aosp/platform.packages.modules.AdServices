@@ -23,13 +23,11 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB
 import android.os.SystemProperties;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
-import com.android.modules.utils.testing.StaticMockFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Test;
-
-import java.util.function.Supplier;
 
 @SpyStatic(SystemProperties.class)
 public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
@@ -39,12 +37,10 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
     // Overriding DeviceConfig stub to avoid Read device config permission errors and to also
     // test the behavior of flags, when both device config and system properties are set.
     @Override
-    protected Supplier<? extends StaticMockFixture>[] getStaticMockFixtureSuppliers() {
-        @SuppressWarnings("unchecked")
-        Supplier<? extends StaticMockFixture>[] suppliers =
-                (Supplier<? extends StaticMockFixture>[])
-                        new Supplier<?>[] {TestableDeviceConfig::new};
-        return (Supplier<? extends StaticMockFixture>[]) suppliers;
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder()
+                .addStaticMockFixtures(TestableDeviceConfig::new)
+                .build();
     }
 
     @Test
