@@ -277,8 +277,13 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void testIsValidAggregateKeyId_null() {
+    public void testIsValidAggregateKeyId_null_returnsFalse() {
         assertFalse(FetcherUtil.isValidAggregateKeyId(null));
+    }
+
+    @Test
+    public void testIsValidAggregateKeyId_empty_returnsFalse() {
+        assertFalse(FetcherUtil.isValidAggregateKeyId(""));
     }
 
     @Test
@@ -305,6 +310,11 @@ public final class FetcherUtilTest {
     @Test
     public void testIsValidAggregateKeyPiece_null() {
         assertFalse(FetcherUtil.isValidAggregateKeyPiece(null, mFlags));
+    }
+
+    @Test
+    public void testIsValidAggregateKeyPiece_emptyString() {
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("", mFlags));
     }
 
     @Test
@@ -565,7 +575,7 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void testAreValidAttributionFilters_filterMap_null() {
+    public void testAreValidAttributionFilters_filterMap_null() throws JSONException {
         JSONObject nullFilterMap = null;
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
@@ -576,7 +586,8 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void testAreValidAttributionFilters_filterMapNull_removeSizeConstraints_returnFalse() {
+    public void testAreValidAttributionFilters_filterMapNull_removeSizeConstraints_returnFalse()
+            throws JSONException {
         JSONObject nullFilterMap = null;
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
@@ -920,6 +931,38 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void testAreValidAttributionFilters_filterSetIncludesNullValue_returnsFalse()
+            throws JSONException {
+        String json = "[{"
+                + "\"filter-string-1\": [\"filter-value-1\", null],"
+                + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
+                + "}]";
+        JSONArray filters = new JSONArray(json);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
+    public void testAreValidAttributionFilters_filterSetIncludesNumericValue_returnsFalse()
+            throws JSONException {
+        String json = "[{"
+                + "\"filter-string-1\": [\"filter-value-1\", 37],"
+                + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"]"
+                + "}]";
+        JSONArray filters = new JSONArray(json);
+        assertFalse(
+                FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true));
+    }
+
+    @Test
     public void emitHeaderMetrics_headersSizeLessThanMaxAllowed_doesNotLogAdTechDomain() {
         // Setup
         int registrationType = 1;
@@ -1071,8 +1114,13 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void isValidAggregateDeduplicationKey_nullValue_success() {
+    public void isValidAggregateDeduplicationKey_nullValue_returnsFalse() {
         assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(null));
+    }
+
+    @Test
+    public void isValidAggregateDeduplicationKey_empty_returnsFalse() {
+        assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(""));
     }
 
     private Map<String, List<String>> createHeadersMap() {
