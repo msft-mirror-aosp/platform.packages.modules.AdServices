@@ -21,6 +21,7 @@
     <!--
     <topics allowAllToAccess="false"/>
     -->
+    <ad-selection allowAllToAccess="false"/>
     <adid allowAllToAccess="false"/>
     <appsetid allowAllToAccess="false"/>
 </ad-services-config>

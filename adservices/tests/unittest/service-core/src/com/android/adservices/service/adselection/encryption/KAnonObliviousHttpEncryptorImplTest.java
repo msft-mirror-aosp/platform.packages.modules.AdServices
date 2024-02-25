@@ -67,7 +67,7 @@ public class KAnonObliviousHttpEncryptorImplTest {
                 NullPointerException.class,
                 () ->
                         mKAnonObliviousHttpEncryptor.encryptBytes(
-                                null, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS));
+                                null, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS, null));
     }
 
     @Test
@@ -87,7 +87,8 @@ public class KAnonObliviousHttpEncryptorImplTest {
                                                 .encryptBytes(
                                                         plainTextBytes,
                                                         UNUSED_CONTEXT_ID,
-                                                        KEY_FETCH_TIMEOUT_MS)
+                                                        KEY_FETCH_TIMEOUT_MS,
+                                                        null)
                                                 .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
@@ -132,7 +133,7 @@ public class KAnonObliviousHttpEncryptorImplTest {
 
         byte[] encryptedBytes =
                 mKAnonObliviousHttpEncryptor
-                        .encryptBytes(plainTextBytes, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS)
+                        .encryptBytes(plainTextBytes, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS, null)
                         .get();
 
         assertThat(encryptedBytes).isNotNull();

@@ -35,13 +35,14 @@ android_test {
         "android.test.runner",
         "framework-configinfrastructure",
     ],
+    manifest: "SdkSandboxRestrictionsManifest.xml",
+    test_config: "SdkSandboxRestrictionsTest.xml",
     data: [
       ":RestrictionsProvider",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
     test_suites: [
-        "cts",
         "mts-adservices",
         "general-tests",
     ],

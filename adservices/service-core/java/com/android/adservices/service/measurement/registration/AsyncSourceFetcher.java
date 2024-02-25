@@ -270,20 +270,24 @@ public class AsyncSourceFetcher {
                     return false;
                 }
                 if (!FetcherUtil.areValidAttributionFilters(
-                        maybeFilterData, mFlags, /* canIncludeLookbackWindow= */ false)) {
+                        maybeFilterData,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true)) {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
-                builder.setFilterData(maybeFilterData.toString());
+                builder.setFilterDataString(maybeFilterData.toString());
             } else {
                 if (!FetcherUtil.areValidAttributionFilters(
                         json.optJSONObject(SourceHeaderContract.FILTER_DATA),
                         mFlags,
-                        /* canIncludeLookbackWindow= */ false)) {
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true)) {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
-                builder.setFilterData(
+                builder.setFilterDataString(
                         json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
             }
         }
@@ -600,10 +604,16 @@ public class AsyncSourceFetcher {
             if (summaryBuckets.isEmpty() || summaryBuckets.size() > maxEventLevelReports) {
                 return Optional.empty();
             }
-        }
 
-        if (summaryBuckets != null && !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
-            return Optional.empty();
+            for (Long bucket : summaryBuckets) {
+                if (bucket < 0L || bucket > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                    return Optional.empty();
+                }
+            }
+
+            if (!TriggerSpec.isStrictIncreasing(summaryBuckets)) {
+                return Optional.empty();
+            }
         }
 
         return Optional.of(

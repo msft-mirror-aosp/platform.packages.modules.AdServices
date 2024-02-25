@@ -40,6 +40,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -56,6 +58,7 @@ public class KAnonSignJoinManagerTest {
     private Flags mFlags;
     @Mock private Clock mockClock;
     @Mock private KAnonCaller mockKanonCaller;
+    @Captor private ArgumentCaptor<List<KAnonMessageEntity>> argumentCaptor;
 
     private final Instant FIXED_TIME = Instant.now();
     private static final long AD_SELECTION_ID_1 = 1;
@@ -84,7 +87,7 @@ public class KAnonSignJoinManagerTest {
                         .build()
                         .kAnonMessageDao();
         when(mockClock.instant()).thenReturn(FIXED_TIME);
-        mFlags = FlagsFactory.getFlags();
+        mFlags = new KanonSignJoinManagerTestFlags(100);
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
     }
 
@@ -124,7 +127,10 @@ public class KAnonSignJoinManagerTest {
 
         mKAnonSignJoinManager.processNewMessages(newMessages);
 
-        verify(mockKanonCaller, times(1)).signAndJoinMessages(newMessages);
+        verify(mockKanonCaller, times(1)).signAndJoinMessages(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue().size()).isEqualTo(1);
+        assertThat(argumentCaptor.getValue().get(0).getAdSelectionId())
+                .isEqualTo(kAnonMessageEntity.getAdSelectionId());
     }
 
     @Test
@@ -179,7 +185,10 @@ public class KAnonSignJoinManagerTest {
 
         mKAnonSignJoinManager.processNewMessages(newMessages);
 
-        verify(mockKanonCaller, times(1)).signAndJoinMessages(newMessages);
+        verify(mockKanonCaller, times(1)).signAndJoinMessages(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue().size()).isEqualTo(1);
+        assertThat(argumentCaptor.getValue().get(0).getAdSelectionId())
+                .isEqualTo(kAnonMessageEntity.getAdSelectionId());
     }
 
     @Test
@@ -227,6 +236,11 @@ public class KAnonSignJoinManagerTest {
         @Override
         public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
             return percentageImmediateSignJoinCalls;
+        }
+
+        @Override
+        public long getFledgeKAnonMessageTtlSeconds() {
+            return 10000;
         }
     }
 }

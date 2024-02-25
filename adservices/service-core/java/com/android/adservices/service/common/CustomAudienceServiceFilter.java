@@ -106,11 +106,12 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         }
         if (!Objects.isNull(adTech)) {
             sLogger.v("Checking ad tech is allowed to use FLEDGE.");
-            assertFledgeEnrollment(adTech, callerPackageName, apiName, devContext);
+            assertFledgeEnrollment(
+                    adTech, callerPackageName, apiName, devContext, API_CUSTOM_AUDIENCES);
         }
 
         sLogger.v("Validating caller package is in allow list.");
-        assertAppInAllowList(callerPackageName, apiName);
+        assertAppInAllowList(callerPackageName, apiName, API_CUSTOM_AUDIENCES);
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");
@@ -175,7 +176,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         }
 
         sLogger.v("Validating caller package is in allow list.");
-        assertAppInAllowList(callerPackageName, apiName);
+        assertAppInAllowList(callerPackageName, apiName, API_CUSTOM_AUDIENCES);
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");

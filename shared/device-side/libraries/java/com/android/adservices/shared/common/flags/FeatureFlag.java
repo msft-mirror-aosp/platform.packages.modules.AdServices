@@ -85,6 +85,17 @@ public @interface FeatureFlag {
         LEGACY_KILL_SWITCH,
 
         /**
+         * Same as {@link #LEGACY_KILL_SWITCH}, but used while its getters are converted to feature
+         * flag getter and hence the value of the field annotated by it is {@code false} -
+         * eventually the field will become a {@link #LEGACY_KILL_SWITCH}, and its value will be
+         * {@code true}.
+         *
+         * @deprecated TODO(b/324077542) - remove once all kill-switches have been converted
+         */
+        @Deprecated
+        LEGACY_KILL_SWITCH_BEING_CONVERTED,
+
+        /**
          * Used for legacy flags that followed the "kill-switch convention" (where the feature is
          * disabled when the flag is {@code true}.
          *

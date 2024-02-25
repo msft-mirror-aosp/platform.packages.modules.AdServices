@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.stats;
 
-public interface FledgeAuctionServerExecutionLogger {
-    /** end a complete Fledge auction server Api process. */
-    void endAuctionServerApi(int resultCode);
+public interface AdsRelevanceExecutionLogger {
+    /** end a complete Ads Relevance Api process. */
+    void endAdsRelevanceApi(int resultCode);
 }

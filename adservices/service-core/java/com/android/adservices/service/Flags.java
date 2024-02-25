@@ -29,6 +29,7 @@ import android.app.job.JobInfo;
 import android.os.Build;
 
 import com.android.adservices.cobalt.CobaltConstants;
+import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.internal.annotations.VisibleForTesting;
@@ -613,11 +614,11 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
 
-    /** Returns the kill switch for Attribution Fallback Job . */
-    default boolean getMeasurementAttributionFallbackJobKillSwitch() {
+    /** Returns the feature flag for Attribution Fallback Job . */
+    default boolean getMeasurementAttributionFallbackJobEnabled() {
         return getGlobalKillSwitch()
-                || getLegacyMeasurementKillSwitch()
-                || MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+                ? false
+                : getMeasurementEnabled() && !MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
     }
 
     long MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
@@ -2532,11 +2533,17 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * MDD Logger Kill Switch. The default value is false which means the MDD Logger is enabled.
      * This flag is used for emergency turning off the MDD Logger.
      */
+    @FeatureFlag(LEGACY_KILL_SWITCH)
     boolean MDD_LOGGER_KILL_SWITCH = false;
 
-    /** Returns value of MDD Logger Kill Switch */
-    default boolean getMddLoggerKillSwitch() {
-        return getGlobalKillSwitch() || MDD_LOGGER_KILL_SWITCH;
+    /**
+     * Returns whether the MDD Logger feature is enabled.
+     *
+     * <p>MDD Logger will be disabled if either the {@link #getGlobalKillSwitch() Global Kill
+     * Switch} or the {@link #MDD_LOGGER_KILL_SWITCH} value is {@code true}.
+     */
+    default boolean getMddLoggerEnabled() {
+        return getGlobalKillSwitch() ? false : !MDD_LOGGER_KILL_SWITCH;
     }
 
     // FLEDGE Kill switches
@@ -2748,6 +2755,11 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * bypass the signature check
      */
     default String getPpapiAppAllowList() {
+        return PPAPI_APP_ALLOW_LIST;
+    }
+
+    default String getPasAppAllowList() {
+        // default to using the same fixed list as custom audiences
         return PPAPI_APP_ALLOW_LIST;
     }
 
@@ -3506,8 +3518,8 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED = false;
 
     /**
-     * Returns whether the fledge beacon reporting metrics is enabled.
-     * This flag should not be ramped on S- prior to M-2024-04.
+     * Returns whether the fledge beacon reporting metrics is enabled. This flag should not be
+     * ramped on S- prior to M-2024-04.
      */
     default boolean getFledgeBeaconReportingMetricsEnabled() {
         return getFledgeRegisterAdBeaconEnabled() && FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
@@ -4707,6 +4719,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value for kanon background process flag */
     boolean FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED = false;
 
+    /** Default value for kanon sign join set type */
+    String FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN = "fledge";
+
     /**
      * This is a feature flag for KAnon Sign/Join feature.
      *
@@ -4746,7 +4761,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /**
-     * This method returns the url that needs to be used to make k-anon JOIN join call.
+     * This method returns the url that needs to be used to make k-anon join call.
      *
      * @return default value of get tokens url
      */
@@ -4802,6 +4817,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
                 && FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
     }
 
+    /**
+     * This method returns the type of set we need to join during kanon sign join process. eg: In
+     * the following example, fledge is the set type to join. "types/fledge/set/hashset"
+     */
+    default String getFledgeKAnonSetTypeToSignJoin() {
+        return FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN;
+    }
+
     /*
      * The allow-list for PP APIs. This list has the list of app package names that we allow
      * using PP APIs.
@@ -4827,5 +4850,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getFledgeCustomAudienceCLIEnabledStatus() {
         return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
+    }
+
+    /** Default value for the base64 encoded Job Policy proto for AdServices. */
+    @ConfigFlag String AD_SERVICES_MODULE_JOB_POLICY = "";
+
+    /** Returns the base64 encoded Job Policy proto for AdServices. */
+    default String getAdServicesModuleJobPolicy() {
+        return AD_SERVICES_MODULE_JOB_POLICY;
     }
 }

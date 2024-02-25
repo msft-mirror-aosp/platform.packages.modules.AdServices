@@ -37,7 +37,6 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -84,8 +83,6 @@ public class DebugReportingJobHandlerTest {
 
     @Mock private ITransaction mTransaction;
 
-    @Mock private EnrollmentDao mEnrollmentDao;
-
     @Mock private Flags mFlags;
     @Mock private AdServicesLogger mLogger;
     @Mock private AdServicesErrorLogger mErrorLogger;
@@ -129,8 +126,7 @@ public class DebugReportingJobHandlerTest {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         mDebugReportingJobHandler =
-                new DebugReportingJobHandler(
-                        mEnrollmentDao, mDatastoreManager, mFlags, mLogger, sContext);
+                new DebugReportingJobHandler(mDatastoreManager, mFlags, mLogger, sContext);
         mSpyDebugReportingJobHandler = Mockito.spy(mDebugReportingJobHandler);
     }
 
