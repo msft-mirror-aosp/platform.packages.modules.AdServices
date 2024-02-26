@@ -55,7 +55,20 @@ import android.provider.DeviceConfig;
  * Manifest.permission.WRITE_DEVICE_CONFIG}, but a better approach would be to use {@link
  * com.android.adservices.common.AdServicesFlagsSetterRule} instead (as that rule will take care of
  * automatically resetting the flags to the initial value, among other features).
+ *
+ * @deprecated TODO(b/317418539) - most usages (especially on CTS) are better suited by the {@link
+ *     com.android.adservices.common.AdServicesFlagsSetterRule} JUnit rule, which provides other
+ *     advantages like properly resetting the flag at the end of the test (while tests using this
+ *     fixture need to manually use a {@code try / finally} block to do so) and supporting
+ *     annotations. So, assuming your test already uses the rule, all you need to do is to annotate
+ *     the test method with the proper annotations (like
+ *     {@code @SetFlagEnabled(FlagsConstants.MY_FEATURE_FLAG}} or
+ *     {@code @SetIntegerFlag(name=FlagsConstants.MY_CONFIG_FLAG}, value=42)} or call the {@code
+ *     setFlag()} method of the rule when the value is not static (for example, if the rule
+ *     reference is called @{code flags}, simply call {@code
+ *     flags.setFlag(FlagsConstant.MY_PGK_ALLOWLIST_FLAG, pkgNames)}).
  */
+@Deprecated
 public final class PhFlagsFixture {
     public static final long DEFAULT_API_RATE_LIMIT_SLEEP_MS =
             (long) (1500 / SDK_REQUEST_PERMITS_PER_SECOND) + 100L;
@@ -364,4 +377,10 @@ public final class PhFlagsFixture {
                 Long.toString(timeoutMs),
                 false);
     }
+
+    // DO NOT ADD MORE METHODS HERE, THIS CLASS IS DEPRECATED.
+    //
+    // If you still need a new method instead of using AdServicesFlagsSetterRule or other infra,
+    // please add a TODO(b/317418539) comment on such method explaining why (and include a
+    // Bug: 317418539 line in the CL that adds it).
 }
