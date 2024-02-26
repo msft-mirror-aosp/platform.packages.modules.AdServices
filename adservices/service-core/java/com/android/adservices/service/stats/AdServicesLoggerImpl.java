@@ -21,6 +21,11 @@ import android.annotation.Nullable;
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -253,6 +258,33 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logKAnonSignJoinStatus() {
         // TODO(b/324564459): add logging for KAnon Sign Join
+    }
+
+    @Override
+    public void logKAonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats) {
+        mStatsdAdServicesLogger.logKAonInitializeStats(kAnonInitializeStatusStats);
+    }
+
+    @Override
+    public void logKAnonSignStats(KAnonSignStatusStats kAnonSignStatusStats) {
+        mStatsdAdServicesLogger.logKAnonSignStats(kAnonSignStatusStats);
+    }
+
+    @Override
+    public void logKAnonJoinStats(KAnonJoinStatusStats kAnonJoinStatusStats) {
+        mStatsdAdServicesLogger.logKAnonJoinStats(kAnonJoinStatusStats);
+    }
+
+    @Override
+    public void logKAnonBackgroundJobStats(
+            KAnonBackgroundJobStatusStats kAnonBackgroundJobStatusStats) {
+        mStatsdAdServicesLogger.logKAnonBackgroundJobStats(kAnonBackgroundJobStatusStats);
+    }
+
+    @Override
+    public void logKAnonImmediateSignJoinStats(
+            KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats) {
+        mStatsdAdServicesLogger.logKAnonImmediateSignJoinStats(kAnonImmediateSignJoinStatusStats);
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */
