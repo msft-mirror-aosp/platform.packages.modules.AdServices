@@ -185,9 +185,10 @@ public abstract class AbstractFledgeServiceFilter {
      * @param callerPackageName the package name to be validated.
      * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
      */
-    protected void assertAppInAllowList(String callerPackageName, int apiName)
+    protected void assertAppInAllowList(
+            String callerPackageName, int apiName, @AppManifestConfigCall.ApiType int apiType)
             throws FledgeAllowListsFilter.AppNotAllowedException {
-        mFledgeAllowListsFilter.assertAppCanUsePpapi(callerPackageName, apiName);
+        mFledgeAllowListsFilter.assertAppInAllowlist(callerPackageName, apiName, apiType);
     }
 
     /**

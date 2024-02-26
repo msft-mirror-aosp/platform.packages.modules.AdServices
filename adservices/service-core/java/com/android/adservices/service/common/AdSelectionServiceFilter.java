@@ -91,7 +91,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
                 assertFledgeEnrollment(
                         adTech, callerPackageName, apiName, devContext, API_AD_SELECTION);
             }
-            assertAppInAllowList(callerPackageName, apiName);
+            assertAppInAllowList(callerPackageName, apiName, API_AD_SELECTION);
             if (enforceConsent) {
                 assertCallerHasUserConsent();
             }
