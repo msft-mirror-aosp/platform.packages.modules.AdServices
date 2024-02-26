@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.data.kanon.KAnonMessageConstants;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -34,21 +35,25 @@ public class KAnonSignJoinManager {
     private final KAnonMessageManager mKAnonMessageManager;
     private final Flags mFlags;
     private final Clock mClock;
+    private final AdServicesLogger mAdServicesLogger;
 
     public KAnonSignJoinManager(
             @NonNull KAnonCaller kAnonCaller,
             @NonNull KAnonMessageManager kAnonMessageManager,
             @NonNull Flags flags,
-            @NonNull Clock clock) {
+            @NonNull Clock clock,
+            @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(kAnonCaller);
         Objects.requireNonNull(kAnonMessageManager);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(clock);
+        Objects.requireNonNull(adServicesLogger);
 
         mKAnonCaller = kAnonCaller;
         mKAnonMessageManager = kAnonMessageManager;
         mFlags = flags;
         mClock = clock;
+        mAdServicesLogger = adServicesLogger;
     }
 
     /**
@@ -105,6 +110,8 @@ public class KAnonSignJoinManager {
                 mKAnonMessageManager.persistNewAnonMessageEntities(messageAfterFiltering);
         if (shouldMakeKAnonCallsNow()) {
             mKAnonCaller.signAndJoinMessages(insertedMessages);
+        } else {
+            mAdServicesLogger.logKAnonSignJoinStatus();
         }
     }
 

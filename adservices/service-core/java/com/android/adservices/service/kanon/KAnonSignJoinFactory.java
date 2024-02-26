@@ -99,7 +99,8 @@ public class KAnonSignJoinFactory {
                             kAnonCaller,
                             kAnonMessageManager,
                             FlagsFactory.getFlags(),
-                            Clock.systemUTC());
+                            Clock.systemUTC(),
+                            AdServicesLoggerImpl.getInstance());
         }
         return mKAnonSignJoinManager;
     }
