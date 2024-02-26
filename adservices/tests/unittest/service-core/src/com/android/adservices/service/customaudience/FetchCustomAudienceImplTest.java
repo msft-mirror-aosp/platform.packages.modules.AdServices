@@ -66,6 +66,7 @@ import static com.android.adservices.service.customaudience.CustomAudienceUpdata
 import static com.android.adservices.service.customaudience.CustomAudienceValidator.DAILY_UPDATE_URI_FIELD_NAME;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
+import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseStringWithAdRenderId;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceImpl.FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceImpl.FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceImpl.REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT_MESSAGE;
@@ -111,6 +112,7 @@ import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceQuarantine;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -137,10 +139,12 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
@@ -912,6 +916,87 @@ public class FetchCustomAudienceImplTest {
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
                         /*debuggable=*/ true);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_withAdRenderId() throws Exception {
+        // Enable server auction Ad Render Ids
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean getFledgeAuctionServerAdRenderIdEnabled() {
+                                return true;
+                            }
+                        });
+
+        // Respond with a complete custom audience with ad render ids including the request values
+        // as is.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponseStringWithAdRenderId(
+                                                        BUYER))));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(callback.mIsSuccess);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture
+                                .getFullSuccessfulDBCustomAudienceWithAdRenderId(),
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_withAdRenderId_AdRenderIdFlagDisabled() throws Exception {
+        // Disable server auction Ad Render Ids
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean getFledgeAuctionServerAdRenderIdEnabled() {
+                                return false;
+                            }
+                        });
+
+        // Respond with a complete custom audience with ad render ids including the request values
+        // as is, but expect that ad render ids to not be read
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponseStringWithAdRenderId(
+                                                        BUYER))));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+
+        ArgumentCaptor<DBCustomAudience> argumentDBCustomAudience =
+                ArgumentCaptor.forClass(DBCustomAudience.class);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(callback.mIsSuccess);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        argumentDBCustomAudience.capture(),
+                        eq(getValidDailyUpdateUriByBuyer(BUYER)),
+                        eq(DevContext.createForDevOptionsDisabled().getDevOptionsEnabled()));
+        DBCustomAudience dbCustomAudience = argumentDBCustomAudience.getValue();
+        Assert.assertNotEquals(
+                FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudienceWithAdRenderId(),
+                dbCustomAudience);
+        assertTrue(dbCustomAudience.getAds().stream().allMatch(ad -> ad.getAdRenderId() == null));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
