@@ -214,11 +214,20 @@ public class AsyncTriggerFetcher {
                 builder.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
             }
             if (!json.isNull(TriggerHeaderContract.DEBUG_KEY)) {
-                try {
-                    builder.setDebugKey(
-                            new UnsignedLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
-                } catch (NumberFormatException e) {
-                    LoggerFactory.getMeasurementLogger().e(e, "Parsing trigger debug key failed");
+                if (mFlags.getMeasurementEnableAraParsingAlignmentV1()) {
+                    Optional<UnsignedLong> maybeDebugKey =
+                            FetcherUtil.extractUnsignedLong(json, TriggerHeaderContract.DEBUG_KEY);
+                    if (maybeDebugKey.isPresent()) {
+                        builder.setDebugKey(maybeDebugKey.get());
+                    }
+                } else {
+                    try {
+                        builder.setDebugKey(
+                                new UnsignedLong(json.getString(TriggerHeaderContract.DEBUG_KEY)));
+                    } catch (NumberFormatException e) {
+                        LoggerFactory.getMeasurementLogger().e(
+                                e, "Parsing trigger debug key failed");
+                    }
                 }
             }
             if (mFlags.getMeasurementEnableXNA()
