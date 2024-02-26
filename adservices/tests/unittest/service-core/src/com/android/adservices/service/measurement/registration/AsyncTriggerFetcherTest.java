@@ -2616,6 +2616,52 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void testTriggerRequest_filterMapIncludesNullValue_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "[{\"something\":[\"val1\", null]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"filters\":" + filters + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_filterMapIncludesNumericValue_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String filters = "[{\"something\":[\"val1\", 347]}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"filters\":" + filters + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void testTriggerRequest_filters_invalidJson() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters =
