@@ -70,14 +70,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
-import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
-import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.Transcript;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
@@ -87,6 +79,14 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+
+import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
+import private_join_and_compute.anonymous_counting_tokens.RequestMetadata;
+import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 // All the tests of this CL are ignored because they make calls to the actual server and these will
 // fail
@@ -121,6 +121,8 @@ public class KAnonCallerImplFullIntegrationTests {
     private final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
 
     @Mock private Clock mockClock;
+    @Mock private com.android.adservices.shared.util.Clock mAdServicesClock;
+
     @Mock private UserProfileIdDao mockUserProfileIdDao;
     @Mock private AdServicesLogger mockAdServicesLogger;
     private UserProfileIdManager mUserProfileIdManager;
@@ -145,7 +147,8 @@ public class KAnonCallerImplFullIntegrationTests {
                 Room.inMemoryDatabaseBuilder(CONTEXT, KAnonDatabase.class).build();
         mClientParametersDao = kAnonDatabase.clientParametersDao();
         mServerParametersDao = kAnonDatabase.serverParametersDao();
-        mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao);
+        when(mAdServicesClock.currentTimeMillis()).thenReturn(FIXED_INSTANT.toEpochMilli());
+        mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao, mAdServicesClock);
         mKAnonMessageDao = kAnonDatabase.kAnonMessageDao();
         mFlags = new KAnonSignAndJoinRunnerTestFlags();
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);

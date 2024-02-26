@@ -125,6 +125,7 @@ public class KAnonCallerImplTest {
     private final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
 
     @Mock private Clock mockClock;
+    @Mock private com.android.adservices.shared.util.Clock mAdServicesClock;
     @Mock private UserProfileIdDao mockUserProfileIdDao;
     @Mock private AdServicesHttpsClient mockAdServicesHttpClient;
     @Mock private AnonymousCountingTokens mockAnonymousCountingTokens;
@@ -152,12 +153,13 @@ public class KAnonCallerImplTest {
                 Room.inMemoryDatabaseBuilder(CONTEXT, KAnonDatabase.class).build();
         mClientParametersDao = kAnonDatabase.clientParametersDao();
         mServerParametersDao = kAnonDatabase.serverParametersDao();
-        mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao);
+        mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao, mAdServicesClock);
         mKAnonMessageDao = kAnonDatabase.kAnonMessageDao();
         mFlags = new KAnonSignAndJoinRunnerTestFlags(32);
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
 
         when(mockClock.instant()).thenReturn(FIXED_INSTANT);
+        when(mAdServicesClock.currentTimeMillis()).thenReturn(FIXED_INSTANT.toEpochMilli());
 
         InputStream inputStream = CONTEXT.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
