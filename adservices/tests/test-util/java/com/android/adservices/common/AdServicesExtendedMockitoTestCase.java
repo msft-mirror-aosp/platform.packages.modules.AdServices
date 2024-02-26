@@ -22,7 +22,6 @@ import android.content.Context;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
-import com.android.modules.utils.testing.StaticMockFixture;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -30,7 +29,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
-import java.util.function.Supplier;
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
@@ -61,37 +59,33 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
     @Rule(order = 10)
     public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
 
-    private AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
-        AdServicesExtendedMockitoRule.Builder builder =
-                new AdServicesExtendedMockitoRule.Builder(this);
-        Supplier<? extends StaticMockFixture>[] suppliers = getStaticMockFixtureSuppliers();
-        if (suppliers != null) {
-            builder.addStaticMockFixtures(suppliers);
-        }
-        return builder.setStrictness(getStrictness()).build();
+    /**
+     * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
+     * extendedMockito} rule.
+     *
+     * <p>By default returns a rule created using {@link
+     * #newDefaultAdServicesExtendedMockitoRuleBuilder()}, which is enough for most tests. But
+     * subclasses can override it to handle special cases that cannot be configured through
+     * annotations, like :
+     *
+     * <ul>
+     *   <li>Changing the strictness mode.
+     *   <li>Setting the {@link com.android.modules.utils.testing.StaticMockFixture}s.
+     * </ul>
+     */
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder().build();
     }
 
     /**
-     * Allows subclasses to override the default strictness of the {@link #extendedMockito} rule.
+     * Creates a new {@link AdServicesExtendedMockitoRule.Builder} with the default properties.
      *
-     * <p><b>NOTE: </b>ideally the strictness shouldn't be matter and this method should only be
-     * temporarily overridden (for example, to return {@code STRICT_STUBS}) to debug / improve the
-     * test (for example, to remove unnecessary expectations after some refactoring).
-     *
-     * @return {@link Strictness#LENIENT} by default
+     * @return builder that initialize mocks for the class, using {@link Strictness.LENIENT lenient}
+     *     mode.
      */
-    protected Strictness getStrictness() {
-        return Strictness.LENIENT;
+    protected final AdServicesExtendedMockitoRule.Builder
+            newDefaultAdServicesExtendedMockitoRuleBuilder() {
+        return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
     }
 
-    /**
-     * Allows subclasses to set the suppliers of {@link StaticMockFixture} of the {@link
-     * #extendedMockito} rule.
-     *
-     * @return {@code null} by default (so it's not set).
-     */
-    @Nullable
-    protected Supplier<? extends StaticMockFixture>[] getStaticMockFixtureSuppliers() {
-        return null;
-    }
 }

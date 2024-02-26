@@ -77,6 +77,7 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.JsVersionRegister;
@@ -201,9 +202,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 mAdServicesLoggerMock);
     }
 
+    // TODO(b/315812832): need to set STRICT_STUBS; ideally test should be refactored to not need it
     @Override
-    protected Strictness getStrictness() {
-        return Strictness.STRICT_STUBS;
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return new AdServicesExtendedMockitoRule.Builder(this)
+                .setStrictness(Strictness.STRICT_STUBS)
+                .build();
     }
 
     @Test
