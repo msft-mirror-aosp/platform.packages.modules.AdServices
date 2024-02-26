@@ -636,7 +636,7 @@ public class AsyncRegistrationQueueRunner {
                                         .setSourceType(source.getSourceType())
                                         .setStatus(EventReport.Status.PENDING)
                                         .setRandomizedTriggerRate(
-                                                mSourceNoiseHandler.getRandomAttributionProbability(
+                                                mSourceNoiseHandler.getRandomizedTriggerRate(
                                                         source))
                                         .setRegistrationOrigin(source.getRegistrationOrigin())
                                         .setSourceDebugKey(getSourceDebugKeyForNoisedReport(source))
