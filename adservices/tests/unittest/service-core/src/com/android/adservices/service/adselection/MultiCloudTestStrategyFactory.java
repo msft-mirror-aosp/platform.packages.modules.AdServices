@@ -22,7 +22,9 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ProtectedServersEncryptionConfigManagerBase;
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 
 public class MultiCloudTestStrategyFactory {
     static class MultiCloudTestStrategyFlagOff implements MultiCloudSupportStrategy {
@@ -43,6 +45,14 @@ public class MultiCloudTestStrategyFactory {
                 @NonNull Context context, @NonNull Flags flags) {
             return mObliviousHttpEncryptor;
         }
+
+        @Override
+        public ProtectedServersEncryptionConfigManagerBase getEncryptionConfigManager(
+                @android.annotation.NonNull Context context,
+                @android.annotation.NonNull Flags flags,
+                @android.annotation.NonNull AdServicesHttpsClient adServicesHttpsClient) {
+            return null;
+        }
     }
 
     static class MultiCloudTestStrategyFlagOn implements MultiCloudSupportStrategy {
@@ -59,6 +69,14 @@ public class MultiCloudTestStrategyFactory {
         @Override
         public CoordinatorOriginUriValidator getCoordinatorOriginUriValidator() {
             return CoordinatorOriginUriValidator.createEnabledInstance(mAllowList);
+        }
+
+        @Override
+        public ProtectedServersEncryptionConfigManagerBase getEncryptionConfigManager(
+                @android.annotation.NonNull Context context,
+                @android.annotation.NonNull Flags flags,
+                @android.annotation.NonNull AdServicesHttpsClient adServicesHttpsClient) {
+            return null;
         }
 
         @Override
