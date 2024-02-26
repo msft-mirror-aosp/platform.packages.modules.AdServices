@@ -328,24 +328,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getTopicsCobaltLoggingEnabled() {
-        // We check the getCobaltLoggingEnabled first.
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return getCobaltLoggingEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
-                        /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
+                        TOPICS_COBALT_LOGGING_ENABLED);
     }
 
     @Override
     public boolean getAppNameApiErrorCobaltLoggingEnabled() {
-        // We check the getCobaltLoggingEnabled first.
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return getCobaltLoggingEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
-                        /* defaultValue */ APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                        APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
     }
 
     @Override
