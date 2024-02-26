@@ -3388,11 +3388,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT);
     }
 
-    @VisibleForTesting
-    static String getSystemPropertyName(String key) {
-        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
-    }
-
     @Override
     public boolean getUiDialogsFeatureEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -6897,5 +6892,37 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getBackgroundJobsLoggingEnabled() {
         return !getBackgroundJobsLoggingKillSwitch();
+    }
+
+    // Do NOT add Flag / @Override methods below - it should only contain helpers
+
+    @VisibleForTesting
+    static boolean getDeviceConfigFlag(String name, boolean defaultValue) {
+        return DeviceConfig.getBoolean(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static String getDeviceConfigFlag(String name, String defaultValue) {
+        return DeviceConfig.getString(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static int getDeviceConfigFlag(String name, int defaultValue) {
+        return DeviceConfig.getInt(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static long getDeviceConfigFlag(String name, long defaultValue) {
+        return DeviceConfig.getLong(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static float getDeviceConfigFlag(String name, float defaultValue) {
+        return DeviceConfig.getFloat(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static String getSystemPropertyName(String key) {
+        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
     }
 }
