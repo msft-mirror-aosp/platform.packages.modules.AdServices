@@ -18,6 +18,10 @@ package com.android.adservices.service.stats;
 
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -37,8 +41,6 @@ import org.mockito.quality.Strictness;
 
 public class AdsRelevanceExecutionLoggerFactoryTest {
     private MockitoSession mStaticMockSession = null;
-
-    private static int UNKNOWN_API_CODE = -1;
 
     private AdServicesLogger mAdServicesLoggerMock;
 
@@ -64,7 +66,7 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
     }
 
     @Test
-    public void testGetFledgeAuctionServerApiUsageMetricsEnabled() {
+    public void testPersistAdSelectionResultAdsRelevanceExecutionLogger_telemetryEnabled() {
         AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
                 new AdsRelevanceExecutionLoggerFactory(
                         TEST_PACKAGE_NAME,
@@ -72,13 +74,13 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         Clock.getInstance(),
                         mAdServicesLoggerMock,
                         new FlagsWithGetFledgeAuctionServerApiUsageMetricsEnabled(),
-                        UNKNOWN_API_CODE);
+                        AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
         assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
                 instanceof AdsRelevanceExecutionLoggerImpl);
     }
 
     @Test
-    public void testGetFledgeAuctionServerApiUsageMetricsDisabled() {
+    public void testPersistAdSelectionResultAdsRelevanceExecutionLogger_telemetryDisabled() {
         AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
                 new AdsRelevanceExecutionLoggerFactory(
                         TEST_PACKAGE_NAME,
@@ -86,7 +88,63 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         Clock.getInstance(),
                         mAdServicesLoggerMock,
                         new FlagsWithGetFledgeAuctionServerApiUsageMetricsDisabled(),
-                        UNKNOWN_API_CODE);
+                        AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
+        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
+    }
+
+    @Test
+    public void testGetAdSelectionDataAdsRelevanceExecutionLogger_telemetryEnabled() {
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
+                        sCallerMetadata,
+                        Clock.getInstance(),
+                        mAdServicesLoggerMock,
+                        new FlagsWithGetFledgeAuctionServerApiUsageMetricsEnabled(),
+                        AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
+        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                instanceof AdsRelevanceExecutionLoggerImpl);
+    }
+
+    @Test
+    public void testGetAdSelectionDataAdsRelevanceExecutionLogger_telemetryDisabled() {
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
+                        sCallerMetadata,
+                        Clock.getInstance(),
+                        mAdServicesLoggerMock,
+                        new FlagsWithGetFledgeAuctionServerApiUsageMetricsDisabled(),
+                        AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
+        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
+    }
+
+    @Test
+    public void testUpdateSignalsAdsRelevanceExecutionLogger() {
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
+                        sCallerMetadata,
+                        Clock.getInstance(),
+                        mAdServicesLoggerMock,
+                        FlagsFactory.getFlagsForTest(),
+                        AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS);
+        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                instanceof AdsRelevanceExecutionLoggerImpl);
+    }
+
+    @Test
+    public void testUnknownApiAdsRelevanceExecutionLogger() {
+        AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
+                        sCallerMetadata,
+                        Clock.getInstance(),
+                        mAdServicesLoggerMock,
+                        FlagsFactory.getFlagsForTest(),
+                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
         assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
                 instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
     }
