@@ -21,7 +21,9 @@ import android.content.Context;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
+import com.android.adservices.service.adselection.encryption.ProtectedServersEncryptionConfigManagerBase;
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 
 /** Interface for strategy related to multi-cloud support */
 public interface MultiCloudSupportStrategy {
@@ -31,6 +33,14 @@ public interface MultiCloudSupportStrategy {
      * the coordinator origin URI.
      */
     CoordinatorOriginUriValidator getCoordinatorOriginUriValidator();
+
+    /**
+     * Returns the {@link ProtectedServersEncryptionConfigManagerBase} with the given https client
+     */
+    ProtectedServersEncryptionConfigManagerBase getEncryptionConfigManager(
+            @NonNull Context context,
+            @NonNull Flags flags,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient);
 
     /** Returns an instance of {@link ObliviousHttpEncryptor} to encrypt the payload */
     // TODO(b/297025763) : Use process stable flags

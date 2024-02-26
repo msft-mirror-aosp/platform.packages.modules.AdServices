@@ -41,8 +41,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.security.spec.InvalidKeySpecException;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public abstract class ProtectedServersEncryptionConfigManagerBase {
@@ -60,6 +62,14 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs,
             @Nullable Uri coordinatorUrl);
+
+    abstract FluentFuture<List<DBEncryptionKey>> fetchAndPersistActiveKeysOfType(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
+            Instant keyExpiryInstant,
+            long timeoutMs,
+            @Nullable Uri coordinatorUrl);
+
+    abstract Set<Integer> getExpiredAdSelectionEncryptionKeyTypes(Instant keyExpiryInstant);
 
     protected ProtectedServersEncryptionConfigManagerBase(
             @NonNull Flags flags,
