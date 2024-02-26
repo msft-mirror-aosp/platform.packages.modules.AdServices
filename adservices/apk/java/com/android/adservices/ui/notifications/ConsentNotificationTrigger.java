@@ -20,6 +20,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_EN
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED;
+import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.UxUtil.isUxStatesReady;
 
@@ -91,7 +92,7 @@ public class ConsentNotificationTrigger {
             @NonNull Context context, boolean gaUxFeatureEnabled, ConsentManager consentManager) {
         if (UxStatesManager.getInstance().getFlag(KEY_RECORD_MANUAL_INTERACTION_ENABLED)
                 && consentManager.getUserManualInteractionWithConsent()
-                        != ConsentManager.MANUAL_INTERACTIONS_RECORDED) {
+                        != MANUAL_INTERACTIONS_RECORDED) {
             consentManager.recordUserManualInteractionWithConsent(NO_MANUAL_INTERACTIONS_RECORDED);
         }
 
@@ -178,7 +179,7 @@ public class ConsentNotificationTrigger {
                     if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)
                             && (isFledgeOrMsmtEnabled(consentManager)
                                     || consentManager.getUserManualInteractionWithConsent()
-                                            != NO_MANUAL_INTERACTIONS_RECORDED)) {
+                                            == MANUAL_INTERACTIONS_RECORDED)) {
                         // Not first time user, respect previous consents
                         break;
                     }
