@@ -25,6 +25,8 @@ import static com.android.adservices.service.common.httpclient.AdServicesHttpUti
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
+import static org.junit.Assert.assertThrows;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -454,6 +456,12 @@ public class KAnonCallerImplTest {
         String actualString = mKAnonCaller.getPathToJoinInBinaryHttp(kAnonMessageEntity);
 
         assertThat(actualString).isEqualTo(expectedString);
+    }
+
+    @Test
+    public void signJoinMessages_withEmptyList_throwsIllegalArgumentException() {
+        assertThrows(
+                IllegalArgumentException.class, () -> mKAnonCaller.signAndJoinMessages(List.of()));
     }
 
     private void createAndPersistKAnonMessages() {
