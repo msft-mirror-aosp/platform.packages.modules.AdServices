@@ -35,7 +35,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
@@ -64,8 +63,8 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -535,7 +534,9 @@ public class PersistAdSelectionResultRunner {
 
         byte metaInfoByte = resultBytes[0];
         int version = AuctionServerPayloadFormattingUtil.extractFormatterVersion(metaInfoByte);
-        mPayloadExtractor = AuctionServerPayloadFormatterFactory.createPayloadExtractor(version);
+        mPayloadExtractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                        version, mAdServicesLogger);
     }
 
     private AuctionResult composeAuctionResult(
