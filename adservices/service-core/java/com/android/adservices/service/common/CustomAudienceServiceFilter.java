@@ -111,7 +111,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         }
 
         sLogger.v("Validating caller package is in allow list.");
-        assertAppInAllowList(callerPackageName, apiName);
+        assertAppInAllowList(callerPackageName, apiName, API_CUSTOM_AUDIENCES);
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");
@@ -176,7 +176,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         }
 
         sLogger.v("Validating caller package is in allow list.");
-        assertAppInAllowList(callerPackageName, apiName);
+        assertAppInAllowList(callerPackageName, apiName, API_CUSTOM_AUDIENCES);
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");

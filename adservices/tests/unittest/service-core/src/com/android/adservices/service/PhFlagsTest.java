@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -871,6 +872,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_ALL
 import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
@@ -919,11 +921,11 @@ import android.util.Log;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
-import com.android.modules.utils.testing.StaticMockFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
@@ -936,7 +938,6 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
@@ -948,14 +949,11 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private final Flags mTestFlags = FlagsFactory.getFlagsForTest();
 
     @Override
-    protected Supplier<? extends StaticMockFixture>[] getStaticMockFixtureSuppliers() {
-        @SuppressWarnings("unchecked")
-        Supplier<? extends StaticMockFixture>[] suppliers =
-                (Supplier<? extends StaticMockFixture>[])
-                        new Supplier<?>[] {
-                            TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new
-                        };
-        return (Supplier<? extends StaticMockFixture>[]) suppliers;
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder()
+                .addStaticMockFixtures(
+                        TestableDeviceConfig::new, SysPropForceDefaultValueFixture::new)
+                .build();
     }
 
     @Test
@@ -1415,6 +1413,17 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetCobaltLoggingEnabled_cobaltLoggingDisabled() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+        setCobaltLoggingEnabled(false);
+
+        assertThat(mPhFlags.getCobaltLoggingEnabled()).isFalse();
+
+        verifyGetBooleanNotCalled(FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED);
+    }
+
+    @Test
     public void testGetAppNameApiErrorCobaltLoggingEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
@@ -1442,7 +1451,9 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         setCobaltLoggingEnabled(false);
 
         // APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED is guarded by COBALT_LOGGING_ENABLED.
-        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isEqualTo(false);
+        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isFalse();
+
+        verifyGetBooleanNotCalled(FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
     }
 
     @Test
@@ -6231,6 +6242,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetPasAppAllowList() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getPasAppAllowList()).isEqualTo(PPAPI_APP_ALLOW_LIST);
+
+        // Now overriding with the value from PH.
+        String phOverridingValue = PPAPI_APP_ALLOW_LIST + "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PAS_APP_ALLOW_LIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getPasAppAllowList()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetAdIdApiAppBlockList() {
         assertThat(mPhFlags.getAdIdApiAppBlockList()).isEqualTo(AD_ID_API_APP_BLOCK_LIST);
 
@@ -10630,36 +10657,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetMddLoggerKillSwitch() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        boolean defaultValue = MDD_LOGGER_KILL_SWITCH;
-        expect.withMessage("getMddLoggerKillSwitch() by default")
-                .that(mPhFlags.getMddLoggerKillSwitch())
-                .isEqualTo(defaultValue);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !defaultValue;
-        setMddLoggerKillSwitch(phOverridingValue);
-        expect.withMessage("getMddLoggerKillSwitch() when set by device config")
-                .that(mPhFlags.getMddLoggerKillSwitch())
-                .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetMddLoggerKillSwitch_globalOverride() {
-        enableGlobalKillSwitch();
-        setMddLoggerKillSwitch(false);
-
-        // should be true because global kill-switch is on
-        expect.withMessage("getMddLoggerKillSwitch() when the global kill switch is on")
-                .that(mPhFlags.getMddLoggerKillSwitch())
-                .isTrue();
-    }
-
-    @Test
     public void testGetMddLoggerEnabled() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
@@ -10693,28 +10690,19 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void setMeasurementKillSwitch(boolean value) {
-        setDeviceConfigFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
+        setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
 
     private void setMeasurementAttributionFallbackJobKillSwitch(boolean value) {
-        setDeviceConfigFlag(KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH, value);
+        setAdservicesFlag(KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH, value);
     }
 
     private void setMddLoggerKillSwitch(boolean value) {
-        setDeviceConfigFlag(KEY_MDD_LOGGER_KILL_SWITCH, value);
+        setAdservicesFlag(KEY_MDD_LOGGER_KILL_SWITCH, value);
     }
 
-    private void setDeviceConfigFlag(String name, boolean value) {
-        Log.d(
-                mTag,
-                "setDeviceConfigFlag(): "
-                        + KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH
-                        + " to "
-                        + value);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                name,
-                Boolean.toString(value),
-                /* makeDefault= */ false);
+    private void verifyGetBooleanNotCalled(String name) {
+        extendedMockito.unsafeVerifyGetBooleanDeviceConfigFlagNotCalled(
+                DeviceConfig.NAMESPACE_ADSERVICES, name);
     }
 }

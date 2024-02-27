@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
@@ -295,7 +296,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
     public void testFilterRequestThrowsAppNotAllowedExceptionWhenAppNotInAllowlist() {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
-                .assertAppCanUsePpapi(CALLER_PACKAGE_NAME, API_NAME);
+                .assertAppInAllowlist(CALLER_PACKAGE_NAME, API_NAME, API_AD_SELECTION);
         FilterException exception =
                 assertThrows(
                         FilterException.class,

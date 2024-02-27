@@ -475,6 +475,7 @@ public class FetchCustomAudienceImpl {
                                                 .setMetadata(ad.getMetadata())
                                                 .setAdCounterKeys(ad.getAdCounterKeys())
                                                 .setAdFilters(ad.getAdFilters())
+                                                .setAdRenderId(ad.getAdRenderId())
                                                 .build());
                             }
 

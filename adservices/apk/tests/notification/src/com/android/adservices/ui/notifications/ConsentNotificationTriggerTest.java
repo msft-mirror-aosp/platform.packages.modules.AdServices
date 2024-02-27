@@ -26,6 +26,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_FIRST_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_RENOTIFY_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
@@ -695,6 +697,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(NO_MANUAL_INTERACTIONS_RECORDED)
                 .when(mConsentManager)
                 .getUserManualInteractionWithConsent();
+        doReturn(GaUxEnrollmentChannelCollection.PAS_FIRST_CONSENT_NOTIFICATION_CHANNEL)
+                .when(mMockUxStatesManager)
+                .getEnrollmentChannel();
 
         String expectedTitle =
                 mSpyContext.getString(R.string.notificationUI_pas_notification_title);
@@ -704,7 +709,12 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         ConsentNotificationTrigger.showConsentNotification(mSpyContext, false);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-        verify(mAdServicesLogger, times(2)).logUIStats(any());
+        ArgumentCaptor<UIStats> argument = ArgumentCaptor.forClass(UIStats.class);
+        verify(mAdServicesLogger, times(2)).logUIStats(argument.capture());
+
+        assertThat(argument.getValue().getEnrollmentChannel())
+                .isEqualTo(
+                        AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_FIRST_NOTIFICATION_CHANNEL);
 
         verify(mConsentManager).enable(mSpyContext, AdServicesApiType.TOPICS);
         verify(mConsentManager).enable(mSpyContext, AdServicesApiType.FLEDGE);
@@ -738,6 +748,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_PAS_UX_ENABLED);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent(any());
         doReturn(false).when(mConsentManager).wasPasNotificationDisplayed();
+        doReturn(GaUxEnrollmentChannelCollection.PAS_RECONSENT_NOTIFICATION_CHANNEL)
+                .when(mMockUxStatesManager)
+                .getEnrollmentChannel();
 
         String expectedTitle =
                 mSpyContext.getString(R.string.notificationUI_pas_re_notification_title);
@@ -747,7 +760,12 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         ConsentNotificationTrigger.showConsentNotification(mSpyContext, false);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
 
-        verify(mAdServicesLogger, times(2)).logUIStats(any());
+        ArgumentCaptor<UIStats> argument = ArgumentCaptor.forClass(UIStats.class);
+        verify(mAdServicesLogger, times(2)).logUIStats(argument.capture());
+
+        assertThat(argument.getValue().getEnrollmentChannel())
+                .isEqualTo(
+                        AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_RENOTIFY_NOTIFICATION_CHANNEL);
 
         verify(mConsentManager, times(0)).enable(mSpyContext, AdServicesApiType.TOPICS);
         verify(mConsentManager, times(0)).enable(mSpyContext, AdServicesApiType.FLEDGE);

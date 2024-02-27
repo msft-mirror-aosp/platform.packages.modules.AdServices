@@ -255,13 +255,14 @@ public class ConsentManager {
                         // builds, use the deprecated flag
                         // enable_adext_service_to_appsearch_migration.
                         if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
-                            ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
-                                    context,
-                                    datastore,
-                                    appSearchConsentManager,
-                                    adServicesExtDataManager,
-                                    statsdAdServicesLogger,
-                                    adServicesManager);
+                            AdExtDataConsentMigrationUtils
+                                    .handleConsentMigrationFromAdExtDataIfNeeded(
+                                            context,
+                                            datastore,
+                                            appSearchConsentManager,
+                                            adServicesExtDataManager,
+                                            statsdAdServicesLogger,
+                                            adServicesManager);
                         }
                     }
 
@@ -2197,6 +2198,12 @@ public class ConsentManager {
                 () -> // Same as PPAPI_ONLY. Doesn't need to be rollback safe
                 mUxStatesDao.setEnrollmentChannel(ux, channel),
                 /* errorLogger= */ null);
+    }
+
+    public boolean isPasFledgeConsentGiven() {
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 
     @FunctionalInterface

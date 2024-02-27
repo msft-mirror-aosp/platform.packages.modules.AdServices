@@ -285,32 +285,22 @@ public class PersistAdSelectionResultRunner {
             ListenableFuture<Void> signJoinFuture =
                     Futures.submitAsync(
                             () -> {
-                                List<KAnonMessageEntity> messageEntities =
-                                        getKAnonEntitiesFromAuctionResult(
-                                                auctionResult, adSelectionId);
-                                KAnonSignJoinManager kAnonSignJoinManager =
-                                        mKAnonSignJoinFactory.getKAnonSignJoinManager();
-                                kAnonSignJoinManager.processNewMessages(messageEntities);
-                                return null;
+                                try {
+                                    List<KAnonMessageEntity> messageEntities =
+                                            getKAnonEntitiesFromAuctionResult(
+                                                    auctionResult, adSelectionId);
+                                    KAnonSignJoinManager kAnonSignJoinManager =
+                                            mKAnonSignJoinFactory.getKAnonSignJoinManager();
+                                    kAnonSignJoinManager.processNewMessages(messageEntities);
+                                } catch (Throwable t) {
+                                    sLogger.d("Error while processing new messages for KAnon");
+                                }
+                                return Futures.immediateVoidFuture();
                             },
                             mBackgroundExecutorService);
-            Futures.addCallback(
-                    signJoinFuture,
-                    new FutureCallback<Void>() {
-                        @Override
-                        public void onSuccess(Void result) {
-                            mAdServicesLogger.logKAnonSignJoinStatus();
-                        }
-
-                        @Override
-                        public void onFailure(Throwable t) {
-                            mAdServicesLogger.logKAnonSignJoinStatus();
-                        }
-                    },
-                    mBackgroundExecutorService);
         } else {
+            sLogger.d("KAnon Sign Join feature is disabled");
             mAdServicesLogger.logKAnonSignJoinStatus();
-            LogUtil.i("KAnon Sign Join feature is disabled");
         }
     }
 

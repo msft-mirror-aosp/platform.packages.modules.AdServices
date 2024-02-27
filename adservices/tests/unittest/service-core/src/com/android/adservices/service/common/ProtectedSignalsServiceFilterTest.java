@@ -265,7 +265,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
 
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
-                .assertAppCanUsePpapi(CALLER_PACKAGE_NAME, API_NAME);
+                .assertAppInAllowlist(CALLER_PACKAGE_NAME, API_NAME, API_PROTECTED_SIGNALS);
 
         assertThrows(
                 FledgeAllowListsFilter.AppNotAllowedException.class,

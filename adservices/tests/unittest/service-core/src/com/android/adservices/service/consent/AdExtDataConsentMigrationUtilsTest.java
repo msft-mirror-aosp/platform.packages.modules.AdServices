@@ -53,7 +53,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-public class ConsentMigrationUtilsTest {
+public class AdExtDataConsentMigrationUtilsTest {
     private static final String EXTSERVICES_PKG_NAME_SUFFIX = "android.ext.services";
     private static final String ADSERVICES_PKG_NAME_SUFFIX = "android.adservices.api";
 
@@ -98,7 +98,7 @@ public class ConsentMigrationUtilsTest {
     public void testHandleConsentMigrationFromAdExtDataIfNeeded_onR_skipsMigration() {
         doReturn(false).when(SdkLevel::isAtLeastS);
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -117,7 +117,7 @@ public class ConsentMigrationUtilsTest {
             testHandleConsentMigrationFromAdExtDataIfNeeded_onSWithNullAdExtManager_skipsMigration() {
         mockSDevice();
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -142,7 +142,7 @@ public class ConsentMigrationUtilsTest {
                         ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH, false))
                 .thenReturn(true);
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -165,7 +165,7 @@ public class ConsentMigrationUtilsTest {
         mockNoMigration();
         when(mAppSearchConsentManagerMock.wasU18NotificationDisplayed()).thenReturn(true);
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -193,7 +193,7 @@ public class ConsentMigrationUtilsTest {
                 .thenReturn(mAdServicesExtDataParamsMock);
         when(mAdServicesExtDataParamsMock.getIsNotificationDisplayed()).thenReturn(BOOLEAN_FALSE);
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -229,7 +229,7 @@ public class ConsentMigrationUtilsTest {
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -296,7 +296,7 @@ public class ConsentMigrationUtilsTest {
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -352,7 +352,7 @@ public class ConsentMigrationUtilsTest {
             testHandleConsentMigrationFromAdExtDataIfNeeded_onTWithNullAdExtManager_skipsMigration() {
         mockTDevice();
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -378,7 +378,7 @@ public class ConsentMigrationUtilsTest {
                         false))
                 .thenReturn(true);
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -401,7 +401,7 @@ public class ConsentMigrationUtilsTest {
                 .thenReturn(mSharedPreferencesMock);
         when(mContextSpy.getPackageName()).thenReturn(EXTSERVICES_PKG_NAME_SUFFIX);
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -425,7 +425,7 @@ public class ConsentMigrationUtilsTest {
         mockNoMigration();
         when(mAdServicesManagerMock.wasU18NotificationDisplayed()).thenReturn(true);
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -454,7 +454,7 @@ public class ConsentMigrationUtilsTest {
                 .thenReturn(mAdServicesExtDataParamsMock);
         when(mAdServicesExtDataParamsMock.getIsNotificationDisplayed()).thenReturn(BOOLEAN_FALSE);
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -491,7 +491,7 @@ public class ConsentMigrationUtilsTest {
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,
@@ -555,7 +555,7 @@ public class ConsentMigrationUtilsTest {
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
-        ConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
+        AdExtDataConsentMigrationUtils.handleConsentMigrationFromAdExtDataIfNeeded(
                 mContextSpy,
                 mDatastoreMock,
                 mAppSearchConsentManagerMock,

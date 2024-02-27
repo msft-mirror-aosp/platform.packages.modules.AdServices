@@ -29,6 +29,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
+import com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -72,6 +73,7 @@ public class AdSelectionService extends Service {
             PackageChangedReceiver.enableReceiver(this, mFlags);
             MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
             MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+            BackgroundKeyFetchJobService.scheduleIfNeeded(this, mFlags, /* forceSchedule */ false);
         }
     }
 
