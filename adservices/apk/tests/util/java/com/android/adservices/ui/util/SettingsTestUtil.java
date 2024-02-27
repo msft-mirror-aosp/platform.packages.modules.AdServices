@@ -433,6 +433,8 @@ public final class SettingsTestUtil {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices pas_ux_enabled true");
         ShellUtils.runShellCommand(
+                "device_config put adservices consent_notification_debug_mode true");
+        ShellUtils.runShellCommand(
                 "device_config put adservices is_eea_device_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
 
@@ -444,6 +446,7 @@ public final class SettingsTestUtil {
         UiObject2 fledgeToggle = getToggleSwitch(device);
         if (fledgeToggle.isChecked()) {
             fledgeToggle.click();
+            device.waitForIdle();
         }
         assertThat(fledgeToggle.isChecked()).isFalse();
         device.pressBack();
