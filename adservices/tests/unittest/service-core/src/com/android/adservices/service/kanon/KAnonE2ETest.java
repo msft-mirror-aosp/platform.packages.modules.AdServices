@@ -73,8 +73,6 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.EncryptionContextDao;
-import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
@@ -290,6 +288,7 @@ public class KAnonE2ETest {
     private Transcript mTranscript;
 
     @Mock private Clock mockClock;
+    @Mock private com.android.adservices.shared.util.Clock mAdServicesClock;
     @Mock private UserProfileIdDao mockUserProfileIdDao;
     @Mock private KAnonObliviousHttpEncryptorImpl mockKAnonOblivivousHttpEncryptorImpl;
     private UserProfileIdManager mUserProfileIdManager;
@@ -389,7 +388,7 @@ public class KAnonE2ETest {
                 Room.inMemoryDatabaseBuilder(CONTEXT, KAnonDatabase.class).build();
         mClientParametersDao = kAnonDatabase.clientParametersDao();
         mServerParametersDao = kAnonDatabase.serverParametersDao();
-        mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao);
+        mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao, mAdServicesClock);
         mKAnonMessageDao = kAnonDatabase.kAnonMessageDao();
         mAnonymousCountingTokensSpy = spy(new AnonymousCountingTokensImpl());
 
