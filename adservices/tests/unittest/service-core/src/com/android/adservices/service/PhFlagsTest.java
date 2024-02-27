@@ -52,6 +52,8 @@ import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MI
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
+import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
@@ -487,7 +489,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEA
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_REQUEST_PERMITS_PER_SECOND;
@@ -10615,6 +10619,32 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Boolean.toString(phOverridingValue), KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED);
 
         assertThat(mPhFlags.getFledgeCustomAudienceCLIEnabledStatus()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAdServicesRetryStrategyEnabled() {
+        assertThat(mPhFlags.getAdServicesRetryStrategyEnabled())
+                .isEqualTo(DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED);
+
+        boolean phOverridingValue = true;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue), KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED);
+
+        assertThat(mPhFlags.getAdServicesRetryStrategyEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAdServicesJsScriptEngineMaxRetryAttempts() {
+        assertThat(mPhFlags.getAdServicesJsScriptEngineMaxRetryAttempts())
+                .isEqualTo(DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS);
+
+        int phOverridingValue = 5;
+        overrideKAnonFlags(
+                Integer.toString(phOverridingValue),
+                KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS);
+
+        assertThat(mPhFlags.getAdServicesJsScriptEngineMaxRetryAttempts())
+                .isEqualTo(phOverridingValue);
     }
 
     private void overrideKAnonFlags(String phOverridingValue, String property) {

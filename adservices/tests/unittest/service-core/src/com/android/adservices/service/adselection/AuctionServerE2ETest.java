@@ -126,6 +126,7 @@ import com.android.adservices.service.adselection.encryption.ProtectedServersEnc
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
@@ -298,6 +299,7 @@ public class AuctionServerE2ETest {
 
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     @Mock private AdServicesHttpsClient mMockHttpClient;
+    private RetryStrategyFactory mRetryStrategyFactory;
 
     @Before
     public void setUp() {
@@ -368,6 +370,7 @@ public class AuctionServerE2ETest {
                 new AdIdFetcher(mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
+        mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
 
         mAdSelectionService = createAdSelectionService();
 
@@ -862,7 +865,8 @@ public class AuctionServerE2ETest {
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -1090,7 +1094,8 @@ public class AuctionServerE2ETest {
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1741,7 +1746,8 @@ public class AuctionServerE2ETest {
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2103,7 +2109,8 @@ public class AuctionServerE2ETest {
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
                 mUnusedKAnonSignJoinFactory,
-                false);
+                false,
+                mRetryStrategyFactory);
     }
 
     private ProtectedAuctionInput getProtectedAuctionInputFromCipherText(
@@ -2193,7 +2200,8 @@ public class AuctionServerE2ETest {
                         mAdSelectionDebugReportDaoSpy,
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
-                        false);
+                        false,
+                        mRetryStrategyFactory);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2257,7 +2265,8 @@ public class AuctionServerE2ETest {
                 mAdSelectionDebugReportDaoSpy,
                 mAdIdFetcher,
                 mUnusedKAnonSignJoinFactory,
-                false);
+                false,
+                mRetryStrategyFactory);
     }
 
     private Map<AdTechIdentifier, BuyerInput> getBuyerInputMapFromDecryptedBytes(

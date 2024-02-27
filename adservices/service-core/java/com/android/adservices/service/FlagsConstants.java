@@ -1319,4 +1319,15 @@ public final class FlagsConstants {
 
     /** Key for AdServices' module job policy. */
     public static final String KEY_AD_SERVICES_MODULE_JOB_POLICY = "ad_services_module_job_policy";
+
+    /** Key for feature flagging AdServices Retryable. */
+    public static final String KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED =
+            "ad_services_retry_strategy_enabled";
+
+    /**
+     * Key for setting the value for max number of retry attempts for {@link
+     * com.android.adservices.service.js.JSScriptEngine}
+     */
+    public static final String KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS =
+            "ad_services_js_engine_max_retry_attempts";
 }

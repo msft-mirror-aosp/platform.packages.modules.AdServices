@@ -66,7 +66,9 @@ import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
@@ -264,7 +266,7 @@ public class SignalsEncodingE2ETest {
                         mProtectedSignalsServiceFilter);
 
         mSignalStorageManager = new SignalsProviderImpl(mSignalsDao);
-
+        RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
                         mContextSpy,
@@ -276,7 +278,8 @@ public class SignalsEncodingE2ETest {
                                         .getMaxHeapSizeBytes(),
                         new AdCounterKeyCopierNoOpImpl(),
                         new DebugReportingScriptDisabledStrategy(),
-                        false);
+                        false,
+                        retryStrategy);
 
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
