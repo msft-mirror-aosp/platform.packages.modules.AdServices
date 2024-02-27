@@ -1679,9 +1679,6 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
         Flags flagsWithKAnonEnabled =
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
         doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
-        doThrow(new RuntimeException("some random exception"))
-                .when(mKAnonSignJoinManagerMock)
-                .processNewMessages(anyList());
         PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
         KAnonSignJoinFactory kAnonSignJoinFactory =
                 spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
@@ -1709,10 +1706,10 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
         doAnswer(
                         (unused) -> {
                             countDownLatch.countDown();
-                            return null;
+                            throw new RuntimeException("some random exception");
                         })
-                .when(mAdServicesLoggerSpy)
-                .logKAnonSignJoinStatus();
+                .when(mKAnonSignJoinManagerMock)
+                .processNewMessages(anyList());
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
         countDownLatch.await();
@@ -1754,8 +1751,8 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
                             countDownLatch.countDown();
                             return null;
                         })
-                .when(mAdServicesLoggerSpy)
-                .logKAnonSignJoinStatus();
+                .when(mKAnonSignJoinManagerMock)
+                .processNewMessages(anyList());
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
         countDownLatch.await();
