@@ -328,24 +328,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getTopicsCobaltLoggingEnabled() {
-        // We check the getCobaltLoggingEnabled first.
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return getCobaltLoggingEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
-                        /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
+                        TOPICS_COBALT_LOGGING_ENABLED);
     }
 
     @Override
     public boolean getAppNameApiErrorCobaltLoggingEnabled() {
-        // We check the getCobaltLoggingEnabled first.
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return getCobaltLoggingEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
-                        /* defaultValue */ APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                        APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
     }
 
     @Override
@@ -2165,9 +2159,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 /* defaultValue */ MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
 
-    // MDD Logger Killswitches
-    @Override
-    public boolean getMddLoggerKillSwitch() {
+    // TODO(b/326254556): ideally it should be removed and the logic moved to getBillEnabled(), but
+    // this is a legacy flag that also reads system properties, and the system properties workflow
+    // is not unit tested.
+    private boolean getMddLoggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
@@ -2323,6 +2318,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST,
+                /* defaultValue */ PPAPI_APP_ALLOW_LIST);
+    }
+
+    @Override
+    public String getPasAppAllowList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PAS_APP_ALLOW_LIST,
+                // default to using the same fixed list as custom audiences
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
@@ -3377,11 +3382,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT);
     }
 
-    @VisibleForTesting
-    static String getSystemPropertyName(String key) {
-        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
-    }
-
     @Override
     public boolean getUiDialogsFeatureEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -3939,6 +3939,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getPpapiAppSignatureAllowList());
         writer.println(
                 "\t" + FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+        writer.println("\t" + FlagsConstants.KEY_PAS_APP_ALLOW_LIST + " = " + getPasAppAllowList());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST
@@ -6885,5 +6886,37 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getBackgroundJobsLoggingEnabled() {
         return !getBackgroundJobsLoggingKillSwitch();
+    }
+
+    // Do NOT add Flag / @Override methods below - it should only contain helpers
+
+    @VisibleForTesting
+    static boolean getDeviceConfigFlag(String name, boolean defaultValue) {
+        return DeviceConfig.getBoolean(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static String getDeviceConfigFlag(String name, String defaultValue) {
+        return DeviceConfig.getString(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static int getDeviceConfigFlag(String name, int defaultValue) {
+        return DeviceConfig.getInt(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static long getDeviceConfigFlag(String name, long defaultValue) {
+        return DeviceConfig.getLong(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static float getDeviceConfigFlag(String name, float defaultValue) {
+        return DeviceConfig.getFloat(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static String getSystemPropertyName(String key) {
+        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
     }
 }

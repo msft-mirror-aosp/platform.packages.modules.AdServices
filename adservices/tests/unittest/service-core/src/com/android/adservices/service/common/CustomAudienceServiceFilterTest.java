@@ -317,7 +317,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
     public void testFilterRequest_appNotInAllowlist_throws() {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
-                .assertAppCanUsePpapi(CALLER_PACKAGE_NAME, API_NAME);
+                .assertAppInAllowlist(CALLER_PACKAGE_NAME, API_NAME, API_CUSTOM_AUDIENCES);
 
         assertThrows(
                 FledgeAllowListsFilter.AppNotAllowedException.class,
@@ -547,7 +547,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
-                .assertAppCanUsePpapi(CALLER_PACKAGE_NAME, API_NAME);
+                .assertAppInAllowlist(CALLER_PACKAGE_NAME, API_NAME, API_CUSTOM_AUDIENCES);
 
         assertThrows(
                 FledgeAllowListsFilter.AppNotAllowedException.class,

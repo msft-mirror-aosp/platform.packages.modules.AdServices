@@ -262,9 +262,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     // Should not be called directly
     private void internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
-            String name,
-            AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator,
-            boolean expectedValue) {
+            String name, Flaginator<Boolean> flaginator, boolean expectedValue) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -281,13 +279,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     private void testRampedUpKillSwitchGuardedByGlobalKillSwitch(
-            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+            String name, Flaginator<Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ false);
     }
 
     private void testNewKillSwitchGuardedByGlobalKillSwitch(
-            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+            String name, Flaginator<Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ true);
     }
@@ -297,7 +295,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
      */
     @Deprecated
     private void testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(
-            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+            String name, Flaginator<Boolean> flaginator) {
         internalHelperFortKillSwitchGuardedByGlobalKillSwitch(
                 name, flaginator, /* expectedValue= */ false);
     }
@@ -306,12 +304,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetTopicsKillSwitch() {
         testNewKillSwitchGuardedByGlobalKillSwitch(
                 "TOPICS_KILL_SWITCH", flags -> flags.getTopicsKillSwitch());
-    }
-
-    @Test
-    public void testGetMddLoggerKillSwitch() {
-        testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(
-                "MDD_LOGGER_KILL_SWITCH", flags -> flags.getMddLoggerKillSwitch());
     }
 
     @Test
@@ -330,9 +322,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     private void testFeatureFlagBasedOnLegacyKillSwitchAndGuardedByGlobalKillSwitch(
-            String getterName,
-            boolean defaultKillSwitchValue,
-            AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+            String getterName, boolean defaultKillSwitchValue, Flaginator<Boolean> flaginator) {
         expect.withMessage("%s when global kill_switch is on", getterName)
                 .that(flaginator.getFlagValue(mGlobalKsOnFlags))
                 .isFalse();
@@ -374,7 +364,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     private void testFeatureFlagGuardedByGlobalKillSwitch(
-            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+            String name, Flaginator<Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -403,9 +393,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Deprecated
     @SuppressWarnings("UnusedMethod") // will be used as more kill switches are refactored
     private void testLegacyMsmtKillSwitchGuardedByMsmtKillSwitch(
-            String getterName,
-            String killSwitchName,
-            AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+            String getterName, String killSwitchName, Flaginator<Boolean> flaginator) {
         boolean defaultKillSwitchValue = getConstantValue(killSwitchName);
 
         // Getter
@@ -433,9 +421,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     private void testMsmtFeatureFlagBasedUpLegacyKillSwitchAndGuardedByMsmtEnabled(
-            String getterName,
-            String killSwitchName,
-            AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+            String getterName, String killSwitchName, Flaginator<Boolean> flaginator) {
         boolean defaultKillSwitchValue = getConstantValue(killSwitchName);
         boolean defaultValue = !defaultKillSwitchValue;
 
@@ -473,8 +459,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 flags -> flags.getAppConfigReturnsEnabledByDefault());
     }
 
-    private void testRetiredFeatureFlag(
-            String name, AiPoweredKillSwitchAkaFeatureFlagTestatorPlus flaginator) {
+    private void testRetiredFeatureFlag(String name, Flaginator<Boolean> flaginator) {
         boolean defaultValue = getConstantValue(name);
 
         // Getter
@@ -588,14 +573,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
             super.decorateToString(toString);
             toString.append(", msmtKsEnabled=").append(mMsmtKsEnabled);
         }
-    }
-
-    /**
-     * "Fancy" interface used to build lambdas that can test a speficic flag on multiple {@code
-     * Flag} objects.
-     */
-    private interface AiPoweredKillSwitchAkaFeatureFlagTestatorPlus {
-        boolean getFlagValue(Flags flags);
     }
 
     // TODO(b/325135083): add a test to make sure all constants are annotated with FeatureFlag or

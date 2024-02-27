@@ -33,6 +33,7 @@ import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -188,7 +189,8 @@ public abstract class ProtectedSignalsDao {
             return 0;
         }
 
-        CleanupUtils.removeAllowedPackages(sourceAppsToRemove, packageManager, flags);
+        CleanupUtils.removeAllowedPackages(
+                sourceAppsToRemove, packageManager, Arrays.asList(flags.getPasAppAllowList()));
 
         int numDeletedEvents = 0;
         if (!sourceAppsToRemove.isEmpty()) {

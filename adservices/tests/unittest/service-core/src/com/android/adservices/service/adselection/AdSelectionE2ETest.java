@@ -7915,7 +7915,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             AdTechIdentifier buyer = buyersBundle.getKey();
             SignedContextualAds ads = buyersBundle.getValue();
             unauthenticatedContextualAds.put(
-                    buyer, ads.cloneToBuilder().setSignature(invalidSignatures).build());
+                    buyer,
+                    new SignedContextualAds.Builder(ads).setSignature(invalidSignatures).build());
         }
         return unauthenticatedContextualAds;
     }
