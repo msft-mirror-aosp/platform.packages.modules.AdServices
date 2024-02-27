@@ -445,7 +445,9 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
-                new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
+                new SetAppInstallAdvertisersRequest.Builder()
+                        .setAdvertisers(Collections.EMPTY_SET)
+                        .build());
 
         // Make sure the flags are picked up cold
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -461,7 +463,9 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mTestCustomAudienceClient.resetAllCustomAudienceOverrides();
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
-                new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
+                new SetAppInstallAdvertisersRequest.Builder()
+                        .setAdvertisers(Collections.EMPTY_SET)
+                        .build());
         mCustomAudienceTestFixture.leaveJoinedCustomAudiences();
 
         // Reset the filtering flag
@@ -2600,7 +2604,9 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Allow BUYER_2 to filter on the test package
         SetAppInstallAdvertisersRequest request =
-                new SetAppInstallAdvertisersRequest(new HashSet<>(Arrays.asList(BUYER_2)));
+                new SetAppInstallAdvertisersRequest.Builder()
+                        .setAdvertisers(new HashSet<>(Arrays.asList(BUYER_2)))
+                        .build();
         ListenableFuture<Void> appInstallFuture =
                 mAdSelectionClient.setAppInstallAdvertisers(request);
         assertNull(appInstallFuture.get());
@@ -2738,8 +2744,9 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Allow BUYER_2 to filter on the test package
         SetAppInstallAdvertisersRequest request =
-                new SetAppInstallAdvertisersRequest(
-                        new HashSet<>(Arrays.asList(BUYER_2, INVALID_EMPTY_BUYER)));
+                new SetAppInstallAdvertisersRequest.Builder()
+                        .setAdvertisers(new HashSet<>(Arrays.asList(BUYER_2, INVALID_EMPTY_BUYER)))
+                        .build();
         mAdSelectionClient.setAppInstallAdvertisers(request);
         ListenableFuture<Void> appInstallFuture =
                 mAdSelectionClient.setAppInstallAdvertisers(request);
@@ -4594,7 +4601,8 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
             AdTechIdentifier buyer = buyersBundle.getKey();
             SignedContextualAds ads = buyersBundle.getValue();
             unauthenticatedContextualAds.put(
-                    buyer, ads.cloneToBuilder().setSignature(invalidSignatures).build());
+                    buyer,
+                    new SignedContextualAds.Builder(ads).setSignature(invalidSignatures).build());
         }
         return unauthenticatedContextualAds;
     }

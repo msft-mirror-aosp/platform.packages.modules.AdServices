@@ -16,20 +16,18 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 
 import android.os.SystemProperties;
-import android.provider.DeviceConfig;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
-import com.android.modules.utils.testing.StaticMockFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Test;
-
-import java.util.function.Supplier;
 
 @SpyStatic(SystemProperties.class)
 public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
@@ -39,34 +37,40 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
     // Overriding DeviceConfig stub to avoid Read device config permission errors and to also
     // test the behavior of flags, when both device config and system properties are set.
     @Override
-    protected Supplier<? extends StaticMockFixture>[] getStaticMockFixtureSuppliers() {
-        @SuppressWarnings("unchecked")
-        Supplier<? extends StaticMockFixture>[] suppliers =
-                (Supplier<? extends StaticMockFixture>[])
-                        new Supplier<?>[] {TestableDeviceConfig::new};
-        return (Supplier<? extends StaticMockFixture>[]) suppliers;
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder()
+                .addStaticMockFixtures(TestableDeviceConfig::new)
+                .build();
     }
 
     @Test
     public void testGetTopicsEpochJobFlexMs() {
+        testSystemPropertyIsPreferred(
+                KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                TOPICS_EPOCH_JOB_FLEX_MS,
+                flags -> flags.getTopicsEpochJobFlexMs());
+    }
+
+    private void testSystemPropertyIsPreferred(
+            String name, long defaultValue, Flaginator<Long> flaginator) {
         // Without any overriding, the value is the hard coded constant.
-        expect.withMessage("getTopicsEpochJobFlexMs() by default")
-                .that(mPhFlags.getTopicsEpochJobFlexMs())
-                .isEqualTo(TOPICS_EPOCH_JOB_FLEX_MS);
+        expect.withMessage("getter for %s by default", name)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(defaultValue);
 
         // Now overriding with the value in both system properties and device config.
-        long systemPropertyValue = TOPICS_EPOCH_JOB_FLEX_MS + 1;
-        long deviceConfigValue = TOPICS_EPOCH_JOB_FLEX_MS + 2;
-        extendedMockito.mockGetSystemProperty(
-                PhFlags.getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS), systemPropertyValue);
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_TOPICS_EPOCH_JOB_FLEX_MS,
-                Long.toString(deviceConfigValue),
-                /* makeDefault */ false);
+        long systemPropertyValue = defaultValue + 1;
+        long deviceConfigValue = defaultValue + 2;
+        mockGetSystemProperty(name, systemPropertyValue);
 
-        expect.withMessage("getTopicsEpochJobFlexMs() prefers system property value")
-                .that(mPhFlags.getTopicsEpochJobFlexMs())
+        setAdservicesFlag(name, deviceConfigValue);
+
+        expect.withMessage("getter for %s prefers system property value", name)
+                .that(flaginator.getFlagValue(mPhFlags))
                 .isEqualTo(systemPropertyValue);
+    }
+
+    private void mockGetSystemProperty(String name, long value) {
+        extendedMockito.mockGetSystemProperty(PhFlags.getSystemPropertyName(name), value);
     }
 }

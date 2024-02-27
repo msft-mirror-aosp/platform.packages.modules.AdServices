@@ -636,7 +636,7 @@ public class AsyncRegistrationQueueRunner {
                                         .setSourceType(source.getSourceType())
                                         .setStatus(EventReport.Status.PENDING)
                                         .setRandomizedTriggerRate(
-                                                mSourceNoiseHandler.getRandomAttributionProbability(
+                                                mSourceNoiseHandler.getRandomizedTriggerRate(
                                                         source))
                                         .setRegistrationOrigin(source.getRegistrationOrigin())
                                         .setSourceDebugKey(getSourceDebugKeyForNoisedReport(source))
@@ -655,12 +655,11 @@ public class AsyncRegistrationQueueRunner {
             return;
         }
 
-        List<EventReport> eventReports = generateFakeEventReports(sourceId, source, fakeReports);
-        if (!eventReports.isEmpty()) {
+        if (fakeReports != null) {
             mDebugReportApi.scheduleSourceNoisedDebugReport(source, dao);
-        }
-        for (EventReport report : eventReports) {
-            dao.insertEventReport(report);
+            for (EventReport report : generateFakeEventReports(sourceId, source, fakeReports)) {
+                dao.insertEventReport(report);
+            }
         }
         // We want to account for attribution if fake report generation was considered
         // based on the probability. In that case the attribution mode will be NEVER

@@ -153,6 +153,7 @@ public class FetcherUtil {
      */
     static boolean isValidAggregateKeyId(String id) {
         return id != null
+                && !id.isEmpty()
                 && id.getBytes().length
                         <= FlagsFactory.getFlags()
                                 .getMeasurementMaxBytesPerAttributionAggregateKeyId();
@@ -160,7 +161,7 @@ public class FetcherUtil {
 
     /** Validate aggregate deduplication key. */
     static boolean isValidAggregateDeduplicationKey(String deduplicationKey) {
-        if (deduplicationKey == null) {
+        if (deduplicationKey == null || deduplicationKey.isEmpty()) {
             return false;
         }
         try {
@@ -175,7 +176,7 @@ public class FetcherUtil {
      * Validate aggregate key-piece.
      */
     static boolean isValidAggregateKeyPiece(String keyPiece, Flags flags) {
-        if (keyPiece == null) {
+        if (keyPiece == null || keyPiece.isEmpty()) {
             return false;
         }
         int length = keyPiece.getBytes().length;
@@ -205,7 +206,7 @@ public class FetcherUtil {
             @NonNull JSONArray filterSet,
             Flags flags,
             boolean canIncludeLookbackWindow,
-            boolean shouldCheckFilterSize) {
+            boolean shouldCheckFilterSize) throws JSONException {
         if (filterSet.length()
                 > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
@@ -227,7 +228,7 @@ public class FetcherUtil {
             JSONObject filtersObj,
             Flags flags,
             boolean canIncludeLookbackWindow,
-            boolean shouldCheckFilterSize) {
+            boolean shouldCheckFilterSize) throws JSONException {
         if (filtersObj == null
                 || filtersObj.length()
                         > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
@@ -266,12 +267,12 @@ public class FetcherUtil {
                 return false;
             }
             for (int i = 0; i < values.length(); i++) {
-                String value = values.optString(i);
-                if (value == null) {
+                Object value = values.get(i);
+                if (!(value instanceof String)) {
                     return false;
                 }
                 if (shouldCheckFilterSize
-                        && value.getBytes().length
+                        && ((String) value).getBytes().length
                                 > FlagsFactory.getFlags()
                                         .getMeasurementMaxBytesPerAttributionFilterString()) {
                     return false;

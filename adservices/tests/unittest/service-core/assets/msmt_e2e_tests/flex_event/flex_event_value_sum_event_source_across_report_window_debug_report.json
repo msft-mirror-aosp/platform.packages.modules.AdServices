@@ -125,7 +125,7 @@
           "source_type": "navigation",
           "source_debug_key": "333",
           "trigger_summary_bucket": [10, 4294967295],
-          "randomized_trigger_rate": 0.000004157629766763622,
+          "randomized_trigger_rate": 0.0000042,
           "trigger_debug_keys": ["555", "444"]
         }
       }
@@ -142,7 +142,7 @@
           "source_type": "navigation",
           "source_debug_key": "333",
           "trigger_summary_bucket": [10, 4294967295],
-          "randomized_trigger_rate": 0.000004157629766763622,
+          "randomized_trigger_rate": 0.0000042,
           "trigger_debug_keys": ["555", "444"]
         }
       }

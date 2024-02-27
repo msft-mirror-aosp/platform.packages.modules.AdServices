@@ -213,12 +213,16 @@ package android.adservices.adselection {
   }
 
   @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public class SetAppInstallAdvertisersRequest {
-    ctor public SetAppInstallAdvertisersRequest(@NonNull java.util.Set<android.adservices.common.AdTechIdentifier>);
     method @NonNull public java.util.Set<android.adservices.common.AdTechIdentifier> getAdvertisers();
   }
 
+  public static final class SetAppInstallAdvertisersRequest.Builder {
+    ctor public SetAppInstallAdvertisersRequest.Builder();
+    method @NonNull public android.adservices.adselection.SetAppInstallAdvertisersRequest build();
+    method @NonNull public android.adservices.adselection.SetAppInstallAdvertisersRequest.Builder setAdvertisers(@NonNull java.util.Set<android.adservices.common.AdTechIdentifier>);
+  }
+
   @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public final class SignedContextualAds implements android.os.Parcelable {
-    method @NonNull public android.adservices.adselection.SignedContextualAds.Builder cloneToBuilder();
     method public int describeContents();
     method @NonNull public java.util.List<android.adservices.adselection.AdWithBid> getAdsWithBid();
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
@@ -230,6 +234,7 @@ package android.adservices.adselection {
 
   public static final class SignedContextualAds.Builder {
     ctor public SignedContextualAds.Builder();
+    ctor public SignedContextualAds.Builder(@NonNull android.adservices.adselection.SignedContextualAds);
     method @NonNull public android.adservices.adselection.SignedContextualAds build();
     method @NonNull public android.adservices.adselection.SignedContextualAds.Builder setAdsWithBid(@NonNull java.util.List<android.adservices.adselection.AdWithBid>);
     method @NonNull public android.adservices.adselection.SignedContextualAds.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);

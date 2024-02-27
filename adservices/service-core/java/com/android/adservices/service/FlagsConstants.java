@@ -847,6 +847,7 @@ public final class FlagsConstants {
 
     // App/SDK AllowList/DenyList keys
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+    public static final String KEY_PAS_APP_ALLOW_LIST = "pas_app_allow_list";
 
     public static final String KEY_AD_ID_API_APP_BLOCK_LIST = "ad_id_api_app_block_list";
 

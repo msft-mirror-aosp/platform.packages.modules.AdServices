@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -75,9 +74,9 @@ public class SourceNoiseHandler {
             @NonNull Source source) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
         double value = rand.nextDouble();
-        if (value > getRandomAttributionProbability(source)) {
+        if (value >= getRandomizedSourceResponsePickRate(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
-            return Collections.emptyList();
+            return null;
         }
 
         List<Source.FakeReport> fakeReports;
@@ -131,13 +130,18 @@ public class SourceNoiseHandler {
         return fakeReports;
     }
 
-    /** @return Probability of selecting random state for attribution */
-    public double getRandomAttributionProbability(@NonNull Source source) {
+    @VisibleForTesting
+    double getRandomizedSourceResponsePickRate(Source source) {
         // Methods on Source and EventReportWindowCalcDelegate that calculate flip probability for
         // the source rely on reporting windows and max reports that are obtained with consideration
         // to install-state and its interaction with configurable report windows and configurable
         // max reports.
-        return convertToDoubleAndLimitDecimal(source.getFlipProbability(mFlags));
+        return source.getFlipProbability(mFlags);
+    }
+
+    /** @return Probability of selecting random state for attribution */
+    public double getRandomizedTriggerRate(@NonNull Source source) {
+        return convertToDoubleAndLimitDecimal(getRandomizedSourceResponsePickRate(source));
     }
 
     private double convertToDoubleAndLimitDecimal(double probability) {

@@ -107,7 +107,7 @@ class TestObjectProvider {
                 spy(new SourceNoiseHandler(FlagsFactory.getFlagsForTest()));
         if (type == Type.DENOISED) {
             // Disable Impression Noise
-            doReturn(Collections.emptyList())
+            doReturn(null)
                     .when(sourceNoiseHandler)
                     .assignAttributionModeAndGenerateFakeReports(any(Source.class));
         } else if (type == Type.NOISY) {

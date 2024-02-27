@@ -30,6 +30,7 @@ import com.android.adservices.data.kanon.KAnonMessageConstants;
 import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -57,6 +58,7 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
     @Mock private Clock mockClock;
     @Mock private KAnonCaller mockKanonCaller;
+    @Mock private AdServicesLogger mockAdServicesLogger;
 
     private final Instant FIXED_TIME = Instant.now();
     private static final long AD_SELECTION_ID_1 = 1;
@@ -80,7 +82,12 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
         mFlags = FlagsFactory.getFlags();
         mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
         mKAnonSignJoinManager =
-                new KAnonSignJoinManager(mockKanonCaller, mKAnonMessageManager, mFlags, mockClock);
+                new KAnonSignJoinManager(
+                        mockKanonCaller,
+                        mKAnonMessageManager,
+                        mFlags,
+                        mockClock,
+                        mockAdServicesLogger);
     }
 
     @Test
