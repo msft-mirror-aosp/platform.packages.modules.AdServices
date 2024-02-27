@@ -79,6 +79,7 @@ public class ConsentNotificationResetChannel implements PrivacySandboxEnrollment
         if (SdkLevel.isAtLeastS()) {
             consentManager.recordNotificationDisplayed(false);
             consentManager.recordGaUxNotificationDisplayed(false);
+            consentManager.recordPasNotificationDisplayed(false);
         }
         consentManager.setU18NotificationDisplayed(false);
         consentManager.setU18Account(false);
