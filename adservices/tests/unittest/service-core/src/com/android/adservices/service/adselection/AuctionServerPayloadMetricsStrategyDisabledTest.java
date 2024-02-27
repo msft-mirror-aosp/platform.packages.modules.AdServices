@@ -19,7 +19,11 @@ package com.android.adservices.service.adselection;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
+import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import org.junit.Before;
@@ -27,10 +31,16 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Map;
+
 public class AuctionServerPayloadMetricsStrategyDisabledTest {
     @Mock private GetAdSelectionDataApiCalledStats.Builder mBuilder;
     private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy =
             new AuctionServerPayloadMetricsStrategyDisabled();
+
+    @Mock private Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> mPerBuyerStatsMock;
+    @Mock private DBCustomAudience mDBCustomAudienceMock;
+    @Mock private BiddingAuctionServers.BuyerInput.CustomAudience mCustomAudienceMock;
 
     @Before
     public void setup() {
@@ -48,5 +58,19 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
         mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataApiCalledStats(
                 mBuilder, 2000, AdServicesStatusUtils.STATUS_SUCCESS);
         verifyZeroInteractions(mBuilder);
+    }
+
+    @Test
+    public void testLogGetAdSelectionDataBuyerInputGeneratedStatsDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
+                mPerBuyerStatsMock);
+        verifyZeroInteractions(mPerBuyerStatsMock);
+    }
+
+    @Test
+    public void testAddToBuyerIntermediateStatsDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.addToBuyerIntermediateStats(
+                mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
+        verifyZeroInteractions(mPerBuyerStatsMock, mDBCustomAudienceMock, mCustomAudienceMock);
     }
 }

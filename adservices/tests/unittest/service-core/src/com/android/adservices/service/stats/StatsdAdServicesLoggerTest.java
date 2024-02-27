@@ -1623,12 +1623,12 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 GetAdSelectionDataBuyerInputGeneratedStats.builder()
                         .setNumCustomAudiences(2)
                         .setNumCustomAudiencesOmitAds(1)
-                        .setCustomAudienceSizeMeanKb(23F)
-                        .setCustomAudienceSizeVarianceKb(24F)
-                        .setTrustedBiddingSignalsKeysSizeMeanKb(25F)
-                        .setTrustedBiddingSignalsSizeVarianceKb(26F)
-                        .setUserBiddingSignalsSizeMeanKb(27F)
-                        .setUserBiddingSignalsSizeVarianceKb(28F)
+                        .setCustomAudienceSizeMeanB(23F)
+                        .setCustomAudienceSizeVarianceB(24F)
+                        .setTrustedBiddingSignalsKeysSizeMeanB(25F)
+                        .setTrustedBiddingSignalsKeysSizeVarianceB(26F)
+                        .setUserBiddingSignalsSizeMeanB(27F)
+                        .setUserBiddingSignalsSizeVarianceB(28F)
                         .build();
         doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 

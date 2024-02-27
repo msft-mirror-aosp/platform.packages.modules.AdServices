@@ -17,8 +17,15 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
+import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
+
+import java.util.Map;
+
 /** Strategy interface denoting how to log GetAdSelectionData payload size metrics */
 public interface AuctionServerPayloadMetricsStrategy {
     /** Sets the number of buyers to the {@link GetAdSelectionDataApiCalledStats#builder()} */
@@ -29,4 +36,20 @@ public interface AuctionServerPayloadMetricsStrategy {
             GetAdSelectionDataApiCalledStats.Builder builder,
             int payloadSize,
             @AdServicesStatusUtils.StatusCode int statusCode);
+
+    /**
+     * Loops thorough each buyer and logs {@link
+     * com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats}
+     */
+    void logGetAdSelectionDataBuyerInputGeneratedStats(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> statsMap);
+
+    /**
+     * Adds this custom audiences stats to the map of buyer to {@link
+     * BuyerInputGeneratorIntermediateStats}
+     */
+    void addToBuyerIntermediateStats(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats,
+            DBCustomAudience dbCustomAudience,
+            BiddingAuctionServers.BuyerInput.CustomAudience customAudience);
 }

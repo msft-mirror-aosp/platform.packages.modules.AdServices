@@ -16,8 +16,18 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
+import android.adservices.common.AdTechIdentifier;
+
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
+import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
+
+import java.util.Map;
 
 public class AuctionServerPayloadMetricsStrategyEnabled
         implements AuctionServerPayloadMetricsStrategy {
@@ -38,5 +48,82 @@ public class AuctionServerPayloadMetricsStrategyEnabled
             GetAdSelectionDataApiCalledStats.Builder builder, int payloadSize, int statusCode) {
         mAdServicesLogger.logGetAdSelectionDataApiCalledStats(
                 builder.setPayloadSizeKb(payloadSize).setStatusCode(statusCode).build());
+    }
+
+    @Override
+    public void logGetAdSelectionDataBuyerInputGeneratedStats(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> statsMap) {
+        for (BuyerInputGeneratorIntermediateStats buyerStats : statsMap.values()) {
+            GetAdSelectionDataBuyerInputGeneratedStats stats =
+                    GetAdSelectionDataBuyerInputGeneratedStats.builder()
+                            .setNumCustomAudiences(buyerStats.getNumCustomAudiences())
+                            .setNumCustomAudiencesOmitAds(buyerStats.getNumCustomAudiencesOmitAds())
+                            .setCustomAudienceSizeMeanB(buyerStats.getCustomAudienceSizeMeanB())
+                            .setCustomAudienceSizeVarianceB(
+                                    buyerStats.getCustomAudienceSizeVarianceB())
+                            .setTrustedBiddingSignalsKeysSizeMeanB(
+                                    buyerStats.getTrustedBiddingSignalsKeysSizeMeanB())
+                            .setTrustedBiddingSignalsKeysSizeVarianceB(
+                                    buyerStats.getTrustedBiddingSignalskeysSizeVarianceB())
+                            .setUserBiddingSignalsSizeMeanB(
+                                    buyerStats.getUserBiddingSignalsSizeMeanB())
+                            .setUserBiddingSignalsSizeVarianceB(
+                                    buyerStats.getUserBiddingSignalsSizeVarianceB())
+                            .build();
+            mAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
+        }
+    }
+
+    @Override
+    public void addToBuyerIntermediateStats(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats,
+            DBCustomAudience dbCustomAudience,
+            BiddingAuctionServers.BuyerInput.CustomAudience customAudience) {
+        AdTechIdentifier buyerName = dbCustomAudience.getBuyer();
+
+        if (!perBuyerStats.containsKey(buyerName)) {
+            perBuyerStats.put(buyerName, new BuyerInputGeneratorIntermediateStats());
+        }
+        updateInputFromCustomAudience(
+                perBuyerStats.get(buyerName), customAudience, dbCustomAudience);
+    }
+
+    private void updateInputFromCustomAudience(
+            BuyerInputGeneratorIntermediateStats stats,
+            BiddingAuctionServers.BuyerInput.CustomAudience customAudience,
+            DBCustomAudience dbCustomAudience) {
+        stats.incrementNumCustomAudiences();
+        if (isCaOmittingAds(customAudience, dbCustomAudience)) {
+            stats.incrementNumCustomAudiencesOmitAds();
+        }
+        stats.addCustomAudienceSize(customAudience.getSerializedSize());
+        if (dbCustomAudience.getTrustedBiddingData() != null) {
+            int trustedBiddingSignalsKeysSize =
+                    dbCustomAudience.getTrustedBiddingData().size()
+                            - dbCustomAudience
+                                    .getTrustedBiddingData()
+                                    .getUri()
+                                    .toString()
+                                    .getBytes()
+                                    .length;
+            stats.addTrustedBiddingSignalsKeysSize(trustedBiddingSignalsKeysSize);
+        } else {
+            stats.addTrustedBiddingSignalsKeysSize(0);
+        }
+        if (dbCustomAudience.getUserBiddingSignals() != null) {
+            stats.addUserBiddingSignalsSize(
+                    dbCustomAudience.getUserBiddingSignals().getSizeInBytes());
+        } else {
+            stats.addUserBiddingSignalsSize(0);
+        }
+    }
+
+    private boolean isCaOmittingAds(
+            BiddingAuctionServers.BuyerInput.CustomAudience customAudience,
+            DBCustomAudience dbCustomAudience) {
+        return customAudience.getAdRenderIdsCount() == 0
+                && ((dbCustomAudience.getAuctionServerRequestFlags()
+                                & FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        != 0);
     }
 }

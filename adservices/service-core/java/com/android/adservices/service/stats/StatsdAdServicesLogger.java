@@ -668,12 +668,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 GET_AD_SELECTION_DATA_BUYER_INPUT_GENERATED,
                 stats.getNumCustomAudiences(),
                 stats.getNumCustomAudiencesOmitAds(),
-                stats.getCustomAudienceSizeMeanKb(),
-                stats.getCustomAudienceSizeVarianceKb(),
-                stats.getTrustedBiddingSignalsKeysSizeMeanKb(),
-                stats.getTrustedBiddingSignalsSizeVarianceKb(),
-                stats.getUserBiddingSignalsSizeMeanKb(),
-                stats.getUserBiddingSignalsSizeVarianceKb());
+                stats.getCustomAudienceSizeMeanB(),
+                stats.getCustomAudienceSizeVarianceB(),
+                stats.getTrustedBiddingSignalsKeysSizeMeanB(),
+                stats.getTrustedBiddingSignalsKeysSizeVarianceB(),
+                stats.getUserBiddingSignalsSizeMeanB(),
+                stats.getUserBiddingSignalsSizeVarianceB());
     }
 
     @NonNull

@@ -149,6 +149,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
+        Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
 
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
@@ -168,6 +169,7 @@ public class GetAdSelectionDataRunner {
         mClock = Clock.systemUTC();
 
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
+        mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
@@ -180,12 +182,12 @@ public class GetAdSelectionDataRunner {
                         mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
                         AuctionServerDataCompressorFactory.getDataCompressor(
                                 mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
-                        mFlags.getFledgeAuctionServerOmitAdsEnabled());
+                        mFlags.getFledgeAuctionServerOmitAdsEnabled(),
+                        auctionServerPayloadMetricsStrategy);
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
         mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
-        mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         mPayloadFormatterVersion,
@@ -215,7 +217,7 @@ public class GetAdSelectionDataRunner {
             @NonNull AuctionServerDebugReporting auctionServerDebugReporting,
             @NonNull AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             @NonNull AdServicesLogger adServicesLogger,
-            AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy) {
+            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -230,6 +232,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(clock);
         Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
+        Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
 
         mObliviousHttpEncryptor =
                 multiCloudSupportStrategy.getObliviousHttpEncryptor(context, flags);
@@ -249,6 +252,7 @@ public class GetAdSelectionDataRunner {
         mClock = clock;
 
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
+        mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
@@ -261,12 +265,12 @@ public class GetAdSelectionDataRunner {
                         mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
                         AuctionServerDataCompressorFactory.getDataCompressor(
                                 mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
-                        mFlags.getFledgeAuctionServerOmitAdsEnabled());
+                        mFlags.getFledgeAuctionServerOmitAdsEnabled(),
+                        auctionServerPayloadMetricsStrategy);
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
         mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
-        mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         mPayloadFormatterVersion,

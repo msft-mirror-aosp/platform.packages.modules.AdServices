@@ -36,28 +36,28 @@ public class GetAdSelectionDataBuyerInputGeneratedStatsTest extends AdServicesUn
                 GetAdSelectionDataBuyerInputGeneratedStats.builder()
                         .setNumCustomAudiences(NUM_CUSTOM_AUDIENCES)
                         .setNumCustomAudiencesOmitAds(NUM_CUSTOM_AUDIENCES_OMIT_ADS)
-                        .setCustomAudienceSizeMeanKb(CUSTOM_AUDIENCE_SIZE_MEAN)
-                        .setCustomAudienceSizeVarianceKb(CUSTOM_AUDIENCE_SIZE_VARIANCE)
-                        .setTrustedBiddingSignalsKeysSizeMeanKb(
+                        .setCustomAudienceSizeMeanB(CUSTOM_AUDIENCE_SIZE_MEAN)
+                        .setCustomAudienceSizeVarianceB(CUSTOM_AUDIENCE_SIZE_VARIANCE)
+                        .setTrustedBiddingSignalsKeysSizeMeanB(
                                 TRUSTED_BIDDING_SIGNALS_KEYS_SIZE_MEAN)
-                        .setTrustedBiddingSignalsSizeVarianceKb(
+                        .setTrustedBiddingSignalsKeysSizeVarianceB(
                                 TRUSTED_BIDDING_SIGNALS_SIZE_VARIANCE)
-                        .setUserBiddingSignalsSizeMeanKb(USER_BIDDING_SIGNALS_SIZE_MEAN)
-                        .setUserBiddingSignalsSizeVarianceKb(USER_BIDDING_SIGNALS_SIZE_VARIANCE)
+                        .setUserBiddingSignalsSizeMeanB(USER_BIDDING_SIGNALS_SIZE_MEAN)
+                        .setUserBiddingSignalsSizeVarianceB(USER_BIDDING_SIGNALS_SIZE_VARIANCE)
                         .build();
 
         expect.that(stats.getNumCustomAudiences()).isEqualTo(NUM_CUSTOM_AUDIENCES);
         expect.that(stats.getNumCustomAudiencesOmitAds()).isEqualTo(NUM_CUSTOM_AUDIENCES_OMIT_ADS);
-        expect.that(stats.getCustomAudienceSizeMeanKb()).isEqualTo(CUSTOM_AUDIENCE_SIZE_MEAN);
-        expect.that(stats.getCustomAudienceSizeVarianceKb())
+        expect.that(stats.getCustomAudienceSizeMeanB()).isEqualTo(CUSTOM_AUDIENCE_SIZE_MEAN);
+        expect.that(stats.getCustomAudienceSizeVarianceB())
                 .isEqualTo(CUSTOM_AUDIENCE_SIZE_VARIANCE);
-        expect.that(stats.getTrustedBiddingSignalsKeysSizeMeanKb())
+        expect.that(stats.getTrustedBiddingSignalsKeysSizeMeanB())
                 .isEqualTo(TRUSTED_BIDDING_SIGNALS_KEYS_SIZE_MEAN);
-        expect.that(stats.getTrustedBiddingSignalsSizeVarianceKb())
+        expect.that(stats.getTrustedBiddingSignalsKeysSizeVarianceB())
                 .isEqualTo(TRUSTED_BIDDING_SIGNALS_SIZE_VARIANCE);
-        expect.that(stats.getUserBiddingSignalsSizeMeanKb())
+        expect.that(stats.getUserBiddingSignalsSizeMeanB())
                 .isEqualTo(USER_BIDDING_SIGNALS_SIZE_MEAN);
-        expect.that(stats.getUserBiddingSignalsSizeVarianceKb())
+        expect.that(stats.getUserBiddingSignalsSizeVarianceB())
                 .isEqualTo(USER_BIDDING_SIGNALS_SIZE_VARIANCE);
     }
 }

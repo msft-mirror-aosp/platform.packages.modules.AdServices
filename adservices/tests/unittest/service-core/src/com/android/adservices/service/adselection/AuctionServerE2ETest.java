@@ -147,6 +147,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
+import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -501,7 +502,6 @@ public class AuctionServerE2ETest {
         Assert.assertNotNull(callback2.mPersistAdSelectionResultResponse.getAdRenderUri());
         Assert.assertEquals(
                 Uri.EMPTY, callback2.mPersistAdSelectionResultResponse.getAdRenderUri());
-
     }
 
     @Test
@@ -557,8 +557,11 @@ public class AuctionServerE2ETest {
     @Test
     public void testGetAdSelectionData_withoutEncrypt_validRequest_successPayloadMetricsEnabled()
             throws Exception {
-        ArgumentCaptor<GetAdSelectionDataApiCalledStats> argumentCaptor =
+        ArgumentCaptor<GetAdSelectionDataApiCalledStats> argumentCaptorApiCalledStats =
                 ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
+
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptorBuyerInputStats =
+                ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
         mFlags =
                 new AuctionServerE2ETestFlags() {
@@ -617,12 +620,29 @@ public class AuctionServerE2ETest {
             }
         }
 
+        // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
+        verify(mAdServicesLoggerMock, times(2))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(
+                        argumentCaptorBuyerInputStats.capture());
+        List<GetAdSelectionDataBuyerInputGeneratedStats> stats =
+                argumentCaptorBuyerInputStats.getAllValues();
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
+        assertThat(stats1.getNumCustomAudiences()).isEqualTo(1);
+        assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
+        assertThat(stats2.getNumCustomAudiences()).isEqualTo(2);
+        assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        // Verify GetAdSelectionDataApiCalledStats metrics
         verify(mAdServicesLoggerMock, times(1))
-                .logGetAdSelectionDataApiCalledStats(argumentCaptor.capture());
-        assertThat(argumentCaptor.getValue().getStatusCode()).isEqualTo(STATUS_SUCCESS);
-        assertThat(argumentCaptor.getValue().getPayloadSizeKb())
+                .logGetAdSelectionDataApiCalledStats(argumentCaptorApiCalledStats.capture());
+        assertThat(argumentCaptorApiCalledStats.getValue().getStatusCode())
+                .isEqualTo(STATUS_SUCCESS);
+        assertThat(argumentCaptorApiCalledStats.getValue().getPayloadSizeKb())
                 .isEqualTo(encryptedBytes.length / 1000);
-        assertThat(argumentCaptor.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
+        assertThat(argumentCaptorApiCalledStats.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
     }
 
     @Test
@@ -686,6 +706,7 @@ public class AuctionServerE2ETest {
         }
 
         verify(mAdServicesLoggerMock, never()).logGetAdSelectionDataApiCalledStats(any());
+        verify(mAdServicesLoggerMock, never()).logGetAdSelectionDataBuyerInputGeneratedStats(any());
     }
 
     @Test
@@ -758,8 +779,6 @@ public class AuctionServerE2ETest {
                 }
             }
         }
-
-
     }
 
     @Test
@@ -805,8 +824,6 @@ public class AuctionServerE2ETest {
                 getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
         Assert.assertTrue(getAdSelectionDataTestCallback.mIsSuccess);
 
-
-
         // Since encryption is mocked to do nothing then just passing encrypted byte[]
         List<String> adRenderIdsFromBuyerInput =
                 extractCAAdRenderIdListFromBuyerInput(
@@ -850,8 +867,6 @@ public class AuctionServerE2ETest {
 
         GetAdSelectionDataTestCallback getAdSelectionDataTestCallback2 =
                 invokeGetAdSelectionData(mAdSelectionService, input2);
-
-
 
         // Since encryption is mocked to do nothing then just passing encrypted byte[]
         List<String> adRenderIdsFromBuyerInput2 =
@@ -1897,7 +1912,6 @@ public class AuctionServerE2ETest {
         Assert.assertTrue(callback.mIsSuccess);
         byte[] adSelectionResponse = callback.mGetAdSelectionDataResponse.getAdSelectionData();
 
-
         ProtectedAuctionInput protectedAuctionInput =
                 getProtectedAuctionInputFromCipherText(adSelectionResponse, privKey);
 
@@ -1989,7 +2003,6 @@ public class AuctionServerE2ETest {
         Assert.assertNotNull(
                 mEncryptionContextDao.getEncryptionContext(
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
-
 
 
         ProtectedAuctionInput protectedAuctionInput =
@@ -2098,7 +2111,6 @@ public class AuctionServerE2ETest {
         Assert.assertNotNull(
                 mEncryptionContextDao.getEncryptionContext(
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
-
     }
 
     @Test
@@ -2158,7 +2170,6 @@ public class AuctionServerE2ETest {
 
         Assert.assertFalse(callback.mIsSuccess);
         Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
-
     }
 
     @Test
@@ -2224,7 +2235,6 @@ public class AuctionServerE2ETest {
         Assert.assertNotNull(
                 mEncryptionContextDao.getEncryptionContext(
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
-
 
     }
 
@@ -2363,8 +2373,6 @@ public class AuctionServerE2ETest {
         Assert.assertNotNull(
                 mEncryptionContextDao.getEncryptionContext(
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
-
-
     }
 
     /**

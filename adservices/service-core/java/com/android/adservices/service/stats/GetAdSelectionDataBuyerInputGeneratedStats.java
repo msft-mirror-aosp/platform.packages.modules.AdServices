@@ -28,22 +28,22 @@ public abstract class GetAdSelectionDataBuyerInputGeneratedStats {
     public abstract int getNumCustomAudiencesOmitAds();
 
     /** Returns the mean of the size of a custom audience for this buyer input */
-    public abstract float getCustomAudienceSizeMeanKb();
+    public abstract float getCustomAudienceSizeMeanB();
 
     /** Returns the variance of the size of a custom audience for this buyer input */
-    public abstract float getCustomAudienceSizeVarianceKb();
+    public abstract float getCustomAudienceSizeVarianceB();
 
     /** Returns the mean of the size of the trusted bidding signals keys for this buyer input */
-    public abstract float getTrustedBiddingSignalsKeysSizeMeanKb();
+    public abstract float getTrustedBiddingSignalsKeysSizeMeanB();
 
     /** Returns the variance of the size of the trusted bidding signals keys for this buyer input */
-    public abstract float getTrustedBiddingSignalsSizeVarianceKb();
+    public abstract float getTrustedBiddingSignalsKeysSizeVarianceB();
 
     /** Returns the mean of the size of the user bidding signals for this buyer input */
-    public abstract float getUserBiddingSignalsSizeMeanKb();
+    public abstract float getUserBiddingSignalsSizeMeanB();
 
     /** Returns the variance of the size of the user bidding signals for this buyer input */
-    public abstract float getUserBiddingSignalsSizeVarianceKb();
+    public abstract float getUserBiddingSignalsSizeVarianceB();
 
     /** Returns a generic builder. */
     public static Builder builder() {
@@ -60,27 +60,27 @@ public abstract class GetAdSelectionDataBuyerInputGeneratedStats {
         public abstract Builder setNumCustomAudiencesOmitAds(int numCustomAudiencesOmitAds);
 
         /** Sets the mean of the size of a custom audience for this buyer input. */
-        public abstract Builder setCustomAudienceSizeMeanKb(float customAudienceSizeMeanKb);
+        public abstract Builder setCustomAudienceSizeMeanB(float customAudienceSizeMeanB);
 
         /** Sets the variance of the size of a custom audience for this buyer input. */
-        public abstract Builder setCustomAudienceSizeVarianceKb(float customAudienceSizeVarianceKb);
+        public abstract Builder setCustomAudienceSizeVarianceB(float customAudienceSizeVarianceB);
 
         /** Sets the mean of the size of the trusted bidding signals keys for this buyer input. */
-        public abstract Builder setTrustedBiddingSignalsKeysSizeMeanKb(
-                float trustedBiddingSignalsKeysSizeMeanKb);
+        public abstract Builder setTrustedBiddingSignalsKeysSizeMeanB(
+                float trustedBiddingSignalsKeysSizeMeanB);
 
         /**
          * Sets the variance of the size of the trusted bidding signals keys for this buyer input.
          */
-        public abstract Builder setTrustedBiddingSignalsSizeVarianceKb(
-                float trustedBiddingSignalsSizeVarianceKb);
+        public abstract Builder setTrustedBiddingSignalsKeysSizeVarianceB(
+                float trustedBiddingSignalsSizeVarianceB);
 
         /** Sets the mean of the size of the user bidding signals for this buyer input */
-        public abstract Builder setUserBiddingSignalsSizeMeanKb(float userBiddingSignalsSizeMeanKb);
+        public abstract Builder setUserBiddingSignalsSizeMeanB(float userBiddingSignalsSizeMeanB);
 
         /** Sets the variance of the size of the user bidding signals for this buyer input */
-        public abstract Builder setUserBiddingSignalsSizeVarianceKb(
-                float userBiddingSignalsSizeVarianceKb);
+        public abstract Builder setUserBiddingSignalsSizeVarianceB(
+                float userBiddingSignalsSizeVarianceB);
 
         /** Builds the {@link GetAdSelectionDataBuyerInputGeneratedStats} object. */
         public abstract GetAdSelectionDataBuyerInputGeneratedStats build();
