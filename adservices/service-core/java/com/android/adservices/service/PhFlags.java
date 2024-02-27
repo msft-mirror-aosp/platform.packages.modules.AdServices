@@ -27,6 +27,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BAC
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
@@ -5769,6 +5770,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonSetTypeToSignJoin());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY
+                        + " = "
+                        + getFledgeKAnonUrlAuthorityToJoin());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
                         + " = "
                         + getAdServicesCommonStatesAllowList());
@@ -6873,6 +6879,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN,
                 /* defaultValue */ FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN);
+    }
+
+    @Override
+    public String getFledgeKAnonUrlAuthorityToJoin() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN);
     }
 
     @Override
