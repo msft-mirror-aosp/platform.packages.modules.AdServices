@@ -271,7 +271,7 @@ public class ConsentManagerV2 {
                         // builds, use the deprecated flag
                         // enable_adext_service_to_appsearch_migration.
                         if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
-                            AdExtDataConsentMigrationUtils
+                            AdExtDataConsentMigrationUtilsV2
                                     .handleConsentMigrationToAppSearchIfNeededV2(
                                             context,
                                             datastore,
