@@ -1505,7 +1505,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setLatencyInMs(latency)
                         .setWasSuccessful(wasSuccessful)
                         .build();
-        mLogger.logKAonInitializeStats(kAnonInitializeStatusStats);
+        mLogger.logKAnonInitializeStats(kAnonInitializeStatusStats);
 
         MockedVoidMethod writeInvocation =
                 () ->

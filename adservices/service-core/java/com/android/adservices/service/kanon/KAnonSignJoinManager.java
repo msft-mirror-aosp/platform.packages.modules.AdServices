@@ -114,6 +114,8 @@ public class KAnonSignJoinManager {
         if (shouldMakeKAnonCallsNow()) {
             mKAnonCaller.signAndJoinMessages(insertedMessages);
         } else {
+            // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
+            // for testing.
             mAdServicesLogger.logKAnonSignJoinStatus();
         }
     }

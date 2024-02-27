@@ -593,7 +593,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     }
 
     @Override
-    public void logKAonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats) {
+    public void logKAnonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats) {
         AdServicesStatsLog.write(
                 K_ANON_INITIALIZE_STATUS_REPORTED,
                 kAnonInitializeStatusStats.getWasSuccessful(),

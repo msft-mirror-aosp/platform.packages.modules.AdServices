@@ -170,7 +170,7 @@ public interface AdServicesLogger {
      * Logs status for initialize method for {@link
      * com.android.adservices.service.kanon.KAnonCaller}.
      */
-    void logKAonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats);
+    void logKAnonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats);
 
     /** Logs status for sign method for {@link com.android.adservices.service.kanon.KAnonCaller */
     void logKAnonSignStats(KAnonSignStatusStats kAnonSignStatusStats);

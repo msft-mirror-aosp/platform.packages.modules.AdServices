@@ -261,8 +261,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
-    public void logKAonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats) {
-        mStatsdAdServicesLogger.logKAonInitializeStats(kAnonInitializeStatusStats);
+    public void logKAnonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats) {
+        mStatsdAdServicesLogger.logKAnonInitializeStats(kAnonInitializeStatusStats);
     }
 
     @Override
