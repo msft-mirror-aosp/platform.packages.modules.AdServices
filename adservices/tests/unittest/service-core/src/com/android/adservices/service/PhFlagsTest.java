@@ -9062,24 +9062,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetAppConfigReturnsEnabledByDefault() {
-        boolean defaultValue = Flags.APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAppConfigReturnsEnabledByDefault()).isEqualTo(defaultValue);
-
-        boolean phOverridingValue = !defaultValue;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        // Flag's not used anymore, so it should always return defaultValue
-        assertThat(mPhFlags.getAppConfigReturnsEnabledByDefault()).isEqualTo(defaultValue);
-    }
-
-    @Test
     public void testGetEnableAdExtDataServiceApis() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,

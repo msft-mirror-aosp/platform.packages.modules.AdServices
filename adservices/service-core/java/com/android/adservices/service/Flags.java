@@ -23,7 +23,6 @@ import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
-import static com.android.adservices.shared.common.flags.FeatureFlag.Type.RAMPED_UP;
 
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
@@ -4625,25 +4624,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default long getAdIdFetcherTimeoutMs() {
         return DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
-    }
-
-    /**
-     * @deprecated TODO(b/314962688): remove (will always be true)
-     */
-    @FeatureFlag(RAMPED_UP)
-    @Deprecated
-    boolean APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT = true;
-
-    /**
-     * Returns whether the API access checked by the AdServices XML config returns {@code true} by
-     * default (i.e., when the app doesn't define the config XML file or if the given API access is
-     * missing from that file).
-     *
-     * @deprecated TODO(b/314962688): remove
-     */
-    @Deprecated
-    default boolean getAppConfigReturnsEnabledByDefault() {
-        return APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
     }
 
     /**

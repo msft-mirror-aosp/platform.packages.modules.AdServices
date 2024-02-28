@@ -28,7 +28,6 @@ import static com.android.adservices.service.common.AppManifestConfigCall.RESULT
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_EXIST;
-import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
@@ -43,7 +42,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -104,7 +102,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
         appContext.set(mMockContext);
         when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
         extendedMockito.mockGetFlags(mMockFlags);
-        setEnabledByDefault(false);
         doNothingOnErrorLogUtilError();
         doNothing().when(() -> AppManifestConfigMetricsLogger.logUsage(any()));
     }
@@ -380,37 +377,8 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
-    @Deprecated // is always enabled by default
-    public void testIsAllowedApiAccess_parsingExceptionSwallowed_disabledByDefault_sPlus()
-            throws Exception {
-        mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
-        Exception e = mockAppManifestConfigParserGetConfigThrows();
-
-        assertNoAccessAllowed();
-
-        verifyErrorLogUtilErrorLogged(e, times(NUM_COMPONENTS)); // Called once for each API
-        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR);
-    }
-
-    @Test
-    @Deprecated // is always enabled by default
-    public void testIsAllowedApiAccess_parsingExceptionSwallowed_disabledByDefault_rMinus()
-            throws Exception {
-        extendedMockito.mockSdkLevelR();
-        mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
-        Exception e = mockAppManifestConfigParserGetConfigThrows();
-
-        assertNoAccessAllowed();
-
-        verifyErrorLogUtilErrorLogged(e, times(NUM_COMPONENTS)); // Called once for each API
-        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_enabledByDefault_sPlus()
             throws Exception {
-        setEnabledByDefault(true);
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         Exception e = mockAppManifestConfigParserGetConfigThrows();
 
@@ -423,7 +391,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @Test
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_enabledByDefault_rMinus()
             throws Exception {
-        setEnabledByDefault(true);
         extendedMockito.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
         Exception e = mockAppManifestConfigParserGetConfigThrows();
@@ -435,56 +402,18 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @Deprecated // is always enabled by default
-    public void testIsAllowedApiAccess_disabledByDefault_packageNotFound() throws Exception {
-        mockAppNotFound(PACKAGE_NAME);
-
-        assertNoAccessAllowed();
-
-        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_DOES_NOT_EXIST);
-    }
-
-    @Test
     public void testIsAllowedApiAccess_packageNotFound_enabledByDefault() throws Exception {
-        setEnabledByDefault(true);
         mockAppNotFound(PACKAGE_NAME);
 
         assertNoAccessAllowed();
 
         verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_DOES_NOT_EXIST);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
-    @Deprecated // is always enabled by default
-    public void testIsAllowedApiAccess_noConfigXmlForPackage_disabledByDefault_sPlus()
-            throws Exception {
-        mockAppFound(PACKAGE_NAME);
-        mockGetPropertyNotFound(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY);
-
-        assertNoAccessAllowed();
-
-        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG);
-    }
-
-    @Test
-    @Deprecated // is always enabled by default
-    public void testIsAllowedApiAccess_noConfigXmlForPackage_disabledByDefault_rMinus()
-            throws Exception {
-        extendedMockito.mockSdkLevelR();
-        mockAppFound(PACKAGE_NAME);
-        mockGetAssetNotFound(PACKAGE_NAME);
-
-        assertNoAccessAllowed();
-
-        verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_DOES_NOT_HAVE_CONFIG);
     }
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedApiAccess_noConfigXmlForPackage_enabledByDefault_sPlus()
             throws Exception {
-        setEnabledByDefault(true);
         mockAppFound(PACKAGE_NAME);
         mockGetPropertyNotFound(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY);
 
@@ -496,7 +425,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @Test
     public void testIsAllowedApiAccess_noConfigXmlForPackage_enabledByDefault_rMinus()
             throws Exception {
-        setEnabledByDefault(true);
         extendedMockito.mockSdkLevelR();
         mockAppFound(PACKAGE_NAME);
         mockGetAssetNotFound(PACKAGE_NAME);
@@ -557,12 +485,12 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     private void mockAppManifestConfigParserGetConfigSucceeds() throws Exception {
         doReturn(mMockAppManifestConfig)
-                .when(() -> AppManifestConfigParser.getConfig(eq(mMockParser), anyBoolean()));
+                .when(() -> AppManifestConfigParser.getConfig(eq(mMockParser)));
     }
 
     private XmlParseException mockAppManifestConfigParserGetConfigThrows() throws Exception {
         XmlParseException e = new XmlParseException("D'OH!");
-        doThrow(e).when(() -> AppManifestConfigParser.getConfig(eq(mMockParser), anyBoolean()));
+        doThrow(e).when(() -> AppManifestConfigParser.getConfig(eq(mMockParser)));
         return e;
     }
 
@@ -700,9 +628,5 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
             verifyLogUsage(API_PROTECTED_SIGNALS, result, times(2));
         }
         verifyLogUsage(API_AD_SELECTION, result);
-    }
-
-    private void setEnabledByDefault(boolean value) {
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(value);
     }
 }
