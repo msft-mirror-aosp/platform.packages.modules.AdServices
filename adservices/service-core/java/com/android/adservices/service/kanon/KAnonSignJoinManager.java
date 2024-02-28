@@ -16,8 +16,13 @@
 
 package com.android.adservices.service.kanon;
 
+import android.annotation.RequiresApi;
+import android.content.Context;
+import android.os.Build;
+
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.kanon.KAnonMessageConstants;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -30,25 +35,31 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /** KAnon sign join manager class */
+@RequiresApi(Build.VERSION_CODES.S)
 public class KAnonSignJoinManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final KAnonCaller mKAnonCaller;
     private final KAnonMessageManager mKAnonMessageManager;
     private final Flags mFlags;
     private final Clock mClock;
     private final AdServicesLogger mAdServicesLogger;
+    private final Context mContext;
 
     public KAnonSignJoinManager(
+            @NonNull Context context,
             @NonNull KAnonCaller kAnonCaller,
             @NonNull KAnonMessageManager kAnonMessageManager,
             @NonNull Flags flags,
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(kAnonCaller);
+        Objects.requireNonNull(context);
         Objects.requireNonNull(kAnonMessageManager);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
 
+        mContext = context;
         mKAnonCaller = kAnonCaller;
         mKAnonMessageManager = kAnonMessageManager;
         mFlags = flags;
@@ -104,6 +115,13 @@ public class KAnonSignJoinManager {
      * the new ad winner/ghost ad winners.
      */
     public void processNewMessages(List<KAnonMessageEntity> newMessages) {
+        try {
+            boolean forceSchedule = false;
+            KAnonSignJoinBackgroundJobService.scheduleIfNeeded(mContext, forceSchedule);
+        } catch (Throwable t) {
+            // Not throwing this error because we want this error to fail silently.
+            sLogger.d("Error while scheduling KAnon background job service:" + t.getMessage());
+        }
         List<KAnonMessageEntity> messageAfterFiltering =
                 newMessages.stream().filter(this::filterRequest).collect(Collectors.toList());
         if (messageAfterFiltering.isEmpty()) {

@@ -1750,6 +1750,7 @@ public class KAnonE2ETest {
                         mAdServicesLoggerMock);
         KAnonSignJoinManager mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
+                        mContext,
                         kAnonCaller,
                         mKAnonMessageManager,
                         mFlags,
