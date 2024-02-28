@@ -22,13 +22,23 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import android.os.SystemProperties;
+import android.util.Log;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.testing.StaticMockFixture;
 
-/** This Fixture class is to force {@link SystemProperties} to return its default value. */
+import org.mockito.invocation.InvocationOnMock;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/** Fixture class mocks {@link SystemProperties} to return the set value or its default value. */
 public final class SysPropForceDefaultValueFixture implements StaticMockFixture {
+
+    private static final String TAG = SysPropForceDefaultValueFixture.class.getSimpleName();
+    private static Map<String, String> sKeyValueMap = new ConcurrentHashMap<>();
+
     @Override
     public StaticMockitoSessionBuilder setUpMockedClasses(
             StaticMockitoSessionBuilder sessionBuilder) {
@@ -38,25 +48,89 @@ public final class SysPropForceDefaultValueFixture implements StaticMockFixture 
 
     @Override
     public void setUpMockBehaviors() {
-        // Mock all getters in SystemProperties to return its default values. The signature of these
-        // getters is always (key, defaultVal).
-        final int defaultValueArgumentIndex = 1;
-        ExtendedMockito.doAnswer(invocation -> invocation.getArgument(defaultValueArgumentIndex))
+        ExtendedMockito.doAnswer(invocation -> getIntValue(invocation))
                 .when(() -> SystemProperties.getInt(anyString(), anyInt()));
-        ExtendedMockito.doAnswer(invocation -> invocation.getArgument(defaultValueArgumentIndex))
+        ExtendedMockito.doAnswer(invocation -> getLongValue(invocation))
                 .when(() -> SystemProperties.getLong(anyString(), anyLong()));
-        ExtendedMockito.doAnswer(invocation -> invocation.getArgument(defaultValueArgumentIndex))
+        ExtendedMockito.doAnswer(invocation -> getBooleanValue(invocation))
                 .when(() -> SystemProperties.getBoolean(anyString(), anyBoolean()));
-        ExtendedMockito.doAnswer(invocation -> invocation.getArgument(defaultValueArgumentIndex))
+        ExtendedMockito.doAnswer(invocation -> getStringValue(invocation))
                 .when(() -> SystemProperties.get(anyString(), anyString()));
-
-        // When using the method SystemProperties.get(key), the default value is not passed in.
-        // Return an empty string to bypass SystemProperties.get(key). Another option is to pass in
-        // a string with invalid number format like "1-1", but it'll log an error which may abuse
-        // the logcat. The implementation is based on the usage of SystemProperties.get(key).
-        ExtendedMockito.doReturn("").when(() -> SystemProperties.get(anyString()));
+        ExtendedMockito.doAnswer(invocation -> getStringValueWithoutDefault(invocation))
+                .when(() -> SystemProperties.get(anyString()));
     }
 
     @Override
-    public void tearDown() {}
+    public void tearDown() {
+        reset();
+    }
+
+    /** Sets the system property for the given {@code key} */
+    public static void set(String key, String value) {
+        Log.v(TAG, String.format("Set(key = %s, value = %s", key, value));
+        sKeyValueMap.put(key, value);
+    }
+
+    /** Resets/Clears all the key,value pairs. */
+    public static void reset() {
+        sKeyValueMap.clear();
+    }
+
+    private static String getStringValueWithoutDefault(InvocationOnMock invocation) {
+        String key = invocation.getArgument(0);
+        String valueToReturn = sKeyValueMap.getOrDefault(key, "");
+        logGetterCall(invocation, valueToReturn);
+        return valueToReturn;
+    }
+
+    private static String getStringValue(InvocationOnMock invocation) {
+        String key = invocation.getArgument(0);
+        String defaultValue = invocation.getArgument(1);
+        String valueToReturn = sKeyValueMap.getOrDefault(key, defaultValue);
+        logGetterCall(invocation, valueToReturn);
+        return valueToReturn;
+    }
+
+    private static Integer getIntValue(InvocationOnMock invocation) {
+        String key = invocation.getArgument(0);
+        Integer defaultValue = invocation.getArgument(1);
+        Integer valueToReturn =
+                sKeyValueMap.containsKey(key)
+                        ? Integer.parseInt(sKeyValueMap.get(key))
+                        : defaultValue;
+        logGetterCall(invocation, valueToReturn);
+        return valueToReturn;
+    }
+
+    private static Long getLongValue(InvocationOnMock invocation) {
+        String key = invocation.getArgument(0);
+        Long defaultValue = invocation.getArgument(1);
+        Long valueToReturn =
+                sKeyValueMap.containsKey(key)
+                        ? Long.parseLong(sKeyValueMap.get(key))
+                        : defaultValue;
+        logGetterCall(invocation, valueToReturn);
+        return valueToReturn;
+    }
+
+    private static Boolean getBooleanValue(InvocationOnMock invocation) {
+        String key = invocation.getArgument(0);
+        Boolean defaultValue = invocation.getArgument(1);
+        Boolean valueToReturn =
+                sKeyValueMap.containsKey(key)
+                        ? Boolean.parseBoolean(sKeyValueMap.get(key))
+                        : defaultValue;
+        logGetterCall(invocation, valueToReturn);
+        return valueToReturn;
+    }
+
+    private static <T> void logGetterCall(InvocationOnMock invocation, T valueToReturn) {
+        Log.v(
+                TAG,
+                invocation.getMethod().getName()
+                        + "(\""
+                        + invocation.getArgument(0)
+                        + "\") will return "
+                        + valueToReturn);
+    }
 }

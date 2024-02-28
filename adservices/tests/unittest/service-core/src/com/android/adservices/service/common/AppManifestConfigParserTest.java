@@ -111,6 +111,43 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                     .containsExactly("1234", "4567");
         }
 
+        // Verify Protected Signals tags.
+        expect.withMessage("isAllowedProtectedSignalsAccess()")
+                .that(appManifestConfig.isAllowedProtectedSignalsAccess("108"))
+                .isEqualTo(RESULT_DISALLOWED_BY_APP);
+        AppManifestProtectedSignalsConfig protectedSignalsConfig =
+                appManifestConfig.getProtectedSignalsConfig();
+        expect.withMessage("getProtectedSignalsConfig()").that(protectedSignalsConfig).isNotNull();
+        if (customAudiencesConfig != null) {
+            expect.withMessage("getProtectedSignalsConfig().getAllowAllToAccess()")
+                    .that(protectedSignalsConfig.getAllowAllToAccess())
+                    .isFalse();
+            expect.withMessage("getProtectedSignalsConfig().getAllowAdPartnersToAccess()")
+                    .that(protectedSignalsConfig.getAllowAdPartnersToAccess())
+                    .hasSize(2);
+            expect.withMessage("getProtectedSignalsConfig().getAllowAdPartnersToAccess()")
+                    .that(protectedSignalsConfig.getAllowAdPartnersToAccess())
+                    .containsExactly("42", "43");
+        }
+
+        // Verify Ad Selection tags.
+        expect.withMessage("isAllowedAdSelectionAccess()")
+                .that(appManifestConfig.isAllowedAdSelectionAccess("108"))
+                .isEqualTo(RESULT_DISALLOWED_BY_APP);
+        AppManifestAdSelectionConfig adSelectionConfig = appManifestConfig.getAdSelectionConfig();
+        expect.withMessage("getAdSelectionConfig()").that(adSelectionConfig).isNotNull();
+        if (adSelectionConfig != null) {
+            expect.withMessage("getAdSelectionConfig().getAllowAllToAccess()")
+                    .that(adSelectionConfig.getAllowAllToAccess())
+                    .isFalse();
+            expect.withMessage("getAdSelectionConfig().getAllowAdPartnersToAccess()")
+                    .that(adSelectionConfig.getAllowAdPartnersToAccess())
+                    .hasSize(2);
+            expect.withMessage("getAdSelectionConfig().getAllowAdPartnersToAccess()")
+                    .that(adSelectionConfig.getAllowAdPartnersToAccess())
+                    .containsExactly("44", "45");
+        }
+
         // Verify Topics tags.
         expect.withMessage("1234567()")
                 .that(appManifestConfig.isAllowedTopicsAccess("1234567"))
@@ -218,10 +255,25 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
 
         AppManifestCustomAudiencesConfig customAudiencesConfig =
                 appManifestConfig.getCustomAudiencesConfig();
-        expect.withMessage("getCustomAudiencesConfig()").that(attributionConfig).isNull();
+        expect.withMessage("getCustomAudiencesConfig()").that(customAudiencesConfig).isNull();
         assertResult(
                 "isAllowedCustomAudiencesAccess()",
                 appManifestConfig.isAllowedCustomAudiencesAccess("not actually there"),
+                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+
+        AppManifestProtectedSignalsConfig protectedSignalsConfig =
+                appManifestConfig.getProtectedSignalsConfig();
+        expect.withMessage("getProtectedSignalsConfig()").that(protectedSignalsConfig).isNull();
+        assertResult(
+                "isAllowedProtectedSignalsAccess()",
+                appManifestConfig.isAllowedProtectedSignalsAccess("not actually there"),
+                RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+
+        AppManifestAdSelectionConfig addSelectionConfig = appManifestConfig.getAdSelectionConfig();
+        expect.withMessage("getAdSelectionConfig()").that(addSelectionConfig).isNull();
+        assertResult(
+                "isAllowedAdSelectionAccess()",
+                appManifestConfig.isAllowedAdSelectionAccess("not actually there"),
                 RESULT_DISALLOWED_APP_HAS_CONFIG_WITHOUT_API_SECTION);
 
         AppManifestTopicsConfig topicsConfig = appManifestConfig.getTopicsConfig();
@@ -263,6 +315,10 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
         assertCustomAudienceConfigIsAllowed(
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertProtectedSignalsConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAdSelectionConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
         assertTopicsConfigIsAllowed(
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
         assertAdIdConfigIsAllowed(
@@ -287,6 +343,8 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         assertAttributionConfigIsAllowed(
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -308,6 +366,54 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+    }
+
+    @Test
+    public void testValidXml_enabledByDefault_missingProtectedSignals() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        .getXml(R.xml.ad_services_config_all_false_missing_protected_signals);
+        AppManifestConfig appManifestConfig =
+                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        assertWithMessage("manifest for ad_services_config_all_false_missing_protected_signals")
+                .that(appManifestConfig)
+                .isNotNull();
+
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+    }
+
+    @Test
+    public void testValidXml_enabledByDefault_missingAdSelection() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        .getXml(R.xml.ad_services_config_all_false_missing_ad_selection);
+        AppManifestConfig appManifestConfig =
+                AppManifestConfigParser.getConfig(parser, /* enabledByDefault= */ true);
+        assertWithMessage("manifest for ad_services_config_all_false_missing_ad_selection")
+                .that(appManifestConfig)
+                .isNotNull();
+
+        assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
         assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -328,6 +434,8 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertTopicsConfigIsAllowed(
                 appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
         assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -349,6 +457,8 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAdIdConfigIsAllowed(
@@ -371,6 +481,8 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAppSetIdConfigIsAllowed(
@@ -392,6 +504,8 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ true);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -428,6 +542,8 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
 
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -447,6 +563,8 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
         assertSdkLibraryConfigIsEmpty(appManifestConfig, /* containsByDefault= */ false);
         assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertProtectedSignalsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertAdSelectionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertTopicsConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAdIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
         assertAppSetIdConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
@@ -550,6 +668,18 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
             AppManifestConfig appManifestConfig, int expectedResult) {
         int actualResult = appManifestConfig.isAllowedCustomAudiencesAccess("not actually there");
         assertResult("getCustomAudiencesConfig()", actualResult, expectedResult);
+    }
+
+    private void assertProtectedSignalsConfigIsAllowed(
+            AppManifestConfig appManifestConfig, int expectedResult) {
+        int actualResult = appManifestConfig.isAllowedProtectedSignalsAccess("not actually there");
+        assertResult("getProtectedSignalsConfig()", actualResult, expectedResult);
+    }
+
+    private void assertAdSelectionConfigIsAllowed(
+            AppManifestConfig appManifestConfig, int expectedResult) {
+        int actualResult = appManifestConfig.isAllowedAdSelectionAccess("not actually there");
+        assertResult("getAdSelectionConfig()", actualResult, expectedResult);
     }
 
     private void assertTopicsConfigIsAllowed(

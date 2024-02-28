@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -29,13 +33,17 @@ import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 
+import com.google.common.collect.ImmutableList;
+
 import org.json.JSONException;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -45,6 +53,9 @@ public class CustomAudienceUpdatableDataTest {
             DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildUpdatableDataSuccess() throws JSONException {
@@ -96,6 +107,176 @@ public class CustomAudienceUpdatableDataTest {
                         + '"',
                 updatableDataFromBuilder,
                 updatableDataFromResponseString);
+    }
+
+    @Test
+    public void testBuildUpdatableDataSuccessWithAuctionServerFlagsEnabled() throws JSONException {
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
+        boolean expectedContainsSuccessfulUpdate = true;
+        CustomAudienceUpdatableData updatableDataFromBuilder =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        .build();
+
+        assertEquals(
+                validUserBiddingSignalsAsJsonObjectString,
+                updatableDataFromBuilder.getUserBiddingSignals());
+        assertEquals(
+                VALID_DB_TRUSTED_BIDDING_DATA, updatableDataFromBuilder.getTrustedBiddingData());
+        assertEquals(VALID_DB_AD_DATA_LIST, updatableDataFromBuilder.getAds());
+        assertEquals(CommonFixture.FIXED_NOW, updatableDataFromBuilder.getAttemptedUpdateTime());
+        assertEquals(
+                BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                updatableDataFromBuilder.getInitialUpdateResult());
+        assertEquals(
+                expectedContainsSuccessfulUpdate,
+                updatableDataFromBuilder.getContainsSuccessfulUpdate());
+        assertEquals(
+                FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS,
+                updatableDataFromBuilder.getAuctionServerRequestFlags());
+
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST,
+                        ImmutableList.of(OMIT_ADS_VALUE));
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER_1,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        new FlagsWithAuctionServerRequestFlagsSet(true));
+
+        assertEquals(
+                "Manually built updatable data does not match built from response string \""
+                        + jsonResponse
+                        + '"',
+                updatableDataFromBuilder,
+                updatableDataFromResponseString);
+    }
+
+    @Test
+    public void testBuildUpdatableDataSuccessWithJunkWithAuctionServerFlagsEnabled()
+            throws JSONException {
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
+        boolean expectedContainsSuccessfulUpdate = true;
+        CustomAudienceUpdatableData updatableDataFromBuilder =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        .build();
+
+        assertEquals(
+                validUserBiddingSignalsAsJsonObjectString,
+                updatableDataFromBuilder.getUserBiddingSignals());
+        assertEquals(
+                VALID_DB_TRUSTED_BIDDING_DATA, updatableDataFromBuilder.getTrustedBiddingData());
+        assertEquals(VALID_DB_AD_DATA_LIST, updatableDataFromBuilder.getAds());
+        assertEquals(CommonFixture.FIXED_NOW, updatableDataFromBuilder.getAttemptedUpdateTime());
+        assertEquals(
+                BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                updatableDataFromBuilder.getInitialUpdateResult());
+        assertEquals(
+                expectedContainsSuccessfulUpdate,
+                updatableDataFromBuilder.getContainsSuccessfulUpdate());
+        assertEquals(
+                FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS,
+                updatableDataFromBuilder.getAuctionServerRequestFlags());
+
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST,
+                        ImmutableList.of(OMIT_ADS_VALUE),
+                        true);
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER_1,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        new FlagsWithAuctionServerRequestFlagsSet(true));
+
+        assertEquals(
+                "Manually built updatable data does not match built from response string \""
+                        + jsonResponse
+                        + '"',
+                updatableDataFromBuilder,
+                updatableDataFromResponseString);
+    }
+
+    @Test
+    public void testBuildUpdatableDataSuccessWithAuctionServerFlagsDisabled() throws JSONException {
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
+        boolean expectedContainsSuccessfulUpdate = true;
+        CustomAudienceUpdatableData updatableDataFromBuilder =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .build();
+
+        assertEquals(
+                validUserBiddingSignalsAsJsonObjectString,
+                updatableDataFromBuilder.getUserBiddingSignals());
+        assertEquals(
+                VALID_DB_TRUSTED_BIDDING_DATA, updatableDataFromBuilder.getTrustedBiddingData());
+        assertEquals(VALID_DB_AD_DATA_LIST, updatableDataFromBuilder.getAds());
+        assertEquals(CommonFixture.FIXED_NOW, updatableDataFromBuilder.getAttemptedUpdateTime());
+        assertEquals(
+                BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                updatableDataFromBuilder.getInitialUpdateResult());
+        assertEquals(
+                expectedContainsSuccessfulUpdate,
+                updatableDataFromBuilder.getContainsSuccessfulUpdate());
+
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST,
+                        ImmutableList.of(OMIT_ADS_VALUE));
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER_1,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        new FlagsWithAuctionServerRequestFlagsSet(false));
+
+        assertEquals(
+                "Manually built updatable data does not match built from response string \""
+                        + jsonResponse
+                        + '"',
+                updatableDataFromBuilder,
+                updatableDataFromResponseString);
+        assertEquals(0, updatableDataFromResponseString.getAuctionServerRequestFlags());
     }
 
     @Test
@@ -380,5 +561,18 @@ public class CustomAudienceUpdatableDataTest {
 
         // All found fields in the response were too large, failing validation
         assertFalse(updatableDataFromResponseString.getContainsSuccessfulUpdate());
+    }
+
+    static class FlagsWithAuctionServerRequestFlagsSet extends FlagsFactory.TestFlags {
+        private final boolean mAuctionServerRequestFlagsEnabled;
+
+        FlagsWithAuctionServerRequestFlagsSet(boolean auctionServerRequestFlagsEnabled) {
+            mAuctionServerRequestFlagsEnabled = auctionServerRequestFlagsEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+            return mAuctionServerRequestFlagsEnabled;
+        }
     }
 }

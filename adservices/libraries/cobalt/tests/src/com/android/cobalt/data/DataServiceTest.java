@@ -1266,4 +1266,158 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
                 .isEqualTo(Optional.of(DAY_INDEX_1));
     }
+
+    @Test
+    public void cleanup_removesAggregates_beforeOldestDayIndex() throws Exception {
+        int oldestDayIndex = 12345;
+
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        oldestDayIndex - 1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 0,
+                        /* stringValue= */ "STRING")
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_2,
+                        oldestDayIndex,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ 1)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_2,
+                        oldestDayIndex + 1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ 1)
+                .get();
+
+        mDataService.cleanup(ImmutableList.of(REPORT_1, REPORT_2), oldestDayIndex).get();
+
+        assertThat(mTestOnlyDao.getAllAggregates())
+                .containsExactly(
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(REPORT_2)
+                                .setDayIndex(oldestDayIndex)
+                                .setSystemProfile(SYSTEM_PROFILE_1)
+                                .setEventVector(EVENT_VECTOR_1)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder().setIntegerValue(1).build())
+                                .build(),
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(REPORT_2)
+                                .setDayIndex(oldestDayIndex + 1)
+                                .setSystemProfile(SYSTEM_PROFILE_1)
+                                .setEventVector(EVENT_VECTOR_1)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder().setIntegerValue(1).build())
+                                .build());
+    }
+
+    @Test
+    public void cleanup_removesIrrelevantReports() throws Exception {
+        int oldestDayIndex = 12345;
+
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        oldestDayIndex,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 0,
+                        /* stringValue= */ "STRING")
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_2,
+                        oldestDayIndex,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ 1)
+                .get();
+
+        mDataService.cleanup(ImmutableList.of(REPORT_2), oldestDayIndex).get();
+
+        assertThat(mTestOnlyDao.getAllAggregates())
+                .containsExactly(
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(REPORT_2)
+                                .setDayIndex(oldestDayIndex)
+                                .setSystemProfile(SYSTEM_PROFILE_1)
+                                .setEventVector(EVENT_VECTOR_1)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder().setIntegerValue(1).build())
+                                .build());
+    }
+
+    @Test
+    public void cleanup_removesUnusedSystemProfileHashes() throws Exception {
+        int oldestDayIndex = 12345;
+
+        mDaoBuildingBlocks.insertSystemProfile(
+                SystemProfileEntity.create(
+                        SystemProfileEntity.getSystemProfileHash(SYSTEM_PROFILE_1),
+                        SYSTEM_PROFILE_1));
+        mDaoBuildingBlocks.insertSystemProfile(
+                SystemProfileEntity.create(
+                        SystemProfileEntity.getSystemProfileHash(SYSTEM_PROFILE_2),
+                        SYSTEM_PROFILE_2));
+
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        oldestDayIndex,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ 1)
+                .get();
+
+        mDataService.cleanup(ImmutableList.of(REPORT_1), oldestDayIndex).get();
+
+        assertThat(mTestOnlyDao.getSystemProfiles())
+                .containsExactly(
+                        SystemProfileEntity.create(
+                                SystemProfileEntity.getSystemProfileHash(SYSTEM_PROFILE_1),
+                                SYSTEM_PROFILE_1));
+    }
+
+    @Test
+    public void cleanup_removesUnusedStringHashes() throws Exception {
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 0,
+                        /* stringValue= */ "STRING")
+                .get();
+
+        // Insert a string hash with a bad report key.
+        mDaoBuildingBlocks.insertStringHash(
+                StringHashEntity.create(REPORT_2, DAY_INDEX_1, 0/* unused= */ , "STRING"));
+
+        // Insert a string hash with a bad day index.
+        mDaoBuildingBlocks.insertStringHash(
+                StringHashEntity.create(REPORT_1, DAY_INDEX_1 + 1, 0/* unused= */ , "STRING"));
+
+        mDataService.cleanup(ImmutableList.of(REPORT_1), DAY_INDEX_1).get();
+
+        assertThat(mTestOnlyDao.getStringHashes())
+                .containsExactly(
+                        StringHashEntity.create(
+                                REPORT_1, DAY_INDEX_1, /* listIndex= */ 0, "STRING"));
+    }
 }

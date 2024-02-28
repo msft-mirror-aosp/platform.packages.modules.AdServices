@@ -483,7 +483,7 @@ public class EventReport {
                     eventReportWindowCalcDelegate.getReportingTime(
                             source, trigger.getTriggerTime(), trigger.getDestinationType());
             mBuilding.mRandomizedTriggerRate =
-                    sourceNoiseHandler.getRandomAttributionProbability(source);
+                    sourceNoiseHandler.getRandomizedTriggerRate(source);
             return this;
         }
 

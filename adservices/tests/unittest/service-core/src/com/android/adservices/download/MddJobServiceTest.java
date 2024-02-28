@@ -16,10 +16,10 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
 import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.common.JobServiceTestHelper.createOnStopJobCallback;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -56,10 +56,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.os.PersistableBundle;
 
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.BooleanSyncCallback;
 import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -81,6 +81,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
+@RequiresSdkLevelAtLeastS
 @SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
 @SpyStatic(FlagsFactory.class)
@@ -139,7 +140,7 @@ public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
-        mLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
+        mLogger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         // MDD Task Tag.
         PersistableBundle bundle = new PersistableBundle();

@@ -24,7 +24,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOverrideCallback;
-import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -119,7 +119,7 @@ public class AdSelectionOverrider {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull BuyersDecisionLogic buyersDecisionLogic,
+            @NonNull PerBuyerDecisionLogic perBuyerDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName =
@@ -143,7 +143,7 @@ public class AdSelectionOverrider {
                                         adSelectionConfig,
                                         decisionLogicJS,
                                         trustedScoringSignals,
-                                        buyersDecisionLogic),
+                                        perBuyerDecisionLogic),
                         mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<Integer>() {
@@ -404,7 +404,7 @@ public class AdSelectionOverrider {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull BuyersDecisionLogic buyersDecisionLogic) {
+            @NonNull PerBuyerDecisionLogic perBuyerDecisionLogic) {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
@@ -418,7 +418,7 @@ public class AdSelectionOverrider {
                                     adSelectionConfig,
                                     decisionLogicJS,
                                     trustedScoringSignals,
-                                    buyersDecisionLogic);
+                                    perBuyerDecisionLogic);
                             return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
     }

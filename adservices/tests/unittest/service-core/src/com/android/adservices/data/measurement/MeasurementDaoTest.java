@@ -9114,7 +9114,7 @@ public class MeasurementDaoTest {
                 .setInstallCooldownWindow(SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                 .setAttributionMode(SourceFixture.ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(SourceFixture.ValidSourceParams.buildAggregateSource())
-                .setFilterData(SourceFixture.ValidSourceParams.buildFilterData())
+                .setFilterDataString(SourceFixture.ValidSourceParams.buildFilterDataString())
                 .setSharedFilterDataKeys(SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(UUID.randomUUID().toString())

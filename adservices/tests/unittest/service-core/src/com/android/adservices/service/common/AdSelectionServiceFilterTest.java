@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -36,8 +38,8 @@ import android.adservices.common.CommonFixture;
 import android.os.LimitExceededException;
 import android.os.Process;
 
-
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -57,6 +59,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 
+@RequiresSdkLevelAtLeastS
 public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -266,7 +269,12 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
-                .assertAdTechAllowed(mSpyContext, CALLER_PACKAGE_NAME, SELLER_VALID, API_NAME);
+                .assertAdTechAllowed(
+                        mSpyContext,
+                        CALLER_PACKAGE_NAME,
+                        SELLER_VALID,
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
         FilterException exception =
                 assertThrows(
                         FilterException.class,
@@ -288,7 +296,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
     public void testFilterRequestThrowsAppNotAllowedExceptionWhenAppNotInAllowlist() {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
-                .assertAppCanUsePpapi(CALLER_PACKAGE_NAME, API_NAME);
+                .assertAppInAllowlist(CALLER_PACKAGE_NAME, API_NAME, API_AD_SELECTION);
         FilterException exception =
                 assertThrows(
                         FilterException.class,
@@ -392,7 +400,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 DevContext.createForDevOptionsDisabled());
 
         verify(mFledgeAuthorizationFilterSpy, never())
-                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
     }
 
     @Test
@@ -467,6 +475,6 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                         .build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
-                .assertAdTechAllowed(any(), anyString(), any(), anyInt());
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
     }
 }

@@ -427,11 +427,11 @@ public class MobileDataDownloadFactory {
                 .build();
     }
 
-    // Check killswitch is on or off. True means do not use MddLogger.
+    // Check the feature flag is on or off. True means use MddLogger.
     @NonNull
     @VisibleForTesting
     static Optional<Logger> getMddLogger(@NonNull Flags flags) {
-        return flags.getMddLoggerKillSwitch() ? Optional.absent() : Optional.of(new MddLogger());
+        return flags.getMddLoggerEnabled() ? Optional.of(new MddLogger()) : Optional.absent();
     }
 
     /** Dump MDD Debug Info. */

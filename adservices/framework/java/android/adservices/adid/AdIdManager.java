@@ -17,7 +17,6 @@ package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
 
-import android.adservices.FlagsConstants;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.annotation.CallbackExecutor;
@@ -31,6 +30,8 @@ import android.os.OutcomeReceiver;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.concurrent.Executor;
 
 /**
@@ -40,12 +41,6 @@ import java.util.concurrent.Executor;
  * personalized ads (formerly known as interest-based ads).
  */
 public class AdIdManager {
-    // The update-api tooling pulls a reference to FlagsConstants if the key is directly used in the
-    // annotation. However, it correctly pulls in the key value from class-local constants. So
-    // reading the value of the key into a local constant which is then used within the annotation.
-    private static final String FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED =
-            FlagsConstants.KEY_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
-
     /**
      * Service used for registering AdIdManager in the system service registry.
      *
@@ -119,7 +114,7 @@ public class AdIdManager {
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
      */
-    @FlaggedApi(FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
     @NonNull
     public void getAdId(

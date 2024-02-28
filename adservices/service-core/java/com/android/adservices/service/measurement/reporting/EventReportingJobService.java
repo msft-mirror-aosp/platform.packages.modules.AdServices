@@ -30,7 +30,6 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -103,7 +102,6 @@ public final class EventReportingJobService extends JobService {
                 long maxEventReportUploadRetryWindowMs =
                         FlagsFactory.getFlags().getMeasurementMaxEventReportUploadRetryWindowMs();
                 new EventReportingJobHandler(
-                                EnrollmentDao.getInstance(getApplicationContext()),
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()),
                                 FlagsFactory.getFlags(),

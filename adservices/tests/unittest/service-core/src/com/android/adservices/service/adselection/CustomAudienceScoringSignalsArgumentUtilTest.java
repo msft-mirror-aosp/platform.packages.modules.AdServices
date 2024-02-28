@@ -25,6 +25,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.js.JSScriptArgument;
 
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -39,6 +41,9 @@ import java.time.Instant;
 public class CustomAudienceScoringSignalsArgumentUtilTest {
     private final CustomAudienceSignals mCustomAudienceSignals1 = createCustomAudience("1");
     private final CustomAudienceSignals mCustomAudienceSignals2 = createCustomAudience("2");
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testConversionToScriptArgument() throws JSONException {

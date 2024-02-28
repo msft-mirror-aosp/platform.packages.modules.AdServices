@@ -49,6 +49,7 @@ import android.os.Parcel;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
@@ -72,6 +73,7 @@ import org.mockito.quality.Strictness;
 import java.util.List;
 
 /** Unit test to test class {@link com.android.adservices.service.topics.BlockedTopicsManager} */
+@RequiresSdkLevelAtLeastS()
 public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final long TAXONOMY_VERSION = 1L;
     private static final long MODEL_VERSION = 1L;

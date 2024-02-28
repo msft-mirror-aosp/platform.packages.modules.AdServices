@@ -44,6 +44,24 @@ public class FetchCustomAudienceFixture {
                 DBAdDataFixture.getValidDbAdDataListByBuyer(buyer));
     }
 
+    /**
+     * Returns a valid Json string representation of a Custom Audience DB with valid Ad Render Ids.
+     */
+    public static String getFullSuccessfulJsonResponseStringWithAdRenderId(AdTechIdentifier buyer)
+            throws JSONException {
+        return CustomAudienceBlobFixture.asJSONObjectString(
+                CustomAudienceFixture.VALID_OWNER,
+                buyer,
+                CustomAudienceFixture.VALID_NAME,
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer),
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer),
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
+                DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(buyer));
+    }
+
     public static JSONObject getFullSuccessfulJsonResponse(AdTechIdentifier buyer)
             throws JSONException {
         return CustomAudienceBlobFixture.asJSONObject(
@@ -59,6 +77,7 @@ public class FetchCustomAudienceFixture {
                 DBAdDataFixture.getValidDbAdDataListByBuyer(buyer),
                 false);
     }
+
 
     public static DBCustomAudience getFullSuccessfulDBCustomAudience() throws JSONException {
         return new DBCustomAudience.Builder()
@@ -79,6 +98,31 @@ public class FetchCustomAudienceFixture {
                                 .build())
                 .setAds(
                         DBAdDataFixture.getValidDbAdDataListByBuyer(
+                                AdTechIdentifier.fromString("localhost")))
+                .build();
+    }
+
+    /** Returns a valid Custom Audience DB with valid Ad Render Ids. */
+    public static DBCustomAudience getFullSuccessfulDBCustomAudienceWithAdRenderId()
+            throws JSONException {
+        return new DBCustomAudience.Builder()
+                .setBuyer(AdTechIdentifier.fromString("localhost"))
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setBiddingLogicUri(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
+                                AdTechIdentifier.fromString("localhost")))
+                .setTrustedBiddingData(
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                        AdTechIdentifier.fromString("localhost"))
+                                .build())
+                .setAds(
+                        DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
                                 AdTechIdentifier.fromString("localhost")))
                 .build();
     }
