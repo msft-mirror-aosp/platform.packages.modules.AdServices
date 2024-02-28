@@ -26,6 +26,9 @@ import android.adservices.common.FrequencyCapFilters;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Random;
@@ -34,6 +37,9 @@ import java.util.Random;
 public class UpdateAdCounterHistogramRequestTest {
     private static final Random RANDOM = new Random();
     private static final long VALID_AD_SELECTION_ID = 10;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidRequest_success() {

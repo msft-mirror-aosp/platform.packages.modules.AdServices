@@ -88,7 +88,7 @@ public class AppsActionDelegate {
                                 break;
                             case BLOCK_APP:
                                 UiStatsLogger.logBlockAppSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockAppDialog(
                                                 mAppsActivity, mAppsViewModel, app);
@@ -102,7 +102,7 @@ public class AppsActionDelegate {
                                 break;
                             case RESET_APPS:
                                 UiStatsLogger.logResetAppSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetAppDialog(
                                                 mAppsActivity, mAppsViewModel);

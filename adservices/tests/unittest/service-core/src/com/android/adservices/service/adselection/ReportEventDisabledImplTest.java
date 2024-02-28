@@ -28,6 +28,7 @@ import android.adservices.common.FledgeErrorResponse;
 import android.os.Process;
 import android.os.RemoteException;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
@@ -40,6 +41,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -61,6 +63,9 @@ public class ReportEventDisabledImplTest {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private static final int MY_UID = Process.myUid();
     @Mock private ReportInteractionInput mReportInteractionInputMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testReportEventDisabledImplFailsWhenCalled() throws Exception {

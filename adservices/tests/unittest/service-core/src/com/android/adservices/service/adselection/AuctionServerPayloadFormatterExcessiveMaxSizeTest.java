@@ -23,9 +23,11 @@ import static com.android.adservices.service.adselection.AuctionServerPayloadFor
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -47,6 +49,9 @@ public class AuctionServerPayloadFormatterExcessiveMaxSizeTest {
         secureRandom.nextBytes(result);
         return result;
     }
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

@@ -23,15 +23,19 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 
-
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AuctionServerPayloadFormatterFactoryTest {
     private static final int V0_VERSION = AuctionServerPayloadFormatterV0.VERSION;
     private static final int V1_VERSION = AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testCreateFormatter_validVersion_returnImplementationSuccess() {

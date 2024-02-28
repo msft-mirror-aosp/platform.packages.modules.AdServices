@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android rexistra temas de interese en función das aplicacións que usases recentemente. As aplicacións e os seus socios publicitarios poden servirse da túa actividade noutras aplicacións deste dispositivo para personalizar os anuncios, sempre tentando preservar a seguranza e a privacidade da túa identidade."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  As aplicacións que usas tamén poden determinar o que che gusta segundo a túa actividade nelas. Por exemplo, se adoitas utilizar aplicacións de cociña, é posible que noutras aplicacións se che mostren anuncios de servizos de envío de alimentos a domicilio ou contido relacionado.\n\nAs aplicacións poden almacenar esta información de forma segura para que só a empreguen os seus socios publicitarios co fin de personalizar eses anuncios."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Máis adiante, unha aplicación que utilices poderá solicitar esta información (os temas dos anuncios ou as suxestións de anuncios ofrecidas polas aplicacións que usases)."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"As aplicacións que uses poden solicitarlle información a Android para axudarlles a medir o rendemento dos seus anuncios. Co obxectivo de axudar a protexer a túa privacidade, Android limita a información que as aplicacións poden compartir entre si."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

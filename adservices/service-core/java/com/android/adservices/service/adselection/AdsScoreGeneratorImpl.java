@@ -160,7 +160,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SCORING);
 
         final List<SignedContextualAds> contextualAds =
-                new ArrayList<>(adSelectionConfig.getBuyerSignedContextualAds().values());
+                new ArrayList<>(adSelectionConfig.getPerBuyerSignedContextualAds().values());
 
         AdServicesHttpClientRequest scoringLogicUriHttpRequest =
                 AdServicesHttpClientRequest.builder()
@@ -522,7 +522,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 .setBuyer(ctx.getBuyer());
 
                 Map<AdTechIdentifier, String> jsOverride =
-                        mAdSelectionDevOverridesHelper.getBuyersDecisionLogicOverride(
+                        mAdSelectionDevOverridesHelper.getPerBuyerDecisionLogicOverride(
                                 adSelectionConfig);
                 if (jsOverride != null && jsOverride.containsKey(ctx.getBuyer())) {
                     sLogger.v(

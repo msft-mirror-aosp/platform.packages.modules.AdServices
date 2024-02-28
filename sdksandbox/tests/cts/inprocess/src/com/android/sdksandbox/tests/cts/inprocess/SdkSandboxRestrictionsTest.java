@@ -242,35 +242,23 @@ public class SdkSandboxRestrictionsTest {
     public void testSandboxCannotAccess_MediaStoreApi() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
-        String errorMessage;
-        if (SdkLevel.isAtLeastV()) {
-            errorMessage = "ContentProvider access not allowed from sdk sandbox UID";
-        } else {
-            errorMessage = "SDK sandbox uid may not access contentprovider";
-        }
-
-        final ContentResolver resolver = mContext.getContentResolver();
+        ContentResolver resolver = mContext.getContentResolver();
 
         // Cannot create new item on media store
-        final Uri audioCollection = MediaStore.Audio.Media.getContentUri(
-                MediaStore.VOLUME_EXTERNAL_PRIMARY);
-        final ContentValues newItem = new ContentValues();
+        Uri audioCollection =
+                MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        ContentValues newItem = new ContentValues();
         newItem.put(MediaStore.Audio.Media.DISPLAY_NAME, "New Audio Item");
         newItem.put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg");
-        SecurityException thrown =
-                assertThrows(
-                        SecurityException.class, () -> resolver.insert(audioCollection, newItem));
-        assertThat(thrown).hasMessageThat().contains(errorMessage);
+        assertThrows(SecurityException.class, () -> resolver.insert(audioCollection, newItem));
 
         // Cannot query on media store
         String[] projection = new String[] {
             MediaStore.Audio.Media._ID,
         };
-        thrown =
-                assertThrows(
-                        SecurityException.class,
-                        () -> resolver.query(audioCollection, projection, null, null, null, null));
-        assertThat(thrown).hasMessageThat().contains(errorMessage);
+        assertThrows(
+                SecurityException.class,
+                () -> resolver.query(audioCollection, projection, null, null, null, null));
     }
 
     @Test

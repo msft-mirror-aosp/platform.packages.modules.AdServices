@@ -25,11 +25,13 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.common.DBAdData;
 
 import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -38,6 +40,9 @@ import java.util.stream.Collectors;
 public class CustomAudienceConvertersTest {
 
     DBCustomAudience.Converters mConverters = new DBCustomAudience.Converters(true, true);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testDeserialize_invalidString() {

@@ -228,7 +228,7 @@
     <string name="settingsUI_apps_view_footer" msgid="5502656868680626279">"Es ist üblich, dass in Apps, die du verwendest, Themen gespeichert werden, die dich interessieren, um deine Nutzung zu personalisieren. Apps können auch in Android Informationen über deine Themen speichern.\n\nWenn du zum Beispiel eine App zum Marathontraining nutzt, könnte daraus geschlossen werden, dass du dich für Laufschuhe interessierst. Wenn du dann später eine andere App verwendest, zeigt dir diese App möglicherweise aufgrund von Vorschlägen der ersten App Werbung für Laufschuhe.\n\nIn Android werden Daten zu App-Vorschlägen regelmäßig automatisch gelöscht. Apps, die du wiederholt verwendest, können aber wieder in die Liste aufgenommen werden. Du kannst auch verhindern, dass eine App dir Werbung vorschlägt.\n\nOb in deinen Apps personalisierte Werbung angezeigt wird, hängt von dieser Einstellung, der Einstellung zu Anzeigenthemen, den Einstellungen zu deiner Werbe-ID und davon ab, ob die jeweilige App personalisierte Werbung nutzt."</string>
     <string name="notificationUI_u18_notification_title" msgid="3039567502781358382">"Neue Funktion zum Datenschutz bei Anzeigen jetzt verfügbar"</string>
     <string name="notificationUI_u18_notification_content" msgid="782224580271117368">"Nur sehr wenige Informationen werden zwischen Apps ausgetauscht, um die Leistung von Werbung messen zu können"</string>
-    <string name="notificationUI_u18_body1" msgid="95107947575995393">"Wir führen eine neue Funktion zum Datenschutz bei Werbung ein: „Erfolgsmessung von Anzeigen“. Android gibt nur sehr wenige Informationen zwischen Apps weiter, z. B. wann dir Werbung gezeigt wurde, damit Apps die Leistung von Werbung messen können."</string>
+    <string name="notificationUI_u18_body1" msgid="95107947575995393">"Wir führen eine neue Funktion zum Datenschutz bei Werbung ein: Erfolgsmessung von Anzeigen. Android gibt nur sehr wenige Informationen zwischen Apps weiter, z. B. wann dir Werbung gezeigt wurde, damit Apps die Leistung von Werbung messen können."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"In den Datenschutzeinstellungen für Werbung kannst du jederzeit Änderungen vornehmen."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Von dir genutzte Apps können von Android Informationen abfragen, die dazu beitragen, die Leistung ihrer Werbung zu messen. Android gibt Apps aber nur Zugang zu bestimmten Arten von Daten."</string>
     <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android schließt aufgrund der in letzter Zeit von dir genutzten Apps auf Themen, die dich interessieren könnten. Außerdem können Apps und deren Werbepartner deine Aktivitäten in anderen Apps auf diesem Gerät verwenden, um dir personalisierte Werbung anzuzeigen, und trotzdem dazu beitragen, dass deine Identität vertraulich und geschützt bleibt."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Von dir genutzte Apps können auch aufgrund deiner App-Aktivitäten feststellen, was dir gefällt. Wenn du beispielsweise regelmäßig Koch-Apps verwendest, siehst du möglicherweise Werbung von Lebensmittellieferanten oder relevante Inhalte aus anderen Apps.\n\n Apps können diese Informationen so speichern, dass sie nur von den Werbepartnern dazu verwendet werden können, in anderen Apps personalisierte Werbung zu schalten."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Apps, die du verwendest, fragen dich später womöglich nach diesen Informationen – entweder nach deinen bevorzugten Werbethemen oder nach der Werbung, die andere Apps dir vorgeschlagen haben."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Von dir genutzte Apps können von Android Informationen abfragen, die dazu beitragen, die Leistung ihrer Anzeigen zu messen. Android trägt zum Schutz deiner Daten bei, indem der Austausch von Informationen zwischen den Apps eingeschränkt wird."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
@@ -571,7 +575,7 @@
     <string name="topic10288" msgid="4197272921112835157">"Web-Apps und Onlinetools"</string>
     <string name="topic10289" msgid="5361961713593805925">"Webdienste"</string>
     <string name="topic10290" msgid="1030690821237195132">"Cloud Storage"</string>
-    <string name="topic10291" msgid="4049265350889304495">"Web-Design und -Entwicklung"</string>
+    <string name="topic10291" msgid="4049265350889304495">"Webdesign und -entwicklung"</string>
     <string name="topic10292" msgid="3386329227033265361">"Webhosting"</string>
     <string name="topic10293" msgid="5737650187548034975">"Beruf und Ausbildung"</string>
     <string name="topic10294" msgid="4134169605040294646">"Bildung"</string>
