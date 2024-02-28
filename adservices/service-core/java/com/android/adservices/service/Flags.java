@@ -61,7 +61,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
-    long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
+    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -2662,7 +2662,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Enable Back Compat feature flag. The default value is false which means that all back compat
      * related features are disabled by default. This flag would be enabled for R/S during rollout.
      */
-    boolean ENABLE_BACK_COMPAT = false;
+    @FeatureFlag boolean ENABLE_BACK_COMPAT = false;
 
     /** Returns value of enable Back Compat */
     default boolean getEnableBackCompat() {
