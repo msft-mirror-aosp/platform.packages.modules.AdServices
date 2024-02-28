@@ -106,6 +106,9 @@ public class KAnonSignJoinManager {
     public void processNewMessages(List<KAnonMessageEntity> newMessages) {
         List<KAnonMessageEntity> messageAfterFiltering =
                 newMessages.stream().filter(this::filterRequest).collect(Collectors.toList());
+        if (messageAfterFiltering.isEmpty()) {
+            return;
+        }
         List<KAnonMessageEntity> insertedMessages =
                 mKAnonMessageManager.persistNewAnonMessageEntities(messageAfterFiltering);
         if (shouldMakeKAnonCallsNow()) {
@@ -123,6 +126,9 @@ public class KAnonSignJoinManager {
         List<KAnonMessageEntity> messageEntities =
                 mKAnonMessageManager.fetchNKAnonMessagesWithStatus(
                         numberOfMessages, KAnonMessageConstants.MessageStatus.NOT_PROCESSED);
+        if (messageEntities.isEmpty()) {
+            return;
+        }
         mKAnonCaller.signAndJoinMessages(messageEntities);
     }
 }

@@ -1546,8 +1546,8 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
     }
 
-    String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
-            "https://staging-chromekanonymity-pa.sandbox.googleapis.com/v1/proxy/keys";
+    /** Default value of the url to fetch keys for KAnon encryption */
+    String FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI = "";
 
     /** Returns Uri to fetch join encryption key for fledge ad selection. */
     default String getFledgeAuctionServerJoinKeyFetchUri() {
@@ -4686,20 +4686,19 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED = false;
 
     /** Default value of k-anon fetch server parameters url. */
-    String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL =
-            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getServerPublicParams/act_v0_32_2048_05_2023";
+    String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL = "";
 
     /** Default value of k-anon register client parameters url. */
-    String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL =
-            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/registerClient";
+    String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL = "";
 
     /** Default value of k-anon get tokens url. */
-    String FLEDGE_DEFAULT_KANON_GET_TOKENS_URL =
-            "https://staging-chromekanonymityauth-pa.sandbox.googleapis.com/v2/getTokens";
+    String FLEDGE_DEFAULT_KANON_GET_TOKENS_URL = "";
 
     /** Default value of k-anon get tokens url. */
-    String FLEDGE_DEFAULT_KANON_JOIN_URL =
-            "https://staging-chromekanonymity-pa.sandbox.googleapis.com/v1/proxy/req";
+    String FLEDGE_DEFAULT_KANON_JOIN_URL = "";
+
+    /** Default value of kanon join authority */
+    String FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN = "";
 
     /** Default size of batch in a kanon sign call */
     int FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE = 32;
@@ -4823,6 +4822,15 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default String getFledgeKAnonSetTypeToSignJoin() {
         return FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN;
+    }
+
+    /**
+     * This method returns the url authority that will be used in the
+     * {@link com.android.adservices.service.common.bhttp.BinaryHttpMessage}. This BinaryHttpMessage
+     * is sent as part of kanon http join request.
+     */
+    default String getFledgeKAnonUrlAuthorityToJoin() {
+        return FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN;
     }
 
     /*

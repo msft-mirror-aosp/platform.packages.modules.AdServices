@@ -44,7 +44,8 @@ public interface UxSelector {
                 initU18();
                 break;
             case GA_UX:
-                if (UxUtil.getFlag(KEY_PAS_UX_ENABLED)) {
+                if (UxUtil.getFlag(KEY_PAS_UX_ENABLED) && UxUtil.wasPasNotificationDisplayed()) {
+                    // UI views should be updated only once notification is sent (ROW).
                     initGaUxWithPas();
                     break;
                 }
