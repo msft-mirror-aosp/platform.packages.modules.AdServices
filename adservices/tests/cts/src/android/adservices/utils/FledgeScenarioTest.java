@@ -157,7 +157,7 @@ public abstract class FledgeScenarioTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public final void tearDown() throws IOException {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
         }
