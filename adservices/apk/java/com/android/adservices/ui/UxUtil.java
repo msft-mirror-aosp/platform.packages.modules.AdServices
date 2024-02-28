@@ -16,6 +16,9 @@
 
 package com.android.adservices.ui;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
+
 import android.content.Context;
 import android.os.Build;
 
@@ -63,5 +66,18 @@ public class UxUtil {
         } else {
             return UxStatesManager.getInstance().getUx();
         }
+    }
+
+    /** Returns the specified UX flag. */
+    public static boolean getFlag(String uxFlagKey) {
+        return UxStatesManager.getInstance().getFlag(uxFlagKey);
+    }
+
+    /** Returns if PAS notification was displayed. */
+    public static boolean wasPasNotificationDisplayed() {
+        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+            return getFlag(KEY_PAS_UX_ENABLED);
+        }
+        return ConsentManager.getInstance().wasPasNotificationDisplayed();
     }
 }

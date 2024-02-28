@@ -16,17 +16,12 @@
 
 package com.android.adservices.shell;
 
-import static com.android.adservices.shared.testing.common.DumpHelper.dump;
-
 import static org.mockito.Mockito.when;
 
 import android.content.Intent;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.LogEntry.Level;
-import com.android.adservices.mockito.LogInterceptor;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -34,8 +29,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-
-import java.util.Arrays;
 
 @SpyStatic(FlagsFactory.class)
 public final class AdServicesShellCommandServiceTest extends AdServicesExtendedMockitoTestCase {
@@ -70,35 +63,6 @@ public final class AdServicesShellCommandServiceTest extends AdServicesExtendedM
         IBinder binder = mShellService.onBind(getIntentForShellCommandService());
 
         expect.withMessage("onBind()").that(binder).isNull();
-    }
-
-    @Test
-    public void testDump_shellCommandThroughDumpsys_flagEnabled() throws Exception {
-        String[] args = new String[] {"cmd", "echo", "hello"};
-
-        expect.withMessage("cmd: echo")
-                .that(dump(pw -> mShellService.dump(/* fd= */ null, pw, args)))
-                .isEqualTo("hello\n");
-    }
-
-    @Test
-    @SpyStatic(Log.class)
-    public void testDump_shellCommandThroughDumpsys_flagDisabled() throws Exception {
-        mockGetAdServicesShellCommandEnabled(/* enabled= */ false);
-        String[] args = new String[] {"cmd", "echo", "hello"};
-        String tag = "adservices";
-        LogInterceptor logInterceptor = extendedMockito.interceptLogE(tag);
-
-        expect.withMessage("cmd: echo")
-                .that(dump(pw -> mShellService.dump(/* fd= */ null, pw, args)))
-                .isEmpty();
-        expect.withMessage("Log.e() calls to tag %s", tag)
-                .that(logInterceptor.getPlainMessages(tag, Level.ERROR))
-                .contains(
-                        String.format(
-                                "dump(%s) called on AdServicesShellCommandService when shell"
-                                        + " command flag was disabled",
-                                Arrays.toString(args)));
     }
 
     private Intent getIntentForShellCommandService() {

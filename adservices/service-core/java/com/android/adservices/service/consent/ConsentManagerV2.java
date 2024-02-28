@@ -265,13 +265,19 @@ public class ConsentManagerV2 {
                     if (enableAdExtServiceConsentData) {
                         AdServicesExtDataStorageServiceManager adServicesExtDataManager =
                                 AdServicesExtDataStorageServiceManager.getInstance(context);
-                        if (FlagsFactory.getFlags().getEnableAdExtServiceToAppSearchMigration()) {
-                            ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeededV2(
-                                    context,
-                                    datastore,
-                                    appSearchConsentStorageManager,
-                                    adServicesExtDataManager,
-                                    statsdAdServicesLogger);
+                        // TODO(b/324273438): Support R->T+ consent migration for Consent Manager
+                        //  V2 project.
+                        // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
+                        // builds, use the deprecated flag
+                        // enable_adext_service_to_appsearch_migration.
+                        if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
+                            AdExtDataConsentMigrationUtilsV2
+                                    .handleConsentMigrationToAppSearchIfNeededV2(
+                                            context,
+                                            datastore,
+                                            appSearchConsentStorageManager,
+                                            adServicesExtDataManager,
+                                            statsdAdServicesLogger);
                         }
                         mAppConsentForRStorageManager =
                                 new AppConsentForRStorageManager(

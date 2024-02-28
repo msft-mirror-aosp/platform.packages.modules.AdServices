@@ -48,6 +48,7 @@ public final class SandboxLatencyInfo implements Parcelable {
                 METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
                 METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
                 METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES,
+                METHOD_LOAD_SDK_VIA_CONTROLLER,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Method {}
@@ -64,6 +65,7 @@ public final class SandboxLatencyInfo implements Parcelable {
     public static final int METHOD_REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE = 11;
     public static final int METHOD_UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE = 12;
     public static final int METHOD_GET_APP_OWNED_SDK_SANDBOX_INTERFACES = 13;
+    public static final int METHOD_LOAD_SDK_VIA_CONTROLLER = 14;
 
     @IntDef(
             prefix = "SANDBOX_STATUS_",
@@ -394,6 +396,7 @@ public final class SandboxLatencyInfo implements Parcelable {
     private long getTotalCallFinishTime() {
         switch (mMethod) {
             case METHOD_LOAD_SDK:
+            case METHOD_LOAD_SDK_VIA_CONTROLLER:
             case METHOD_REQUEST_SURFACE_PACKAGE:
                 return mTimeAppReceivedCallFromSystemServer;
             case METHOD_GET_SANDBOXED_SDKS:

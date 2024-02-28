@@ -105,7 +105,6 @@ public class FetchCustomAudienceImpl {
                     .build();
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final ListeningExecutorService mExecutorService;
-    private final int mCallingAppUid;
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
     @NonNull private final AdServicesHttpsClient mHttpClient;
     @NonNull private final Clock mClock;
@@ -140,6 +139,8 @@ public class FetchCustomAudienceImpl {
     @NonNull private CustomAudienceBlob mRequestCustomAudience;
     @NonNull private CustomAudienceBlob mResponseCustomAudience;
     @NonNull private CustomAudienceBlob mFusedCustomAudience;
+    private final int mCallingAppUid;
+    @NonNull private String mCallerAppPackageName;
 
     public FetchCustomAudienceImpl(
             @NonNull Flags flags,
@@ -196,7 +197,6 @@ public class FetchCustomAudienceImpl {
         mFledgeCustomAuienceMaxTotal = flags.getFledgeCustomAudienceMaxCount();
         mDefaultRetryDurationSeconds = flags.getFledgeFetchCustomAudienceMinRetryAfterValueMs();
         mMaxRetryDurationSeconds = flags.getFledgeFetchCustomAudienceMaxRetryAfterValueMs();
-
         // Instantiate request, response and result CustomAudienceBlobs
         mRequestCustomAudience =
                 new CustomAudienceBlob(
@@ -247,6 +247,7 @@ public class FetchCustomAudienceImpl {
             @NonNull FetchAndJoinCustomAudienceCallback callback,
             @NonNull DevContext devContext) {
         try {
+            mCallerAppPackageName = request.getCallerPackageName();
             // Failing fast and silently if fetchCustomAudience is disabled.
             if (!mFledgeFetchCustomAudienceEnabled) {
                 sLogger.v("fetchCustomAudience is disabled.");
@@ -442,6 +443,10 @@ public class FetchCustomAudienceImpl {
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
+                            boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+                            sLogger.v(
+                                    "Is debuggable custom audience: %b",
+                                    isDebuggableCustomAudience);
                             // TODO(b/283857101): Add a asDBCustomAudience() method.
                             DBCustomAudience.Builder customAudienceBuilder =
                                     new DBCustomAudience.Builder()
@@ -460,7 +465,7 @@ public class FetchCustomAudienceImpl {
                                                     DBTrustedBiddingData.fromServiceObject(
                                                             mFusedCustomAudience
                                                                     .getTrustedBiddingData()))
-                                            .setDebuggable(devContext.getDevOptionsEnabled());
+                                            .setDebuggable(isDebuggableCustomAudience);
 
                             List<DBAdData> ads = new ArrayList<>();
                             for (AdData ad : mFusedCustomAudience.getAds()) {
@@ -470,6 +475,7 @@ public class FetchCustomAudienceImpl {
                                                 .setMetadata(ad.getMetadata())
                                                 .setAdCounterKeys(ad.getAdCounterKeys())
                                                 .setAdFilters(ad.getAdFilters())
+                                                .setAdRenderId(ad.getAdRenderId())
                                                 .build());
                             }
 
@@ -484,7 +490,7 @@ public class FetchCustomAudienceImpl {
                             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                                     customAudience,
                                     mFusedCustomAudience.getDailyUpdateUri(),
-                                    devContext.getDevOptionsEnabled());
+                                    isDebuggableCustomAudience);
                             return null;
                         }));
     }
@@ -559,7 +565,8 @@ public class FetchCustomAudienceImpl {
             // AdSelectionServiceFilter ensures the failing assertion is logged internally.
             // Note: Failure is logged before the callback to ensure deterministic testing.
             if (!isFilterException) {
-                mAdServicesLogger.logFledgeApiCallStats(API_NAME, resultCode, 0);
+                mAdServicesLogger.logFledgeApiCallStats(
+                        API_NAME, mCallerAppPackageName, resultCode, 0);
             }
 
             callback.onFailure(
@@ -570,7 +577,10 @@ public class FetchCustomAudienceImpl {
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    API_NAME,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    0);
             throw new RuntimeException(e);
         }
     }
@@ -579,12 +589,15 @@ public class FetchCustomAudienceImpl {
     private void notifySuccess(@NonNull FetchAndJoinCustomAudienceCallback callback) {
         try {
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+                    API_NAME, mCallerAppPackageName, AdServicesStatusUtils.STATUS_SUCCESS, 0);
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, 0);
+                    API_NAME,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    0);
             throw new RuntimeException(e);
         }
     }

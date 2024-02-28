@@ -334,7 +334,7 @@ public final class AggregatePayloadGeneratorTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregateSource(aggregatableSource.toString())
-                        .setFilterData(sourceFilter.serializeAsJson(mFlags).toString())
+                        .setFilterDataString(sourceFilter.serializeAsJson(mFlags).toString())
                         .build();
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()

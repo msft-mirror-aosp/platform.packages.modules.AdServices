@@ -154,13 +154,14 @@ class SdkSandboxStatsdLogger {
      * Send sandbox activity API call latency data to StatsD. Corresponding StatsD atom is
      * SandboxActivityEventOccurred.
      */
-    public void logSandboxActivityApiLatency(int method, int callResult, int latencyMillis) {
+    public void logSandboxActivityApiLatency(
+            int method, int callResult, int latencyMillis, int clientUid) {
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED,
                 method,
                 callResult,
                 latencyMillis,
-                Binder.getCallingUid(),
+                clientUid,
                 /*sdkUid=*/ -1);
     }
 }

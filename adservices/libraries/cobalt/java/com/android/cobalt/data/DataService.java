@@ -264,6 +264,7 @@ public final class DataService {
                                     mDaoBuildingBlocks.deleteOldAggregates(oldestDayIndex);
                                     mDaoBuildingBlocks.deleteReports(
                                             irrelevantReports(relevantReports));
+                                    mDaoBuildingBlocks.deleteUnusedStringHashes();
                                     mDaoBuildingBlocks.deleteUnusedSystemProfileHashes();
                                 }),
                 mExecutorService);

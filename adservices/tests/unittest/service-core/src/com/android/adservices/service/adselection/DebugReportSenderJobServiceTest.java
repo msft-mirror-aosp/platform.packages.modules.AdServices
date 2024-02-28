@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -55,6 +55,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -62,7 +63,6 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -81,6 +81,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ConsentManager.class)
 @SpyStatic(DebugReportSenderJobService.class)
@@ -108,9 +109,6 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private DebugReportSenderWorker mDebugReportSenderWorker;
     @Mock private JobParameters mJobParametersMock;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
-
-    @Mock private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setup() {
@@ -118,8 +116,6 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_DEBUG_REPORT_SENDER_JOB_ID));
-
-        mSpyLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
     }
 
     @After
@@ -137,10 +133,12 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithoutLogging);
 
         testOnStartJobFlagDisabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -153,11 +151,13 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithLogging);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
 
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -352,10 +352,11 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -364,10 +365,12 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
 
         doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -375,13 +378,15 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingEnabled);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
-        verifyOnJobFinishedLogged(mSpyLogger, onJobDoneCallback);
+        verifyOnStartJobLogged(logger, onStartJobCallback);
+        verifyOnJobFinishedLogged(logger, onJobDoneCallback);
     }
 
     @Test
@@ -456,12 +461,13 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -469,10 +475,12 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
         doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
         testOnStopJobCallsStopWork();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -480,11 +488,12 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         Flags mockFlag =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         mockGetFlags(mockFlag);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
 
-        verifyOnStopJobLogged(mSpyLogger, callback);
+        verifyOnStopJobLogged(logger, callback);
     }
 
     @Test
@@ -492,24 +501,26 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         Flags flags =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingDisabled();
         mockGetFlags(flags);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
     public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() throws InterruptedException {
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingEnabled();
         mockGetFlags(flags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
-        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
-        verifyBackgroundJobsSkipLogged(mSpyLogger, onJobDoneCallback);
+        verifyOnStartJobLogged(logger, onStartJobCallback);
+        verifyBackgroundJobsSkipLogged(logger, onJobDoneCallback);
     }
 
     @Test
@@ -517,10 +528,12 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
         doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
         testOnStartJobUpdateSuccess();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -528,12 +541,14 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingEnabled);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateSuccess();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     private void testOnStartJobUpdateSuccess() throws InterruptedException {

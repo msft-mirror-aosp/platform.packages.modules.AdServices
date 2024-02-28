@@ -23,6 +23,9 @@ import static org.junit.Assert.assertEquals;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 
@@ -31,6 +34,9 @@ public class DBBuyerDecisionLogicTest {
     private static final String BUYER_DECISION_LOGIC_JS =
             "function test() { return \"hello world\"; }";
     private static final Uri BIDDING_LOGIC_URI = Uri.parse("http://www.domain.com/logic/1");
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBBuyerDecisionLogic() {

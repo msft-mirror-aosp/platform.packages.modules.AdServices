@@ -87,7 +87,9 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     @Override
     public int onCommand(String cmd) {
         int callingUid = mInjector.getCallingUid();
-        if (callingUid != Process.ROOT_UID && callingUid != Process.SHELL_UID) {
+        if (callingUid != Process.ROOT_UID
+                && callingUid != Process.SHELL_UID
+                && callingUid != Process.SYSTEM_UID) {
             throw new SecurityException(String.format(WRONG_UID_TEMPLATE, callingUid));
         }
         if (cmd == null || cmd.isEmpty() || cmd.equals(CMD_SHORT_HELP) || cmd.equals(CMD_HELP)) {
@@ -144,23 +146,21 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
             latch.countDown();
         }
 
-        await(latch, mTimeoutMillis, getErrPrintWriter());
-
-        return resultCode.get();
-    }
-
-    private void await(CountDownLatch latch, int timeout, PrintWriter pw) {
         try {
-            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                pw.printf(
-                        "Elapsed time: %d Millisecond. Timeout occurred , failed to "
-                                + "complete shell command\n",
-                        timeout);
+            if (!latch.await(mTimeoutMillis, TimeUnit.MILLISECONDS)) {
+                getErrPrintWriter()
+                        .printf(
+                                "Elapsed time: %d Millisecond. Timeout occurred , failed to "
+                                        + "complete shell command\n",
+                                mTimeoutMillis);
+                return -1;
             }
         } catch (InterruptedException e) {
-            pw.println("Thread interrupted, failed to complete shell command");
+            getErrPrintWriter().println("Thread interrupted, failed to complete shell command");
             Thread.currentThread().interrupt();
+            return -1;
         }
+        return resultCode.get();
     }
 
     private String[] handleAdServicesArgs(String[] args) {

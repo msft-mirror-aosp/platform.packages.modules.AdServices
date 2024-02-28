@@ -49,7 +49,7 @@ final class DeviceSideDeviceConfigHelper extends DeviceConfigHelper.Interface {
     public boolean asyncSet(String name, String value) {
         mLog.v("asyncSet(%s=%s)", name, value);
         return callWithDeviceConfigPermissions(
-                () -> DeviceConfig.setProperty(mNamespace, name, value, /* makeDefault= */ false));
+                () -> DeviceConfigUtil.setDeviceConfigFlag(mNamespace, name, value));
     }
 
     @Override

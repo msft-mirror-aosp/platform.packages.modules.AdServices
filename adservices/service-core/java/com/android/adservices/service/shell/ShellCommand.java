@@ -23,4 +23,9 @@ interface ShellCommand {
 
     /** Runs the shell command and returns the result. */
     int run(PrintWriter out, PrintWriter err, String[] args);
+
+    /**
+     * @return the name of the command.
+     */
+    String getCommandName();
 }

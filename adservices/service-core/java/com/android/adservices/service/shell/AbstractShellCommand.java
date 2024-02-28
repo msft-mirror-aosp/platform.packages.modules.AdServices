@@ -21,7 +21,6 @@ import java.util.Arrays;
 
 abstract class AbstractShellCommand implements ShellCommand {
 
-    static final String TAG = AbstractShellCommand.class.getSimpleName();
     static final int RESULT_GENERIC_ERROR = -1;
     static final int RESULT_OK = 0;
 

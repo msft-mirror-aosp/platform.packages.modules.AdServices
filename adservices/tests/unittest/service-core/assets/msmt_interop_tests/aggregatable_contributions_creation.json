@@ -290,8 +290,7 @@
               "key": "0x12",
               "value": 456
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"
@@ -308,8 +307,7 @@
               "key": "0x2",
               "value": 654
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3602000"
@@ -326,8 +324,7 @@
               "key": "0x22",
               "value": 789
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3603000"
@@ -344,8 +341,7 @@
               "key": "0x1",
               "value": 666
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_time": "3606000",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"
