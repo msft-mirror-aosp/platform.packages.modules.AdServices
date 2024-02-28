@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_DEFAULT;
+
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
@@ -158,6 +160,7 @@ public class DBCustomAudience {
      * @param defaultExpireIn the default expiration from activation
      * @param adDataConversionStrategy Strategy to convert ads from DB
      * @param debuggable If the CA was created in a debuggable context
+     * @param auctionServerRequestFlagsEnabled If auction server request flags are enabled.
      * @return storage model
      */
     @NonNull
@@ -167,7 +170,8 @@ public class DBCustomAudience {
             @NonNull Instant currentTime,
             @NonNull Duration defaultExpireIn,
             @NonNull AdDataConversionStrategy adDataConversionStrategy,
-            boolean debuggable) {
+            boolean debuggable,
+            boolean auctionServerRequestFlagsEnabled) {
         Objects.requireNonNull(parcelable);
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(currentTime);
@@ -216,7 +220,10 @@ public class DBCustomAudience {
                                                                 .build())
                                         .collect(Collectors.toList()))
                 .setUserBiddingSignals(parcelable.getUserBiddingSignals())
-                .setAuctionServerRequestFlags(parcelable.getAuctionServerRequestFlags())
+                .setAuctionServerRequestFlags(
+                        auctionServerRequestFlagsEnabled
+                                ? parcelable.getAuctionServerRequestFlags()
+                                : FLAG_AUCTION_SERVER_REQUEST_DEFAULT)
                 .build();
     }
 
