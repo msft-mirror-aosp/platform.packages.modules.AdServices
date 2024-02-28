@@ -96,7 +96,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -2005,14 +2005,14 @@ public final class MeasurementServiceImplTest {
     private void assertFailureReasonLogged(int failureReason) {
         ArgumentCaptor<ApiCallStats> captorStatus = ArgumentCaptor.forClass(ApiCallStats.class);
         verify(mMockAdServicesLogger, timeout(TIMEOUT)).logApiCallStats(captorStatus.capture());
-        assertEquals(failureReason, captorStatus.getValue().getResult().getFailureReason());
+        assertEquals(failureReason, captorStatus.getValue().getFailureReason());
     }
 
     private MeasurementServiceImpl createServiceWithMocks() {
         return new MeasurementServiceImpl(
                 mMockMeasurementImpl,
                 mMockContext,
-                Clock.SYSTEM_CLOCK,
+                Clock.getInstance(),
                 mMockConsentManager,
                 mMockThrottler,
                 new CachedFlags(mMockFlags),

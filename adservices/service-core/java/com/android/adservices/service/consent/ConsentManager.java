@@ -251,13 +251,18 @@ public class ConsentManager {
                     if (enableAdExtServiceConsentData) {
                         adServicesExtDataManager =
                                 AdServicesExtDataStorageServiceManager.getInstance(context);
-                        if (FlagsFactory.getFlags().getEnableAdExtServiceToAppSearchMigration()) {
-                            ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeeded(
-                                    context,
-                                    datastore,
-                                    appSearchConsentManager,
-                                    adServicesExtDataManager,
-                                    statsdAdServicesLogger);
+                        // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
+                        // builds, use the deprecated flag
+                        // enable_adext_service_to_appsearch_migration.
+                        if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
+                            AdExtDataConsentMigrationUtils
+                                    .handleConsentMigrationFromAdExtDataIfNeeded(
+                                            context,
+                                            datastore,
+                                            appSearchConsentManager,
+                                            adServicesExtDataManager,
+                                            statsdAdServicesLogger,
+                                            adServicesManager);
                         }
                     }
 
@@ -1542,7 +1547,6 @@ public class ConsentManager {
         adServicesManager.setConsent(consentParcel);
     }
 
-    @VisibleForTesting
     static void setPerApiConsentToSystemServer(
             @NonNull AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType,
@@ -1597,7 +1601,11 @@ public class ConsentManager {
                                     /* default= */ false)
                             || sharedPreferences.getBoolean(
                                     ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED,
-                                    /* default= */ false);
+                                    /* default= */ false)
+                            || sharedPreferences.getBoolean(
+                                    ConsentConstants
+                                            .SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER,
+                                    /* defValue= */ false);
             if (shouldSkipMigration) {
                 LogUtil.v(
                         "Consent migration has happened to user %d, skip...",
@@ -2190,6 +2198,12 @@ public class ConsentManager {
                 () -> // Same as PPAPI_ONLY. Doesn't need to be rollback safe
                 mUxStatesDao.setEnrollmentChannel(ux, channel),
                 /* errorLogger= */ null);
+    }
+
+    public boolean isPasFledgeConsentGiven() {
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 
     @FunctionalInterface

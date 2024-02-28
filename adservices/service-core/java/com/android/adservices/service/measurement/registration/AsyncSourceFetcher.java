@@ -270,20 +270,24 @@ public class AsyncSourceFetcher {
                     return false;
                 }
                 if (!FetcherUtil.areValidAttributionFilters(
-                        maybeFilterData, mFlags, /* canIncludeLookbackWindow= */ false)) {
+                        maybeFilterData,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true)) {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
-                builder.setFilterData(maybeFilterData.toString());
+                builder.setFilterDataString(maybeFilterData.toString());
             } else {
                 if (!FetcherUtil.areValidAttributionFilters(
                         json.optJSONObject(SourceHeaderContract.FILTER_DATA),
                         mFlags,
-                        /* canIncludeLookbackWindow= */ false)) {
+                        /* canIncludeLookbackWindow= */ false,
+                        /* shouldCheckFilterSize= */ true)) {
                     LoggerFactory.getMeasurementLogger().d("Source filter-data is invalid.");
                     return false;
                 }
-                builder.setFilterData(
+                builder.setFilterDataString(
                         json.getJSONObject(SourceHeaderContract.FILTER_DATA).toString());
             }
         }
@@ -445,8 +449,30 @@ public class AsyncSourceFetcher {
         }
 
         if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()
-                && !json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
-            String triggerSpecString = json.getString(SourceHeaderContract.TRIGGER_SPECS);
+                && (!json.isNull(SourceHeaderContract.TRIGGER_SPECS)
+                        || !json.isNull(SourceHeaderContract.TRIGGER_DATA))) {
+            String triggerSpecString;
+            if (!json.isNull(SourceHeaderContract.TRIGGER_DATA)) {
+                if (!json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
+                    LoggerFactory.getMeasurementLogger().d(
+                            "Only one of trigger_data or trigger_specs is expected");
+                    return false;
+                }
+                JSONArray triggerData = json.getJSONArray(SourceHeaderContract.TRIGGER_DATA);
+                // Empty top-level trigger data results in an empty trigger specs list.
+                if (triggerData.length() == 0) {
+                    triggerSpecString = triggerData.toString();
+                // Populated top-level trigger data results in one trigger spec object.
+                } else {
+                    JSONArray triggerSpecsArray = new JSONArray();
+                    JSONObject triggerSpec = new JSONObject();
+                    triggerSpec.put(SourceHeaderContract.TRIGGER_DATA, triggerData);
+                    triggerSpecsArray.put(triggerSpec);
+                    triggerSpecString = triggerSpecsArray.toString();
+                }
+            } else {
+                triggerSpecString = json.getString(SourceHeaderContract.TRIGGER_SPECS);
+            }
 
             final int finalMaxEventLevelReports =
                     Source.getOrDefaultMaxEventLevelReports(
@@ -497,7 +523,7 @@ public class AsyncSourceFetcher {
             Source.TriggerDataMatching triggerDataMatching) {
         List<Pair<Long, Long>> parsedEventReportWindows =
                 Source.getOrDefaultEventReportWindowsForFlex(
-                        eventReportWindows, sourceType, expiry, mFlags);
+                        eventReportWindows, sourceType, TimeUnit.SECONDS.toMillis(expiry), mFlags);
         long defaultStart = parsedEventReportWindows.get(0).first;
         List<Long> defaultEnds =
                 parsedEventReportWindows.stream().map((x) -> x.second).collect(Collectors.toList());
@@ -597,17 +623,16 @@ public class AsyncSourceFetcher {
 
             summaryBuckets = TriggerSpec.getLongListFromJSON(maybeSummaryBucketsJson.get());
 
-            if (summaryBuckets.size() > maxEventLevelReports) {
+            if (summaryBuckets.isEmpty() || summaryBuckets.size() > maxEventLevelReports
+                    || !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
                 return Optional.empty();
             }
-        }
-        if ((summaryBuckets == null || summaryBuckets.isEmpty())
-                && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
-            return Optional.empty();
-        }
 
-        if (summaryBuckets != null && !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
-            return Optional.empty();
+            for (Long bucket : summaryBuckets) {
+                if (bucket < 0L || bucket > TriggerSpecs.MAX_BUCKET_THRESHOLD) {
+                    return Optional.empty();
+                }
+            }
         }
 
         return Optional.of(
@@ -945,7 +970,8 @@ public class AsyncSourceFetcher {
 
     private static long roundSecondsToWholeDays(long seconds) {
         long remainder = seconds % ONE_DAY_IN_SECONDS;
-        boolean roundUp = remainder >= ONE_DAY_IN_SECONDS / 2L;
+        // Return value should be at least one whole day.
+        boolean roundUp = (remainder >= ONE_DAY_IN_SECONDS / 2L) || (seconds == remainder);
         return seconds - remainder + (roundUp ? ONE_DAY_IN_SECONDS : 0);
     }
 
@@ -976,6 +1002,7 @@ public class AsyncSourceFetcher {
         String SHARED_FILTER_DATA_KEYS = "shared_filter_data_keys";
         String DROP_SOURCE_IF_INSTALLED = "drop_source_if_installed";
         String TRIGGER_DATA_MATCHING = "trigger_data_matching";
+        String TRIGGER_DATA = "trigger_data";
     }
 
     private interface SourceRequestContract {

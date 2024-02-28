@@ -15,28 +15,16 @@
  */
 package com.android.adservices.service;
 
-import static com.android.adservices.flags.Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_AD_ID_CACHE_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_PROTECTED_SIGNALS_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_TOPICS_ENCRYPTION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.ACONFIG_PREFIX;
-import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.aconfigToDeviceConfig;
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 
-import static org.junit.Assert.assertThrows;
-
+import android.util.Log;
 import android.util.Pair;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.internal.util.Preconditions;
 
 import org.junit.Test;
 
@@ -44,12 +32,51 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public final class FlagsConstantsTest extends AdServicesUnitTestCase {
 
+    private static final String ACONFIG_PREFIX = "com.android.adservices.flags.";
+
+    private static final List<String> MISSING_FLAGS_ALLOWLIST =
+            List.of(
+                    // FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED guards APIs that are overloaded
+                    // to take android.adservices.common.OutcomeReceiver (instead of
+                    // android.os.OutcomeReceiver) and hence don't need to be checked at runtime.
+                    FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
+
+                    // TODO(b/323888604): fix it (FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED)
+                    "com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled",
+
+                    // TODO(b/323297322): fix it
+                    FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED,
+
+                    // TODO(b/323397060);
+                    FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED,
+
+                    // TODO(b/320786372): fix it
+                    FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED
+
+                    // Add more flags below, either explaining to reason or using a TODO(b/BUG) that
+                    // will
+                    // add the PhFlags / FlagsConstant counterpart
+                    );
+
+    private static final Map<String, String> NON_CANONICAL_FLAGS =
+            // Flag names on FlagsConstants are expect to have the same name (minus prefix) as the
+            // aconfig counterpart, but there are a few exceptions like:
+            // - DeviceConfig flag already pushed to production
+            // - Same DeviceConfig flag is guarding multiple APIs using different @FlaggedApi
+            Map.of(
+                    // Add more flags below, either explaining to reason or using a TODO(b/BUG) that
+                    // will add the PhFlags / FlagsConstant counterpart
+                    );
+
     @Test
     public void testNoFlagHasTheAConfigPrefix() throws Exception {
-        for (Pair<String, String> constant : getAllFlagNameConstants()) {
+        for (Pair<String, String> constant : getAllFlagNameConstants(FlagsConstants.class)) {
             String name = constant.first;
             String value = constant.second;
             expect.withMessage(
@@ -60,87 +87,62 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
         }
     }
 
-    /** Tests flags whose initial value were hardcoded (but now calls aconfigToDeviceConfig()). */
     @Test
-    public void testAconfigToDeviceConfig_legacyFlags() {
-        expect.withMessage("KEY_AD_ID_CACHE_ENABLED")
-                .that(KEY_AD_ID_CACHE_ENABLED)
-                .isEqualTo("ad_id_cache_enabled");
-        expect.withMessage("KEY_ENABLE_ADSERVICES_API_ENABLED")
-                .that(KEY_ENABLE_ADSERVICES_API_ENABLED)
-                .isEqualTo("enable_adservices_api_enabled");
-        expect.withMessage("KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED")
-                .that(KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
-                .isEqualTo("adservices_enablement_check_enabled");
-        expect.withMessage("KEY_ENABLE_ADEXT_DATA_SERVICE_APIS")
-                .that(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
-                .isEqualTo("adext_data_service_apis_enabled");
-        expect.withMessage("KEY_TOPICS_ENCRYPTION_ENABLED")
-                .that(KEY_TOPICS_ENCRYPTION_ENABLED)
-                .isEqualTo("topics_encryption_enabled");
-        expect.withMessage("KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED")
-                .that(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
-                .isEqualTo("fledge_ad_selection_filtering_enabled");
-        expect.withMessage("KEY_PROTECTED_SIGNALS_ENABLED")
-                .that(KEY_PROTECTED_SIGNALS_ENABLED)
-                .isEqualTo("protected_signals_enabled");
+    public void testAllAconfigFlagsAreMapped() throws Exception {
+        Map<String, String> reverseServiceFlags =
+                getAllFlagNameConstants(FlagsConstants.class).stream()
+                        .collect(Collectors.toMap(p -> p.second, p -> p.first));
+        List<String> missingFlags = new ArrayList<>();
+        for (Pair<String, String> constant :
+                getAllFlagNameConstants(com.android.adservices.flags.Flags.class)) {
+            String constantName = constant.first;
+            String aconfigFlag = constant.second;
+            String expectedDeviceConfigFlag = getExpectedDeviceConfigFlag(aconfigFlag);
+            String serviceConstant = reverseServiceFlags.get(expectedDeviceConfigFlag);
+            if (serviceConstant == null) {
+                if (MISSING_FLAGS_ALLOWLIST.contains(aconfigFlag)) {
+                    Log.i(
+                            mTag,
+                            "Missing mapping for allowlisted flag ("
+                                    + constantName
+                                    + "="
+                                    + aconfigFlag
+                                    + ")");
+                } else {
+                    Log.e(mTag, "Missing mapping for " + constantName + "=" + aconfigFlag);
+                    missingFlags.add(expectedDeviceConfigFlag);
+                }
+            } else {
+                Log.d(mTag, "Found mapping: " + constantName + "->" + serviceConstant);
+            }
+        }
+        expect.withMessage("aconfig flags missing counterpart on FlagsConstants")
+                .that(missingFlags)
+                .isEmpty();
     }
 
-    // TODO(b/318891959): temporary test until refactoring constants to use aconfigToDeviceConfig -
-    // this test makes sure changing them won't break the current value
-    @Test
-    @Deprecated
-    public void testFlagsThatWillBeRefactoredToUseAconfigToDeviceConfig() {
-        expect.withMessage("KEY_AD_ID_CACHE_ENABLED")
-                .that(KEY_AD_ID_CACHE_ENABLED)
-                .isEqualTo(aconfigToDeviceConfig(FLAG_AD_ID_CACHE_ENABLED));
-        expect.withMessage("KEY_ENABLE_ADSERVICES_API_ENABLED")
-                .that(KEY_ENABLE_ADSERVICES_API_ENABLED)
-                .isEqualTo(aconfigToDeviceConfig(FLAG_ENABLE_ADSERVICES_API_ENABLED));
-        expect.withMessage("KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED")
-                .that(KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
-                .isEqualTo(aconfigToDeviceConfig(FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED));
-        expect.withMessage("KEY_ENABLE_ADEXT_DATA_SERVICE_APIS")
-                .that(KEY_ENABLE_ADEXT_DATA_SERVICE_APIS)
-                .isEqualTo(aconfigToDeviceConfig(FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED));
-        expect.withMessage("KEY_TOPICS_ENCRYPTION_ENABLED")
-                .that(KEY_TOPICS_ENCRYPTION_ENABLED)
-                .isEqualTo(aconfigToDeviceConfig(FLAG_TOPICS_ENCRYPTION_ENABLED));
-        expect.withMessage("KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED")
-                .that(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
-                .isEqualTo(aconfigToDeviceConfig(FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED));
-        expect.withMessage("KEY_PROTECTED_SIGNALS_ENABLED")
-                .that(KEY_PROTECTED_SIGNALS_ENABLED)
-                .isEqualTo(aconfigToDeviceConfig(FLAG_PROTECTED_SIGNALS_ENABLED));
+    private static String aconfigToDeviceConfig(String flag) {
+        Preconditions.checkArgument(
+                Objects.requireNonNull(flag).startsWith(ACONFIG_PREFIX),
+                "Flag doesn't start with %s: %s",
+                ACONFIG_PREFIX,
+                flag);
+        return flag.substring(ACONFIG_PREFIX.length());
     }
 
-    @Test
-    public void testAconfigToDeviceConfig_null() {
-        assertThrows(NullPointerException.class, () -> aconfigToDeviceConfig(null));
+    private String getExpectedDeviceConfigFlag(String aconfigFlag) {
+        String nonCanonical = NON_CANONICAL_FLAGS.get(aconfigFlag);
+        if (nonCanonical != null) {
+            Log.i(mTag, "Returning non-canonical flag for " + aconfigFlag + ": " + nonCanonical);
+            return nonCanonical;
+        }
+        return aconfigToDeviceConfig(aconfigFlag);
     }
 
-    @Test
-    public void testAconfigToDeviceConfig() {
-        String noPrefix = "D'OH!";
-        expect.withMessage("aconfigToDeviceConfig(%s)", noPrefix)
-                .that(aconfigToDeviceConfig(noPrefix))
-                .isEqualTo(noPrefix);
-
-        String nonAconfigPrefix = "annoyed.grunt.D'OH!";
-        expect.withMessage("aconfigToDeviceConfig(%s)", nonAconfigPrefix)
-                .that(aconfigToDeviceConfig(nonAconfigPrefix))
-                .isEqualTo(nonAconfigPrefix);
-
-        String aconfigPrefix = ACONFIG_PREFIX + noPrefix;
-        expect.withMessage("aconfigToDeviceConfig(%s)", aconfigPrefix)
-                .that(aconfigToDeviceConfig(aconfigPrefix))
-                .isEqualTo(noPrefix);
-    }
-
-    private static List<Pair<String, String>> getAllFlagNameConstants()
+    private static List<Pair<String, String>> getAllFlagNameConstants(Class<?> clazz)
             throws IllegalAccessException {
         List<Pair<String, String>> constants = new ArrayList<>();
-        for (Field field : FlagsConstants.class.getDeclaredFields()) {
+        for (Field field : clazz.getDeclaredFields()) {
             int modifiers = field.getModifiers();
             if (Modifier.isStatic(modifiers)
                     && Modifier.isFinal(modifiers)

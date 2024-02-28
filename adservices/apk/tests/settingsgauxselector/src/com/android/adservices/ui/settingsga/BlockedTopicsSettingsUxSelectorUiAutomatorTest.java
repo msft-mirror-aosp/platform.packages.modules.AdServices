@@ -23,6 +23,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_O
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
 
@@ -66,19 +67,19 @@ public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest extends AdServ
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
-                    .setTopicsEpochJobPeriodMs(TEST_EPOCH_JOB_PERIOD_MS)
+                    .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS)
                     .setCompatModeFlags();
 
     @Ignore("b/296642754")
     @Test
     public void topicBlockUnblockTest() throws Exception {
         // Launch main view of Privacy Sandbox Settings.
-        ApkTestUtil.launchSettingView(mSpyContext, mDevice, LAUNCHER_LAUNCH_TIMEOUT);
+        ApkTestUtil.launchSettingView(mDevice, LAUNCHER_LAUNCH_TIMEOUT);
 
         // Enter Topics Consent view.
         BlockedTopicsSettingsTestUtil.enterGaTopicsConsentView(mDevice);
 
-        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch2(mDevice);
+        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(mDevice);
         if (!consentSwitch.isChecked()) {
             consentSwitch.click();
         }
@@ -95,31 +96,26 @@ public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest extends AdServ
 
         // Verify there is a topic to be blocked.
         UiObject2 blockTopicButton =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.settingsUI_block_topic_title, 0);
+                ApkTestUtil.getElement(mDevice, R.string.settingsUI_block_topic_title, 0);
         BlockedTopicsSettingsTestUtil.blockATopicWithDialog(mDevice, blockTopicButton);
 
         // When there is no topic available to be blocked, it will display "no topics" text and the
         // "Block" button will not be displayed.
         assertThat(blockTopicButton).isNull();
-        ApkTestUtil.scrollTo(
-                mSpyContext, mDevice, R.string.settingsUI_topics_view_no_topics_ga_text);
+        ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_view_no_topics_ga_text);
         UiObject2 noTopicsText =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.settingsUI_topics_view_no_topics_ga_text);
+                ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_view_no_topics_ga_text);
         assertThat(noTopicsText).isNotNull();
 
         // Click viewBlockedTopicsButton to view topics being blocked.
-        ApkTestUtil.scrollToAndClick(
-                mSpyContext, mDevice, R.string.settingsUI_view_blocked_topics_title);
+        ApkTestUtil.scrollToAndClick(mDevice, R.string.settingsUI_view_blocked_topics_title);
 
         // There is 1 topic being blocked and "Unblock" button should be visible. Unblock it.
         BlockedTopicsSettingsTestUtil.unblockATopicWithDialog(mDevice);
 
         // Verify there is no blocked topic.
         UiObject2 noUnblockedTopicsText =
-                ApkTestUtil.getElement(
-                        mSpyContext, mDevice, R.string.settingsUI_no_blocked_topics_ga_text);
+                ApkTestUtil.getElement(mDevice, R.string.settingsUI_no_blocked_topics_ga_text);
         assertThat(noUnblockedTopicsText).isNotNull();
     }
 }

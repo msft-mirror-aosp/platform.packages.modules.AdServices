@@ -77,7 +77,7 @@ public final class SourceFixture {
                 .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
-                .setFilterData(ValidSourceParams.buildFilterData())
+                .setFilterDataString(ValidSourceParams.buildFilterDataString())
                 .setSharedFilterDataKeys(ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
@@ -133,7 +133,8 @@ public final class SourceFixture {
             return null;
         }
 
-        public static final String buildFilterData() {
+        /** Creates a filter data string */
+        public static final String buildFilterDataString() {
             try {
                 JSONObject filterMap = new JSONObject();
                 filterMap.put("conversion_subdomain",

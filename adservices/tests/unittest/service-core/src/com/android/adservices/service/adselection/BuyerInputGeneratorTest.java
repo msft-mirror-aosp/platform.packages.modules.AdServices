@@ -596,7 +596,7 @@ public class BuyerInputGeneratorTest {
     private DBCustomAudience createAndPersistDBCustomAudienceWithOmitAdsEnabled(
             String name, AdTechIdentifier buyer) {
         DBCustomAudience thisCustomAudience =
-                DBCustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(buyer, name)
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(buyer, name)
                         .build();
         mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY, false);
         return thisCustomAudience;

@@ -108,7 +108,7 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -308,6 +308,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         when(mEnrollmentSharedPreferences.getInt(eq(FILE_GROUP_STATUS), eq(/* defaultValue */ 0)))
                 .thenReturn(2);
     }
+
     @Test
     public void checkEmptySdkNameRequests() throws Exception {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
@@ -798,6 +799,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         // To capture result in inner class, we have to declare final.
         GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
+
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
                 .isEqualTo(expectedGetTopicsResult.getResultCode());
@@ -898,9 +900,14 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
         callback.assertFailed(STATUS_UNAUTHORIZED);
+
+        logApiCallStatsCallback.assertResultReceived();
 
         ExtendedMockito.verify(
                 () ->
@@ -1011,7 +1018,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
     private void assertApiCallStats(ApiCallStats apiCallStats, int apiName) {
         expect.withMessage("%s.getResultCode()", apiCallStats)
-                .that(apiCallStats.getResult().getResultCode())
+                .that(apiCallStats.getResultCode())
                 .isEqualTo(STATUS_SUCCESS);
         expect.withMessage("%s.getAppPackageName()", apiCallStats)
                 .that(apiCallStats.getAppPackageName())
@@ -1065,7 +1072,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
 
             expect.withMessage("%s.getResultCode()", apiCallStats)
-                    .that(apiCallStats.getResult().getResultCode())
+                    .that(apiCallStats.getResultCode())
                     .isEqualTo(expectedResultCode);
             expect.withMessage("%s.getApiClass()", apiCallStats)
                     .that(apiCallStats.getApiName())
@@ -1079,8 +1086,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             expect.withMessage("%s.getSdkPackageName()", apiCallStats)
                     .that(apiCallStats.getSdkPackageName())
                     .isEqualTo(request.getSdkName());
-            assertThat(apiCallStats.getResult().getFailureReason())
-                    .isEqualTo(expectedFailureReason);
+            assertThat(apiCallStats.getFailureReason()).isEqualTo(expectedFailureReason);
         }
     }
 
@@ -1121,8 +1127,13 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @NonNull
     private GetTopicsResult getTopicsResults(TopicsServiceImpl topicsServiceImpl)
             throws InterruptedException {
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
+
+        logApiCallStatsCallback.assertResultReceived();
         return callback.assertSuccess();
     }
 

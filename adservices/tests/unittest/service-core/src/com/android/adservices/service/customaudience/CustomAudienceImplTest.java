@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -56,15 +58,15 @@ public class CustomAudienceImplTest {
                     .build();
 
     private static final CustomAudience VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
-            CustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(
-                            CommonFixture.VALID_BUYER_1)
+            CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                            CommonFixture.VALID_BUYER_1, FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
                     .build();
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
-            DBCustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(
+            DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(
                             CommonFixture.VALID_BUYER_1)
                     .build();
 

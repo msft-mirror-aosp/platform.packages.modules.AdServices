@@ -55,6 +55,12 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        initWithUx(this, getApplicationContext());
+    }
+
+    @Override
     public void initGaUxWithPas() {
         // overriding in base activity since PAS layout will be the same as GA.
         initGA();

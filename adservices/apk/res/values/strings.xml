@@ -1717,4 +1717,7 @@
     <string name="topic10445">Travel Agencies &amp; Services</string>
     <!-- Text for the topic name for topic Travel Guides &amp; Travelogues. [CHAR LIMIT=NONE] -->
     <string name="topic10446">Travel Guides &amp; Travelogues</string>
+
+    <!-- Text for shell command activity -->
+    <string name="shell_command_activity_header" translatable="false">Shell Command Activity</string>
 </resources>

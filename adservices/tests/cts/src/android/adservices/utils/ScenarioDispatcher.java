@@ -17,6 +17,7 @@
 package android.adservices.utils;
 
 import android.util.ArrayMap;
+import android.util.ArraySet;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -41,6 +42,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -68,8 +70,8 @@ public class ScenarioDispatcher extends Dispatcher {
     private final String mPrefix;
     private final Map<String, String> mSubstitutionMap;
     private final Map<String, String> mSubstitutionVariables;
-    private final ImmutableSet.Builder<String> mCalledPaths;
-    private final CountDownLatch mCallCount;
+    private final Set<String> mCalledPaths;
+    private final CountDownLatch mUniqueCallCount;
 
     /**
      * Setup the dispatcher for a given scenario.
@@ -126,10 +128,11 @@ public class ScenarioDispatcher extends Dispatcher {
      * @return String list of paths.
      */
     public ImmutableSet<String> getCalledPaths() throws InterruptedException {
-        if (!mCallCount.await(TIMEOUT_SEC, TimeUnit.SECONDS)) {
+        sLogger.w("getCalledPaths() called");
+        if (!mUniqueCallCount.await(TIMEOUT_SEC, TimeUnit.SECONDS)) {
             sLogger.w("Timeout reached in getCalledPaths()");
         }
-        return mCalledPaths.build();
+        return ImmutableSet.copyOf(mCalledPaths);
     }
 
     private ScenarioDispatcher(String scenarioPath, String prefix)
@@ -139,7 +142,7 @@ public class ScenarioDispatcher extends Dispatcher {
 
         JSONObject json = new JSONObject(loadTextResource(scenarioPath));
 
-        mCalledPaths = new ImmutableSet.Builder<>();
+        mCalledPaths = new ArraySet<>();
         mSubstitutionMap = parseSubstitutions(json);
         mSubstitutionVariables = new ArrayMap<>();
         mSubstitutionVariables.put("{base_url}", BASE_ADDRESS + prefix);
@@ -149,7 +152,7 @@ public class ScenarioDispatcher extends Dispatcher {
         mSubstitutionVariables.put("{adtech2_url}", FAKE_ADDRESS_1 + prefix);
         mSubstitutionVariables.put("{adtech3_url}", FAKE_ADDRESS_2 + prefix);
         mRequestToResponseMap = parseMocks(json);
-        mCallCount = new CountDownLatch(mRequestToResponseMap.size());
+        mUniqueCallCount = new CountDownLatch(mRequestToResponseMap.size());
     }
 
     private static Map<String, String> parseSubstitutions(JSONObject json) {
@@ -289,13 +292,12 @@ public class ScenarioDispatcher extends Dispatcher {
                 // If the mock path specifically has query params, then add that, otherwise strip
                 // them before adding them to the log.
                 // This behaviour matches the existing test server functionality.
-                mCalledPaths.add(
+                recordCalledPath(
                         String.format(
                                 "/%s",
                                 hasQueryParams(mockPath)
                                         ? mockPath
                                         : pathWithoutQueryParams(path)));
-                mCallCount.countDown();
                 sLogger.v("serving path at %s (200)", path);
 
                 return maybeApplyFledgeV3Header(
@@ -309,10 +311,23 @@ public class ScenarioDispatcher extends Dispatcher {
         // For any requests that weren't specifically overloaded with query params to be handled,
         // always strip them when adding them to the log.
         // This behaviour matches the existing test server functionality.
-        mCalledPaths.add("/" + pathWithoutQueryParams(path));
-        mCallCount.countDown();
+        recordCalledPath("/" + pathWithoutQueryParams(path));
         sLogger.v("serving path at %s (404)", path);
         return new MockResponse().setResponseCode(404);
+    }
+
+    private synchronized void recordCalledPath(String path) {
+        if (mCalledPaths.contains(path)) {
+            sLogger.v(
+                    "Not recording path called at %s as already hit, latch count is %d/%d.",
+                    path, mUniqueCallCount.getCount(), mRequestToResponseMap.size());
+        } else {
+            mCalledPaths.add(path);
+            mUniqueCallCount.countDown();
+            sLogger.v(
+                    "Recording path called at %s, latch count is %d/%d.",
+                    path, mUniqueCallCount.getCount(), mRequestToResponseMap.size());
+        }
     }
 
     private MockResponse maybeApplyFledgeV3Header(
@@ -396,6 +411,10 @@ public class ScenarioDispatcher extends Dispatcher {
     }
 
     private String pathWithoutPrefix(String path) {
+        if (Strings.isNullOrEmpty(mPrefix)) {
+            // Only remove the first redundant "/" if no prefix is explicitly defined.
+            return path.substring(1);
+        }
         return path.replace(mPrefix + "/", "");
     }
 

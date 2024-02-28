@@ -35,7 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
-
+    public static final String COMMAND_PREFIX = "custom-audience";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsCustomAudienceCliEnabled;
 
@@ -77,7 +77,7 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
     }
 
     @Override
-    public ImmutableSet<String> getAllCommands() {
-        return ImmutableSet.copyOf(mAllCommandsMap.keySet());
+    public String getCommandPrefix() {
+        return COMMAND_PREFIX;
     }
 }

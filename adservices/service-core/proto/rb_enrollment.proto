@@ -23,7 +23,7 @@ option java_multiple_files = true;
 message RbEnrollmentList {
   repeated RbEnrollment entry = 1;
 }
-
+// LINT.IfChange(PrivacySandboxApi)
 // Privacy Sandbox APIs that are gated on enrollment.
 enum PrivacySandboxApi {
   PRIVACY_SANDBOX_API_UNKNOWN = 0;
@@ -32,7 +32,9 @@ enum PrivacySandboxApi {
   PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION = 3;
   PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING = 4;
   PRIVACY_SANDBOX_API_SHARED_STORAGE = 5;
+  PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS = 6;
 }
+// LINT.ThenChange(/adservices/service-core/java/com/android/adservices/service/enrollment/EnrollmentData.java:enrolledApiToEnum)
 
 // A single Adtech enrollment entry.
 message RbEnrollment {

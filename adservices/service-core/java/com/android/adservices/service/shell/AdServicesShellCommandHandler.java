@@ -28,7 +28,7 @@ import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -61,6 +61,13 @@ public final class AdServicesShellCommandHandler {
             "is-allowed-custom-audiences-access";
 
     @VisibleForTesting
+    static final String CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS =
+            "is-allowed-protected-signals-access";
+
+    @VisibleForTesting
+    static final String CMD_IS_ALLOWED_AD_SELECTION_ACCESS = "is-allowed-ad-selection-access";
+
+    @VisibleForTesting
     static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
 
     @VisibleForTesting
@@ -78,6 +85,20 @@ public final class AdServicesShellCommandHandler {
                     + "Audience APIs in the given app.";
 
     @VisibleForTesting
+    static final String HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS =
+            CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Protected "
+                    + "Signals APIs in the given app.";
+
+    @VisibleForTesting
+    static final String HELP_IS_ALLOWED_AD_SELECTION_ACCESS =
+            CMD_IS_ALLOWED_AD_SELECTION_ACCESS
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Ad "
+                    + "Selection APIs in the given app.";
+
+    @VisibleForTesting
     static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
             CMD_IS_ALLOWED_TOPICS_ACCESS
                     + " <package_name> <enrollment_id> <using_sdk_sandbox>\n"
@@ -87,9 +108,11 @@ public final class AdServicesShellCommandHandler {
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
     static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
+    private static final ShellCommandFactory COMMON_SHELL_COMMAND_FACTORY =
+            CommonShellCommandFactory.getInstance();
     private final PrintWriter mOut;
     private final PrintWriter mErr;
-    private final ImmutableList<ShellCommandFactory> mShellCommandFactories;
+    private final ImmutableMap<String, ShellCommandFactory> mShellCommandFactories;
     private String[] mArgs;
     private int mArgPos;
     private String mCurArgData;
@@ -108,7 +131,7 @@ public final class AdServicesShellCommandHandler {
         mErr = Objects.requireNonNull(err, "err cannot be null");
         Objects.requireNonNull(
                 shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
-        mShellCommandFactories = shellCommandFactorySupplier.getAllShellCommandFactories();
+        mShellCommandFactories = shellCommandFactorySupplier.getShellCommandFactories();
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
@@ -198,6 +221,8 @@ public final class AdServicesShellCommandHandler {
         pw.printf("%s\n\n", HELP_ECHO);
         pw.printf("%s\n\n", HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
         pw.printf("%s\n\n", HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_AD_SELECTION_ACCESS);
         pw.printf("%s\n\n", HELP_IS_ALLOWED_TOPICS_ACCESS);
         pw.printf("%s\n\n", CustomAudienceListCommand.HELP);
         pw.printf("%s\n\n", CustomAudienceViewCommand.HELP);
@@ -214,16 +239,19 @@ public final class AdServicesShellCommandHandler {
                 return RESULT_GENERIC_ERROR;
             case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
+            case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
             default:
                 // TODO (b/308009734): Move other shell commands implement ICommand interface.
-                ShellCommand shellCommand = null;
-                for (ShellCommandFactory factory : mShellCommandFactories) {
-                    shellCommand = factory.getShellCommand(cmd);
-                    if (shellCommand != null) {
-                        break;
-                    }
+                ShellCommand shellCommand;
+                if (mShellCommandFactories.containsKey(cmd)) {
+                    ShellCommandFactory shellCommandFactory = mShellCommandFactories.get(cmd);
+                    String subCommand = getNextArg();
+                    shellCommand = shellCommandFactory.getShellCommand(subCommand);
+                } else {
+                    shellCommand = COMMON_SHELL_COMMAND_FACTORY.getShellCommand(cmd);
                 }
 
                 if (shellCommand == null) {
@@ -244,6 +272,12 @@ public final class AdServicesShellCommandHandler {
                 break;
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
                 helpMsg = HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+                break;
+            case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
+                helpMsg = HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+                break;
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
+                helpMsg = HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
                 break;
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 expectedArgs = 3;
@@ -282,6 +316,30 @@ public final class AdServicesShellCommandHandler {
                 Log.i(
                         TAG,
                         "isAllowedCustomAudiencesAccess("
+                                + pkgName
+                                + ", "
+                                + enrollmentId
+                                + ": "
+                                + isValid);
+                break;
+            case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
+                isValid =
+                        AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
+                                pkgName, enrollmentId);
+                Log.i(
+                        TAG,
+                        "isAllowedProtectedSignalsAccess("
+                                + pkgName
+                                + ", "
+                                + enrollmentId
+                                + ": "
+                                + isValid);
+                break;
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
+                isValid = AppManifestConfigHelper.isAllowedAdSelectionAccess(pkgName, enrollmentId);
+                Log.i(
+                        TAG,
+                        "isAllowedAdSelectionAccess("
                                 + pkgName
                                 + ", "
                                 + enrollmentId

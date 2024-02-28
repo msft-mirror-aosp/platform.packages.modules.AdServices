@@ -38,6 +38,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
@@ -205,7 +206,7 @@ import java.util.stream.Collectors;
 @SmallTest
 public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final int UX_TYPE_COUNT = 5;
-    private static final int ENROLLMENT_CHANNEL_COUNT = 20;
+    private static final int ENROLLMENT_CHANNEL_COUNT = 22;
 
     private BooleanFileDatastore mDatastore;
     private BooleanFileDatastore mConsentDatastore;
@@ -595,7 +596,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     public void testJobsAreScheduledAfterEnablingKillSwitchOff() {
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
         doReturn(false).when(mMockFlags).getFledgeSelectAdsKillSwitch();
-        doReturn(false).when(mMockFlags).getMeasurementKillSwitch();
+        mockMeasurementEnabled(true);
         doReturn(false).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(true).when(mMockFlags).getCobaltLoggingEnabled();
 
@@ -640,14 +641,14 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 () ->
                         AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
-        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        verify(() -> CobaltJobService.scheduleIfNeeded(any(Context.class), eq(false)), times(2));
     }
 
     @Test
     public void testJobsAreNotScheduledAfterEnablingKillSwitchOn() {
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
-        doReturn(true).when(mMockFlags).getMeasurementKillSwitch();
+        mockMeasurementEnabled(false);
         doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
         doReturn(false).when(mMockFlags).getCobaltLoggingEnabled();
 
@@ -745,6 +746,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mJobSchedulerMock).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(COBALT_LOGGING_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);
     }
@@ -3716,6 +3718,10 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                                         any(), eq(packageName), anyInt()));
     }
 
+    private void mockMeasurementEnabled(boolean value) {
+        when(mMockFlags.getMeasurementEnabled()).thenReturn(value);
+    }
+
     private List<ApplicationInfo> createApplicationInfos(String... packageNames) {
         return Arrays.stream(packageNames)
                 .map(s -> ApplicationInfoBuilder.newBuilder().setPackageName(s).build())
@@ -4472,8 +4478,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             spyConsentManager.setUx(ux);
         }
 
-        verify(mUxStatesDaoMock, times(5)).getUx();
-        verify(mUxStatesDaoMock, times(5)).setUx(any());
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mUxStatesDaoMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4490,8 +4496,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             spyConsentManager.setUx(ux);
         }
 
-        verify(mMockIAdServicesManager, times(5)).getUx();
-        verify(mMockIAdServicesManager, times(5)).setUx(any());
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).getUx();
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4508,8 +4514,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             spyConsentManager.setUx(ux);
         }
 
-        verify(mMockIAdServicesManager, times(5)).getUx();
-        verify(mMockIAdServicesManager, times(5)).setUx(any());
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).getUx();
+        verify(mMockIAdServicesManager, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4527,8 +4533,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             spyConsentManager.setUx(ux);
         }
 
-        verify(mAppSearchConsentManagerMock, times(5)).getUx();
-        verify(mAppSearchConsentManagerMock, times(5)).setUx(any());
+        verify(mAppSearchConsentManagerMock, times(UX_TYPE_COUNT)).getUx();
+        verify(mAppSearchConsentManagerMock, times(UX_TYPE_COUNT)).setUx(any());
     }
 
     @Test
@@ -4558,8 +4564,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             }
         }
 
-        verify(mUxStatesDaoMock, times(20)).getEnrollmentChannel(any());
-        verify(mUxStatesDaoMock, times(20)).setEnrollmentChannel(any(), any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel(any());
+        verify(mUxStatesDaoMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 
     @Test
@@ -4579,8 +4586,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             }
         }
 
-        verify(mMockIAdServicesManager, times(20)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(20)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4600,8 +4608,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             }
         }
 
-        verify(mMockIAdServicesManager, times(20)).getEnrollmentChannel();
-        verify(mMockIAdServicesManager, times(20)).setEnrollmentChannel(anyString());
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT)).getEnrollmentChannel();
+        verify(mMockIAdServicesManager, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(anyString());
     }
 
     @Test
@@ -4622,8 +4631,10 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             }
         }
 
-        verify(mAppSearchConsentManagerMock, times(20)).getEnrollmentChannel(any());
-        verify(mAppSearchConsentManagerMock, times(20)).setEnrollmentChannel(any(), any());
+        verify(mAppSearchConsentManagerMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .getEnrollmentChannel(any());
+        verify(mAppSearchConsentManagerMock, times(ENROLLMENT_CHANNEL_COUNT))
+                .setEnrollmentChannel(any(), any());
     }
 
     @Test
@@ -4691,5 +4702,57 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         // Verify notificationDisplayed is also set in PPAPI
         assertThat(mConsentDatastore.get(PAS_NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_happycase() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isTrue();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_NotificationNotDisplayed() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(false).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_FledgeRevoken() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_pasNotEnabled() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(false);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
     }
 }

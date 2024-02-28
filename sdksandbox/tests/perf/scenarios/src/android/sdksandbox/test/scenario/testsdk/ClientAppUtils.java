@@ -25,7 +25,8 @@ import androidx.test.uiautomator.Until;
 
 /** Utility class to help do operations for the client app. */
 final class ClientAppUtils {
-    private final String mClientApp;
+    private final String mPackageName;
+    private final String mActivityName;
 
     private static final String LOAD_AD_BUTTON = "loadAdButton";
     private static final long UI_NAVIGATION_WAIT_MS = 1000;
@@ -34,9 +35,9 @@ final class ClientAppUtils {
 
     public static final String AD_LOADED_BUTTON_TEXT = "Load Ad (Ad loaded)";
 
-    /** Returns the command for stopping the client app. */
-    public String getStopAppCommand() {
-        return "am force-stop " + mClientApp;
+    /** Returns the command for stopping the client app with {@code packageName}. */
+    public static String getStopAppCommand(String packageName) {
+        return "am force-stop " + packageName;
     }
 
     /**
@@ -46,8 +47,10 @@ final class ClientAppUtils {
      */
     public String getStartAppCommand(boolean mediationEnabled) {
         return "am start -n "
-                + mClientApp
-                + "/.MainActivity --ez mediation_enabled "
+                + mPackageName
+                + "/"
+                + mActivityName
+                + " --ez mediation_enabled "
                 + mediationEnabled;
     }
 
@@ -59,7 +62,7 @@ final class ClientAppUtils {
      */
     public UiObject2 getLoadAdButton(UiDevice uiDevice) {
         return uiDevice.wait(
-                Until.findObject(By.res(mClientApp, LOAD_AD_BUTTON)), UI_NAVIGATION_WAIT_MS);
+                Until.findObject(By.res(mPackageName, LOAD_AD_BUTTON)), UI_NAVIGATION_WAIT_MS);
     }
 
     /**
@@ -101,9 +104,11 @@ final class ClientAppUtils {
     /**
      * Constructor for {@link ClientAppUtils}.
      *
-     * @param clientApp is the full name for the client app.
+     * @param packageName is the package name for the client app.
+     * @param activityName is the activity name to start for the test.
      */
-    ClientAppUtils(String clientApp) {
-        this.mClientApp = clientApp;
+    ClientAppUtils(String packageName, String activityName) {
+        this.mPackageName = packageName;
+        this.mActivityName = activityName;
     }
 }

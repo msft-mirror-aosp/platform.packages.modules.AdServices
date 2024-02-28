@@ -50,6 +50,7 @@
                     android:src="@drawable/ic_android_icon"
                     tools:ignore="ContentDescription" />
                 <TextView
+                    android:id="@+id/notification_title"
                     android:text="@string/notificationUI_pas_header_title"
                     style="@style/MainStyle.H1" />
 

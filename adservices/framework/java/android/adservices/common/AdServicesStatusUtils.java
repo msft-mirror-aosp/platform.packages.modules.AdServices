@@ -20,6 +20,8 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.os.LimitExceededException;
 
+import com.android.adservices.shared.common.ServiceUnavailableException;
+
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.lang.annotation.Retention;
@@ -202,9 +204,6 @@ public final class AdServicesStatusUtils {
      */
     public static final int STATUS_ENCRYPTION_FAILURE = 19;
 
-    /** The error message to be returned along with {@link IllegalStateException}. */
-    public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
-
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
 
@@ -257,38 +256,6 @@ public final class AdServicesStatusUtils {
     /** The error message to be returned along with {@link IllegalArgumentException}. */
     public static final String ENCRYPTION_FAILURE_MESSAGE = "Failed to encrypt responses.";
 
-    // API codes used for logging. Keep in sync with the AdServicesApiName in
-    // frameworks/proto_logging/stats/atoms.proto
-    // TODO(b/323439428): Add unit test for api name code.
-    public static final int API_NAME_GET_TOPICS = 1;
-    public static final int API_NAME_JOIN_CUSTOM_AUDIENCE = 2;
-    public static final int API_NAME_LEAVE_CUSTOM_AUDIENCE = 3;
-    public static final int API_NAME_SELECT_ADS = 4;
-    public static final int API_NAME_REGISTER_SOURCE = 5;
-    public static final int API_NAME_DELETE_REGISTRATIONS = 6;
-    public static final int API_NAME_REPORT_IMPRESSION = 7;
-    public static final int API_NAME_OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO = 8;
-    public static final int API_NAME_REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE = 9;
-    public static final int API_NAME_RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES = 10;
-    public static final int API_NAME_OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO = 11;
-    public static final int API_NAME_REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE = 12;
-    public static final int API_NAME_RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES = 13;
-    public static final int API_NAME_GET_ADID = 14;
-    public static final int API_NAME_GET_APPSETID = 15;
-    public static final int API_NAME_REGISTER_TRIGGER = 16;
-    public static final int API_NAME_REGISTER_WEB_SOURCE = 17;
-    public static final int API_NAME_REGISTER_WEB_TRIGGER = 18;
-    public static final int API_NAME_GET_MEASUREMENT_API_STATUS = 19;
-    public static final int API_NAME_GET_TOPICS_PREVIEW_API = 20;
-    public static final int API_NAME_SELECT_ADS_FROM_OUTCOMES = 21;
-    public static final int API_NAME_SET_APP_INSTALL_ADVERTISERS = 22;
-    public static final int API_NAME_REPORT_INTERACTION = 23;
-    public static final int API_NAME_UPDATE_AD_COUNTER_HISTOGRAM = 24;
-    public static final int API_NAME_FETCH_AND_JOIN_CUSTOM_AUDIENCE = 25;
-    public static final int API_NAME_REGISTER_SOURCES = 26;
-    public static final int API_NAME_GET_AD_SERVICES_EXT_DATA = 27;
-    public static final int API_NAME_PUT_AD_SERVICES_EXT_DATA = 28;
-
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
@@ -308,7 +275,7 @@ public final class AdServicesStatusUtils {
             case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
-                return new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                return new ServiceUnavailableException();
             case STATUS_PERMISSION_NOT_REQUESTED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
@@ -394,44 +361,6 @@ public final class AdServicesStatusUtils {
     @Retention(RetentionPolicy.SOURCE)
     public @interface FailureReason {}
 
-    /**
-     * Api name codes used for app name api error logging.
-     *
-     * @hide
-     */
-    @IntDef(
-            value = {
-                API_NAME_GET_TOPICS,
-                API_NAME_JOIN_CUSTOM_AUDIENCE,
-                API_NAME_LEAVE_CUSTOM_AUDIENCE,
-                API_NAME_SELECT_ADS,
-                API_NAME_REGISTER_SOURCE,
-                API_NAME_DELETE_REGISTRATIONS,
-                API_NAME_REPORT_IMPRESSION,
-                API_NAME_OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
-                API_NAME_REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
-                API_NAME_RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
-                API_NAME_OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
-                API_NAME_REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE,
-                API_NAME_RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES,
-                API_NAME_GET_ADID,
-                API_NAME_GET_APPSETID,
-                API_NAME_REGISTER_TRIGGER,
-                API_NAME_REGISTER_WEB_SOURCE,
-                API_NAME_REGISTER_WEB_TRIGGER,
-                API_NAME_GET_MEASUREMENT_API_STATUS,
-                API_NAME_GET_TOPICS_PREVIEW_API,
-                API_NAME_SELECT_ADS_FROM_OUTCOMES,
-                API_NAME_SET_APP_INSTALL_ADVERTISERS,
-                API_NAME_REPORT_INTERACTION,
-                API_NAME_UPDATE_AD_COUNTER_HISTOGRAM,
-                API_NAME_FETCH_AND_JOIN_CUSTOM_AUDIENCE,
-                API_NAME_REGISTER_SOURCES,
-                API_NAME_GET_AD_SERVICES_EXT_DATA,
-                API_NAME_PUT_AD_SERVICES_EXT_DATA
-            })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ApiNameCode {}
 
     private AdServicesStatusUtils() {
         throw new UnsupportedOperationException();

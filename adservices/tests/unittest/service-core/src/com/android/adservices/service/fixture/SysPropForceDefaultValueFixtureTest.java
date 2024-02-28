@@ -34,80 +34,113 @@ public class SysPropForceDefaultValueFixtureTest {
 
     @Test
     public void testForceToReturnDefaultValue_intValue() {
-        final String systemPropertyKey = "debug.adservices.testKeyInt";
-        int configuredValue = 1;
+        String systemPropertyKey = "debug.adservices.testKeyInt";
+        int shellCommandConfiguredValue = 1;
         int defaultValue = 2;
-        setSystemPropertyByRunningAdbCommand(systemPropertyKey, configuredValue);
+        int apiConfiguredValue = 3;
+        setSystemPropertyByRunningAdbCommand(systemPropertyKey, shellCommandConfiguredValue);
 
         // Verify system property from adb command returns the configured value.
         assertThat(getSystemPropertyByRunningAdbCommand(systemPropertyKey))
-                .isEqualTo(String.valueOf(configuredValue));
+                .isEqualTo(String.valueOf(shellCommandConfiguredValue));
 
         // Verify the SystemProperties getter method is stubbed to return overridden value.
         assertThat(SystemProperties.getInt(systemPropertyKey, defaultValue))
                 .isEqualTo(defaultValue);
+
+        // Now set the SystemProperties value using method and verify that correct value is
+        // returned.
+        SysPropForceDefaultValueFixture.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
+        assertThat(SystemProperties.getInt(systemPropertyKey, defaultValue))
+                .isEqualTo(apiConfiguredValue);
     }
 
     @Test
     public void testForceToReturnDefaultValue_longValue() {
-        final String systemPropertyKey = "debug.adservices.testKeyLong";
-        long configuredValue = 1L;
+        String systemPropertyKey = "debug.adservices.testKeyLong";
+        long shellCommandConfiguredValue = 1L;
         long defaultValue = 2L;
-        setSystemPropertyByRunningAdbCommand(systemPropertyKey, configuredValue);
+        long apiConfiguredValue = 3L;
+        setSystemPropertyByRunningAdbCommand(systemPropertyKey, shellCommandConfiguredValue);
 
         // Verify system property from adb command returns the configured value.
         assertThat(getSystemPropertyByRunningAdbCommand(systemPropertyKey))
-                .isEqualTo(String.valueOf(configuredValue));
+                .isEqualTo(String.valueOf(shellCommandConfiguredValue));
 
         // Verify the SystemProperties getter method is stubbed to return overridden value.
         assertThat(SystemProperties.getLong(systemPropertyKey, defaultValue))
                 .isEqualTo(defaultValue);
+
+        // Now set the SystemProperties value using method and verify that correct value is
+        // returned.
+        SysPropForceDefaultValueFixture.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
+        assertThat(SystemProperties.getLong(systemPropertyKey, defaultValue))
+                .isEqualTo(apiConfiguredValue);
     }
 
     @Test
     public void testForceToReturnDefaultValue_booleanValue() {
-        final String systemPropertyKey = "debug.adservices.testKeyBoolean";
-        boolean configuredValue = true;
+        String systemPropertyKey = "debug.adservices.testKeyBoolean";
+        boolean shellCommandConfiguredValue = true;
         boolean defaultValue = false;
-        setSystemPropertyByRunningAdbCommand(systemPropertyKey, configuredValue);
+        boolean apiConfiguredValue = true;
+        setSystemPropertyByRunningAdbCommand(systemPropertyKey, shellCommandConfiguredValue);
 
         // Verify system property from adb command returns the configured value.
         assertThat(getSystemPropertyByRunningAdbCommand(systemPropertyKey))
-                .isEqualTo(String.valueOf(configuredValue));
+                .isEqualTo(String.valueOf(shellCommandConfiguredValue));
 
         // Verify the SystemProperties getter method is stubbed to return overridden value.
         assertThat(SystemProperties.getBoolean(systemPropertyKey, defaultValue))
                 .isEqualTo(defaultValue);
+
+        // Now set the SystemProperties value using method and verify that correct value is
+        // returned.
+        SysPropForceDefaultValueFixture.set(systemPropertyKey, String.valueOf(apiConfiguredValue));
+        assertThat(SystemProperties.getBoolean(systemPropertyKey, defaultValue))
+                .isEqualTo(apiConfiguredValue);
     }
 
     @Test
     public void testForceToReturnDefaultValue_stringValue() {
-        final String systemPropertyKey = "debug.adservices.testKeyString";
-        String configuredValue = "1";
+        String systemPropertyKey = "debug.adservices.testKeyString";
+        String shellCommandConfiguredValue = "1";
         String defaultValue = "2";
-        setSystemPropertyByRunningAdbCommand(systemPropertyKey, configuredValue);
+        String apiConfiguredValue = "3";
+        setSystemPropertyByRunningAdbCommand(systemPropertyKey, shellCommandConfiguredValue);
 
         // Verify system property from adb command returns the configured value.
         assertThat(getSystemPropertyByRunningAdbCommand(systemPropertyKey))
-                .isEqualTo(String.valueOf(configuredValue));
+                .isEqualTo(String.valueOf(shellCommandConfiguredValue));
 
         // Verify the SystemProperties getter method is stubbed to return overridden value.
         assertThat(SystemProperties.get(systemPropertyKey, defaultValue)).isEqualTo(defaultValue);
+
+        // Now set the SystemProperties value using method and verify that correct value is
+        // returned.
+        SysPropForceDefaultValueFixture.set(systemPropertyKey, apiConfiguredValue);
+        assertThat(SystemProperties.get(systemPropertyKey, defaultValue))
+                .isEqualTo(apiConfiguredValue);
     }
 
     @Test
     public void testGetterWithoutDefaultValue() {
-        final String systemPropertyKey = "debug.adservices.testKeyString";
-        String configuredValue = "1";
+        String systemPropertyKey = "debug.adservices.testKeyString";
+        String shellCommandConfiguredValue = "1";
         String emptyString = "";
-        setSystemPropertyByRunningAdbCommand(systemPropertyKey, configuredValue);
+        String apiConfiguredValue = "2";
+
+        setSystemPropertyByRunningAdbCommand(systemPropertyKey, shellCommandConfiguredValue);
 
         // Verify system property from adb command returns the configured value.
         assertThat(getSystemPropertyByRunningAdbCommand(systemPropertyKey))
-                .isEqualTo(String.valueOf(configuredValue));
+                .isEqualTo(shellCommandConfiguredValue);
 
         // Verify the SystemProperties getter method is stubbed to return overridden value.
         assertThat(SystemProperties.get(systemPropertyKey)).isEqualTo(emptyString);
+
+        SysPropForceDefaultValueFixture.set(systemPropertyKey, apiConfiguredValue);
+        assertThat(SystemProperties.get(systemPropertyKey)).isEqualTo(apiConfiguredValue);
     }
 
     private <T> void setSystemPropertyByRunningAdbCommand(

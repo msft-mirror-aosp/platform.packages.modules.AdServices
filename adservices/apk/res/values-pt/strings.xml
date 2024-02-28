@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"O Android registra temas de interesse com base nos apps usados recentemente. Além disso, os apps e seus parceiros de publicidade podem usar sua atividade em outros aplicativos neste dispositivo para personalizar anúncios e, ao mesmo tempo, ajudar a manter a segurança e privacidade da sua identidade."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Os apps que você usa também determinam suas preferências com base na atividade no app. Por exemplo, se você usa apps de culinária regularmente, pode receber anúncios de serviços de entrega de supermercado ou conteúdo relacionado em outros aplicativos.\n\nOs apps podem armazenar essas informações com segurança para que elas sejam usadas apenas pelos seus parceiros de publicidade para personalizar anúncios em outros aplicativos."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Depois, um app pode pedir essas informações, sejam os temas ou os anúncios sugeridos pelos aplicativos que você usou."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Os apps que você usa podem pedir informações ao Android para medir a performance dos anúncios. O Android ajuda a proteger sua privacidade limitando as informações que apps podem compartilhar uns com os outros."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Nagtatala ang Android ng mga paksa kung saan ka interesado batay sa mga app na kamakailan mong ginamit. Puwede ring gamitin ng mga app at ng mga partner sa pag-advertise ng mga ito ang iyong aktibidad sa ibang app sa device na ito para mag-personalize ng mga ad habang tumutulong pa rin na panatilihing pribado at secure ang iyong pagkakakilanlan."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Puwede ring matukoy ng mga ginagamit mong app kung ano ang gusto mo batay sa iyong aktibidad sa app. Halimbawa, kung regular kang gumagamit ng mga app sa pagluluto, posibleng makakita ka ng mga ad para sa mga serbisyo sa paghahatid ng grocery o nauugnay na content sa ibang app.\n\nPuwedeng secure na i-store ng mga app ang impormasyong ito para ang mga partner sa pag-advertise ng mga ito lang ang makagamit nito para mag-personalize ng mga ad sa ibang app."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Sa ibang pagkakataon, puwedeng hilingin ng ginagamit mong app ang impormasyong ito—ang iyong mga paksa ng ad man o mga ad na iminungkahi ng mga app na nagamit mo."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Puwedeng humiling ng impormasyon sa Android ang mga ginagamit mong app para masukat ng mga ito ang performance ng mga ad ng mga ito. Tumutulong ang Android na protektahan ang iyong privacy sa pamamagitan ng paglilimita sa impormasyong puwedeng ibahagi ng mga app sa isa\'t isa."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

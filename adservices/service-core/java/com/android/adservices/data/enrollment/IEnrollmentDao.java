@@ -82,6 +82,39 @@ public interface IEnrollmentDao {
             Uri originalUri);
 
     /**
+     * Returns the {@link EnrollmentData} that matches the given {@link AdTechIdentifier}.
+     *
+     * <p>Upon enrollment, the server will validate that ad techs' urls do not share the same
+     * domain. If this does happen, only return the first match in the database.
+     *
+     * @param adTechIdentifier the {@link AdTechIdentifier} to search against
+     * @return a matching {@link EnrollmentData} or {@code null} if no matches were found
+     */
+    EnrollmentData getEnrollmentDataForPASByAdTechIdentifier(AdTechIdentifier adTechIdentifier);
+
+    /**
+     * Returns a set of {@link AdTechIdentifier} objects for all ad techs enrolled with PAS.
+     *
+     * @return a set of all enrolled ad techs' {@link AdTechIdentifier} if they enrolled in PAS;
+     *     empty if none found
+     */
+    Set<AdTechIdentifier> getAllPASEnrolledAdTechs();
+
+    /**
+     * Extracts and returns the {@link AdTechIdentifier} and matching {@link EnrollmentData} from a
+     * given {@link Uri}.
+     *
+     * <p>Upon enrollment, the server will validate that ad techs' url do not share the same domain.
+     * If this does happen, only return the first match in the database.
+     *
+     * @param originalUri the {@link Uri} to extract from
+     * @return a matching {@link Pair} of {@link AdTechIdentifier} and {@link EnrollmentData}, or
+     *     {@code null} if no matches were found
+     */
+    Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForPASByMatchingAdTechIdentifier(
+            Uri originalUri);
+
+    /**
      * Returns the {@link EnrollmentData} given AdTech SDK Name.
      *
      * @param sdkName List of SDKs belonging to the same enrollment.

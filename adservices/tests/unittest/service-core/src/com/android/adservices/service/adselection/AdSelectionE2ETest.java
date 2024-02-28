@@ -27,6 +27,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.data.encryptionkey.EncryptionKeyDaoTest.ENCRYPTION_KEY1;
@@ -156,6 +157,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -600,8 +602,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
             Uri.parse("https://developer%$android.com/test/decisions_logic_uris");
     private static final long BINDER_ELAPSED_TIME_MS = 100L;
-    private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
+    private static final String MY_APP_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private Flags mFlags = new AdSelectionE2ETestFlags();
@@ -624,6 +626,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Mock private File mMockDBAdSelectionFile;
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
     private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             spy(
@@ -652,6 +655,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
 
     private MockAdIdWorker mMockAdIdWorker;
@@ -677,6 +681,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mEnrollmentDao = EnrollmentDao.getInstance(mSpyContext);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
+        mMultiCloudSupportStrategy =
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
 
         // Initialize dependencies for the AdSelectionService
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
@@ -730,9 +736,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
@@ -941,6 +948,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -981,9 +989,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1068,6 +1077,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1107,9 +1117,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1213,6 +1224,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1253,9 +1265,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1355,6 +1368,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1395,9 +1409,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1478,6 +1493,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1518,9 +1534,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1604,6 +1621,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1699,6 +1717,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1735,9 +1754,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -1834,9 +1854,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1908,6 +1929,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -1983,6 +2005,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2022,9 +2045,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2107,6 +2131,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2146,9 +2171,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -2252,6 +2278,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2291,9 +2318,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -2393,6 +2421,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2432,9 +2461,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2515,6 +2545,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2554,9 +2585,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2638,6 +2670,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -2708,7 +2741,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2776,7 +2811,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2871,7 +2908,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -2965,6 +3004,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3101,9 +3141,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallback =
@@ -3141,6 +3182,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3239,9 +3281,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallback =
@@ -3265,6 +3308,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3326,6 +3370,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3432,6 +3477,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
 
@@ -3520,6 +3566,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
         mMockWebServerRule.verifyMockServerRequests(
@@ -3599,6 +3646,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3673,6 +3721,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3786,6 +3835,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3899,6 +3949,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -3999,9 +4050,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallbackNoCache =
@@ -4118,9 +4170,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallbackNoCache =
@@ -4238,9 +4291,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // We call selectAds again to verify that scoring logic was also cached
@@ -4361,9 +4415,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // We call selectAds again to verify that scoring logic was also cached
@@ -4485,9 +4540,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Populating the Custom Audience DB
@@ -4519,6 +4575,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4624,9 +4681,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Populating the Custom Audience DB
@@ -4658,6 +4716,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4750,6 +4809,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -4845,7 +4905,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -4886,7 +4948,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -4933,7 +4997,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5009,6 +5075,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5145,7 +5212,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5258,7 +5327,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5370,7 +5441,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5486,6 +5559,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5608,6 +5682,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -5728,7 +5803,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -5805,9 +5882,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
@@ -5904,6 +5982,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6057,9 +6136,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallback =
@@ -6133,9 +6213,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         resultsCallback =
@@ -6173,6 +6254,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, times(2))
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6326,9 +6408,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         AdSelectionTestCallback resultsCallback =
@@ -6402,9 +6485,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         resultsCallback =
@@ -6442,6 +6526,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, times(2))
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -6520,9 +6605,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         String jsWaitMoreThanAllowedForScoring =
@@ -6621,7 +6707,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
+                        eq(ApiCallStats.failureResult(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6673,7 +6759,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6764,7 +6852,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6866,7 +6956,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         geq((int) BINDER_ELAPSED_TIME_MS),
-                        eq(new ApiCallStats.Result(STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -6980,6 +7072,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -7070,6 +7163,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_UNAUTHORIZED),
                         geq(0));
 
@@ -7158,6 +7252,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         geq(0));
     }
@@ -7209,9 +7304,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -7277,6 +7373,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         geq(0));
     }
@@ -7343,9 +7440,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -7478,9 +7576,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock,
-                        mObliviousHttpEncryptor,
+                        mMultiCloudSupportStrategy,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
                         false);
 
         // Logger calls come after the callback is returned
@@ -7553,6 +7652,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
@@ -7589,9 +7689,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             mAdSelectionServiceFilter,
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
-                            mObliviousHttpEncryptor,
+                            mMultiCloudSupportStrategy,
                             mAdSelectionDebugReportDao,
                             mAdIdFetcher,
+                            mUnusedKAnonSignJoinFactory,
                             false);
 
             mMockWebServerRule.startMockWebServer(mDispatcher);
@@ -7635,7 +7736,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                             geq((int) BINDER_ELAPSED_TIME_MS),
                             eq(
-                                    new ApiCallStats.Result(
+                                    ApiCallStats.failureResult(
                                             STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET)));
         } finally {
             // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
@@ -7814,7 +7915,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             AdTechIdentifier buyer = buyersBundle.getKey();
             SignedContextualAds ads = buyersBundle.getValue();
             unauthenticatedContextualAds.put(
-                    buyer, ads.cloneToBuilder().setSignature(invalidSignatures).build());
+                    buyer,
+                    new SignedContextualAds.Builder(ads).setSignature(invalidSignatures).build());
         }
         return unauthenticatedContextualAds;
     }
