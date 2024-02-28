@@ -226,6 +226,7 @@ public final class AdServicesShellCommandHandler {
         pw.printf("%s\n\n", HELP_IS_ALLOWED_TOPICS_ACCESS);
         pw.printf("%s\n\n", CustomAudienceListCommand.HELP);
         pw.printf("%s\n\n", CustomAudienceViewCommand.HELP);
+        pw.printf("%s\n\n", CustomAudienceRefreshCommand.HELP);
     }
 
     private int onCommand(String cmd) {
