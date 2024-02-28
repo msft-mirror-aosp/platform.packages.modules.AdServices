@@ -16,20 +16,34 @@
 
 package com.android.adservices.mockito;
 
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
 import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+
+import android.app.ActivityManager;
 import android.os.Binder;
 import android.os.Process;
+import android.os.SystemProperties;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.common.LogEntry.Level;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.testing.common.TestHelper;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule;
 import com.android.modules.utils.testing.StaticMockFixture;
 
@@ -146,6 +160,198 @@ public class AdServicesExtendedMockitoRule
         mockBinderGetCallingUidOrThrow(uid);
     }
 
+    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
+    public final void mockIsAtLeastR(boolean isIt) {
+        logV("mockIsAtLeastR(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastR);
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
+    public final void mockIsAtLeastS(boolean isIt) {
+        logV("mockIsAtLeastS(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastS);
+    }
+
+    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
+    public final void mockIsAtLeastT(boolean isIt) {
+        logV("mockIsAtLeastT(%b)", isIt);
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(isIt).when(SdkLevel::isAtLeastT);
+    }
+
+    /**
+     * Mocks a call to {@link ActivityManager#getCurrentUser()}, returning {@code user}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link ActivityManager}.
+     */
+    public final void mockGetCurrentUser(int user) {
+        logV("mockGetCurrentUser(user=%d)", user);
+        assertSpiedOrMocked(ActivityManager.class);
+        doReturn(user).when(ActivityManager::getCurrentUser);
+    }
+
+    /**
+     * Mocks a call to {@link SystemProperties#getLong(String, long)}, returning {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link SystemProperties}.
+     */
+    public final void mockGetSystemProperty(String key, long value) {
+        logV("mockGetSystemProperty(key=%s, value=%s)", key, value);
+        assertSpiedOrMocked(SystemProperties.class);
+        doReturn(value).when(() -> SystemProperties.getLong(eq(key), anyLong()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getBoolean()} using the AdServices namespace and
+     * returning {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, boolean value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getBoolean(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyBoolean()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getString()} using the AdServices namespace and returning
+     * {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, String value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getString(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ any()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getInt()} using the AdServices namespace and returning
+     * {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, int value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getInt(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyInt()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getLong()} using the AdServices namespace and returning
+     * {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, long value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getLong(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyLong()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getFloat()} using the AdServices namespace and returning
+     * {@code value}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link DeviceConfig}.
+     */
+    public final void mockGetAdServicesFlag(String name, float value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        assertSpiedOrMocked(DeviceConfig.class);
+
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getFloat(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyFloat()));
+    }
+
+    /**
+     * Verifies no call to {@link DeviceConfig#getBoolean(String, String, boolean)} with the given
+     * {@code namespace} and {@code name} was made.
+     *
+     * <p><b>NOTE:</b> it does <b>NOT</b> verify if caller called {@code spyStatic} / {@code
+     * mockStatic} (or equivalent annotations) on {@link DeviceConfig} - if it didn't, chances are
+     * this call will fail with some obscure {@code Mockito} errors (hence the "unsafe" prefix).
+     */
+    public final void unsafeVerifyGetBooleanDeviceConfigFlagNotCalled(
+            String namespace, String name) {
+        logV(
+                "unsafeVerifyGetBooleanDeviceConfigFlagNotCalled(namespace=%s, name=%s)",
+                namespace, name);
+        verify(() -> DeviceConfig.getBoolean(eq(namespace), eq(name), anyBoolean()), never());
+    }
+
+    /**
+     * Statically spy on {@code Log.v} for that {@code tag}.
+     *
+     * @return object that can be used to assert the {@code Log.v} calls.
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Log}.
+     */
+    public final LogInterceptor interceptLogV(String tag) {
+        logV("interceptLogV(%s)", tag);
+        assertSpiedOrMocked(Log.class);
+
+        return LogInterceptor.forTagAndLevels(tag, Level.VERBOSE);
+    }
+
+    /**
+     * Statically spy on {@code Log.e} for that {@code tag}.
+     *
+     * @return object that can be used to assert the {@code Log.e} calls.
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link Log}.
+     */
+    public final LogInterceptor interceptLogE(String tag) {
+        logV("interceptLogE(%s)", tag);
+        assertSpiedOrMocked(Log.class);
+
+        return LogInterceptor.forTagAndLevels(tag, Level.ERROR);
+    }
+
+    // NOTE: current tests are only intercepting v and e, but we could add more methods on demand
+    // (even one that takes Level...levels)
+
     // mock only, don't log
     private void mockBinderGetCallingUidOrThrow(int uid) {
         assertSpiedOrMocked(Binder.class);
@@ -185,7 +391,7 @@ public class AdServicesExtendedMockitoRule
     }
 
     @Override
-    protected boolean getClearInlineMethodsAtTheEnd(Description description) {
+    protected final boolean getClearInlineMethodsAtTheEnd(Description description) {
         ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
         if (annotation != null) {
             boolean shouldClear = shouldClearInlineMocksAfterTest(description, annotation.value());

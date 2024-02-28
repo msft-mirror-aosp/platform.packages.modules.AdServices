@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.stats;
 
+import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.common.AppManifestConfigHelper;
+
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
     /** log method for MeasurementReportsStats. */
@@ -27,8 +30,20 @@ public interface AdServicesLogger {
     /** log UIStats which has stats about UI events. */
     void logUIStats(UIStats uiStats);
 
+    /**
+     * Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object with app
+     * package name, if enabled.
+     */
+    void logFledgeApiCallStats(int apiName, String appPackageName, int resultCode, int latencyMs);
+
     /** Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object. */
     void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs);
+
+    /**
+     * Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object with
+     * failure reason.
+     */
+    void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result);
 
     /** Logs measurement registrations response size. */
     void logMeasurementRegistrationsResponseSize(MeasurementRegistrationResponseStats stats);
@@ -139,4 +154,10 @@ public interface AdServicesLogger {
 
     /** Logs beacon level reporting for clearing interaction reporting table stats. */
     void logInteractionReportingTableClearedStats(InteractionReportingTableClearedStats stats);
+
+    /** Logs call to {@link AppManifestConfigHelper} to check if app is allowed to access an API. */
+    void logAppManifestConfigCall(AppManifestConfigCall call);
+
+    /** Logs status for {@link com.android.adservices.service.kanon.KAnonSignJoinManager}. */
+    void logKAnonSignJoinStatus();
 }

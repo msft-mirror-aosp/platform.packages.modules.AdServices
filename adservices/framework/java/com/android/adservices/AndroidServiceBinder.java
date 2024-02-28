@@ -15,8 +15,6 @@
  */
 package com.android.adservices;
 
-import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
-
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_EXT_DATA_STORAGE_SERVICE;
@@ -27,6 +25,8 @@ import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_S
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_PROTECTED_SIGNALS_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_SHELL_COMMAND_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
 import static com.android.adservices.AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW;
 
@@ -43,6 +43,7 @@ import android.os.IBinder;
 import android.os.SystemProperties;
 import android.text.TextUtils;
 
+import com.android.adservices.shared.common.ServiceUnavailableException;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.List;
@@ -102,7 +103,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     public T getService() {
         if (mSimulatingLowRamDevice) {
-            throw new IllegalStateException(
+            throw new ServiceUnavailableException(
                     "Service is not bound (because of SystemProperty "
                             + SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW
                             + ")");
@@ -169,7 +170,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
         synchronized (mLock) {
             if (mService == null) {
-                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                throw new ServiceUnavailableException();
             }
             return mService;
         }
@@ -221,7 +222,9 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                 && !mServiceIntentAction.equals(ACTION_APPSETID_PROVIDER_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)
-                && !mServiceIntentAction.equals(ACTION_AD_EXT_DATA_STORAGE_SERVICE)) {
+                && !mServiceIntentAction.equals(ACTION_AD_EXT_DATA_STORAGE_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_SHELL_COMMAND_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_PROTECTED_SIGNALS_SERVICE)) {
             LogUtil.e("Bad service intent action: " + mServiceIntentAction);
             return null;
         }

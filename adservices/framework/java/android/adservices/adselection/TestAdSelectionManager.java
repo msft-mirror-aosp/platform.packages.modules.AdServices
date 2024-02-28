@@ -16,7 +16,9 @@
 
 package android.adservices.adselection;
 
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -67,7 +69,12 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AddAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -83,7 +90,7 @@ public class TestAdSelectionManager {
                     request.getAdSelectionConfig(),
                     request.getDecisionLogicJs(),
                     request.getTrustedScoringSignals(),
-                    request.getBuyersDecisionLogic(),
+                    request.getPerBuyerDecisionLogic(),
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
@@ -121,7 +128,12 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void removeAdSelectionConfigRemoteInfoOverride(
             @NonNull RemoveAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -170,7 +182,12 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> receiver) {
@@ -219,7 +236,12 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void overrideAdSelectionFromOutcomesConfigRemoteInfo(
             @NonNull AddAdSelectionFromOutcomesOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -272,7 +294,12 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
             @NonNull RemoveAdSelectionFromOutcomesOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
@@ -321,7 +348,12 @@ public class TestAdSelectionManager {
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     Exception} indicates the error.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> receiver) {
@@ -371,7 +403,12 @@ public class TestAdSelectionManager {
      * @hide
      */
     // TODO(b/265204820): Unhide for frequency cap dev override API review
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void setAdCounterHistogramOverride(
             @NonNull SetAdCounterHistogramOverrideRequest setRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -431,7 +468,12 @@ public class TestAdSelectionManager {
      * @hide
      */
     // TODO(b/265204820): Unhide for frequency cap dev override API review
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void removeAdCounterHistogramOverride(
             @NonNull RemoveAdCounterHistogramOverrideRequest removeRequest,
             @NonNull @CallbackExecutor Executor executor,
@@ -488,7 +530,12 @@ public class TestAdSelectionManager {
      * @hide
      */
     // TODO(b/265204820): Unhide for frequency cap dev override API review
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(
+            anyOf = {
+                ACCESS_ADSERVICES_CUSTOM_AUDIENCE,
+                ACCESS_ADSERVICES_PROTECTED_SIGNALS,
+                ACCESS_ADSERVICES_AD_SELECTION
+            })
     public void resetAllAdCounterHistogramOverrides(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Object, Exception> outcomeReceiver) {

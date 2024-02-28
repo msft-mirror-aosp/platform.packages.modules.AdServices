@@ -19,6 +19,7 @@ package com.android.adservices.service.signals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 
@@ -48,6 +49,9 @@ public class SignalsProviderImplTest {
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
 
     private SignalsProviderImpl mSignalStorage;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

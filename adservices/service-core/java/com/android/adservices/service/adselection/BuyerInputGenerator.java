@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.util.Pair;
@@ -62,6 +64,7 @@ public class BuyerInputGenerator {
     private final long mCustomAudienceActiveTimeWindowInMs;
     private final boolean mEnableAdFilter;
     private final boolean mEnableProtectedSignals;
+    private final boolean mEnableOmitAds;
 
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
 
@@ -74,7 +77,8 @@ public class BuyerInputGenerator {
             long customAudienceActiveTimeWindowInMs,
             boolean enableAdFilter,
             boolean enableProtectedSignals,
-            @NonNull AuctionServerDataCompressor dataCompressor) {
+            @NonNull AuctionServerDataCompressor dataCompressor,
+            boolean enableOmitAds) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(encodedSignalsDaoDao);
         Objects.requireNonNull(adFilterer);
@@ -93,6 +97,7 @@ public class BuyerInputGenerator {
         mCustomAudienceActiveTimeWindowInMs = customAudienceActiveTimeWindowInMs;
         mEnableAdFilter = enableAdFilter;
         mEnableProtectedSignals = enableProtectedSignals;
+        mEnableOmitAds = enableOmitAds;
     }
 
     /**
@@ -231,13 +236,23 @@ public class BuyerInputGenerator {
         BuyerInput.CustomAudience.Builder customAudienceBuilder =
                 BuyerInput.CustomAudience.newBuilder();
 
-        return customAudienceBuilder
+        customAudienceBuilder
                 .setName(customAudience.getName())
                 .setOwner(customAudience.getOwner())
                 .setUserBiddingSignals(getUserBiddingSignals(customAudience))
-                .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience))
-                .addAllAdRenderIds(getAdRenderIds(customAudience))
-                .build();
+                .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience));
+
+        if (shouldIncludeAds(customAudience)) {
+            customAudienceBuilder.addAllAdRenderIds(getAdRenderIds(customAudience));
+        }
+        return customAudienceBuilder.build();
+    }
+
+    private boolean shouldIncludeAds(DBCustomAudience customAudience) {
+        return !(mEnableOmitAds
+                && ((customAudience.getAuctionServerRequestFlags()
+                                & FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        != 0));
     }
 
     private ListenableFuture<Map<AdTechIdentifier, DBEncodedPayload>>

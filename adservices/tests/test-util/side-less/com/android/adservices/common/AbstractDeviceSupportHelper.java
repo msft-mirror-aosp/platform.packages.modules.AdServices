@@ -36,6 +36,10 @@ abstract class AbstractDeviceSupportHelper {
     private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
 
+    // Used only for Go device checks, which rely on checking GMS Core and Play Store.
+    public static final String GMS_CORE_PACKAGE = "com.google.android.gms";
+    public static final String PLAY_STORE_PACKAGE = "com.android.vending";
+
     protected final Logger mLog;
     private final SystemPropertiesHelper.Interface mSystemProperties;
 
@@ -62,6 +66,10 @@ abstract class AbstractDeviceSupportHelper {
         boolean supported = isDeviceSupportedByDefault();
         mLog.v("isDeviceSupported(): returning hardcoded value (%b)", supported);
         return supported;
+    }
+
+    public final boolean isGoDevice() {
+        return isLowRamDevice() && isPhone() && hasGmsCore() && hasPlayStore();
     }
 
     // TODO(b/297408848): rename to isAdservicesLiteDevice() or something like that
@@ -91,6 +99,10 @@ abstract class AbstractDeviceSupportHelper {
         return isIt;
     }
 
+    protected abstract boolean hasGmsCore();
+
+    protected abstract boolean hasPlayStore();
+
     protected abstract boolean hasPackageManagerFeature(String feature);
 
     protected abstract boolean isLowRamDeviceByDefault();
@@ -98,7 +110,7 @@ abstract class AbstractDeviceSupportHelper {
     protected abstract boolean isDebuggable();
 
     private boolean isDeviceSupportedByDefault() {
-        return isPhone() && !isLowRamDevice();
+        return isPhone() && !isGoDevice();
     }
 
     private boolean isPhone() {

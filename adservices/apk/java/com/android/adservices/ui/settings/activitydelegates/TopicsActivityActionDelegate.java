@@ -152,6 +152,13 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
     @Override
     public void initRvc() {}
 
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+        configureElement(R.id.topics_view_ga_footer, R.string.settingsUI_pas_topics_view_footer);
+        configureLink(R.id.topics_view_ga_footer);
+    }
+
     private void configureSharedElements() {
         // recycler view (topics list)
         Function<Topic, OnClickListener> getOnclickListener =
@@ -222,7 +229,7 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
                                 break;
                             case BLOCK_TOPIC:
                                 UiStatsLogger.logBlockTopicSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockTopicDialog(
                                                 mActivity, mTopicsViewModel, topic);
@@ -236,7 +243,7 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
                                 break;
                             case RESET_TOPICS:
                                 UiStatsLogger.logResetTopicSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetTopicDialog(
                                                 mActivity, mTopicsViewModel);

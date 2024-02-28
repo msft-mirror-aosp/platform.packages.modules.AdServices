@@ -34,6 +34,7 @@ import android.os.SystemClock;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -79,6 +80,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
+@RequiresSdkLevelAtLeastS
 @SpyStatic(MddLogger.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MobileDataDownloadFactory.class)
@@ -113,7 +115,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1986/9e98784bcdb26a3eb2ab3f65ee811f43177c761f";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2867/799a2e308daf8ccaa2fe9c9ef71b115a7f4a41c8";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2998/b35ed340576e8a72385af87b95f1f526abdb7f5f";
 
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
@@ -123,7 +125,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 60;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 64;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
@@ -138,7 +140,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
     private MobileDataDownload mMdd;
-    private Context mContext;
 
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
@@ -146,7 +147,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
     @Before
     public void setUp() throws Exception {
-        mContext = appContext.get();
         // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
         // the whole test suite run.
         // Checking wifi connection using WifiManager isn't working on low-performance devices.
@@ -165,9 +165,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance(any(Context.class)));
-
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
         overridingMddLoggingLevel("VERBOSE");
     }
 
@@ -498,17 +497,17 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void testMddLoggerKillSwitchIsOn() {
-        // Killswitch is on. MddLogger should be disabled.
-        doReturn(true).when(mMockFlags).getMddLoggerKillSwitch();
+    public void testMddLoggerFeatureFlagIsOff() {
+        // The feature flag is off. MddLogger should be disabled.
+        doReturn(false).when(mMockFlags).getMddLoggerEnabled();
         Optional<Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);
         assertThat(mddLogger).isAbsent();
     }
 
     @Test
-    public void testMddLoggerKillSwitchIsOff() {
-        // Killswitch is off. MddLogger should be enabled.
-        doReturn(false).when(mMockFlags).getMddLoggerKillSwitch();
+    public void testMddLoggerFeatureFlagIsOn() {
+        // The feature flag is on. MddLogger should be enabled.
+        doReturn(true).when(mMockFlags).getMddLoggerEnabled();
         Optional<Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);
         assertThat(mddLogger).isPresent();
     }

@@ -16,9 +16,13 @@
 
 package com.android.adservices.cobalt;
 
-import android.content.Context;
+import static com.android.adservices.AdServicesCommon.ADSERVICES_APEX_NAME_SUFFIX;
+import static com.android.adservices.AdServicesCommon.EXTSERVICES_APEX_NAME_SUFFIX;
+import static com.android.adservices.service.measurement.rollback.MeasurementRollbackCompatManager.APEX_VERSION_WHEN_NOT_FOUND;
 
-import androidx.annotation.NonNull;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
@@ -34,9 +38,11 @@ import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemClockImpl;
 import com.android.cobalt.system.SystemData;
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -56,6 +62,7 @@ public final class CobaltFactory {
     private static Project sSingletonCobaltRegistryProject;
     private static DataService sSingletonDataService;
     private static SecureRandom sSingletonSecureRandom;
+    private static SystemData sSingletonSystemData;
 
     @GuardedBy("SINGLETON_LOCK")
     private static CobaltLogger sSingletonCobaltLogger;
@@ -68,24 +75,22 @@ public final class CobaltFactory {
      *
      * @throws CobaltInitializationException if an unrecoverable errors occurs during initialization
      */
-    @NonNull
-    public static CobaltLogger getCobaltLogger(@NonNull Context context, @NonNull Flags flags)
+    public static CobaltLogger getCobaltLogger(Context context, Flags flags)
             throws CobaltInitializationException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
         synchronized (SINGLETON_LOCK) {
             if (sSingletonCobaltLogger == null) {
                 sSingletonCobaltLogger =
-                        sSingletonCobaltLogger =
-                                new CobaltLoggerImpl(
-                                        getRegistry(context),
-                                        CobaltReleaseStages.getReleaseStage(
-                                                flags.getAdservicesReleaseStageForCobalt()),
-                                        getDataService(context),
-                                        new SystemData(),
-                                        getExecutor(),
-                                        new SystemClockImpl(),
-                                        flags.getTopicsCobaltLoggingEnabled());
+                        new CobaltLoggerImpl(
+                                getRegistry(context),
+                                CobaltReleaseStages.getReleaseStage(
+                                        flags.getAdservicesReleaseStageForCobalt()),
+                                getDataService(context),
+                                getSystemData(context),
+                                getExecutor(),
+                                new SystemClockImpl(),
+                                flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltLogger;
         }
@@ -99,9 +104,8 @@ public final class CobaltFactory {
      *
      * @throws CobaltInitializationException if an unrecoverable errors occurs during initialization
      */
-    @NonNull
-    public static CobaltPeriodicJob getCobaltPeriodicJob(
-            @NonNull Context context, @NonNull Flags flags) throws CobaltInitializationException {
+    public static CobaltPeriodicJob getCobaltPeriodicJob(Context context, Flags flags)
+            throws CobaltInitializationException {
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
         synchronized (SINGLETON_LOCK) {
@@ -115,7 +119,7 @@ public final class CobaltFactory {
                                 getExecutor(),
                                 getScheduledExecutor(),
                                 new SystemClockImpl(),
-                                new SystemData(),
+                                getSystemData(context),
                                 new PrivacyGenerator(getSecureRandom()),
                                 getSecureRandom(),
                                 new CobaltUploader(context, PIPELINE_TYPE),
@@ -124,25 +128,22 @@ public final class CobaltFactory {
                                 CobaltApiKeys.copyFromHexApiKey(
                                         flags.getCobaltAdservicesApiKeyHex()),
                                 Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
-                                flags.getTopicsCobaltLoggingEnabled());
+                                flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;
         }
     }
 
-    @NonNull
     private static ExecutorService getExecutor() {
         // Cobalt requires disk I/O and must run on the background executor.
         return AdServicesExecutors.getBackgroundExecutor();
     }
 
-    @NonNull
     private static ScheduledExecutorService getScheduledExecutor() {
         // Cobalt requires a timeout to disconnect from the system server.
         return AdServicesExecutors.getScheduler();
     }
 
-    @NonNull
     private static Project getRegistry(Context context) throws CobaltInitializationException {
         if (sSingletonCobaltRegistryProject == null) {
             sSingletonCobaltRegistryProject = CobaltRegistryLoader.getRegistry(context);
@@ -150,8 +151,7 @@ public final class CobaltFactory {
         return sSingletonCobaltRegistryProject;
     }
 
-    @NonNull
-    private static DataService getDataService(@NonNull Context context) {
+    private static DataService getDataService(Context context) {
         Objects.requireNonNull(context);
         if (sSingletonDataService == null) {
             sSingletonDataService =
@@ -161,12 +161,53 @@ public final class CobaltFactory {
         return sSingletonDataService;
     }
 
-    @NonNull
     private static SecureRandom getSecureRandom() {
         if (sSingletonSecureRandom == null) {
             sSingletonSecureRandom = new SecureRandom();
         }
 
         return sSingletonSecureRandom;
+    }
+
+    private static SystemData getSystemData(Context context) {
+        if (sSingletonSystemData == null) {
+            sSingletonSystemData = new SystemData(computeApexVersion(context));
+        }
+
+        return sSingletonSystemData;
+    }
+
+    /**
+     * Returns the {@code Adservices} APEX version in String. If {@code Adservices} is not
+     * available, returns {@code Extservices} APEX version. Otherwise return {@code
+     * APEX_VERSION_WHEN_NOT_FOUND} if {@code Adservices} nor {@code Extservices} are not available.
+     */
+    // TODO(b/323567786): Move this method to a common util class.
+    @VisibleForTesting
+    public static String computeApexVersion(Context context) {
+        PackageManager packageManager = context.getPackageManager();
+        List<PackageInfo> installedPackages =
+                packageManager.getInstalledPackages(PackageManager.MATCH_APEX);
+        long adservicesVersion =
+                installedPackages.stream()
+                        .filter(
+                                s ->
+                                        s.isApex
+                                                && s.packageName.endsWith(
+                                                        ADSERVICES_APEX_NAME_SUFFIX))
+                        .findFirst()
+                        .map(PackageInfo::getLongVersionCode)
+                        .orElse(APEX_VERSION_WHEN_NOT_FOUND);
+
+        if (adservicesVersion != APEX_VERSION_WHEN_NOT_FOUND) {
+            return String.valueOf(adservicesVersion);
+        }
+
+        return installedPackages.stream()
+                .filter(s -> s.isApex && s.packageName.endsWith(EXTSERVICES_APEX_NAME_SUFFIX))
+                .findFirst()
+                .map(PackageInfo::getLongVersionCode)
+                .orElse(APEX_VERSION_WHEN_NOT_FOUND)
+                .toString();
     }
 }

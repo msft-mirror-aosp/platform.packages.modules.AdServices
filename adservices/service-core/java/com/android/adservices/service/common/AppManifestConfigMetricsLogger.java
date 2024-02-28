@@ -34,6 +34,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -93,8 +94,10 @@ public final class AppManifestConfigMetricsLogger {
                 return;
             }
 
-            // TODO(b/306417555): upload metrics first (and unit test it) - it should mask the
-            // package name
+            // Send metrics to statsd first...
+            StatsdAdServicesLogger.getInstance().logAppManifestConfigCall(call);
+
+            // ...then "mark" as sent
             Editor editor = prefs.edit().putInt(key, newValue);
 
             if (editor.commit()) {

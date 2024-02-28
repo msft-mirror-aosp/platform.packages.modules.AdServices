@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdServicesStatusUtils;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link RunAdScoringProcessReportedStats}. */
@@ -39,6 +42,9 @@ public class RunAdScoringProcessReportedStatsTest {
     static final int RUN_AD_SCORING_LATENCY_IN_MILLIS = 10;
     static final int RUN_AD_SCORING_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int GET_AD_SELECTION_LOGIC_SCRIPT_TYPE = AdServicesStatusUtils.STATUS_SUCCESS;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuilderCreateSuccess() {

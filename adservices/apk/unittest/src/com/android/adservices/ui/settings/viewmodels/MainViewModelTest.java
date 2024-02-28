@@ -54,8 +54,7 @@ public final class MainViewModelTest extends AdServicesExtendedMockitoTestCase {
     public void setup() {
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         mMainViewModel =
                 new MainViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);

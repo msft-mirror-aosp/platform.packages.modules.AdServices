@@ -21,9 +21,18 @@ import static android.adservices.adselection.DataHandlersFixture.getAdSelectionR
 import static android.adservices.adselection.DataHandlersFixture.getReportingData;
 import static android.adservices.adselection.DataHandlersFixture.getWinningCustomAudience;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.BINDER_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
@@ -33,8 +42,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -57,6 +68,9 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.NoFailureSyncCallback;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -76,16 +90,22 @@ import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryp
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.kanon.KAnonSignJoinManager;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -93,6 +113,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -113,7 +134,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class PersistAdSelectionResultRunnerTest {
+public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String DIFFERENT_CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME_2;
@@ -351,6 +372,8 @@ public class PersistAdSelectionResultRunnerTest {
 
     private static final boolean FLEDGE_BEACON_REPORTING_METRICS_ENABLED_IN_TEST = true;
 
+    private static final boolean FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED_IN_TEST = true;
+
     private static final int ADSERVICES_STATUS_UNSET = -1;
     private static final int SELLER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
@@ -368,6 +391,8 @@ public class PersistAdSelectionResultRunnerTest {
     private AuctionServerPayloadFormatter mPayloadFormatter;
     private AuctionServerDataCompressor mDataCompressor;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
+    @Mock private KAnonSignJoinManager mKAnonSignJoinManagerMock;
 
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private PersistAdSelectionResultRunner mPersistAdSelectionResultRunner;
@@ -380,7 +405,16 @@ public class PersistAdSelectionResultRunnerTest {
 
     private AuctionResultValidator mAuctionResultValidator;
 
-    @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private Clock mFledgeAuctionServerExecutionLoggerClockMock;
+    private AdsRelevanceExecutionLoggerFactory mAdsRelevanceExecutionLoggerFactory;
+    private AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
+
+    private NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback;
+
+    private AdServicesLogger mAdServicesLoggerSpy;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
@@ -405,7 +439,6 @@ public class PersistAdSelectionResultRunnerTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -428,6 +461,17 @@ public class PersistAdSelectionResultRunnerTest {
         mAuctionResultValidator =
                 new AuctionResultValidator(
                         mFledgeAuthorizationFilterMock, false /* disableFledgeEnrollmentCheck */);
+        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+        mAdsRelevanceExecutionLoggerFactory =
+                new AdsRelevanceExecutionLoggerFactory(
+                        TEST_PACKAGE_NAME,
+                        sCallerMetadata,
+                        mFledgeAuctionServerExecutionLoggerClockMock,
+                        mAdServicesLoggerSpy,
+                        mFlags,
+                        AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
+        mAdsRelevanceExecutionLogger =
+                mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mPersistAdSelectionResultRunner =
                 new PersistAdSelectionResultRunner(
                         mObliviousHttpEncryptorMock,
@@ -445,7 +489,9 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFlags,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
     }
 
     @After
@@ -462,6 +508,8 @@ public class PersistAdSelectionResultRunnerTest {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
                 ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
                 .when(mObliviousHttpEncryptorMock)
@@ -528,7 +576,7 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdSelectionEntryDaoSpy.getWinningCustomAudienceDataForId(AD_SELECTION_ID));
 
         // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
-        verify(mAdServicesLoggerMock, times(2))
+        verify(mAdServicesLoggerSpy, times(2))
                 .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats.size()).isEqualTo(2);
@@ -560,6 +608,8 @@ public class PersistAdSelectionResultRunnerTest {
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(2);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
@@ -569,6 +619,8 @@ public class PersistAdSelectionResultRunnerTest {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
                 ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForAppInstallAd(AUCTION_RESULT))
                 .when(mObliviousHttpEncryptorMock)
@@ -635,7 +687,7 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdSelectionEntryDaoSpy.getWinningCustomAudienceDataForId(AD_SELECTION_ID));
 
         // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
-        verify(mAdServicesLoggerMock, times(2))
+        verify(mAdServicesLoggerSpy, times(2))
                 .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats.size()).isEqualTo(2);
@@ -667,6 +719,8 @@ public class PersistAdSelectionResultRunnerTest {
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(2);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
@@ -677,6 +731,8 @@ public class PersistAdSelectionResultRunnerTest {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
                 ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(
                         prepareDecryptedAuctionResultForRemarketingAd(
@@ -736,7 +792,7 @@ public class PersistAdSelectionResultRunnerTest {
                         ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER);
 
         // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
-        verify(mAdServicesLoggerMock, times(2))
+        verify(mAdServicesLoggerSpy, times(2))
                 .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats.size()).isEqualTo(2);
@@ -768,12 +824,15 @@ public class PersistAdSelectionResultRunnerTest {
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(1);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
     public void testRunner_persistAppInstallResult_withInvalidSellerReportingUriSuccess()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -837,7 +896,7 @@ public class PersistAdSelectionResultRunnerTest {
                         ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER);
 
         // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
-        verify(mAdServicesLoggerMock, times(2))
+        verify(mAdServicesLoggerSpy, times(2))
                 .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats.size()).isEqualTo(2);
@@ -869,12 +928,15 @@ public class PersistAdSelectionResultRunnerTest {
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(1);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
     public void testRunner_persistRemarketingResult_withInvalidBuyerReportingUriSuccess()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -938,7 +1000,7 @@ public class PersistAdSelectionResultRunnerTest {
                         eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER));
 
         // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
-        verify(mAdServicesLoggerMock, times(2))
+        verify(mAdServicesLoggerSpy, times(2))
                 .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats.size()).isEqualTo(2);
@@ -970,6 +1032,8 @@ public class PersistAdSelectionResultRunnerTest {
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(1);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     // TODO(b/291680065): Remove the test when owner field is returned from B&A
@@ -981,6 +1045,8 @@ public class PersistAdSelectionResultRunnerTest {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
                 ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITHOUT_OWNER))
                 .when(mObliviousHttpEncryptorMock)
@@ -1007,7 +1073,9 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFlags,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1026,7 +1094,7 @@ public class PersistAdSelectionResultRunnerTest {
         verify(mCustomAudienceDaoMock, times(0)).getCustomAudienceByPrimaryKey(any(), any(), any());
 
         // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
-        verify(mAdServicesLoggerMock, times(2))
+        verify(mAdServicesLoggerSpy, times(2))
                 .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats.size()).isEqualTo(2);
@@ -1058,6 +1126,8 @@ public class PersistAdSelectionResultRunnerTest {
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(2);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     // TODO(b/291680065): Remove the test when owner field is returned from B&A
@@ -1069,6 +1139,8 @@ public class PersistAdSelectionResultRunnerTest {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
                 ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITHOUT_OWNER))
                 .when(mObliviousHttpEncryptorMock)
@@ -1098,7 +1170,9 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFlags,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1118,7 +1192,7 @@ public class PersistAdSelectionResultRunnerTest {
         verify(mCustomAudienceDaoMock, times(0)).getCustomAudienceByPrimaryKey(any(), any(), any());
 
         // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
-        verify(mAdServicesLoggerMock, times(2))
+        verify(mAdServicesLoggerSpy, times(2))
                 .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats.size()).isEqualTo(2);
@@ -1150,11 +1224,14 @@ public class PersistAdSelectionResultRunnerTest {
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(2);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
     public void testRunner_persistChaffResult_nothingPersisted() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_CHAFF))
                 .when(mObliviousHttpEncryptorMock)
@@ -1196,11 +1273,15 @@ public class PersistAdSelectionResultRunnerTest {
                         anyLong(),
                         anyLong(),
                         eq(ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER));
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
     @Test
     public void testRunner_persistResultWithError_throwsException() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITH_ERROR))
                 .when(mObliviousHttpEncryptorMock)
@@ -1223,11 +1304,15 @@ public class PersistAdSelectionResultRunnerTest {
         Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
         verify(mObliviousHttpEncryptorMock, times(1))
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testRunner_persistTimesOut_throwsException() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         mOverallTimeout = 200;
         when(mObliviousHttpEncryptorMock.decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID))
@@ -1258,7 +1343,9 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFlags,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
 
         PersistAdSelectionResultInput inputParams =
                 new PersistAdSelectionResultInput.Builder()
@@ -1273,11 +1360,14 @@ public class PersistAdSelectionResultRunnerTest {
         Assert.assertFalse(callback.mIsSuccess);
         assertNotNull(callback.mFledgeErrorResponse);
         assertEquals(STATUS_TIMEOUT, callback.mFledgeErrorResponse.getStatusCode());
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_TIMEOUT);
     }
 
     @Test
     public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
@@ -1286,7 +1376,7 @@ public class PersistAdSelectionResultRunnerTest {
                         eq(false),
                         eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
                         eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
                         eq(DevContext.createForDevOptionsDisabled()));
 
@@ -1312,6 +1402,7 @@ public class PersistAdSelectionResultRunnerTest {
 
     @Test
     public void testRunner_persistResultWithNotEnrolledBuyer_throwsException() throws Exception {
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
         Mockito.doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
                 .assertAdTechEnrolled(
@@ -1329,11 +1420,14 @@ public class PersistAdSelectionResultRunnerTest {
         Assert.assertFalse(callback.mIsSuccess);
         assertNotNull(callback.mFledgeErrorResponse);
         assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testRunner_persistResultWithWrongSeller_throwsException() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
                 .when(mObliviousHttpEncryptorMock)
@@ -1366,11 +1460,14 @@ public class PersistAdSelectionResultRunnerTest {
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .safelyInsertRegisteredAdInteractions(
                         anyLong(), any(), anyLong(), anyLong(), anyInt());
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testRunner_persistResultWithWrongCallerPackage_throwsException() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
                 .when(mObliviousHttpEncryptorMock)
@@ -1403,12 +1500,15 @@ public class PersistAdSelectionResultRunnerTest {
         verify(mAdSelectionEntryDaoSpy, times(0))
                 .safelyInsertRegisteredAdInteractions(
                         anyLong(), any(), anyLong(), anyLong(), anyInt());
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testRunner_persistResultWithLongInteractionKeyAndUri_throwsException()
             throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -1469,7 +1569,9 @@ public class PersistAdSelectionResultRunnerTest {
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFlags,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
@@ -1493,7 +1595,7 @@ public class PersistAdSelectionResultRunnerTest {
                         anyLong(), any(), anyLong(), anyLong(), anyInt());
 
         // Verifies DestinationRegisteredBeaconsReportedStats get the correct values.
-        verify(mAdServicesLoggerMock, times(2))
+        verify(mAdServicesLoggerSpy, times(2))
                 .logDestinationRegisteredBeaconsReportedStats(argumentCaptor.capture());
         List<DestinationRegisteredBeaconsReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats.size()).isEqualTo(2);
@@ -1520,11 +1622,143 @@ public class PersistAdSelectionResultRunnerTest {
                 .isEqualTo(
                         Arrays.asList(
                                 DestinationRegisteredBeaconsReportedStats
-                                        .InteractionKeySizeRangeType
-                                        .LARGER_THAN_MAXIMUM_KEY_SIZE));
+                                        .InteractionKeySizeRangeType.LARGER_THAN_MAXIMUM_KEY_SIZE));
         assertThat(sellerDestinationStats.getTableNumRows()).isEqualTo(0);
         assertThat(sellerDestinationStats.getAdServicesStatusCode())
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
+
+        verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testRunner_withKAnonSignFlagedDisabled_doesNothing() throws Exception {
+        Flags flagsWithKAnonDisabled =
+                new PersistAdSelectionResultRunnerTestFlagsForKAnon(false, 100);
+        doReturn(flagsWithKAnonDisabled).when(FlagsFactory::getFlags);
+
+        PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithKAnonDisabled,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerSpy)
+                .logKAnonSignJoinStatus();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+        countDownLatch.await();
+
+        Assert.assertTrue(callback.mIsSuccess);
+        verifyZeroInteractions(mUnusedKAnonSignJoinFactory);
+    }
+
+    @Test
+    public void testRunner_kanonSignJoinManagerThrowsException_persistSelectionRunnerIsSuccessful()
+            throws Exception {
+        Flags flagsWithKAnonEnabled =
+                new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
+        doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
+        PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
+        KAnonSignJoinFactory kAnonSignJoinFactory =
+                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithKAnonEnabled,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        kAnonSignJoinFactory);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            throw new RuntimeException("some random exception");
+                        })
+                .when(mKAnonSignJoinManagerMock)
+                .processNewMessages(anyList());
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+        countDownLatch.await();
+
+        Assert.assertTrue(callback.mIsSuccess);
+    }
+
+    @Test
+    public void testRunner_withKAnonEnabled_makesSignAndJoinCalls() throws Exception {
+        Flags flagsWithKAnonEnabled =
+                new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
+        doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
+        PersistAdSelectionResultInput inputParams = setupPersistRunnerMocksForKAnonTests();
+        KAnonSignJoinFactory kAnonSignJoinFactory =
+                spy(new KAnonSignJoinFactory(mKAnonSignJoinManagerMock));
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithKAnonEnabled,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        kAnonSignJoinFactory);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        doAnswer(
+                        (unused) -> {
+                            countDownLatch.countDown();
+                            return null;
+                        })
+                .when(mKAnonSignJoinManagerMock)
+                .processNewMessages(anyList());
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+        countDownLatch.await();
+
+        Assert.assertTrue(callback.mIsSuccess);
+        verify(mKAnonSignJoinManagerMock, times(1)).processNewMessages(anyList());
     }
 
     private byte[] prepareDecryptedAuctionResultForRemarketingAd(
@@ -1578,6 +1812,73 @@ public class PersistAdSelectionResultRunnerTest {
                 .build();
     }
 
+    private void mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger() {
+        when(mFledgeAuctionServerExecutionLoggerClockMock.elapsedRealtime())
+                .thenReturn(
+                        BINDER_ELAPSED_TIMESTAMP,
+                        PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP,
+                        PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP);
+        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
+        mAdsRelevanceExecutionLogger =
+                mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
+        mPersistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        mFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mUnusedKAnonSignJoinFactory);
+    }
+
+    private void verifyPersistAdSelectionResultApiUsageLog(int resultCode)
+            throws InterruptedException {
+        ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
+        assertThat(apiCallStats.getApiName()).isEqualTo(
+                AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
+        assertThat(apiCallStats.getAppPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
+        assertThat(apiCallStats.getLatencyMillisecond()).isEqualTo(
+                PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS);
+    }
+
+    private PersistAdSelectionResultInput setupPersistRunnerMocksForKAnonTests() {
+
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(DestinationRegisteredBeaconsReportedStats.class);
+
+        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA);
+
+        return new PersistAdSelectionResultInput.Builder()
+                .setSeller(SELLER)
+                .setAdSelectionId(AD_SELECTION_ID)
+                .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                .build();
+    }
+
     public static class PersistAdSelectionResultRunnerTestFlags implements Flags {
         @Override
         public long getFledgeAuctionServerOverallTimeoutMs() {
@@ -1592,6 +1893,33 @@ public class PersistAdSelectionResultRunnerTest {
         @Override
         public boolean getFledgeBeaconReportingMetricsEnabled() {
             return FLEDGE_BEACON_REPORTING_METRICS_ENABLED_IN_TEST;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
+            return FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED_IN_TEST;
+        }
+    }
+
+    public static class PersistAdSelectionResultRunnerTestFlagsForKAnon
+            extends PersistAdSelectionResultRunnerTestFlags {
+        private boolean mKAnonFeatureFlagEnabled;
+        private int mPercentageImmediateJoinValue;
+
+        public PersistAdSelectionResultRunnerTestFlagsForKAnon(
+                boolean kAnonFlagEnabled, int percentageImmediateJoinValue) {
+            mKAnonFeatureFlagEnabled = kAnonFlagEnabled;
+            mPercentageImmediateJoinValue = percentageImmediateJoinValue;
+        }
+
+        @Override
+        public boolean getFledgeKAnonSignJoinFeatureEnabled() {
+            return mKAnonFeatureFlagEnabled;
+        }
+
+        @Override
+        public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
+            return mPercentageImmediateJoinValue;
         }
     }
 

@@ -36,21 +36,11 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
-
-import static org.junit.Assert.assertEquals;
 
 import android.provider.DeviceConfig;
 
@@ -65,7 +55,20 @@ import android.provider.DeviceConfig;
  * Manifest.permission.WRITE_DEVICE_CONFIG}, but a better approach would be to use {@link
  * com.android.adservices.common.AdServicesFlagsSetterRule} instead (as that rule will take care of
  * automatically resetting the flags to the initial value, among other features).
+ *
+ * @deprecated TODO(b/317418539) - most usages (especially on CTS) are better suited by the {@link
+ *     com.android.adservices.common.AdServicesFlagsSetterRule} JUnit rule, which provides other
+ *     advantages like properly resetting the flag at the end of the test (while tests using this
+ *     fixture need to manually use a {@code try / finally} block to do so) and supporting
+ *     annotations. So, assuming your test already uses the rule, all you need to do is to annotate
+ *     the test method with the proper annotations (like
+ *     {@code @SetFlagEnabled(FlagsConstants.MY_FEATURE_FLAG}} or
+ *     {@code @SetIntegerFlag(name=FlagsConstants.MY_CONFIG_FLAG}, value=42)} or call the {@code
+ *     setFlag()} method of the rule when the value is not static (for example, if the rule
+ *     reference is called @{code flags}, simply call {@code
+ *     flags.setFlag(FlagsConstant.MY_PGK_ALLOWLIST_FLAG, pkgNames)}).
  */
+@Deprecated
 public final class PhFlagsFixture {
     public static final long DEFAULT_API_RATE_LIMIT_SLEEP_MS =
             (long) (1500 / SDK_REQUEST_PERMITS_PER_SECOND) + 100L;
@@ -97,21 +100,6 @@ public final class PhFlagsFixture {
             EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
                     FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS
                             + (int) ADDITIONAL_TIMEOUT;
-
-    public static void configureFledgeBackgroundFetchEligibleUpdateBaseIntervalS(
-            final long phOverridingValue) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S,
-                Long.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertEquals(
-                "Failed to configure P/H flag",
-                phOverridingValue,
-                phFlags.getFledgeBackgroundFetchEligibleUpdateBaseIntervalS());
-    }
 
     /** Enables test to override the flag enabling ad selection filtering */
     public static void overrideFledgeAdSelectionFilteringEnabled(boolean value) {
@@ -179,19 +167,6 @@ public final class PhFlagsFixture {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE,
                 Boolean.toString(value),
-                false);
-    }
-
-    /**
-     * Allows tests to override seed enrollment data flag thereby seeding data into enrollment table
-     *
-     * @param enable disable enrollment seed
-     */
-    public static void overrideEnableEnrollmentSeed(boolean enable) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED,
-                Boolean.toString(enable),
                 false);
     }
 
@@ -303,73 +278,19 @@ public final class PhFlagsFixture {
                 false);
     }
 
+    /** Enables or disables the HTTP cache */
+    public static void overrideHttpClientCacheEnabled(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE,
+                Boolean.toString(value),
+                false);
+    }
+
     public static void overrideSdkRequestPermitsPerSecond(int value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_SDK_REQUEST_PERMITS_PER_SECOND,
-                Integer.toString(value),
-                true);
-    }
-
-    /** Switches the fetchAndJoinCustomAudience API on/off. */
-    public static void overrideFledgeFetchCustomAudienceEnabled(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED,
-                Boolean.toString(value),
-                true);
-    }
-
-    /** Configures the maximum size of a custom audience's name. */
-    public static void overrideFledgeCustomAudienceMaxNameSizeB(int value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B,
-                Integer.toString(value),
-                true);
-    }
-
-    /** Configures the maximum size of a custom audience's user bidding signals. */
-    public static void overrideFledgeFetchCustomAudienceMaxUserBiddingSignalsSizeB(int value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B,
-                Integer.toString(value),
-                true);
-    }
-
-    /** Configures the maximum number of ads allowed per custom audience. */
-    public static void overrideFledgeCustomAudienceMaxNumAds(int value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS,
-                Integer.toString(value),
-                true);
-    }
-
-    /** Configures the maximum total number of custom audiences in the datastore. */
-    public static void overrideFledgeCustomAudienceMaxCount(int value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT,
-                Integer.toString(value),
-                true);
-    }
-
-    /** Configures the maximum number of custom audiences per owner application in the datastore. */
-    public static void overrideFledgeCustomAudiencePerAppMaxCount(int value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT,
-                Integer.toString(value),
-                true);
-    }
-
-    /** Configures the maximum number of owner applications in the datastore. */
-    public static void overrideFledgeCustomAudienceMaxOwnerCount(int value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 Integer.toString(value),
                 true);
     }
@@ -456,4 +377,10 @@ public final class PhFlagsFixture {
                 Long.toString(timeoutMs),
                 false);
     }
+
+    // DO NOT ADD MORE METHODS HERE, THIS CLASS IS DEPRECATED.
+    //
+    // If you still need a new method instead of using AdServicesFlagsSetterRule or other infra,
+    // please add a TODO(b/317418539) comment on such method explaining why (and include a
+    // Bug: 317418539 line in the CL that adds it).
 }

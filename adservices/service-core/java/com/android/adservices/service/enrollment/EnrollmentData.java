@@ -19,6 +19,7 @@ package com.android.adservices.service.enrollment;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -32,7 +33,9 @@ public class EnrollmentData {
     @VisibleForTesting public static String SEPARATOR = " ";
 
     private String mEnrollmentId;
-    private String mCompanyId;
+    private String mEnrolledAPIsString;
+    // mEnrolled APIs are derived from mEnrolledAPIsString, they represent the same enrolledAPIs
+    private List<PrivacySandboxApi> mEnrolledAPIs;
     private List<String> mSdkNames;
     private List<String> mAttributionSourceRegistrationUrl;
     private List<String> mAttributionTriggerRegistrationUrl;
@@ -42,7 +45,8 @@ public class EnrollmentData {
 
     private EnrollmentData() {
         mEnrollmentId = null;
-        mCompanyId = null;
+        mEnrolledAPIsString = null;
+        mEnrolledAPIs = new ArrayList<PrivacySandboxApi>();
         mSdkNames = new ArrayList<>();
         mAttributionSourceRegistrationUrl = new ArrayList<>();
         mAttributionTriggerRegistrationUrl = new ArrayList<>();
@@ -58,7 +62,8 @@ public class EnrollmentData {
         }
         EnrollmentData enrollmentData = (EnrollmentData) obj;
         return Objects.equals(mEnrollmentId, enrollmentData.mEnrollmentId)
-                && Objects.equals(mCompanyId, enrollmentData.mCompanyId)
+                && Objects.equals(mEnrolledAPIsString, enrollmentData.mEnrolledAPIsString)
+                && Objects.equals(mEnrolledAPIs, enrollmentData.mEnrolledAPIs)
                 && Objects.equals(mSdkNames, enrollmentData.mSdkNames)
                 && Objects.equals(
                         mAttributionSourceRegistrationUrl,
@@ -77,7 +82,8 @@ public class EnrollmentData {
     public int hashCode() {
         return Objects.hash(
                 mEnrollmentId,
-                mCompanyId,
+                mEnrolledAPIsString,
+                mEnrolledAPIs,
                 mSdkNames,
                 mAttributionSourceRegistrationUrl,
                 mAttributionTriggerRegistrationUrl,
@@ -91,9 +97,16 @@ public class EnrollmentData {
         return mEnrollmentId;
     }
 
-    /** Returns ID assigned to the Parent Company. */
-    public String getCompanyId() {
-        return mCompanyId;
+    /** Return Enrolled APIs of given enrollment in string format */
+    @Nullable
+    public String getEnrolledAPIsString() {
+        return mEnrolledAPIsString;
+    }
+
+    /** Return list of Enrolled APIs of given enrollment */
+    @Nullable
+    public List<PrivacySandboxApi> getEnrolledAPIs() {
+        return mEnrolledAPIs;
     }
 
     /** List of SDKs belonging to the same enrollment. */
@@ -140,12 +153,50 @@ public class EnrollmentData {
         return Arrays.asList(input.trim().split(SEPARATOR));
     }
 
+    /**
+     * Returns the given {@code enrolledAPIs} as a list of {@link PrivacySandboxApi} enum values.
+     */
+    private static List<PrivacySandboxApi> enrolledApisToEnums(String enrolledAPIs) {
+        List<PrivacySandboxApi> enrolledApiEnums = new ArrayList<PrivacySandboxApi>();
+        if (enrolledAPIs == null || enrolledAPIs.trim().isEmpty()) {
+            return enrolledApiEnums;
+        }
+
+        String[] enrolledAPIsList = enrolledAPIs.trim().split("\\s+");
+        for (String enrolledApi : enrolledAPIsList) {
+            enrolledApiEnums.add(enrolledApiToEnum(enrolledApi));
+        }
+        return enrolledApiEnums;
+    }
+
+    /**
+     * Returns the given {@code enrolledAPI} to corresponding {@link PrivacySandboxApi} enum value
+     */
+    // LINT.IfChange(enrolledApiToEnum)
+    private static PrivacySandboxApi enrolledApiToEnum(String enrolledAPI) {
+        return switch (enrolledAPI) {
+            case ("PRIVACY_SANDBOX_API_TOPICS") -> PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS;
+            case ("PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE") -> PrivacySandboxApi
+                    .PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE;
+            case ("PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION") -> PrivacySandboxApi
+                    .PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION;
+            case ("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING") -> PrivacySandboxApi
+                    .PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING;
+            case ("PRIVACY_SANDBOX_API_SHARED_STORAGE") -> PrivacySandboxApi
+                    .PRIVACY_SANDBOX_API_SHARED_STORAGE;
+            case ("PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS") -> PrivacySandboxApi
+                    .PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS;
+            default -> PrivacySandboxApi.PRIVACY_SANDBOX_API_UNKNOWN;
+        };
+    }
+    // LINT.ThenChange(/adservices/service-core/proto/rb_enrollment.proto:PrivacySandboxApi)
+
     /** Returns the builder for the instance */
     @NonNull
     public EnrollmentData.Builder cloneToBuilder() {
         return new EnrollmentData.Builder()
                 .setEnrollmentId(this.mEnrollmentId)
-                .setCompanyId(this.mCompanyId)
+                .setEnrolledAPIs(this.mEnrolledAPIsString)
                 .setSdkNames(this.mSdkNames)
                 .setAttributionSourceRegistrationUrl(this.mAttributionSourceRegistrationUrl)
                 .setAttributionTriggerRegistrationUrl(this.mAttributionTriggerRegistrationUrl)
@@ -169,9 +220,10 @@ public class EnrollmentData {
             return this;
         }
 
-        /** See {@link EnrollmentData#getCompanyId()}. */
-        public Builder setCompanyId(String companyId) {
-            mBuilding.mCompanyId = companyId;
+        /** See {@link EnrollmentData#getEnrolledAPIs()}. */
+        public Builder setEnrolledAPIs(String enrolledAPIs) {
+            mBuilding.mEnrolledAPIsString = enrolledAPIs;
+            mBuilding.mEnrolledAPIs = enrolledApisToEnums(enrolledAPIs);
             return this;
         }
 

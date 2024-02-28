@@ -16,11 +16,13 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.adservices.flags.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -45,9 +47,8 @@ import java.util.Set;
  * <p>Note that the filtering is based on any package with one of the listed package names being on
  * the device. It is possible that the package holding the package name is not the application
  * targeted by the ad.
- *
- * @hide
  */
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class AppInstallFilters implements Parcelable {
     /** @hide */
     @VisibleForTesting public static final String PACKAGE_NAMES_FIELD_NAME = "package_names";

@@ -26,9 +26,12 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableSet;
 
 import org.json.JSONArray;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -39,6 +42,9 @@ import java.util.Set;
 
 public class FledgeRoomConvertersTest {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testSerializeDeserializeInstant() {

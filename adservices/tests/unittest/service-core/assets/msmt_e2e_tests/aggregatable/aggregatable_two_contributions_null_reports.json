@@ -1,5 +1,5 @@
 {
-  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate a real aggregate report with two contributions and 31 null aggregate reports",
+  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate a real aggregate report with two contributions and 30 null aggregate reports",
   "phflags_override": {
     "measurement_null_aggregate_report_enabled": true,
     "measurement_null_agg_report_rate_incl_source_registration_time": "1.0"
@@ -107,7 +107,7 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0008051
       }
     }],
     "aggregatable_results": [
@@ -125,7 +125,8 @@
               "key": "0xa85",
               "value": 1664
             }
-          ]
+          ],
+          "source_registration_time": "799977600"
         }
       },
       {
@@ -138,7 +139,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797408600"
         }
       },
       {
@@ -151,7 +153,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797495000"
         }
       },
       {
@@ -164,7 +167,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797581400"
         }
       },
       {
@@ -177,7 +181,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797667800"
         }
       },
       {
@@ -190,7 +195,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797754200"
         }
       },
       {
@@ -203,7 +209,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797840600"
         }
       },
       {
@@ -216,7 +223,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797927000"
         }
       },
       {
@@ -229,7 +237,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798013400"
         }
       },
       {
@@ -242,7 +251,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798099800"
         }
       },
       {
@@ -255,7 +265,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798186200"
         }
       },
       {
@@ -268,7 +279,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798272600"
         }
       },
       {
@@ -281,7 +293,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798359000"
         }
       },
       {
@@ -294,7 +307,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798445400"
         }
       },
       {
@@ -307,7 +321,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798531800"
         }
       },
       {
@@ -320,7 +335,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798618200"
         }
       },
       {
@@ -333,7 +349,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798704600"
         }
       },
       {
@@ -346,7 +363,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798791000"
         }
       },
       {
@@ -359,7 +377,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798877400"
         }
       },
       {
@@ -372,7 +391,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798963800"
         }
       },
       {
@@ -385,7 +405,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799050200"
         }
       },
       {
@@ -398,7 +419,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799136600"
         }
       },
       {
@@ -411,7 +433,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799223000"
         }
       },
       {
@@ -424,7 +447,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799309400"
         }
       },
       {
@@ -437,7 +461,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799395800"
         }
       },
       {
@@ -450,7 +475,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799482200"
         }
       },
       {
@@ -463,7 +489,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799568600"
         }
       },
       {
@@ -476,7 +503,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799655000"
         }
       },
       {
@@ -489,7 +517,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799741400"
         }
       },
       {
@@ -502,7 +531,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799827800"
         }
       },
       {
@@ -515,7 +545,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799914200"
         }
       }
     ]

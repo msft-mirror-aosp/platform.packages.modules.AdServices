@@ -91,26 +91,6 @@ public final class PermissionHelper {
     }
 
     /**
-     * @return {@code true} if the caller has the permission to invoke Custom Audiences APIs.
-     */
-    public static boolean hasCustomAudiencesPermission(
-            @NonNull Context context, @NonNull String appPackageName) {
-        // TODO(b/236268316): Add check for SDK permission.
-        return hasPermission(
-                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
-    }
-
-    /**
-     * @return {@code true} if the caller has the permission to invoke Protected Signals APIs.
-     */
-    public static boolean hasProtectedSignalsPermission(
-            @NonNull Context context, @NonNull String appPackageName) {
-        // TODO(b/236268316): Add check for SDK permission.
-        return hasPermission(
-                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
-    }
-
-    /**
      * @return {@code true} if the caller has the permission to invoke AdService's state
      *     modification API.
      */
@@ -149,7 +129,12 @@ public final class PermissionHelper {
                                 AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT);
     }
 
-    private static boolean hasPermission(
+    /**
+     * Checks if a caller has a permission.
+     *
+     * @return {@code true} if the caller has the permission
+     */
+    public static boolean hasPermission(
             @NonNull Context context, @NonNull String packageName, @NonNull String permission) {
         try {
             // Check requested permission using {@link PackageManager#getPackageInfo(String, int)}
@@ -172,5 +157,17 @@ public final class PermissionHelper {
                     "Package %s not found while requesting permission %s", packageName, permission);
             return false;
         }
+    }
+
+    /**
+     * Returns if the caller has the permission to invoke the API of {@link
+     * getAdServicesCommonStates}
+     *
+     * @return {@code true} if the caller has the permission.
+     */
+    public static boolean hasAccessAdServicesCommonStatePermission(
+            @NonNull Context context, @NonNull String appPackageName) {
+        return hasPermission(
+                context, appPackageName, AdServicesPermissions.ACCESS_ADSERVICES_STATE);
     }
 }
