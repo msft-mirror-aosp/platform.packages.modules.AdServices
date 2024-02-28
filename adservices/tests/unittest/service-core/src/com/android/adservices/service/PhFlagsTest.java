@@ -920,10 +920,9 @@ import static org.junit.Assert.assertThrows;
 import android.provider.DeviceConfig;
 import android.util.Log;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.fixture.SysPropForceDefaultValueFixture;
 import com.android.modules.utils.build.SdkLevel;
@@ -943,7 +942,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
-@SmallTest
 @SpyStatic(SdkLevel.class)
 public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
@@ -10715,7 +10713,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void verifyGetBooleanNotCalled(String name) {
-        extendedMockito.unsafeVerifyGetBooleanDeviceConfigFlagNotCalled(
+        ExtendedMockitoExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
                 DeviceConfig.NAMESPACE_ADSERVICES, name);
     }
 }

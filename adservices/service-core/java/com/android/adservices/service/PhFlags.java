@@ -855,9 +855,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW);
     }
 
-    // TODO(b/326254556): ideally it should be removed and the logic moved to
-    // getMeasurementEnabled(), but this is a legacy flag that also reads system properties, and
-    // the system properties workflow is not unit tested.
+    // TODO(b/326254556): logic will be moved to getMeasurementEnabled() (after new unit tests
+    // are added on PhFlagsSystemPropertyOverrideTest)
     private boolean getMeasurementAttributionFallbackJobKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
@@ -875,8 +874,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getMeasurementAttributionFallbackJobEnabled() {
-        // TODO(b/325144327): ideally logic should be here, but this is a legacy flag that also
-        // reads system properties, and the system properties workflow is not unit tested.
         return !getMeasurementAttributionFallbackJobKillSwitch();
     }
 
@@ -1654,9 +1651,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     // MEASUREMENT Killswitches
 
-    // TODO(b/326254556): ideally it should be removed and the logic moved to
-    // getMeasurementEnabled(), but this is a legacy flag that also reads system properties, and
-    // the system properties workflow is not unit tested.
+    // TODO(b/326254556): logic will be moved to getMeasurementEnabled() (after new unit tests
+    // are added on PhFlagsSystemPropertyOverrideTest)
+    @Override
+    public boolean getLegacyMeasurementKillSwitch() {
+        return getMeasurementKillSwitch();
+    }
+
     private boolean getMeasurementKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
