@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 
@@ -75,6 +76,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -128,6 +130,7 @@ public class FetchCustomAudienceImpl {
     @NonNull private final long mFledgeCustomAuienceMaxTotal;
     private final boolean mFledgeAdSelectionFilteringEnabled;
     private final boolean mFledgeAuctionServerAdRenderIdEnabled;
+    private final boolean mAuctionServerRequestFlagsEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
     private final long mDefaultRetryDurationSeconds;
     private final long mMaxRetryDurationSeconds;
@@ -189,6 +192,7 @@ public class FetchCustomAudienceImpl {
         mFledgeCustomAudienceMaxNumAds = flags.getFledgeCustomAudienceMaxNumAds();
         mFledgeAdSelectionFilteringEnabled = flags.getFledgeAdSelectionFilteringEnabled();
         mFledgeAuctionServerAdRenderIdEnabled = flags.getFledgeAuctionServerAdRenderIdEnabled();
+        mAuctionServerRequestFlagsEnabled = flags.getFledgeAuctionServerRequestFlagsEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength = flags.getFledgeAuctionServerAdRenderIdMaxLength();
         mFledgeCustomAudienceMaxCustomHeaderSizeB =
                 flags.getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB();
@@ -202,17 +206,20 @@ public class FetchCustomAudienceImpl {
                 new CustomAudienceBlob(
                         mFledgeAdSelectionFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
-                        mFledgeAuctionServerAdRenderIdMaxLength);
+                        mFledgeAuctionServerAdRenderIdMaxLength,
+                        mAuctionServerRequestFlagsEnabled);
         mResponseCustomAudience =
                 new CustomAudienceBlob(
                         mFledgeAdSelectionFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
-                        mFledgeAuctionServerAdRenderIdMaxLength);
+                        mFledgeAuctionServerAdRenderIdMaxLength,
+                        mAuctionServerRequestFlagsEnabled);
         mFusedCustomAudience =
                 new CustomAudienceBlob(
                         mFledgeAdSelectionFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
-                        mFledgeAuctionServerAdRenderIdMaxLength);
+                        mFledgeAuctionServerAdRenderIdMaxLength,
+                        mAuctionServerRequestFlagsEnabled);
 
         // Instantiate a CustomAudienceBlobValidator
         mCustomAudienceBlobValidator =
@@ -416,9 +423,7 @@ public class FetchCustomAudienceImpl {
                             mFusedCustomAudience.overrideFromJSONObject(
                                     mRequestCustomAudience.asJSONObject());
                             // Validate the fused custom audience has values for all fields.
-                            // TODO(b/283857101): Add an isComplete() method.
-                            if (mFusedCustomAudience.mFieldsMap.keySet().size()
-                                    != CustomAudienceBlob.mKeysSet.size()) {
+                            if (!isComplete(mFusedCustomAudience)) {
                                 throw new InvalidObjectException(
                                         FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE);
                             }
@@ -465,7 +470,10 @@ public class FetchCustomAudienceImpl {
                                                     DBTrustedBiddingData.fromServiceObject(
                                                             mFusedCustomAudience
                                                                     .getTrustedBiddingData()))
-                                            .setDebuggable(isDebuggableCustomAudience);
+                                            .setDebuggable(isDebuggableCustomAudience)
+                                            .setAuctionServerRequestFlags(
+                                                    mFusedCustomAudience
+                                                            .getAuctionServerRequestFlags());
 
                             List<DBAdData> ads = new ArrayList<>();
                             for (AdData ad : mFusedCustomAudience.getAds()) {
@@ -600,5 +608,15 @@ public class FetchCustomAudienceImpl {
                     0);
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean isComplete(CustomAudienceBlob fusedCustomAudience) {
+        HashSet<String> expectedKeysSet = new HashSet<>(CustomAudienceBlob.mKeysSet);
+        HashSet<String> currentKeySet = new HashSet<>(fusedCustomAudience.mFieldsMap.keySet());
+
+        if (mAuctionServerRequestFlagsEnabled) {
+            currentKeySet.remove(AUCTION_SERVER_REQUEST_FLAGS_KEY);
+        }
+        return currentKeySet.size() == expectedKeysSet.size();
     }
 }
