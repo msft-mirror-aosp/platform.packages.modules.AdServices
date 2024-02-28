@@ -19,6 +19,7 @@ package com.android.adservices.service.stats;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
@@ -190,4 +191,7 @@ public interface AdServicesLogger {
      */
     void logKAnonImmediateSignJoinStats(
             KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats);
+
+    /** Logs status for get challenge method during kAnon sign join process. */
+    void logKAnonGetChallengeJobStats(KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats);
 }

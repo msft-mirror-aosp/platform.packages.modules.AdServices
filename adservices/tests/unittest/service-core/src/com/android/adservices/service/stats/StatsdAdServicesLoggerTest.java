@@ -44,9 +44,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
@@ -80,6 +81,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
@@ -1589,6 +1591,32 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 totalMessagesAttempted,
                                 messagesFailedToJoin,
                                 messageFailedToSign,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKAnonGetChallengeStats_success() {
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
+        int jobResult = 1;
+        int latency = 17;
+        int challengeSizeInBytes = 100;
+        KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats =
+                KAnonGetChallengeStatusStats.builder()
+                        .setCertificateSizeInBytes(challengeSizeInBytes)
+                        .setResultCode(jobResult)
+                        .setLatencyInMs(latency)
+                        .build();
+
+        mLogger.logKAnonGetChallengeJobStats(kAnonGetChallengeStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_KEY_ATTESTATION_STATUS_REPORTED,
+                                challengeSizeInBytes,
+                                jobResult,
                                 latency);
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
