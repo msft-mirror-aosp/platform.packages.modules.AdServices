@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 
 /** Provides essential operations for interacting with Cobalt's database. */
 public final class DataService {
@@ -60,6 +61,10 @@ public final class DataService {
         this.mCobaltDatabase = Objects.requireNonNull(cobaltDatabase);
 
         this.mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
+    }
+
+    public DaoBuildingBlocks getDaoBuildingBlocks() {
+        return mDaoBuildingBlocks;
     }
 
     /**
@@ -94,7 +99,7 @@ public final class DataService {
     }
 
     /**
-     * Generate the observations for Count aggregated events that have occurred for a report.
+     * Generate the observations for a report.
      *
      * <p>Observations are generated in a transaction to be sure that multiple observations aren't
      * generated for the same event/data. The process is in one transaction:
@@ -110,23 +115,23 @@ public final class DataService {
      * @param reportKey the report to get the Count aggregated data for
      * @param mostRecentDayIndex the most recent day to check for aggregated events to send data for
      * @param dayIndexLoggerEnabled the day index that the logger was enabled
-     * @param generator an ObservationGenerator to convert the EventRecordAndSystemProfile for a day
-     *     into observations
+     * @param generatorSupplier a function that returns ObservationGenerator to convert the
+     *     EventRecordAndSystemProfile for a specific day into observations
      */
-    public ListenableFuture<Void> generateCountObservations(
+    public ListenableFuture<Void> generateObservations(
             ReportKey reportKey,
             int mostRecentDayIndex,
             int dayIndexLoggerEnabled,
-            ObservationGenerator generator) {
+            Function<Integer, ObservationGenerator> generatorSupplier) {
         return Futures.submit(
                 () ->
                         mCobaltDatabase.runInTransaction(
                                 () ->
-                                        generateCountObservationsSync(
+                                        generateObservationsSync(
                                                 reportKey,
                                                 mostRecentDayIndex,
                                                 dayIndexLoggerEnabled,
-                                                generator)),
+                                                generatorSupplier)),
                 mExecutorService);
     }
 
@@ -259,6 +264,7 @@ public final class DataService {
                                     mDaoBuildingBlocks.deleteOldAggregates(oldestDayIndex);
                                     mDaoBuildingBlocks.deleteReports(
                                             irrelevantReports(relevantReports));
+                                    mDaoBuildingBlocks.deleteUnusedStringHashes();
                                     mDaoBuildingBlocks.deleteUnusedSystemProfileHashes();
                                 }),
                 mExecutorService);
@@ -445,11 +451,11 @@ public final class DataService {
         return true;
     }
 
-    private void generateCountObservationsSync(
+    private void generateObservationsSync(
             ReportKey reportKey,
             int mostRecentDayIndex,
             int dayIndexLoggerEnabled,
-            ObservationGenerator generator) {
+            Function<Integer, ObservationGenerator> generatorSupplier) {
         // Read the aggregate store data that has already been sent.
         int nextDayIndex =
                 nextDayIndexToAggregate(reportKey, mostRecentDayIndex, dayIndexLoggerEnabled);
@@ -466,6 +472,7 @@ public final class DataService {
                             .collect(
                                     toImmutableListMultimap(
                                             EventRecordAndSystemProfile::systemProfile, e -> e));
+            ObservationGenerator generator = generatorSupplier.apply(dayIndex);
             ImmutableList<UnencryptedObservationBatch> batches =
                     generator.generateObservations(dayIndex, eventData);
             int numObservations =

@@ -41,12 +41,12 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsServiceImpl;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.adservices.shared.util.Clock;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -84,9 +84,9 @@ public class TopicsService extends Service {
                     new TopicsServiceImpl(
                             this,
                             TopicsWorker.getInstance(this),
-                            ConsentManager.getInstance(this),
+                            ConsentManager.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
-                            Clock.SYSTEM_CLOCK,
+                            Clock.getInstance(),
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(FlagsFactory.getFlags()),
                             EnrollmentDao.getInstance(this),
@@ -107,7 +107,7 @@ public class TopicsService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(AdServicesApiType.TOPICS).isGiven();
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.TOPICS).isGiven();
     }
 
     @Override

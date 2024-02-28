@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
+import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -55,9 +56,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -85,8 +84,8 @@ public class DeleteExpiredJobServiceTest {
 
     private DeleteExpiredJobService mSpyService;
 
-    private AdservicesJobServiceLogger mSpyLogger;
     private Flags mMockFlags;
+    private AdServicesJobServiceLogger mSpyLogger;
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -94,7 +93,7 @@ public class DeleteExpiredJobServiceTest {
                     .spyStatic(DatastoreManagerFactory.class)
                     .spyStatic(DeleteExpiredJobService.class)
                     .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdservicesJobServiceLogger.class)
+                    .spyStatic(AdServicesJobServiceLogger.class)
                     .mockStatic(ServiceCompatUtils.class)
                     .setStrictness(Strictness.LENIENT)
                     .build();
@@ -105,10 +104,8 @@ public class DeleteExpiredJobServiceTest {
         mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
 
-        StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
-        mSpyLogger =
-                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
         mMockFlags = mock(Flags.class);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
         when(mMockFlags.getMeasurementDeleteExpiredJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementDeleteExpiredJobRequiresDeviceIdle()).thenReturn(true);
         when(mMockFlags.getMeasurementDeleteExpiredJobPeriodMs()).thenReturn(JOB_PERIOD_MS);
@@ -439,7 +436,7 @@ public class DeleteExpiredJobServiceTest {
         ExtendedMockito.doReturn(mMockDatastoreManager)
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
         ExtendedMockito.doNothing().when(() -> DeleteExpiredJobService.schedule(any(), any()));
-        mockGetAdservicesJobServiceLogger(mSpyLogger);
+        mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();

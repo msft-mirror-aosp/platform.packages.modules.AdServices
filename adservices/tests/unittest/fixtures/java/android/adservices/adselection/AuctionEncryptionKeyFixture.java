@@ -19,6 +19,7 @@ package android.adservices.adselection;
 import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
 
 import com.android.adservices.data.adselection.DBEncryptionKey;
+import com.android.adservices.data.adselection.DBProtectedServersEncryptionConfig;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 
 import com.google.auto.value.AutoValue;
@@ -40,6 +41,8 @@ public class AuctionEncryptionKeyFixture {
 
     private static final String KEY_ID_LABEL = "id";
     private static final String PUBLIC_KEY_LABEL = "key";
+    public static final String COORDINATOR_URL_AUCTION = "https://example-auction.com/full/url";
+    public static final String COORDINATOR_URL_AUCTION_ORIGIN = "https://example-auction.com";
     public static final DBEncryptionKey ENCRYPTION_KEY_AUCTION =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("152233fc-f255-4c3d-b3ef-7e2b7fbb9ca7")
@@ -47,7 +50,6 @@ public class AuctionEncryptionKeyFixture {
                     .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
                     .setExpiryTtlSeconds(1000L)
                     .build();
-
     public static final DBEncryptionKey ENCRYPTION_KEY_AUCTION_TTL_1SECS =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("1b333681-4fe3-4ba9-b603-5169d421734c")
@@ -66,7 +68,7 @@ public class AuctionEncryptionKeyFixture {
                     .setKeyId("152233fc-f255-4c3d-b3ef-7e2b7fbb9ca7")
                     .setPublicKey("3QKut1VYAJGrE3TTu4NGZq3sPSgAeRaaTIdi7eZqtwk=")
                     .build();
-    private static final AuctionKey AUCTION_KEY_2 =
+    public static final AuctionKey AUCTION_KEY_2 =
             AuctionKey.builder()
                     .setKeyId("1b333681-4fe3-4ba9-b603-5169d421734c")
                     .setPublicKey("nD4MogDIKg+NIXiJ3lEPHcf8mYOl1wjioNFe6h9pUAI=")
@@ -85,6 +87,15 @@ public class AuctionEncryptionKeyFixture {
             AuctionKey.builder()
                     .setKeyId("7b6724dc-839c-4108-bfa7-2e73eb19e5fe")
                     .setPublicKey("t/dzKzHJKe7k//n2u7wDdvxRtgXy9SncfXz6g8JB/m4=")
+                    .build();
+
+    public static final DBProtectedServersEncryptionConfig ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR =
+            DBProtectedServersEncryptionConfig.builder()
+                    .setKeyIdentifier(AUCTION_KEY_2.keyId())
+                    .setPublicKey(AUCTION_KEY_2.publicKey())
+                    .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
+                    .setExpiryTtlSeconds(1000L)
+                    .setCoordinatorUrl(COORDINATOR_URL_AUCTION)
                     .build();
 
     public static String getAuctionResponseBodySingleKey() throws JSONException {
@@ -108,6 +119,15 @@ public class AuctionEncryptionKeyFixture {
                 .build();
     }
 
+    /** Gets the AdServicesHttpClientResponse with the provided AuctionKey */
+    public static AdServicesHttpClientResponse mockAuctionKeyFetchResponseWithGivenKey(
+            AuctionKey auctionKey) throws JSONException {
+        return AdServicesHttpClientResponse.builder()
+                .setResponseBody(getDeterministicAuctionResponseBody(auctionKey))
+                .setResponseHeaders(DEFAULT_RESPONSE_HEADERS)
+                .build();
+    }
+
     private static JSONObject getAuctionKeyJson(AuctionKey key) throws JSONException {
         return new JSONObject()
                 .put(KEY_ID_LABEL, key.keyId())
@@ -124,6 +144,13 @@ public class AuctionEncryptionKeyFixture {
                         .put(getAuctionKeyJson(AUCTION_KEY_3))
                         .put(getAuctionKeyJson(AUCTION_KEY_4))
                         .put(getAuctionKeyJson(AUCTION_KEY_5)));
+        return json.toString();
+    }
+
+    private static String getDeterministicAuctionResponseBody(AuctionKey auctionKey)
+            throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("keys", new JSONArray().put(getAuctionKeyJson(auctionKey)));
         return json.toString();
     }
 

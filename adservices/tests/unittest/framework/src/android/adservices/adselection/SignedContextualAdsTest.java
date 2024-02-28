@@ -22,9 +22,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -32,6 +36,9 @@ import java.util.Collections;
 /** Unit tests for {@link SignedContextualAds} */
 public class SignedContextualAdsTest {
     public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildContextualAdsSuccess() {
@@ -49,6 +56,17 @@ public class SignedContextualAdsTest {
         assertThat(contextualAds.getAdsWithBid())
                 .isEqualTo(SignedContextualAdsFixture.ADS_WITH_BID);
         assertThat(contextualAds.getSignature()).isEqualTo(TEST_SIGNATURE);
+    }
+
+    @Test
+    public void testBuildContextualAdsBuilderSuccess() {
+        AdTechIdentifier newAdTech = AdTechIdentifier.fromString("new-buyer");
+        SignedContextualAds contextualAds = SignedContextualAdsFixture.aSignedContextualAds();
+        assertThat(contextualAds.getBuyer()).isNotEqualTo(newAdTech);
+
+        SignedContextualAds anotherContextualAds =
+                new SignedContextualAds.Builder(contextualAds).setBuyer(newAdTech).build();
+        assertThat(anotherContextualAds.getBuyer()).isEqualTo(newAdTech);
     }
 
     @Test

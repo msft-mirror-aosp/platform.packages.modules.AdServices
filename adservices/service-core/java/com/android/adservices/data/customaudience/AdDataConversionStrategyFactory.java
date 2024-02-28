@@ -101,7 +101,7 @@ public class AdDataConversionStrategyFactory {
         @Override
         public void fromServiceObject(
                 @NonNull AdData parcelable, @NonNull DBAdData.Builder adDataBuilder) {
-            sLogger.v("Setting ad render id");
+            sLogger.v("Setting ad render id " + parcelable.getAdRenderId());
             adDataBuilder.setAdRenderId(parcelable.getAdRenderId());
         }
     }

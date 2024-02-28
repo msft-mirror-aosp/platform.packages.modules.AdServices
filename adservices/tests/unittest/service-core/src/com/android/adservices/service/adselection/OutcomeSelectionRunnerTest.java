@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixture.SAMPLE_SELLER;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
@@ -57,6 +58,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -72,6 +74,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -79,6 +82,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
@@ -136,6 +140,9 @@ public class OutcomeSelectionRunnerTest {
     private ListeningExecutorService mBlockingExecutorService;
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -217,8 +224,10 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        anyInt());
+                        anyInt(),
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET)));
     }
 
     @Test
@@ -263,8 +272,10 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+                        anyInt(),
+                        eq(
+                                ApiCallStats.failureResult(
+                                        STATUS_USER_CONSENT_REVOKED, FAILURE_REASON_UNSET)));
     }
 
 
@@ -334,8 +345,8 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_TIMEOUT),
-                        anyInt());
+                        anyInt(),
+                        eq(ApiCallStats.failureResult(STATUS_TIMEOUT, FAILURE_REASON_UNSET)));
     }
 
     private void persistAdSelectionEntry(

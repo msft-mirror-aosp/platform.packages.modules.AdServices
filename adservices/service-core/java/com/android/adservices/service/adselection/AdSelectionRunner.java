@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResultCodeFromException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
@@ -64,6 +69,7 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -299,6 +305,8 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
+        String callerAppPackageName = inputParams.getCallerPackageName();
+
         try {
             ListenableFuture<Void> filterAndValidateRequestFuture =
                     Futures.submit(
@@ -343,7 +351,9 @@ public abstract class AdSelectionRunner {
                                         adSelectionAndOrchestrationResultPair) {
                             Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
                             notifySuccessToCaller(
-                                    adSelectionAndOrchestrationResultPair.first, callback);
+                                    callerAppPackageName,
+                                    adSelectionAndOrchestrationResultPair.first,
+                                    callback);
                             if (mDebugReporting.isEnabled()) {
                                 sendDebugReports(
                                         adSelectionAndOrchestrationResultPair.second, fullCallback);
@@ -433,7 +443,9 @@ public abstract class AdSelectionRunner {
     }
 
     private void notifySuccessToCaller(
-            @NonNull DBAdSelection result, @NonNull AdSelectionCallback callback) {
+            @NonNull String callerAppPackageName,
+            @NonNull DBAdSelection result,
+            @NonNull AdSelectionCallback callback) {
         try {
             int overallLatencyMs =
                     mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
@@ -446,7 +458,8 @@ public abstract class AdSelectionRunner {
             // Note: Success is logged before the callback to ensure deterministic testing.
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                    AdServicesStatusUtils.STATUS_SUCCESS,
+                    callerAppPackageName,
+                    STATUS_SUCCESS,
                     overallLatencyMs);
 
             callback.onSuccess(
@@ -478,6 +491,10 @@ public abstract class AdSelectionRunner {
             sLogger.e(t, "Ad Selection failure: ");
 
             int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+            int failureReason =
+                    resultCode == STATUS_CALLER_NOT_ALLOWED
+                            ? FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST
+                            : FAILURE_REASON_UNSET;
 
             // Skip logging if a FilterException occurs.
             // AdSelectionServiceFilter ensures the failing assertion is logged internally.
@@ -490,7 +507,9 @@ public abstract class AdSelectionRunner {
                 // side
                 //  should be able to differentiate the data from the on-device telemetry.
                 mAdServicesLogger.logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode, overallLatencyMs);
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        overallLatencyMs,
+                        ApiCallStats.failureResult(resultCode, failureReason));
             }
 
             FledgeErrorResponse selectionFailureResponse =
@@ -584,7 +603,9 @@ public abstract class AdSelectionRunner {
                 () -> {
                     boolean atLeastOnePresent =
                             !(adSelectionConfig.getCustomAudienceBuyers().isEmpty()
-                                    && adSelectionConfig.getBuyerSignedContextualAds().isEmpty());
+                                    && adSelectionConfig
+                                            .getPerBuyerSignedContextualAds()
+                                            .isEmpty());
 
                     Preconditions.checkArgument(
                             atLeastOnePresent, ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE);
@@ -597,7 +618,7 @@ public abstract class AdSelectionRunner {
                                     mClock.instant(),
                                     mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
                     if ((buyerCustomAudience == null || buyerCustomAudience.isEmpty())
-                            && adSelectionConfig.getBuyerSignedContextualAds().isEmpty()) {
+                            && adSelectionConfig.getPerBuyerSignedContextualAds().isEmpty()) {
                         IllegalStateException exception =
                                 new IllegalStateException(ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE);
                         mAdSelectionExecutionLogger.endBiddingProcess(
@@ -751,7 +772,7 @@ public abstract class AdSelectionRunner {
                 new ProtectedAudienceSignatureManager(
                         mEnrollmentDao, mEncryptionKeyDao, isEnrollmentCheckEnabled);
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
-                adSelectionConfig.getBuyerSignedContextualAds().entrySet()) {
+                adSelectionConfig.getPerBuyerSignedContextualAds().entrySet()) {
             if (!signatureManager.isVerified(entry.getKey(), entry.getValue())) {
                 sLogger.v(
                         "Contextual ads for buyer: '%s' have an invalid signature and will be"
@@ -770,7 +791,7 @@ public abstract class AdSelectionRunner {
         }
         return adSelectionConfig
                 .cloneToBuilder()
-                .setBuyerSignedContextualAds(filteredContextualAdsMap)
+                .setPerBuyerSignedContextualAds(filteredContextualAdsMap)
                 .build();
     }
 
@@ -779,7 +800,7 @@ public abstract class AdSelectionRunner {
         sLogger.v("Emptying contextual ads in Ad Selection Config");
         return adSelectionConfig
                 .cloneToBuilder()
-                .setBuyerSignedContextualAds(Collections.EMPTY_MAP)
+                .setPerBuyerSignedContextualAds(Collections.EMPTY_MAP)
                 .build();
     }
 

@@ -16,21 +16,28 @@
 
 package com.android.adservices.service.stats;
 
-import android.annotation.NonNull;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
+import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdServicesStatusUtils.FailureReason;
+import android.adservices.common.AdServicesStatusUtils.StatusCode;
 
 import java.util.Objects;
 
 /** Class for Api Call Stats. */
-public class ApiCallStats {
+public final class ApiCallStats {
     private int mCode;
     private int mApiClass;
-    int mApiName;
-    String mAppPackageName;
-    String mSdkPackageName;
-    int mLatencyMillisecond;
-    int mResultCode;
+    private int mApiName;
+    private String mAppPackageName;
+    private String mSdkPackageName;
+    private int mLatencyMillisecond;
 
-    public ApiCallStats() {}
+    private @StatusCode int mResultCode;
+    private @FailureReason int mFailureReason;
+
+    private ApiCallStats() {}
 
     @Override
     public boolean equals(Object obj) {
@@ -38,13 +45,14 @@ public class ApiCallStats {
             return false;
         }
         ApiCallStats apiCallStats = (ApiCallStats) obj;
-        return mCode == apiCallStats.getCode()
-                && mApiClass == apiCallStats.getApiClass()
-                && mApiName == apiCallStats.getApiName()
-                && Objects.equals(mAppPackageName, apiCallStats.getAppPackageName())
-                && Objects.equals(mSdkPackageName, apiCallStats.getSdkPackageName())
-                && mLatencyMillisecond == apiCallStats.getLatencyMillisecond()
-                && mResultCode == apiCallStats.getResultCode();
+        return mCode == apiCallStats.mCode
+                && mApiClass == apiCallStats.mApiClass
+                && mApiName == apiCallStats.mApiName
+                && Objects.equals(mAppPackageName, apiCallStats.mAppPackageName)
+                && Objects.equals(mSdkPackageName, apiCallStats.mSdkPackageName)
+                && mLatencyMillisecond == apiCallStats.mLatencyMillisecond
+                && mResultCode == apiCallStats.mResultCode
+                && mFailureReason == apiCallStats.mFailureReason;
     }
 
     @Override
@@ -56,42 +64,42 @@ public class ApiCallStats {
                 mAppPackageName,
                 mSdkPackageName,
                 mLatencyMillisecond,
-                mResultCode);
+                mResultCode,
+                mFailureReason);
     }
 
-    @NonNull
     public int getCode() {
         return mCode;
     }
 
-    @NonNull
     public int getApiClass() {
         return mApiClass;
     }
 
-    @NonNull
     public int getApiName() {
         return mApiName;
     }
 
-    @NonNull
     public String getAppPackageName() {
         return mAppPackageName;
     }
 
-    @NonNull
     public String getSdkPackageName() {
         return mSdkPackageName;
     }
 
-    @NonNull
     public int getLatencyMillisecond() {
         return mLatencyMillisecond;
     }
 
-    @NonNull
-    public int getResultCode() {
+    public @StatusCode int getResultCode() {
         return mResultCode;
+    }
+
+    // TODO(b/324488816): failure reason is not currently being used, it might be "folded" into
+    // more status codes.
+    public @FailureReason int getFailureReason() {
+        return mFailureReason;
     }
 
     @Override
@@ -113,67 +121,144 @@ public class ApiCallStats {
                 + mLatencyMillisecond
                 + ", mResultCode="
                 + mResultCode
+                + ", mFailureReason="
+                + mFailureReason
                 + '}';
     }
 
     /** Builder for {@link ApiCallStats}. */
     public static final class Builder {
-        private final ApiCallStats mBuilding;
+        private final ApiCallStats mBuilding = new ApiCallStats();
 
         public Builder() {
-            mBuilding = new ApiCallStats();
         }
 
         /** See {@link ApiCallStats#getCode()} . */
-        public @NonNull ApiCallStats.Builder setCode(int code) {
+        public Builder setCode(int code) {
             mBuilding.mCode = code;
             return this;
         }
 
         /** See {@link ApiCallStats#getApiClass()} . */
-        public @NonNull ApiCallStats.Builder setApiClass(int apiClass) {
+        public Builder setApiClass(int apiClass) {
             mBuilding.mApiClass = apiClass;
             return this;
         }
 
         /** See {@link ApiCallStats#getApiName()} . */
-        public @NonNull ApiCallStats.Builder setApiName(int apiName) {
+        public Builder setApiName(int apiName) {
             mBuilding.mApiName = apiName;
             return this;
         }
 
         /** See {@link ApiCallStats#getAppPackageName()} . */
-        public @NonNull ApiCallStats.Builder setAppPackageName(@NonNull String appPackageName) {
-            Objects.requireNonNull(appPackageName);
-            mBuilding.mAppPackageName = appPackageName;
+        public Builder setAppPackageName(String appPackageName) {
+            mBuilding.mAppPackageName = Objects.requireNonNull(appPackageName);
             return this;
         }
 
         /** See {@link ApiCallStats#getSdkPackageName()}. */
-        public @NonNull ApiCallStats.Builder setSdkPackageName(@NonNull String sdkPackageName) {
-            Objects.requireNonNull(sdkPackageName);
-            mBuilding.mSdkPackageName = sdkPackageName;
+        public Builder setSdkPackageName(String sdkPackageName) {
+            mBuilding.mSdkPackageName = Objects.requireNonNull(sdkPackageName);
             return this;
         }
 
         /** See {@link ApiCallStats#getLatencyMillisecond()}. */
-        public @NonNull ApiCallStats.Builder setLatencyMillisecond(int latencyMillisecond) {
+        public Builder setLatencyMillisecond(int latencyMillisecond) {
             mBuilding.mLatencyMillisecond = latencyMillisecond;
             return this;
         }
 
-        /** See {@link ApiCallStats#getResultCode()}. */
-        public @NonNull ApiCallStats.Builder setResultCode(int resultCode) {
+        /**
+         * Sets the {@link ApiCallStats#getResultCode()} and {@link
+         * ApiCallStats#getFailureReason()}.
+         */
+        public Builder setResult(Result result) {
+            Objects.requireNonNull(result, "result cannot be null");
+            return setResult(result.getResultCode(), result.getFailureReason());
+        }
+
+        /**
+         * Sets the {@link ApiCallStats#getResultCode()} and {@link
+         * ApiCallStats#getFailureReason()}.
+         */
+        public Builder setResult(@StatusCode int resultCode, @FailureReason int failureReason) {
             mBuilding.mResultCode = resultCode;
+            mBuilding.mFailureReason = failureReason;
             return this;
         }
 
         /** Build the {@link ApiCallStats}. */
-        public @NonNull ApiCallStats build() {
-            if (mBuilding.mAppPackageName == null || mBuilding.mSdkPackageName == null) {
-                throw new IllegalArgumentException("appPackageName or sdkPackageName is null");
+        public ApiCallStats build() {
+            if (mBuilding.mAppPackageName == null) {
+                throw new IllegalStateException("must call setAppPackageName()");
+            }
+            if (mBuilding.mSdkPackageName == null) {
+                throw new IllegalStateException("must call setSdkPackageName()");
             }
             return mBuilding;
+        }
+    }
+
+    private static final Result SUCCESS = new Result(STATUS_SUCCESS, FAILURE_REASON_UNSET);
+
+    /** Creates a result for successful calls */
+    public static Result successResult() {
+        return SUCCESS;
+    }
+
+    // TODO(b/324488816): throws IAE (or log warning) on FAILURE_REASON_UNSET
+    // (need to fix all callers first)
+    /** Creates a result for failed calls */
+    public static Result failureResult(
+            @StatusCode int resultCode, @FailureReason int failureReason) {
+        return new Result(resultCode, failureReason);
+    }
+
+    public static final class Result {
+
+        private final @AdServicesStatusUtils.StatusCode int mResultCode;
+        private final @FailureReason int mFailureReason;
+
+        private Result(@StatusCode int resultCode, @FailureReason int failureReason) {
+            mResultCode = resultCode;
+            mFailureReason = failureReason;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Result)) {
+                return false;
+            }
+            Result result = (Result) obj;
+            return mResultCode == result.mResultCode && mFailureReason == result.mFailureReason;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mResultCode, mFailureReason);
+        }
+
+        public @StatusCode int getResultCode() {
+            return mResultCode;
+        }
+
+        public @FailureReason int getFailureReason() {
+            return mFailureReason;
+        }
+
+        public boolean isSuccess() {
+            return mResultCode == STATUS_SUCCESS;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{"
+                    + "mResultCode="
+                    + mResultCode
+                    + ", mFailureReason="
+                    + mFailureReason
+                    + '}';
         }
     }
 }

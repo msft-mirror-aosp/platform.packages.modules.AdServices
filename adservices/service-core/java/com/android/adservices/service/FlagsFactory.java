@@ -74,6 +74,17 @@ public class FlagsFactory {
         }
 
         @Override
+        public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+            return true;
+        }
+
+        @Override
+        public int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+            // Lets the delay be set in past for easier testing
+            return -100;
+        }
+
+        @Override
         public boolean getEnableLoggedTopic() {
             return true;
         }
@@ -94,12 +105,12 @@ public class FlagsFactory {
         }
 
         @Override
-        public boolean getAppConfigReturnsEnabledByDefault() {
-            return false;
+        public boolean getFledgeBeaconReportingMetricsEnabled() {
+            return true;
         }
 
         @Override
-        public boolean getFledgeBeaconReportingMetricsEnabled() {
+        public boolean getFledgeAppPackageNameLoggingEnabled() {
             return true;
         }
     }

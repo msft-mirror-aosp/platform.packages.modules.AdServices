@@ -194,7 +194,12 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
         LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
-                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+                () ->
+                        MeasurementImpl.getInstance(
+                                        SdkLevel.isAtLeastS()
+                                                ? context
+                                                : context.getApplicationContext())
+                                .deletePackageRecords(packageUri));
 
         // Log wipeout event triggered by request to uninstall package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
@@ -295,6 +300,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     void consentOnPackageFullyRemoved(
             @NonNull Context context, @NonNull Uri packageUri, int packageUid) {
+        if (!SdkLevel.isAtLeastS()) {
+            LogUtil.d("consentOnPackageFullyRemoved is not needed on Android R, returning...");
+            return;
+        }
         Objects.requireNonNull(context);
         Objects.requireNonNull(packageUri);
 
@@ -302,7 +311,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Deleting consent data for package %s with UID %d", packageName, packageUid);
         sBackgroundExecutor.execute(
                 () -> {
-                    ConsentManager instance = ConsentManager.getInstance(context);
+                    ConsentManager instance = ConsentManager.getInstance();
                     if (packageUid == DEFAULT_PACKAGE_UID) {
                         // There can be multiple instances of PackageChangedReceiver, e.g. in
                         // different user profiles. The system broadcasts a package change

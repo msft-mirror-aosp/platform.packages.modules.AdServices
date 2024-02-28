@@ -277,18 +277,18 @@ public class MobileDataDownloadFactory {
                 .setEnabledSupplier(
                         () -> {
                             // Topics is permanently disabled for U18 UX.
-                            if (UxStatesManager.getInstance(context).getUx()
+                            if (UxStatesManager.getInstance().getUx()
                                     == PrivacySandboxUxCollection.U18_UX) {
                                 return false;
                             }
 
                             // Topics resources should not be downloaded pre-consent.
                             if (flags.getGaUxFeatureEnabled()) {
-                                return ConsentManager.getInstance(context)
+                                return ConsentManager.getInstance()
                                         .getConsent(AdServicesApiType.TOPICS)
                                         .isGiven();
                             } else {
-                                return ConsentManager.getInstance(context).getConsent().isGiven();
+                                return ConsentManager.getInstance().getConsent().isGiven();
                             }
                         })
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
@@ -338,7 +338,7 @@ public class MobileDataDownloadFactory {
                 // OTA resources can be downloaded pre-consent before notification, or with consent
                 .setEnabledSupplier(
                         () ->
-                                !ConsentManager.getInstance(context).wasGaUxNotificationDisplayed()
+                                !ConsentManager.getInstance().wasGaUxNotificationDisplayed()
                                         || isAnyConsentGiven(context, flags))
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
@@ -364,7 +364,7 @@ public class MobileDataDownloadFactory {
     }
 
     private static boolean isAnyConsentGiven(@NonNull Context context, Flags flags) {
-        ConsentManager instance = ConsentManager.getInstance(context);
+        ConsentManager instance = ConsentManager.getInstance();
         if (flags.getGaUxFeatureEnabled()
                 && (instance.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
                         || instance.getConsent(AdServicesApiType.TOPICS).isGiven()
@@ -401,7 +401,7 @@ public class MobileDataDownloadFactory {
                             if (flags.getGaUxFeatureEnabled()) {
                                 return isAnyConsentGiven(context, flags);
                             } else {
-                                return ConsentManager.getInstance(context).getConsent().isGiven();
+                                return ConsentManager.getInstance().getConsent().isGiven();
                             }
                         })
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
@@ -427,11 +427,11 @@ public class MobileDataDownloadFactory {
                 .build();
     }
 
-    // Check killswitch is on or off. True means do not use MddLogger.
+    // Check the feature flag is on or off. True means use MddLogger.
     @NonNull
     @VisibleForTesting
     static Optional<Logger> getMddLogger(@NonNull Flags flags) {
-        return flags.getMddLoggerKillSwitch() ? Optional.absent() : Optional.of(new MddLogger());
+        return flags.getMddLoggerEnabled() ? Optional.of(new MddLogger()) : Optional.absent();
     }
 
     /** Dump MDD Debug Info. */

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -27,6 +29,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -39,6 +42,7 @@ import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.devapi.DevContext;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -53,18 +57,32 @@ public class CustomAudienceImplTest {
             CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .build();
 
+    private static final CustomAudience VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
+            CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                            CommonFixture.VALID_BUYER_1, FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                    .build();
+
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+
+    private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
+            DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(
+                            CommonFixture.VALID_BUYER_1)
+                    .build();
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
             AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
 
+    private static final DevContext DEV_OPTIONS_DISABLED = DevContext.createForDevOptionsDisabled();
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
     @Mock private Validator<CustomAudience> mCustomAudienceValidatorMock;
     @Mock private Clock mClockMock;
 
-    public CustomAudienceImpl mImpl;
+    private CustomAudienceImpl mImpl;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -83,20 +101,65 @@ public class CustomAudienceImplTest {
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
         mImpl.joinCustomAudience(
-                VALID_CUSTOM_AUDIENCE,
-                CustomAudienceFixture.VALID_OWNER,
-                DevContext.createForDevOptionsDisabled());
+                VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER, DEV_OPTIONS_DISABLED);
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         VALID_DB_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
-                        /*debuggable=*/ false);
+                        false);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE);
+        verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
+    }
+
+    @Test
+    public void testJoinCustomAudience_withDevOptionsEnabled() {
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+
+        mImpl.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE,
+                CustomAudienceFixture.VALID_OWNER,
+                DevContext.builder().setDevOptionsEnabled(true).build());
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        VALID_DB_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1),
+                        true);
+        verify(mClockMock).instant();
+        verify(mCustomAudienceQuantityCheckerMock)
+                .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
+        verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE);
+        verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
+    }
+
+    @Test
+    public void testJoinCustomAudienceWithServerAuctionFlags_runNormally() {
+
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+
+        mImpl.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                CustomAudienceFixture.VALID_OWNER,
+                DEV_OPTIONS_DISABLED);
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        VALID_DB_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1),
+                        false);
+        verify(mClockMock).instant();
+        verify(mCustomAudienceQuantityCheckerMock)
+                .check(
+                        VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                        CustomAudienceFixture.VALID_OWNER);
+        verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS);
         verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
     }
 
@@ -137,7 +200,7 @@ public class CustomAudienceImplTest {
         implWithRealValidators.joinCustomAudience(
                 customAudienceWithValidSubdomains,
                 CustomAudienceFixture.VALID_OWNER,
-                DevContext.createForDevOptionsDisabled());
+                DEV_OPTIONS_DISABLED);
 
         DBCustomAudience expectedDbCustomAudience =
                 DBCustomAudience.fromServiceObject(
@@ -147,7 +210,8 @@ public class CustomAudienceImplTest {
                         Duration.ofMillis(
                                 CommonFixture.FLAGS_FOR_TEST
                                         .getFledgeCustomAudienceDefaultExpireInMs()),
-                        AD_DATA_CONVERSION_STRATEGY);
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false);
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(

@@ -95,6 +95,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__ALREADY_ENROLLED_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__CONSENT_NOTIFICATION_DEBUG_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_FIRST_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_RENOTIFY_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
@@ -560,11 +562,10 @@ public final class UiStatsLogger {
     }
 
     private static int getDefaultConsent() {
-        Context context = getApplicationContext();
-        if (UxStatesManager.getInstance(context).getUx() == RVC_UX) {
+        if (UxStatesManager.getInstance().getUx() == RVC_UX) {
             return getDefaultConsent(AdServicesApiType.MEASUREMENTS);
         }
-        Boolean defaultConsent = ConsentManager.getInstance(context).getDefaultConsent();
+        Boolean defaultConsent = ConsentManager.getInstance().getDefaultConsent();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultConsent == null) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__CONSENT_UNSPECIFIED;
@@ -576,8 +577,7 @@ public final class UiStatsLogger {
     }
 
     private static int getDefaultAdIdState() {
-        Context context = getApplicationContext();
-        Boolean defaultAdIdState = ConsentManager.getInstance(context).getDefaultAdIdState();
+        Boolean defaultAdIdState = ConsentManager.getInstance().getDefaultAdIdState();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultAdIdState == null) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__STATE_UNSPECIFIED;
@@ -589,11 +589,10 @@ public final class UiStatsLogger {
     }
 
     private static int getDefaultConsent(AdServicesApiType apiType) {
-        Context context = getApplicationContext();
         switch (apiType) {
             case TOPICS:
                 Boolean topicsDefaultConsent =
-                        ConsentManager.getInstance(context).getTopicsDefaultConsent();
+                        ConsentManager.getInstance().getTopicsDefaultConsent();
                 // edge case where the user checks topic consent before receiving consent
                 // notification.
                 if (topicsDefaultConsent == null) {
@@ -605,7 +604,7 @@ public final class UiStatsLogger {
                 }
             case FLEDGE:
                 Boolean fledgeDefaultConsent =
-                        ConsentManager.getInstance(context).getFledgeDefaultConsent();
+                        ConsentManager.getInstance().getFledgeDefaultConsent();
                 // edge case where the user checks FLEDGE consent before receiving consent
                 // notification.
                 if (fledgeDefaultConsent == null) {
@@ -617,7 +616,7 @@ public final class UiStatsLogger {
                 }
             case MEASUREMENTS:
                 Boolean measurementDefaultConsent =
-                        ConsentManager.getInstance(context).getMeasurementDefaultConsent();
+                        ConsentManager.getInstance().getMeasurementDefaultConsent();
                 // edge case where the user checks measurement consent before receiving consent
                 // notification.
                 if (measurementDefaultConsent == null) {
@@ -652,8 +651,7 @@ public final class UiStatsLogger {
     }
 
     private static int getUx() {
-        Context context = getApplicationContext();
-        switch (UxStatesManager.getInstance(context).getUx()) {
+        switch (UxStatesManager.getInstance().getUx()) {
             case U18_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
             case RVC_UX:
@@ -668,9 +666,8 @@ public final class UiStatsLogger {
     }
 
     private static int getEnrollmentChannel() {
-        Context context = getApplicationContext();
         PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
-                UxStatesManager.getInstance(context).getEnrollmentChannel();
+                UxStatesManager.getInstance().getEnrollmentChannel();
         if (enrollmentChannel == GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
                 || enrollmentChannel
                         == BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
@@ -679,6 +676,9 @@ public final class UiStatsLogger {
                 || enrollmentChannel
                         == RvcUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+        } else if (enrollmentChannel
+                == GaUxEnrollmentChannelCollection.PAS_FIRST_CONSENT_NOTIFICATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_FIRST_NOTIFICATION_CHANNEL;
         } else if (enrollmentChannel
                         == GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
                 || enrollmentChannel
@@ -696,6 +696,9 @@ public final class UiStatsLogger {
         } else if (enrollmentChannel
                 == GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
+        } else if (enrollmentChannel
+                == GaUxEnrollmentChannelCollection.PAS_RECONSENT_NOTIFICATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_RENOTIFY_NOTIFICATION_CHANNEL;
         } else if (enrollmentChannel == GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
         } else if (enrollmentChannel == U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL) {

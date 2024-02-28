@@ -189,7 +189,8 @@
               "key": "0x559",
               "value": 123
             }
-          ]
+          ],
+          "source_registration_time": "0"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"
@@ -216,7 +217,7 @@
           "trigger_summary_bucket": [10, 99],
           "trigger_debug_keys": ["333"],
           "source_debug_key": "111",
-          "randomized_trigger_rate": 0.000012472785585841613
+          "randomized_trigger_rate": 0.0000125
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
         "report_time": "176402000"
@@ -231,7 +232,7 @@
           "trigger_summary_bucket": [10, 99],
           "trigger_debug_keys": ["222"],
           "source_debug_key": "111",
-          "randomized_trigger_rate": 0.000012472785585841613
+          "randomized_trigger_rate": 0.0000125
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "report_time": "3000"
@@ -246,7 +247,7 @@
           "trigger_summary_bucket": [10, 99],
           "trigger_debug_keys": ["333"],
           "source_debug_key": "111",
-          "randomized_trigger_rate": 0.000012472785585841613
+          "randomized_trigger_rate": 0.0000125
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "report_time": "4000"

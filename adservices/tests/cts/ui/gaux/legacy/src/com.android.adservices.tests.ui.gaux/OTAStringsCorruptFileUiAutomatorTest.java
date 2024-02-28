@@ -23,7 +23,6 @@ import android.content.Context;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -110,7 +109,6 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     }
 
     @Test
-    @FlakyTest(bugId = 297347345)
     public void checkCorruptedARSCFile_OTAFailTest() throws Exception {
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, CORRUPT_ARSC_FILE_MDD_URL);
 
@@ -119,7 +117,6 @@ public class OTAStringsCorruptFileUiAutomatorTest {
     }
 
     @Test
-    @FlakyTest(bugId = 297347345)
     public void checkXMLFile_OTAFailTest() throws Exception {
         UiUtils.setupOTAStrings(sContext, sDevice, sCommonManager, XML_FIL_MDD_URL);
 

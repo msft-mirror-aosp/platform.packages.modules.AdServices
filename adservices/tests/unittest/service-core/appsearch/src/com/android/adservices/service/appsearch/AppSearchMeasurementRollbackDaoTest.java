@@ -22,108 +22,92 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
 
 import android.app.adservices.AdServicesManager;
-import android.content.Context;
 
 import androidx.appsearch.app.AppSearchSession;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.concurrent.Executor;
 
-@SmallTest
-public class AppSearchMeasurementRollbackDaoTest {
-    private static final String USER1 = "ID1";
-    private static final String USER2 = "ID2";
+@MockStatic(AppSearchDao.class)
+public final class AppSearchMeasurementRollbackDaoTest extends AdServicesExtendedMockitoTestCase {
+    private static final String ID = "ID";
+    private static final String USER_ID = "USER_ID";
     private static final String NAMESPACE = "test_namespace";
     private static final long APEX_VERSION = 100L;
 
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
-    private final Context mContext = ApplicationProvider.getApplicationContext();
     private final String mAdServicePackageName =
             AppSearchConsentWorker.getAdServicesPackageName(mContext);
     @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).mockStatic(AppSearchDao.class).build();
-
     @Test
     public void testGetProperties() {
         AppSearchMeasurementRollbackDao dao =
-                new AppSearchMeasurementRollbackDao(USER1, NAMESPACE, USER2, APEX_VERSION);
-        assertThat(dao.getId()).isEqualTo(USER1);
-        assertThat(dao.getNamespace()).isEqualTo(NAMESPACE);
-        assertThat(dao.getUserId()).isEqualTo(USER2);
-        assertThat(dao.getApexVersion()).isEqualTo(APEX_VERSION);
-    }
-
-    @SuppressWarnings("TruthIncompatibleType")
-    @Test
-    public void testEquals() {
-        AppSearchMeasurementRollbackDao dao1 =
-                new AppSearchMeasurementRollbackDao(USER1, NAMESPACE, USER2, APEX_VERSION);
-        AppSearchMeasurementRollbackDao dao2 =
-                new AppSearchMeasurementRollbackDao(USER2, NAMESPACE, USER1, APEX_VERSION);
-        AppSearchMeasurementRollbackDao dao3 =
-                new AppSearchMeasurementRollbackDao(USER1, NAMESPACE, USER2, APEX_VERSION);
-        AppSearchConsentDao dao4 =
-                new AppSearchConsentDao(USER1, USER1, NAMESPACE, "API_TYPE", "true");
-
-        // Not using assertThat(dao1).isEqualTo(dao1) because that causes errorprone failures.
-        // Tried to use EqualsTester, but adding guava-android-testlib to the bp file resulted in
-        // lots of test failures.
-        assertThat(dao1.equals(dao1)).isTrue();
-        assertThat(dao1).isNotEqualTo(dao2);
-        assertThat(dao1).isEqualTo(dao3);
-        assertThat(dao1).isNotEqualTo(dao4);
-        assertThat(dao2).isNotEqualTo(dao3);
+                new AppSearchMeasurementRollbackDao(ID, NAMESPACE, USER_ID, APEX_VERSION);
+        expect.that(dao.getId()).isEqualTo(ID);
+        expect.that(dao.getNamespace()).isEqualTo(NAMESPACE);
+        expect.that(dao.getUserId()).isEqualTo(USER_ID);
+        expect.that(dao.getApexVersion()).isEqualTo(APEX_VERSION);
     }
 
     @Test
-    public void testHashCode() {
-        AppSearchMeasurementRollbackDao dao1 =
-                new AppSearchMeasurementRollbackDao(USER1, NAMESPACE, USER2, APEX_VERSION);
-        AppSearchMeasurementRollbackDao dao2 =
-                new AppSearchMeasurementRollbackDao(USER2, NAMESPACE, USER1, APEX_VERSION);
-        AppSearchMeasurementRollbackDao dao3 =
-                new AppSearchMeasurementRollbackDao(USER1, NAMESPACE, USER2, APEX_VERSION);
-        AppSearchMeasurementRollbackDao dao4 =
-                new AppSearchMeasurementRollbackDao(USER1, NAMESPACE, USER2, APEX_VERSION * 2);
-        assertThat(dao1.hashCode()).isNotEqualTo(dao2.hashCode());
-        assertThat(dao1.hashCode()).isEqualTo(dao3.hashCode());
-        assertThat(dao1.hashCode()).isNotEqualTo(dao4.hashCode());
+    public void testEqualsAndHashcode() {
+        String id = ID;
+        String namespace = NAMESPACE;
+        String userId = USER_ID;
+        long apexVersion = APEX_VERSION;
+
+        AppSearchMeasurementRollbackDao equals1 =
+                new AppSearchMeasurementRollbackDao(id, namespace, userId, apexVersion);
+        AppSearchMeasurementRollbackDao equals2 =
+                new AppSearchMeasurementRollbackDao(id, namespace, userId, apexVersion);
+        AppSearchMeasurementRollbackDao different1 =
+                new AppSearchMeasurementRollbackDao(id + "42", namespace, userId, apexVersion);
+        AppSearchMeasurementRollbackDao different2 =
+                new AppSearchMeasurementRollbackDao(id, namespace + "42", userId, apexVersion);
+        AppSearchMeasurementRollbackDao different3 =
+                new AppSearchMeasurementRollbackDao(id, namespace, userId + "42", apexVersion);
+        AppSearchMeasurementRollbackDao different4 =
+                new AppSearchMeasurementRollbackDao(id, namespace, userId, apexVersion + 42);
+
+        expectObjectsAreEqual(equals1, equals1);
+        expectObjectsAreEqual(equals1, equals2);
+
+        expectObjectsAreNotEqual(equals1, null);
+        expectObjectsAreNotEqual(equals1, "DAO, Y U NO STRING?");
+        expectObjectsAreNotEqual(equals1, different1);
+        expectObjectsAreNotEqual(equals1, different2);
+        expectObjectsAreNotEqual(equals1, different3);
+        expectObjectsAreNotEqual(equals1, different4);
     }
 
     @Test
     public void testToString() {
         AppSearchMeasurementRollbackDao dao1 =
-                new AppSearchMeasurementRollbackDao(USER1, NAMESPACE, USER2, APEX_VERSION);
-        final String expected =
+                new AppSearchMeasurementRollbackDao(ID, NAMESPACE, USER_ID, APEX_VERSION);
+        String expected =
                 String.format(
                         "id=%s; userId=%s; namespace=%s; apexVersion=%d",
-                        USER1, USER2, NAMESPACE, APEX_VERSION);
-        assertThat(dao1.toString()).isEqualTo(expected);
+                        ID, USER_ID, NAMESPACE, APEX_VERSION);
+        expect.that(dao1.toString()).isEqualTo(expected);
     }
 
     @Test
     public void testGetRowId() {
-        final String expected = String.format("Measurement_Rollback_%s_0", USER1);
-        assertThat(getRowId(USER1, AdServicesManager.MEASUREMENT_DELETION)).isEqualTo(expected);
+        String expected = String.format("Measurement_Rollback_%s_0", ID);
+        expect.that(getRowId(ID, AdServicesManager.MEASUREMENT_DELETION)).isEqualTo(expected);
 
         assertThrows(
                 NullPointerException.class,
@@ -132,31 +116,31 @@ public class AppSearchMeasurementRollbackDaoTest {
 
     @Test
     public void testGetQuery() {
-        String expected = "userId:" + USER1;
-        assertThat(AppSearchMeasurementRollbackDao.getQuery(USER1)).isEqualTo(expected);
+        String expected = "userId:" + ID;
+        expect.that(AppSearchMeasurementRollbackDao.getQuery(ID)).isEqualTo(expected);
     }
 
     @Test
     public void testReadDocument_invalidInputs() {
-            assertThrows(
-                    NullPointerException.class,
-                    () ->
-                            AppSearchMeasurementRollbackDao.readDocument(
-                                    null, mExecutor, USER1, mAdServicePackageName));
-            assertThrows(
-                    NullPointerException.class,
-                    () ->
-                            AppSearchMeasurementRollbackDao.readDocument(
-                                    mAppSearchSession, null, USER1, mAdServicePackageName));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        AppSearchMeasurementRollbackDao.readDocument(
+                                null, mExecutor, ID, mAdServicePackageName));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        AppSearchMeasurementRollbackDao.readDocument(
+                                mAppSearchSession, null, ID, mAdServicePackageName));
             assertThrows(
                     NullPointerException.class,
                     () ->
                             AppSearchMeasurementRollbackDao.readDocument(
                                     mAppSearchSession, mExecutor, null, mAdServicePackageName));
-            assertThat(
-                            AppSearchMeasurementRollbackDao.readDocument(
-                                    mAppSearchSession, mExecutor, "", mAdServicePackageName))
-                    .isNull();
+        expect.that(
+                        AppSearchMeasurementRollbackDao.readDocument(
+                                mAppSearchSession, mExecutor, "", mAdServicePackageName))
+                .isNull();
     }
 
     @Test
@@ -169,18 +153,18 @@ public class AppSearchMeasurementRollbackDaoTest {
                                     AppSearchDao.readAppSearchSessionData(
                                             any(), any(), any(), any(), any(), any()));
 
-            AppSearchMeasurementRollbackDao returned =
-                    AppSearchMeasurementRollbackDao.readDocument(
-                            mAppSearchSession, mExecutor, USER1, mAdServicePackageName);
-            assertThat(returned).isEqualTo(mockDao);
-            verify(
-                    () ->
-                            AppSearchDao.readAppSearchSessionData(
-                                    eq(AppSearchMeasurementRollbackDao.class),
-                                    eq(mAppSearchSession),
-                                    eq(mExecutor),
-                                    eq(AppSearchMeasurementRollbackDao.NAMESPACE),
-                                    eq(AppSearchMeasurementRollbackDao.getQuery(USER1)),
-                                    eq(mAdServicePackageName)));
+        AppSearchMeasurementRollbackDao returned =
+                AppSearchMeasurementRollbackDao.readDocument(
+                        mAppSearchSession, mExecutor, ID, mAdServicePackageName);
+        expect.that(returned).isEqualTo(mockDao);
+        verify(
+                () ->
+                        AppSearchDao.readAppSearchSessionData(
+                                eq(AppSearchMeasurementRollbackDao.class),
+                                eq(mAppSearchSession),
+                                eq(mExecutor),
+                                eq(AppSearchMeasurementRollbackDao.NAMESPACE),
+                                eq(AppSearchMeasurementRollbackDao.getQuery(ID)),
+                                eq(mAdServicePackageName)));
     }
 }

@@ -68,6 +68,9 @@ class ReportEventDisabledImpl extends EventReporter {
     public void reportInteraction(
             @NonNull ReportInteractionInput input, @NonNull ReportInteractionCallback callback) {
         sLogger.v(API_DISABLED_MESSAGE);
-        notifyFailureToCaller(callback, new IllegalStateException(API_DISABLED_MESSAGE));
+        notifyFailureToCaller(
+                input.getCallerPackageName(),
+                callback,
+                new IllegalStateException(API_DISABLED_MESSAGE));
     }
 }

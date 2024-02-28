@@ -18,7 +18,7 @@ package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
-import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
@@ -127,7 +127,7 @@ public class AdSelectionDevOverridesHelper {
      * {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
-    public Map<AdTechIdentifier, String> getBuyersDecisionLogicOverride(
+    public Map<AdTechIdentifier, String> getPerBuyerDecisionLogicOverride(
             @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
@@ -135,7 +135,7 @@ public class AdSelectionDevOverridesHelper {
             return null;
         }
         return mAdSelectionEntryDao
-                .getBuyersDecisionLogicOverride(
+                .getPerBuyerDecisionLogicOverride(
                         calculateAdSelectionConfigId(adSelectionConfig),
                         mDevContext.getCallingAppPackageName())
                 .stream()
@@ -177,7 +177,7 @@ public class AdSelectionDevOverridesHelper {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull BuyersDecisionLogic buyersDecisionLogic) {
+            @NonNull PerBuyerDecisionLogic perBuyerDecisionLogic) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
 
@@ -194,7 +194,7 @@ public class AdSelectionDevOverridesHelper {
                         .build());
 
         List<DBBuyerDecisionOverride> dbBuyerDecisionOverrideList =
-                buyersDecisionLogic.getLogicMap().entrySet().stream()
+                perBuyerDecisionLogic.getPerBuyerLogicMap().entrySet().stream()
                         .map(
                                 x ->
                                         DBBuyerDecisionOverride.builder()
@@ -205,7 +205,7 @@ public class AdSelectionDevOverridesHelper {
                                                         mDevContext.getCallingAppPackageName())
                                                 .build())
                         .collect(Collectors.toList());
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(dbBuyerDecisionOverrideList);
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(dbBuyerDecisionOverrideList);
     }
 
     /**

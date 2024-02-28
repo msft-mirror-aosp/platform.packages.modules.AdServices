@@ -47,7 +47,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportingFallba
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 
 /** Measurement Service */
 // TODO(b/269798827): Enable for R.
@@ -61,7 +61,7 @@ public class MeasurementService extends Service {
     public void onCreate() {
         super.onCreate();
         Flags flags = FlagsFactory.getFlags();
-        if (flags.getMeasurementKillSwitch()) {
+        if (!flags.getMeasurementEnabled()) {
             LogUtil.e("Measurement API is disabled");
             return;
         }
@@ -76,8 +76,8 @@ public class MeasurementService extends Service {
             mMeasurementService =
                     new MeasurementServiceImpl(
                             this,
-                            Clock.SYSTEM_CLOCK,
-                            ConsentManager.getInstance(this),
+                            Clock.getInstance(),
+                            ConsentManager.getInstance(),
                             new CachedFlags(flags),
                             appImportanceFilter);
         }
@@ -90,7 +90,7 @@ public class MeasurementService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        if (FlagsFactory.getFlags().getMeasurementKillSwitch()) {
+        if (!FlagsFactory.getFlags().getMeasurementEnabled()) {
             LogUtil.e("Measurement API is disabled");
             // Return null so that clients can not bind to the service.
             return null;
@@ -99,9 +99,7 @@ public class MeasurementService extends Service {
     }
 
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this)
-                .getConsent(AdServicesApiType.MEASUREMENTS)
-                .isGiven();
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
     private void schedulePeriodicJobsIfNeeded() {

@@ -15,6 +15,11 @@
  */
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
+import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_GENERIC_ERROR;
+import static com.android.adservices.service.shell.AbstractShellCommand.RESULT_OK;
+import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
+
 import android.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -22,6 +27,8 @@ import android.util.Log;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
+
+import com.google.common.collect.ImmutableMap;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -39,11 +46,13 @@ import java.util.Objects;
  * <p>By convention, methods implementing commands should be prefixed with {@code run}.
  */
 public final class AdServicesShellCommandHandler {
+    @VisibleForTesting static final String ERROR_EMPTY_COMMAND = "Must provide a non-empty command";
 
     @VisibleForTesting static final String CMD_SHORT_HELP = "-h";
     @VisibleForTesting static final String CMD_HELP = "help";
-    @VisibleForTesting static final String CMD_ECHO = "echo";
 
+    // TODO(b/308009734): Move CMD_IS_ALLOWED_XXX constants and shell commands to
+    // CommonShellCommandFactory
     @VisibleForTesting
     static final String CMD_IS_ALLOWED_ATTRIBUTION_ACCESS = "is-allowed-attribution-access";
 
@@ -52,50 +61,77 @@ public final class AdServicesShellCommandHandler {
             "is-allowed-custom-audiences-access";
 
     @VisibleForTesting
-    static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
+    static final String CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS =
+            "is-allowed-protected-signals-access";
 
     @VisibleForTesting
-    static final String HELP_ECHO =
-            CMD_ECHO + " <message> - prints the given message (useful to check cmd is working).";
+    static final String CMD_IS_ALLOWED_AD_SELECTION_ACCESS = "is-allowed-ad-selection-access";
+
+    @VisibleForTesting
+    static final String CMD_IS_ALLOWED_TOPICS_ACCESS = "is-allowed-topics-access";
 
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_ATTRIBUTION_ACCESS =
             CMD_IS_ALLOWED_ATTRIBUTION_ACCESS
-                    + " <package_name> <enrollment_id> - checks if the given enrollment id is"
-                    + " allowed to use the Attribution APIs in the given app.";
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Attribution "
+                    + "APIs in the given app.";
 
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS =
             CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS
-                    + " <package_name> <enrollment_id> - checks if the given enrollment id is"
-                    + " allowed to use the Custom Audience APIs in the given app.";
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Custom "
+                    + "Audience APIs in the given app.";
+
+    @VisibleForTesting
+    static final String HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS =
+            CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Protected "
+                    + "Signals APIs in the given app.";
+
+    @VisibleForTesting
+    static final String HELP_IS_ALLOWED_AD_SELECTION_ACCESS =
+            CMD_IS_ALLOWED_AD_SELECTION_ACCESS
+                    + " <package_name> <enrollment_id>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Ad "
+                    + "Selection APIs in the given app.";
 
     @VisibleForTesting
     static final String HELP_IS_ALLOWED_TOPICS_ACCESS =
             CMD_IS_ALLOWED_TOPICS_ACCESS
-                    + " <package_name> <enrollment_id> <using_sdk_sandbox>- checks if the given"
-                    + " enrollment id is allowed to use the Topics APIs in the given app, when"
-                    + " using SDK sandbox or not.";
-
-    @VisibleForTesting static final String ERROR_EMPTY_COMMAND = "Must provide a non-empty command";
-
-    @VisibleForTesting
-    static final String ERROR_TEMPLATE_INVALID_ARGS = "Invalid cmd (%s). Syntax: %s";
+                    + " <package_name> <enrollment_id> <using_sdk_sandbox>\n"
+                    + "    Checks if the given enrollment id is allowed to use the Topics APIs in"
+                    + " the given app, when using SDK sandbox or not.";
 
     // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    private static final String TAG = "AdServicesShellCmd";
+    static final String TAG = "AdServicesShellCmd";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
-    private static final int RESULT_OK = 0;
-    private static final int RESULT_GENERIC_ERROR = -1;
-
+    private static final ShellCommandFactory COMMON_SHELL_COMMAND_FACTORY =
+            CommonShellCommandFactory.getInstance();
     private final PrintWriter mOut;
-
+    private final PrintWriter mErr;
+    private final ImmutableMap<String, ShellCommandFactory> mShellCommandFactories;
     private String[] mArgs;
     private int mArgPos;
     private String mCurArgData;
 
-    public AdServicesShellCommandHandler(PrintWriter out) {
+    /** If PrintWriter {@code err} is not provided, we use {@code out} for the {@code err}. */
+    public AdServicesShellCommandHandler(
+            PrintWriter out, ShellCommandFactorySupplier shellCommandFactorySupplier) {
+        this(out, /* err= */ out, shellCommandFactorySupplier);
+    }
+
+    public AdServicesShellCommandHandler(
+            PrintWriter out,
+            PrintWriter err,
+            ShellCommandFactorySupplier shellCommandFactorySupplier) {
         mOut = Objects.requireNonNull(out, "out cannot be null");
+        mErr = Objects.requireNonNull(err, "err cannot be null");
+        Objects.requireNonNull(
+                shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
+        mShellCommandFactories = shellCommandFactorySupplier.getShellCommandFactories();
     }
 
     /** Runs the given command ({@code args[0]}) and optional arguments */
@@ -117,13 +153,14 @@ public final class AdServicesShellCommandHandler {
             }
         } catch (Throwable e) {
             // TODO(b/308009734): need to test this
-            mOut.printf("Exception occurred while executing %s\n", Arrays.toString(mArgs));
+            mErr.printf("Exception occurred while executing %s\n", Arrays.toString(mArgs));
             e.printStackTrace(mOut);
         } finally {
             if (DEBUG) {
                 Log.d(TAG, "Flushing output");
             }
             mOut.flush();
+            mErr.flush();
         }
         if (DEBUG) {
             Log.d(TAG, "Sending command result: " + res);
@@ -134,7 +171,6 @@ public final class AdServicesShellCommandHandler {
     /******************
      * Helper methods *
      ******************/
-
     @Nullable
     private String getNextArg() {
         if (mArgs == null) {
@@ -173,7 +209,7 @@ public final class AdServicesShellCommandHandler {
     }
 
     private int invalidArgsError(String syntax) {
-        mOut.println(String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax));
+        mErr.printf(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(mArgs), syntax);
         return RESULT_GENERIC_ERROR;
     }
 
@@ -181,46 +217,50 @@ public final class AdServicesShellCommandHandler {
      * Commands - for each new one, add onHelp(), onCommand(), and runCommand() *
      ****************************************************************************/
 
-    private void onHelp() {
-        mOut.println(HELP_ECHO);
-        mOut.println(HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
-        mOut.println(HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
-        mOut.println(HELP_IS_ALLOWED_TOPICS_ACCESS);
+    private static void onHelp(PrintWriter pw) {
+        pw.printf("%s\n\n", HELP_ECHO);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_ATTRIBUTION_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_AD_SELECTION_ACCESS);
+        pw.printf("%s\n\n", HELP_IS_ALLOWED_TOPICS_ACCESS);
+        pw.printf("%s\n\n", CustomAudienceListCommand.HELP);
+        pw.printf("%s\n\n", CustomAudienceViewCommand.HELP);
     }
 
     private int onCommand(String cmd) {
         switch (cmd) {
             case CMD_SHORT_HELP:
             case CMD_HELP:
-                onHelp();
-                return RESULT_GENERIC_ERROR;
+                onHelp(mOut);
+                return RESULT_OK;
             case "":
-                mOut.println(ERROR_EMPTY_COMMAND);
+                mErr.println(ERROR_EMPTY_COMMAND);
                 return RESULT_GENERIC_ERROR;
-            case CMD_ECHO:
-                return runEcho();
             case CMD_IS_ALLOWED_ATTRIBUTION_ACCESS:
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
+            case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 return runIsAllowedApiAccess(cmd);
             default:
-                mOut.printf("Unknown command: %s\n", cmd);
-                return RESULT_GENERIC_ERROR;
-        }
-    }
+                // TODO (b/308009734): Move other shell commands implement ICommand interface.
+                ShellCommand shellCommand;
+                if (mShellCommandFactories.containsKey(cmd)) {
+                    ShellCommandFactory shellCommandFactory = mShellCommandFactories.get(cmd);
+                    String subCommand = getNextArg();
+                    shellCommand = shellCommandFactory.getShellCommand(subCommand);
+                } else {
+                    shellCommand = COMMON_SHELL_COMMAND_FACTORY.getShellCommand(cmd);
+                }
 
-    private int runEcho() {
-        if (!hasExactNumberOfArgs(1)) {
-            return invalidArgsError(HELP_ECHO);
+                if (shellCommand == null) {
+                    mErr.printf("Unknown command: %s\n", cmd);
+                    mErr.println("Use -h for help.");
+                    return RESULT_GENERIC_ERROR;
+                }
+                return shellCommand.run(mOut, mErr, mArgs);
         }
-        String message = getNextArg();
-        if (TextUtils.isEmpty(message)) {
-            return invalidArgsError(HELP_ECHO);
-        }
-
-        Log.i(TAG, "runEcho: message='" + message + "'");
-        mOut.println(message);
-        return RESULT_OK;
     }
 
     private int runIsAllowedApiAccess(String cmd) {
@@ -232,6 +272,12 @@ public final class AdServicesShellCommandHandler {
                 break;
             case CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS:
                 helpMsg = HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+                break;
+            case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
+                helpMsg = HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+                break;
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
+                helpMsg = HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
                 break;
             case CMD_IS_ALLOWED_TOPICS_ACCESS:
                 expectedArgs = 3;
@@ -270,6 +316,30 @@ public final class AdServicesShellCommandHandler {
                 Log.i(
                         TAG,
                         "isAllowedCustomAudiencesAccess("
+                                + pkgName
+                                + ", "
+                                + enrollmentId
+                                + ": "
+                                + isValid);
+                break;
+            case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
+                isValid =
+                        AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
+                                pkgName, enrollmentId);
+                Log.i(
+                        TAG,
+                        "isAllowedProtectedSignalsAccess("
+                                + pkgName
+                                + ", "
+                                + enrollmentId
+                                + ": "
+                                + isValid);
+                break;
+            case CMD_IS_ALLOWED_AD_SELECTION_ACCESS:
+                isValid = AppManifestConfigHelper.isAllowedAdSelectionAccess(pkgName, enrollmentId);
+                Log.i(
+                        TAG,
+                        "isAllowedAdSelectionAccess("
                                 + pkgName
                                 + ", "
                                 + enrollmentId

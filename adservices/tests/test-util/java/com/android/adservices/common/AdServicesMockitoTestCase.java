@@ -15,7 +15,11 @@
  */
 package com.android.adservices.common;
 
+import android.content.Context;
+
 import org.junit.Rule;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
@@ -25,6 +29,11 @@ import org.mockito.quality.Strictness;
  * those, use {@link AdServicesExtendedMockitoTestCase} instead)
  */
 public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
+
+    @Mock public Context mMockContext;
+
+    /** Spy the {@link AdServicesUnitTestCase#sContext} */
+    @Spy protected final Context mSpyContext = sContext;
 
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);

@@ -23,8 +23,11 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -38,6 +41,9 @@ public class UpdateEncoderTest {
     private final Uri mEndpointUri = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/encoder");
 
     private UpdateEncoder mUpdateEncoder = new UpdateEncoder();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testGetName() {

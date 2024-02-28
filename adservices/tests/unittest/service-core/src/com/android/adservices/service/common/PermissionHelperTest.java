@@ -152,27 +152,38 @@ public class PermissionHelperTest {
 
     @Test
     public void testHasPermission_notUseSandboxCheck() {
-        Context mockContext = getMockContext(ACCESS_ADSERVICES_TOPICS, mMockPackageManagerGrant);
+        Context topicsMockContext =
+                getMockContext(ACCESS_ADSERVICES_TOPICS, mMockPackageManagerGrant);
         assertThat(
                         PermissionHelper.hasTopicsPermission(
-                                mockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
+                                topicsMockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
                 .isTrue();
-        Context mockContext1 = getMockContext(ACCESS_ADSERVICES_AD_ID, mMockPackageManagerGrant);
+        Context adIdMockContext = getMockContext(ACCESS_ADSERVICES_AD_ID, mMockPackageManagerGrant);
         assertThat(
                         PermissionHelper.hasAdIdPermission(
-                                mockContext1, APP_PACKAGE_NAME, APP_CALLING_UID))
+                                adIdMockContext, APP_PACKAGE_NAME, APP_CALLING_UID))
                 .isTrue();
-        Context mockContext2 =
+        Context attributionMockContext =
                 getMockContext(ACCESS_ADSERVICES_ATTRIBUTION, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasAttributionPermission(mockContext2, APP_PACKAGE_NAME))
-                .isTrue();
-        Context mockContext3 =
+        Context CustomAudienceMockContext =
                 getMockContext(ACCESS_ADSERVICES_CUSTOM_AUDIENCE, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext3, APP_PACKAGE_NAME))
+        assertThat(
+                        PermissionHelper.hasPermission(
+                                CustomAudienceMockContext,
+                                APP_PACKAGE_NAME,
+                                ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
                 .isTrue();
-        Context mockContext4 =
+        Context signalsMockContext =
                 getMockContext(ACCESS_ADSERVICES_PROTECTED_SIGNALS, mMockPackageManagerGrant);
-        assertThat(PermissionHelper.hasProtectedSignalsPermission(mockContext4, APP_PACKAGE_NAME))
+        assertThat(
+                        PermissionHelper.hasPermission(
+                                signalsMockContext,
+                                APP_PACKAGE_NAME,
+                                ACCESS_ADSERVICES_PROTECTED_SIGNALS))
+                .isTrue();
+        assertThat(
+                        PermissionHelper.hasAttributionPermission(
+                                attributionMockContext, APP_PACKAGE_NAME))
                 .isTrue();
     }
 
@@ -189,9 +200,13 @@ public class PermissionHelperTest {
                 .isFalse();
         assertThat(PermissionHelper.hasAttributionPermission(mockContext, APP_PACKAGE_NAME))
                 .isFalse();
-        assertThat(PermissionHelper.hasCustomAudiencesPermission(mockContext, APP_PACKAGE_NAME))
+        assertThat(
+                        PermissionHelper.hasPermission(
+                                mockContext, APP_PACKAGE_NAME, ACCESS_ADSERVICES_CUSTOM_AUDIENCE))
                 .isFalse();
-        assertThat(PermissionHelper.hasProtectedSignalsPermission(mockContext, APP_PACKAGE_NAME))
+        assertThat(
+                        PermissionHelper.hasPermission(
+                                mockContext, APP_PACKAGE_NAME, ACCESS_ADSERVICES_PROTECTED_SIGNALS))
                 .isFalse();
         assertThat(PermissionHelper.hasAccessAdServicesStatePermission(mockContext)).isFalse();
         assertThat(PermissionHelper.hasModifyAdServicesStatePermission(mockContext)).isFalse();

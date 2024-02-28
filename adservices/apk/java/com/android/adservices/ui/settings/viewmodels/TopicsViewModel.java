@@ -64,7 +64,7 @@ public class TopicsViewModel extends AndroidViewModel {
 
     public TopicsViewModel(@NonNull Application application) {
         super(application);
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mTopics = new MutableLiveData<>(getTopicsFromConsentManager());
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
         mTopicsConsent =
@@ -199,7 +199,7 @@ public class TopicsViewModel extends AndroidViewModel {
         }
         mTopicsConsent.postValue(getTopicsConsentFromConsentManager());
         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance(getApplication())
+            ConsentManager.getInstance()
                     .recordUserManualInteractionWithConsent(
                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         }

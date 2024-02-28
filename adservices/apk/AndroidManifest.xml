@@ -275,6 +275,15 @@
             </intent-filter>
         </service>
 
+        <service android:name="com.android.adservices.shell.AdServicesShellCommandService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false"
+        >
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.SHELL_COMMAND_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <!-- Daily maintenance Job. -->
         <service android:name="com.android.adservices.service.MaintenanceJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
@@ -365,6 +374,12 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- FLEDGE Ad selection debug report sender Job -->
         <service android:name=
                      "com.android.adservices.service.adselection.DebugReportSenderJobService"
@@ -374,6 +389,18 @@
         <!-- FLEDGE Protected Signals periodic encoding job -->
         <service android:name=
                      "com.android.adservices.service.signals.PeriodicEncodingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE KAnon sign join background job -->
+        <service android:name=
+                     "com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE Background Key Fetch Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
@@ -436,3 +463,4 @@
         />
     </application>
 </manifest>
+
