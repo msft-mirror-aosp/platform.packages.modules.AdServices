@@ -57,6 +57,7 @@ import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntit
 import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -123,9 +124,7 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     private final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
     private final int SIGN_BATCH_SIZE;
-    // TODO(b/324536970): Control this via flag
-    private final String BINARY_HTTP_AUTHORITY_URL =
-            "staging-chromekanonymity-pa.sandbox.googleapis.com";
+    private final String BINARY_HTTP_AUTHORITY_URL;
     private final String JOIN_VERSION = "v2";
     private final String BB_SIGNATURE_JSON_KEY = "bb_signature";
     private final String NONCE_BYTES_JSON_KEY = "nonce_bytes";
@@ -181,6 +180,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                         .build();
         mFlags = flags;
         SIGN_BATCH_SIZE = mFlags.getFledgeKAnonSignBatchSize();
+        BINARY_HTTP_AUTHORITY_URL = mFlags.getFledgeKAnonUrlAuthorityToJoin();
         SET_TYPE = mFlags.getFledgeKAnonSetTypeToSignJoin();
         mAdServicesHttpsClient = adServicesHttpsClient;
         mSchemeParameters = KAnonUtil.getSchemeParameters();
@@ -204,6 +204,8 @@ public class KAnonCallerImpl implements KAnonCaller {
      */
     @Override
     public void signAndJoinMessages(List<KAnonMessageEntity> messageEntities) {
+        Preconditions.checkArgument(messageEntities.size() > 0);
+
         ListenableFuture<Void> signJoinFuture =
                 FluentFuture.from(initializeClientAndServerParameters())
                         .transformAsync(

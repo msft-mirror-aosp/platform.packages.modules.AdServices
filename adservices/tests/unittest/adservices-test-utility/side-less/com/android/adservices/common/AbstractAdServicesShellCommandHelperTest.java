@@ -37,8 +37,9 @@ public final class AbstractAdServicesShellCommandHelperTest {
     private static final String CMD_ECHO = "echo";
     private static final String CMD_ECHO_OUT = "hello";
     private static final String SAMPLE_DUMPSYS_OUTPUT =
-            "com.google.android.adservices.api/com.android.adservices.shell"
-                    + ".AdServicesShellCommandService 4e0649c pid=5303 user=0\nClient:\n"
+            "TASK 10145:com.google.android.ext.services id=13 userId=0\nACTIVITY com.google"
+                    + ".android.ext.services/com.android.adservices.shell.ShellCommandActivity "
+                    + "a3ccaeb pid=6721\n"
                     + CMD_ECHO_OUT;
 
     @Rule public final Expect expect = Expect.create();
@@ -58,8 +59,10 @@ public final class AbstractAdServicesShellCommandHelperTest {
     @Test
     public void testParseResultFromDumpsys_fails() {
         String input =
-                "com.google.android.adservices.api/com.android.adservices.shell"
-                        + ".AdServicesShellCommandService 4e0649c pid=5303 user=0:\n hello";
+                "TASK 10145:com.google.android.ext.services id=13 userId=0\n"
+                    + "ACTIVITY"
+                    + " com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity"
+                    + " a3ccaeb pid=6721";
 
         String res = mAdServicesShellCommandHelper.parseResultFromDumpsys(input);
 
@@ -168,8 +171,6 @@ public final class AbstractAdServicesShellCommandHelperTest {
                 return CMD_ECHO_OUT;
             } else if (cmd.equals(ADSERVICES_MANAGER_SERVICE_CHECK)) {
                 return mUsesSdkSandbox ? " not found" : "found";
-            } else if (cmd.equals(START_SHELL_COMMAND_SERVICE)) {
-                return "started";
             } else if (cmd.equals(
                     runDumpsysShellCommand(String.format("%s %s", CMD_ECHO, CMD_ECHO_OUT)))) {
                 return SAMPLE_DUMPSYS_OUTPUT;
