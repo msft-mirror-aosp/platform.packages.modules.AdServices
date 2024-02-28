@@ -4688,6 +4688,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value of k-anon fetch server parameters url. */
     String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL = "";
 
+    /** Default value of k-anon get challenge url. */
+    String FLEDGE_DEFAULT_GET_CHALLENGE_URL = "";
+
     /** Default value of k-anon register client parameters url. */
     String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL = "";
 
@@ -4721,6 +4724,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value for kanon logging flag */
     boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED = false;
 
+    /** Default value for kanon key attestation feature flag */
+    boolean FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED = false;
+
     /** Default value for kanon sign join set type */
     String FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN = "fledge";
 
@@ -4741,6 +4747,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default String getFledgeKAnonFetchServerParamsUrl() {
         return FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch server parameters during k-anon
+     * sign call
+     *
+     * @return kanon fetch server params url.
+     */
+    default String getFledgeKAnonGetChallengeUrl() {
+        return FLEDGE_DEFAULT_GET_CHALLENGE_URL;
     }
 
     /**
@@ -4826,6 +4842,15 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getFledgeKAnonLoggingEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
                 && FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED;
+    }
+
+    /**
+     * This method return {@code true} if the KAnon Key attestaion is enabled, {@code false}
+     * otherwise.
+     */
+    default boolean getFledgeKAnonKeyAttestationEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED;
     }
 
     /**

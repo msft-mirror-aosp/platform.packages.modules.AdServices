@@ -28,6 +28,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BAC
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
@@ -5772,6 +5773,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonLoggingEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED
+                        + " = "
+                        + getFledgeKAnonKeyAttestationEnabled());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN
                         + " = "
                         + getFledgeKAnonSetTypeToSignJoin());
@@ -6800,6 +6806,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getFledgeKAnonGetChallengeUrl() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ANON_GET_CHALLENGE_URl,
+                /* defaultValue */ FLEDGE_DEFAULT_GET_CHALLENGE_URL);
+    }
+
+    @Override
     public String getFledgeKAnonRegisterClientParametersUrl() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -6887,6 +6901,15 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         FlagsConstants.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED,
                         /* defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonKeyAttestationEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED,
+                        /* defaultValue */ FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED);
     }
 
     @Override
