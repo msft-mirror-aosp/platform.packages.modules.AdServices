@@ -650,6 +650,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PER
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
@@ -10533,6 +10534,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Boolean.toString(phOverridingValue), KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED);
 
         assertThat(mPhFlags.getFledgeKAnonBackgroundProcessEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testKAnonSignJoinLoggingEnabled() {
+        // Set KAnon feature flag to true.
+        setFledgeAuctionServerEnabled(true);
+        overrideKAnonFlags(Boolean.toString(true), KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE);
+        assertThat(mPhFlags.getFledgeKAnonSignJoinFeatureEnabled()).isTrue();
+        assertThat(mPhFlags.getFledgeKAnonLoggingEnabled())
+                .isEqualTo(FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
+
+        boolean phOverridingValue = true;
+        overrideKAnonFlags(
+                Boolean.toString(phOverridingValue), KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED);
+
+        assertThat(mPhFlags.getFledgeKAnonLoggingEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test

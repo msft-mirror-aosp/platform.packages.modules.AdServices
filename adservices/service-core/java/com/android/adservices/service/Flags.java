@@ -4718,6 +4718,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value for kanon background process flag */
     boolean FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED = false;
 
+    /** Default value for kanon logging flag */
+    boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED = false;
+
     /** Default value for kanon sign join set type */
     String FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN = "fledge";
 
@@ -4809,11 +4812,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /**
      * This method returns {@code true} if the kanon background process is enabled, {@code false}
-     * otherwise
+     * otherwise.
      */
     default boolean getFledgeKAnonBackgroundProcessEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
                 && FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED;
+    }
+
+    /**
+     * This method returns {@code true} if the telemetry logging for kanon is enabled, {@code false}
+     * otherwise.
+     */
+    default boolean getFledgeKAnonLoggingEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED;
     }
 
     /**

@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.kanon;
 
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_CLIENT;
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_SERVER;
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS;
+
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.CONTENT_LENGTH_HDR;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_OHTTP_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
@@ -33,7 +37,9 @@ import android.annotation.Nullable;
 import android.net.Uri;
 import android.util.Pair;
 
+
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.kanon.ClientParametersDao;
 import com.android.adservices.data.kanon.DBClientParameters;
 import com.android.adservices.data.kanon.DBServerParameters;
@@ -55,6 +61,10 @@ import com.android.adservices.service.exception.KAnonSignJoinException;
 import com.android.adservices.service.exception.KAnonSignJoinException.KAnonAction;
 import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
+import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -102,6 +112,7 @@ import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 
 public class KAnonCallerImpl implements KAnonCaller {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
     @NonNull private ObliviousHttpEncryptor mKAnonObliviousHttpEncryptor;
     @NonNull private ListeningExecutorService mLightweightExecutorService;
@@ -216,11 +227,15 @@ public class KAnonCallerImpl implements KAnonCaller {
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
+                        // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
+                        // for testing.
                         mAdServicesLogger.logKAnonSignJoinStatus();
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
+                        // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
+                        // for testing.
                         mAdServicesLogger.logKAnonSignJoinStatus();
                     }
                 },
@@ -232,15 +247,52 @@ public class KAnonCallerImpl implements KAnonCaller {
      * calls.
      */
     private ListenableFuture<Void> initializeClientAndServerParameters() {
+        long startTime = Instant.now().toEpochMilli();
         return FluentFuture.from(getOrUpdateServerAndClientParameters())
+                .transformAsync(
+                        ignoredVoid -> {
+                            if (mFlags.getFledgeKAnonLoggingEnabled()) {
+                                long latency = Instant.now().toEpochMilli() - startTime;
+                                KAnonInitializeStatusStats kAnonInitializeStatusStats =
+                                        KAnonInitializeStatusStats.builder()
+                                                .setWasSuccessful(true)
+                                                .setLatencyInMs((int) latency)
+                                                .build();
+                                mAdServicesLogger.logKAnonInitializeStats(
+                                        kAnonInitializeStatusStats);
+                            }
+                            return immediateVoidFuture();
+                        },
+                        mLightweightExecutorService)
                 .catchingAsync(
                         Throwable.class,
                         e -> {
-                            if (e.getCause() instanceof KAnonSignJoinException exception) {
-                                LogUtil.d("Client and server parameters couldn't be initialized");
-                                LogUtil.d("Failed during: " + exception.getAction());
-                            } else {
-                                LogUtil.d("Failed due to unknown error");
+                            if (mFlags.getFledgeKAnonLoggingEnabled()) {
+                                long latency = Instant.now().toEpochMilli() - startTime;
+                                boolean wasSuccessful = false;
+                                int action = KAnonSignJoinStatsConstants.KANON_ACTION_UNSET;
+                                int actionFailureReason =
+                                        KAnonSignJoinStatsConstants
+                                                .KANON_ACTION_FAILURE_REASON_UNKNOWN_ERROR;
+
+                                if (e instanceof KAnonSignJoinException exception) {
+                                    sLogger.d(
+                                            "Client and server parameters couldn't be initialized."
+                                                    + " Failed during "
+                                                    + exception.getAction());
+                                    action = exception.getAction().ordinal();
+                                    actionFailureReason =
+                                            getActionFailureReasonFromException(exception);
+                                }
+                                KAnonInitializeStatusStats kAnonInitializeStatusStats =
+                                        KAnonInitializeStatusStats.builder()
+                                                .setWasSuccessful(wasSuccessful)
+                                                .setLatencyInMs((int) latency)
+                                                .setKAnonAction(action)
+                                                .setKAnonActionFailureReason(actionFailureReason)
+                                                .build();
+                                mAdServicesLogger.logKAnonInitializeStats(
+                                        kAnonInitializeStatusStats);
                             }
                             return immediateFailedFuture(e);
                         },
@@ -270,17 +322,51 @@ public class KAnonCallerImpl implements KAnonCaller {
     }
 
     private ListenableFuture<TokensSet> signRequest(List<KAnonMessageEntity> messageEntities) {
+        long signRequestStartTime = Instant.now().toEpochMilli();
         return FluentFuture.from(performSignRequest(messageEntities))
+                .transformAsync(
+                        tokensSet -> {
+                            if (mFlags.getFledgeKAnonLoggingEnabled()) {
+                                long latency = Instant.now().toEpochMilli() - signRequestStartTime;
+                                KAnonSignStatusStats kAnonSignStatusStats =
+                                        KAnonSignStatusStats.builder()
+                                                .setWasSuccessful(true)
+                                                .setBatchSize(messageEntities.size())
+                                                .setLatencyInMs((int) latency)
+                                                .build();
+                                mAdServicesLogger.logKAnonSignStats(kAnonSignStatusStats);
+                            }
+                            return immediateFuture(tokensSet);
+                        },
+                        mLightweightExecutorService)
                 .catchingAsync(
                         Throwable.class,
                         e -> {
-                            if (e.getCause() instanceof KAnonSignJoinException exception) {
-                                LogUtil.d("Error while performing sign requests");
-                                LogUtil.d("Failed during: " + exception.getAction());
-                            } else {
-                                LogUtil.d("Failed due to unknown error");
+                            if (mFlags.getFledgeKAnonLoggingEnabled()) {
+                                long latency = Instant.now().toEpochMilli() - signRequestStartTime;
+                                boolean wasSuccessful = false;
+                                int action = KAnonSignJoinStatsConstants.KANON_ACTION_UNSET;
+                                int actionFailureReason =
+                                        KAnonSignJoinStatsConstants
+                                                .KANON_ACTION_FAILURE_REASON_UNKNOWN_ERROR;
+                                if (e instanceof KAnonSignJoinException exception) {
+                                    sLogger.d(
+                                            "Failure during sign process. Failed during "
+                                                    + exception.getAction());
+                                    action = exception.getAction().ordinal();
+                                    actionFailureReason =
+                                            getActionFailureReasonFromException(exception);
+                                }
+                                KAnonSignStatusStats kAnonSignStatusStats =
+                                        KAnonSignStatusStats.builder()
+                                                .setWasSuccessful(wasSuccessful)
+                                                .setLatencyInMs((int) latency)
+                                                .setKAnonAction(action)
+                                                .setKAnonActionFailureReason(actionFailureReason)
+                                                .setBatchSize(messageEntities.size())
+                                                .build();
+                                mAdServicesLogger.logKAnonSignStats(kAnonSignStatusStats);
                             }
-                            mAdServicesLogger.logKAnonSignJoinStatus();
                             return immediateFailedFuture(e);
                         },
                         mLightweightExecutorService);
@@ -288,20 +374,7 @@ public class KAnonCallerImpl implements KAnonCaller {
 
     private ListenableFuture<Void> joinRequest(
             List<KAnonMessageEntity> messageEntities, TokensSet tokensSet) {
-        return FluentFuture.from(performJoinRequest(messageEntities, tokensSet))
-                .catchingAsync(
-                        Throwable.class,
-                        e -> {
-                            if (e.getCause() instanceof KAnonSignJoinException exception) {
-                                LogUtil.d("Error while making join request");
-                                LogUtil.d("Failed during: " + exception.getAction());
-                            } else {
-                                LogUtil.d("Failed due to unknown error");
-                            }
-                            mAdServicesLogger.logKAnonSignJoinStatus();
-                            return immediateFailedFuture(e);
-                        },
-                        mLightweightExecutorService);
+        return performJoinRequest(messageEntities, tokensSet);
     }
 
     /**
@@ -774,9 +847,43 @@ public class KAnonCallerImpl implements KAnonCaller {
                                             readAndUpdateStatusFromBinaryHttp(
                                                     deserializedJoinRequest, currentMessage),
                                     mLightweightExecutorService)
+                            .transformAsync(
+                                    ignoredVoid -> {
+                                        if (mFlags.getFledgeKAnonLoggingEnabled()) {
+                                            int totalMessages = 1;
+                                            int failedMessages = 0;
+                                            KAnonJoinStatusStats kAnonJoinStatusStats =
+                                                    KAnonJoinStatusStats.builder()
+                                                            .setTotalMessages(totalMessages)
+                                                            .setWasSuccessful(true)
+                                                            .setNumberOfFailedMessages(
+                                                                    failedMessages)
+                                                            .build();
+                                            mAdServicesLogger.logKAnonJoinStats(
+                                                    kAnonJoinStatusStats);
+                                        }
+                                        return immediateVoidFuture();
+                                    },
+                                    mLightweightExecutorService)
                             .catchingAsync(
-                                    KAnonSignJoinException.class,
-                                    Futures::immediateFailedFuture,
+                                    Throwable.class,
+                                    e -> {
+                                        if (mFlags.getFledgeKAnonLoggingEnabled()) {
+                                            boolean wasSuccessful = false;
+                                            int totalMessages = 0;
+                                            int failedMessages = 1;
+                                            KAnonJoinStatusStats kAnonJoinStatusStats =
+                                                    KAnonJoinStatusStats.builder()
+                                                            .setWasSuccessful(wasSuccessful)
+                                                            .setTotalMessages(totalMessages)
+                                                            .setNumberOfFailedMessages(
+                                                                    failedMessages)
+                                                            .build();
+                                            mAdServicesLogger.logKAnonJoinStats(
+                                                    kAnonJoinStatusStats);
+                                        }
+                                        return immediateFailedFuture(e);
+                                    },
                                     mLightweightExecutorService));
         }
         return Futures.whenAllComplete(joinFuturesList)
@@ -902,5 +1009,21 @@ public class KAnonCallerImpl implements KAnonCaller {
                             + binaryHttpMessage.getResponseControlData().getFinalStatusCode(),
                     KAnonAction.BINARY_HTTP_RESPONSE);
         }
+    }
+
+    private int getActionFailureReasonFromException(KAnonSignJoinException exception) {
+        if (exception.getCause() instanceof InvalidProtocolBufferException) {
+            return KAnonSignJoinStatsConstants.KANON_ACTION_FAILURE_REASON_PROTO_PARSE_EXCEPTION;
+        }
+        if (exception.getCause() instanceof AdServicesNetworkException networkException) {
+            if (networkException.getErrorCode() == ERROR_SERVER) {
+                return KAnonSignJoinStatsConstants.KANON_ACTION_FAILURE_REASON_SERVER_EXCEPTION;
+            }
+            if (networkException.getErrorCode() == ERROR_TOO_MANY_REQUESTS
+                    || networkException.getErrorCode() == ERROR_CLIENT) {
+                return KAnonSignJoinStatsConstants.KANON_ACTION_FAILURE_REASON_NETWORK_EXCEPTION;
+            }
+        }
+        return KAnonSignJoinStatsConstants.KANON_ACTION_FAILURE_REASON_INTERNAL_ERROR;
     }
 }
