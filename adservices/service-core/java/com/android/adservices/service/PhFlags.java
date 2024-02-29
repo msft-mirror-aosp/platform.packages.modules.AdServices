@@ -28,12 +28,14 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BAC
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
@@ -855,9 +857,8 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW);
     }
 
-    // TODO(b/326254556): ideally it should be removed and the logic moved to
-    // getMeasurementEnabled(), but this is a legacy flag that also reads system properties, and
-    // the system properties workflow is not unit tested.
+    // TODO(b/326254556): logic will be moved to getMeasurementEnabled() (after new unit tests
+    // are added on PhFlagsSystemPropertyOverrideTest)
     private boolean getMeasurementAttributionFallbackJobKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
@@ -875,8 +876,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getMeasurementAttributionFallbackJobEnabled() {
-        // TODO(b/325144327): ideally logic should be here, but this is a legacy flag that also
-        // reads system properties, and the system properties workflow is not unit tested.
         return !getMeasurementAttributionFallbackJobKillSwitch();
     }
 
@@ -1654,9 +1653,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     // MEASUREMENT Killswitches
 
-    // TODO(b/326254556): ideally it should be removed and the logic moved to
-    // getMeasurementEnabled(), but this is a legacy flag that also reads system properties, and
-    // the system properties workflow is not unit tested.
+    // TODO(b/326254556): logic will be moved to getMeasurementEnabled() (after new unit tests
+    // are added on PhFlagsSystemPropertyOverrideTest)
+    @Override
+    public boolean getLegacyMeasurementKillSwitch() {
+        return getMeasurementKillSwitch();
+    }
+
     private boolean getMeasurementKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
@@ -5765,6 +5768,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonBackgroundProcessEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED
+                        + " = "
+                        + getFledgeKAnonLoggingEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED
+                        + " = "
+                        + getFledgeKAnonKeyAttestationEnabled());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN
                         + " = "
                         + getFledgeKAnonSetTypeToSignJoin());
@@ -6793,6 +6806,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getFledgeKAnonGetChallengeUrl() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ANON_GET_CHALLENGE_URl,
+                /* defaultValue */ FLEDGE_DEFAULT_GET_CHALLENGE_URL);
+    }
+
+    @Override
     public String getFledgeKAnonRegisterClientParametersUrl() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -6871,6 +6892,24 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         FlagsConstants.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
                         /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonLoggingEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED,
+                        /* defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonKeyAttestationEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED,
+                        /* defaultValue */ FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED);
     }
 
     @Override
