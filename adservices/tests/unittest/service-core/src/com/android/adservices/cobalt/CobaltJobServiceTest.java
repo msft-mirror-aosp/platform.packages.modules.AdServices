@@ -20,7 +20,7 @@ import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_API_KEY;
 import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_RELEASE_STAGE;
 import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.common.JobServiceTestHelper.createOnStopJobCallback;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -49,6 +49,7 @@ import android.content.Context;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.BooleanSyncCallback;
 import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -68,6 +69,7 @@ import org.mockito.Spy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@RequiresSdkLevelAtLeastS(reason = "Cobalt is not launching for Android R")
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(CobaltFactory.class)
@@ -95,7 +97,7 @@ public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCas
         doReturn(sJobScheduler).when(mSpyCobaltJobService).getSystemService(JobScheduler.class);
         mockCobaltLoggingFlags();
 
-        mLogger = mockAdservicesJobServiceLogger(sContext, mMockStatsdLogger);
+        mLogger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
     }
 
     @After

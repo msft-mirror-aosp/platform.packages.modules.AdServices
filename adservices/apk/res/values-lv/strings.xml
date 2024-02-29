@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android nosaka, kādas tēmas jūs interesē, ņemot vērā nesen izmantotās lietotnes. Turklāt lietotņu izstrādātāji un to reklamēšanas partneri var izmantot citās šīs ierīces lietotnēs veiktās darbības, lai personalizētu reklāmas, vienlaikus palīdzot aizsargāt jūsu identitāti un tās konfidencialitāti."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• Jūsu izmantotajās lietotnēs var arī noteikt, kas jums patīk, ņemot vērā lietotnēs veiktās darbības. Piemēram, ja regulāri izmantojat kulinārijas lietotnes, citās lietotnēs jums var tikt rādītas pārtikas piegādes pakalpojumu vai saistīta satura reklāmas.\n\nLietotnēs var droši glabāt šo informāciju, lai to varētu izmantot tikai attiecīgie reklamēšanas partneri reklāmu personalizācijai citās lietotnēs."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Vēlāk kādā izmantotajā lietotnē var tikt lūgta šī informācija — vai nu jūsu reklāmu tēmas, vai arī jūsu izmantotajās lietotnēs ieteiktās reklāmas."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Jūsu izmantotās lietotnes var pieprasīt informāciju no operētājsistēmas Android, lai varētu efektīvāk novērtēt reklāmu veiktspēju šajās lietotnēs. Android palīdz aizsargāt jūsu konfidencialitāti, ierobežojot informāciju, ko lietotnes var savstarpēji kopīgot."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

@@ -516,7 +516,9 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
      * clean up cache.
      */
     private void cleanUpCache() {
-        mAdServicesHttpsClient.getAssociatedCache().cleanUp();
+        ListenableFuture<?> unused =
+                mBackgroundExecutorService.submit(
+                        () -> mAdServicesHttpsClient.getAssociatedCache().cleanUp());
     }
 
     private static class AdSelectionContext {

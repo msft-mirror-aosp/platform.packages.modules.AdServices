@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android son kullandığınız uygulamalara bağlı olarak ilgilendiğiniz konuları not eder. Ayrıca, uygulamalar ve uygulamaların reklamcılık iş ortakları, bu cihazda yüklü diğer uygulamalardaki etkinliğinizi kullanarak reklamları kişiselleştirebilir. Bu sırada, kimliğiniz gizli ve güvende tutulur."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• Kullandığınız uygulamalar ayrıca uygulama etkinliğinize bağlı olarak nelerden hoşlandığınızı belirleyebilir. Örneğin, yemek yapma uygulamalarını sık kullanıyorsanız diğer uygulamalarda market siparişi hizmetleri veya alakalı içeriklerle ilgili reklamlar görebilirsiniz.\n\nUygulamalar bu bilgileri güvenli bir şekilde depoladığından söz konu bilgiler yalnızca reklamcılık iş ortakları tarafından diğer uygulamalardaki reklamları kişiselleştirmek için kullanılabilir."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Daha sonra kullandığınız bir uygulama sizden bu bilgileri (reklam konularınız veya kullandığınız uygulamalar tarafından önerilen reklamlar) isteyebilir."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Kullandığınız uygulamalar, gösterdikleri reklamların performansını ölçmelerine yardımcı olmak için Android\'den bilgi isteyebilir. Android, uygulamaların diğer uygulamalarla paylaşabileceği bilgileri sınırlandırarak gizliliğinizi korur."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

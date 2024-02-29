@@ -149,6 +149,11 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
+    public int getContextUserId() {
+        return mContext.getUserId();
+    }
+
+    @Override
     public void testStoragePaths() {
         // Verify CE data directories
         {

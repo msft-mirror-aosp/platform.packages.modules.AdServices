@@ -24,6 +24,8 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.flags.Flags;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -54,7 +56,7 @@ import java.util.Objects;
  *   <li>{@code Strings} get encoded into byte[] using UTF-8 encoding
  * </ul>
  */
-@FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled")
+@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class SignedContextualAds implements Parcelable {
     private static final String BUYER_CANNOT_BE_NULL = "Buyer cannot be null.";
     private static final String DECISION_LOGIC_URI_CANNOT_BE_NULL =
@@ -132,18 +134,6 @@ public final class SignedContextualAds implements Parcelable {
     }
 
     /**
-     * @return a new builder from this SignedContextualAds instance
-     */
-    @NonNull
-    public SignedContextualAds.Builder cloneToBuilder() {
-        return new SignedContextualAds.Builder()
-                .setBuyer(mBuyer)
-                .setDecisionLogicUri(mDecisionLogicUri)
-                .setAdsWithBid(mAdsWithBid)
-                .setSignature(mSignature);
-    }
-
-    /**
      * @return the Ad tech identifier from which this contextual Ad would have been downloaded
      */
     @NonNull
@@ -202,6 +192,16 @@ public final class SignedContextualAds implements Parcelable {
         @Nullable private byte[] mSignature;
 
         public Builder() {}
+
+        /** Returns a {@link SignedContextualAds.Builder} from a {@link SignedContextualAds}. */
+        public Builder(@NonNull SignedContextualAds signedContextualAds) {
+            Objects.requireNonNull(signedContextualAds);
+
+            this.mBuyer = signedContextualAds.getBuyer();
+            this.mDecisionLogicUri = signedContextualAds.getDecisionLogicUri();
+            this.mAdsWithBid = signedContextualAds.getAdsWithBid();
+            this.mSignature = signedContextualAds.getSignature();
+        }
 
         /**
          * Sets the buyer Ad tech Identifier

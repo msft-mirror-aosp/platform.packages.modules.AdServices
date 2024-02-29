@@ -46,6 +46,7 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -70,6 +71,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -201,6 +203,9 @@ public class AdSelectionScriptEngineTest {
 
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
@@ -652,7 +657,8 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false),
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -714,7 +720,8 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false),
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -760,6 +767,7 @@ public class AdSelectionScriptEngineTest {
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
+                        false,
                         false);
         final List<GenerateBidResult> results =
                 generateBidsV3(
@@ -1098,7 +1106,8 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false),
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -1162,7 +1171,8 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false),
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -1224,7 +1234,8 @@ public class AdSelectionScriptEngineTest {
                                 CustomAudienceFixture.VALID_ACTIVATION_TIME,
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
-                                false),
+                                false,
+                                /* auctionServerRequestFlags = */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,

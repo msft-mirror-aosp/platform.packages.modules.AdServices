@@ -15,12 +15,15 @@
  */
 package com.android.adservices.shared.testing.common;
 
+import static com.android.adservices.shared.util.LogUtil.DEBUG;
+import static com.android.adservices.shared.util.LogUtil.VERBOSE;
+
 import android.content.Context;
-import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.util.LogUtil;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -37,9 +40,6 @@ import java.util.Objects;
  * ApplicationContextSingleton}.
  */
 public final class ApplicationContextSingletonRule implements TestRule {
-
-    public static final String TAG = ApplicationContextSingletonRule.class.getSimpleName();
-
     private final Context mContext;
     private final boolean mRestoreAfter;
 
@@ -58,19 +58,25 @@ public final class ApplicationContextSingletonRule implements TestRule {
     public ApplicationContextSingletonRule(Context context, boolean restoreAfter) {
         mContext = Objects.requireNonNull(context, "context cannot be null");
         mRestoreAfter = restoreAfter;
-        Log.v(TAG, "Constructing with " + context + " and restoreAfter=" + restoreAfter);
+        if (VERBOSE) {
+            LogUtil.v("Constructing with %s and restoreAfter=%s", context, restoreAfter);
+        }
     }
 
     /** Convenience method to get the current {@link ApplicationContextSingleton}. */
     public Context get() {
         Context context = ApplicationContextSingleton.getForTests();
-        Log.v(TAG, "get(): " + context);
+        if (VERBOSE) {
+            LogUtil.v("get(): %s", context);
+        }
         return context;
     }
 
     /** Convenience method to set the {@link ApplicationContextSingleton}. */
     public void set(Context context) {
-        Log.v(TAG, "set(" + context + ")");
+        if (VERBOSE) {
+            LogUtil.v("set(%s)", context);
+        }
         ApplicationContextSingleton.setForTests(context);
     }
 
@@ -84,33 +90,29 @@ public final class ApplicationContextSingletonRule implements TestRule {
                         description.getTestClass().getSimpleName()
                                 + "#"
                                 + description.getMethodName();
-                Log.d(
-                        TAG,
-                        "Changing ApplicationContextSingleton from "
-                                + previousContext
-                                + " to "
-                                + mContext
-                                + " on "
-                                + testName);
+                if (DEBUG) {
+                    LogUtil.d(
+                            "Changing ApplicationContextSingleton from %s to %s on %s",
+                            previousContext, mContext, testName);
+                }
                 ApplicationContextSingleton.setForTests(mContext);
                 try {
                     base.evaluate();
                 } finally {
                     if (mRestoreAfter) {
-                        Log.d(
-                                TAG,
-                                "Restoring ApplicationContextSingleton to "
-                                        + previousContext
-                                        + " on "
-                                        + testName);
+                        if (DEBUG) {
+                            LogUtil.d(
+                                    "Restoring ApplicationContextSingleton to %s on %s",
+                                    previousContext, testName);
+                        }
                         ApplicationContextSingleton.setForTests(previousContext);
                     } else {
-                        Log.d(
-                                TAG,
-                                "NOT restoring ApplicationContextSingleton to previous context ("
-                                        + previousContext
-                                        + ") on "
-                                        + testName);
+                        if (DEBUG) {
+                            LogUtil.d(
+                                    "NOT restoring ApplicationContextSingleton to previous context"
+                                            + " (%s) on %s",
+                                    previousContext, testName);
+                        }
                     }
                 }
             }

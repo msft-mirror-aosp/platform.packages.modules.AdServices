@@ -27,13 +27,14 @@ import static org.mockito.Mockito.doReturn;
 import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
 
-
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -47,6 +48,9 @@ public class ProtectedAudienceSignatureManagerTest {
     @Mock private EncryptionKeyDao mEncryptionKeyDaoMock;
     private ProtectedAudienceSignatureManager mNoOpSignatureManager;
     private ProtectedAudienceSignatureManager mSignatureManager;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -94,7 +98,9 @@ public class ProtectedAudienceSignatureManagerTest {
     public void testVerifySignature_invalidSignature_returnFalse() {
         byte[] invalidSignature = new byte[] {1, 2, 3};
         SignedContextualAds signedContextualAds =
-                aSignedContextualAds().cloneToBuilder().setSignature(invalidSignature).build();
+                new SignedContextualAds.Builder(aSignedContextualAds())
+                        .setSignature(invalidSignature)
+                        .build();
         String enrollmentId = "enrollment1";
         AdTechIdentifier buyer = signedContextualAds.getBuyer();
 

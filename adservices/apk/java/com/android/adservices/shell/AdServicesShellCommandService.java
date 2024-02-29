@@ -23,13 +23,11 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.ShellCommandServiceImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Objects;
 
 /** Implements a service which runs the shell command in the adservices process. */
@@ -61,27 +59,6 @@ public final class AdServicesShellCommandService extends Service {
 
     @Override
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
-        if (args != null && args.length > 0 && args[0].equals("cmd")) {
-            boolean enabled = FlagsFactory.getFlags().getAdServicesShellCommandEnabled();
-            if (!enabled) {
-                Log.e(
-                        TAG,
-                        String.format(
-                                "dump(%s) called on AdServicesShellCommandService when shell"
-                                        + " command flag was disabled",
-                                Arrays.toString(args)));
-                return;
-            }
-            // need to strip the "cmd" arg
-            String[] realArgs = new String[args.length - 1];
-            System.arraycopy(args, 1, realArgs, 0, args.length - 1);
-            Log.w(
-                    TAG,
-                    "Using dump to call AdServicesShellCommandHandler - should NOT happen on"
-                            + " production");
-            new AdServicesShellCommandHandler(pw).run(realArgs);
-            return;
-        }
         // TODO(b/308009734): Add service and flag info to the dump.
         super.dump(fd, pw, args);
     }

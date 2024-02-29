@@ -25,8 +25,20 @@ import android.adservices.shell.ShellCommandResult;
 import android.os.RemoteException;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Objects;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implements a service which runs shell command in the AdServices process.
@@ -37,21 +49,100 @@ import java.io.StringWriter;
  * @hide
  */
 public final class ShellCommandServiceImpl extends IShellCommand.Stub {
+
+    @VisibleForTesting
+    static final int RESULT_SHELL_COMMAND_EXECUTION_TIMED_OUT = Integer.MIN_VALUE;
+
+    private static final long MAX_COMMAND_DURATION_MILLIS = 3000L;
+    private final ScheduledThreadPoolExecutor mSchedulingExecutorService;
+    private final ListeningExecutorService mExecutorService;
+
+    private final long mMaxCommandDurationMillis;
+    private ShellCommandFactorySupplier mShellCommandFactorySupplier;
+
+    @VisibleForTesting
+    public ShellCommandServiceImpl(
+            @NonNull ShellCommandFactorySupplier shellCommandFactorySupplier,
+            @NonNull ListeningExecutorService executorService,
+            @NonNull ScheduledThreadPoolExecutor schedulingExecutorService,
+            long maxCommandDurationMillis) {
+        mShellCommandFactorySupplier =
+                Objects.requireNonNull(
+                        shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
+
+        mExecutorService = executorService;
+        mSchedulingExecutorService = schedulingExecutorService;
+        mMaxCommandDurationMillis = maxCommandDurationMillis;
+    }
+
+    public ShellCommandServiceImpl() {
+        this(
+                new AdservicesShellCommandFactorySupplier(),
+                AdServicesExecutors.getLightWeightExecutor(),
+                AdServicesExecutors.getScheduler(),
+                MAX_COMMAND_DURATION_MILLIS);
+    }
+
     @Override
     public void runShellCommand(ShellCommandParam param, IShellCommandCallback callback) {
         StringWriter outStringWriter = new StringWriter();
-        StringWriter ErrStringWriter = new StringWriter();
+        StringWriter errStringWriter = new StringWriter();
 
-        try (PrintWriter outPw = new PrintWriter(outStringWriter);
-                PrintWriter errPw = new PrintWriter(ErrStringWriter); ) {
-            AdServicesShellCommandHandler handler = new AdServicesShellCommandHandler(outPw, errPw);
-            int resultCode = handler.run(param.getCommandArgs());
-            ShellCommandResult response =
-                    new ShellCommandResult.Builder()
-                            .setResultCode(resultCode)
-                            .setOut(outStringWriter.toString())
-                            .setErr(ErrStringWriter.toString())
-                            .build();
+        PrintWriter outPw = new PrintWriter(outStringWriter);
+        PrintWriter errPw = new PrintWriter(errStringWriter);
+
+        AdServicesShellCommandHandler handler =
+                new AdServicesShellCommandHandler(outPw, errPw, mShellCommandFactorySupplier);
+        FluentFuture.from(mExecutorService.submit(() -> handler.run(param.getCommandArgs())))
+                .withTimeout(
+                        mMaxCommandDurationMillis,
+                        TimeUnit.MILLISECONDS,
+                        mSchedulingExecutorService)
+                .addCallback(
+                        new FutureCallback<Integer>() {
+                            @Override
+                            public void onSuccess(Integer resultCode) {
+                                ShellCommandResult response =
+                                        new ShellCommandResult.Builder()
+                                                .setResultCode(resultCode)
+                                                .setOut(outStringWriter.toString())
+                                                .setErr(errStringWriter.toString())
+                                                .build();
+                                notifyCaller(response, callback, param, outPw, errPw);
+                            }
+
+                            @Override
+                            // We can be here only for timeout.
+                            // All other failures are processed in the handler.
+                            public void onFailure(Throwable timeoutException) {
+                                Log.w(
+                                        TAG,
+                                        "Service failure when processing command ",
+                                        timeoutException);
+
+                                int resultCode = RESULT_SHELL_COMMAND_EXECUTION_TIMED_OUT;
+
+                                ShellCommandResult response =
+                                        new ShellCommandResult.Builder()
+                                                .setResultCode(resultCode)
+                                                .setErr(
+                                                        "Timeout processing command "
+                                                                + timeoutException)
+                                                .build();
+
+                                notifyCaller(response, callback, param, outPw, errPw);
+                            }
+                        },
+                        mExecutorService);
+    }
+
+    private static void notifyCaller(
+            ShellCommandResult response,
+            IShellCommandCallback callback,
+            ShellCommandParam param,
+            PrintWriter outPw,
+            PrintWriter errPw) {
+        try {
             callback.onResult(response);
         } catch (RemoteException e) {
             Log.e(
@@ -59,5 +150,8 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
                     String.format("Unable to send result to the callback for request: %s", param),
                     e);
         }
+
+        outPw.close();
+        errPw.close();
     }
 }

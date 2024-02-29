@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
 import android.adservices.adselection.AdSelectionCallback;
@@ -277,7 +279,8 @@ public class OutcomeSelectionRunner {
                     new FutureCallback<>() {
                         @Override
                         public void onSuccess(AdSelectionOutcome result) {
-                            notifySuccessToCaller(result, callback);
+                            notifySuccessToCaller(
+                                    inputParams.getCallerPackageName(), result, callback);
                         }
 
                         @Override
@@ -293,9 +296,13 @@ public class OutcomeSelectionRunner {
                                 notifyEmptySuccessToCaller(callback);
                             } else {
                                 if (t.getCause() instanceof AdServicesException) {
-                                    notifyFailureToCaller(t.getCause(), callback);
+                                    notifyFailureToCaller(
+                                            inputParams.getCallerPackageName(),
+                                            t.getCause(),
+                                            callback);
                                 } else {
-                                    notifyFailureToCaller(t, callback);
+                                    notifyFailureToCaller(
+                                            inputParams.getCallerPackageName(), t, callback);
                                 }
                             }
                         }
@@ -304,7 +311,7 @@ public class OutcomeSelectionRunner {
 
         } catch (Throwable t) {
             sLogger.v("runOutcomeSelection fails fast with exception %s.", t.toString());
-            notifyFailureToCaller(t, callback);
+            notifyFailureToCaller(inputParams.getCallerPackageName(), t, callback);
         }
     }
 
@@ -341,14 +348,16 @@ public class OutcomeSelectionRunner {
         throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 
-    private void notifySuccessToCaller(AdSelectionOutcome result, AdSelectionCallback callback) {
+    private void notifySuccessToCaller(
+            String callerAppPackageName, AdSelectionOutcome result, AdSelectionCallback callback) {
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             // Note: Success is logged before the callback to ensure deterministic testing.
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                    AdServicesStatusUtils.STATUS_SUCCESS,
-                    0);
+                    callerAppPackageName,
+                    STATUS_SUCCESS,
+                    /*latencyMs=*/ 0);
             if (result == null) {
                 callback.onSuccess(null);
             } else {
@@ -381,7 +390,8 @@ public class OutcomeSelectionRunner {
     }
 
     /** Sends a failure notification to the caller */
-    private void notifyFailureToCaller(Throwable t, AdSelectionCallback callback) {
+    private void notifyFailureToCaller(
+            String callerAppPackageName, Throwable t, AdSelectionCallback callback) {
         try {
             sLogger.e("Notify caller of error: " + t);
             int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
@@ -391,7 +401,10 @@ public class OutcomeSelectionRunner {
             // Note: Failure is logged before the callback to ensure deterministic testing.
             if (!(t instanceof FilterException)) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
+                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        callerAppPackageName,
+                        resultCode,
+                        /*latencyMs=*/ 0);
             }
 
             FledgeErrorResponse selectionFailureResponse =

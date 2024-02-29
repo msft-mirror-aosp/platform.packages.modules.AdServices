@@ -114,6 +114,11 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         initU18();
     }
 
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
+    }
+
     private void initMainActivity(int layoutResID) {
         setContentView(layoutResID);
         // no need to store since not using

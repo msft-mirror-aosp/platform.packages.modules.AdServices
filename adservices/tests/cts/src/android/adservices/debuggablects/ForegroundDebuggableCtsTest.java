@@ -18,10 +18,6 @@ package android.adservices.debuggablects;
 
 import static org.junit.Assert.assertTrue;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.AfterClass;
@@ -30,13 +26,14 @@ import org.junit.BeforeClass;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
-public class ForegroundDebuggableCtsTest {
+abstract class ForegroundDebuggableCtsTest extends AdServicesDebuggableTestCase {
     // If the context is initialized in the setup method the importance of our foreground
     // service will be IMPORTANCE_FOREGROUND_SERVICE (125) instead of
     // IMPORTANCE_FOREGROUND (100) on some platforms only.
     // See http://ag/c/platform/packages/modules/AdServices/+/19607471/comments/e6767fdc_971415d0
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static boolean sSimpleActivityStarted = false;
+    // Given that AdServicesTestCase sets it that way, Saul Goodman!
+
+    private static boolean sSimpleActivityStarted;
 
     /**
      * Starts a foreground activity to make the test process a foreground one to pass PPAPI and SDK

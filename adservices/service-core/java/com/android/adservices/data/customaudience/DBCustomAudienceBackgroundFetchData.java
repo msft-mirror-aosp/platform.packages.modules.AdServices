@@ -174,7 +174,8 @@ public abstract class DBCustomAudienceBackgroundFetchData {
                         .setDailyUpdateUri(getDailyUpdateUri())
                         .setEligibleUpdateTime(getEligibleUpdateTime())
                         .setNumValidationFailures(getNumValidationFailures())
-                        .setNumTimeoutFailures(getNumTimeoutFailures());
+                        .setNumTimeoutFailures(getNumTimeoutFailures())
+                        .setIsDebuggable(getIsDebuggable());
 
         if (updatableData.getContainsSuccessfulUpdate()) {
             fetchDataBuilder.setEligibleUpdateTime(

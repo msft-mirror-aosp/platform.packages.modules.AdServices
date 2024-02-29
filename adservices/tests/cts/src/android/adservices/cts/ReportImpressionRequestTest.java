@@ -27,11 +27,17 @@ import android.adservices.adselection.ReportImpressionRequest;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
 public class ReportImpressionRequestTest {
     private static final long AUCTION_ID = 123;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildsReportImpressionInput() throws Exception {

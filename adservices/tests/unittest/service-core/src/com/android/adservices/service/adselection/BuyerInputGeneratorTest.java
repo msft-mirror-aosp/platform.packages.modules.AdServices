@@ -40,6 +40,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -62,6 +63,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
@@ -93,6 +95,9 @@ public class BuyerInputGeneratorTest {
     private BuyerInputGenerator mBuyerInputGenerator;
     private AuctionServerDataCompressor mDataCompressor;
     private MockitoSession mStaticMockSession = null;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws Exception {
@@ -591,7 +596,7 @@ public class BuyerInputGeneratorTest {
     private DBCustomAudience createAndPersistDBCustomAudienceWithOmitAdsEnabled(
             String name, AdTechIdentifier buyer) {
         DBCustomAudience thisCustomAudience =
-                DBCustomAudienceFixture.getValidBuilderByBuyerWithServerAuctionFLags(buyer, name)
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(buyer, name)
                         .build();
         mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY, false);
         return thisCustomAudience;
