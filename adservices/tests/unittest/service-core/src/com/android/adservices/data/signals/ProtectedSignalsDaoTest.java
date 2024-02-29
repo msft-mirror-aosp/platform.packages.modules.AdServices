@@ -147,6 +147,17 @@ public class ProtectedSignalsDaoTest {
     }
 
     @Test
+    public void testTwoSignalsDeleteAll() {
+        mProtectedSignalsDao.insertSignals(
+                Arrays.asList(DBProtectedSignalFixture.SIGNAL, DBProtectedSignalFixture.SIGNAL));
+
+        List<DBProtectedSignal> readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        mProtectedSignalsDao.deleteAllSignals();
+        readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        assertEquals(0, readResult.size());
+    }
+
+    @Test
     public void testTwoBuyers() {
         DBProtectedSignal signal1 =
                 DBProtectedSignal.builder()
