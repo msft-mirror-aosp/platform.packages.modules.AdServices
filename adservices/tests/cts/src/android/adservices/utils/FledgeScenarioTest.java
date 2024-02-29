@@ -238,6 +238,21 @@ public abstract class FledgeScenarioTest {
                         enabled ? "true" : "false"));
     }
 
+    protected void overrideRegisterAdBeaconEnabled(boolean enabled) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices fledge_register_ad_beacon_enabled %s",
+                        enabled ? "true" : "false"));
+    }
+
+    protected void overrideShouldUseUnifiedTable(boolean shouldUse) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices"
+                                + " fledge_on_device_auction_should_use_unified_tables %s",
+                        shouldUse ? "true" : "false"));
+    }
+
     protected void setDebugReportingEnabledForTesting(boolean enabled) {
         FledgeScenarioTest.overrideBiddingLogicVersionToV3(enabled);
         PhFlagsFixture.overrideAdIdFetcherTimeoutMs(
