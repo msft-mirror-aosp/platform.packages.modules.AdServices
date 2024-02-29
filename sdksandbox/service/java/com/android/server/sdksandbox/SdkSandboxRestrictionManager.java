@@ -75,22 +75,23 @@ class SdkSandboxRestrictionManager {
     public int getEffectiveTargetSdkVersion(int appUid)
             throws PackageManager.NameNotFoundException {
         PackageManagerHelper packageManagerHelper = mInjector.getPackageManagerHelper(appUid);
-        String packageName = packageManagerHelper.getPackageNameForUid(appUid);
-        return getEffectiveTargetSdkVersion(
-                new CallingInfo(appUid, packageName), packageManagerHelper);
-    }
+        List<String> packageNames = packageManagerHelper.getPackageNamesForUid(appUid);
 
-    /** Cache and get the effectiveTargetSdkVersion for the sdk sandbox process */
-    public int getEffectiveTargetSdkVersion(CallingInfo callingInfo)
-            throws PackageManager.NameNotFoundException {
-        synchronized (mLock) {
-            if (mEffectiveTargetSdkVersions.get(callingInfo) != null) {
-                return mEffectiveTargetSdkVersions.get(callingInfo);
+        // Initializing the effectiveTargetSdkVersion as the current SDK level
+        int effectiveTargetSdkVersion = mInjector.getCurrentSdkLevel();
+
+        for (String packageName : packageNames) {
+            int effectiveTargetSdkVersionForPackage =
+                    getEffectiveTargetSdkVersion(
+                            new CallingInfo(appUid, packageName), packageManagerHelper);
+            if (effectiveTargetSdkVersionForPackage == DEFAULT_TARGET_SDK_VERSION) {
+                return effectiveTargetSdkVersionForPackage;
             }
+            effectiveTargetSdkVersion =
+                    Integer.min(effectiveTargetSdkVersion, effectiveTargetSdkVersionForPackage);
         }
-        PackageManagerHelper packageManagerHelper =
-                mInjector.getPackageManagerHelper(callingInfo.getUid());
-        return getEffectiveTargetSdkVersion(callingInfo, packageManagerHelper);
+
+        return effectiveTargetSdkVersion;
     }
 
     private int getEffectiveTargetSdkVersion(
