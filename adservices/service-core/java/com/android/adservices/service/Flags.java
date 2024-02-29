@@ -4292,6 +4292,13 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
     }
 
+    boolean MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE = false;
+
+    /** Returns true when attribution scope is enabled. */
+    default boolean getMeasurementEnableAttributionScope() {
+        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+    }
+
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
     boolean DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED = true;
 
