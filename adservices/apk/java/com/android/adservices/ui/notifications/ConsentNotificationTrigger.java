@@ -77,12 +77,13 @@ public class ConsentNotificationTrigger {
             OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
         }
 
-        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
-
         createNotificationChannel(context);
         Notification notification =
                 getNotification(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+
         notificationManager.notify(NOTIFICATION_ID, notification);
+
+        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         UiStatsLogger.logNotificationDisplayed();
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);

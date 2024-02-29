@@ -57,7 +57,9 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
     @Override
     protected void onResume() {
         super.onResume();
-        initWithUx(this, getApplicationContext());
+        if (isUxStatesReady(this)) {
+            initWithUx(this, getApplicationContext());
+        }
     }
 
     @Override
