@@ -391,7 +391,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default whether measurement click deduplication is enabled. */
-    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = true;
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = false;
 
     /** Returns whether measurement click deduplication is enforced. */
     default boolean getMeasurementIsClickDeduplicationEnforced() {
@@ -399,7 +399,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default whether measurement click deduplication is enforced. */
-    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = true;
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = false;
 
     /** Returns the number of sources that can be registered with a single click. */
     default long getMeasurementMaxSourcesPerClick() {
