@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
@@ -41,6 +43,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
+import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
@@ -128,6 +131,8 @@ public class CustomAudienceBlob {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String OWNER_KEY = "owner";
     public static final String BUYER_KEY = "buyer";
+    public static final String AUCTION_SERVER_REQUEST_FLAGS_KEY = "auction_server_request_flags";
+    public static final String OMIT_ADS_VALUE = "omit_ads";
     static final LinkedHashSet<String> mKeysSet =
             new LinkedHashSet<>(
                     Arrays.asList(
@@ -144,20 +149,25 @@ public class CustomAudienceBlob {
     final LinkedHashMap<String, Field<?>> mFieldsMap = new LinkedHashMap<>();
     private final ReadFiltersFromJsonStrategy mReadFiltersFromJsonStrategy;
     private final ReadAdRenderIdFromJsonStrategy mReadAdRenderIdFromJsonStrategy;
+    private final boolean mAuctionServerRequestFlagsEnabled;
 
     public CustomAudienceBlob(
-            boolean filteringEnabled, boolean adRenderIdEnabled, long adRenderIdMaxLength) {
+            boolean filteringEnabled,
+            boolean adRenderIdEnabled,
+            long adRenderIdMaxLength,
+            boolean auctionServerRequestFlagsEnabled) {
         mReadFiltersFromJsonStrategy =
                 ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
         mReadAdRenderIdFromJsonStrategy =
                 ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
                         adRenderIdEnabled, adRenderIdMaxLength);
+        mAuctionServerRequestFlagsEnabled = auctionServerRequestFlagsEnabled;
     }
 
     @VisibleForTesting
     public CustomAudienceBlob() {
         // Filtering enabled by default.
-        this(true, true, 12L);
+        this(true, true, 12L, false);
     }
 
     /** Update fields of the {@link CustomAudienceBlob} from a {@link JSONObject}. */
@@ -211,6 +221,13 @@ public class CustomAudienceBlob {
                 }
             }
         }
+        // Set auction server flags if flag is enabled
+        if (mAuctionServerRequestFlagsEnabled
+                && jsonKeySet.contains(AUCTION_SERVER_REQUEST_FLAGS_KEY)) {
+            this.setAuctionServerRequestFlags(
+                    this.getAuctionServerRequestFlagsFromJSONObject(
+                            json, AUCTION_SERVER_REQUEST_FLAGS_KEY));
+        }
     }
 
     /**
@@ -232,6 +249,29 @@ public class CustomAudienceBlob {
         }
         if (input.getUserBiddingSignals() != null) {
             this.setUserBiddingSignals(input.getUserBiddingSignals());
+        }
+    }
+
+    /**
+     * Utility methods to override a {@link CustomAudienceBlob} from a {@link PartialCustomAudience}
+     */
+    public void overrideFromPartialCustomAudience(
+            String owner, AdTechIdentifier buyer, PartialCustomAudience partialCustomAudience) {
+        this.setOwner(owner);
+        this.setBuyer(buyer);
+
+        this.setName(partialCustomAudience.getName());
+
+        if (partialCustomAudience.getActivationTime() != null) {
+            this.setActivationTime(partialCustomAudience.getActivationTime());
+        }
+
+        if (partialCustomAudience.getExpirationTime() != null) {
+            this.setExpirationTime(partialCustomAudience.getExpirationTime());
+        }
+
+        if (partialCustomAudience.getUserBiddingSignals() != null) {
+            this.setUserBiddingSignals(partialCustomAudience.getUserBiddingSignals());
         }
     }
 
@@ -312,6 +352,45 @@ public class CustomAudienceBlob {
 
             mFieldsMap.put(BUYER_KEY, field);
         }
+    }
+
+    /** sets the {@code auctionServerRequestFlags} {@link Field} */
+    public void setAuctionServerRequestFlags(List<String> auctionServerRequestFlags) {
+        if (mFieldsMap.containsKey(AUCTION_SERVER_REQUEST_FLAGS_KEY)) {
+            Field<List<String>> field =
+                    (Field<List<String>>) mFieldsMap.get(AUCTION_SERVER_REQUEST_FLAGS_KEY);
+            field.mValue = auctionServerRequestFlags;
+        } else {
+            Field<List<String>> field =
+                    new Field<>(
+                            this::getAuctionServerRequestFlagsAsJSONArray,
+                            this::getAuctionServerRequestFlagsFromJSONObject);
+
+            field.mName = AUCTION_SERVER_REQUEST_FLAGS_KEY;
+            field.mValue = auctionServerRequestFlags;
+
+            mFieldsMap.put(AUCTION_SERVER_REQUEST_FLAGS_KEY, field);
+        }
+    }
+
+    /** Returns the server auction request bitfield extracted from the response, if found. */
+    @CustomAudience.AuctionServerRequestFlag
+    public int getAuctionServerRequestFlags() {
+        @CustomAudience.AuctionServerRequestFlag int result = 0;
+        if (mFieldsMap.containsKey(AUCTION_SERVER_REQUEST_FLAGS_KEY)) {
+            sLogger.d("Fields map contains auction server key");
+            List<String> list =
+                    (List<String>) mFieldsMap.get(AUCTION_SERVER_REQUEST_FLAGS_KEY).mValue;
+            for (String s : list) {
+                if (OMIT_ADS_VALUE.equals(s)) {
+                    if ((result & FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS) == 0) {
+                        // Only set the flag once
+                        result = result | FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -675,6 +754,47 @@ public class CustomAudienceBlob {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private JSONArray getAuctionServerRequestFlagsAsJSONArray(List<String> value) {
+        return new JSONArray(value);
+    }
+
+    @SuppressWarnings("FormatStringAnnotation")
+    private List<String> getAuctionServerRequestFlagsFromJSONObject(JSONObject json, String key) {
+        return getValueFromJSONObject(
+                json,
+                key,
+                (jsonObject, jsonKey) -> {
+                    List<String> resultList = new ArrayList<>();
+                    try {
+                        JSONArray flagsJsonArray = jsonObject.getJSONArray(key);
+                        for (int i = 0; i < flagsJsonArray.length(); i++) {
+                            try {
+                                resultList.add(
+                                        JsonUtils.getStringFromJsonArrayAtIndex(
+                                                flagsJsonArray,
+                                                i,
+                                                SKIP_INVALID_JSON_TYPE_LOG_FORMAT));
+                            } catch (JSONException e) {
+                                sLogger.v(
+                                        SKIP_INVALID_JSON_TYPE_LOG_FORMAT,
+                                        jsonObject.hashCode(),
+                                        key,
+                                        Optional.ofNullable(e.getMessage()).orElse("<null>"));
+                            }
+                        }
+                    } catch (JSONException e) {
+                        // Ignore since we don't want to fail if there is an issue with this
+                        // optional field
+                        sLogger.v(
+                                FIELD_NOT_FOUND_LOG_FORMAT,
+                                jsonObject.hashCode(),
+                                key,
+                                Optional.ofNullable(e.getMessage()).orElse("<null>"));
+                    }
+                    return resultList;
+                });
     }
 
     private List<AdData> getAdsFromJSONObject(JSONObject json, String key) {

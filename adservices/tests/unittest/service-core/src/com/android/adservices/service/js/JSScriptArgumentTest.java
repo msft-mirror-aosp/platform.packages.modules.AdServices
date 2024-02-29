@@ -28,14 +28,20 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONException;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
 
 public class JSScriptArgumentTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testStringArg() {
         JSScriptArgument arg = stringArg("stringArg", "value");

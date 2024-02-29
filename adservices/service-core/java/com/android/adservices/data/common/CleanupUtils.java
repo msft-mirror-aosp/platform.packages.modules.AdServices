@@ -20,10 +20,10 @@ import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,21 +37,26 @@ public final class CleanupUtils {
      *
      * @param packages a list of package names
      * @param packageManager the package manager
-     * @param flags the adservices flags
+     * @param appAllowLists the allowlist(s) for the relevant API(s). Packages are kept if they are
+     *     present in any of the listed allowlists.
      */
     public static void removeAllowedPackages(
             @NonNull List<String> packages,
             @NonNull PackageManager packageManager,
-            @NonNull Flags flags) {
+            @NonNull List<String> appAllowLists) {
         if (!packages.isEmpty()) {
             Set<String> allowedPackages =
                     PackageManagerCompatUtils.getInstalledApplications(packageManager, 0).stream()
                             .map(applicationInfo -> applicationInfo.packageName)
                             .collect(Collectors.toSet());
-
-            String appAllowList = flags.getPpapiAppAllowList();
-            if (!AllowLists.doesAllowListAllowAll(appAllowList)) {
-                allowedPackages.retainAll(AllowLists.splitAllowList(appAllowList));
+            boolean allowAll = false;
+            List<String> allowedApps = new ArrayList<>();
+            for (String appAllowList : appAllowLists) {
+                allowAll = allowAll || AllowLists.doesAllowListAllowAll(appAllowList);
+                allowedApps.addAll(AllowLists.splitAllowList(appAllowList));
+            }
+            if (!allowAll) {
+                allowedPackages.retainAll(allowedApps);
             }
 
             // Packages must be both installed and allowlisted, or else they should be removed

@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Mada unazopendelea za madokezo ya Android kulingana na programu ulizotumia hivi majuzi. Pia, programu na washirika wake wa utangazaji wanaweza kutumia shughuli zako kwenye programu nyingine katika kifaa hiki kuwekea matangazo mapendeleo huku wakiendelea kusaidia kuweka utambulisho wako ukiwa wa faragha na salama."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Programu unazotumia zinaweza pia kubainisha unachopenda kulingana na shughuli zako kwenye programu. Kwa mfano, iwapo unatumia programu za upishi mara kwa mara, unaweza kuona matangazo ya huduma za kukuletea bidhaa za matumizi ya mapishi mahali ulipo au maudhui yanayohusiana katika programu nyingine. \n\nProgramu zinaweza kuhifadhi maelezo haya kwa usalama ili yatumike tu na washirika wake wa utangazaji kuwekea matangazo mapendeleo kwenye programu nyingine."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Baadaye, programu unayotumia inaweza kuomba maelezo haya, iwe ni mada za matangazo yako au matangazo yaliyopendekezwa na programu ulizotumia."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Programu unazotumia zinaweza kuiomba Android taarifa ili kuzisaidia kupima utendaji wa matangazo. Android hulinda faragha yako kwa kudhibiti taarifa ambazo programu zinaweza kutumiana."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

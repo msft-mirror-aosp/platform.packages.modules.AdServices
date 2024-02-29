@@ -249,6 +249,10 @@
     <skip />
     <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
     <skip />
+    <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android relève les thèmes qui vous intéressent en fonction des applis que vous avez utilisées récemment. De plus, les applis et leurs partenaires publicitaires peuvent utiliser votre activité dans d\'autres applis sur cet appareil pour personnaliser les annonces tout en contribuant à maintenir le caractère privé et la sécurité de votre identité."</string>
+    <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• Les applis que vous utilisez peuvent aussi déterminer ce que vous aimez à partir de votre activité dans les applis. Par exemple, si vous utilisez régulièrement des applis de cuisine, vous pourrez voir des annonces pour des services de livraison de courses ou des contenus associés dans d\'autres applis.\n\nLes applis peuvent stocker ces informations de manière sécurisée afin que seuls leurs partenaires publicitaires puissent les utiliser pour personnaliser des annonces dans d\'autres applis."</string>
+    <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Par la suite, une appli que vous utilisez peut demander ces informations : vos thèmes d\'annonces ou les annonces suggérées par vos applis."</string>
+    <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Les applis que vous utilisez peuvent demander à Android des infos qui les aident à mesurer les performances de leurs annonces. Android contribue à protéger votre confidentialité en limitant les infos que les applis peuvent partager entre elles."</string>
     <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
     <skip />
     <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->

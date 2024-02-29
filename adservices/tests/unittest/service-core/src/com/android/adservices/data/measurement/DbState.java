@@ -380,7 +380,7 @@ public class DbState {
                         .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
                         .setAttributionMode(
                                 sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
-                        .setFilterData(sJSON.optString("filterData", null))
+                        .setFilterDataString(sJSON.optString("filterData", null))
                         .setRegistrationOrigin(getRegistrationOrigin(sJSON))
                         .setTriggerSpecsString(sJSON.optString("triggerSpecs", null))
                         .setEventAttributionStatus(sJSON.optString("eventAttributionStatus", null));

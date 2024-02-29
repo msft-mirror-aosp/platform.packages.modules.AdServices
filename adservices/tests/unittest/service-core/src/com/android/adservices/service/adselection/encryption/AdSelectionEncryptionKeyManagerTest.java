@@ -22,6 +22,8 @@ import static android.adservices.adselection.AuctionEncryptionKeyFixture.ENCRYPT
 
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.ENCRYPTION_KEY_JOIN;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.ENCRYPTION_KEY_JOIN_TTL_1SECS;
+import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
+import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.RESPONSE_PROPERTIES_CONTENT_TYPE;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,16 +35,19 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.Before;
@@ -79,6 +84,9 @@ public class AdSelectionEncryptionKeyManagerTest {
             new AuctionEncryptionKeyParser(mFlags);
     private JoinEncryptionKeyParser mJoinEncryptionKeyParser = new JoinEncryptionKeyParser(mFlags);
     private AdSelectionEncryptionKeyManager mKeyManager;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
@@ -158,7 +166,10 @@ public class AdSelectionEncryptionKeyManagerTest {
         assertThat(actualKey).isNotNull();
         assertThat(actualKey.keyIdentifier()).isEqualTo(ENCRYPTION_KEY_JOIN.getKeyIdentifier());
         assertThat(actualKey.publicKey())
-                .isEqualTo(ENCRYPTION_KEY_JOIN.getPublicKey().getBytes(StandardCharsets.UTF_8));
+                .isEqualTo(
+                        BaseEncoding.base16()
+                                .lowerCase()
+                                .decode(ENCRYPTION_KEY_JOIN.getPublicKey()));
     }
 
     @Test
@@ -262,8 +273,14 @@ public class AdSelectionEncryptionKeyManagerTest {
     @Test
     public void test_fetchAndPersistJoinKey_fetchSuccess_returnsLatestActiveJoinKey()
             throws Exception {
-        when(mMockHttpClient.fetchPayload(
-                        Uri.parse(JOIN_KEY_FETCH_URI), DevContext.createForDevOptionsDisabled()))
+        AdServicesHttpClientRequest fetchKeyRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(Uri.parse(JOIN_KEY_FETCH_URI))
+                        .setRequestProperties(REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setResponseHeaderKeys(RESPONSE_PROPERTIES_CONTENT_TYPE)
+                        .setDevContext(DevContext.createForDevOptionsDisabled())
+                        .build();
+        when(mMockHttpClient.performRequestGetResponseInBase64String(fetchKeyRequest))
                 .thenReturn(
                         Futures.immediateFuture(
                                 JoinEncryptionKeyTestUtil.mockJoinKeyFetchResponse()));
@@ -291,7 +308,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                null)
                         .get();
 
         byte[] expectedPublicKey =
@@ -313,7 +331,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                null)
                         .get();
 
         byte[] expectedPublicKey =

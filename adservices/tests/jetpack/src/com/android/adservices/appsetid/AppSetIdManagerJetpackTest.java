@@ -18,6 +18,7 @@ package com.android.adservices.appsetid;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.os.Build;
 import android.os.ext.SdkExtensions;
 
 import androidx.privacysandbox.ads.adservices.appsetid.AppSetId;
@@ -38,7 +39,9 @@ public class AppSetIdManagerJetpackTest {
 
     @Before
     public void setup() throws Exception {
-        Assume.assumeTrue(SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES) >= 4);
+        int adServicesVersion = SdkExtensions.getExtensionVersion(SdkExtensions.AD_SERVICES);
+        int extServicesVersion = SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S);
+        Assume.assumeTrue(adServicesVersion >= 4 || extServicesVersion >= 9);
 
         mTestUtil.overrideAppSetIdKillSwitch(true);
         mTestUtil.overrideKillSwitches(true);

@@ -33,6 +33,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.FutureSyncCallback;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
@@ -44,6 +45,7 @@ import com.google.common.util.concurrent.Futures;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
@@ -65,6 +67,9 @@ public class JavaScriptSandboxProviderTest {
     @Mock private Profiler mProfilerMock;
 
     private JSScriptEngine.JavaScriptSandboxProvider mJsSandboxProvider;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

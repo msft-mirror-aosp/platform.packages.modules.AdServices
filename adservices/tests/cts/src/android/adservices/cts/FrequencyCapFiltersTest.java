@@ -28,13 +28,19 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link FrequencyCapFilters}. */
 @SmallTest
 public class FrequencyCapFiltersTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildValidFrequencyCapFilters_success() {
         final FrequencyCapFilters originalFilters =

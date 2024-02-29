@@ -16,10 +16,11 @@
 
 package com.android.adservices.mockito;
 
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
 import static com.android.adservices.shared.testing.common.TestHelper.getAnnotation;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import android.app.ActivityManager;
 import android.os.Binder;
 import android.os.Process;
 import android.util.Log;
@@ -167,6 +168,18 @@ public class AdServicesExtendedMockitoRule
         logV("mockIsAtLeastT(%b)", isIt);
         assertSpiedOrMocked(SdkLevel.class);
         doReturn(isIt).when(SdkLevel::isAtLeastT);
+    }
+
+    /**
+     * Mocks a call to {@link ActivityManager#getCurrentUser()}, returning {@code user}.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link ActivityManager}.
+     */
+    public final void mockGetCurrentUser(int user) {
+        logV("mockGetCurrentUser(user=%d)", user);
+        assertSpiedOrMocked(ActivityManager.class);
+        doReturn(user).when(ActivityManager::getCurrentUser);
     }
 
     /**

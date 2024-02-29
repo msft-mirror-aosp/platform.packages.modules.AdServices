@@ -191,7 +191,7 @@
           "trigger_data": "1",
           "source_type": "navigation",
           "trigger_summary_bucket": [1, 1],
-          "randomized_trigger_rate": 0.0024263221679834087
+          "randomized_trigger_rate": 0.0024263
         }
       },
       {
@@ -204,7 +204,7 @@
           "trigger_data": "3",
           "source_type": "navigation",
           "trigger_summary_bucket": [1, 1],
-          "randomized_trigger_rate": 0.0024263221679834087
+          "randomized_trigger_rate": 0.0024263
         }
       }
     ],

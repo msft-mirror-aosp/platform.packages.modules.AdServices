@@ -16,8 +16,9 @@
 
 package com.android.adservices.service.adselection.encryption;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_AD_SELECTION_DATA_BACKGROUND_KEY_FETCH_NETWORK_READ_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -42,15 +43,19 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
+import com.android.adservices.data.adselection.DBProtectedServersEncryptionConfig;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
+import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 
@@ -66,7 +71,10 @@ import org.mockito.junit.MockitoRule;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -88,8 +96,16 @@ public class BackgroundKeyFetchWorkerTest {
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
 
     private EncryptionKeyDao mEncryptionKeyDaoSpy;
+    private ProtectedServersEncryptionConfigDao mProtectedServersEncryptionConfigDaoSpy;
     private AdSelectionEncryptionKeyManager mKeyManagerSpy;
+
+    @Mock
+    private ProtectedServersEncryptionConfigManager mProtectedServersEncryptionConfigManagerMock;
+
     private BackgroundKeyFetchWorker mBackgroundKeyFetchWorker;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
@@ -98,6 +114,13 @@ public class BackgroundKeyFetchWorkerTest {
                         Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
                                 .build()
                                 .encryptionKeyDao());
+
+        mProtectedServersEncryptionConfigDaoSpy =
+                Mockito.spy(
+                        Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
+                                .build()
+                                .protectedServersEncryptionConfigDao());
+
         mKeyManagerSpy =
                 Mockito.spy(
                         new AdSelectionEncryptionKeyManager(
@@ -109,6 +132,7 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(mKeyManagerSpy, mFlags, mClockMock);
         mEncryptionKeyDaoSpy.insertAllKeys(DBEncryptionKeyFixture.getKeysExpiringInTtl(1L));
+        mProtectedServersEncryptionConfigDaoSpy.insertKeys(getEncryptionConfigs(0L));
     }
 
     @Test
@@ -158,7 +182,8 @@ public class BackgroundKeyFetchWorkerTest {
             public FluentFuture<List<DBEncryptionKey>> fetchAndPersistActiveKeysOfType(
                     @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
                     Instant keyExpiryInstant,
-                    long timeoutMs) {
+                    long timeoutMs,
+                    Uri unusedCoordinatorUrl) {
 
                 return FluentFuture.from(
                         AdServicesExecutors.getBlockingExecutor()
@@ -239,7 +264,8 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker.runBackgroundKeyFetch().get();
 
         verify(mKeyManagerSpy, times(1)).getExpiredAdSelectionEncryptionKeyTypes(any());
-        verify(mKeyManagerSpy, never()).fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong());
+        verify(mKeyManagerSpy, never())
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any());
         assertThat(mKeyManagerSpy.getExpiredAdSelectionEncryptionKeyTypes(mClockMock.instant()))
                 .containsExactly(
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
@@ -287,7 +313,7 @@ public class BackgroundKeyFetchWorkerTest {
 
         verify(mKeyManagerSpy).getExpiredAdSelectionEncryptionKeyTypes(any());
         verify(mEncryptionKeyDaoSpy).getExpiredKeys(any());
-        verify(mKeyManagerSpy).fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong());
+        verify(mKeyManagerSpy).fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any());
         // InsertAllKeys called twice - once to insert expired keys in setUp, second after fetching
         // active keys.
         verify(mEncryptionKeyDaoSpy, times(2)).insertAllKeys(any(List.class));
@@ -338,7 +364,7 @@ public class BackgroundKeyFetchWorkerTest {
 
         verify(mKeyManagerSpy).getExpiredAdSelectionEncryptionKeyTypes(any());
         verify(mEncryptionKeyDaoSpy).getExpiredKeys(any());
-        verify(mKeyManagerSpy).fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong());
+        verify(mKeyManagerSpy).fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any());
         // InsertAllKeys called twice - once to insert expired keys in setUp, second after fetching
         // active keys.
         verify(mEncryptionKeyDaoSpy, times(2)).insertAllKeys(any(List.class));
@@ -353,6 +379,75 @@ public class BackgroundKeyFetchWorkerTest {
     }
 
     @Test
+    public void testRunBackgroundKeyFetch_multiCloudEnabled_allAuctionKeysFetched()
+            throws ExecutionException, InterruptedException, JSONException {
+        String gcpCoordinatorUrl = "https://foo.bar/gcp";
+        String awsCoordinatorUrl = "https://foo.bar/aws";
+        class FlagsWithMultiCloudEnabled implements Flags {
+            @Override
+            public boolean getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAuctionServerBackgroundJoinKeyFetchEnabled() {
+                return false;
+            }
+
+            @Override
+            public String getFledgeAuctionServerAuctionKeyFetchUri() {
+                return gcpCoordinatorUrl;
+            }
+
+            @Override
+            public boolean getFledgeAuctionServerMultiCloudEnabled() {
+                return true;
+            }
+
+            @Override
+            public String getFledgeAuctionServerCoordinatorUrlAllowlist() {
+                return gcpCoordinatorUrl + "," + awsCoordinatorUrl + "," + "https://foo.bar/azure";
+            }
+
+            @Override
+            public long getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs() {
+                return 100;
+            }
+        }
+        when(mAdServicesHttpsClientMock.fetchPayload(any(Uri.class), any(DevContext.class)))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponse()));
+        Set<Integer> set = new HashSet<Integer>();
+        set.add(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION);
+        when(mProtectedServersEncryptionConfigManagerMock.getExpiredAdSelectionEncryptionKeyTypes(
+                        any()))
+                .thenReturn(set);
+        when(mProtectedServersEncryptionConfigManagerMock.fetchAndPersistActiveKeysOfType(
+                        anyInt(), any(), anyLong(), any()))
+                .thenReturn(
+                        FluentFuture.from(
+                                Futures.immediateFuture(new ArrayList<DBEncryptionKey>())));
+
+        mBackgroundKeyFetchWorker =
+                new BackgroundKeyFetchWorker(
+                        mProtectedServersEncryptionConfigManagerMock,
+                        new FlagsWithMultiCloudEnabled(),
+                        mClockMock);
+
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(100));
+
+        mBackgroundKeyFetchWorker.runBackgroundKeyFetch().get();
+
+        verify(mProtectedServersEncryptionConfigManagerMock)
+                .getExpiredAdSelectionEncryptionKeyTypes(any());
+
+        // called once per url in allowlist
+        verify(mProtectedServersEncryptionConfigManagerMock, times(3))
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any());
+    }
+
+    @Test
     @Ignore
     public void test_runBackgroundKeyFetchInSequence()
             throws InterruptedException, ExecutionException {
@@ -362,14 +457,14 @@ public class BackgroundKeyFetchWorkerTest {
         // Count the number of times fetch and persist key is run
         AtomicInteger completionCount = new AtomicInteger(0);
         doAnswer(
-                unused -> {
-                    Thread.sleep(100);
-                    completionLatch.countDown();
-                    completionCount.getAndIncrement();
-                    return FluentFuture.from(Futures.immediateFuture(null));
-                })
+                        unused -> {
+                            Thread.sleep(100);
+                            completionLatch.countDown();
+                            completionCount.getAndIncrement();
+                            return FluentFuture.from(Futures.immediateFuture(null));
+                        })
                 .when(mKeyManagerSpy)
-                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong());
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any());
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(100));
 
@@ -396,8 +491,22 @@ public class BackgroundKeyFetchWorkerTest {
         verify(mKeyManagerSpy, times(2)).getExpiredAdSelectionEncryptionKeyTypes(any());
         verify(mEncryptionKeyDaoSpy, times(2)).getExpiredKeys(any());
         verify(mKeyManagerSpy, times(4))
-                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong());
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any());
         assertThat(completionCount.get()).isEqualTo(fetchKeyCount * 2);
+    }
+
+    public static final DBProtectedServersEncryptionConfig.Builder ENCRYPTION_KEY_WITH_COORDINATOR =
+            DBProtectedServersEncryptionConfig.builder()
+                    .setKeyIdentifier("key_id_5")
+                    .setPublicKey("public_key_5")
+                    .setEncryptionKeyType(ENCRYPTION_KEY_TYPE_AUCTION)
+                    .setCoordinatorUrl("https://foo.bar/gcp")
+                    .setExpiryTtlSeconds(5L);
+
+    private static List<DBProtectedServersEncryptionConfig> getEncryptionConfigs(
+            long expiryTtlSeconds) {
+        return ImmutableList.of(
+                ENCRYPTION_KEY_WITH_COORDINATOR.setExpiryTtlSeconds(expiryTtlSeconds).build());
     }
 
     static class BackgroundKeyFetchWorkerTestFlags implements Flags {

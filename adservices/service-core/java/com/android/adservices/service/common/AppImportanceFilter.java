@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -240,7 +242,7 @@ public final class AppImportanceFilter {
                         .setCode(AD_SERVICES_API_CALLED)
                         .setApiClass(mApiClass)
                         .setApiName(apiNameLoggingId)
-                        .setResultCode(resultCode)
+                        .setResult(resultCode, FAILURE_REASON_UNSET)
                         .setSdkPackageName(sdkName != null ? sdkName : "")
                         .setAppPackageName(appPackageName)
                         .build());
