@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
@@ -152,4 +153,8 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
     public void logKAnonImmediateSignJoinStats(
             KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats) {}
+
+    @Override
+    public void logKAnonGetChallengeJobStats(
+            KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats) {}
 }
