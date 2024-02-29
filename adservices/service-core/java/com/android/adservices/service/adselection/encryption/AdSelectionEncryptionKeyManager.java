@@ -214,7 +214,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             long timeoutMs) {
         Instant fetchInstant = mClock.instant();
-        return fetchAndPersistActiveKeysOfType(adSelectionKeyType, fetchInstant, timeoutMs)
+        return fetchAndPersistActiveKeysOfType(adSelectionKeyType, fetchInstant, timeoutMs, null)
                 .transform(keys -> selectRandomDbKeyAndParse(keys), mLightweightExecutor);
     }
 
@@ -227,8 +227,9 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
     public FluentFuture<List<DBEncryptionKey>> fetchAndPersistActiveKeysOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Instant keyExpiryInstant,
-            long timeoutMs) {
-        Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, null);
+            long timeoutMs,
+            @Nullable Uri unusedCoordinatorUrl) {
+        Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, null, null);
         if (fetchUri == null) {
             throw new IllegalStateException(
                     "Uri to fetch active key of type " + adSelectionKeyType + " is null.");

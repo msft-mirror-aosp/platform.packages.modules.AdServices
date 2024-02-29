@@ -31,6 +31,7 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.StatsdUtil;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -227,10 +228,19 @@ public class SdkSandboxController {
         if (!SdkLevel.isAtLeastU()) {
             throw new UnsupportedOperationException();
         }
+        // TODO(b/321909787) : Use injector to set time for unit tests.
+        long timeEventStarted = SystemClock.elapsedRealtime();
         enforceSandboxedSdkContextInitialization();
 
-        return mSdkSandboxActivityRegistry.register(
-                (SandboxedSdkContext) mContext, sdkSandboxActivityHandler);
+        IBinder token =
+                mSdkSandboxActivityRegistry.register(
+                        (SandboxedSdkContext) mContext, sdkSandboxActivityHandler);
+        logSandboxActivityApiLatency(
+                StatsdUtil
+                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__REGISTER_SDK_SANDBOX_ACTIVITY_HANDLER,
+                StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                timeEventStarted);
+        return token;
     }
 
     /**
@@ -254,9 +264,15 @@ public class SdkSandboxController {
         if (!SdkLevel.isAtLeastU()) {
             throw new UnsupportedOperationException();
         }
+        long timeEventStarted = SystemClock.elapsedRealtime();
         enforceSandboxedSdkContextInitialization();
 
         mSdkSandboxActivityRegistry.unregister(sdkSandboxActivityHandler);
+        logSandboxActivityApiLatency(
+                StatsdUtil
+                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__UNREGISTER_SDK_SANDBOX_ACTIVITY_HANDLER,
+                StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                timeEventStarted);
     }
 
     /**
@@ -349,6 +365,19 @@ public class SdkSandboxController {
                             + sandboxLatencyInfo.getMethod()
                             + " failed with exception "
                             + e.getMessage());
+        }
+    }
+
+    private void logSandboxActivityApiLatency(int method, int callResult, long timeEventStarted) {
+        try {
+            mSdkSandboxLocalSingleton
+                    .getSdkToServiceCallback()
+                    .logSandboxActivityApiLatencyFromSandbox(
+                            method,
+                            callResult,
+                            (int) (SystemClock.elapsedRealtime() - timeEventStarted));
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
         }
     }
 

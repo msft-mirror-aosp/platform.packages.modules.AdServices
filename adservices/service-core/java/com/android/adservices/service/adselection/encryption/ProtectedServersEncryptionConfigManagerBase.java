@@ -29,6 +29,7 @@ import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -40,8 +41,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.security.spec.InvalidKeySpecException;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public abstract class ProtectedServersEncryptionConfigManagerBase {
@@ -59,6 +62,14 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs,
             @Nullable Uri coordinatorUrl);
+
+    abstract FluentFuture<List<DBEncryptionKey>> fetchAndPersistActiveKeysOfType(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
+            Instant keyExpiryInstant,
+            long timeoutMs,
+            @Nullable Uri coordinatorUrl);
+
+    abstract Set<Integer> getExpiredAdSelectionEncryptionKeyTypes(Instant keyExpiryInstant);
 
     protected ProtectedServersEncryptionConfigManagerBase(
             @NonNull Flags flags,
@@ -166,10 +177,14 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
 
     protected Uri getKeyFetchUriOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
-            @Nullable Uri coordinatorUrl) {
+            @Nullable Uri coordinatorUrl,
+            @Nullable String allowList) {
 
-        if (coordinatorUrl != null) {
-            return coordinatorUrl;
+        if (coordinatorUrl != null
+                && allowList != null
+                && adSelectionEncryptionKeyType
+                        == AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION) {
+            return getUriFromAllowlist(coordinatorUrl, allowList);
         }
 
         sLogger.v("The passed coordinatorUrl was null. Fetching default coordinator");
@@ -183,5 +198,18 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
             default:
                 return null;
         }
+    }
+
+    private Uri getUriFromAllowlist(@Nullable Uri coordinatorUrl, String allowlist) {
+        List<String> allowedUrls = AllowLists.splitAllowList(allowlist);
+
+        for (String url : allowedUrls) {
+            Uri allowedUri = Uri.parse(url);
+            if (coordinatorUrl.getHost().equals(allowedUri.getHost())) {
+                return allowedUri;
+            }
+        }
+
+        return null;
     }
 }

@@ -38,6 +38,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
@@ -745,6 +746,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mJobSchedulerMock).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(COBALT_LOGGING_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);
     }
@@ -4700,5 +4702,57 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         // Verify notificationDisplayed is also set in PPAPI
         assertThat(mConsentDatastore.get(PAS_NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_happycase() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isTrue();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_NotificationNotDisplayed() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(false).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_FledgeRevoken() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+    }
+
+    @Test
+    public void testIsPasFledgeConsentGiven_pasNotEnabled() throws RemoteException {
+        when(mMockFlags.getPasUxEnabled()).thenReturn(false);
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(/* isGiven */ true, consentSourceOfTruth);
+        doReturn(true).when(mMockIAdServicesManager).wasPasNotificationDisplayed();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(eq(AdServicesApiType.FLEDGE));
+        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
     }
 }

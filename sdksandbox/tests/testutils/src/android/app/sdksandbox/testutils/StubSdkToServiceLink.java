@@ -57,4 +57,8 @@ public class StubSdkToServiceLink extends ISdkToServiceCallback.Stub {
 
     @Override
     public void logLatenciesFromSandbox(SandboxLatencyInfo sandboxLatencyInfo) {}
+
+    @Override
+    public void logSandboxActivityApiLatencyFromSandbox(
+            int method, int callResult, int latencyMillis) {}
 }

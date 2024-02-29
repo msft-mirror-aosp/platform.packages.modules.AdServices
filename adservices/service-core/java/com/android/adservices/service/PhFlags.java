@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
@@ -26,11 +27,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BAC
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_NUMBER_OF_MESSAGES_PER_BACKGROUND_PROCESS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
@@ -326,24 +331,18 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     @Override
     public boolean getTopicsCobaltLoggingEnabled() {
-        // We check the getCobaltLoggingEnabled first.
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return getCobaltLoggingEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
-                        /* defaultValue */ TOPICS_COBALT_LOGGING_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED,
+                        TOPICS_COBALT_LOGGING_ENABLED);
     }
 
     @Override
     public boolean getAppNameApiErrorCobaltLoggingEnabled() {
-        // We check the getCobaltLoggingEnabled first.
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return getCobaltLoggingEnabled()
-                && DeviceConfig.getBoolean(
-                        FlagsConstants.NAMESPACE_ADSERVICES,
-                        /* flagName */ FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
-                        /* defaultValue */ APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                        APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
     }
 
     @Override
@@ -858,20 +857,26 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_MAX_DELAYED_SOURCE_REGISTRATION_WINDOW);
     }
 
-    @Override
-    public boolean getMeasurementAttributionFallbackJobKillSwitch() {
+    // TODO(b/326254556): logic will be moved to getMeasurementEnabled() (after new unit tests
+    // are added on PhFlagsSystemPropertyOverrideTest)
+    private boolean getMeasurementAttributionFallbackJobKillSwitch() {
         // We check the Global Killswitch first then Measurement Killswitch.
         // As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        final String flagName = FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
-        final boolean defaultValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        String flagName = FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        boolean defaultValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 FlagsConstants.NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementAttributionFallbackJobEnabled() {
+        return !getMeasurementAttributionFallbackJobKillSwitch();
     }
 
     @Override
@@ -1648,9 +1653,13 @@ public final class PhFlags extends CommonPhFlags implements Flags {
 
     // MEASUREMENT Killswitches
 
-    // TODO(b/325144327): ideally it should be removed and the logic moved to
-    // getMeasurementEnabled(), but this is a legacy flag that also reads system properties, and
-    // the system properties workflow is not unit tested.
+    // TODO(b/326254556): logic will be moved to getMeasurementEnabled() (after new unit tests
+    // are added on PhFlagsSystemPropertyOverrideTest)
+    @Override
+    public boolean getLegacyMeasurementKillSwitch() {
+        return getMeasurementKillSwitch();
+    }
+
     private boolean getMeasurementKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
@@ -2154,9 +2163,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 /* defaultValue */ MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
 
-    // MDD Logger Killswitches
-    @Override
-    public boolean getMddLoggerKillSwitch() {
+    // TODO(b/326254556): ideally it should be removed and the logic moved to getBillEnabled(), but
+    // this is a legacy flag that also reads system properties, and the system properties workflow
+    // is not unit tested.
+    private boolean getMddLoggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
@@ -2167,6 +2177,11 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                                 FlagsConstants.NAMESPACE_ADSERVICES,
                                 /* flagName */ FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH,
                                 /* defaultValue */ MDD_LOGGER_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMddLoggerEnabled() {
+        return !getMddLoggerKillSwitch();
     }
 
     // FLEDGE Kill switches
@@ -2307,6 +2322,16 @@ public final class PhFlags extends CommonPhFlags implements Flags {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
                 /* flagName */ FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST,
+                /* defaultValue */ PPAPI_APP_ALLOW_LIST);
+    }
+
+    @Override
+    public String getPasAppAllowList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_PAS_APP_ALLOW_LIST,
+                // default to using the same fixed list as custom audiences
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
@@ -3361,11 +3386,6 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT);
     }
 
-    @VisibleForTesting
-    static String getSystemPropertyName(String key) {
-        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
-    }
-
     @Override
     public boolean getUiDialogsFeatureEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -3766,6 +3786,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getAdServicesModuleJobPolicy() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_AD_SERVICES_MODULE_JOB_POLICY,
+                /* defaultValue */ AD_SERVICES_MODULE_JOB_POLICY);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         super.dump(writer, args); // common flags
 
@@ -3915,6 +3943,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getPpapiAppSignatureAllowList());
         writer.println(
                 "\t" + FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST + " = " + getPpapiAppAllowList());
+        writer.println("\t" + FlagsConstants.KEY_PAS_APP_ALLOW_LIST + " = " + getPasAppAllowList());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST
@@ -5734,9 +5763,29 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                         + getFledgeKAnonMessagesPerBackgroundProcess());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
+                        + KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED
                         + " = "
                         + getFledgeKAnonBackgroundProcessEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED
+                        + " = "
+                        + getFledgeKAnonLoggingEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED
+                        + " = "
+                        + getFledgeKAnonKeyAttestationEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN
+                        + " = "
+                        + getFledgeKAnonSetTypeToSignJoin());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY
+                        + " = "
+                        + getFledgeKAnonUrlAuthorityToJoin());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST
@@ -6757,6 +6806,14 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     }
 
     @Override
+    public String getFledgeKAnonGetChallengeUrl() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ FlagsConstants.KEY_ANON_GET_CHALLENGE_URl,
+                /* defaultValue */ FLEDGE_DEFAULT_GET_CHALLENGE_URL);
+    }
+
+    @Override
     public String getFledgeKAnonRegisterClientParametersUrl() {
         return DeviceConfig.getString(
                 FlagsConstants.NAMESPACE_ADSERVICES,
@@ -6800,7 +6857,7 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     public long getFledgeKAnonMessageTtlSeconds() {
         return DeviceConfig.getLong(
                 FlagsConstants.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS,
+                /* flagName */ FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS,
                 /* defaultValue */ FLEDGE_DEFAULT_KANON_MESSAGE_TTL_SECONDS);
     }
 
@@ -6828,12 +6885,47 @@ public final class PhFlags extends CommonPhFlags implements Flags {
                 /* defaultValue */ GET_ADSERVICES_COMMON_STATES_ALLOW_LIST);
     }
 
+    @Override
     public boolean getFledgeKAnonBackgroundProcessEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
                 && DeviceConfig.getBoolean(
                         FlagsConstants.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
                         /* defaultValue */ FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonLoggingEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED,
+                        /* defaultValue */ FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeKAnonKeyAttestationEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && DeviceConfig.getBoolean(
+                        FlagsConstants.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED,
+                        /* defaultValue */ FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED);
+    }
+
+    @Override
+    public String getFledgeKAnonSetTypeToSignJoin() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN);
+    }
+
+    @Override
+    public String getFledgeKAnonUrlAuthorityToJoin() {
+        return DeviceConfig.getString(
+                FlagsConstants.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY,
+                /* defaultValue */ FLEDGE_DEFAULT_KANON_AUTHORIY_URL_JOIN);
     }
 
     @Override
@@ -6847,5 +6939,37 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getBackgroundJobsLoggingEnabled() {
         return !getBackgroundJobsLoggingKillSwitch();
+    }
+
+    // Do NOT add Flag / @Override methods below - it should only contain helpers
+
+    @VisibleForTesting
+    static boolean getDeviceConfigFlag(String name, boolean defaultValue) {
+        return DeviceConfig.getBoolean(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static String getDeviceConfigFlag(String name, String defaultValue) {
+        return DeviceConfig.getString(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static int getDeviceConfigFlag(String name, int defaultValue) {
+        return DeviceConfig.getInt(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static long getDeviceConfigFlag(String name, long defaultValue) {
+        return DeviceConfig.getLong(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static float getDeviceConfigFlag(String name, float defaultValue) {
+        return DeviceConfig.getFloat(FlagsConstants.NAMESPACE_ADSERVICES, name, defaultValue);
+    }
+
+    @VisibleForTesting
+    static String getSystemPropertyName(String key) {
+        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
     }
 }

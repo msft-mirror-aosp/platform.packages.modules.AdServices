@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
@@ -114,6 +115,29 @@ public final class AppManifestConfigHelper {
                 appPackageName,
                 enrollmentId,
                 config -> config.isAllowedProtectedSignalsAccess(enrollmentId));
+    }
+
+    /**
+     * Parses the app's manifest config to determine whether the given {@code enrollmentId}
+     * associated with an ad tech is permitted to use the Ad Selection API.
+     *
+     * @param appPackageName the package name of the app whose manifest config will be read
+     * @param enrollmentId the enrollment ID associate with the ad tech
+     * @return {@code true} if API access is allowed, {@code false} if it's not or if there was an
+     *     error parsing the app manifest config.
+     */
+    public static boolean isAllowedAdSelectionAccess(String appPackageName, String enrollmentId) {
+        boolean adSelectionAccess =
+                isAllowedApiAccess(
+                        "isAllowedAdSelectionAccess()",
+                        API_AD_SELECTION,
+                        appPackageName,
+                        enrollmentId,
+                        config -> config.isAllowedAdSelectionAccess(enrollmentId));
+        // You can use the ad selection APIs with any of the 3 manifest permissions
+        return adSelectionAccess
+                || isAllowedCustomAudiencesAccess(appPackageName, enrollmentId)
+                || isAllowedProtectedSignalsAccess(appPackageName, enrollmentId);
     }
 
     /**

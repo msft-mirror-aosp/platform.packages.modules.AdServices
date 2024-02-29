@@ -25,6 +25,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__FLEDGE_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__FLEDGE_OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_CONFIRMATION_PAGE_DISMISSED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_CLICKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_DISMISSED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_GOT_IT_BUTTON_CLICKED;
@@ -95,6 +96,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__ALREADY_ENROLLED_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__CONSENT_NOTIFICATION_DEBUG_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_FIRST_NOTIFICATION_CHANNEL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_RENOTIFY_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
@@ -536,6 +539,16 @@ public final class UiStatsLogger {
         LogUtil.d(PRIVACY_SANDBOX_UI_REQUEST_MESSAGE);
     }
 
+    /** Logs that the second additional info button on the landing page was clicked. */
+    public static void logLandingPageSecondAdditionalInfoClicked() {
+        UIStats uiStats = getBaseUiStats();
+
+        uiStats.setAction(
+                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__GA_UX_LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED);
+
+        getAdServicesLogger().logUIStats(uiStats);
+    }
+
     @VisibleForTesting
     public static AdServicesLogger getAdServicesLogger() {
         return sLogger;
@@ -560,7 +573,6 @@ public final class UiStatsLogger {
     }
 
     private static int getDefaultConsent() {
-        Context context = getApplicationContext();
         if (UxStatesManager.getInstance().getUx() == RVC_UX) {
             return getDefaultConsent(AdServicesApiType.MEASUREMENTS);
         }
@@ -576,7 +588,6 @@ public final class UiStatsLogger {
     }
 
     private static int getDefaultAdIdState() {
-        Context context = getApplicationContext();
         Boolean defaultAdIdState = ConsentManager.getInstance().getDefaultAdIdState();
         // edge case where the user opens the settings pages before receiving consent notification.
         if (defaultAdIdState == null) {
@@ -589,7 +600,6 @@ public final class UiStatsLogger {
     }
 
     private static int getDefaultConsent(AdServicesApiType apiType) {
-        Context context = getApplicationContext();
         switch (apiType) {
             case TOPICS:
                 Boolean topicsDefaultConsent =
@@ -652,7 +662,6 @@ public final class UiStatsLogger {
     }
 
     private static int getUx() {
-        Context context = getApplicationContext();
         switch (UxStatesManager.getInstance().getUx()) {
             case U18_UX:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__UNSPECIFIED_UX;
@@ -668,7 +677,6 @@ public final class UiStatsLogger {
     }
 
     private static int getEnrollmentChannel() {
-        Context context = getApplicationContext();
         PrivacySandboxEnrollmentChannelCollection enrollmentChannel =
                 UxStatesManager.getInstance().getEnrollmentChannel();
         if (enrollmentChannel == GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
@@ -679,6 +687,9 @@ public final class UiStatsLogger {
                 || enrollmentChannel
                         == RvcUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
+        } else if (enrollmentChannel
+                == GaUxEnrollmentChannelCollection.PAS_FIRST_CONSENT_NOTIFICATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_FIRST_NOTIFICATION_CHANNEL;
         } else if (enrollmentChannel
                         == GaUxEnrollmentChannelCollection.CONSENT_NOTIFICATION_DEBUG_CHANNEL
                 || enrollmentChannel
@@ -696,6 +707,9 @@ public final class UiStatsLogger {
         } else if (enrollmentChannel
                 == GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RECONSENT_NOTIFICATION_CHANNEL;
+        } else if (enrollmentChannel
+                == GaUxEnrollmentChannelCollection.PAS_RECONSENT_NOTIFICATION_CHANNEL) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_RENOTIFY_NOTIFICATION_CHANNEL;
         } else if (enrollmentChannel == GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__UNSPECIFIED_CHANNEL;
         } else if (enrollmentChannel == U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL) {

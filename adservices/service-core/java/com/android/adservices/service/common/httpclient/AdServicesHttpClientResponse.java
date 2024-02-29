@@ -30,6 +30,9 @@ public abstract class AdServicesHttpClientResponse {
      *     UTF-8 or Base64 encoding depending on the {@link AdServicesHttpsClient} method used to
      *     make the HTTP call.
      */
+    // TODO(b/323851937): We should return the response body in a byte
+    //  array. It will make {@link AdServicesHttpsClient} uniform and will be easy to handle all
+    //  different types of responses.
     public abstract String getResponseBody();
 
     /** @return the response headers associated with a payload download */

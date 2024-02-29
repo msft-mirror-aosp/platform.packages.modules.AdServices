@@ -191,6 +191,9 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
         // Disable data version header by default
         PhFlagsFixture.overrideFledgeDataVersionHeaderEnabled(false);
 
+        // Ensure HTTP Cache is disabled
+        PhFlagsFixture.overrideHttpClientCacheEnabled(false);
+
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
         mCacheBuster = mCacheBusterRandom.nextInt();
     }
@@ -289,9 +292,9 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
 
         mMockWebServerRule.verifyMockServerRequests(
                 mMockWebServer,
-                7,
+                8,
                 ImmutableList.of(
-                        prefix + SELLER_DECISION_LOGIC_URI_PATH,
+                        prefix + SELLER_DECISION_LOGIC_URI_PATH, // this call is done twice
                         prefix + BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
                         prefix + BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
                         prefix + BUYER_TRUSTED_SIGNAL_URI_PATH,
@@ -372,9 +375,9 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
 
         mMockWebServerRule.verifyMockServerRequests(
                 mMockWebServer,
-                7,
+                8,
                 ImmutableList.of(
-                        prefix + SELLER_DECISION_LOGIC_URI_PATH,
+                        prefix + SELLER_DECISION_LOGIC_URI_PATH, // this call is done twice
                         prefix + BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
                         prefix + BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
                         prefix + BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION,
@@ -460,9 +463,9 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
 
         mMockWebServerRule.verifyMockServerRequests(
                 mMockWebServer,
-                7,
+                8,
                 ImmutableList.of(
-                        prefix + SELLER_DECISION_LOGIC_URI_PATH,
+                        prefix + SELLER_DECISION_LOGIC_URI_PATH, // this call is done twice
                         prefix + BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
                         prefix + BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
                         prefix + BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION,
@@ -548,9 +551,9 @@ public final class FledgeCtsMockServerTests extends ForegroundDebuggableCtsTest 
 
         mMockWebServerRule.verifyMockServerRequests(
                 mMockWebServer,
-                7,
+                8,
                 ImmutableList.of(
-                        prefix + SELLER_DECISION_LOGIC_URI_PATH,
+                        prefix + SELLER_DECISION_LOGIC_URI_PATH, // this call is done twice
                         prefix + BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
                         prefix + BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
                         prefix + BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION,

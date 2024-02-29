@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableMap;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -549,7 +550,8 @@ public abstract class CustomAudienceDao {
         Objects.requireNonNull(flags);
         List<String> ownersToRemove = getAllCustomAudienceOwners();
 
-        CleanupUtils.removeAllowedPackages(ownersToRemove, packageManager, flags);
+        CleanupUtils.removeAllowedPackages(
+                ownersToRemove, packageManager, Arrays.asList(flags.getPpapiAppAllowList()));
 
         long numDisallowedOwnersFound = ownersToRemove.size();
         long numRemovedCustomAudiences = 0;

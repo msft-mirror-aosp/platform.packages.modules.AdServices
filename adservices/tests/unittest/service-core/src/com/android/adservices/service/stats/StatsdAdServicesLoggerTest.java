@@ -44,6 +44,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_BACKGROUND_JOB_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INITIALIZE_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.INTERACTION_REPORTING_TABLE_CLEARED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
@@ -74,6 +79,11 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
+import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -1096,6 +1106,10 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         long inputEventDelayMs = 200L;
         long validDelayWindowMs = 1000L;
         String sourceRegistrant = "test_source_registrant";
+        boolean clickDeduplicationEnabled = true;
+        boolean clickDeduplicationEnforced = true;
+        long maxSourcesPerClick = 1;
+        boolean clickUnderLimit = true;
 
         MeasurementClickVerificationStats stats =
                 MeasurementClickVerificationStats.builder()
@@ -1106,6 +1120,10 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setInputEventDelayMillis(inputEventDelayMs)
                         .setValidDelayWindowMillis(validDelayWindowMs)
                         .setSourceRegistrant(sourceRegistrant)
+                        .setClickDeduplicationEnabled(clickDeduplicationEnabled)
+                        .setClickDeduplicationEnforced(clickDeduplicationEnforced)
+                        .setMaxSourcesPerClick(maxSourcesPerClick)
+                        .setCurrentRegistrationUnderClickDeduplicationLimit(clickUnderLimit)
                         .build();
 
         doNothing()
@@ -1119,7 +1137,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyBoolean(),
                                         anyLong(),
                                         anyLong(),
-                                        anyString()));
+                                        anyString(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyLong(),
+                                        anyBoolean()));
 
         // Invoke logging call.
         mLogger.logMeasurementClickVerificationStats(stats);
@@ -1135,8 +1157,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(systemClickVerificationEnabled),
                                 eq(inputEventDelayMs),
                                 eq(validDelayWindowMs),
-                                eq("")); // App package name not in allow list.
-
+                                eq(""), // App package name not in allow list.
+                                eq(clickDeduplicationEnabled),
+                                eq(clickDeduplicationEnforced),
+                                eq(maxSourcesPerClick),
+                                eq(clickUnderLimit));
         verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
@@ -1381,6 +1406,190 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 () ->
                         AdServicesStatsLog.write(
                                 APP_MANIFEST_CONFIG_HELPER_CALLED, pkgName, apiType, result);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKAnonSignStatus_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
+        boolean wasSuccessful = true;
+        int action = 0;
+        int actionFailureReason = 0;
+        int latency = 1000;
+        int batchSize = 32;
+        KAnonSignStatusStats kAnonSignStatusStats =
+                KAnonSignStatusStats.builder()
+                        .setKAnonAction(action)
+                        .setKAnonActionFailureReason(actionFailureReason)
+                        .setBatchSize(batchSize)
+                        .setLatencyInMs(latency)
+                        .setWasSuccessful(wasSuccessful)
+                        .build();
+        mLogger.logKAnonSignStats(kAnonSignStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_SIGN_STATUS_REPORTED,
+                                wasSuccessful,
+                                action,
+                                actionFailureReason,
+                                batchSize,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKAnonJoinStatus_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyBoolean(), anyInt(), anyInt(), anyInt()));
+        boolean wasSuccessful = true;
+        int latency = 1000;
+        int numberOfFailedMessages = 32;
+        int totalMessages = 100;
+        KAnonJoinStatusStats kAnonSignStatusStats =
+                KAnonJoinStatusStats.builder()
+                        .setLatencyInMs(latency)
+                        .setNumberOfFailedMessages(numberOfFailedMessages)
+                        .setWasSuccessful(true)
+                        .setTotalMessages(totalMessages)
+                        .build();
+        mLogger.logKAnonJoinStats(kAnonSignStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_JOIN_STATUS_REPORTED,
+                                wasSuccessful,
+                                totalMessages,
+                                numberOfFailedMessages,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKAnonInitializeStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt()));
+        boolean wasSuccessful = true;
+        int action = 1;
+        int actionFailureReason = 2;
+        int latency = 122;
+        KAnonInitializeStatusStats kAnonInitializeStatusStats =
+                KAnonInitializeStatusStats.builder()
+                        .setKAnonAction(1)
+                        .setKAnonActionFailureReason(actionFailureReason)
+                        .setLatencyInMs(latency)
+                        .setWasSuccessful(wasSuccessful)
+                        .build();
+        mLogger.logKAnonInitializeStats(kAnonInitializeStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_INITIALIZE_STATUS_REPORTED,
+                                wasSuccessful,
+                                action,
+                                actionFailureReason,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKanonBackgroundJobStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                                        anyInt()));
+        int jobResult = 1;
+        int totalMessagesAttempted = 12;
+        int messagesFailedToJoin = 123;
+        int messageFailedToSign = 19;
+        int latency = 17;
+        int messagesLeftInDb = 12356;
+        KAnonBackgroundJobStatusStats kAnonBackgroundJobStatusStats =
+                KAnonBackgroundJobStatusStats.builder()
+                        .setKAnonJobResult(jobResult)
+                        .setMessagesFailedToJoin(messagesFailedToJoin)
+                        .setMessagesFailedToSign(messageFailedToSign)
+                        .setMessagesInDBLeft(messagesLeftInDb)
+                        .setTotalMessagesAttempted(totalMessagesAttempted)
+                        .setLatencyInMs(latency)
+                        .build();
+        mLogger.logKAnonBackgroundJobStats(kAnonBackgroundJobStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_BACKGROUND_JOB_STATUS_REPORTED,
+                                jobResult,
+                                totalMessagesAttempted,
+                                messagesLeftInDb,
+                                messagesFailedToJoin,
+                                messageFailedToSign,
+                                latency);
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogKanonImmediateSignJoinStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                                        anyInt()));
+        int jobResult = 1;
+        int totalMessagesAttempted = 12;
+        int messagesFailedToJoin = 123;
+        int messageFailedToSign = 19;
+        int latency = 17;
+        KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats =
+                KAnonImmediateSignJoinStatusStats.builder()
+                        .setKAnonJobResult(jobResult)
+                        .setMessagesFailedToJoin(messagesFailedToJoin)
+                        .setMessagesFailedToSign(messageFailedToSign)
+                        .setTotalMessagesAttempted(totalMessagesAttempted)
+                        .setLatencyInMs(latency)
+                        .build();
+        mLogger.logKAnonImmediateSignJoinStats(kAnonImmediateSignJoinStatusStats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                K_ANON_IMMEDIATE_SIGN_JOIN_STATUS_REPORTED,
+                                jobResult,
+                                totalMessagesAttempted,
+                                messagesFailedToJoin,
+                                messageFailedToSign,
+                                latency);
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }

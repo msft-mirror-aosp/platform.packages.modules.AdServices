@@ -41,7 +41,8 @@ public class AuctionEncryptionKeyFixture {
 
     private static final String KEY_ID_LABEL = "id";
     private static final String PUBLIC_KEY_LABEL = "key";
-    public static final String COORDINATOR_URL_AUCTION = "https://example-auction.com";
+    public static final String COORDINATOR_URL_AUCTION = "https://example-auction.com/full/url";
+    public static final String COORDINATOR_URL_AUCTION_ORIGIN = "https://example-auction.com";
     public static final DBEncryptionKey ENCRYPTION_KEY_AUCTION =
             DBEncryptionKey.builder()
                     .setKeyIdentifier("152233fc-f255-4c3d-b3ef-7e2b7fbb9ca7")

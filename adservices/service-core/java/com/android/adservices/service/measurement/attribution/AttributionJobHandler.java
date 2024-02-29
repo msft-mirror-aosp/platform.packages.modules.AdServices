@@ -1319,7 +1319,7 @@ class AttributionJobHandler {
                                 triggerSummaryBucket,
                                 debugKeys.first,
                                 debugKeys.second,
-                                source.getFlipProbability(mFlags),
+                                mSourceNoiseHandler.getRandomizedTriggerRate(source),
                                 getEventReportDestinations(
                                         source, trigger.getDestinationType()))
                         .build();
@@ -1623,6 +1623,9 @@ class AttributionJobHandler {
         if (source.getTriggerSpecs() != null) {
             if (mFlags.getMeasurementEnableTriggerDataMatching()
                     && source.getTriggerDataMatching() == Source.TriggerDataMatching.MODULUS) {
+                if (source.getTriggerDataCardinality() == 0) {
+                    return Optional.empty();
+                }
                 // Modify trigger data value mod total trigger spec cardinality.
                 triggerData = triggerData.mod(source.getTriggerDataCardinality());
             }

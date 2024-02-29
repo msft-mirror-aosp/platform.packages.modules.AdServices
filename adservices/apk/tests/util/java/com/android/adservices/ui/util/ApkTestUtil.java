@@ -53,7 +53,7 @@ public class ApkTestUtil {
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
 
     private static final String TAG = "ApkTestUtil";
-    private static final int WINDOW_LAUNCH_TIMEOUT = 1_000;
+    private static final int WINDOW_LAUNCH_TIMEOUT = 2_000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1_000;
 
     /**
@@ -127,11 +127,12 @@ public class ApkTestUtil {
                 PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         String targetStr = getString(resId);
         if (scrollView != null) {
-            // first scroll to the top
-            scrollView.scrollUntil(Direction.UP, Until.scrollFinished(Direction.UP));
-            // start scrolling down until the object is found
             scrollView.scrollUntil(
                     Direction.DOWN,
+                    Until.findObject(
+                            By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+            scrollView.scrollUntil(
+                    Direction.UP,
                     Until.findObject(
                             By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
         }
@@ -145,11 +146,11 @@ public class ApkTestUtil {
                         Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
                         PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         if (scrollView != null) {
-            // first scroll to the top
-            scrollView.scrollUntil(Direction.UP, Until.scrollFinished(Direction.UP));
-            // start scrolling down until the object is found
             scrollView.scrollUntil(
                     Direction.DOWN,
+                    Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
+            scrollView.scrollUntil(
+                    Direction.UP,
                     Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
         }
         return getElement(device, regexStr);
