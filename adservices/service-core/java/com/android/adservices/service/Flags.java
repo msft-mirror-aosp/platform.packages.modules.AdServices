@@ -4492,7 +4492,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Cobalt logging feature flag. */
-    boolean COBALT_LOGGING_ENABLED = false;
+    @FeatureFlag boolean COBALT_LOGGING_ENABLED = false;
 
     /**
      * Returns the feature flag value for cobalt logging job. The cobalt logging feature will be

@@ -474,7 +474,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     // Not passing type (and using type.cast(value)) because most of the flags are primitive types
     // (like boolean) and T would be their object equivalent (like Boolean)
     @SuppressWarnings("TypeParameterUnusedInFormals")
-    private static <T> T getConstantValue(String name) {
+    static <T> T getConstantValue(String name) {
         Field field;
         try {
             field = Flags.class.getDeclaredField(name);
