@@ -84,6 +84,7 @@ public class KAnonSignJoinFactory {
                             KAnonDatabase.getInstance(mContext).kAnonMessageDao(),
                             FlagsFactory.getFlags(),
                             Clock.systemUTC());
+            KeyAttestationFactory keyAttestationFactory = new KeyAttestationFactory(mContext);
             KAnonCallerImpl kAnonCaller =
                     new KAnonCallerImpl(
                             AdServicesExecutors.getLightWeightExecutor(),
@@ -96,7 +97,8 @@ public class KAnonSignJoinFactory {
                             FlagsFactory.getFlags(),
                             kAnonObliviousHttpEncryptor,
                             kAnonMessageManager,
-                            AdServicesLoggerImpl.getInstance());
+                            AdServicesLoggerImpl.getInstance(),
+                            keyAttestationFactory);
             mKAnonSignJoinManager =
                     new KAnonSignJoinManager(
                             mContext,

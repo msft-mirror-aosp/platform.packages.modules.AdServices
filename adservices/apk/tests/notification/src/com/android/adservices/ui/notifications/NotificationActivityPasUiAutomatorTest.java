@@ -24,6 +24,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -65,7 +66,8 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
                     .setFlag(KEY_PAS_UX_ENABLED, true)
                     .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)
-                    .setFlag(KEY_IS_EEA_DEVICE, false);
+                    .setFlag(KEY_IS_EEA_DEVICE, false)
+                    .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
     /**
      * Setup before notification tests.

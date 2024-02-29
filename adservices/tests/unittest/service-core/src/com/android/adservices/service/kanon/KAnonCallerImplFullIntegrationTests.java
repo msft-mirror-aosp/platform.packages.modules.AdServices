@@ -125,6 +125,7 @@ public class KAnonCallerImplFullIntegrationTests {
 
     @Mock private UserProfileIdDao mockUserProfileIdDao;
     @Mock private AdServicesLogger mockAdServicesLogger;
+    @Mock private KeyAttestationFactory mockKeyAttestationFactory;
     private UserProfileIdManager mUserProfileIdManager;
 
     private final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -201,7 +202,8 @@ public class KAnonCallerImplFullIntegrationTests {
                                 mFlags,
                                 mKAnonObliviousHttpEncryptor,
                                 mKAnonMessageManager,
-                                mockAdServicesLogger));
+                                mockAdServicesLogger,
+                                mockKeyAttestationFactory));
         CountDownLatch countDownLatch = new CountDownLatch(1);
         kAnonCaller.signAndJoinMessages(messageEntities);
 
@@ -240,7 +242,8 @@ public class KAnonCallerImplFullIntegrationTests {
                         mFlags,
                         mKAnonObliviousHttpEncryptor,
                         mKAnonMessageManager,
-                        mockAdServicesLogger);
+                        mockAdServicesLogger,
+                        mockKeyAttestationFactory);
         CountDownLatch countdownLatch = new CountDownLatch(1);
         runner.signAndJoinMessages(messageEntities);
         countdownLatch.await();

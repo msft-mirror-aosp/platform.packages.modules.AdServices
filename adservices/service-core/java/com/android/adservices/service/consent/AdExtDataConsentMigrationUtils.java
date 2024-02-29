@@ -34,7 +34,6 @@ import android.os.Build;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
@@ -64,13 +63,11 @@ public final class AdExtDataConsentMigrationUtils {
     @TargetApi(Build.VERSION_CODES.S)
     public static void handleConsentMigrationFromAdExtDataIfNeeded(
             @NonNull Context context,
-            @NonNull BooleanFileDatastore datastore,
             @Nullable AppSearchConsentManager appSearchConsentManager,
             @Nullable AdServicesExtDataStorageServiceManager adExtDataManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
             @Nullable AdServicesManager adServicesManager) {
         Objects.requireNonNull(context);
-        Objects.requireNonNull(datastore);
         Objects.requireNonNull(statsdAdServicesLogger);
 
         AppConsents appConsents = null;
@@ -97,9 +94,7 @@ public final class AdExtDataConsentMigrationUtils {
                 return;
             }
 
-            appConsents =
-                    migrateAdExtData(
-                            appSearchConsentManager, adServicesManager, datastore, dataFromR);
+            appConsents = migrateAdExtData(appSearchConsentManager, adServicesManager, dataFromR);
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean(getSharedPrefMigrationKey(), true);
@@ -185,21 +180,7 @@ public final class AdExtDataConsentMigrationUtils {
     private static AppConsents migrateAdExtData(
             AppSearchConsentManager appSearchConsentManager,
             AdServicesManager adServicesManager,
-            BooleanFileDatastore datastore,
             AdServicesExtDataParams dataFromR) {
-        // Default measurement consent is stored using PPAPI_ONLY source on R which will only be
-        // available on S because both are powered by ExtServices. For T, this information will
-        // be lost. This data is not critical and therefore optional to migrate as UX engine will
-        // set this field after daily ping.
-        if (!SdkLevel.isAtLeastT()) {
-            Boolean measurementDefaultConsent =
-                    datastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT);
-            if (measurementDefaultConsent != null) {
-                appSearchConsentManager.setConsent(
-                        ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, measurementDefaultConsent);
-            }
-        }
-
         // Migrate measurement consent
         boolean isMeasurementConsented = dataFromR.getIsMeasurementConsented() == BOOLEAN_TRUE;
         migrateBasedOnSdk(

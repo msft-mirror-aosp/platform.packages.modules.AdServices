@@ -61,7 +61,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
-    long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
+    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -391,7 +391,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default whether measurement click deduplication is enabled. */
-    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = true;
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED = false;
 
     /** Returns whether measurement click deduplication is enforced. */
     default boolean getMeasurementIsClickDeduplicationEnforced() {
@@ -399,7 +399,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default whether measurement click deduplication is enforced. */
-    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = true;
+    boolean MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED = false;
 
     /** Returns the number of sources that can be registered with a single click. */
     default long getMeasurementMaxSourcesPerClick() {
@@ -2662,7 +2662,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      * Enable Back Compat feature flag. The default value is false which means that all back compat
      * related features are disabled by default. This flag would be enabled for R/S during rollout.
      */
-    boolean ENABLE_BACK_COMPAT = false;
+    @FeatureFlag boolean ENABLE_BACK_COMPAT = false;
 
     /** Returns value of enable Back Compat */
     default boolean getEnableBackCompat() {
@@ -4492,7 +4492,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Cobalt logging feature flag. */
-    boolean COBALT_LOGGING_ENABLED = false;
+    @FeatureFlag boolean COBALT_LOGGING_ENABLED = false;
 
     /**
      * Returns the feature flag value for cobalt logging job. The cobalt logging feature will be
@@ -4688,6 +4688,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value of k-anon fetch server parameters url. */
     String FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL = "";
 
+    /** Default value of k-anon get challenge url. */
+    String FLEDGE_DEFAULT_GET_CHALLENGE_URL = "";
+
     /** Default value of k-anon register client parameters url. */
     String FLEDGE_DEFAULT_KANON_REGISTER_CLIENT_PARAMETERS_URL = "";
 
@@ -4721,6 +4724,9 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value for kanon logging flag */
     boolean FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED = false;
 
+    /** Default value for kanon key attestation feature flag */
+    boolean FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED = false;
+
     /** Default value for kanon sign join set type */
     String FLEDGE_DEFAULT_KANON_SET_TYPE_TO_SIGN_JOIN = "fledge";
 
@@ -4741,6 +4747,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default String getFledgeKAnonFetchServerParamsUrl() {
         return FLEDGE_DEFAULT_KANON_FETCH_SERVER_PARAMS_URL;
+    }
+
+    /**
+     * This method returns the url that needs to be used to fetch server parameters during k-anon
+     * sign call
+     *
+     * @return kanon fetch server params url.
+     */
+    default String getFledgeKAnonGetChallengeUrl() {
+        return FLEDGE_DEFAULT_GET_CHALLENGE_URL;
     }
 
     /**
@@ -4826,6 +4842,15 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getFledgeKAnonLoggingEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
                 && FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED;
+    }
+
+    /**
+     * This method return {@code true} if the KAnon Key attestaion is enabled, {@code false}
+     * otherwise.
+     */
+    default boolean getFledgeKAnonKeyAttestationEnabled() {
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED;
     }
 
     /**
