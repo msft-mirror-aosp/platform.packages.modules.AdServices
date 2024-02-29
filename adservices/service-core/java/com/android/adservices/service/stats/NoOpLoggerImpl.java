@@ -42,9 +42,6 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {}
 
     @Override
-    public void logFledgeApiCallStats(int apiName, int latencyMs, ApiCallStats.Result result) {}
-
-    @Override
     public void logMeasurementRegistrationsResponseSize(
             MeasurementRegistrationResponseStats stats) {}
 
